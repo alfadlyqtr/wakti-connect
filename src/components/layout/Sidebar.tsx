@@ -25,9 +25,16 @@ interface SidebarProps {
   userRole: "free" | "individual" | "business" | "staff";
   onCollapseChange?: (collapsed: boolean) => void;
   closeSidebar?: () => void;
+  openCommandSearch?: () => void;
 }
 
-const Sidebar = ({ isOpen, userRole, onCollapseChange, closeSidebar }: SidebarProps) => {
+const Sidebar = ({ 
+  isOpen, 
+  userRole, 
+  onCollapseChange, 
+  closeSidebar,
+  openCommandSearch
+}: SidebarProps) => {
   const [collapsed, setCollapsed] = useState(true); // Default to collapsed
   
   // Check local storage for saved sidebar state
@@ -99,7 +106,11 @@ const Sidebar = ({ isOpen, userRole, onCollapseChange, closeSidebar }: SidebarPr
       
       {/* Navigation Items - Wrap in ScrollArea for proper scrolling */}
       <ScrollArea className="flex-grow">
-        <SidebarNavItems onNavClick={handleNavClick} isCollapsed={collapsed} />
+        <SidebarNavItems 
+          onNavClick={handleNavClick} 
+          isCollapsed={collapsed} 
+          openCommandSearch={openCommandSearch}
+        />
       </ScrollArea>
       
       {/* Upgrade Banner - Only show for free users and when not collapsed */}

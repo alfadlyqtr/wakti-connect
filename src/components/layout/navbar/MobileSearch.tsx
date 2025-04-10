@@ -2,13 +2,26 @@
 import React from "react";
 import { Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { UserRole } from "@/types/user";
 
 interface MobileSearchProps {
   searchOpen: boolean;
   setSearchOpen: (open: boolean) => void;
+  openCommandSearch: () => void;
+  userRole?: UserRole | null;
 }
 
-const MobileSearch = ({ searchOpen, setSearchOpen }: MobileSearchProps) => {
+const MobileSearch = ({ 
+  searchOpen, 
+  setSearchOpen, 
+  openCommandSearch,
+  userRole
+}: MobileSearchProps) => {
+  // Don't render the search for staff users
+  if (userRole === 'staff') {
+    return null;
+  }
+
   return (
     <div className={`absolute left-0 top-full w-full bg-background/95 backdrop-blur-md p-3 sm:p-4 border-b border-border z-30 transition-all duration-300 ease-in-out lg:relative lg:top-auto lg:left-auto lg:w-auto lg:bg-transparent lg:p-0 lg:border-0 ${
       searchOpen ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0 pointer-events-none lg:translate-y-0 lg:opacity-100 lg:pointer-events-auto"
@@ -17,8 +30,19 @@ const MobileSearch = ({ searchOpen, setSearchOpen }: MobileSearchProps) => {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <input 
           type="text"
-          placeholder="Search"
+          placeholder="Search..."
           className="w-full h-10 pl-10 pr-12 rounded-md border border-input bg-background focus:ring-2 focus:ring-ring focus:outline-none transition-all"
+          onClick={(e) => {
+            e.preventDefault();
+            setSearchOpen(false);
+            openCommandSearch();
+          }}
+          onFocus={(e) => {
+            e.preventDefault();
+            setSearchOpen(false);
+            openCommandSearch();
+          }}
+          readOnly
         />
         <Button 
           variant="ghost" 

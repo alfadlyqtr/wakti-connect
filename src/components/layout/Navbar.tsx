@@ -16,6 +16,10 @@ import NavDateTime from "./navbar/NavDateTime";
 import UserMenu from "./navbar/UserMenu";
 import { UserRole } from "@/types/user";
 
+// Import our new command search components
+import CommandSearch from "../search/CommandSearch";
+import SearchButton from "../search/SearchButton";
+
 interface NavbarProps {
   toggleSidebar: () => void;
   isSidebarOpen: boolean;
@@ -25,6 +29,7 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState<UserRole | null>(null);
+  const [commandSearchOpen, setCommandSearchOpen] = useState(false);
 
   // Get unread notifications count
   const { data: unreadNotifications = [] } = useQuery({
@@ -86,6 +91,11 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
     };
   }, []);
 
+  // Function to open command search dialog
+  const openCommandSearch = () => {
+    setCommandSearchOpen(true);
+  };
+
   // Check if user is a staff member
   const isStaff = userRole === 'staff';
 
@@ -112,7 +122,20 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
 
         {/* Only show search for business, individual, and free users - not for staff */}
         {!isStaff && (
-          <MobileSearch searchOpen={searchOpen} setSearchOpen={setSearchOpen} />
+          <>
+            {/* Desktop search button */}
+            <div className="hidden lg:flex w-64">
+              <SearchButton onClick={openCommandSearch} userRole={userRole} />
+            </div>
+            
+            {/* Mobile search field */}
+            <MobileSearch 
+              searchOpen={searchOpen} 
+              setSearchOpen={setSearchOpen} 
+              openCommandSearch={openCommandSearch}
+              userRole={userRole}
+            />
+          </>
         )}
 
         <div className="flex items-center gap-3">
@@ -155,6 +178,13 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
           />
         </div>
       </div>
+
+      {/* Command search dialog */}
+      <CommandSearch 
+        open={commandSearchOpen} 
+        setOpen={setCommandSearchOpen}
+        userRole={userRole}
+      />
     </header>
   );
 };

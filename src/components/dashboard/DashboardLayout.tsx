@@ -8,6 +8,7 @@ import { useSidebarToggle } from "@/hooks/useSidebarToggle";
 import DashboardContent from "./DashboardContent";
 import { useLocation, useNavigate } from "react-router-dom";
 import { UserRole, getEffectiveRole } from "@/types/user";
+import CommandSearch from "@/components/search/CommandSearch";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -20,6 +21,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const [commandSearchOpen, setCommandSearchOpen] = useState(false);
   
   // Fetch user profile data
   const { 
@@ -42,6 +44,11 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
   // Handle sidebar collapse state
   const handleCollapseChange = (collapsed: boolean) => {
     setSidebarCollapsed(collapsed);
+  };
+
+  // Command search open function to pass to both Navbar and Sidebar
+  const openCommandSearch = () => {
+    setCommandSearchOpen(true);
   };
 
   // Redirect to appropriate dashboard based on role if on main dashboard
@@ -93,6 +100,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
           userRole={userRoleValue}
           onCollapseChange={handleCollapseChange}
           closeSidebar={closeSidebar}
+          openCommandSearch={openCommandSearch}
         />
         
         <DashboardContent
@@ -107,6 +115,13 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
           {children}
         </DashboardContent>
       </div>
+
+      {/* Global command search dialog */}
+      <CommandSearch 
+        open={commandSearchOpen} 
+        setOpen={setCommandSearchOpen}
+        userRole={userRoleValue}
+      />
     </div>
   );
 };
