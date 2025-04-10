@@ -116,8 +116,11 @@ const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications, userRo
   
   // Filter items based on user role
   const filteredNavItems = navItems.filter(item => {
+    // If userRole is undefined or null, don't show restricted items
+    if (!userRole) return false;
+    
     // If the user's role is in the showForRoles array, show the item
-    return item.showForRoles.includes(userRole as UserRole);
+    return item.showForRoles.includes(userRole);
   });
 
   return (

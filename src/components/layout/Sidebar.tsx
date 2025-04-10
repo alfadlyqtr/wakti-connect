@@ -8,6 +8,7 @@ import SidebarUpgradeBanner from "./sidebar/SidebarUpgradeBanner";
 import SidebarProfile from "./sidebar/SidebarProfile";
 import CollapseToggle from "./sidebar/CollapseToggle";
 import SidebarContainer from "./sidebar/SidebarContainer";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Define profile type to ensure TypeScript knows about our new columns
 interface SidebarProfileData {
@@ -96,10 +97,10 @@ const Sidebar = ({ isOpen, userRole, onCollapseChange, closeSidebar }: SidebarPr
       {/* User Profile Section */}
       <SidebarProfile profileData={profileData} collapsed={collapsed} />
       
-      {/* Navigation Items */}
-      <div className="flex-grow overflow-y-auto">
+      {/* Navigation Items - Wrap in ScrollArea for proper scrolling */}
+      <ScrollArea className="flex-grow">
         <SidebarNavItems onNavClick={handleNavClick} isCollapsed={collapsed} />
-      </div>
+      </ScrollArea>
       
       {/* Upgrade Banner - Only show for free users and when not collapsed */}
       {userRole === "free" && !collapsed && (

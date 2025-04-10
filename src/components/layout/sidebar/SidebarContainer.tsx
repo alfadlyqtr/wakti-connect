@@ -44,7 +44,7 @@ const SidebarContainer: React.FC<SidebarContainerProps> = ({
         isOpen ? 'sidebar-open shadow-lg' : 'sidebar-closed'
       } ${collapsed ? 'w-[70px]' : 'w-52'}`}
     >
-      <div className="h-full flex flex-col relative overflow-y-auto">
+      <div className="h-full flex flex-col relative">
         {children}
       </div>
     </aside>
