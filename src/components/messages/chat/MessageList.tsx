@@ -57,9 +57,12 @@ const MessageList: React.FC<MessageListProps> = ({ messages, currentUserId }) =>
           >
             <MessageBubble 
               content={message.content} 
+              type={message.type || 'text'}
               isCurrentUser={isCurrentUser} 
               senderName={message.senderName}
               timestamp={message.createdAt}
+              audioUrl={message.audioUrl}
+              imageUrl={message.imageUrl}
             />
           </div>
         );

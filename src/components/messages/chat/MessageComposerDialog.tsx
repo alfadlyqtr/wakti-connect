@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { 
   Dialog, 
   DialogContent, 
@@ -9,13 +9,13 @@ import {
   DialogClose
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Avatar } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Mic, MicOff } from "lucide-react";
+import { Send, Mic, Image, X, AlertCircle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { useVoiceInteraction } from "@/hooks/useVoiceInteraction";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useMessaging } from "@/hooks/useMessaging";
+import VoiceRecorder from "./VoiceRecorder";
+import { supabase } from "@/integrations/supabase/client";
 
 interface MessageComposerDialogProps {
   recipientId: string;
@@ -34,37 +34,100 @@ const MessageComposerDialog: React.FC<MessageComposerDialogProps> = ({
 }) => {
   const [message, setMessage] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { sendMessage, isSending } = useMessaging({});
   
-  const {
-    isListening,
-    transcript,
-    supportsVoice,
-    startListening,
-    stopListening
-  } = useVoiceInteraction({
-    onTranscriptComplete: (text) => {
-      if (text) {
-        setMessage(prev => prev + (prev && !prev.endsWith(' ') ? ' ' : '') + text);
-      }
-    }
-  });
+  const MAX_MESSAGE_LENGTH = 300;
+  const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
   
-  const handleSendMessage = async () => {
-    if (!message.trim() || isSending) return;
+  const handleSendMessage = async (type: 'text' | 'voice' | 'image' = 'text', audioFile?: Blob, duration?: string) => {
+    if (isSending) return;
     
     try {
-      await sendMessage({ recipientId, content: message });
+      let messageContent = message.trim();
+      let audioUrl: string | undefined;
+      let imageUrl: string | undefined;
+      
+      // For voice messages, upload audio file
+      if (type === 'voice' && audioFile) {
+        const { data: audioData, error: audioError } = await supabase.storage
+          .from('message_attachments')
+          .upload(`voice/${Date.now()}.webm`, audioFile);
+          
+        if (audioError) {
+          throw audioError;
+        }
+        
+        const { data: audioPubUrlData } = supabase.storage
+          .from('message_attachments')
+          .getPublicUrl(audioData.path);
+          
+        audioUrl = audioPubUrlData.publicUrl;
+        messageContent = duration || '0:00'; // Use duration as content
+      }
+      
+      // For image messages, upload image file
+      if (type === 'image' && imageFile) {
+        // Check file size
+        if (imageFile.size > MAX_IMAGE_SIZE) {
+          toast({
+            title: "File too large",
+            description: "Image size must be less than 2MB",
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        const { data: imageData, error: imageError } = await supabase.storage
+          .from('message_attachments')
+          .upload(`images/${Date.now()}_${imageFile.name}`, imageFile);
+          
+        if (imageError) {
+          throw imageError;
+        }
+        
+        const { data: imagePubUrlData } = supabase.storage
+          .from('message_attachments')
+          .getPublicUrl(imageData.path);
+          
+        imageUrl = imagePubUrlData.publicUrl;
+        
+        // Clear image preview
+        setImagePreview(null);
+        setImageFile(null);
+      }
+      
+      // Validate for text message
+      if (type === 'text' && (!messageContent || messageContent.length > MAX_MESSAGE_LENGTH)) {
+        toast({
+          title: "Invalid message",
+          description: "Message cannot be empty or exceed 300 characters",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      await sendMessage({ 
+        recipientId, 
+        content: messageContent,
+        type,
+        audioUrl,
+        imageUrl
+      });
       
       toast({
         title: "Message sent",
-        description: "Your message has been sent successfully.",
+        description: "Your message has been sent successfully. It will expire in 24 hours.",
       });
       
       setMessage("");
       setIsOpen(false);
+      setIsRecording(false);
       
       if (onMessageSent) {
         onMessageSent();
@@ -79,12 +142,54 @@ const MessageComposerDialog: React.FC<MessageComposerDialogProps> = ({
     }
   };
   
-  const toggleVoiceRecording = () => {
-    if (isListening) {
-      stopListening();
-    } else {
-      startListening();
+  const handleVoiceRecordingComplete = (audioBlob: Blob, audioDuration: string) => {
+    handleSendMessage('voice', audioBlob, audioDuration);
+  };
+  
+  const handleFileSelect = () => {
+    fileInputRef.current?.click();
+  };
+  
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    const selectedFile = files[0];
+    
+    // Check file size
+    if (selectedFile.size > MAX_IMAGE_SIZE) {
+      toast({
+        title: "File too large",
+        description: "Image size must be less than 2MB",
+        variant: "destructive",
+      });
+      return;
     }
+    
+    // Check if file is image
+    if (!selectedFile.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Only image files are supported",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setImagePreview(event.target?.result as string);
+    };
+    reader.readAsDataURL(selectedFile);
+    
+    setImageFile(selectedFile);
+    e.target.value = ''; // Reset input
+  };
+  
+  const handleClearImage = () => {
+    setImagePreview(null);
+    setImageFile(null);
   };
   
   return (
@@ -115,72 +220,122 @@ const MessageComposerDialog: React.FC<MessageComposerDialogProps> = ({
           </DialogTitle>
         </DialogHeader>
         
-        <div className="relative">
-          <Textarea
-            placeholder="Type your message here..."
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            className={`min-h-[120px] resize-none pr-10 ${isListening ? "bg-rose-50 border-rose-200" : ""}`}
-            disabled={isSending || isListening}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey && !isMobile) {
-                e.preventDefault();
-                handleSendMessage();
-              }
-            }}
+        {/* Voice recorder */}
+        {isRecording ? (
+          <VoiceRecorder 
+            onRecordingComplete={handleVoiceRecordingComplete}
+            onCancel={() => setIsRecording(false)}
+            maxDuration={30}
           />
-          {isListening && (
-            <span className="absolute right-3 top-3">
-              <span className="relative flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
-              </span>
-            </span>
-          )}
-        </div>
-        
-        <p className="text-xs text-muted-foreground">
-          Messages expire after 24 hours. Press Enter to send, Shift+Enter for new line.
-        </p>
-        
-        <div className="flex justify-between gap-2">
-          <div className="flex items-center">
-            {supportsVoice && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={toggleVoiceRecording}
-                disabled={isSending}
-                className={isListening ? "text-rose-500" : ""}
-              >
-                {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-              </Button>
+        ) : (
+          <div className="space-y-4">
+            {/* Image preview */}
+            {imagePreview && (
+              <div className="relative">
+                <img 
+                  src={imagePreview} 
+                  alt="Selected image" 
+                  className="w-full h-auto max-h-40 object-cover rounded-md"
+                />
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="icon"
+                  className="absolute top-2 right-2 h-6 w-6"
+                  onClick={handleClearImage}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
             )}
+            
+            <div className="relative">
+              <Textarea
+                placeholder="Type your message here... (max 300 characters)"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                className="min-h-[120px] resize-none pr-10"
+                disabled={isSending}
+                maxLength={MAX_MESSAGE_LENGTH}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey && !isMobile) {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }
+                }}
+              />
+              <div className="absolute bottom-2 right-2 text-xs text-muted-foreground">
+                {message.length}/{MAX_MESSAGE_LENGTH}
+              </div>
+            </div>
+            
+            <p className="text-xs text-muted-foreground">
+              Messages expire after 24 hours. Press Enter to send, Shift+Enter for new line.
+            </p>
+            
+            <div className="flex justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsRecording(true)}
+                  disabled={isSending}
+                  title="Record voice message"
+                >
+                  <Mic className="h-4 w-4" />
+                </Button>
+                
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleFileSelect}
+                  disabled={isSending}
+                  title="Add image"
+                >
+                  <Image className="h-4 w-4" />
+                </Button>
+                
+                <input
+                  type="file"
+                  className="hidden"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept="image/*"
+                />
+              </div>
+              
+              <div className="flex gap-2">
+                <DialogClose asChild>
+                  <Button variant="outline" disabled={isSending}>
+                    Cancel
+                  </Button>
+                </DialogClose>
+                <Button 
+                  onClick={() => {
+                    if (imageFile) {
+                      handleSendMessage('image');
+                    } else {
+                      handleSendMessage();
+                    }
+                  }}
+                  disabled={(!message.trim() && !imageFile) || isSending}
+                  className="flex items-center gap-1"
+                >
+                  {isSending ? (
+                    <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4" />
+                      <span>Send</span>
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
           </div>
-          
-          <div className="flex gap-2">
-            <DialogClose asChild>
-              <Button variant="outline" disabled={isSending}>
-                Cancel
-              </Button>
-            </DialogClose>
-            <Button 
-              onClick={handleSendMessage} 
-              disabled={!message.trim() || isSending}
-              className="flex items-center gap-1"
-            >
-              {isSending ? (
-                <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <>
-                  <Send className="h-4 w-4" />
-                  <span>Send</span>
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
+        )}
       </DialogContent>
     </Dialog>
   );

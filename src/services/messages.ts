@@ -7,9 +7,18 @@ import { Message } from "@/types/message.types";
  * 
  * @param recipientId The UUID of the message recipient
  * @param content The message content
+ * @param type Message type (text, voice, image)
+ * @param audioUrl URL to audio file (for voice messages)
+ * @param imageUrl URL to image file (for image messages)
  * @returns Promise with the result of the message insertion
  */
-export const sendMessage = async (recipientId: string, content: string) => {
+export const sendMessage = async (
+  recipientId: string, 
+  content: string, 
+  type: 'text' | 'voice' | 'image' = 'text',
+  audioUrl?: string,
+  imageUrl?: string
+) => {
   try {
     // Get the current user's session
     const { data: { session } } = await supabase.auth.getSession();
@@ -18,7 +27,7 @@ export const sendMessage = async (recipientId: string, content: string) => {
       throw new Error("No authenticated user found");
     }
     
-    console.log("Sending message to:", recipientId, "Content:", content);
+    console.log(`Sending ${type} message to:`, recipientId, "Content:", content);
     
     // Insert the message
     const { data, error } = await supabase
@@ -27,7 +36,10 @@ export const sendMessage = async (recipientId: string, content: string) => {
         sender_id: session.user.id,
         recipient_id: recipientId,
         content,
-        is_read: false
+        is_read: false,
+        message_type: type,
+        audio_url: audioUrl,
+        image_url: imageUrl
       })
       .select('id');
     
@@ -99,6 +111,9 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
         content,
         is_read,
         created_at,
+        message_type,
+        audio_url,
+        image_url,
         sender:sender_id(id, full_name, display_name, business_name, avatar_url),
         recipient:recipient_id(id, full_name, display_name, business_name, avatar_url)
       `)
@@ -172,7 +187,10 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
         isRead: msg.is_read || false,
         createdAt: msg.created_at || '',
         senderName: senderName,
-        senderAvatar: senderAvatar
+        senderAvatar: senderAvatar,
+        type: msg.message_type as 'text' | 'voice' | 'image' || 'text',
+        audioUrl: msg.audio_url,
+        imageUrl: msg.image_url
       };
     }) || [];
     

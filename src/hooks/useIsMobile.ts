@@ -1,19 +1,23 @@
 
 import { useState, useEffect } from 'react';
 
-export const useIsMobile = (): boolean => {
+export const useIsMobile = () => {
   const [isMobile, setIsMobile] = useState(false);
   
   useEffect(() => {
-    const checkIsMobile = () => {
+    const checkIfMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
     
-    checkIsMobile();
-    window.addEventListener('resize', checkIsMobile);
+    // Initial check
+    checkIfMobile();
     
+    // Add event listener for window resize
+    window.addEventListener('resize', checkIfMobile);
+    
+    // Clean up
     return () => {
-      window.removeEventListener('resize', checkIsMobile);
+      window.removeEventListener('resize', checkIfMobile);
     };
   }, []);
   

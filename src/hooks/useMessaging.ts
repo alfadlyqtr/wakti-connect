@@ -19,6 +19,14 @@ export interface UseMessagingOptions {
   staffOnly?: boolean;
 }
 
+export interface SendMessageParams {
+  recipientId: string;
+  content: string;
+  type?: 'text' | 'voice' | 'image';
+  audioUrl?: string;
+  imageUrl?: string;
+}
+
 export const useMessaging = (options?: string | UseMessagingOptions) => {
   const queryClient = useQueryClient();
   const isStaff = localStorage.getItem('userRole') === 'staff';
@@ -49,8 +57,14 @@ export const useMessaging = (options?: string | UseMessagingOptions) => {
 
   // Send message mutation
   const sendMessageMutation = useMutation({
-    mutationFn: async ({ recipientId, content }: { recipientId: string; content: string }) => {
-      return sendMessage(recipientId, content);
+    mutationFn: async ({ 
+      recipientId, 
+      content, 
+      type = 'text',
+      audioUrl,
+      imageUrl
+    }: SendMessageParams) => {
+      return sendMessage(recipientId, content, type, audioUrl, imageUrl);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['messages', otherUserId] });
