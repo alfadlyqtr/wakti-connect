@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -70,23 +69,18 @@ export const useTaskQueries = (tab: TaskTab = "my-tasks"): UseTaskQueriesReturn 
 
   const queryKey = ['tasks', tab, isStaff, userRole];
 
-  // Define the query function to use the appropriate fetcher based on tab and user role
   const fetchTasksData = async (): Promise<TaskWithSharedInfo[]> => {
     const { data: { session } } = await supabase.auth.getSession();
       
     if (!session) throw new Error("You must be logged in to view tasks");
     
-    // Re-check staff status to ensure it's up to date
     const staffCheck = isStaff || localStorage.getItem('isStaff') === 'true';
     
     if (staffCheck) {
       console.log("Fetching tasks as staff member, tab:", tab);
-      // For staff, we only support my-tasks tab now
       return await fetchMyTasks(session.user.id);
     } 
     
-    // Since we've limited TaskTab to just "my-tasks", this is the only path
-    // that will be executed
     return await fetchMyTasks(session.user.id);
   };
 
@@ -96,7 +90,7 @@ export const useTaskQueries = (tab: TaskTab = "my-tasks"): UseTaskQueriesReturn 
     enabled: !!userRole,
     refetchOnWindowFocus: false,
     staleTime: 30000,
-    refetchInterval: false // Prevent continuous refetching
+    refetchInterval: false
   });
 
   useEffect(() => {
@@ -105,7 +99,6 @@ export const useTaskQueries = (tab: TaskTab = "my-tasks"): UseTaskQueriesReturn 
     }
   }, [data]);
 
-  // Create a wrapper for refetch that returns void to match our interface
   const refetch = async (): Promise<void> => {
     await queryRefetch();
   };
