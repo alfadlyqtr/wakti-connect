@@ -84,10 +84,13 @@ export const fetchConversations = async (staffOnly = false): Promise<Conversatio
       for (const msg of messageData) {
         if (!msg || typeof msg !== 'object') continue;
         
+        // Use type assertion to safely access properties
+        const typedMsg = msg as any;
+        
         // Determine the other user ID (conversation partner)
-        const otherUserId = msg.sender_id === session.user.id 
-          ? msg.recipient_id 
-          : msg.sender_id;
+        const otherUserId = typedMsg.sender_id === session.user.id 
+          ? typedMsg.recipient_id 
+          : typedMsg.sender_id;
         
         // Skip if this is not a staff conversation when staffOnly is true
         if (staffOnly && !filteredContactIds.includes(otherUserId)) {
@@ -95,15 +98,15 @@ export const fetchConversations = async (staffOnly = false): Promise<Conversatio
         }
         
         // Get profile data for the other user
-        const profileData = msg.sender_id === session.user.id 
-          ? msg.recipient 
-          : msg.sender;
+        const profileData = typedMsg.sender_id === session.user.id 
+          ? typedMsg.recipient 
+          : typedMsg.sender;
           
         if (!profileData) continue;
         
         // If this conversation hasn't been processed yet or this message is newer
         if (!conversationMap.has(otherUserId) || 
-            (new Date(msg.created_at) > new Date(conversationMap.get(otherUserId)!.lastMessageTime))) {
+            (new Date(typedMsg.created_at) > new Date(conversationMap.get(otherUserId)!.lastMessageTime))) {
           
           // Format display name (business name > display name > full name)
           const displayName = (profileData as any)?.business_name || 
@@ -112,15 +115,15 @@ export const fetchConversations = async (staffOnly = false): Promise<Conversatio
                              'Unknown User';
           
           // Check if there are any unread messages from this user
-          const isUnread = msg.recipient_id === session.user.id && !msg.is_read;
+          const isUnread = typedMsg.recipient_id === session.user.id && !typedMsg.is_read;
           
           conversationMap.set(otherUserId, {
             id: otherUserId,
             userId: otherUserId,
             displayName,
             avatar: (profileData as any)?.avatar_url,
-            lastMessage: msg.content || '',
-            lastMessageTime: msg.created_at || new Date().toISOString(),
+            lastMessage: typedMsg.content || '',
+            lastMessageTime: typedMsg.created_at || new Date().toISOString(),
             unread: isUnread
           });
         }

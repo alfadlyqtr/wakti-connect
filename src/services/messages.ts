@@ -158,8 +158,8 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
             if (msg === null) return false;
             
             // Safely check properties
-            const msgSenderId = msg.sender_id;
-            const msgRecipientId = msg.recipient_id;
+            const msgSenderId = (msg as any).sender_id;
+            const msgRecipientId = (msg as any).recipient_id;
             
             return (
               (msgSenderId === session.user.id && msgRecipientId === conversationUserId) ||
@@ -200,14 +200,16 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
       const messages: Message[] = filteredData.map(msg => {
         if (!msg) return {} as Message;
         
+        // Type cast to access properties safely
+        const typedMsg = msg as any;
+        
         // Get sender information with safe property access
-        const senderInfo = msg.sender || {};
+        const senderInfo = typedMsg.sender || {};
         
         // Check if sender is a staff member
-        const staffInfo = staffProfiles[msg.sender_id];
+        const staffInfo = staffProfiles[typedMsg.sender_id];
         
         // Use staff info if available, otherwise use profile info
-        // Add proper null checking to avoid TypeScript errors
         const senderName = 
           staffInfo?.name ||
           (senderInfo && typeof senderInfo === 'object' ? (senderInfo as any)?.business_name : undefined) || 
@@ -220,17 +222,17 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
           (senderInfo && typeof senderInfo === 'object' ? (senderInfo as any)?.avatar_url : undefined);
         
         return {
-          id: msg.id || '',
-          content: msg.content || '',
-          senderId: msg.sender_id || '',
-          recipientId: msg.recipient_id || '',
-          isRead: msg.is_read || false,
-          createdAt: msg.created_at || '',
+          id: typedMsg.id || '',
+          content: typedMsg.content || '',
+          senderId: typedMsg.sender_id || '',
+          recipientId: typedMsg.recipient_id || '',
+          isRead: typedMsg.is_read || false,
+          createdAt: typedMsg.created_at || '',
           senderName: senderName,
           senderAvatar: senderAvatar,
-          type: msg.message_type as 'text' | 'voice' | 'image' || 'text',
-          audioUrl: msg.audio_url,
-          imageUrl: msg.image_url
+          type: typedMsg.message_type as 'text' | 'voice' | 'image' || 'text',
+          audioUrl: typedMsg.audio_url,
+          imageUrl: typedMsg.image_url
         };
       });
       
@@ -271,9 +273,10 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
         filteredData = data.filter(msg => {
           if (!msg || typeof msg !== 'object') return false;
           
-          // Safely check properties
-          const msgSenderId = (msg as any).sender_id;
-          const msgRecipientId = (msg as any).recipient_id;
+          // Safely check properties using type assertion
+          const typedMsg = msg as any;
+          const msgSenderId = typedMsg.sender_id;
+          const msgRecipientId = typedMsg.recipient_id;
           
           return (
             (msgSenderId === session.user.id && msgRecipientId === conversationUserId) ||
