@@ -1,7 +1,7 @@
 
 import { supabase } from '@/lib/supabase';
 import { InvitationCustomization } from '@/types/invitation.types';
-import { EventCustomization, BackgroundType } from '@/types/event.types';
+import { EventCustomization, BackgroundType, TextAlign, ButtonShape } from '@/types/event.types';
 
 // Helper function to safely convert the EventCustomization to a JSON object
 const convertEventCustomization = (customization: EventCustomization): any => {
@@ -34,6 +34,22 @@ const convertEventCustomization = (customization: EventCustomization): any => {
   };
 };
 
+// Helper function to ensure text alignment is a valid TextAlign value
+const ensureValidTextAlign = (alignment: string): TextAlign => {
+  const validAlignments: TextAlign[] = ['left', 'center', 'right', 'justify'];
+  return validAlignments.includes(alignment as TextAlign) 
+    ? (alignment as TextAlign) 
+    : 'left';
+};
+
+// Helper function to ensure button shape is a valid ButtonShape value
+const ensureValidButtonShape = (shape: string): ButtonShape => {
+  const validShapes: ButtonShape[] = ['rounded', 'pill', 'square'];
+  return validShapes.includes(shape as ButtonShape)
+    ? (shape as ButtonShape)
+    : 'rounded';
+};
+
 // Helper function to convert InvitationCustomization to EventCustomization
 const convertToEventCustomization = (invitationCustomization: InvitationCustomization): EventCustomization => {
   // Create a default EventCustomization structure
@@ -48,18 +64,18 @@ const convertToEventCustomization = (invitationCustomization: InvitationCustomiz
       size: invitationCustomization.fontSize || 'medium',
       color: invitationCustomization.textColor || '#000000',
       weight: 'normal',
-      alignment: invitationCustomization.textAlign || 'left'
+      alignment: ensureValidTextAlign(invitationCustomization.textAlign || 'left')
     },
     buttons: {
       accept: {
         background: invitationCustomization.buttonStyles?.color || '#3B82F6',
         color: '#ffffff',
-        shape: invitationCustomization.buttonStyles?.style || 'rounded'
+        shape: ensureValidButtonShape(invitationCustomization.buttonStyles?.style || 'rounded')
       },
       decline: {
         background: '#f43f5e',
         color: '#ffffff',
-        shape: invitationCustomization.buttonStyles?.style || 'rounded'
+        shape: ensureValidButtonShape(invitationCustomization.buttonStyles?.style || 'rounded')
       }
     }
   };
