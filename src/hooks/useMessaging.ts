@@ -3,14 +3,14 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/ui/use-toast";
 import { 
   getMessages, 
-  sendMessage, 
-  markMessageAsRead 
+  sendMessage as sendMessageService, 
+  markMessageAsRead,
+  canMessageUser,
+  getUnreadMessagesCount,
+  markConversationAsRead as markConversationAsReadService
 } from "@/services/messages";
 import { fetchConversations } from "@/services/messages/fetchConversations";
-import { canMessageUser } from "@/services/messages/permissionsService";
-import { getUnreadMessagesCount } from "@/services/messages/notificationsService";
 import { Message, Conversation } from "@/types/message.types";
-import { getStaffBusinessId } from "@/utils/staffUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useRef } from "react";
 
@@ -64,7 +64,7 @@ export const useMessaging = (options?: string | UseMessagingOptions) => {
       audioUrl,
       imageUrl
     }: SendMessageParams) => {
-      return sendMessage(recipientId, content, type, audioUrl, imageUrl);
+      return sendMessageService(recipientId, content, type, audioUrl, imageUrl);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['messages', otherUserId] });
@@ -194,23 +194,7 @@ export const useMessaging = (options?: string | UseMessagingOptions) => {
   // Mark conversation as read
   const markConversationAsRead = async (userId: string) => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) return;
-      
-      // Find unread messages from this user
-      const { data: unreadMessages } = await supabase
-        .from('messages')
-        .select('id')
-        .eq('sender_id', userId)
-        .eq('recipient_id', session.user.id)
-        .eq('is_read', false);
-        
-      if (!unreadMessages || unreadMessages.length === 0) return;
-      
-      // Mark each message as read
-      for (const msg of unreadMessages) {
-        await markMessageAsRead(msg.id);
-      }
+      await markConversationAsReadService(userId);
       
       // Invalidate queries to update UI
       queryClient.invalidateQueries({ queryKey: ['messages', userId] });

@@ -1,8 +1,8 @@
 
-// Re-export all message service functions from a single entry point
-export { getMessages, sendMessage, markMessageAsRead } from '../messages';
-
-// These functions are in their own files
-export { fetchConversations } from './fetchConversations';
+// Export all message service functions from a unified entry point
+export { sendMessage } from './sendMessage';
+export { markMessageAsRead } from './markMessageAsRead';
+export { getMessages } from './getMessages';
+export { getUnreadMessagesCount, markConversationAsRead } from './notificationsService';
 export { canMessageUser } from './permissionsService';
-export { getUnreadMessagesCount } from './notificationsService';
+export { fetchConversations } from './fetchConversations';
