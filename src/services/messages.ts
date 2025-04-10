@@ -148,11 +148,21 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
       
       // If a specific conversation user is provided, filter for only messages between the current user and that user
       let filteredData = data;
+      
       if (conversationUserId) {
-        filteredData = data.filter(msg => 
-          (msg.sender_id === session.user.id && msg.recipient_id === conversationUserId) ||
-          (msg.sender_id === conversationUserId && msg.recipient_id === session.user.id)
-        );
+        // Type check: Ensure data is an array of objects with the expected properties
+        if (Array.isArray(data) && data.every(item => typeof item === 'object' && item !== null)) {
+          filteredData = data.filter(msg => {
+            if (msg === null) return false;
+            return (
+              (msg.sender_id === session.user.id && msg.recipient_id === conversationUserId) ||
+              (msg.sender_id === conversationUserId && msg.recipient_id === session.user.id)
+            );
+          });
+        } else {
+          console.error("Unexpected data format:", data);
+          return [];
+        }
       }
       
       // Check if these are staff messages
@@ -248,11 +258,21 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
       
       // If a specific conversation user is provided, filter for only messages between the current user and that user
       let filteredData = data;
+      
       if (conversationUserId) {
-        filteredData = data.filter(msg => 
-          (msg.sender_id === session.user.id && msg.recipient_id === conversationUserId) ||
-          (msg.sender_id === conversationUserId && msg.recipient_id === session.user.id)
-        );
+        // Type check: Ensure data is an array of objects with the expected properties
+        if (Array.isArray(data) && data.every(item => typeof item === 'object' && item !== null)) {
+          filteredData = data.filter(msg => {
+            if (msg === null) return false;
+            return (
+              (msg.sender_id === session.user.id && msg.recipient_id === conversationUserId) ||
+              (msg.sender_id === conversationUserId && msg.recipient_id === session.user.id)
+            );
+          });
+        } else {
+          console.error("Unexpected data format:", data);
+          return [];
+        }
       }
       
       // Check if these are staff messages

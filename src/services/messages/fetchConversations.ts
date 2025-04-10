@@ -103,7 +103,7 @@ export const fetchConversations = async (staffOnly = false): Promise<Conversatio
         
         // If this conversation hasn't been processed yet or this message is newer
         if (!conversationMap.has(otherUserId) || 
-            new Date(msg.created_at) > new Date(conversationMap.get(otherUserId)!.lastMessageTime)) {
+            (new Date(msg.created_at) > new Date(conversationMap.get(otherUserId)!.lastMessageTime))) {
           
           // Format display name (business name > display name > full name)
           const displayName = (profileData as any)?.business_name || 
@@ -214,7 +214,7 @@ export const fetchConversations = async (staffOnly = false): Promise<Conversatio
         
         // If this conversation hasn't been processed yet or this message is newer
         if (!conversationMap.has(otherUserId) || 
-            new Date(msg.created_at) > new Date(conversationMap.get(otherUserId)!.lastMessageTime)) {
+            (new Date(msg.created_at) > new Date(conversationMap.get(otherUserId)!.lastMessageTime))) {
           
           // Format display name (business name > display name > full name)
           const displayName = (profileData as any)?.business_name || 
