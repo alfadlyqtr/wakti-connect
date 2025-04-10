@@ -12,6 +12,11 @@ export const fetchMessagesFromDb = async (
   conversationUserId?: string
 ): Promise<any[]> => {
   try {
+    console.log("Fetching messages for user ID:", userId);
+    if (conversationUserId) {
+      console.log("Filtering by conversation with user ID:", conversationUserId);
+    }
+    
     // First check if the message_type column exists
     const { error: columnCheckError } = await supabase
       .from('messages')
