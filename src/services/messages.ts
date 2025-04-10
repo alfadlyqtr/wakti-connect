@@ -30,29 +30,55 @@ export const sendMessage = async (
     
     console.log(`Sending ${type} message to:`, recipientId, "Content:", content);
     
-    // Insert the message with all fields
-    const insertData = {
-      sender_id: session.user.id,
-      recipient_id: recipientId,
-      content,
-      is_read: false,
-      message_type: type,
-      audio_url: audioUrl,
-      image_url: imageUrl
-    };
-    
-    const { data, error } = await supabase
-      .from('messages')
-      .insert(insertData)
-      .select('id');
-    
-    if (error) {
-      console.error("Error sending message:", error);
+    // Check if the messages table has the new columns
+    try {
+      // First check if the new columns exist
+      const { error: columnCheckError } = await supabase
+        .from('messages')
+        .select('message_type')
+        .limit(1);
+        
+      if (columnCheckError) {
+        console.log("Message table doesn't have new columns yet, using legacy insert");
+        // If the column doesn't exist, use the legacy insert
+        const { data, error } = await supabase
+          .from('messages')
+          .insert({
+            sender_id: session.user.id,
+            recipient_id: recipientId,
+            content,
+            is_read: false
+          })
+          .select('id');
+          
+        if (error) throw error;
+        return data;
+      }
+      
+      // New columns exist, use the updated schema
+      const insertData = {
+        sender_id: session.user.id,
+        recipient_id: recipientId,
+        content,
+        is_read: false,
+        message_type: type,
+        audio_url: audioUrl,
+        image_url: imageUrl
+      };
+      
+      const { data, error } = await supabase
+        .from('messages')
+        .insert(insertData)
+        .select('id');
+      
+      if (error) throw error;
+      
+      console.log("Message sent successfully:", data);
+      return data;
+    } catch (error) {
+      console.error("Error checking column existence:", error);
       throw error;
     }
-    
-    console.log("Message sent successfully:", data);
-    return data;
     
   } catch (error) {
     console.error("Failed to send message:", error);
@@ -105,24 +131,58 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
       throw new Error("No authenticated user found");
     }
     
-    // Fetch messages with full schema
-    const { data, error } = await supabase
+    // First check if the message_type column exists
+    const { error: columnCheckError } = await supabase
       .from('messages')
-      .select(`
-        id,
-        sender_id,
-        recipient_id,
-        content,
-        is_read,
-        created_at,
-        message_type,
-        audio_url,
-        image_url,
-        sender:sender_id(id, full_name, display_name, business_name, avatar_url),
-        recipient:recipient_id(id, full_name, display_name, business_name, avatar_url)
-      `)
-      .or(`sender_id.eq.${session.user.id},recipient_id.eq.${session.user.id}`)
-      .order('created_at');
+      .select('message_type')
+      .limit(1);
+      
+    let data;
+    let error;
+    
+    if (columnCheckError) {
+      console.log("Using legacy message schema without message_type");
+      // Use legacy schema query
+      const result = await supabase
+        .from('messages')
+        .select(`
+          id,
+          sender_id,
+          recipient_id,
+          content,
+          is_read,
+          created_at,
+          sender:sender_id(id, full_name, display_name, business_name, avatar_url),
+          recipient:recipient_id(id, full_name, display_name, business_name, avatar_url)
+        `)
+        .or(`sender_id.eq.${session.user.id},recipient_id.eq.${session.user.id}`)
+        .order('created_at');
+        
+      data = result.data;
+      error = result.error;
+    } else {
+      // Use new schema with message_type
+      const result = await supabase
+        .from('messages')
+        .select(`
+          id,
+          sender_id,
+          recipient_id,
+          content,
+          is_read,
+          created_at,
+          message_type,
+          audio_url,
+          image_url,
+          sender:sender_id(id, full_name, display_name, business_name, avatar_url),
+          recipient:recipient_id(id, full_name, display_name, business_name, avatar_url)
+        `)
+        .or(`sender_id.eq.${session.user.id},recipient_id.eq.${session.user.id}`)
+        .order('created_at');
+        
+      data = result.data;
+      error = result.error;
+    }
     
     if (error) {
       console.error("Error fetching messages:", error);
@@ -190,6 +250,7 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
         staffInfo?.avatar_url ||
         senderInfo?.avatar_url;
       
+      // Create message object with proper type handling
       return {
         id: msg.id || '',
         content: msg.content || '',
@@ -199,7 +260,7 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
         createdAt: msg.created_at || '',
         senderName: senderName,
         senderAvatar: senderAvatar,
-        type: msg.message_type as 'text' | 'voice' | 'image' || 'text',
+        type: (msg.message_type as 'text' | 'voice' | 'image') || 'text',
         audioUrl: msg.audio_url,
         imageUrl: msg.image_url
       };

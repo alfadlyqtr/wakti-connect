@@ -18,25 +18,60 @@ export const fetchConversations = async (staffOnly = false): Promise<Conversatio
       return [];
     }
     
-    // Get all conversations
-    const { data: messageData, error } = await supabase
+    // Check if the message_type column exists
+    const { error: columnCheckError } = await supabase
       .from('messages')
-      .select(`
-        id,
-        sender_id,
-        recipient_id,
-        content,
-        is_read,
-        created_at,
-        message_type,
-        audio_url,
-        image_url,
-        sender:sender_id(id, full_name, display_name, business_name, avatar_url),
-        recipient:recipient_id(id, full_name, display_name, business_name, avatar_url)
-      `)
-      .or(`sender_id.eq.${session.user.id},recipient_id.eq.${session.user.id}`)
-      .order('created_at', { ascending: false })
-      .limit(500);
+      .select('message_type')
+      .limit(1);
+      
+    let messageData;
+    let error;
+    
+    if (columnCheckError) {
+      console.log("Using legacy schema for conversations");
+      // Use legacy schema query
+      const result = await supabase
+        .from('messages')
+        .select(`
+          id,
+          sender_id,
+          recipient_id,
+          content,
+          is_read,
+          created_at,
+          sender:sender_id(id, full_name, display_name, business_name, avatar_url),
+          recipient:recipient_id(id, full_name, display_name, business_name, avatar_url)
+        `)
+        .or(`sender_id.eq.${session.user.id},recipient_id.eq.${session.user.id}`)
+        .order('created_at', { ascending: false })
+        .limit(500);
+        
+      messageData = result.data;
+      error = result.error;
+    } else {
+      // Use new schema with message_type
+      const result = await supabase
+        .from('messages')
+        .select(`
+          id,
+          sender_id,
+          recipient_id,
+          content,
+          is_read,
+          created_at,
+          message_type,
+          audio_url,
+          image_url,
+          sender:sender_id(id, full_name, display_name, business_name, avatar_url),
+          recipient:recipient_id(id, full_name, display_name, business_name, avatar_url)
+        `)
+        .or(`sender_id.eq.${session.user.id},recipient_id.eq.${session.user.id}`)
+        .order('created_at', { ascending: false })
+        .limit(500);
+        
+      messageData = result.data;
+      error = result.error;
+    }
     
     if (error) {
       console.error("Error fetching conversations:", error);
