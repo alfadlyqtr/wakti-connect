@@ -36,31 +36,31 @@ export const navItems: NavItem[] = [
     label: "Tasks",
     path: "tasks",
     icon: ListChecks,
-    showFor: ['free', 'individual', 'business'], // Staff can't see tasks
+    showFor: ['free', 'individual', 'business', 'staff'],
   },
   {
     label: "Events",
     path: "events",
     icon: PartyPopper,
-    showFor: ['free', 'individual', 'business'],
+    showFor: ['free', 'individual', 'business', 'staff'],
   },
   {
     label: "Bookings",
     path: "bookings",
     icon: Calendar,
-    showFor: ['business', 'staff'], // Staff can see bookings
+    showFor: ['business', 'staff'],
   },
   {
     label: "Jobs",
     path: "jobs",
     icon: KanbanSquare,
-    showFor: ['business'], // Business users go to the jobs page
+    showFor: ['business'],
   },
   {
     label: "Job Cards",
     path: "job-cards",
     icon: FileText,
-    showFor: ['staff'], // Staff users go directly to job-cards page
+    showFor: ['staff'],
   },
   {
     label: "Services",
@@ -78,7 +78,7 @@ export const navItems: NavItem[] = [
     label: "WAKTI AI",
     path: "ai-assistant",
     icon: Bot,
-    showFor: ['free', 'individual', 'business'],
+    showFor: ['free', 'individual', 'business', 'staff'],
   },
   {
     label: "Settings",
@@ -106,7 +106,7 @@ export const dropdownNavItems: NavItem[] = [
     label: "Messages",
     path: "messages",
     icon: MessageSquare,
-    showFor: ['free', 'individual', 'business'],
+    showFor: ['free', 'individual', 'business', 'staff'],
   },
   {
     label: "Business Page",
@@ -133,4 +133,3 @@ export const dropdownNavItems: NavItem[] = [
     showFor: ['business'],
   },
 ];
-

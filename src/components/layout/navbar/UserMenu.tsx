@@ -98,7 +98,7 @@ const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications, userRo
       label: 'Contacts', 
       path: '/dashboard/contacts', 
       badge: null,
-      showForRoles: ['free', 'individual', 'business']
+      showForRoles: ['free', 'individual', 'business', 'staff']
     },
   ];
   
