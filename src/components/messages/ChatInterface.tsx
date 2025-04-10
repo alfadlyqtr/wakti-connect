@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useMessaging } from "@/hooks/useMessaging";
@@ -5,11 +6,12 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import MessageList from "./chat/MessageList";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, UserCircle, Briefcase } from "lucide-react";
+import { ArrowLeft, UserCircle, Briefcase, Send } from "lucide-react";
 import MessageComposer from "./chat/MessageComposer";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { Avatar } from "@/components/ui/avatar"; 
-import { isUserProfile, type UserProfile, type StaffProfile } from "@/types/message.types";
+import { isUserProfile, type UserProfile, type StaffProfile, Message } from "@/types/message.types";
+import { toast } from "@/components/ui/use-toast";
 
 const ChatInterface: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -18,6 +20,8 @@ const ChatInterface: React.FC = () => {
   const [selectedUserData, setSelectedUserData] = useState<UserProfile | StaffProfile | null>(null);
   const [isStaff, setIsStaff] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [replyToMessage, setReplyToMessage] = useState<Message | null>(null);
+  const [replyContent, setReplyContent] = useState("");
   
   const { 
     messages, 
@@ -101,12 +105,35 @@ const ChatInterface: React.FC = () => {
         imageUrl
       });
       
+      // Clear the reply state after sending
+      setReplyToMessage(null);
+      setReplyContent("");
+      
       setTimeout(() => {
         refetchMessages();
       }, 500);
     } catch (error) {
       console.error("Error sending message:", error);
+      toast({
+        title: "Failed to send message",
+        description: "Please try again later",
+        variant: "destructive"
+      });
     }
+  };
+  
+  const handleReplyClick = (message: Message) => {
+    setReplyToMessage(message);
+    // Focus the message composer
+    const composerInput = document.querySelector('input[type="text"]');
+    if (composerInput) {
+      (composerInput as HTMLInputElement).focus();
+    }
+  };
+  
+  const handleCancelReply = () => {
+    setReplyToMessage(null);
+    setReplyContent("");
   };
   
   const handleGoBack = () => {
@@ -196,8 +223,24 @@ const ChatInterface: React.FC = () => {
       </div>
       
       <div className="flex-1 overflow-y-auto p-4">
-        <MessageList messages={messages} currentUserId={currentUserId || undefined} />
+        <MessageList 
+          messages={messages} 
+          currentUserId={currentUserId || undefined} 
+          onReplyClick={handleReplyClick}
+        />
       </div>
+      
+      {replyToMessage && (
+        <div className="p-2 bg-muted border-t flex items-start gap-2">
+          <div className="flex-1 text-sm">
+            <span className="text-xs font-medium">Replying to:</span>
+            <div className="truncate">{replyToMessage.content}</div>
+          </div>
+          <Button size="sm" variant="ghost" onClick={handleCancelReply}>
+            Cancel
+          </Button>
+        </div>
+      )}
       
       <div className="border-t p-3">
         <MessageComposer onSendMessage={handleSendMessage} isDisabled={!canMessage} />

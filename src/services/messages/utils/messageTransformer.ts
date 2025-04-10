@@ -1,53 +1,63 @@
 
 import { Message } from "@/types/message.types";
-import { UserProfile, StaffProfile } from "@/types/message.types";
 
 /**
- * Transforms raw message data from Supabase into Message objects
- * @param messageData Array of raw message objects from database
- * @param userProfiles Map of user profiles by ID
- * @param staffProfiles Object of staff profiles by ID
- * @returns Array of formatted Message objects
+ * Transforms raw message data from database into Message objects
  */
 export const transformMessages = (
   messageData: any[],
-  userProfiles: Map<string, UserProfile>,
-  staffProfiles: Record<string, StaffProfile>
+  userProfiles: Map<string, any>,
+  staffProfiles: Record<string, any>
 ): Message[] => {
-  if (!messageData || messageData.length === 0) {
-    return [];
-  }
-  
   return messageData.map(msg => {
-    // Get sender information from the profiles map
-    const senderProfile = userProfiles.get(msg.sender_id);
+    // Get sender profile from either user profiles or staff profiles
+    const senderProfile = userProfiles.get(msg.sender_id) || staffProfiles[msg.sender_id];
     
-    // Check if sender is a staff member
-    const staffInfo = staffProfiles[msg.sender_id];
+    // Get recipient profile from either user profiles or staff profiles
+    const recipientProfile = userProfiles.get(msg.recipient_id) || staffProfiles[msg.recipient_id];
     
-    // Use staff info if available, otherwise use profile info
-    const senderName = 
-      staffInfo?.name ||
-      senderProfile?.business_name || 
-      senderProfile?.display_name || 
-      senderProfile?.full_name || 
-      'Unknown User';
+    // Get sender name from the appropriate profile
+    let senderName = "User";
+    if (senderProfile) {
+      if ('name' in senderProfile) {
+        // Staff profile
+        senderName = senderProfile.name;
+      } else {
+        // User profile
+        senderName = senderProfile.business_name || senderProfile.display_name || senderProfile.full_name;
+      }
+    }
     
-    const senderAvatar = 
-      staffInfo?.profile_image_url ||
-      senderProfile?.avatar_url;
+    // Get recipient name from the appropriate profile
+    let recipientName = "User";
+    if (recipientProfile) {
+      if ('name' in recipientProfile) {
+        // Staff profile
+        recipientName = recipientProfile.name;
+      } else {
+        // User profile
+        recipientName = recipientProfile.business_name || recipientProfile.display_name || recipientProfile.full_name;
+      }
+    }
     
-    // Create message object with proper type handling
+    // Determine message type based on fields
+    let messageType: 'text' | 'voice' | 'image' = 'text';
+    if (msg.audio_url) {
+      messageType = 'voice';
+    } else if (msg.image_url) {
+      messageType = 'image';
+    }
+    
     return {
-      id: msg.id || '',
+      id: msg.id,
       content: msg.content || '',
-      senderId: msg.sender_id || '',
-      recipientId: msg.recipient_id || '',
-      isRead: msg.is_read || false,
-      createdAt: msg.created_at || '',
+      senderId: msg.sender_id,
       senderName: senderName,
-      senderAvatar: senderAvatar,
-      type: (msg.message_type as 'text' | 'voice' | 'image') || 'text',
+      recipientId: msg.recipient_id,
+      recipientName: recipientName,
+      isRead: msg.is_read,
+      createdAt: msg.created_at,
+      type: msg.message_type || messageType,
       audioUrl: msg.audio_url,
       imageUrl: msg.image_url
     };

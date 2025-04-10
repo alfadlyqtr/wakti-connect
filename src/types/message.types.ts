@@ -8,6 +8,7 @@ export interface Message {
   createdAt: string;
   senderName?: string;
   senderAvatar?: string;
+  recipientName?: string;
   type?: 'text' | 'voice' | 'image';
   audioUrl?: string;
   imageUrl?: string;
