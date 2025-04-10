@@ -2,16 +2,16 @@
 import React from 'react';
 import CreateSuperAdmin from '@/components/admin/CreateSuperAdmin';
 import LandingPage from '@/pages/public/LandingPage';
+import PricingPage from '@/pages/public/PricingPage';
+import FeaturesPage from '@/pages/public/FeaturesPage';
+import ContactPage from '@/pages/public/ContactPage';
+import AboutPage from '@/pages/public/AboutPage';
+import PrivacyPage from '@/pages/public/PrivacyPage';
+import TermsPage from '@/pages/public/TermsPage';
+import FaqPage from '@/pages/public/FaqPage';
 
-// Placeholder components for the missing pages
-// These can be replaced with actual implementations later
-const PrivacyPolicy = () => <div>Privacy Policy</div>;
-const TermsOfService = () => <div>Terms of Service</div>;
+// Placeholder component for the Helpdesk page
 const HelpdeskPage = () => <div>Helpdesk Page</div>;
-const AboutPage = () => <div>About Page</div>;
-const ContactPage = () => <div>Contact Page</div>;
-const PricingPage = () => <div>Pricing Page</div>;
-const BlogPage = () => <div>Blog Page</div>;
 
 export const publicRoutes = [
   {
@@ -20,11 +20,11 @@ export const publicRoutes = [
   },
   {
     path: '/privacy-policy',
-    element: <PrivacyPolicy />
+    element: <PrivacyPage />
   },
   {
     path: '/terms-of-service',
-    element: <TermsOfService />
+    element: <TermsPage />
   },
   {
     path: '/help',
@@ -43,8 +43,12 @@ export const publicRoutes = [
     element: <PricingPage />
   },
   {
-    path: '/blog',
-    element: <BlogPage />
+    path: '/features',
+    element: <FeaturesPage />
+  },
+  {
+    path: '/faq',
+    element: <FaqPage />
   },
   {
     path: '/create-super-admin',
