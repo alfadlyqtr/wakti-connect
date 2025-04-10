@@ -1,21 +1,9 @@
 
 import React from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import {
-  Home,
-  CalendarDays,
-  CheckSquare,
-  MessageSquare,
-  BookOpen,
-  Settings,
-  Users,
-  Star,
-  PanelLeft,
-  Plus,
-  Search,
-  Building,
-} from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Search } from "lucide-react";
+import { navItems } from "./sidebarNavConfig";
 
 interface SidebarNavItemsProps {
   onNavClick?: () => void;
@@ -31,81 +19,10 @@ const SidebarNavItems = ({
   const location = useLocation();
   const userRole = localStorage.getItem('userRole');
   
-  // Define the navigation items
-  const navItems = [
-    {
-      name: "Dashboard",
-      path: "/dashboard",
-      icon: Home,
-      excludeExact: true
-    },
-    {
-      name: "Tasks",
-      path: "/dashboard/tasks",
-      icon: CheckSquare,
-    },
-    {
-      name: "Calendar",
-      path: "/dashboard/events",
-      icon: CalendarDays,
-    },
-    {
-      name: "Messages",
-      path: "/dashboard/messages",
-      icon: MessageSquare,
-    },
-    {
-      name: "Contacts",
-      path: "/dashboard/contacts",
-      icon: Users,
-      hideFor: ['staff']
-    },
-    {
-      name: "Bookings",
-      path: "/dashboard/bookings",
-      icon: CalendarDays,
-      showOnlyFor: ['business', 'individual']
-    },
-    {
-      name: "Job Cards",
-      path: "/dashboard/job-cards",
-      icon: BookOpen,
-      showOnlyFor: ['business', 'staff']
-    },
-    {
-      name: "Jobs",
-      path: "/dashboard/jobs",
-      icon: PanelLeft,
-      showOnlyFor: ['business']
-    },
-    {
-      name: "Business",
-      path: "/dashboard/business",
-      icon: Building,
-      showOnlyFor: ['business']
-    },
-    {
-      name: "Subscribers",
-      path: "/dashboard/subscribers",
-      icon: Star,
-      showOnlyFor: ['business']
-    },
-    {
-      name: "Settings",
-      path: "/dashboard/settings",
-      icon: Settings
-    }
-  ];
-
   // Filter the navigation items based on the user's role
   const filteredNavItems = navItems.filter(item => {
-    // If the item should be hidden for certain roles
-    if (item.hideFor && item.hideFor.includes(userRole as string)) {
-      return false;
-    }
-    
     // If the item should only be shown for certain roles
-    if (item.showOnlyFor && !item.showOnlyFor.includes(userRole as string)) {
+    if (item.showFor && !item.showFor.includes(userRole as any)) {
       return false;
     }
     
@@ -127,18 +44,15 @@ const SidebarNavItems = ({
         >
           <Search className="h-5 w-5 shrink-0" />
           {!isCollapsed && <span className="ml-3">Search</span>}
-          {!isCollapsed && (
-            <span className="ml-auto text-xs text-muted-foreground opacity-60">⌘K</span>
-          )}
         </button>
       )}
       
       {filteredNavItems.map((item) => (
         <NavLink
           key={item.path}
-          to={item.path}
+          to={`/dashboard/${item.path}`}
           onClick={onNavClick}
-          end={!item.excludeExact}
+          end={item.path === ""}
           className={({ isActive }) => 
             cn(
               "flex items-center px-3 py-2 text-sm group rounded-md transition-colors",
@@ -150,7 +64,12 @@ const SidebarNavItems = ({
           }
         >
           <item.icon className="h-5 w-5 shrink-0" />
-          {!isCollapsed && <span className="ml-3">{item.name}</span>}
+          {!isCollapsed && <span className="ml-3">{item.label}</span>}
+          {!isCollapsed && item.badge && (
+            <span className="ml-auto bg-primary/10 text-primary px-1.5 py-0.5 rounded-full text-xs font-medium">
+              {item.badge}
+            </span>
+          )}
         </NavLink>
       ))}
     </nav>

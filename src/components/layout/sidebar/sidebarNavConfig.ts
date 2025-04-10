@@ -1,3 +1,4 @@
+
 import {
   LayoutDashboard,
   Settings,
@@ -13,7 +14,6 @@ import {
   FileText,
   Bot,
   MessageSquare,
-  Bookmark,
   Headphones
 } from "lucide-react";
 
@@ -51,22 +51,16 @@ export const navItems: NavItem[] = [
     showFor: ['business', 'staff'], // Staff can see bookings
   },
   {
-    label: "Messages",
-    path: "messages",
-    icon: MessageSquare,
-    showFor: ['individual', 'business'],
+    label: "Jobs",
+    path: "jobs",
+    icon: KanbanSquare,
+    showFor: ['business'], // Business users go to the jobs page
   },
   {
-    label: "WAKTI AI",
-    path: "ai-assistant",
-    icon: Bot,
-    showFor: ['free', 'individual', 'business'],
-  },
-  {
-    label: "Business Page",
-    path: "business-page",
-    icon: Building2,
-    showFor: ['business'],
+    label: "Job Cards",
+    path: "job-cards",
+    icon: FileText,
+    showFor: ['staff'], // Staff users go directly to job-cards page
   },
   {
     label: "Services",
@@ -81,28 +75,10 @@ export const navItems: NavItem[] = [
     showFor: ['business'],
   },
   {
-    label: "Jobs",
-    path: "jobs",
-    icon: KanbanSquare,
-    showFor: ['business'], // Business users go to the jobs page
-  },
-  {
-    label: "Job Cards",
-    path: "job-cards",
-    icon: FileText,
-    showFor: ['staff'], // Staff users go directly to job-cards page
-  },
-  {
-    label: "Analytics",
-    path: "analytics",
-    icon: BarChart2,
-    showFor: ['business'],
-  },
-  {
-    label: "Reports",
-    path: "reports",
-    icon: FileText,
-    showFor: ['business'],
+    label: "WAKTI AI",
+    path: "ai-assistant",
+    icon: Bot,
+    showFor: ['free', 'individual', 'business'],
   },
   {
     label: "Settings",
@@ -123,3 +99,38 @@ export const navItems: NavItem[] = [
     showFor: ['staff'],
   },
 ];
+
+// Items moved to dropdown menu - these are not in sidebar
+export const dropdownNavItems: NavItem[] = [
+  {
+    label: "Messages",
+    path: "messages",
+    icon: MessageSquare,
+    showFor: ['free', 'individual', 'business'],
+  },
+  {
+    label: "Business Page",
+    path: "business-page",
+    icon: Building2,
+    showFor: ['business'],
+  },
+  {
+    label: "Subscribers",
+    path: "subscribers",
+    icon: UserPlus,
+    showFor: ['business'],
+  },
+  {
+    label: "Analytics",
+    path: "analytics",
+    icon: BarChart2,
+    showFor: ['business'],
+  },
+  {
+    label: "Reports",
+    path: "reports",
+    icon: FileText,
+    showFor: ['business'],
+  },
+];
+

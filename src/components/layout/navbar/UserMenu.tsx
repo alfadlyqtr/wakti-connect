@@ -1,6 +1,6 @@
 
 import React from "react";
-import { User, Settings, LogOut, MessageSquare, Users, HeartHandshake, Bell } from "lucide-react";
+import { User, Settings, LogOut, MessageSquare, Users, HeartHandshake, Bell, BarChart2, FileText, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -17,6 +17,7 @@ import { useStaffWorkingStatus } from "@/hooks/staff/useStaffWorkingStatus";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import { UserRole } from "@/types/user";
+import { dropdownNavItems } from "../sidebar/sidebarNavConfig";
 
 interface UserMenuProps {
   isAuthenticated: boolean;
@@ -74,7 +75,7 @@ const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications, userRo
     }
   };
   
-  // Define nav items with proper typing
+  // Define core nav items with proper typing
   type NavItem = {
     icon: React.ElementType;
     label: string;
@@ -83,13 +84,14 @@ const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications, userRo
     showForRoles: UserRole[];
   };
   
-  const navItems: NavItem[] = [
+  // Core items always present in dropdown
+  const coreNavItems: NavItem[] = [
     { 
-      icon: MessageSquare, 
-      label: 'Messages', 
-      path: '/dashboard/messages', 
-      badge: unreadMessages.length > 0 ? unreadMessages.length : null,
-      showForRoles: ['free', 'individual', 'business']
+      icon: Bell, 
+      label: 'Notifications', 
+      path: '/dashboard/notifications', 
+      badge: notificationCount > 0 ? notificationCount : null,
+      showForRoles: ['free', 'individual', 'business', 'staff']
     },
     { 
       icon: Users, 
@@ -98,24 +100,26 @@ const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications, userRo
       badge: null,
       showForRoles: ['free', 'individual', 'business']
     },
-    { 
-      icon: HeartHandshake, 
-      label: 'Subscribers', 
-      path: '/dashboard/subscribers', 
-      badge: null,
-      showForRoles: ['business']
-    },
-    { 
-      icon: Bell, 
-      label: 'Notifications', 
-      path: '/dashboard/notifications', 
-      badge: notificationCount > 0 ? notificationCount : null,
-      showForRoles: ['free', 'individual', 'business', 'staff']
-    },
   ];
   
-  // Filter items based on user role
-  const filteredNavItems = navItems.filter(item => {
+  // Dynamic items from config file
+  const configNavItems: NavItem[] = dropdownNavItems.map(item => ({
+    icon: item.icon,
+    label: item.label,
+    path: `/dashboard/${item.path}`,
+    badge: item.badge || null,
+    showForRoles: item.showFor as UserRole[]
+  }));
+  
+  // Special handling for Messages to show badge
+  const messagesItem = configNavItems.find(item => item.label === 'Messages');
+  if (messagesItem) {
+    messagesItem.badge = unreadMessages.length > 0 ? unreadMessages.length : null;
+  }
+  
+  // Combined and filtered navigation items
+  const allNavItems = [...coreNavItems, ...configNavItems];
+  const filteredNavItems = allNavItems.filter(item => {
     // If userRole is undefined or null, don't show restricted items
     if (!userRole) return false;
     
@@ -153,7 +157,7 @@ const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications, userRo
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         
-        {/* Nav items now displayed here in dropdown */}
+        {/* Nav items displayed here in dropdown */}
         <div className="px-2 py-1.5">
           {filteredNavItems.map((item, index) => (
             <Link 
