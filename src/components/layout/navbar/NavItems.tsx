@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { fetchUnreadNotificationsCount } from "@/services/notifications/notificationService";
 import { MessageSquare, Users, HeartHandshake, Bell } from "lucide-react";
+import { UserRole } from "@/types/user";
 
 // This component is no longer used in the navbar directly,
 // but keeping it for any other places that might reference it.
@@ -15,14 +16,13 @@ interface NavItem {
   label: string;
   path: string;
   badge: number | null;
-  showForBusiness?: boolean;
-  hideForStaff?: boolean;
+  showForRoles: UserRole[];
 }
 
 interface NavItemsProps {
   unreadMessages: any[];
   unreadNotifications: any[];
-  userRole?: string | null;
+  userRole?: UserRole | null;
   isMobile?: boolean;
 }
 
@@ -41,45 +41,35 @@ const NavItems = ({ unreadMessages, unreadNotifications, userRole, isMobile = fa
       label: 'Messages', 
       path: '/dashboard/messages', 
       badge: unreadMessages.length > 0 ? unreadMessages.length : null,
-      hideForStaff: true // Hide from staff
+      showForRoles: ['free', 'individual', 'business']
     },
     { 
       icon: Users, 
       label: 'Contacts', 
       path: '/dashboard/contacts', 
       badge: null,
-      hideForStaff: true // Hide from staff
+      showForRoles: ['free', 'individual', 'business']
     },
     { 
       icon: HeartHandshake, 
       label: 'Subscribers', 
       path: '/dashboard/subscribers', 
       badge: null,
-      showForBusiness: true, // Only show for business
-      hideForStaff: true // Hide from staff
+      showForRoles: ['business']
     },
     { 
       icon: Bell, 
       label: 'Notifications', 
       path: '/dashboard/notifications', 
       badge: notificationCount > 0 ? notificationCount : null,
-      hideForStaff: true // Hide from staff
+      showForRoles: ['free', 'individual', 'business', 'staff']
     },
   ];
 
   // Filter items based on user role
   const filteredItems = navItems.filter(item => {
-    // Hide items from staff
-    if (item.hideForStaff && userRole === 'staff') {
-      return false;
-    }
-    
-    // Only show business-specific items to business users
-    if (item.showForBusiness && userRole !== 'business') {
-      return false;
-    }
-    
-    return true;
+    // If the user's role is in the showForRoles array, show the item
+    return item.showForRoles.includes(userRole as UserRole);
   });
 
   return (

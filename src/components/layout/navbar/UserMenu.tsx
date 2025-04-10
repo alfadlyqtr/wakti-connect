@@ -22,14 +22,12 @@ interface UserMenuProps {
   isAuthenticated: boolean;
   unreadMessages: any[];
   unreadNotifications: any[];
-  userRole?: string | null;
+  userRole?: UserRole | null;
 }
 
 const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications, userRole }: UserMenuProps) => {
   const { data: staffStatus } = useStaffWorkingStatus();
   const isWorking = staffStatus?.isWorking || false;
-  const isStaff = userRole === 'staff';
-  const isBusiness = userRole === 'business';
   
   // Fetch user profile data for displaying name
   const { data: profileData } = useQuery({
