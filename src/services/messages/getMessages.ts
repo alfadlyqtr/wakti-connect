@@ -128,15 +128,21 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
     let staffProfiles: Record<string, any> = {};
     
     if (conversationUserId) {
-      // Fixed query: Use in() instead of or() with eq()
-      const { data: staffData } = await supabase
+      console.log("Fetching staff profiles for:", [conversationUserId, session.user.id]);
+      
+      // Fixed query: Use in() instead of or() with eq() - correctly implemented
+      const { data: staffData, error: staffError } = await supabase
         .from('business_staff')
         .select('staff_id, name, profile_image_url')
         .in('staff_id', [conversationUserId, session.user.id])
         .eq('status', 'active');
-        
+      
+      if (staffError) {
+        console.error("Error fetching staff profiles:", staffError);
+      }
+      
       if (staffData && Array.isArray(staffData)) {
-        console.log("Staff profiles found:", staffData.length);
+        console.log("Staff profiles found:", staffData.length, staffData);
         staffData.forEach(staff => {
           staffProfiles[staff.staff_id] = {
             name: staff.name,
