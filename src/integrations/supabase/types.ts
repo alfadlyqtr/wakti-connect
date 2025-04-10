@@ -1274,28 +1274,37 @@ export type Database = {
       }
       messages: {
         Row: {
-          content: string
+          audio_url: string | null
+          content: string | null
           created_at: string
           id: string
+          image_url: string | null
           is_read: boolean
+          message_type: string
           recipient_id: string
           sender_id: string
           updated_at: string
         }
         Insert: {
-          content: string
+          audio_url?: string | null
+          content?: string | null
           created_at?: string
           id?: string
+          image_url?: string | null
           is_read?: boolean
+          message_type?: string
           recipient_id: string
           sender_id: string
           updated_at?: string
         }
         Update: {
-          content?: string
+          audio_url?: string | null
+          content?: string | null
           created_at?: string
           id?: string
+          image_url?: string | null
           is_read?: boolean
+          message_type?: string
           recipient_id?: string
           sender_id?: string
           updated_at?: string

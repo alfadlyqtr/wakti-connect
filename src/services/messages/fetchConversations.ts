@@ -29,7 +29,7 @@ export const fetchConversations = async (staffOnly = false): Promise<Conversatio
     
     if (columnCheckError) {
       console.log("Using legacy schema for conversations");
-      // Use legacy schema query
+      // Use legacy schema query with explicit joins instead of relationship syntax
       const result = await supabase
         .from('messages')
         .select(`
@@ -38,9 +38,7 @@ export const fetchConversations = async (staffOnly = false): Promise<Conversatio
           recipient_id,
           content,
           is_read,
-          created_at,
-          sender:sender_id(id, full_name, display_name, business_name, avatar_url),
-          recipient:recipient_id(id, full_name, display_name, business_name, avatar_url)
+          created_at
         `)
         .or(`sender_id.eq.${session.user.id},recipient_id.eq.${session.user.id}`)
         .order('created_at', { ascending: false })
@@ -48,8 +46,39 @@ export const fetchConversations = async (staffOnly = false): Promise<Conversatio
         
       messageData = result.data;
       error = result.error;
+      
+      // If we have data, fetch profile information separately for senders and recipients
+      if (messageData && messageData.length > 0) {
+        // Get unique user IDs from messages (both senders and recipients)
+        const userIds = new Set<string>();
+        messageData.forEach(msg => {
+          userIds.add(msg.sender_id);
+          userIds.add(msg.recipient_id);
+        });
+        
+        // Fetch profiles for all these users
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, full_name, display_name, business_name, avatar_url')
+          .in('id', Array.from(userIds));
+          
+        const profilesMap = new Map();
+        if (profilesData) {
+          profilesData.forEach(profile => {
+            profilesMap.set(profile.id, profile);
+          });
+        }
+        
+        // Append profile data to messages
+        messageData = messageData.map(msg => ({
+          ...msg,
+          sender: profilesMap.get(msg.sender_id) || null,
+          recipient: profilesMap.get(msg.recipient_id) || null
+        }));
+      }
     } else {
-      // Use new schema with message_type
+      console.log("Using new schema with message_type");
+      // Use new schema with message_type and explicit joins
       const result = await supabase
         .from('messages')
         .select(`
@@ -61,9 +90,7 @@ export const fetchConversations = async (staffOnly = false): Promise<Conversatio
           created_at,
           message_type,
           audio_url,
-          image_url,
-          sender:sender_id(id, full_name, display_name, business_name, avatar_url),
-          recipient:recipient_id(id, full_name, display_name, business_name, avatar_url)
+          image_url
         `)
         .or(`sender_id.eq.${session.user.id},recipient_id.eq.${session.user.id}`)
         .order('created_at', { ascending: false })
@@ -71,6 +98,36 @@ export const fetchConversations = async (staffOnly = false): Promise<Conversatio
         
       messageData = result.data;
       error = result.error;
+      
+      // If we have data, fetch profile information separately
+      if (messageData && messageData.length > 0) {
+        // Get unique user IDs from messages
+        const userIds = new Set<string>();
+        messageData.forEach(msg => {
+          userIds.add(msg.sender_id);
+          userIds.add(msg.recipient_id);
+        });
+        
+        // Fetch profiles for all these users
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, full_name, display_name, business_name, avatar_url')
+          .in('id', Array.from(userIds));
+          
+        const profilesMap = new Map();
+        if (profilesData) {
+          profilesData.forEach(profile => {
+            profilesMap.set(profile.id, profile);
+          });
+        }
+        
+        // Append profile data to messages
+        messageData = messageData.map(msg => ({
+          ...msg,
+          sender: profilesMap.get(msg.sender_id) || null,
+          recipient: profilesMap.get(msg.recipient_id) || null
+        }));
+      }
     }
     
     if (error) {
@@ -148,12 +205,20 @@ export const fetchConversations = async (staffOnly = false): Promise<Conversatio
         // Check if there are any unread messages from this user
         const isUnread = msg.recipient_id === session.user.id && !msg.is_read;
         
+        // Format the last message preview based on the message type
+        let lastMessage = msg.content || '';
+        if (msg.message_type === 'voice') {
+          lastMessage = 'Voice Message';
+        } else if (msg.message_type === 'image') {
+          lastMessage = 'Image Message';
+        }
+        
         conversationMap.set(otherUserId, {
           id: otherUserId,
           userId: otherUserId,
           displayName,
           avatar: profileData?.avatar_url,
-          lastMessage: msg.content || '',
+          lastMessage,
           lastMessageTime: msg.created_at || new Date().toISOString(),
           unread: isUnread
         });
