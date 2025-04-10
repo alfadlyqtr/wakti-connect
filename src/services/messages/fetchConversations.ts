@@ -18,38 +18,22 @@ export const fetchConversations = async (staffOnly = false): Promise<Conversatio
       return [];
     }
     
-    // Check if messages table has the required columns
-    const { data: columnCheck, error: columnError } = await supabase
-      .from('messages')
-      .select('message_type')
-      .limit(1);
-      
-    const hasExtendedSchema = !columnError;
-    
-    // Construct the select query based on available columns
-    let selectQuery = `
-      id,
-      sender_id,
-      recipient_id,
-      content,
-      is_read,
-      created_at,
-      sender:sender_id(id, full_name, display_name, business_name, avatar_url),
-      recipient:recipient_id(id, full_name, display_name, business_name, avatar_url)
-    `;
-    
-    if (hasExtendedSchema) {
-      selectQuery += `,
-        message_type,
-        audio_url,
-        image_url
-      `;
-    }
-    
     // Get all conversations
     const { data: messageData, error } = await supabase
       .from('messages')
-      .select(selectQuery)
+      .select(`
+        id,
+        sender_id,
+        recipient_id,
+        content,
+        is_read,
+        created_at,
+        message_type,
+        audio_url,
+        image_url,
+        sender:sender_id(id, full_name, display_name, business_name, avatar_url),
+        recipient:recipient_id(id, full_name, display_name, business_name, avatar_url)
+      `)
       .or(`sender_id.eq.${session.user.id},recipient_id.eq.${session.user.id}`)
       .order('created_at', { ascending: false })
       .limit(500);
