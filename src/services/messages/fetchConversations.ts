@@ -1,20 +1,34 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Conversation } from "@/types/message.types";
-import { formatDistanceToNow } from "date-fns";
+import { isUserStaff, getStaffBusinessId } from "@/utils/staffUtils";
 
-export const fetchConversations = async (staffOnly: boolean = false): Promise<Conversation[]> => {
+/**
+ * Fetches all conversations for the current user
+ * 
+ * @param staffOnly Whether to only include staff conversations
+ * @returns Promise with array of conversations
+ */
+export const fetchConversations = async (staffOnly = false): Promise<Conversation[]> => {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session?.user) {
-      throw new Error("No authenticated user found");
+      console.log("No authenticated user found");
+      return [];
     }
     
-    const currentUserId = session.user.id;
-    const isStaff = localStorage.getItem('userRole') === 'staff';
+    // Check if message_type column exists
+    const { data: columnsData } = await supabase
+      .from('_metadata')
+      .select('id')
+      .eq('table_name', 'messages')
+      .maybeSingle();
     
-    // Get all messages to/from the current user
-    const { data: messagesData, error: messagesError } = await supabase
+    const hasNewColumns = !!columnsData;
+    
+    // Get all conversations
+    const { data: messageData, error } = await supabase
       .from('messages')
       .select(`
         id,
@@ -23,149 +37,105 @@ export const fetchConversations = async (staffOnly: boolean = false): Promise<Co
         content,
         is_read,
         created_at,
-        message_type,
+        ${hasNewColumns ? 'message_type, audio_url, image_url,' : ''}
         sender:sender_id(id, full_name, display_name, business_name, avatar_url),
         recipient:recipient_id(id, full_name, display_name, business_name, avatar_url)
       `)
-      .or(`sender_id.eq.${currentUserId},recipient_id.eq.${currentUserId}`)
-      .order('created_at', { ascending: false });
-      
-    if (messagesError) {
-      throw messagesError;
+      .or(`sender_id.eq.${session.user.id},recipient_id.eq.${session.user.id}`)
+      .order('created_at', { ascending: false })
+      .limit(500);
+    
+    if (error) {
+      console.error("Error fetching conversations:", error);
+      return [];
     }
     
-    // Get staff records for staff-specific handling
-    let staffProfiles: Record<string, any> = {};
+    if (!messageData || messageData.length === 0) {
+      return [];
+    }
     
-    if (isStaff || staffOnly) {
-      let businessId = currentUserId;
+    // For staff member filtering
+    let staffBusinessId: string | null = null;
+    let filteredContactIds: string[] = [];
+    
+    if (staffOnly) {
+      const userIsStaff = await isUserStaff();
       
-      // If current user is staff, get their business ID
-      if (isStaff) {
-        const { data: staffData } = await supabase
-          .from('business_staff')
-          .select('business_id')
-          .eq('staff_id', currentUserId)
-          .eq('status', 'active')
-          .maybeSingle();
-          
-        if (staffData?.business_id) {
-          businessId = staffData.business_id;
-        }
-      }
-      
-      // Get all staff for this business
-      const { data: allStaffData } = await supabase
-        .from('business_staff')
-        .select('staff_id, name, profile_image_url, business_id')
-        .eq('status', 'active')
-        .or(`business_id.eq.${businessId},staff_id.eq.${currentUserId}`);
+      if (userIsStaff) {
+        // If user is staff, get their business ID
+        staffBusinessId = await getStaffBusinessId();
         
-      if (allStaffData) {
-        allStaffData.forEach(staff => {
-          staffProfiles[staff.staff_id] = {
-            name: staff.name,
-            avatar_url: staff.profile_image_url,
-            business_id: staff.business_id
-          };
-        });
+        if (staffBusinessId) {
+          // Get the business owner ID (same as business ID)
+          filteredContactIds.push(staffBusinessId);
+          
+          // Get IDs of other staff members
+          const { data: otherStaff } = await supabase
+            .from('business_staff')
+            .select('staff_id')
+            .eq('business_id', staffBusinessId)
+            .neq('staff_id', session.user.id)
+            .eq('status', 'active');
+            
+          if (otherStaff) {
+            filteredContactIds = [...filteredContactIds, ...otherStaff.map(s => s.staff_id)];
+          }
+        }
       }
     }
     
     // Process messages into conversations
-    const conversations: Record<string, any> = {};
+    const conversationMap = new Map<string, Conversation>();
     
-    messagesData?.forEach(message => {
-      // Determine the other user in the conversation
-      const otherUserId = message.sender_id === currentUserId ? message.recipient_id : message.sender_id;
+    for (const message of messageData) {
+      // Determine the other user ID (conversation partner)
+      const otherUserId = message.sender_id === session.user.id 
+        ? message.recipient_id 
+        : message.sender_id;
       
-      // Skip if we're only looking for staff conversations and this isn't one
-      if (staffOnly) {
-        const isStaffConversation = 
-          staffProfiles[otherUserId] || // Other user is staff
-          (isStaff && staffProfiles[currentUserId]?.business_id === otherUserId); // Other user is the business
-          
-        if (!isStaffConversation) {
-          return;
-        }
+      // Skip if this is not a staff conversation when staffOnly is true
+      if (staffOnly && !filteredContactIds.includes(otherUserId)) {
+        continue;
       }
       
-      // Initialize conversation if this is the first message
-      if (!conversations[otherUserId]) {
-        // Get user info for display
-        let displayName = 'Unknown User';
-        let avatar = undefined;
+      // Get profile data for the other user
+      const profileData = message.sender_id === session.user.id 
+        ? message.recipient 
+        : message.sender;
         
-        // Check if this is a staff member
-        if (staffProfiles[otherUserId]) {
-          displayName = staffProfiles[otherUserId].name;
-          avatar = staffProfiles[otherUserId].avatar_url;
-        } else {
-          // Otherwise get from profiles
-          const userInfo = message.sender_id === otherUserId ? message.sender : message.recipient;
-          
-          if (userInfo) {
-            displayName = 
-              userInfo.business_name || 
-              userInfo.display_name || 
-              userInfo.full_name || 
-              'Unknown User';
-            
-            avatar = userInfo.avatar_url;
-          }
-        }
+      if (!profileData) continue;
+      
+      // If this conversation hasn't been processed yet or this message is newer
+      if (!conversationMap.has(otherUserId) || 
+          new Date(message.created_at) > new Date(conversationMap.get(otherUserId)!.lastMessageTime)) {
         
-        conversations[otherUserId] = {
+        // Format display name (business name > display name > full name)
+        const displayName = (profileData as any)?.business_name || 
+                           (profileData as any)?.display_name || 
+                           (profileData as any)?.full_name || 
+                           'Unknown User';
+        
+        // Check if there are any unread messages from this user
+        const isUnread = message.recipient_id === session.user.id && !message.is_read;
+        
+        conversationMap.set(otherUserId, {
           id: otherUserId,
           userId: otherUserId,
           displayName,
-          avatar,
-          messages: [],
-          unread: false
-        };
+          avatar: (profileData as any)?.avatar_url,
+          lastMessage: message.content,
+          lastMessageTime: message.created_at,
+          unread: isUnread
+        });
       }
-      
-      // Track if conversation has unread messages
-      if (message.recipient_id === currentUserId && !message.is_read) {
-        conversations[otherUserId].unread = true;
-      }
-      
-      // Add message to conversation
-      conversations[otherUserId].messages.push(message);
-    });
+    }
     
-    // Format conversations for return
-    return Object.values(conversations)
-      .map((convo: any) => {
-        // Get the latest message
-        const latestMessage = convo.messages[0];
-        
-        // Format the last message content based on type
-        let lastMessage = latestMessage.content;
-        if (latestMessage.message_type === 'voice') {
-          lastMessage = '🎤 Voice message';
-        } else if (latestMessage.message_type === 'image') {
-          lastMessage = '📷 Image' + (latestMessage.content ? `: ${latestMessage.content}` : '');
-        }
-        
-        return {
-          id: convo.id,
-          userId: convo.userId,
-          displayName: convo.displayName,
-          avatar: convo.avatar,
-          lastMessage,
-          lastMessageTime: formatDistanceToNow(new Date(latestMessage.created_at), { addSuffix: true }),
-          unread: convo.unread
-        } as Conversation;
-      })
-      .sort((a, b) => {
-        // Show unread conversations first
-        if (a.unread && !b.unread) return -1;
-        if (!a.unread && b.unread) return 1;
-        return 0;
-      });
+    // Sort conversations by last message time (newest first)
+    return Array.from(conversationMap.values())
+      .sort((a, b) => new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime());
+    
   } catch (error) {
-    console.error('Error fetching conversations:', error);
+    console.error("Error fetching conversations:", error);
     return [];
   }
 };

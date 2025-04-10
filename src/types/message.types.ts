@@ -27,6 +27,7 @@ export type UserProfile = {
   id: string;
   full_name: string;
   display_name: string;
+  business_name?: string;
   avatar_url?: string;
 };
 

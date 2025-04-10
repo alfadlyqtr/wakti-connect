@@ -165,7 +165,7 @@ const ChatInterface: React.FC = () => {
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center text-red-500">
             <p>An error occurred loading the conversation.</p>
-            <Button variant="outline" onClick={refetchMessages} className="mt-2">
+            <Button variant="outline" onClick={() => refetchMessages()} className="mt-2">
               Try Again
             </Button>
           </div>

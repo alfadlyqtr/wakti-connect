@@ -29,18 +29,31 @@ export const sendMessage = async (
     
     console.log(`Sending ${type} message to:`, recipientId, "Content:", content);
     
+    // Check if the messages table has the message_type column
+    const { data: columnsData } = await supabase
+      .from('_metadata')
+      .select('id')
+      .eq('table_name', 'messages')
+      .single();
+      
     // Insert the message
+    const insertData: any = {
+      sender_id: session.user.id,
+      recipient_id: recipientId,
+      content,
+      is_read: false
+    };
+    
+    // Add the new fields only if they exist in the table schema
+    if (columnsData) {
+      insertData.message_type = type;
+      insertData.audio_url = audioUrl;
+      insertData.image_url = imageUrl;
+    }
+    
     const { data, error } = await supabase
       .from('messages')
-      .insert({
-        sender_id: session.user.id,
-        recipient_id: recipientId,
-        content,
-        is_read: false,
-        message_type: type,
-        audio_url: audioUrl,
-        image_url: imageUrl
-      })
+      .insert(insertData)
       .select('id');
     
     if (error) {
@@ -102,6 +115,16 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
       throw new Error("No authenticated user found");
     }
     
+    // Check if message_type column exists
+    const { data: columnsData, error: columnsError } = await supabase
+      .from('_metadata')
+      .select('id')
+      .eq('table_name', 'messages')
+      .maybeSingle();
+    
+    const hasNewColumns = !!columnsData;
+    
+    // Build query based on available columns
     let query = supabase
       .from('messages')
       .select(`
@@ -111,11 +134,9 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
         content,
         is_read,
         created_at,
-        message_type,
-        audio_url,
-        image_url,
         sender:sender_id(id, full_name, display_name, business_name, avatar_url),
         recipient:recipient_id(id, full_name, display_name, business_name, avatar_url)
+        ${hasNewColumns ? ', message_type, audio_url, image_url' : ''}
       `)
       .or(`sender_id.eq.${session.user.id},recipient_id.eq.${session.user.id}`)
       .order('created_at');
@@ -188,9 +209,9 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
         createdAt: msg.created_at || '',
         senderName: senderName,
         senderAvatar: senderAvatar,
-        type: msg.message_type as 'text' | 'voice' | 'image' || 'text',
-        audioUrl: msg.audio_url,
-        imageUrl: msg.image_url
+        type: (hasNewColumns && msg.message_type) ? msg.message_type as 'text' | 'voice' | 'image' : 'text',
+        audioUrl: hasNewColumns ? msg.audio_url : undefined,
+        imageUrl: hasNewColumns ? msg.image_url : undefined
       };
     }) || [];
     
