@@ -17,7 +17,7 @@ const CreateSuperAdmin: React.FC = () => {
     setMessage("");
     
     try {
-      const email = "admin@tmw.qa";
+      const email = "alfadly@me.com";
       const password = "Ohcanada@00974";
 
       // Step 1: Create the user account
@@ -131,7 +131,7 @@ const CreateSuperAdmin: React.FC = () => {
         <CardDescription>
           This will create a super admin account with the credentials:
           <br />
-          Email: admin@tmw.qa
+          Email: alfadly@me.com
           <br />
           Password: Ohcanada@00974
         </CardDescription>

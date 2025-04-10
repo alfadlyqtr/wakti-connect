@@ -7,7 +7,7 @@ import { createAuditLog } from "@/types/auditLogs";
  * This should be executed once to set up the initial admin account
  */
 async function createSuperAdmin() {
-  const email = "admin@tmw.qa";
+  const email = "alfadly@me.com";
   const password = "Ohcanada@00974";
   
   console.log("Starting super admin account creation process...");

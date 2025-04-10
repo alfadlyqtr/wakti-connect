@@ -14,7 +14,7 @@ async function runCreateSuperAdmin() {
   // Create Supabase admin client with service role key
   const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
   
-  const email = "admin@tmw.qa";
+  const email = "alfadly@me.com";
   const password = "Ohcanada@00974";
   
   try {
