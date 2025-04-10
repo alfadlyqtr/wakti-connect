@@ -30,27 +30,16 @@ export const sendMessage = async (
     
     console.log(`Sending ${type} message to:`, recipientId, "Content:", content);
     
-    // Check if the messages table has the message_type column
-    const { data: columnsData } = await supabase
-      .from('_metadata')
-      .select('id')
-      .eq('table_name', 'messages')
-      .single();
-      
-    // Insert the message
-    const insertData: any = {
+    // Insert the message with all fields
+    const insertData = {
       sender_id: session.user.id,
       recipient_id: recipientId,
       content,
-      is_read: false
+      is_read: false,
+      message_type: type,
+      audio_url: audioUrl,
+      image_url: imageUrl
     };
-    
-    // Add the new fields only if they exist in the table schema
-    if (columnsData) {
-      insertData.message_type = type;
-      insertData.audio_url = audioUrl;
-      insertData.image_url = imageUrl;
-    }
     
     const { data, error } = await supabase
       .from('messages')
@@ -116,241 +105,111 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
       throw new Error("No authenticated user found");
     }
     
-    // First check if message_type column exists
-    try {
-      // Try to fetch messages with new columns structure
-      const { data, error } = await supabase
-        .from('messages')
-        .select(`
-          id,
-          sender_id,
-          recipient_id,
-          content,
-          is_read,
-          created_at,
-          message_type,
-          audio_url,
-          image_url,
-          sender:sender_id(id, full_name, display_name, business_name, avatar_url),
-          recipient:recipient_id(id, full_name, display_name, business_name, avatar_url)
-        `)
-        .or(`sender_id.eq.${session.user.id},recipient_id.eq.${session.user.id}`)
-        .order('created_at');
-      
-      if (error) {
-        // This indicates the query failed due to missing columns
-        console.error("Error with new column structure:", error);
-        throw error;
-      }
-      
-      // If no data or empty array, return empty array
-      if (!data || data.length === 0) {
-        return [];
-      }
-      
-      // If a specific conversation user is provided, filter for only messages between the current user and that user
-      let filteredData = data;
-      
-      if (conversationUserId) {
-        // Type check: Ensure data is an array of objects with the expected properties
-        if (Array.isArray(data) && data.every(item => typeof item === 'object' && item !== null)) {
-          filteredData = data.filter(msg => {
-            if (msg === null) return false;
-            
-            // Safely check properties
-            const msgSenderId = (msg as any).sender_id;
-            const msgRecipientId = (msg as any).recipient_id;
-            
-            return (
-              (msgSenderId === session.user.id && msgRecipientId === conversationUserId) ||
-              (msgSenderId === conversationUserId && msgRecipientId === session.user.id)
-            );
-          });
-        } else {
-          console.error("Unexpected data format:", data);
-          return [];
-        }
-      }
-      
-      // Check if these are staff messages
-      const isStaff = localStorage.getItem('userRole') === 'staff';
-      
-      // Get staff profiles if needed
-      let staffProfiles: Record<string, any> = {};
-      
-      if (conversationUserId) {
-        const { data: staffData } = await supabase
-          .from('business_staff')
-          .select('staff_id, name, profile_image_url')
-          .or(`staff_id.eq.${conversationUserId},staff_id.eq.${session.user.id}`)
-          .eq('status', 'active');
-          
-        if (staffData && Array.isArray(staffData)) {
-          console.log("Staff profiles found:", staffData.length);
-          staffData.forEach(staff => {
-            staffProfiles[staff.staff_id] = {
-              name: staff.name,
-              avatar_url: staff.profile_image_url
-            };
-          });
-        }
-      }
-      
-      // Transform the data to match the Message interface
-      const messages: Message[] = filteredData.map(msg => {
-        if (!msg) return {} as Message;
+    // Fetch messages with full schema
+    const { data, error } = await supabase
+      .from('messages')
+      .select(`
+        id,
+        sender_id,
+        recipient_id,
+        content,
+        is_read,
+        created_at,
+        message_type,
+        audio_url,
+        image_url,
+        sender:sender_id(id, full_name, display_name, business_name, avatar_url),
+        recipient:recipient_id(id, full_name, display_name, business_name, avatar_url)
+      `)
+      .or(`sender_id.eq.${session.user.id},recipient_id.eq.${session.user.id}`)
+      .order('created_at');
+    
+    if (error) {
+      console.error("Error fetching messages:", error);
+      throw error;
+    }
+    
+    // If no data or empty array, return empty array
+    if (!data || data.length === 0) {
+      return [];
+    }
+    
+    // If a specific conversation user is provided, filter for only messages between the current user and that user
+    let filteredData = data;
+    
+    if (conversationUserId) {
+      filteredData = data.filter(msg => {
+        if (!msg) return false;
         
-        // Type cast to access properties safely
-        const typedMsg = msg as any;
-        
-        // Get sender information with safe property access
-        const senderInfo = typedMsg.sender || {};
-        
-        // Check if sender is a staff member
-        const staffInfo = staffProfiles[typedMsg.sender_id];
-        
-        // Use staff info if available, otherwise use profile info
-        const senderName = 
-          staffInfo?.name ||
-          (senderInfo && typeof senderInfo === 'object' ? (senderInfo as any)?.business_name : undefined) || 
-          (senderInfo && typeof senderInfo === 'object' ? (senderInfo as any)?.display_name : undefined) || 
-          (senderInfo && typeof senderInfo === 'object' ? (senderInfo as any)?.full_name : undefined) || 
-          'Unknown User';
-        
-        const senderAvatar = 
-          staffInfo?.avatar_url ||
-          (senderInfo && typeof senderInfo === 'object' ? (senderInfo as any)?.avatar_url : undefined);
-        
-        return {
-          id: typedMsg.id || '',
-          content: typedMsg.content || '',
-          senderId: typedMsg.sender_id || '',
-          recipientId: typedMsg.recipient_id || '',
-          isRead: typedMsg.is_read || false,
-          createdAt: typedMsg.created_at || '',
-          senderName: senderName,
-          senderAvatar: senderAvatar,
-          type: typedMsg.message_type as 'text' | 'voice' | 'image' || 'text',
-          audioUrl: typedMsg.audio_url,
-          imageUrl: typedMsg.image_url
-        };
+        return (
+          (msg.sender_id === session.user.id && msg.recipient_id === conversationUserId) ||
+          (msg.sender_id === conversationUserId && msg.recipient_id === session.user.id)
+        );
       });
-      
-      return messages;
-    } catch (columnError) {
-      console.log("Error with new columns, falling back to old schema:", columnError);
-      
-      // Fallback to old schema without message_type column
-      const { data, error } = await supabase
-        .from('messages')
-        .select(`
-          id,
-          sender_id,
-          recipient_id,
-          content,
-          is_read,
-          created_at,
-          sender:sender_id(id, full_name, display_name, business_name, avatar_url),
-          recipient:recipient_id(id, full_name, display_name, business_name, avatar_url)
-        `)
-        .or(`sender_id.eq.${session.user.id},recipient_id.eq.${session.user.id}`)
-        .order('created_at');
-      
-      if (error) {
-        console.error("Error fetching messages:", error);
-        throw error;
-      }
-      
-      if (!data) {
-        return [];
-      }
-      
-      // If a specific conversation user is provided, filter for only messages between the current user and that user
-      let filteredData = data;
-      
-      if (conversationUserId && Array.isArray(data)) {
-        // Type check: Ensure data is an array of objects with the expected properties
-        filteredData = data.filter(msg => {
-          if (!msg || typeof msg !== 'object') return false;
-          
-          // Safely check properties using type assertion
-          const typedMsg = msg as any;
-          const msgSenderId = typedMsg.sender_id;
-          const msgRecipientId = typedMsg.recipient_id;
-          
-          return (
-            (msgSenderId === session.user.id && msgRecipientId === conversationUserId) ||
-            (msgSenderId === conversationUserId && msgRecipientId === session.user.id)
-          );
+    }
+    
+    // Check if these are staff messages
+    const isStaff = localStorage.getItem('userRole') === 'staff';
+    
+    // Get staff profiles if needed
+    let staffProfiles: Record<string, any> = {};
+    
+    if (conversationUserId) {
+      const { data: staffData } = await supabase
+        .from('business_staff')
+        .select('staff_id, name, profile_image_url')
+        .or(`staff_id.eq.${conversationUserId},staff_id.eq.${session.user.id}`)
+        .eq('status', 'active');
+        
+      if (staffData && Array.isArray(staffData)) {
+        console.log("Staff profiles found:", staffData.length);
+        staffData.forEach(staff => {
+          staffProfiles[staff.staff_id] = {
+            name: staff.name,
+            avatar_url: staff.profile_image_url
+          };
         });
       }
-      
-      // Check if these are staff messages
-      const isStaff = localStorage.getItem('userRole') === 'staff';
-      
-      // Get staff profiles if needed
-      let staffProfiles: Record<string, any> = {};
-      
-      if (conversationUserId) {
-        const { data: staffData } = await supabase
-          .from('business_staff')
-          .select('staff_id, name, profile_image_url')
-          .or(`staff_id.eq.${conversationUserId},staff_id.eq.${session.user.id}`)
-          .eq('status', 'active');
-          
-        if (staffData && Array.isArray(staffData)) {
-          console.log("Staff profiles found:", staffData.length);
-          staffData.forEach(staff => {
-            staffProfiles[staff.staff_id] = {
-              name: staff.name,
-              avatar_url: staff.profile_image_url
-            };
-          });
-        }
-      }
-      
-      // Transform the data to match the Message interface
-      const messages: Message[] = Array.isArray(filteredData) ? filteredData.map(msg => {
-        if (!msg || typeof msg !== 'object') return {} as Message;
-        
-        // Safe casting
-        const typedMsg = msg as any;
-        
-        // Get sender information with safe property access
-        const senderInfo = typedMsg.sender || {};
-        
-        // Check if sender is a staff member
-        const staffInfo = staffProfiles[typedMsg.sender_id];
-        
-        // Use staff info if available, otherwise use profile info
-        const senderName = 
-          staffInfo?.name ||
-          (senderInfo && typeof senderInfo === 'object' ? (senderInfo as any)?.business_name : undefined) || 
-          (senderInfo && typeof senderInfo === 'object' ? (senderInfo as any)?.display_name : undefined) || 
-          (senderInfo && typeof senderInfo === 'object' ? (senderInfo as any)?.full_name : undefined) || 
-          'Unknown User';
-        
-        const senderAvatar = 
-          staffInfo?.avatar_url ||
-          (senderInfo && typeof senderInfo === 'object' ? (senderInfo as any)?.avatar_url : undefined);
-        
-        return {
-          id: typedMsg.id || '',
-          content: typedMsg.content || '',
-          senderId: typedMsg.sender_id || '',
-          recipientId: typedMsg.recipient_id || '',
-          isRead: typedMsg.is_read || false,
-          createdAt: typedMsg.created_at || '',
-          senderName: senderName,
-          senderAvatar: senderAvatar,
-          type: 'text', // Default to text for old schema
-          audioUrl: undefined,
-          imageUrl: undefined
-        };
-      }) : [];
-      
-      return messages;
     }
+    
+    // Transform the data to match the Message interface
+    const messages: Message[] = filteredData.map(msg => {
+      if (!msg) return {} as Message;
+      
+      // Get sender information
+      const senderInfo = msg.sender || {};
+      
+      // Check if sender is a staff member
+      const staffInfo = staffProfiles[msg.sender_id];
+      
+      // Use staff info if available, otherwise use profile info
+      const senderName = 
+        staffInfo?.name ||
+        senderInfo?.business_name || 
+        senderInfo?.display_name || 
+        senderInfo?.full_name || 
+        'Unknown User';
+      
+      const senderAvatar = 
+        staffInfo?.avatar_url ||
+        senderInfo?.avatar_url;
+      
+      return {
+        id: msg.id || '',
+        content: msg.content || '',
+        senderId: msg.sender_id || '',
+        recipientId: msg.recipient_id || '',
+        isRead: msg.is_read || false,
+        createdAt: msg.created_at || '',
+        senderName: senderName,
+        senderAvatar: senderAvatar,
+        type: msg.message_type as 'text' | 'voice' | 'image' || 'text',
+        audioUrl: msg.audio_url,
+        imageUrl: msg.image_url
+      };
+    });
+    
+    return messages;
   } catch (error) {
     console.error("Failed to fetch messages:", error);
     return [];
