@@ -34,7 +34,7 @@ export const fetchUserProfiles = async (userIds: string[]): Promise<Map<string, 
 };
 
 /**
- * Fetches staff profiles for message senders/recipients
+ * Fetches staff profiles for message senders/recipients using RPC function
  * @param userIds Array of user IDs to fetch staff profiles for
  * @returns Object mapping user IDs to staff profile data
  */
@@ -44,20 +44,19 @@ export const fetchStaffProfiles = async (userIds: string[]): Promise<Record<stri
   if (uniqueIds.length === 0) return {};
   
   try {
-    const staffProfiles: Record<string, StaffProfile> = {};
-    
-    // Use the official Supabase-supported query without fallback logic
+    // Use the RPC function for a more efficient query
     const { data: staffData, error } = await supabase
-      .from('business_staff')
-      .select('staff_id, name, profile_image_url')
-      .in('staff_id', uniqueIds)
-      .eq('status', 'active');
+      .rpc('get_active_staff_profiles', { ids: uniqueIds });
     
-    console.log("✅ Clean staff query returned:", staffData?.length, staffData);
+    console.log("✅ RPC returned staffData:", staffData?.length, staffData);
     
     if (error) {
-      console.error("Error fetching staff profiles:", error);
-    } else if (staffData && Array.isArray(staffData)) {
+      console.error("❌ Error fetching staff profiles via RPC:", error);
+      return {};
+    }
+    
+    const staffProfiles: Record<string, StaffProfile> = {};
+    if (staffData && Array.isArray(staffData)) {
       staffData.forEach(staff => {
         if (staff.staff_id) {
           staffProfiles[staff.staff_id] = {
@@ -71,7 +70,7 @@ export const fetchStaffProfiles = async (userIds: string[]): Promise<Record<stri
     
     return staffProfiles;
   } catch (error) {
-    console.error("Error fetching staff profiles:", error);
+    console.error("❌ Unexpected error in fetchStaffProfiles:", error);
     return {};
   }
 };

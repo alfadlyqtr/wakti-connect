@@ -1842,6 +1842,14 @@ export type Database = {
         Args: { business_name: string }
         Returns: string
       }
+      get_active_staff_profiles: {
+        Args: { ids: string[] }
+        Returns: {
+          staff_id: string
+          name: string
+          profile_image_url: string
+        }[]
+      }
       get_auth_user_account_type: {
         Args: Record<PropertyKey, never>
         Returns: string
