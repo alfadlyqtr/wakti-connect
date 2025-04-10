@@ -16,6 +16,7 @@ import { fetchUnreadNotificationsCount } from "@/services/notifications/notifica
 import { useStaffWorkingStatus } from "@/hooks/staff/useStaffWorkingStatus";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
+import { UserRole } from "@/types/user";
 
 interface UserMenuProps {
   isAuthenticated: boolean;
@@ -81,8 +82,7 @@ const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications, userRo
     label: string;
     path: string;
     badge: number | null;
-    showForBusiness?: boolean;
-    hideForStaff?: boolean;
+    showForRoles: UserRole[];
   };
   
   const navItems: NavItem[] = [
@@ -91,41 +91,35 @@ const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications, userRo
       label: 'Messages', 
       path: '/dashboard/messages', 
       badge: unreadMessages.length > 0 ? unreadMessages.length : null,
-      hideForStaff: true
+      showForRoles: ['free', 'individual', 'business']
     },
     { 
       icon: Users, 
       label: 'Contacts', 
       path: '/dashboard/contacts', 
       badge: null,
-      hideForStaff: true
+      showForRoles: ['free', 'individual', 'business']
     },
     { 
       icon: HeartHandshake, 
       label: 'Subscribers', 
       path: '/dashboard/subscribers', 
       badge: null,
-      showForBusiness: true,
-      hideForStaff: true
+      showForRoles: ['business']
     },
     { 
       icon: Bell, 
       label: 'Notifications', 
       path: '/dashboard/notifications', 
       badge: notificationCount > 0 ? notificationCount : null,
-      hideForStaff: true
+      showForRoles: ['free', 'individual', 'business', 'staff']
     },
   ];
   
   // Filter items based on user role
   const filteredNavItems = navItems.filter(item => {
-    if (item.hideForStaff && isStaff) {
-      return false;
-    }
-    if (item.showForBusiness && !isBusiness) {
-      return false;
-    }
-    return true;
+    // If the user's role is in the showForRoles array, show the item
+    return item.showForRoles.includes(userRole as UserRole);
   });
 
   return (

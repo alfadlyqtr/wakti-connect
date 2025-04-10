@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Menu, X, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import MobileSearch from "./navbar/MobileSearch";
 import ThemeToggle from "./navbar/ThemeToggle";
 import NavDateTime from "./navbar/NavDateTime";
 import UserMenu from "./navbar/UserMenu";
+import { UserRole } from "@/types/user";
 
 interface NavbarProps {
   toggleSidebar: () => void;
@@ -22,7 +24,7 @@ interface NavbarProps {
 const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userRole, setUserRole] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
 
   // Get unread notifications count
   const { data: unreadNotifications = [] } = useQuery({
@@ -65,7 +67,7 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
       setIsAuthenticated(!!data.session);
       
       // Get user role from localStorage
-      const role = localStorage.getItem('userRole');
+      const role = localStorage.getItem('userRole') as UserRole;
       setUserRole(role);
     };
 
@@ -75,7 +77,7 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       setIsAuthenticated(!!session);
       // Update user role when auth state changes
-      const role = localStorage.getItem('userRole');
+      const role = localStorage.getItem('userRole') as UserRole;
       setUserRole(role);
     });
 
