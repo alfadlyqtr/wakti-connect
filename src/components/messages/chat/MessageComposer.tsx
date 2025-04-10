@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -176,7 +175,6 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
     }
   };
   
-  // Show voice recorder if recording
   if (isRecording) {
     return (
       <VoiceRecorder 
@@ -189,7 +187,6 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
   
   return (
     <div className="space-y-3">
-      {/* Image preview */}
       {imagePreview && (
         <div className="relative rounded-md overflow-hidden border">
           <img 
@@ -225,7 +222,6 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
           </div>
         </div>
         
-        {/* Media buttons */}
         <div className="flex gap-1">
           <Button
             type="button"
@@ -259,7 +255,6 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
             accept="image/*"
           />
           
-          {/* Send button */}
           <Button
             type="button"
             disabled={(!message.trim() && !imageFile) || isDisabled || isSending}
