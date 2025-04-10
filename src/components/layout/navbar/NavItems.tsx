@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { fetchUnreadNotificationsCount } from "@/services/notifications/notificationService";
+import { MessageSquare, Users, HeartHandshake, Bell } from "lucide-react";
 
 // This component is no longer used in the navbar directly,
 // but keeping it for any other places that might reference it.
@@ -65,9 +66,6 @@ const NavItems = ({ unreadMessages, unreadNotifications, userRole, isMobile = fa
       hideForStaff: true // Hide from staff
     },
   ];
-
-  // Need to import the icons
-  import { MessageSquare, Users, HeartHandshake, Bell } from "lucide-react";
 
   // Filter items based on user role
   const filteredItems = navItems.filter(item => {

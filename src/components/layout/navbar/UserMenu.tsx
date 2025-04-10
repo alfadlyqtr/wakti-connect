@@ -1,6 +1,6 @@
 
 import React from "react";
-import { User, Settings, LogOut } from "lucide-react";
+import { User, Settings, LogOut, MessageSquare, Users, HeartHandshake, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -117,9 +117,6 @@ const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications, userRo
       hideForStaff: true
     },
   ];
-
-  // Need to import the icons
-  import { MessageSquare, Users, HeartHandshake, Bell } from "lucide-react";
   
   // Filter items based on user role
   const filteredNavItems = navItems.filter(item => {
