@@ -128,27 +128,67 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
     let staffProfiles: Record<string, any> = {};
     
     if (conversationUserId) {
-      console.log("Fetching staff profiles for:", [conversationUserId, session.user.id]);
+      // Step 1: Log exactly what values being passed
+      const staffIdsArray = [conversationUserId, session.user.id];
+      console.log("Fetching staff profiles for array:", staffIdsArray);
       
-      // Fixed query: Use in() instead of or() with eq() - correctly implemented
-      const { data: staffData, error: staffError } = await supabase
-        .from('business_staff')
-        .select('staff_id, name, profile_image_url')
-        .in('staff_id', [conversationUserId, session.user.id])
-        .eq('status', 'active');
+      // Step 2: Confirm both IDs are non-null
+      const validIds = staffIdsArray.filter(id => id != null && id !== undefined);
+      console.log("Valid IDs for staff query:", validIds);
       
-      if (staffError) {
-        console.error("Error fetching staff profiles:", staffError);
-      }
-      
-      if (staffData && Array.isArray(staffData)) {
-        console.log("Staff profiles found:", staffData.length, staffData);
-        staffData.forEach(staff => {
-          staffProfiles[staff.staff_id] = {
-            name: staff.name,
-            avatar_url: staff.profile_image_url
-          };
-        });
+      if (validIds.length > 0) {
+        try {
+          // Step 3 & 4: Try multiple approaches
+          // First attempt: using .in() with properly filtered array
+          const { data: staffData, error: staffError } = await supabase
+            .from('business_staff')
+            .select('staff_id, name, profile_image_url')
+            .in('staff_id', validIds)
+            .eq('status', 'active');
+          
+          if (staffError) {
+            console.error("Error with .in() query:", staffError);
+            
+            // Fallback to individual queries if .in() fails
+            console.log("Trying fallback individual queries...");
+            const staffResults = await Promise.all(
+              validIds.map(async (id) => {
+                const { data } = await supabase
+                  .from('business_staff')
+                  .select('staff_id, name, profile_image_url')
+                  .eq('staff_id', id)
+                  .eq('status', 'active');
+                return data || [];
+              })
+            );
+            
+            // Flatten results from individual queries
+            const combinedStaffData = staffResults.flat();
+            console.log("Staff data from fallback queries:", combinedStaffData);
+            
+            if (combinedStaffData && combinedStaffData.length > 0) {
+              console.log("Staff profiles found via fallback:", combinedStaffData.length);
+              combinedStaffData.forEach(staff => {
+                staffProfiles[staff.staff_id] = {
+                  name: staff.name,
+                  avatar_url: staff.profile_image_url
+                };
+              });
+            }
+          } else if (staffData && Array.isArray(staffData)) {
+            console.log("Staff profiles found via .in():", staffData.length, staffData);
+            staffData.forEach(staff => {
+              staffProfiles[staff.staff_id] = {
+                name: staff.name,
+                avatar_url: staff.profile_image_url
+              };
+            });
+          }
+        } catch (queryError) {
+          console.error("Critical error fetching staff profiles:", queryError);
+        }
+      } else {
+        console.log("No valid IDs for staff query");
       }
     }
     
