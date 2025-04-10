@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "./types";
+import { UserRole } from "@/types/user";
 
 export function useAuthState() {
   const [user, setUser] = useState<User | null>(null);
@@ -39,7 +40,7 @@ export function useAuthState() {
                   ...session.user,
                   name: profile?.full_name || session.user.email?.split('@')[0],
                   displayName: profile?.display_name || profile?.full_name,
-                  plan: profile?.account_type || "free"
+                  plan: (profile?.account_type as UserRole) || "free"
                 };
                 
                 setUser(userData);
@@ -81,7 +82,7 @@ export function useAuthState() {
               ...session.user,
               name: profile?.full_name || session.user.email?.split('@')[0],
               displayName: profile?.display_name || profile?.full_name,
-              plan: profile?.account_type || "free"
+              plan: (profile?.account_type as UserRole) || "free"
             };
             
             setUser(userData);

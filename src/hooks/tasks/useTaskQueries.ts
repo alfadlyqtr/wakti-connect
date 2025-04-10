@@ -15,10 +15,11 @@ import {
   fetchTeamTasks,
   fetchDefaultTasks 
 } from './fetchers';
+import { UserRole } from '@/types/user';
 
 export const useTaskQueries = (tab: TaskTab = "my-tasks"): UseTaskQueriesReturn => {
   const [tasks, setTasks] = useState<TaskWithSharedInfo[]>([]);
-  const [userRole, setUserRole] = useState<"free" | "individual" | "business" | "staff" | null>(null);
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [isStaff, setIsStaff] = useState<boolean>(false);
 
   useEffect(() => {
@@ -43,7 +44,7 @@ export const useTaskQueries = (tab: TaskTab = "my-tasks"): UseTaskQueriesReturn 
             .eq('id', session.user.id)
             .single();
           
-          setUserRole(profileData?.account_type || "free");
+          setUserRole((profileData?.account_type as UserRole) || "free");
           console.log(`User role set to ${profileData?.account_type || "free"}`);
         }
       } catch (error) {

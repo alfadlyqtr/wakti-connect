@@ -3,7 +3,17 @@
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'account_type') THEN
-        CREATE TYPE public.account_type AS ENUM ('free', 'individual', 'business');
+        CREATE TYPE public.account_type AS ENUM ('free', 'individual', 'business', 'super-admin');
+    ELSE
+        -- Check if 'super-admin' already exists in the enum
+        IF NOT EXISTS (
+            SELECT 1 FROM pg_enum 
+            WHERE enumtypid = 'public.account_type'::regtype 
+            AND enumlabel = 'super-admin'
+        ) THEN
+            -- Add 'super-admin' to the enum
+            ALTER TYPE public.account_type ADD VALUE 'super-admin';
+        END IF;
     END IF;
 END$$;
 

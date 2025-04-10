@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import SidebarProfile from "./SidebarProfile";
 import { navItems } from "./sidebarNavConfig";
+import { UserRole } from "@/types/user";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -22,7 +23,7 @@ interface ProfileData {
   full_name: string | null;
   display_name: string | null;
   business_name: string | null;
-  account_type: "free" | "individual" | "business" | "staff";
+  account_type: UserRole;
   avatar_url: string | null;
 }
 
@@ -53,8 +54,25 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
         if (error) {
           console.error("Error fetching profile:", error);
         } else if (data) {
-          // Cast the account_type to include 'staff' for staff members
-          const accountType = isStaff ? 'staff' as const : data.account_type;
+          // Check if user is super admin
+          const { data: superAdminData } = await supabase
+            .from('super_admins')
+            .select('id')
+            .eq('id', session.user.id)
+            .maybeSingle();
+            
+          const isSuperAdmin = !!superAdminData;
+          
+          // Cast the account_type appropriately
+          let accountType: UserRole;
+          
+          if (isSuperAdmin) {
+            accountType = 'super-admin';
+          } else if (isStaff) {
+            accountType = 'staff';
+          } else {
+            accountType = (data.account_type as UserRole) || 'free';
+          }
           
           setProfileData({
             id: data.id,

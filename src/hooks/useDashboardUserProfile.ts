@@ -24,32 +24,47 @@ export const useDashboardUserProfile = () => {
       // Store user ID for other hooks to use
       setUserId(session.user.id);
       
-      // Check if user is a staff member
-      const staffStatus = await isUserStaff();
-      setIsStaff(staffStatus);
-      
-      // Fetch profile data
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
+      // Check if user is a super admin
+      const { data: superAdminData, error: superAdminError } = await supabase
+        .from('super_admins')
+        .select('id')
         .eq('id', session.user.id)
-        .single();
+        .maybeSingle();
         
-      if (error) {
-        console.error("Error fetching profile data:", error);
-        return null;
+      const isSuperAdmin = !!superAdminData;
+      
+      if (isSuperAdmin) {
+        setUserRole('super-admin');
+        localStorage.setItem('userRole', 'super-admin');
+        console.log("User is a super admin");
+      } else {
+        // Check if user is a staff member
+        const staffStatus = await isUserStaff();
+        setIsStaff(staffStatus);
+        
+        // Fetch profile data
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+          
+        if (error) {
+          console.error("Error fetching profile data:", error);
+          return null;
+        }
+        
+        // Determine user role and store in localStorage for quick access
+        const accountType = data?.account_type || 'free';
+        
+        // Set the user role with proper prioritization
+        // If user is both business owner and staff, business takes priority
+        const effectiveRole = accountType === 'business' ? 'business' : 
+                            (staffStatus ? 'staff' : accountType);
+        
+        setUserRole(effectiveRole as UserRole);
+        localStorage.setItem('userRole', effectiveRole);
       }
-      
-      // Determine user role and store in localStorage for quick access
-      const accountType = data?.account_type || 'free';
-      
-      // Set the user role with proper prioritization
-      // If user is both business owner and staff, business takes priority
-      const effectiveRole = accountType === 'business' ? 'business' : 
-                          (staffStatus ? 'staff' : accountType);
-      
-      setUserRole(effectiveRole as UserRole);
-      localStorage.setItem('userRole', effectiveRole);
       
       return data;
     },

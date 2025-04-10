@@ -1,11 +1,12 @@
 
 import { Session, User as SupabaseUser } from '@supabase/supabase-js';
+import { UserRole } from '@/types/user';
 
 export interface User extends SupabaseUser {
   // Add additional user fields here if needed
   name?: string;
   displayName?: string;
-  plan?: 'free' | 'individual' | 'business' | 'staff';
+  plan?: UserRole;
 }
 
 export interface AuthContextType {
