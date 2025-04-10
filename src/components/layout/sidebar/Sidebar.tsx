@@ -17,8 +17,8 @@ interface SidebarProps {
   collapsed: boolean;
 }
 
-// Define the profile type to match what we're setting in state
-interface ProfileData {
+// Update this interface to use UserRole type which includes 'super-admin'
+interface SidebarProfileData {
   id: string;
   full_name: string | null;
   display_name: string | null;
@@ -28,7 +28,7 @@ interface ProfileData {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
-  const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const [profileData, setProfileData] = useState<SidebarProfileData | null>(null);
   const { user, logout } = useAuth();
   
   useEffect(() => {
@@ -96,12 +96,17 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
     
     return navItems
       .filter(item => {
+        // Special handling for super-admin role - show all items
+        if (userRole === 'super-admin') {
+          return true;
+        }
+        
         // Show items based on user account type or staff status
         if (isStaff && item.showFor.includes('staff')) {
           return true;
         }
         
-        if (!isStaff && profileData && item.showFor.includes(profileData.account_type)) {
+        if (!isStaff && profileData && item.showFor.includes(profileData.account_type as any)) {
           return true;
         }
         

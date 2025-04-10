@@ -15,7 +15,7 @@ import {
   fetchTeamTasks,
   fetchDefaultTasks 
 } from './fetchers';
-import { UserRole } from '@/types/user';
+import { UserRole } from "@/types/user";
 
 export const useTaskQueries = (tab: TaskTab = "my-tasks"): UseTaskQueriesReturn => {
   const [tasks, setTasks] = useState<TaskWithSharedInfo[]>([]);
@@ -30,6 +30,19 @@ export const useTaskQueries = (tab: TaskTab = "my-tasks"): UseTaskQueriesReturn 
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session?.user) return;
+        
+        // Check if user is super admin
+        const { data: superAdminData } = await supabase
+          .from('super_admins')
+          .select('id')
+          .eq('id', session.user.id)
+          .maybeSingle();
+        
+        if (superAdminData) {
+          setUserRole("super-admin");
+          console.log("User role set to super-admin");
+          return;
+        }
         
         const staffStatus = await isUserStaff();
         setIsStaff(staffStatus);

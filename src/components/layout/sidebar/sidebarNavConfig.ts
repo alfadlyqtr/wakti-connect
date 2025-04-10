@@ -16,13 +16,14 @@ import {
   MessageSquare,
   Headphones
 } from "lucide-react";
+import { UserRole } from "@/types/user";
 
 export type NavItem = {
   label: string;
   path: string;
   icon: any;
   badge?: number | null;
-  showFor: Array<'free' | 'individual' | 'business' | 'staff'>;
+  showFor: UserRole[];
 };
 
 export const navItems: NavItem[] = [
@@ -30,91 +31,91 @@ export const navItems: NavItem[] = [
     label: "Dashboard",
     path: "",
     icon: LayoutDashboard,
-    showFor: ['free', 'individual', 'business', 'staff'],
+    showFor: ['free', 'individual', 'business', 'staff', 'super-admin'],
   },
   {
     label: "Tasks",
     path: "tasks",
     icon: ListChecks,
-    showFor: ['free', 'individual', 'business', 'staff'],
+    showFor: ['free', 'individual', 'business', 'staff', 'super-admin'],
   },
   {
     label: "Events",
     path: "events",
     icon: PartyPopper,
-    showFor: ['free', 'individual', 'business', 'staff'],
+    showFor: ['free', 'individual', 'business', 'staff', 'super-admin'],
   },
   {
     label: "Bookings",
     path: "bookings",
     icon: Calendar,
-    showFor: ['business', 'staff'],
+    showFor: ['business', 'staff', 'super-admin'],
   },
   {
     label: "Jobs",
     path: "jobs",
     icon: KanbanSquare,
-    showFor: ['business'],
+    showFor: ['business', 'super-admin'],
   },
   {
     label: "Job Cards",
     path: "job-cards",
     icon: FileText,
-    showFor: ['staff'],
+    showFor: ['staff', 'super-admin'],
   },
   {
     label: "Services",
     path: "services",
     icon: Store,
-    showFor: ['business'],
+    showFor: ['business', 'super-admin'],
   },
   {
     label: "Staff",
     path: "staff",
     icon: UserPlus,
-    showFor: ['business'],
+    showFor: ['business', 'super-admin'],
   },
   {
     label: "Business Page",
     path: "business-page",
     icon: Building2,
-    showFor: ['business'],
+    showFor: ['business', 'super-admin'],
   },
   {
     label: "Analytics",
     path: "analytics",
     icon: BarChart2,
-    showFor: ['business'],
+    showFor: ['business', 'super-admin'],
   },
   {
     label: "Reports",
     path: "reports",
     icon: FileText,
-    showFor: ['business'],
+    showFor: ['business', 'super-admin'],
   },
   {
     label: "WAKTI AI",
     path: "ai-assistant",
     icon: Bot,
-    showFor: ['free', 'individual', 'business', 'staff'],
+    showFor: ['free', 'individual', 'business', 'staff', 'super-admin'],
   },
   {
     label: "Settings",
     path: "settings",
     icon: Settings,
-    showFor: ['free', 'individual', 'business', 'staff'],
+    showFor: ['free', 'individual', 'business', 'staff', 'super-admin'],
   },
   {
     label: "Help",
     path: "help",
     icon: HelpCircle,
-    showFor: ['free', 'individual', 'business', 'staff'],
+    showFor: ['free', 'individual', 'business', 'staff', 'super-admin'],
   },
   {
     label: "Staff Communication",
     path: "staff-communication",
     icon: Headphones,
-    showFor: ['staff'],
+    showFor: ['staff', 'super-admin'],
   },
 ];
 
@@ -124,12 +125,12 @@ export const dropdownNavItems: NavItem[] = [
     label: "Messages",
     path: "messages",
     icon: MessageSquare,
-    showFor: ['free', 'individual', 'business', 'staff'],
+    showFor: ['free', 'individual', 'business', 'staff', 'super-admin'],
   },
   {
     label: "Subscribers",
     path: "subscribers",
     icon: UserPlus,
-    showFor: ['business'],
+    showFor: ['business', 'super-admin'],
   },
 ];

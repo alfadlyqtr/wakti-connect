@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
@@ -86,8 +87,14 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
     }
   }, [profileLoading, location.pathname, userRoleValue, isStaff, navigate, location.state, profileData?.account_type, accountType]);
 
-  // For components that don't recognize super-admin yet
-  const displayRole = userRoleValue === 'super-admin' ? 'business' : userRoleValue;
+  // For components that don't recognize super-admin yet, map it to business role
+  const mapRoleForCompatibility = (role: UserRole): "free" | "individual" | "business" | "staff" => {
+    if (role === 'super-admin') return 'business';
+    return role as "free" | "individual" | "business" | "staff";
+  };
+
+  // Get display role that's compatible with components expecting the old type
+  const displayRole = mapRoleForCompatibility(userRoleValue);
 
   return (
     <div className={`min-h-screen flex flex-col overflow-hidden ${isSidebarOpen && isMobile ? 'sidebar-open-body' : ''}`}>
@@ -105,7 +112,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
         
         <Sidebar 
           isOpen={isSidebarOpen} 
-          userRole={displayRole as "free" | "individual" | "business" | "staff"}
+          userRole={displayRole}
           onCollapseChange={handleCollapseChange}
           closeSidebar={closeSidebar}
           openCommandSearch={openCommandSearch}
@@ -117,7 +124,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
           userId={userId}
           isMobile={isMobile}
           currentPath={location.pathname}
-          userRole={displayRole as "free" | "individual" | "business" | "staff"}
+          userRole={displayRole}
           sidebarCollapsed={sidebarCollapsed}
         >
           {children}
@@ -128,7 +135,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
       <CommandSearch 
         open={commandSearchOpen} 
         setOpen={setCommandSearchOpen}
-        userRole={displayRole as "free" | "individual" | "business" | "staff"}
+        userRole={displayRole}
       />
     </div>
   );

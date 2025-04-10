@@ -37,13 +37,18 @@ export const useDashboardUserProfile = () => {
         setUserRole('super-admin');
         localStorage.setItem('userRole', 'super-admin');
         console.log("User is a super admin");
+        
+        // Return placeholder profile data
+        return {
+          account_type: 'super-admin'
+        };
       } else {
         // Check if user is a staff member
         const staffStatus = await isUserStaff();
         setIsStaff(staffStatus);
         
         // Fetch profile data
-        const { data, error } = await supabase
+        const { data: profileData, error } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', session.user.id)
@@ -55,7 +60,7 @@ export const useDashboardUserProfile = () => {
         }
         
         // Determine user role and store in localStorage for quick access
-        const accountType = data?.account_type || 'free';
+        const accountType = profileData?.account_type || 'free';
         
         // Set the user role with proper prioritization
         // If user is both business owner and staff, business takes priority
@@ -64,9 +69,9 @@ export const useDashboardUserProfile = () => {
         
         setUserRole(effectiveRole as UserRole);
         localStorage.setItem('userRole', effectiveRole);
+        
+        return profileData;
       }
-      
-      return data;
     },
     refetchOnWindowFocus: false,
   });
