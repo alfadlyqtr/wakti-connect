@@ -24,6 +24,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserRole } from "@/types/user";
 import { supabase } from "@/integrations/supabase/client";
+import { createAuditLog } from "@/types/auditLogs";
 
 interface User {
   id: string;

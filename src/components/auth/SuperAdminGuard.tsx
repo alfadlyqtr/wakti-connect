@@ -4,6 +4,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { useAuth } from "@/hooks/useAuth";
+import { createAuditLog } from "@/types/auditLogs";
 
 interface SuperAdminGuardProps {
   children: React.ReactNode;
@@ -40,26 +41,13 @@ const SuperAdminGuard: React.FC<SuperAdminGuardProps> = ({ children }) => {
         
         // Log access attempt for audit purposes - with error handling for table not existing
         try {
-          // First check if table exists to avoid error
-          const { data: tableExists } = await supabase
-            .from('_metadata')
-            .select('*')
-            .eq('table_name', 'audit_logs')
-            .single();
-            
-          if (tableExists) {
-            console.log("Attempting to log super admin access");
-            // Instead of using RPC, directly insert into audit_logs if the table exists
-            await supabase
-              .from('audit_logs')
-              .insert({
-                user_id: userId,
-                action_type: 'super_admin_access',
-                metadata: { path: location.pathname }
-              });
-          } else {
-            console.warn("Audit logs table does not exist yet - skipping audit logging");
-          }
+          // Use our utility function to safely log the admin access
+          await createAuditLog(
+            supabase,
+            userId,
+            'super_admin_access',
+            { path: location.pathname }
+          );
         } catch (logError) {
           console.warn("Could not log to audit system:", logError);
         }

@@ -37,17 +37,21 @@ export const createAuditLog = async (
       .single();
       
     if (tableExists) {
-      await supabase
-        .from('audit_logs')
-        .insert({
-          user_id: userId,
-          action_type: actionType,
-          metadata
-        });
+      try {
+        await supabase
+          .from('audit_logs')
+          .insert({
+            user_id: userId,
+            action_type: actionType,
+            metadata
+          });
+      } catch (error) {
+        console.warn("Could not log to audit system:", error);
+      }
     } else {
       console.warn("Audit logs table does not exist yet - skipping audit logging");
     }
   } catch (error) {
-    console.warn("Could not log to audit system:", error);
+    console.warn("Error checking for audit_logs table:", error);
   }
 };
