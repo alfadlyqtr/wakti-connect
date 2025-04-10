@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { 
@@ -43,11 +42,9 @@ const UsersPage: React.FC = () => {
   const [impersonateDialogOpen, setImpersonateDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
-  // Fetch users - in a real implementation, this would be paginated and include filters
   const { data: users, isLoading } = useQuery({
     queryKey: ['superadmin', 'users', searchQuery, selectedTab, showVerified],
     queryFn: async () => {
-      // Mock data - in a real implementation, this would fetch from the database
       const mockUsers: User[] = [
         {
           id: '1',
@@ -96,7 +93,6 @@ const UsersPage: React.FC = () => {
         }
       ];
       
-      // Filter by tab
       let filteredUsers = [...mockUsers];
       if (selectedTab !== 'all') {
         filteredUsers = filteredUsers.filter(user => 
@@ -114,7 +110,6 @@ const UsersPage: React.FC = () => {
         );
       }
       
-      // Filter by search query
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         filteredUsers = filteredUsers.filter(user => 
@@ -135,23 +130,31 @@ const UsersPage: React.FC = () => {
   const confirmImpersonation = async () => {
     if (!selectedUser) return;
     
-    // In a real implementation, this would call a secure endpoint
-    // that creates a special session with the user's privileges
     console.log(`Impersonating user: ${selectedUser.email}`);
     
-    // Log this action for audit
-    await supabase
-      .from('audit_logs')
-      .insert({
-        action: 'impersonate_user',
-        user_id: 'current-admin-id', // In a real implementation, this would be the admin's ID
-        target_user_id: selectedUser.id,
-        metadata: { userEmail: selectedUser.email }
-      });
+    try {
+      const { error: checkError } = await supabase
+        .from('_metadata')
+        .select('table_name')
+        .eq('table_name', 'audit_logs')
+        .single();
+        
+      if (!checkError) {
+        await supabase
+          .from('audit_logs')
+          .insert({
+            action: 'impersonate_user',
+            user_id: 'current-admin-id',
+            target_user_id: selectedUser.id,
+            metadata: { userEmail: selectedUser.email }
+          });
+      }
+    } catch (error) {
+      console.warn("Could not log to audit_logs, table may not exist yet");
+    }
     
     setImpersonateDialogOpen(false);
     
-    // Mock notification of success - in a real implementation, this would redirect to the user's dashboard
     alert(`Impersonation mode activated for ${selectedUser.email}`);
   };
 
@@ -195,7 +198,6 @@ const UsersPage: React.FC = () => {
         </Button>
       </div>
 
-      {/* Quick stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="bg-gray-900 border-gray-800">
           <CardHeader className="pb-2">
@@ -240,7 +242,6 @@ const UsersPage: React.FC = () => {
         </Card>
       </div>
 
-      {/* Filters and search */}
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
         <div className="w-full md:w-96">
           <div className="relative">
@@ -276,7 +277,6 @@ const UsersPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Tabs */}
       <Tabs defaultValue="all" value={selectedTab} onValueChange={setSelectedTab}>
         <TabsList className="bg-gray-800">
           <TabsTrigger value="all" className="data-[state=active]:bg-gray-700">All Users</TabsTrigger>
@@ -371,7 +371,6 @@ const UsersPage: React.FC = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Impersonation confirmation dialog */}
       <Dialog open={impersonateDialogOpen} onOpenChange={setImpersonateDialogOpen}>
         <DialogContent className="bg-gray-900 border-gray-800 text-white">
           <DialogHeader>

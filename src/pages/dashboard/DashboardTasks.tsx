@@ -42,8 +42,8 @@ const DashboardTasks = () => {
   } = useTasksPageState();
 
   // Redirect staff users away from tasks page
-  // Cast userRole to UserRole to ensure TypeScript recognizes "staff" as a valid option
-  if ((userRole as UserRole) === "staff") {
+  // Super-admin users have full access to everything
+  if (userRole === "staff") {
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -66,6 +66,9 @@ const DashboardTasks = () => {
     setCurrentEditTask(task);
     setEditTaskDialogOpen(true);
   };
+
+  // Convert UserRole to the expected type for components that don't recognize super-admin yet
+  const displayRole = userRole === 'super-admin' ? 'business' : userRole;
 
   return (
     <div className="space-y-6">
@@ -106,13 +109,13 @@ const DashboardTasks = () => {
         }}
         onCreateTask={() => setCreateTaskDialogOpen(true)}
         isPaidAccount={isPaidAccount}
-        userRole={userRole || "free"}
+        userRole={displayRole as "free" | "individual" | "business" | "staff"}
         showCreateButton={activeTab === "my-tasks"}
       />
       
       <TasksContainer
         tasks={filteredTasks}
-        userRole={userRole}
+        userRole={displayRole as "free" | "individual" | "business" | "staff"}
         refetch={refetchTasks}
         isPaidAccount={isPaidAccount}
         onCreateTask={() => setCreateTaskDialogOpen(true)}
@@ -126,7 +129,7 @@ const DashboardTasks = () => {
         open={createTaskDialogOpen}
         onOpenChange={setCreateTaskDialogOpen}
         onCreateTask={handleCreateTask}
-        userRole={userRole || "free"}
+        userRole={displayRole as "free" | "individual" | "business" | "staff"}
       />
       
       <EditTaskDialog

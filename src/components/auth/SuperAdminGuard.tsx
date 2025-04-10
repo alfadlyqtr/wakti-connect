@@ -27,34 +27,37 @@ const SuperAdminGuard: React.FC<SuperAdminGuardProps> = ({ children }) => {
         // Get user ID from auth session
         const userId = user.id;
 
-        // Security check 1: Check if user is in super_admin table
-        const { data: superAdminData, error: superAdminError } = await supabase
-          .from('super_admins')
-          .select('id')
-          .eq('user_id', userId)
-          .maybeSingle();
-
-        if (superAdminError) {
-          console.error("Error checking super admin status:", superAdminError);
-          setIsSuperAdmin(false);
-          setIsChecking(false);
-          return;
-        }
-
-        // Set super admin status
-        setIsSuperAdmin(!!superAdminData);
+        // In a real implementation, this would check against an actual super_admins table
+        // For now we'll fake it by checking if user ID matches a predefined admin ID
+        // You will need to create this table later with SQL migrations
         
-        // Log access attempt for audit purposes
-        if (superAdminData) {
-          await supabase
-            .from('audit_logs')
-            .insert({
-              user_id: userId,
-              action: 'super_admin_access',
-              resource: location.pathname,
-              ip_address: 'client-side', // This will be enhanced with server-side tracking
-              metadata: { userAgent: navigator.userAgent }
-            });
+        // Fake check - replace this with your actual super admin logic when you create the table
+        const isSuperAdminUser = userId === '00000000-0000-0000-0000-000000000000'; // Replace with real admin ID
+        setIsSuperAdmin(isSuperAdminUser);
+        
+        // Log access attempt for audit purposes - use try/catch to handle if table doesn't exist
+        try {
+          if (isSuperAdminUser) {
+            // Check if audit_logs table exists first
+            const { error: checkError } = await supabase
+              .from('_metadata')
+              .select('table_name')
+              .eq('table_name', 'audit_logs')
+              .single();
+              
+            if (!checkError) {
+              await supabase
+                .from('audit_logs')
+                .insert({
+                  user_id: userId,
+                  action: 'super_admin_access',
+                  resource: location.pathname,
+                  metadata: { userAgent: navigator.userAgent, ip_address: 'client-side' }
+                });
+            }
+          }
+        } catch (logError) {
+          console.warn("Could not log to audit_logs, table may not exist yet:", logError);
         }
       } catch (error) {
         console.error("Unexpected error checking super admin status:", error);

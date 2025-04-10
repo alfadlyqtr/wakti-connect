@@ -20,7 +20,7 @@ const AuthLoadingState: React.FC<AuthLoadingStateProps> = ({ authError }) => {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
       <div className="text-center max-w-md">
-        <LoadingSpinner color="border-wakti-blue" />
+        <LoadingSpinner color="primary" />
         <p className="mt-4 text-gray-600">
           {extendedLoading
             ? "Still working on connecting to services..."
