@@ -16,9 +16,8 @@ import NavDateTime from "./navbar/NavDateTime";
 import UserMenu from "./navbar/UserMenu";
 import { UserRole } from "@/types/user";
 
-// Import our new command search components
+// Import our command search component - removing the SearchButton import
 import CommandSearch from "../search/CommandSearch";
-import SearchButton from "../search/SearchButton";
 
 interface NavbarProps {
   toggleSidebar: () => void;
@@ -123,10 +122,7 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
         {/* Only show search for business, individual, and free users - not for staff */}
         {!isStaff && (
           <>
-            {/* Desktop search button */}
-            <div className="hidden lg:flex w-64">
-              <SearchButton onClick={openCommandSearch} userRole={userRole} />
-            </div>
+            {/* Removing the desktop search button with command+K shortcut */}
             
             {/* Mobile search field */}
             <MobileSearch 
