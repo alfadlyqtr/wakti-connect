@@ -6,7 +6,7 @@ import { createTask as createTaskService } from '@/services/task/createService';
 import { toast } from "@/components/ui/use-toast";
 
 export const useTaskOperations = (
-  userRole: "free" | "individual" | "business" | "staff" | null,
+  userRole: "free" | "individual" | "business" | "staff" | "super-admin" | null,
   isStaff: boolean = false
 ): UseTaskOperationsReturn => {
   const [isProcessing, setIsProcessing] = useState(false);
