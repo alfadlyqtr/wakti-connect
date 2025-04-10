@@ -30,16 +30,28 @@ export const sendMessage = async (
     
     console.log(`Sending ${type} message to:`, recipientId, "Content:", content);
     
-    // Insert the message with all fields
-    const insertData = {
+    // Check if messages table has the required columns
+    const { data: columnCheck, error: columnError } = await supabase
+      .from('messages')
+      .select('message_type')
+      .limit(1);
+      
+    const hasMessageTypeColumn = !columnError;
+    
+    // Insert the message with the appropriate fields
+    const insertData: any = {
       sender_id: session.user.id,
       recipient_id: recipientId,
       content,
-      is_read: false,
-      message_type: type,
-      audio_url: audioUrl,
-      image_url: imageUrl
+      is_read: false
     };
+    
+    // Add media fields if the schema supports them
+    if (hasMessageTypeColumn) {
+      insertData.message_type = type;
+      insertData.audio_url = audioUrl;
+      insertData.image_url = imageUrl;
+    }
     
     const { data, error } = await supabase
       .from('messages')
@@ -105,22 +117,38 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
       throw new Error("No authenticated user found");
     }
     
-    // Fetch messages with full schema
-    const { data, error } = await supabase
+    // First check if the messages table has the required columns
+    const { data: columnCheck, error: columnError } = await supabase
       .from('messages')
-      .select(`
-        id,
-        sender_id,
-        recipient_id,
-        content,
-        is_read,
-        created_at,
+      .select('message_type')
+      .limit(1);
+      
+    const hasExtendedSchema = !columnError;
+    
+    // Construct the select query based on available columns
+    let selectQuery = `
+      id,
+      sender_id,
+      recipient_id,
+      content,
+      is_read,
+      created_at,
+      sender:sender_id(id, full_name, display_name, business_name, avatar_url),
+      recipient:recipient_id(id, full_name, display_name, business_name, avatar_url)
+    `;
+    
+    if (hasExtendedSchema) {
+      selectQuery += `,
         message_type,
         audio_url,
-        image_url,
-        sender:sender_id(id, full_name, display_name, business_name, avatar_url),
-        recipient:recipient_id(id, full_name, display_name, business_name, avatar_url)
-      `)
+        image_url
+      `;
+    }
+    
+    // Fetch messages
+    const { data, error } = await supabase
+      .from('messages')
+      .select(selectQuery)
       .or(`sender_id.eq.${session.user.id},recipient_id.eq.${session.user.id}`)
       .order('created_at');
     
@@ -203,9 +231,9 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
         createdAt: msg.created_at || '',
         senderName: senderName,
         senderAvatar: senderAvatar,
-        type: msg.message_type as 'text' | 'voice' | 'image' || 'text',
-        audioUrl: msg.audio_url,
-        imageUrl: msg.image_url
+        type: (hasExtendedSchema ? msg.message_type as 'text' | 'voice' | 'image' : 'text') || 'text',
+        audioUrl: hasExtendedSchema ? msg.audio_url : undefined,
+        imageUrl: hasExtendedSchema ? msg.image_url : undefined
       };
     });
     
