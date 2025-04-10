@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from "react";
 import { 
   Dialog, 
@@ -9,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Mic, Image, X, AlertCircle } from "lucide-react";
+import { Send, Mic, Image, X } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useMessaging } from "@/hooks/useMessaging";
