@@ -141,9 +141,14 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
         throw error;
       }
       
+      // If no data or empty array, return empty array
+      if (!data || data.length === 0) {
+        return [];
+      }
+      
       // If a specific conversation user is provided, filter for only messages between the current user and that user
-      let filteredData = data || [];
-      if (conversationUserId && data) {
+      let filteredData = data;
+      if (conversationUserId) {
         filteredData = data.filter(msg => 
           (msg.sender_id === session.user.id && msg.recipient_id === conversationUserId) ||
           (msg.sender_id === conversationUserId && msg.recipient_id === session.user.id)
@@ -176,6 +181,8 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
       
       // Transform the data to match the Message interface
       const messages: Message[] = filteredData.map(msg => {
+        if (!msg) return {} as Message;
+        
         // Get sender information with safe property access
         const senderInfo = msg.sender || {};
         
@@ -274,6 +281,8 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
       
       // Transform the data to match the Message interface
       const messages: Message[] = filteredData.map(msg => {
+        if (!msg) return {} as Message;
+        
         // Get sender information with safe property access
         const senderInfo = msg.sender || {};
         
