@@ -1568,6 +1568,24 @@ export type Database = {
         }
         Relationships: []
       }
+      super_admins: {
+        Row: {
+          created_at: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       task_label_assignments: {
         Row: {
           created_at: string
@@ -1917,6 +1935,10 @@ export type Database = {
         Args: { business_id_param: string }
         Returns: boolean
       }
+      is_super_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       mark_booking_no_show: {
         Args: { booking_id_param: string }
         Returns: boolean
@@ -1967,7 +1989,7 @@ export type Database = {
       }
     }
     Enums: {
-      account_type: "free" | "individual" | "business" | "staff"
+      account_type: "free" | "individual" | "business" | "staff" | "super-admin"
       ai_assistant_role:
         | "student"
         | "employee"
@@ -2099,7 +2121,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      account_type: ["free", "individual", "business", "staff"],
+      account_type: ["free", "individual", "business", "staff", "super-admin"],
       ai_assistant_role: [
         "student",
         "employee",

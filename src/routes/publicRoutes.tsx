@@ -1,55 +1,50 @@
 
-import { RouteObject } from "react-router-dom";
-import LandingPage from "@/pages/public/LandingPage";
-import AboutPage from "@/pages/public/AboutPage";
-import FeaturesPage from "@/pages/public/FeaturesPage";
-import PricingPage from "@/pages/public/PricingPage";
-import ContactPage from "@/pages/public/ContactPage";
-import FaqPage from "@/pages/public/FaqPage";
-import PrivacyPage from "@/pages/public/PrivacyPage";
-import TermsPage from "@/pages/public/TermsPage";
-import Index from "@/pages/Index";
-import BookServicePage from "@/pages/booking/BookServicePage";
+import React from 'react';
+import LandingPage from '@/pages/landing/LandingPage';
+import PrivacyPolicy from '@/pages/legal/PrivacyPolicy';
+import TermsOfService from '@/pages/legal/TermsOfService';
+import HelpdeskPage from '@/pages/helpdesk/HelpdeskPage';
+import AboutPage from '@/pages/about/AboutPage';
+import ContactPage from '@/pages/contact/ContactPage';
+import PricingPage from '@/pages/pricing/PricingPage';
+import BlogPage from '@/pages/blog/BlogPage';
+import CreateSuperAdmin from '@/components/admin/CreateSuperAdmin';
 
-export const publicRoutes: RouteObject[] = [
+export const publicRoutes = [
   {
-    path: "/",
-    element: <Index />,
+    path: '/',
+    element: <LandingPage />
   },
   {
-    path: "/landing",
-    element: <LandingPage />,
+    path: '/privacy-policy',
+    element: <PrivacyPolicy />
   },
   {
-    path: "/about",
-    element: <AboutPage />,
+    path: '/terms-of-service',
+    element: <TermsOfService />
   },
   {
-    path: "/features",
-    element: <FeaturesPage />,
+    path: '/help',
+    element: <HelpdeskPage />
   },
   {
-    path: "/pricing",
-    element: <PricingPage />,
+    path: '/about',
+    element: <AboutPage />
   },
   {
-    path: "/contact",
-    element: <ContactPage />,
+    path: '/contact',
+    element: <ContactPage />
   },
   {
-    path: "/faq",
-    element: <FaqPage />,
+    path: '/pricing',
+    element: <PricingPage />
   },
   {
-    path: "/privacy",
-    element: <PrivacyPage />,
+    path: '/blog',
+    element: <BlogPage />
   },
   {
-    path: "/terms",
-    element: <TermsPage />,
-  },
-  // Removing the /book/:serviceId route to avoid conflicts with booking system
-  // This was causing the issue where clicking Book Now redirected to the main WAKTI site
+    path: '/create-super-admin',
+    element: <CreateSuperAdmin />
+  }
 ];
-
-export default publicRoutes;

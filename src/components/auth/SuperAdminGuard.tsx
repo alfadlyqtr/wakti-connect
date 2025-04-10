@@ -28,20 +28,34 @@ const SuperAdminGuard: React.FC<SuperAdminGuardProps> = ({ children }) => {
         // Get user ID from auth session
         const userId = user.id;
 
-        // In a real implementation, this would check against an actual super_admins table
-        // For now, we'll check for a specific hard-coded ID as a placeholder
-        // This will be replaced with a proper table check after migration is applied
+        // Check if user is in the super_admins table
+        const { data: superAdminData, error: superAdminError } = await supabase
+          .from('super_admins')
+          .select('id')
+          .eq('id', userId)
+          .single();
+          
+        // If super_admins table doesn't exist yet or error occurs, fallback to RPC function
+        if (superAdminError) {
+          console.warn("Super admins table check failed, falling back to function:", superAdminError);
+          
+          // Use the is_super_admin function as a fallback
+          const { data: isSuperAdminResult, error: functionError } = await supabase
+            .rpc('is_super_admin');
+            
+          if (functionError) {
+            console.error("Error calling is_super_admin function:", functionError);
+            setIsSuperAdmin(false);
+          } else {
+            setIsSuperAdmin(!!isSuperAdminResult);
+          }
+        } else {
+          // User is a super admin if found in the table
+          setIsSuperAdmin(!!superAdminData);
+        }
         
-        // Fake check - replace this with real admin ID later
-        // For testing purposes, every authenticated user can be a super admin
-        // Replace this with proper checks once the super_admins table is created
-        const isSuperAdminUser = true; // Temporary override for testing
-        
-        setIsSuperAdmin(isSuperAdminUser);
-        
-        // Log access attempt for audit purposes - with error handling for table not existing
+        // Log access attempt for audit purposes
         try {
-          // Use our utility function to safely log the admin access
           await createAuditLog(
             supabase,
             userId,
