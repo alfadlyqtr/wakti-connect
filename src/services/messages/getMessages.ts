@@ -128,10 +128,11 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
     let staffProfiles: Record<string, any> = {};
     
     if (conversationUserId) {
+      // Fixed query: Use in() instead of or() with eq()
       const { data: staffData } = await supabase
         .from('business_staff')
         .select('staff_id, name, profile_image_url')
-        .or(`staff_id.eq.${conversationUserId},staff_id.eq.${session.user.id}`)
+        .in('staff_id', [conversationUserId, session.user.id])
         .eq('status', 'active');
         
       if (staffData && Array.isArray(staffData)) {
