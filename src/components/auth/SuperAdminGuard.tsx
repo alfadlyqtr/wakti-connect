@@ -45,18 +45,18 @@ const SuperAdminGuard: React.FC<SuperAdminGuardProps> = ({ children }) => {
             .from('_metadata')
             .select('*')
             .eq('table_name', 'audit_logs')
-            .maybeSingle();
+            .single();
             
           if (tableExists) {
             console.log("Attempting to log super admin access");
-            // Using raw RPC call instead of from() since the table might not exist yet
-            await supabase.rpc('log_admin_action', {
-              action_type: 'super_admin_access',
-              user_id: userId,
-              metadata: { path: location.pathname }
-            }).catch(err => {
-              console.warn("Failed to log admin action:", err);
-            });
+            // Instead of using RPC, directly insert into audit_logs if the table exists
+            await supabase
+              .from('audit_logs')
+              .insert({
+                user_id: userId,
+                action_type: 'super_admin_access',
+                metadata: { path: location.pathname }
+              });
           } else {
             console.warn("Audit logs table does not exist yet - skipping audit logging");
           }

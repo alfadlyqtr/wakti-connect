@@ -137,15 +137,20 @@ const UsersPage: React.FC = () => {
         .from('_metadata')
         .select('*')
         .eq('table_name', 'audit_logs')
-        .maybeSingle();
+        .single();
         
       if (tableExists) {
         try {
-          await supabase.rpc('log_admin_action', {
-            action_type: 'impersonate_user',
-            user_id: 'current-admin-id',
-            metadata: { target_user_id: selectedUser.id, user_email: selectedUser.email }
-          });
+          await supabase
+            .from('audit_logs')
+            .insert({
+              user_id: 'current-admin-id',
+              action_type: 'impersonate_user',
+              metadata: { 
+                target_user_id: selectedUser.id, 
+                user_email: selectedUser.email 
+              }
+            });
         } catch (error) {
           console.warn("Failed to log impersonation action:", error);
         }
