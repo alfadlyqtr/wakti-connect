@@ -1,10 +1,10 @@
 
 import React from 'react';
 import CreateSuperAdmin from '@/components/admin/CreateSuperAdmin';
+import LandingPage from '@/pages/public/LandingPage';
 
 // Placeholder components for the missing pages
 // These can be replaced with actual implementations later
-const LandingPage = () => <div>Landing Page</div>;
 const PrivacyPolicy = () => <div>Privacy Policy</div>;
 const TermsOfService = () => <div>Terms of Service</div>;
 const HelpdeskPage = () => <div>Helpdesk Page</div>;
