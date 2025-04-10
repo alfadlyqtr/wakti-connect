@@ -1,14 +1,17 @@
 
 import React from 'react';
-import LandingPage from '@/pages/landing/LandingPage';
-import PrivacyPolicy from '@/pages/legal/PrivacyPolicy';
-import TermsOfService from '@/pages/legal/TermsOfService';
-import HelpdeskPage from '@/pages/helpdesk/HelpdeskPage';
-import AboutPage from '@/pages/about/AboutPage';
-import ContactPage from '@/pages/contact/ContactPage';
-import PricingPage from '@/pages/pricing/PricingPage';
-import BlogPage from '@/pages/blog/BlogPage';
 import CreateSuperAdmin from '@/components/admin/CreateSuperAdmin';
+
+// Placeholder components for the missing pages
+// These can be replaced with actual implementations later
+const LandingPage = () => <div>Landing Page</div>;
+const PrivacyPolicy = () => <div>Privacy Policy</div>;
+const TermsOfService = () => <div>Terms of Service</div>;
+const HelpdeskPage = () => <div>Helpdesk Page</div>;
+const AboutPage = () => <div>About Page</div>;
+const ContactPage = () => <div>Contact Page</div>;
+const PricingPage = () => <div>Pricing Page</div>;
+const BlogPage = () => <div>Blog Page</div>;
 
 export const publicRoutes = [
   {
