@@ -121,6 +121,11 @@ const ChatInterface: React.FC = () => {
     navigate('/dashboard/messages');
   };
   
+  // Function to handle the refetch messages button click
+  const handleRefetch = () => {
+    refetchMessages();
+  };
+  
   // Function to get the display name based on the loaded profile
   const getDisplayName = (): string => {
     if (!selectedUserData) return 'User';
@@ -165,7 +170,7 @@ const ChatInterface: React.FC = () => {
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center text-red-500">
             <p>An error occurred loading the conversation.</p>
-            <Button variant="outline" onClick={() => refetchMessages()} className="mt-2">
+            <Button variant="outline" onClick={handleRefetch} className="mt-2">
               Try Again
             </Button>
           </div>
