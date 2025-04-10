@@ -19,11 +19,11 @@ export const publicRoutes = [
     element: <LandingPage />
   },
   {
-    path: '/privacy-policy',
+    path: '/privacy',
     element: <PrivacyPage />
   },
   {
-    path: '/terms-of-service',
+    path: '/terms',
     element: <TermsPage />
   },
   {
