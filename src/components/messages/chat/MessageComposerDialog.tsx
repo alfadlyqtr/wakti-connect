@@ -49,7 +49,7 @@ const MessageComposerDialog: React.FC<MessageComposerDialogProps> = ({
     if (isSending) return;
     
     try {
-      let messageContent = message.trim();
+      let messageContent: string | null = message.trim();
       let audioUrl: string | undefined;
       let imageUrl: string | undefined;
       
@@ -68,7 +68,7 @@ const MessageComposerDialog: React.FC<MessageComposerDialogProps> = ({
           .getPublicUrl(audioData.path);
           
         audioUrl = audioPubUrlData.publicUrl;
-        messageContent = duration || '0:00'; // Use duration as content
+        messageContent = null; // Set content to null for voice messages
       }
       
       // For image messages, upload image file
@@ -96,6 +96,7 @@ const MessageComposerDialog: React.FC<MessageComposerDialogProps> = ({
           .getPublicUrl(imageData.path);
           
         imageUrl = imagePubUrlData.publicUrl;
+        messageContent = null; // Set content to null for image messages
         
         // Clear image preview
         setImagePreview(null);
@@ -103,13 +104,15 @@ const MessageComposerDialog: React.FC<MessageComposerDialogProps> = ({
       }
       
       // Validate for text message
-      if (type === 'text' && (!messageContent || messageContent.length > MAX_MESSAGE_LENGTH)) {
-        toast({
-          title: "Invalid message",
-          description: "Message cannot be empty or exceed 300 characters",
-          variant: "destructive",
-        });
-        return;
+      if (type === 'text') {
+        if (!messageContent || messageContent.length > MAX_MESSAGE_LENGTH) {
+          toast({
+            title: "Invalid message",
+            description: "Message cannot be empty or exceed 300 characters",
+            variant: "destructive",
+          });
+          return;
+        }
       }
       
       await sendMessage({ 

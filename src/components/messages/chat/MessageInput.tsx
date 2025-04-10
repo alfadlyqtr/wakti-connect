@@ -32,6 +32,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (message.trim() && !isSending) {
+      // This only handles text messages
       onSendMessage(message.trim());
       setMessage('');
     }

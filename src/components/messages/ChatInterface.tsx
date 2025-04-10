@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useMessaging } from "@/hooks/useMessaging";
@@ -31,7 +30,6 @@ const ChatInterface: React.FC = () => {
     markConversationAsRead
   } = useMessaging(userId);
   
-  // Get current user
   useEffect(() => {
     const getCurrentUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -43,19 +41,16 @@ const ChatInterface: React.FC = () => {
     getCurrentUser();
   }, []);
   
-  // Check if current user is staff
   useEffect(() => {
     const staffRole = localStorage.getItem('userRole') === 'staff';
     setIsStaff(staffRole);
   }, []);
   
-  // Fetch user/staff data
   const { isLoading: isLoadingUserData } = useQuery({
     queryKey: ['userData', userId],
     queryFn: async () => {
       if (!userId) return null;
       
-      // Try to fetch user profile first
       const { data: profileData } = await supabase
         .from('profiles')
         .select('id, full_name, display_name, business_name, avatar_url')
@@ -67,7 +62,6 @@ const ChatInterface: React.FC = () => {
         return profileData;
       }
       
-      // If no profile found, try to find staff data
       const { data: staffData } = await supabase
         .from('business_staff')
         .select('id, staff_id, name, profile_image_url')
@@ -89,14 +83,13 @@ const ChatInterface: React.FC = () => {
     enabled: !!userId
   });
   
-  // Mark messages as read when viewing the conversation
   useEffect(() => {
     if (userId) {
       markConversationAsRead(userId);
     }
   }, [userId, messages, markConversationAsRead]);
   
-  const handleSendMessage = async (content: string, type: 'text' | 'voice' | 'image' = 'text', audioUrl?: string, imageUrl?: string) => {
+  const handleSendMessage = async (content: string | null, type: 'text' | 'voice' | 'image' = 'text', audioUrl?: string, imageUrl?: string) => {
     if (!userId || isSending) return;
     
     try {
@@ -108,7 +101,6 @@ const ChatInterface: React.FC = () => {
         imageUrl
       });
       
-      // Refetch messages after sending
       setTimeout(() => {
         refetchMessages();
       }, 500);
@@ -121,12 +113,10 @@ const ChatInterface: React.FC = () => {
     navigate('/dashboard/messages');
   };
   
-  // Function to handle the refetch messages button click
   const handleRefetch = () => {
     refetchMessages();
   };
   
-  // Function to get the display name based on the loaded profile
   const getDisplayName = (): string => {
     if (!selectedUserData) return 'User';
     
@@ -137,7 +127,6 @@ const ChatInterface: React.FC = () => {
     return selectedUserData.name;
   };
   
-  // Function to get avatar based on the loaded profile
   const getAvatar = (): string | undefined => {
     if (!selectedUserData) return undefined;
     
@@ -148,7 +137,6 @@ const ChatInterface: React.FC = () => {
     return selectedUserData.profile_image_url;
   };
   
-  // Loading state
   if (isLoadingUserData) {
     return (
       <div className="flex flex-col h-full border-l p-4">
@@ -163,7 +151,6 @@ const ChatInterface: React.FC = () => {
     );
   }
   
-  // Error state
   if (messagesError) {
     return (
       <div className="flex flex-col h-full border-l p-4">
@@ -181,7 +168,6 @@ const ChatInterface: React.FC = () => {
   
   return (
     <div className="flex flex-col h-full border-l">
-      {/* Header */}
       <div className="border-b p-3 flex items-center gap-3">
         {isMobile && (
           <Button variant="ghost" size="icon" onClick={handleGoBack} className="mr-1">
@@ -209,12 +195,10 @@ const ChatInterface: React.FC = () => {
         </div>
       </div>
       
-      {/* Message list */}
       <div className="flex-1 overflow-y-auto p-4">
         <MessageList messages={messages} currentUserId={currentUserId || undefined} />
       </div>
       
-      {/* Message composer */}
       <div className="border-t p-3">
         <MessageComposer onSendMessage={handleSendMessage} isDisabled={!canMessage} />
       </div>

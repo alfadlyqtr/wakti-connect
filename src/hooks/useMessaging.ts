@@ -21,7 +21,7 @@ export interface UseMessagingOptions {
 
 export interface SendMessageParams {
   recipientId: string;
-  content: string;
+  content: string | null;
   type?: 'text' | 'voice' | 'image';
   audioUrl?: string;
   imageUrl?: string;

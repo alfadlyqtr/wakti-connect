@@ -9,7 +9,7 @@ import VoiceRecorder from './VoiceRecorder';
 import { supabase } from '@/integrations/supabase/client';
 
 interface MessageComposerProps {
-  onSendMessage: (content: string, type?: 'text' | 'voice' | 'image', audioUrl?: string, imageUrl?: string) => void;
+  onSendMessage: (content: string | null, type?: 'text' | 'voice' | 'image', audioUrl?: string, imageUrl?: string) => void;
   isDisabled?: boolean;
 }
 
@@ -34,7 +34,7 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
     
     try {
       setIsSending(true);
-      await onSendMessage(message);
+      await onSendMessage(message, 'text');
       setMessage('');
     } catch (error) {
       console.error('Error sending message:', error);
@@ -64,8 +64,8 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
         
       const imageUrl = imagePubUrlData.publicUrl;
       
-      // Send message with image
-      await onSendMessage(message, 'image', undefined, imageUrl);
+      // Send message with image - pass null for content
+      await onSendMessage(null, 'image', undefined, imageUrl);
       
       // Clear form
       setMessage('');
@@ -104,8 +104,8 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
         
       const audioUrl = audioPubUrlData.publicUrl;
       
-      // Send voice message
-      await onSendMessage(audioDuration, 'voice', audioUrl);
+      // Send voice message - pass null for content
+      await onSendMessage(null, 'voice', audioUrl);
       setIsRecording(false);
     } catch (error) {
       console.error('Error sending voice message:', error);
