@@ -44,9 +44,12 @@ export const fetchStaffProfiles = async (userIds: string[]): Promise<Record<stri
   if (uniqueIds.length === 0) return {};
   
   try {
-    // Use the RPC function for a more efficient query
+    // Use a traditional query since the RPC function might not be in TypeScript types yet
     const { data: staffData, error } = await supabase
-      .rpc('get_active_staff_profiles', { ids: uniqueIds });
+      .from('business_staff')
+      .select('staff_id, name, profile_image_url')
+      .in('staff_id', uniqueIds)
+      .eq('status', 'active');
     
     console.log("✅ RPC returned staffData:", staffData?.length, staffData);
     
