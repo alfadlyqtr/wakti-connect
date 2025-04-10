@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -76,7 +75,7 @@ const CommandSearch: React.FC<CommandSearchProps> = ({
       try {
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, full_name, display_name, email, avatar_url, account_type, business_name')
+          .select('id, full_name, display_name, avatar_url, account_type, business_name')
           .eq('account_type', 'business')
           .eq('is_searchable', true)
           .limit(3);
@@ -88,7 +87,7 @@ const CommandSearch: React.FC<CommandSearchProps> = ({
             id: business.id,
             fullName: business.full_name,
             displayName: business.display_name,
-            email: business.email,
+            email: null, // Not displaying email for featured businesses
             avatarUrl: business.avatar_url,
             accountType: business.account_type,
             businessName: business.business_name
@@ -297,7 +296,7 @@ const CommandSearch: React.FC<CommandSearchProps> = ({
           )}
         </CommandEmpty>
         
-        {/* Featured Businesses Section */}
+        {/* Featured Businesses Section - Updated to be more concise */}
         {featuredBusinesses.length > 0 && !searchQuery && (
           <>
             <CommandGroup heading="Featured Businesses">
@@ -317,9 +316,6 @@ const CommandSearch: React.FC<CommandSearchProps> = ({
                         <Badge variant="outline" className="ml-2 bg-yellow-100 text-yellow-800 border-yellow-200">
                           <Star className="h-3 w-3 mr-1" /> Featured
                         </Badge>
-                      </p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {business.email}
                       </p>
                     </div>
                     <div className="flex gap-2">
@@ -358,7 +354,7 @@ const CommandSearch: React.FC<CommandSearchProps> = ({
           </>
         )}
         
-        {/* Search Results */}
+        {/* Search Results - Keeping full details for actual search results */}
         {searchResults.length > 0 && (
           <>
             {/* Business Results */}
