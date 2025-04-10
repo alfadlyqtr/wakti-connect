@@ -81,11 +81,13 @@ export const fetchConversations = async (staffOnly = false): Promise<Conversatio
       // Process messages into conversations
       const conversationMap = new Map<string, Conversation>();
       
-      for (const message of messageData) {
+      for (const msg of messageData) {
+        if (!msg || typeof msg !== 'object') continue;
+        
         // Determine the other user ID (conversation partner)
-        const otherUserId = message.sender_id === session.user.id 
-          ? message.recipient_id 
-          : message.sender_id;
+        const otherUserId = msg.sender_id === session.user.id 
+          ? msg.recipient_id 
+          : msg.sender_id;
         
         // Skip if this is not a staff conversation when staffOnly is true
         if (staffOnly && !filteredContactIds.includes(otherUserId)) {
@@ -93,15 +95,15 @@ export const fetchConversations = async (staffOnly = false): Promise<Conversatio
         }
         
         // Get profile data for the other user
-        const profileData = message.sender_id === session.user.id 
-          ? message.recipient 
-          : message.sender;
+        const profileData = msg.sender_id === session.user.id 
+          ? msg.recipient 
+          : msg.sender;
           
         if (!profileData) continue;
         
         // If this conversation hasn't been processed yet or this message is newer
         if (!conversationMap.has(otherUserId) || 
-            new Date(message.created_at) > new Date(conversationMap.get(otherUserId)!.lastMessageTime)) {
+            new Date(msg.created_at) > new Date(conversationMap.get(otherUserId)!.lastMessageTime)) {
           
           // Format display name (business name > display name > full name)
           const displayName = (profileData as any)?.business_name || 
@@ -110,15 +112,15 @@ export const fetchConversations = async (staffOnly = false): Promise<Conversatio
                              'Unknown User';
           
           // Check if there are any unread messages from this user
-          const isUnread = message.recipient_id === session.user.id && !message.is_read;
+          const isUnread = msg.recipient_id === session.user.id && !msg.is_read;
           
           conversationMap.set(otherUserId, {
             id: otherUserId,
             userId: otherUserId,
             displayName,
             avatar: (profileData as any)?.avatar_url,
-            lastMessage: message.content,
-            lastMessageTime: message.created_at,
+            lastMessage: msg.content,
+            lastMessageTime: msg.created_at,
             unread: isUnread
           });
         }
@@ -190,11 +192,13 @@ export const fetchConversations = async (staffOnly = false): Promise<Conversatio
       // Process messages into conversations
       const conversationMap = new Map<string, Conversation>();
       
-      for (const message of messageData) {
+      for (const msg of messageData) {
+        if (!msg || typeof msg !== 'object') continue;
+        
         // Determine the other user ID (conversation partner)
-        const otherUserId = message.sender_id === session.user.id 
-          ? message.recipient_id 
-          : message.sender_id;
+        const otherUserId = msg.sender_id === session.user.id 
+          ? msg.recipient_id 
+          : msg.sender_id;
         
         // Skip if this is not a staff conversation when staffOnly is true
         if (staffOnly && !filteredContactIds.includes(otherUserId)) {
@@ -202,15 +206,15 @@ export const fetchConversations = async (staffOnly = false): Promise<Conversatio
         }
         
         // Get profile data for the other user
-        const profileData = message.sender_id === session.user.id 
-          ? message.recipient 
-          : message.sender;
+        const profileData = msg.sender_id === session.user.id 
+          ? msg.recipient 
+          : msg.sender;
           
         if (!profileData) continue;
         
         // If this conversation hasn't been processed yet or this message is newer
         if (!conversationMap.has(otherUserId) || 
-            new Date(message.created_at) > new Date(conversationMap.get(otherUserId)!.lastMessageTime)) {
+            new Date(msg.created_at) > new Date(conversationMap.get(otherUserId)!.lastMessageTime)) {
           
           // Format display name (business name > display name > full name)
           const displayName = (profileData as any)?.business_name || 
@@ -219,15 +223,15 @@ export const fetchConversations = async (staffOnly = false): Promise<Conversatio
                              'Unknown User';
           
           // Check if there are any unread messages from this user
-          const isUnread = message.recipient_id === session.user.id && !message.is_read;
+          const isUnread = msg.recipient_id === session.user.id && !msg.is_read;
           
           conversationMap.set(otherUserId, {
             id: otherUserId,
             userId: otherUserId,
             displayName,
             avatar: (profileData as any)?.avatar_url,
-            lastMessage: message.content,
-            lastMessageTime: message.created_at,
+            lastMessage: msg.content,
+            lastMessageTime: msg.created_at,
             unread: isUnread
           });
         }

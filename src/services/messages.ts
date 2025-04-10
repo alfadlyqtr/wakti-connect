@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Message } from "@/types/message.types";
+import { isUserStaff, getStaffBusinessId } from "@/utils/staffUtils";
 
 /**
  * Sends a message to a recipient user
@@ -136,6 +137,10 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
         .or(`sender_id.eq.${session.user.id},recipient_id.eq.${session.user.id}`)
         .order('created_at');
       
+      if (error) {
+        throw error;
+      }
+      
       // If a specific conversation user is provided, filter for only messages between the current user and that user
       let filteredData = data || [];
       if (conversationUserId && data) {
@@ -143,10 +148,6 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
           (msg.sender_id === session.user.id && msg.recipient_id === conversationUserId) ||
           (msg.sender_id === conversationUserId && msg.recipient_id === session.user.id)
         );
-      }
-      
-      if (error) {
-        throw error;
       }
       
       // Check if these are staff messages
