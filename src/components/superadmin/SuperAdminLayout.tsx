@@ -1,6 +1,5 @@
 
 import React, { useState } from "react";
-import { Outlet } from "react-router-dom";
 import { Shield, AlertTriangle, Activity, Bell, ChevronLeft, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -8,7 +7,11 @@ import SuperAdminSidebar from "./SuperAdminSidebar";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 
-const SuperAdminLayout: React.FC = () => {
+interface SuperAdminLayoutProps {
+  children: React.ReactNode;
+}
+
+const SuperAdminLayout: React.FC<SuperAdminLayoutProps> = ({ children }) => {
   const { user } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isEmergencyPanelOpen, setIsEmergencyPanelOpen] = useState(false);
@@ -102,7 +105,7 @@ const SuperAdminLayout: React.FC = () => {
           )}
           
           {/* Content from child routes */}
-          <Outlet />
+          {children}
         </main>
       </div>
     </div>

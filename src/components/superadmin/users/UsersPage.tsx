@@ -133,24 +133,27 @@ const UsersPage: React.FC = () => {
     console.log(`Impersonating user: ${selectedUser.email}`);
     
     try {
-      const { error: checkError } = await supabase
+      const { data: tableExists } = await supabase
         .from('_metadata')
-        .select('table_name')
+        .select('*')
         .eq('table_name', 'audit_logs')
-        .single();
+        .maybeSingle();
         
-      if (!checkError) {
-        await supabase
-          .from('audit_logs')
-          .insert({
-            action: 'impersonate_user',
+      if (tableExists) {
+        try {
+          await supabase.rpc('log_admin_action', {
+            action_type: 'impersonate_user',
             user_id: 'current-admin-id',
-            target_user_id: selectedUser.id,
-            metadata: { userEmail: selectedUser.email }
+            metadata: { target_user_id: selectedUser.id, user_email: selectedUser.email }
           });
+        } catch (error) {
+          console.warn("Failed to log impersonation action:", error);
+        }
+      } else {
+        console.warn("Audit logs table does not exist yet - skipping audit logging");
       }
     } catch (error) {
-      console.warn("Could not log to audit_logs, table may not exist yet");
+      console.warn("Error checking for audit_logs table:", error);
     }
     
     setImpersonateDialogOpen(false);
