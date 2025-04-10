@@ -128,55 +128,52 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
     let staffProfiles: Record<string, any> = {};
     
     if (conversationUserId) {
-      // Step 1: Log exactly what values being passed
-      const staffIdsArray = [conversationUserId, session.user.id];
-      console.log("Fetching staff profiles for array:", staffIdsArray);
+      // DEBUGGING: Log user IDs before query
+      console.log("conversationUserId:", conversationUserId);
+      console.log("session.user.id:", session.user.id);
       
-      // Step 2: Confirm both IDs are non-null
-      const validIds = staffIdsArray.filter(id => id != null && id !== undefined);
-      console.log("Valid IDs for staff query:", validIds);
-      
-      if (validIds.length > 0) {
-        try {
-          // Step 3 & 4: Try multiple approaches
-          // First attempt: using .in() with properly filtered array
-          const { data: staffData, error: staffError } = await supabase
-            .from('business_staff')
-            .select('staff_id, name, profile_image_url')
-            .in('staff_id', validIds)
-            .eq('status', 'active');
+      // Step a. testing .in() without additional conditions
+      try {
+        const { data: staffData, error: staffError } = await supabase
+          .from('business_staff')
+          .select('staff_id, name, profile_image_url')
+          .in('staff_id', [conversationUserId, session.user.id]);
+        
+        if (staffError) {
+          console.error("Error with basic .in() query:", staffError);
+        } else if (staffData && Array.isArray(staffData)) {
+          console.log("✅ Staff profile query ran successfully with staff IDs:", [conversationUserId, session.user.id]);
+          console.log("Staff profiles found (without status filter):", staffData.length, staffData);
           
-          if (staffError) {
-            console.error("Error with .in() query:", staffError);
+          // Try step b. with status filter if basic query works
+          try {
+            const { data: staffDataWithStatus, error: statusError } = await supabase
+              .from('business_staff')
+              .select('staff_id, name, profile_image_url')
+              .in('staff_id', [conversationUserId, session.user.id])
+              .eq('status', 'active');
             
-            // Fallback to individual queries if .in() fails
-            console.log("Trying fallback individual queries...");
-            const staffResults = await Promise.all(
-              validIds.map(async (id) => {
-                const { data } = await supabase
-                  .from('business_staff')
-                  .select('staff_id, name, profile_image_url')
-                  .eq('staff_id', id)
-                  .eq('status', 'active');
-                return data || [];
-              })
-            );
-            
-            // Flatten results from individual queries
-            const combinedStaffData = staffResults.flat();
-            console.log("Staff data from fallback queries:", combinedStaffData);
-            
-            if (combinedStaffData && combinedStaffData.length > 0) {
-              console.log("Staff profiles found via fallback:", combinedStaffData.length);
-              combinedStaffData.forEach(staff => {
+            if (statusError) {
+              console.error("Error when adding status filter:", statusError);
+              // If status filter fails, use the results without status filter
+              staffData.forEach(staff => {
+                staffProfiles[staff.staff_id] = {
+                  name: staff.name,
+                  avatar_url: staff.profile_image_url
+                };
+              });
+            } else {
+              console.log("Staff profiles found (with status filter):", staffDataWithStatus.length, staffDataWithStatus);
+              staffDataWithStatus.forEach(staff => {
                 staffProfiles[staff.staff_id] = {
                   name: staff.name,
                   avatar_url: staff.profile_image_url
                 };
               });
             }
-          } else if (staffData && Array.isArray(staffData)) {
-            console.log("Staff profiles found via .in():", staffData.length, staffData);
+          } catch (statusError) {
+            console.error("Exception with status filter:", statusError);
+            // Fallback to data without status filter
             staffData.forEach(staff => {
               staffProfiles[staff.staff_id] = {
                 name: staff.name,
@@ -184,11 +181,37 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
               };
             });
           }
-        } catch (queryError) {
-          console.error("Critical error fetching staff profiles:", queryError);
+        } else {
+          console.log("No staff profiles found with .in() query");
         }
-      } else {
-        console.log("No valid IDs for staff query");
+      } catch (baseQueryError) {
+        console.error("Critical error with base .in() query:", baseQueryError);
+        
+        // Fallback to individual queries as last resort
+        try {
+          console.log("Trying individual queries as fallback...");
+          const ids = [conversationUserId, session.user.id].filter(id => id != null);
+          
+          for (const id of ids) {
+            const { data } = await supabase
+              .from('business_staff')
+              .select('staff_id, name, profile_image_url')
+              .eq('staff_id', id);
+              
+            if (data && data.length > 0) {
+              data.forEach(staff => {
+                staffProfiles[staff.staff_id] = {
+                  name: staff.name,
+                  avatar_url: staff.profile_image_url
+                };
+              });
+            }
+          }
+          
+          console.log("Fetched profiles via individual queries:", Object.keys(staffProfiles).length);
+        } catch (fallbackError) {
+          console.error("Even fallback queries failed:", fallbackError);
+        }
       }
     }
     
