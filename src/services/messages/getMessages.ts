@@ -26,12 +26,12 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
       .select('message_type')
       .limit(1);
       
-    let data;
+    let messageData;
     let error;
     
     if (columnCheckError) {
       console.log("Using legacy message schema without message_type");
-      // Use legacy schema query
+      // Use legacy schema query without relationship syntax
       const result = await supabase
         .from('messages')
         .select(`
@@ -40,17 +40,15 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
           recipient_id,
           content,
           is_read,
-          created_at,
-          sender:sender_id(id, full_name, display_name, business_name, avatar_url),
-          recipient:recipient_id(id, full_name, display_name, business_name, avatar_url)
+          created_at
         `)
         .or(`sender_id.eq.${session.user.id},recipient_id.eq.${session.user.id}`)
         .order('created_at');
         
-      data = result.data;
+      messageData = result.data;
       error = result.error;
     } else {
-      // Use new schema with message_type
+      // Use new schema with message_type without relationship syntax
       const result = await supabase
         .from('messages')
         .select(`
@@ -62,14 +60,12 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
           created_at,
           message_type,
           audio_url,
-          image_url,
-          sender:sender_id(id, full_name, display_name, business_name, avatar_url),
-          recipient:recipient_id(id, full_name, display_name, business_name, avatar_url)
+          image_url
         `)
         .or(`sender_id.eq.${session.user.id},recipient_id.eq.${session.user.id}`)
         .order('created_at');
         
-      data = result.data;
+      messageData = result.data;
       error = result.error;
     }
     
@@ -79,19 +75,40 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
     }
     
     // If no data or empty array, return empty array
-    if (!data || data.length === 0) {
+    if (!messageData || messageData.length === 0) {
       return [];
     }
     
     // If a specific conversation user is provided, filter for only messages between the current user and that user
-    let filteredData = data;
+    let filteredData = messageData;
     
     if (conversationUserId) {
-      filteredData = data.filter(msg => {
+      filteredData = messageData.filter(msg => {
         return (
           (msg.sender_id === session.user.id && msg.recipient_id === conversationUserId) ||
           (msg.sender_id === conversationUserId && msg.recipient_id === session.user.id)
         );
+      });
+    }
+    
+    // Get all unique user IDs from messages (both senders and recipients)
+    const userIds = new Set<string>();
+    filteredData.forEach(msg => {
+      userIds.add(msg.sender_id);
+      userIds.add(msg.recipient_id);
+    });
+    
+    // Fetch profile data for all users in a single query
+    const { data: profilesData } = await supabase
+      .from('profiles')
+      .select('id, full_name, display_name, business_name, avatar_url')
+      .in('id', Array.from(userIds));
+      
+    // Create a map of profiles for easy lookup
+    const profilesMap = new Map();
+    if (profilesData) {
+      profilesData.forEach(profile => {
+        profilesMap.set(profile.id, profile);
       });
     }
     
@@ -121,8 +138,8 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
     
     // Transform the data to match the Message interface
     const messages: Message[] = filteredData.map(msg => {
-      // Get sender information
-      const senderInfo = msg.sender || {};
+      // Get sender information from the profiles map
+      const senderProfile = profilesMap.get(msg.sender_id);
       
       // Check if sender is a staff member
       const staffInfo = staffProfiles[msg.sender_id];
@@ -130,14 +147,14 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
       // Use staff info if available, otherwise use profile info
       const senderName = 
         staffInfo?.name ||
-        senderInfo?.business_name || 
-        senderInfo?.display_name || 
-        senderInfo?.full_name || 
+        senderProfile?.business_name || 
+        senderProfile?.display_name || 
+        senderProfile?.full_name || 
         'Unknown User';
       
       const senderAvatar = 
         staffInfo?.avatar_url ||
-        senderInfo?.avatar_url;
+        senderProfile?.avatar_url;
       
       // Create message object with proper type handling
       return {

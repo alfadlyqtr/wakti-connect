@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { Play, Pause, ExternalLink, AlertCircle } from "lucide-react";
+import { Play, Pause, ExternalLink } from "lucide-react";
 import { isMessageExpired } from "@/utils/messageExpiration";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
