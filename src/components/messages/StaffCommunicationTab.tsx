@@ -1,15 +1,16 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Users, MessageSquare } from "lucide-react";
+import { Users, MessageSquare, RefreshCcw } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
-import ConversationsList from "./ConversationsList";
 import { Button } from "@/components/ui/button";
 import MessageComposerDialog from "./chat/MessageComposerDialog";
+import MessageList from "./chat/MessageList";
+import { getMessages } from "@/services/messages";
 
 interface StaffCommunicationTabProps {
   businessId?: string | null;
@@ -28,13 +29,44 @@ interface StaffMember {
 const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessId }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   
-  const { data: staffMembers, isLoading, error, refetch } = useQuery({
+  // Fetch the current user ID
+  React.useEffect(() => {
+    const fetchCurrentUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setCurrentUserId(session.user.id);
+      }
+    };
+    
+    fetchCurrentUser();
+  }, []);
+  
+  // Fetch all messages for the staff
+  const { 
+    data: messages = [], 
+    isLoading: isLoadingMessages,
+    error: messagesError,
+    refetch: refetchMessages
+  } = useQuery({
+    queryKey: ['staffMessages'],
+    queryFn: async () => {
+      // Get all messages without filtering by conversation
+      const allMessages = await getMessages();
+      
+      // Sort messages by date (newest first)
+      return allMessages.sort((a, b) => 
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+    },
+    refetchInterval: 10000 // Refresh every 10 seconds
+  });
+  
+  const { data: staffMembers, isLoading: isLoadingStaff, error: staffError } = useQuery({
     queryKey: ['businessStaff', businessId],
     queryFn: async () => {
       if (!businessId) return [];
-      
-      console.log("Fetching staff members for business:", businessId);
       
       // First fetch staff records, ensuring we only get active staff
       const { data: staffData, error: staffError } = await supabase
@@ -72,18 +104,49 @@ const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessI
         })
       );
       
-      console.log("Found staff members:", staffWithProfiles.length);
       return staffWithProfiles as StaffMember[];
     },
     enabled: !!businessId
   });
   
   const handleMessageSent = () => {
-    // Refresh the conversations list
+    // Refresh messages after sending
     setTimeout(() => {
-      navigate('/dashboard/messages');
+      refetchMessages();
     }, 500);
   };
+  
+  const handleReplyClick = (message: any) => {
+    // Determine the recipient based on the sender of the original message
+    const recipientId = message.senderId === currentUserId 
+      ? message.recipientId 
+      : message.senderId;
+      
+    const recipientName = message.senderId === currentUserId
+      ? message.recipientName
+      : message.senderName;
+    
+    // Open MessageComposerDialog with the recipient information
+    // Implementation would be specific to how you want to handle replies
+    // For now, just navigate to the main messaging interface with the recipient
+    navigate(`/dashboard/messages/${recipientId}`);
+  };
+  
+  if (messagesError) {
+    return (
+      <Card className="mt-4">
+        <CardContent className="p-6">
+          <div className="text-center text-red-500">
+            <p>Failed to load messages. Please try again.</p>
+            <Button onClick={() => refetchMessages()} className="mt-4" variant="outline">
+              <RefreshCcw className="mr-2 h-4 w-4" />
+              Retry
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
   
   return (
     <div className="space-y-6">
@@ -99,16 +162,55 @@ const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessI
         </div>
       </div>
       
+      {/* Messages Inbox */}
       <Card className="overflow-hidden">
-        <CardContent className="p-0">
-          <div className="p-4 border-b">
-            <h3 className="font-medium">Recent Staff Conversations</h3>
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-medium">Messages Inbox</h3>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => refetchMessages()}
+              title="Refresh messages"
+            >
+              <RefreshCcw className="h-4 w-4" />
+            </Button>
           </div>
-          <ConversationsList staffOnly={true} />
+          
+          {isLoadingMessages ? (
+            <div className="space-y-4">
+              {Array(3).fill(0).map((_, i) => (
+                <div key={i} className="p-4 border rounded-md animate-pulse">
+                  <div className="flex items-start gap-3">
+                    <div className="h-10 w-10 bg-muted rounded-full"></div>
+                    <div className="space-y-2 flex-1">
+                      <div className="h-4 bg-muted rounded w-1/3"></div>
+                      <div className="h-3 bg-muted rounded w-full"></div>
+                      <div className="h-3 bg-muted rounded w-3/4"></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : messages.length === 0 ? (
+            <div className="text-center p-8 text-muted-foreground">
+              <MessageSquare className="mx-auto h-12 w-12 opacity-20 mb-2" />
+              <p>No messages yet</p>
+              <p className="text-sm">Messages from your business owner or other staff will appear here</p>
+            </div>
+          ) : (
+            <MessageList 
+              messages={messages} 
+              currentUserId={currentUserId || undefined} 
+              onReplyClick={handleReplyClick}
+            />
+          )}
         </CardContent>
       </Card>
       
-      {isLoading ? (
+      {/* Staff Cards Section */}
+      <h3 className="font-medium text-lg mt-8">Message Staff Members</h3>
+      {isLoadingStaff ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
             <Card key={i} className="overflow-hidden">
@@ -124,7 +226,7 @@ const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessI
             </Card>
           ))}
         </div>
-      ) : error ? (
+      ) : staffError ? (
         <Card>
           <CardContent className="p-6 text-center">
             <div className="flex flex-col items-center gap-2">
