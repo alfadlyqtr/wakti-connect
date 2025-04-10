@@ -10,9 +10,12 @@ import { publicRoutes } from "./routes/publicRoutes";
 import { authRoutes } from "./routes/authRoutes";
 import { dashboardRoutes } from "./routes/dashboardRoutes";
 import { businessRoutes, bookingRoutes } from "./routes/businessRoutes";
+import { superadminRoutes } from "./routes/superadminRoutes"; // Add this line
 import ScrollToTop from "./components/ui/scroll-to-top";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import SuperAdminGuard from "./components/auth/SuperAdminGuard"; // Add this line
 import DashboardLayout from "./components/dashboard/DashboardLayout";
+import SuperAdminLayout from "./components/superadmin/SuperAdminLayout"; // Add this line
 import { TaskProvider } from "@/contexts/TaskContext";
 import NotificationListener from "@/components/notifications/NotificationListener";
 import ErrorBoundary from "@/components/ui/ErrorBoundary";
@@ -90,6 +93,27 @@ function App() {
                             </Routes>
                           </DashboardLayout>
                         </ProtectedRoute>
+                      }
+                    />
+                    
+                    {/* Super Admin Dashboard routes */}
+                    <Route
+                      path="/gohabsgo/*"
+                      element={
+                        <SuperAdminGuard>
+                          <SuperAdminLayout>
+                            <Routes>
+                              {superadminRoutes.map((route) => (
+                                <Route
+                                  key={route.path || 'index'}
+                                  path={route.path}
+                                  index={route.index}
+                                  element={route.element}
+                                />
+                              ))}
+                            </Routes>
+                          </SuperAdminLayout>
+                        </SuperAdminGuard>
                       }
                     />
                     
