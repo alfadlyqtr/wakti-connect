@@ -46,17 +46,18 @@ export const fetchStaffProfiles = async (userIds: string[]): Promise<Record<stri
   try {
     const staffProfiles: Record<string, StaffProfile> = {};
     
-    // Just fetch the staff records directly without the relationship syntax
+    // Use the official Supabase-supported query without fallback logic
     const { data: staffData, error } = await supabase
       .from('business_staff')
       .select('staff_id, name, profile_image_url')
-      .in('staff_id', uniqueIds);
+      .in('staff_id', uniqueIds)
+      .eq('status', 'active');
+    
+    console.log("✅ Clean staff query returned:", staffData?.length, staffData);
     
     if (error) {
       console.error("Error fetching staff profiles:", error);
     } else if (staffData && Array.isArray(staffData)) {
-      console.log("✅ Staff profiles found:", staffData.length);
-      
       staffData.forEach(staff => {
         if (staff.staff_id) {
           staffProfiles[staff.staff_id] = {
@@ -66,31 +67,6 @@ export const fetchStaffProfiles = async (userIds: string[]): Promise<Record<stri
           };
         }
       });
-    } else {
-      console.log("No staff profiles found with query");
-    }
-    
-    // If no profiles were found, try individual queries as fallback
-    if (Object.keys(staffProfiles).length === 0 && uniqueIds.length > 0) {
-      console.log("Using individual queries as fallback...");
-      
-      for (const id of uniqueIds) {
-        if (!id) continue;
-        
-        const { data } = await supabase
-          .from('business_staff')
-          .select('staff_id, name, profile_image_url')
-          .eq('staff_id', id)
-          .maybeSingle();
-          
-        if (data) {
-          staffProfiles[data.staff_id] = {
-            id: data.staff_id,
-            name: data.name,
-            profile_image_url: data.profile_image_url
-          };
-        }
-      }
     }
     
     return staffProfiles;
