@@ -138,6 +138,8 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
         .order('created_at');
       
       if (error) {
+        // This indicates the query failed due to missing columns
+        console.error("Error with new column structure:", error);
         throw error;
       }
       
@@ -154,9 +156,14 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
         if (Array.isArray(data) && data.every(item => typeof item === 'object' && item !== null)) {
           filteredData = data.filter(msg => {
             if (msg === null) return false;
+            
+            // Safely check properties
+            const msgSenderId = msg.sender_id;
+            const msgRecipientId = msg.recipient_id;
+            
             return (
-              (msg.sender_id === session.user.id && msg.recipient_id === conversationUserId) ||
-              (msg.sender_id === conversationUserId && msg.recipient_id === session.user.id)
+              (msgSenderId === session.user.id && msgRecipientId === conversationUserId) ||
+              (msgSenderId === conversationUserId && msgRecipientId === session.user.id)
             );
           });
         } else {
@@ -259,20 +266,20 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
       // If a specific conversation user is provided, filter for only messages between the current user and that user
       let filteredData = data;
       
-      if (conversationUserId) {
+      if (conversationUserId && Array.isArray(data)) {
         // Type check: Ensure data is an array of objects with the expected properties
-        if (Array.isArray(data) && data.every(item => typeof item === 'object' && item !== null)) {
-          filteredData = data.filter(msg => {
-            if (msg === null) return false;
-            return (
-              (msg.sender_id === session.user.id && msg.recipient_id === conversationUserId) ||
-              (msg.sender_id === conversationUserId && msg.recipient_id === session.user.id)
-            );
-          });
-        } else {
-          console.error("Unexpected data format:", data);
-          return [];
-        }
+        filteredData = data.filter(msg => {
+          if (!msg || typeof msg !== 'object') return false;
+          
+          // Safely check properties
+          const msgSenderId = (msg as any).sender_id;
+          const msgRecipientId = (msg as any).recipient_id;
+          
+          return (
+            (msgSenderId === session.user.id && msgRecipientId === conversationUserId) ||
+            (msgSenderId === conversationUserId && msgRecipientId === session.user.id)
+          );
+        });
       }
       
       // Check if these are staff messages
@@ -300,14 +307,17 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
       }
       
       // Transform the data to match the Message interface
-      const messages: Message[] = filteredData.map(msg => {
-        if (!msg) return {} as Message;
+      const messages: Message[] = Array.isArray(filteredData) ? filteredData.map(msg => {
+        if (!msg || typeof msg !== 'object') return {} as Message;
+        
+        // Safe casting
+        const typedMsg = msg as any;
         
         // Get sender information with safe property access
-        const senderInfo = msg.sender || {};
+        const senderInfo = typedMsg.sender || {};
         
         // Check if sender is a staff member
-        const staffInfo = staffProfiles[msg.sender_id];
+        const staffInfo = staffProfiles[typedMsg.sender_id];
         
         // Use staff info if available, otherwise use profile info
         const senderName = 
@@ -322,19 +332,19 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
           (senderInfo && typeof senderInfo === 'object' ? (senderInfo as any)?.avatar_url : undefined);
         
         return {
-          id: msg.id || '',
-          content: msg.content || '',
-          senderId: msg.sender_id || '',
-          recipientId: msg.recipient_id || '',
-          isRead: msg.is_read || false,
-          createdAt: msg.created_at || '',
+          id: typedMsg.id || '',
+          content: typedMsg.content || '',
+          senderId: typedMsg.sender_id || '',
+          recipientId: typedMsg.recipient_id || '',
+          isRead: typedMsg.is_read || false,
+          createdAt: typedMsg.created_at || '',
           senderName: senderName,
           senderAvatar: senderAvatar,
           type: 'text', // Default to text for old schema
           audioUrl: undefined,
           imageUrl: undefined
         };
-      });
+      }) : [];
       
       return messages;
     }
