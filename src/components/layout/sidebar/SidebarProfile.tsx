@@ -3,13 +3,14 @@ import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cva } from "class-variance-authority";
 import { useNavigate } from "react-router-dom";
+import { UserRole } from "@/types/user";
 
 interface SidebarProfileData {
   id?: string;
   full_name?: string | null;
   display_name?: string | null;
   business_name?: string | null;
-  account_type?: "free" | "individual" | "business" | "staff";
+  account_type?: UserRole;
   avatar_url?: string | null;
 }
 
@@ -55,6 +56,9 @@ const SidebarProfile: React.FC<SidebarProfileProps> = ({ profileData, collapsed 
         break;
       case "staff":
         type = "Staff";
+        break;
+      case "super-admin":
+        type = "Super Admin";
         break;
       default:
         type = "Free";

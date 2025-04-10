@@ -115,7 +115,7 @@ export const useTaskQueries = (tab: TaskTab = "my-tasks"): UseTaskQueriesReturn 
     isLoading,
     error,
     refetch,
-    userRole,
+    userRole: userRole as "free" | "individual" | "business" | "staff" | "super-admin",
     isStaff
   };
 };

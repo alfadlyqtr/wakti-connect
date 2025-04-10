@@ -9,6 +9,7 @@ import SidebarProfile from "./sidebar/SidebarProfile";
 import CollapseToggle from "./sidebar/CollapseToggle";
 import SidebarContainer from "./sidebar/SidebarContainer";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { UserRole } from "@/types/user";
 
 // Define profile type to ensure TypeScript knows about our new columns
 interface SidebarProfileData {
@@ -16,7 +17,7 @@ interface SidebarProfileData {
   full_name: string | null;
   display_name: string | null;
   business_name: string | null;
-  account_type: "free" | "individual" | "business";
+  account_type: UserRole;
   avatar_url: string | null;
 }
 
