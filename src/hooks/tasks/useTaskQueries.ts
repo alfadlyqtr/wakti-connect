@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -30,6 +31,13 @@ export const useTaskQueries = (tab: TaskTab = "my-tasks"): UseTaskQueriesReturn 
         
         if (!session?.user) return;
         
+        // First check localStorage for super admin status (faster)
+        if (localStorage.getItem('isSuperAdmin') === 'true') {
+          setUserRole("super-admin");
+          console.log("User role set to super-admin from localStorage");
+          return;
+        }
+        
         // Check if user is super admin
         const { data: superAdminData } = await supabase
           .from('super_admins')
@@ -39,8 +47,11 @@ export const useTaskQueries = (tab: TaskTab = "my-tasks"): UseTaskQueriesReturn 
         
         if (superAdminData) {
           setUserRole("super-admin");
+          localStorage.setItem('isSuperAdmin', 'true');
           console.log("User role set to super-admin");
           return;
+        } else {
+          localStorage.setItem('isSuperAdmin', 'false');
         }
         
         const staffStatus = await isUserStaff();

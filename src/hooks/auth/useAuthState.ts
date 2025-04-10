@@ -21,6 +21,32 @@ export function useAuthState() {
             
             if (event === 'SIGNED_IN' && session) {
               try {
+                // Check if user is a super admin first
+                const { data: superAdminData, error: superAdminError } = await supabase
+                  .from('super_admins')
+                  .select('id')
+                  .eq('id', session.user.id)
+                  .maybeSingle();
+                  
+                const isSuperAdmin = !!superAdminData;
+                
+                if (isSuperAdmin) {
+                  console.log("Auth state: User is a super admin");
+                  localStorage.setItem('isSuperAdmin', 'true');
+                  
+                  const userData: User = {
+                    ...session.user,
+                    name: 'System Administrator',
+                    displayName: 'System Administrator',
+                    plan: 'super-admin' as UserRole
+                  };
+                  
+                  setUser(userData);
+                  return;
+                } else {
+                  localStorage.setItem('isSuperAdmin', 'false');
+                }
+                
                 // Get user profile data
                 const { data: profile, error: profileError } = await supabase
                   .from("profiles")
@@ -49,6 +75,7 @@ export function useAuthState() {
               }
             } else if (event === 'SIGNED_OUT') {
               setUser(null);
+              localStorage.removeItem('isSuperAdmin');
             }
           }
         );
@@ -63,6 +90,33 @@ export function useAuthState() {
         
         if (session?.user) {
           try {
+            // Check if user is a super admin first
+            const { data: superAdminData, error: superAdminError } = await supabase
+              .from('super_admins')
+              .select('id')
+              .eq('id', session.user.id)
+              .maybeSingle();
+              
+            const isSuperAdmin = !!superAdminData;
+            
+            if (isSuperAdmin) {
+              console.log("Initial session: User is a super admin");
+              localStorage.setItem('isSuperAdmin', 'true');
+              
+              const userData: User = {
+                ...session.user,
+                name: 'System Administrator',
+                displayName: 'System Administrator',
+                plan: 'super-admin' as UserRole
+              };
+              
+              setUser(userData);
+              setIsLoading(false);
+              return;
+            } else {
+              localStorage.setItem('isSuperAdmin', 'false');
+            }
+            
             // Get user profile data
             const { data: profile, error: profileError } = await supabase
               .from("profiles")

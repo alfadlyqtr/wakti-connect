@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +19,42 @@ const SuperAdminGuard: React.FC<SuperAdminGuardProps> = ({ children }) => {
     const checkSuperAdminStatus = async () => {
       try {
         if (!isAuthenticated || !user) {
+          console.log("SuperAdminGuard: User not authenticated");
+          setIsSuperAdmin(false);
+          setIsChecking(false);
+          return;
+        }
+
+        // First check if we have the super admin status in localStorage
+        const cachedIsSuperAdmin = localStorage.getItem('isSuperAdmin');
+        if (cachedIsSuperAdmin === 'true') {
+          console.log("SuperAdminGuard: Using cached super admin status (true)");
+          setIsSuperAdmin(true);
+          setIsChecking(false);
+          
+          // Still verify in the background but don't block UI
+          setTimeout(async () => {
+            try {
+              // Verify against database to keep cache fresh
+              const { data } = await supabase
+                .from('super_admins')
+                .select('id')
+                .eq('id', user.id)
+                .single();
+                
+              if (!data) {
+                console.warn("SuperAdminGuard: Cache mismatch! User is not a super admin in database");
+                localStorage.setItem('isSuperAdmin', 'false');
+                setIsSuperAdmin(false);
+              }
+            } catch (error) {
+              console.error("SuperAdminGuard: Background verification error:", error);
+            }
+          }, 1000);
+          
+          return;
+        } else if (cachedIsSuperAdmin === 'false') {
+          console.log("SuperAdminGuard: Using cached super admin status (false)");
           setIsSuperAdmin(false);
           setIsChecking(false);
           return;
@@ -27,6 +62,7 @@ const SuperAdminGuard: React.FC<SuperAdminGuardProps> = ({ children }) => {
 
         // Get user ID from auth session
         const userId = user.id;
+        console.log("SuperAdminGuard: Checking super admin status for", userId);
 
         // Check if user is in the super_admins table
         const { data: superAdminData, error: superAdminError } = await supabase
@@ -37,21 +73,24 @@ const SuperAdminGuard: React.FC<SuperAdminGuardProps> = ({ children }) => {
           
         // If super_admins table doesn't exist yet or error occurs, fallback to RPC function
         if (superAdminError) {
-          console.warn("Super admins table check failed, falling back to function:", superAdminError);
+          console.warn("SuperAdminGuard: Super admins table check failed, falling back to function:", superAdminError);
           
           // Use the is_super_admin function as a fallback
           const { data: isSuperAdminResult, error: functionError } = await supabase
             .rpc('is_super_admin');
             
           if (functionError) {
-            console.error("Error calling is_super_admin function:", functionError);
+            console.error("SuperAdminGuard: Error calling is_super_admin function:", functionError);
             setIsSuperAdmin(false);
           } else {
             setIsSuperAdmin(!!isSuperAdminResult);
           }
         } else {
           // User is a super admin if found in the table
-          setIsSuperAdmin(!!superAdminData);
+          const isAdmin = !!superAdminData;
+          setIsSuperAdmin(isAdmin);
+          localStorage.setItem('isSuperAdmin', isAdmin ? 'true' : 'false');
+          console.log("SuperAdminGuard: User super admin status set to", isAdmin);
         }
         
         // Log access attempt for audit purposes
@@ -63,10 +102,10 @@ const SuperAdminGuard: React.FC<SuperAdminGuardProps> = ({ children }) => {
             { path: location.pathname }
           );
         } catch (logError) {
-          console.warn("Could not log to audit system:", logError);
+          console.warn("SuperAdminGuard: Could not log to audit system:", logError);
         }
       } catch (error) {
-        console.error("Unexpected error checking super admin status:", error);
+        console.error("SuperAdminGuard: Unexpected error checking super admin status:", error);
         setIsSuperAdmin(false);
       } finally {
         setIsChecking(false);
@@ -88,15 +127,18 @@ const SuperAdminGuard: React.FC<SuperAdminGuardProps> = ({ children }) => {
 
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
+    console.log("SuperAdminGuard: Not authenticated, redirecting to login");
     return <Navigate to="/auth/login" state={{ from: location }} replace />;
   }
 
   // Redirect to dashboard if authenticated but not a super admin
   if (!isSuperAdmin) {
+    console.log("SuperAdminGuard: Not a super admin, redirecting to dashboard");
     return <Navigate to="/dashboard" replace />;
   }
 
   // User is a super admin, render the protected content
+  console.log("SuperAdminGuard: User is a super admin, rendering content");
   return <>{children}</>;
 };
 
