@@ -75,6 +75,24 @@ export const navItems: NavItem[] = [
     showFor: ['business'],
   },
   {
+    label: "Business Page",
+    path: "business-page",
+    icon: Building2,
+    showFor: ['business'],
+  },
+  {
+    label: "Analytics",
+    path: "analytics",
+    icon: BarChart2,
+    showFor: ['business'],
+  },
+  {
+    label: "Reports",
+    path: "reports",
+    icon: FileText,
+    showFor: ['business'],
+  },
+  {
     label: "WAKTI AI",
     path: "ai-assistant",
     icon: Bot,
@@ -109,27 +127,9 @@ export const dropdownNavItems: NavItem[] = [
     showFor: ['free', 'individual', 'business', 'staff'],
   },
   {
-    label: "Business Page",
-    path: "business-page",
-    icon: Building2,
-    showFor: ['business'],
-  },
-  {
     label: "Subscribers",
     path: "subscribers",
     icon: UserPlus,
-    showFor: ['business'],
-  },
-  {
-    label: "Analytics",
-    path: "analytics",
-    icon: BarChart2,
-    showFor: ['business'],
-  },
-  {
-    label: "Reports",
-    path: "reports",
-    icon: FileText,
     showFor: ['business'],
   },
 ];

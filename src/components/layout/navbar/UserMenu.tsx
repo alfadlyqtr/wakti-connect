@@ -1,6 +1,6 @@
 
 import React from "react";
-import { User, Settings, LogOut, MessageSquare, Users, HeartHandshake, Bell, BarChart2, FileText, Building2 } from "lucide-react";
+import { User, Settings, LogOut, MessageSquare, Users, HeartHandshake, Bell, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
