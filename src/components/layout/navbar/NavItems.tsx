@@ -13,15 +13,17 @@ interface NavItem {
   path: string;
   badge: number | null;
   showForBusiness?: boolean;
+  hideForStaff?: boolean;
 }
 
 interface NavItemsProps {
   unreadMessages: any[];
   unreadNotifications: any[];
+  userRole?: string | null;
   isMobile?: boolean;
 }
 
-const NavItems = ({ unreadMessages, unreadNotifications, isMobile = false }: NavItemsProps) => {
+const NavItems = ({ unreadMessages, unreadNotifications, userRole, isMobile = false }: NavItemsProps) => {
   const navigate = useNavigate();
   
   // Use our notification service to get unread count
@@ -35,34 +37,45 @@ const NavItems = ({ unreadMessages, unreadNotifications, isMobile = false }: Nav
       icon: MessageSquare, 
       label: 'Messages', 
       path: '/dashboard/messages', 
-      badge: unreadMessages.length > 0 ? unreadMessages.length : null 
+      badge: unreadMessages.length > 0 ? unreadMessages.length : null,
+      hideForStaff: true // Hide from staff
     },
     { 
       icon: Users, 
       label: 'Contacts', 
       path: '/dashboard/contacts', 
-      badge: null 
+      badge: null,
+      hideForStaff: true // Hide from staff
     },
     { 
       icon: HeartHandshake, 
       label: 'Subscribers', 
       path: '/dashboard/subscribers', 
       badge: null,
-      showForBusiness: true
+      showForBusiness: true, // Only show for business
+      hideForStaff: true // Hide from staff
     },
     { 
       icon: Bell, 
       label: 'Notifications', 
       path: '/dashboard/notifications', 
-      badge: notificationCount > 0 ? notificationCount : null
+      badge: notificationCount > 0 ? notificationCount : null,
+      hideForStaff: true // Hide from staff
     },
   ];
 
-  // Only show items that should be visible based on user role
+  // Filter items based on user role
   const filteredItems = navItems.filter(item => {
-    if (item.showForBusiness && !localStorage.getItem('userRole')?.includes('business')) {
+    // Hide items from staff
+    if (item.hideForStaff && userRole === 'staff') {
       return false;
     }
+    
+    // Only show business-specific items to business users
+    if (item.showForBusiness && userRole !== 'business') {
+      return false;
+    }
+    
     return true;
   });
 

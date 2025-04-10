@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { LogOut, Settings } from "lucide-react";
+import { LogOut, Settings, User } from "lucide-react";
 import { DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -14,19 +14,29 @@ const AccountMenuItems = ({ isAuthenticated }: AccountMenuItemsProps) => {
   
   const handleSignOut = async () => {
     await supabase.auth.signOut();
+    navigate('/auth');
   };
 
   return (
     <>
       <DropdownMenuItem asChild>
-        <Link to="/dashboard/settings">
+        <Link to="/dashboard/settings" className="flex items-center">
           <Settings className="h-4 w-4 mr-2" />
           Settings
         </Link>
       </DropdownMenuItem>
+      
+      <DropdownMenuItem asChild>
+        <Link to="/dashboard/profile" className="flex items-center">
+          <User className="h-4 w-4 mr-2" />
+          Account/Profile
+        </Link>
+      </DropdownMenuItem>
+      
       <DropdownMenuSeparator />
+      
       {isAuthenticated ? (
-        <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
+        <DropdownMenuItem onClick={handleSignOut} className="text-destructive flex items-center">
           <LogOut className="h-4 w-4 mr-2" />
           Log Out
         </DropdownMenuItem>

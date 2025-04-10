@@ -1,6 +1,6 @@
 
 import React from "react";
-import { MessageSquare, Users, HeartHandshake, Bell, User } from "lucide-react";
+import { MessageSquare, Users, HeartHandshake, Bell, User, Settings, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -16,16 +16,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchUnreadNotificationsCount } from "@/services/notifications/notificationService";
 import { useStaffWorkingStatus } from "@/hooks/staff/useStaffWorkingStatus";
 import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
 
 interface UserMenuProps {
   isAuthenticated: boolean;
   unreadMessages: any[];
   unreadNotifications: any[];
+  userRole?: string | null;
 }
 
-const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications }: UserMenuProps) => {
+const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications, userRole }: UserMenuProps) => {
   const { data: staffStatus } = useStaffWorkingStatus();
   const isWorking = staffStatus?.isWorking || false;
+  const isStaff = userRole === 'staff';
+  const isBusiness = userRole === 'business';
   
   // Fetch user profile data for displaying name
   const { data: profileData } = useQuery({
@@ -52,6 +56,11 @@ const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications }: User
     enabled: isAuthenticated,
   });
   
+  // Determine if user icon should pulse/blink
+  const shouldPulse = 
+    unreadMessages.length > 0 || 
+    notificationCount > 0;
+  
   // Determine the display name based on account type
   const getDisplayName = () => {
     if (!profileData) return 'Account';
@@ -74,6 +83,7 @@ const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications }: User
     path: string;
     badge: number | null;
     showForBusiness?: boolean;
+    hideForStaff?: boolean;
   };
   
   const navItems: NavItem[] = [
@@ -81,32 +91,39 @@ const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications }: User
       icon: MessageSquare, 
       label: 'Messages', 
       path: '/dashboard/messages', 
-      badge: unreadMessages.length > 0 ? unreadMessages.length : null 
+      badge: unreadMessages.length > 0 ? unreadMessages.length : null,
+      hideForStaff: true
     },
     { 
       icon: Users, 
       label: 'Contacts', 
       path: '/dashboard/contacts', 
-      badge: null 
+      badge: null,
+      hideForStaff: true
     },
     { 
       icon: HeartHandshake, 
       label: 'Subscribers', 
       path: '/dashboard/subscribers', 
       badge: null,
-      showForBusiness: true
+      showForBusiness: true,
+      hideForStaff: true
     },
     { 
       icon: Bell, 
       label: 'Notifications', 
       path: '/dashboard/notifications', 
-      badge: notificationCount > 0 ? notificationCount : null
+      badge: notificationCount > 0 ? notificationCount : null,
+      hideForStaff: true
     },
   ];
   
-  // Filter for business-only items
+  // Filter items based on user role
   const filteredNavItems = navItems.filter(item => {
-    if (item.showForBusiness && !localStorage.getItem('userRole')?.includes('business')) {
+    if (item.hideForStaff && isStaff) {
+      return false;
+    }
+    if (item.showForBusiness && !isBusiness) {
       return false;
     }
     return true;
@@ -120,7 +137,8 @@ const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications }: User
           size="icon" 
           className={cn(
             "rounded-full h-8 w-8 bg-muted relative", 
-            isWorking && "ring-2 ring-green-500"
+            isWorking && "ring-2 ring-green-500",
+            shouldPulse && "animate-pulse"
           )} 
           aria-label="User menu"
         >
@@ -141,10 +159,30 @@ const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications }: User
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         
-        {/* Mobile menu items in dropdown for navigation redundancy */}
-        <MobileNavItems filteredNavItems={filteredNavItems} />
+        {/* Menu items for both mobile and desktop */}
+        <div className="px-2 py-1.5">
+          {filteredNavItems.map((item, index) => (
+            <Link 
+              key={index}
+              to={item.path}
+              className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+            >
+              <div className="relative">
+                <item.icon className="h-4 w-4" />
+                {item.badge && (
+                  <span className="absolute -top-1 -right-1 h-3 w-3 bg-destructive rounded-full flex items-center justify-center text-[8px] text-white font-bold">
+                    {item.badge > 9 ? '9+' : item.badge}
+                  </span>
+                )}
+              </div>
+              {item.label}
+            </Link>
+          ))}
+        </div>
+        
         <DropdownMenuSeparator />
         
+        {/* Account related items */}
         <AccountMenuItems isAuthenticated={isAuthenticated} />
       </DropdownMenuContent>
     </DropdownMenu>

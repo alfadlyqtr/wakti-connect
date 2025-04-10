@@ -23,6 +23,7 @@ interface NavbarProps {
 const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   // Get unread notifications count
   const { data: unreadNotifications = [] } = useQuery({
@@ -63,6 +64,10 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
     const checkAuth = async () => {
       const { data } = await supabase.auth.getSession();
       setIsAuthenticated(!!data.session);
+      
+      // Get user role from localStorage
+      const role = localStorage.getItem('userRole');
+      setUserRole(role);
     };
 
     checkAuth();
@@ -70,6 +75,9 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
     // Listen for auth changes
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       setIsAuthenticated(!!session);
+      // Update user role when auth state changes
+      const role = localStorage.getItem('userRole');
+      setUserRole(role);
     });
 
     return () => {
@@ -98,39 +106,50 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
           <BrandLogo />
         </div>
 
-        <MobileSearch searchOpen={searchOpen} setSearchOpen={setSearchOpen} />
+        {/* Only show search for business, individual, and free users - not for staff */}
+        {userRole !== 'staff' && (
+          <MobileSearch searchOpen={searchOpen} setSearchOpen={setSearchOpen} />
+        )}
 
         <div className="flex items-center gap-3">
-          {/* Date and Time display */}
+          {/* Date and Time display - shown to everyone */}
           <NavDateTime className="mr-3 hidden md:block" />
           
           {/* Add a subtle separator before other icons (only visible on md+ screens) */}
           <Separator orientation="vertical" className="h-8 hidden md:block" />
           
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => setSearchOpen(true)}
-            className="lg:hidden"
-            aria-label="Search"
-          >
-            <Search className="h-5 w-5" />
-          </Button>
+          {/* Only show search for business, individual, and free users - not for staff */}
+          {userRole !== 'staff' && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setSearchOpen(true)}
+              className="lg:hidden"
+              aria-label="Search"
+            >
+              <Search className="h-5 w-5" />
+            </Button>
+          )}
 
-          {/* Navigation Icons - show on all screen sizes now */}
+          {/* Navigation Icons */}
           <NavItems 
             unreadMessages={unreadMessages} 
             unreadNotifications={unreadNotifications} 
+            userRole={userRole}
           />
 
+          {/* Language switcher - shown to everyone */}
           <LanguageSwitcher />
 
+          {/* Theme toggle - shown to everyone and outside dropdown menu */}
           <ThemeToggle />
 
+          {/* User menu dropdown */}
           <UserMenu 
             isAuthenticated={isAuthenticated} 
             unreadMessages={unreadMessages} 
             unreadNotifications={unreadNotifications} 
+            userRole={userRole}
           />
         </div>
       </div>
