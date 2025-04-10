@@ -1,11 +1,13 @@
-
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MessageSquare, Users, HeartHandshake, Bell } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchUnreadNotificationsCount } from "@/services/notifications/notificationService";
+
+// This component is no longer used in the navbar directly,
+// but keeping it for any other places that might reference it.
+// In future refactoring, we may want to completely remove this component.
 
 interface NavItem {
   icon: React.ElementType;
@@ -63,6 +65,9 @@ const NavItems = ({ unreadMessages, unreadNotifications, userRole, isMobile = fa
       hideForStaff: true // Hide from staff
     },
   ];
+
+  // Need to import the icons
+  import { MessageSquare, Users, HeartHandshake, Bell } from "lucide-react";
 
   // Filter items based on user role
   const filteredItems = navItems.filter(item => {

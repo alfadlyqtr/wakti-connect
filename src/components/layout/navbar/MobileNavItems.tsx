@@ -1,7 +1,10 @@
-
 import React from "react";
 import { Link } from "react-router-dom";
 import { DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+
+// This component is no longer directly used in its original form,
+// but keeping it for backward compatibility.
+// The functionality has been integrated directly into UserMenu.tsx
 
 interface NavItem {
   icon: React.ElementType;

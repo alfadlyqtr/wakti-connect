@@ -10,10 +10,9 @@ import { Separator } from "@/components/ui/separator";
 // Import the components
 import BrandLogo from "./navbar/BrandLogo";
 import MobileSearch from "./navbar/MobileSearch";
-import NavItems from "./navbar/NavItems";
-import UserMenu from "./navbar/UserMenu";
 import ThemeToggle from "./navbar/ThemeToggle";
 import NavDateTime from "./navbar/NavDateTime";
+import UserMenu from "./navbar/UserMenu";
 
 interface NavbarProps {
   toggleSidebar: () => void;
@@ -85,6 +84,9 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
     };
   }, []);
 
+  // Check if user is a staff member
+  const isStaff = userRole === 'staff';
+
   return (
     <header className="w-full bg-background/80 backdrop-blur-sm border-b border-border sticky top-0 z-50">
       <div className="container mx-auto px-4 flex items-center justify-between h-16">
@@ -107,7 +109,7 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
         </div>
 
         {/* Only show search for business, individual, and free users - not for staff */}
-        {userRole !== 'staff' && (
+        {!isStaff && (
           <MobileSearch searchOpen={searchOpen} setSearchOpen={setSearchOpen} />
         )}
 
@@ -118,8 +120,8 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
           {/* Add a subtle separator before other icons (only visible on md+ screens) */}
           <Separator orientation="vertical" className="h-8 hidden md:block" />
           
-          {/* Only show search for business, individual, and free users - not for staff */}
-          {userRole !== 'staff' && (
+          {/* Only show search button for business, individual, and free users - not for staff */}
+          {!isStaff && (
             <Button 
               variant="ghost" 
               size="icon" 
@@ -131,20 +133,13 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
             </Button>
           )}
 
-          {/* Navigation Icons */}
-          <NavItems 
-            unreadMessages={unreadMessages} 
-            unreadNotifications={unreadNotifications} 
-            userRole={userRole}
-          />
-
           {/* Language switcher - shown to everyone */}
           <LanguageSwitcher />
 
           {/* Theme toggle - shown to everyone and outside dropdown menu */}
           <ThemeToggle />
 
-          {/* User menu dropdown */}
+          {/* User menu dropdown - contains all the navigation items now */}
           <UserMenu 
             isAuthenticated={isAuthenticated} 
             unreadMessages={unreadMessages} 

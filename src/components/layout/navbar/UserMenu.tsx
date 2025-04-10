@@ -1,6 +1,6 @@
 
 import React from "react";
-import { MessageSquare, Users, HeartHandshake, Bell, User, Settings, LogOut } from "lucide-react";
+import { User, Settings, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -9,7 +9,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import MobileNavItems from "./MobileNavItems";
 import AccountMenuItems from "./AccountMenuItems";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,6 +16,7 @@ import { fetchUnreadNotificationsCount } from "@/services/notifications/notifica
 import { useStaffWorkingStatus } from "@/hooks/staff/useStaffWorkingStatus";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
+import MobileNavItems from "./MobileNavItems";
 
 interface UserMenuProps {
   isAuthenticated: boolean;
@@ -117,6 +117,9 @@ const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications, userRo
       hideForStaff: true
     },
   ];
+
+  // Need to import the icons
+  import { MessageSquare, Users, HeartHandshake, Bell } from "lucide-react";
   
   // Filter items based on user role
   const filteredNavItems = navItems.filter(item => {
@@ -148,7 +151,7 @@ const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications, userRo
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel className="flex items-center gap-2">
           {getDisplayName()}
           {isWorking && (
@@ -159,7 +162,7 @@ const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications, userRo
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         
-        {/* Menu items for both mobile and desktop */}
+        {/* Nav items now displayed here in dropdown */}
         <div className="px-2 py-1.5">
           {filteredNavItems.map((item, index) => (
             <Link 
