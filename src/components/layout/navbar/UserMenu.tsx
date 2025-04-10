@@ -16,7 +16,6 @@ import { fetchUnreadNotificationsCount } from "@/services/notifications/notifica
 import { useStaffWorkingStatus } from "@/hooks/staff/useStaffWorkingStatus";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
-import MobileNavItems from "./MobileNavItems";
 
 interface UserMenuProps {
   isAuthenticated: boolean;

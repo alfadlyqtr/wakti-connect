@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import LanguageSwitcher from "@/components/ui/language-switcher";
 import { Separator } from "@/components/ui/separator";
+import { NotificationsDropdown } from "@/components/notifications/NotificationsDropdown";
 
 // Import the components
 import BrandLogo from "./navbar/BrandLogo";
@@ -138,6 +139,11 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
 
           {/* Theme toggle - shown to everyone and outside dropdown menu */}
           <ThemeToggle />
+
+          {/* Notifications dropdown - shown to everyone */}
+          {isAuthenticated && (
+            <NotificationsDropdown />
+          )}
 
           {/* User menu dropdown - contains all the navigation items now */}
           <UserMenu 
