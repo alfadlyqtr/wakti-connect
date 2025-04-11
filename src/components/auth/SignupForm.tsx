@@ -96,7 +96,7 @@ const SignupForm = ({ setError }: SignupFormProps) => {
         id="full-name"
         label="Full Name"
         type="text"
-        placeholder="John Doe"
+        placeholder="Hassan Abdullah"
         value={fullName}
         onChange={(e) => setFullName(e.target.value)}
         required
