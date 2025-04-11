@@ -19,6 +19,7 @@ import ScrollToTop from "./components/ui/scroll-to-top";
 import { TaskProvider } from "@/contexts/TaskContext";
 import NotificationListener from "@/components/notifications/NotificationListener";
 import ErrorBoundary from "@/components/ui/ErrorBoundary";
+import Auth from "./pages/Auth"; // Import the main Auth component
 
 export const router = createBrowserRouter([
   // Public routes wrapped in PublicLayout
@@ -75,7 +76,25 @@ export const router = createBrowserRouter([
     children: businessRoutes,
   },
   
-  // Auth routes  
+  // Direct Auth route
+  {
+    path: "/auth",
+    element: (
+      <ErrorBoundary>
+        <TooltipProvider>
+          <TaskProvider>
+            <ScrollToTop />
+            <NotificationListener />
+            <Toaster />
+            <Sonner />
+            <Auth />
+          </TaskProvider>
+        </TooltipProvider>
+      </ErrorBoundary>
+    ),
+  },
+  
+  // Auth routes with children  
   {
     path: "/auth",
     element: (

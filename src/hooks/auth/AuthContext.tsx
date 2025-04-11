@@ -27,6 +27,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     authError,
   } = useAuthInitializer();
   
+  console.log("AuthProvider rendering:", { 
+    user: user?.id || "no user", 
+    isLoading, 
+    authInitialized, 
+    hasError: !!authError 
+  });
+  
   // Use the auth operations hook for login, logout, register functions
   const { login, logout, register } = useAuthOperations(setUser, setIsLoading);
 
@@ -42,11 +49,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Show a loading state until auth is fully initialized
   if (!authInitialized) {
+    console.log("Auth not initialized yet, showing loading state");
     return <AuthLoadingState authError={authError} />;
   }
 
   // If we have an auth error but initialization is complete, show a recovery UI
   if (authError) {
+    console.log("Auth error occurred:", authError);
     return <AuthErrorState authError={authError} />;
   }
 
@@ -61,6 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
+    console.error("useAuth must be used within an AuthProvider");
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;

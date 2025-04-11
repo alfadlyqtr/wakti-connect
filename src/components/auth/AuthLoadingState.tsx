@@ -10,7 +10,10 @@ const AuthLoadingState: React.FC<AuthLoadingStateProps> = ({ authError }) => {
   const [extendedLoading, setExtendedLoading] = useState(false);
   
   useEffect(() => {
+    console.log("AuthLoadingState mounted", { authError });
+    
     const timeout = setTimeout(() => {
+      console.log("Extended loading timeout reached");
       setExtendedLoading(true);
     }, 5000);
     

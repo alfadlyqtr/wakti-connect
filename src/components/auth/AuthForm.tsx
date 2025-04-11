@@ -27,10 +27,16 @@ const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    console.log("AuthForm mounted with defaultTab:", defaultTab);
+    
     const checkSession = async () => {
+      console.log("Checking for existing session");
       const { data, error } = await supabase.auth.getSession();
       if (data?.session) {
+        console.log("Session found, redirecting to dashboard");
         navigate("/dashboard");
+      } else {
+        console.log("No active session found");
       }
     };
 
@@ -38,13 +44,16 @@ const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log("Auth state changed:", event);
         if (event === "SIGNED_IN" && session) {
+          console.log("User signed in, redirecting to dashboard");
           navigate("/dashboard");
         }
       }
     );
 
     return () => {
+      console.log("AuthForm unmounting, cleaning up listener");
       authListener?.subscription.unsubscribe();
     };
   }, [navigate]);

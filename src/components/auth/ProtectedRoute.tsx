@@ -21,16 +21,23 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   useEffect(() => {
     if (!isLoading) return;
     
-    console.log("ProtectedRoute mounted, auth state:", { isAuthenticated, isLoading, userId: user?.id });
+    console.log("ProtectedRoute mounted, auth state:", { 
+      isAuthenticated, 
+      isLoading, 
+      userId: user?.id, 
+      pathname: location.pathname
+    });
     
     const shortTimer = setTimeout(() => {
       if (isLoading) {
+        console.log("Short loading timeout reached");
         setLoadingTimeout(prev => ({ ...prev, short: true }));
       }
     }, 2000);
     
     const longTimer = setTimeout(() => {
       if (isLoading) {
+        console.log("Long loading timeout reached");
         setLoadingTimeout(prev => ({ ...prev, long: true }));
       }
     }, 5000);
@@ -44,7 +51,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   // Handle authentication and redirection
   useEffect(() => {
     if (!isLoading && !isAuthenticated && !redirectAttempted) {
-      console.log("Not authenticated, will redirect to login");
+      console.log("Not authenticated, will redirect to login", {
+        isLoading,
+        isAuthenticated,
+        redirectAttempted,
+        pathname: location.pathname
+      });
       setRedirectAttempted(true);
     }
   }, [isAuthenticated, isLoading, redirectAttempted]);
@@ -80,7 +92,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   // If authentication check is complete and user is not authenticated, redirect to login
   if (!isAuthenticated && redirectAttempted) {
-    console.log("Redirecting to login page");
+    console.log("Redirecting to login page from:", location.pathname);
     return <Navigate to="/auth/login" state={{ from: location }} replace />;
   }
 
