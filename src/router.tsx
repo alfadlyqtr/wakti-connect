@@ -19,7 +19,6 @@ import ScrollToTop from "./components/ui/scroll-to-top";
 import { TaskProvider } from "@/contexts/TaskContext";
 import NotificationListener from "@/components/notifications/NotificationListener";
 import ErrorBoundary from "@/components/ui/ErrorBoundary";
-import Index from "./pages/Index"; // Ensure Index page is imported
 
 export const router = createBrowserRouter([
   // Public routes wrapped in PublicLayout

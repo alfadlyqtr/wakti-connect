@@ -45,7 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     register,
   };
 
-  // Render children immediately, don't block with loading/error states
+  // Render children without blocking, even when auth is still loading
   return (
     <AuthContext.Provider value={contextValue}>
       {children}

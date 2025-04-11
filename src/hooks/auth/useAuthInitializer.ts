@@ -63,6 +63,7 @@ export function useAuthInitializer() {
           console.log("No session found");
         }
         
+        // Always set loading to false to not block rendering
         setIsLoading(false);
         setAuthInitialized(true);
       } catch (error: any) {
