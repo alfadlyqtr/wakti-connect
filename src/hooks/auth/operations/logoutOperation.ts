@@ -11,25 +11,35 @@ export async function logoutOperation(
   setUser: SetUserFunction
 ) {
   try {
-    console.log("Attempting logout");
-    setIsLoading(true);
+    console.log("Logging out user");
+    
     const { error } = await supabase.auth.signOut();
+    
     if (error) {
       console.error("Logout error:", error);
+      
+      toast({
+        title: "Logout failed",
+        description: error.message || "Failed to log out. Please try again.",
+        variant: "destructive",
+      });
+      
       throw error;
     }
     
-    console.log("Logout successful");
+    // Clear auth data after successful logout
     setUser(null);
-    // User is set to null by the auth listener
+    localStorage.removeItem('isSuperAdmin');
+    
+    console.log("Logout successful");
+    
+    // Skip toast on logout to avoid cluttering the UI
+    // unless you specifically want to show a confirmation
+    
+    // Redirect will be handled by the auth state listener in AuthProvider
   } catch (error: any) {
-    console.error("Logout error:", error);
-    toast({
-      title: "Logout failed",
-      description: error.message || "An error occurred during logout",
-      variant: "destructive",
-    });
-  } finally {
-    setIsLoading(false);
+    console.error("Logout processing error:", error);
+    setIsLoading(false); // Ensure loading state is reset on error
+    throw error;
   }
 }

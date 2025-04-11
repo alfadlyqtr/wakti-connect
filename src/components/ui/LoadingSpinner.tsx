@@ -1,40 +1,42 @@
 
 import React from 'react';
+import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface LoadingSpinnerProps {
+  size?: 'sm' | 'md' | 'lg';
+  color?: 'primary' | 'secondary' | 'muted' | 'white';
   className?: string;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
-  color?: 'primary' | 'secondary' | 'white' | 'red';
 }
 
 const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ 
-  className,
-  size = 'md',
-  color = 'primary' 
+  size = 'md', 
+  color = 'primary',
+  className 
 }) => {
+  // Determine the size of the spinner
   const sizeClasses = {
-    sm: 'h-4 w-4 border-2',
-    md: 'h-8 w-8 border-3',
-    lg: 'h-12 w-12 border-4',
-    xl: 'h-16 w-16 border-4'
+    sm: 'h-4 w-4',
+    md: 'h-6 w-6',
+    lg: 'h-10 w-10',
   };
-
+  
+  // Determine the color of the spinner
   const colorClasses = {
-    primary: 'border-primary border-t-transparent',
-    secondary: 'border-secondary border-t-transparent',
-    white: 'border-white border-t-transparent',
-    red: 'border-red-500 border-t-transparent'
+    primary: 'text-primary',
+    secondary: 'text-secondary',
+    muted: 'text-muted-foreground',
+    white: 'text-white',
   };
-
+  
   return (
-    <div
+    <Loader2 
       className={cn(
-        'animate-spin rounded-full',
+        'animate-spin',
         sizeClasses[size],
         colorClasses[color],
         className
-      )}
+      )} 
     />
   );
 };

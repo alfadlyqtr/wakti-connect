@@ -1,8 +1,10 @@
 
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import { User, AuthContextType } from "./types";
 import { useAuthOperations } from "./useAuthOperations";
-import { useAuthInitializer } from "./useAuthInitializer";
+import { supabase } from "@/integrations/supabase/client";
+import AuthLoadingState from "@/components/auth/AuthLoadingState";
+import AuthErrorState from "@/components/auth/AuthErrorState";
 
 // Create context with default values
 const AuthContext = createContext<AuthContextType>({
@@ -15,26 +17,101 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Use the auth initializer hook to handle session and user state
-  const {
-    user,
-    setUser,
-    isLoading,
-    setIsLoading,
-    authInitialized,
-    authError,
-  } = useAuthInitializer();
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
   
-  console.log("AuthProvider rendering:", { 
-    user: user?.id || "no user", 
-    isLoading, 
-    authInitialized, 
-    hasError: !!authError 
-  });
+  // Set up authentication on mount
+  useEffect(() => {
+    let isMounted = true;
+    
+    const initialize = async () => {
+      try {
+        console.log("Initializing auth context");
+        
+        // First set up the auth listener to catch any auth changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          (event, session) => {
+            if (!isMounted) return;
+            
+            console.log("Auth state changed:", event, {
+              hasSession: !!session,
+              userId: session?.user?.id || 'none'
+            });
+            
+            if (session) {
+              setUser({
+                ...session.user,
+                name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || '',
+                displayName: session.user.user_metadata?.display_name || session.user.user_metadata?.full_name || '',
+                plan: session.user.user_metadata?.account_type || 'free'
+              });
+            } else if (event === 'SIGNED_OUT') {
+              setUser(null);
+            }
+            
+            setIsLoading(false);
+          }
+        );
+        
+        // Then check for existing session
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Session check error:", error);
+          setAuthError(error.message);
+          setIsLoading(false);
+          return;
+        }
+        
+        if (data?.session) {
+          console.log("Found existing session for user:", data.session.user.id);
+          setUser({
+            ...data.session.user,
+            name: data.session.user.user_metadata?.full_name || data.session.user.email?.split('@')[0] || '',
+            displayName: data.session.user.user_metadata?.display_name || data.session.user.user_metadata?.full_name || '',
+            plan: data.session.user.user_metadata?.account_type || 'free'
+          });
+        } else {
+          console.log("No session found");
+        }
+        
+        // Always set loading to false to not block rendering
+        setIsLoading(false);
+        
+        return () => {
+          isMounted = false;
+          subscription.unsubscribe();
+        };
+      } catch (error: any) {
+        console.error("Unexpected error initializing auth:", error);
+        if (isMounted) {
+          setAuthError(error.message || "Failed to initialize authentication");
+          setIsLoading(false);
+        }
+      }
+    };
+    
+    initialize();
+    
+    return () => {
+      isMounted = false;
+    };
+  }, []);
   
   // Use the auth operations hook for login, logout, register functions
   const { login, logout, register } = useAuthOperations(setUser, setIsLoading);
 
+  // Show loading state while initializing
+  if (isLoading) {
+    return <AuthLoadingState authError={authError} />;
+  }
+  
+  // Show error state if initialization failed
+  if (authError) {
+    return <AuthErrorState authError={authError} />;
+  }
+  
   // Provide the auth context value
   const contextValue: AuthContextType = {
     user,
