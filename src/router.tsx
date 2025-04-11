@@ -5,6 +5,7 @@ import { publicRoutes } from "./routes/publicRoutes";
 import { dashboardRoutes } from "./routes/dashboardRoutes";
 import { authRoutes } from "./routes/authRoutes";
 import { businessRoutes, bookingRoutes } from "./routes/businessRoutes";
+import { superadminRoutes } from "./routes/superadminRoutes";
 import NotFound from "./pages/NotFound";
 import PublicLayout from "./components/layout/PublicLayout";
 import DashboardLayout from "./components/dashboard/DashboardLayout";
