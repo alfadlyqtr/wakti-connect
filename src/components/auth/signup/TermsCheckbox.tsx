@@ -5,11 +5,11 @@ import { Label } from "@/components/ui/label";
 
 const TermsCheckbox: React.FC = () => {
   return (
-    <div className="flex items-center gap-2">
-      <Checkbox id="terms" required />
+    <div className="flex items-start gap-2 mt-2">
+      <Checkbox id="terms" required className="mt-1" />
       <Label 
         htmlFor="terms" 
-        className="text-sm font-normal cursor-pointer"
+        className="text-sm font-normal cursor-pointer leading-tight"
       >
         I agree to the Terms of Service and Privacy Policy
       </Label>

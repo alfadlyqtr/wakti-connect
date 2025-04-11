@@ -32,7 +32,7 @@ const SocialAuth = () => {
   };
 
   return (
-    <div className="grid grid-cols-1 gap-3 w-full">
+    <div className="w-full">
       <Button 
         variant="outline" 
         type="button" 

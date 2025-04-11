@@ -8,9 +8,9 @@ interface SubmitButtonProps {
 
 const SubmitButton: React.FC<SubmitButtonProps> = ({ isLoading }) => {
   return (
-    <Button type="submit" className="w-full" disabled={isLoading}>
+    <Button type="submit" className="w-full mt-2" disabled={isLoading}>
       {isLoading ? (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 justify-center">
           <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
           <span>Creating Account...</span>
         </div>

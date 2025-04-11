@@ -60,7 +60,7 @@ const LoginForm = ({ setError }: LoginFormProps) => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="pl-10"
+            className="pl-10 w-full"
           />
         </div>
       </div>
@@ -68,9 +68,6 @@ const LoginForm = ({ setError }: LoginFormProps) => {
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label htmlFor="password">Password</Label>
-          <Link to="/auth/forgot-password" className="text-xs text-muted-foreground hover:text-primary">
-            Forgot Password?
-          </Link>
         </div>
         <div className="relative">
           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -81,7 +78,7 @@ const LoginForm = ({ setError }: LoginFormProps) => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="pl-10"
+            className="pl-10 w-full"
           />
           <Button
             type="button"
@@ -93,6 +90,12 @@ const LoginForm = ({ setError }: LoginFormProps) => {
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </Button>
         </div>
+      </div>
+      
+      <div className="flex justify-end">
+        <Link to="/auth/forgot-password" className="text-xs text-muted-foreground hover:text-primary">
+          Forgot Password?
+        </Link>
       </div>
       
       <Button type="submit" className="w-full" disabled={isLoading}>

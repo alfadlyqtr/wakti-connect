@@ -59,10 +59,19 @@ const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
   }, [navigate]);
 
   return (
-    <Card className="w-full max-w-md mx-auto border-border/50 shadow-xl animate-in">
+    <Card className="w-full max-w-sm mx-auto border-border/50 shadow-xl animate-in">
       <Tabs defaultValue={defaultTab} className="w-full">
-        <CardHeader>
-          <div className="flex items-center justify-between mb-2">
+        <CardHeader className="space-y-4">
+          {/* WAKTI Logo */}
+          <div className="flex justify-center mb-2">
+            <img 
+              src="/lovable-uploads/9b7d0693-89eb-4cc5-b90b-7834bfabda0e.png" 
+              alt="WAKTI Logo" 
+              className="w-20 h-20 object-contain"
+            />
+          </div>
+          
+          <div className="flex items-center justify-between">
             <Button
               variant="ghost"
               size="sm"
@@ -71,21 +80,23 @@ const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
             >
               <Link to="/" className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
                 <ChevronLeft className="h-4 w-4" />
-                <span>Back to Home</span>
+                <span className="text-sm">Back to Home</span>
               </Link>
             </Button>
-            <div className="flex items-center gap-2">
-              <LanguageSwitcher />
-              <TabsList className="grid w-32 sm:w-48 grid-cols-2">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="register">Sign Up</TabsTrigger>
-              </TabsList>
-            </div>
+            <LanguageSwitcher />
           </div>
-          <CardTitle className="text-2xl text-center">Welcome to WAKTI</CardTitle>
-          <CardDescription className="text-center">
-            Manage your tasks, appointments, and business efficiently
-          </CardDescription>
+          
+          <div className="text-center space-y-1.5">
+            <CardTitle className="text-2xl">Welcome to WAKTI</CardTitle>
+            <CardDescription>
+              Manage your tasks, appointments, and business efficiently
+            </CardDescription>
+          </div>
+          
+          <TabsList className="grid w-full grid-cols-2 mt-2">
+            <TabsTrigger value="login">Login</TabsTrigger>
+            <TabsTrigger value="register">Sign Up</TabsTrigger>
+          </TabsList>
         </CardHeader>
 
         <CardContent>
@@ -94,16 +105,16 @@ const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
               {error}
             </div>
           )}
-          <TabsContent value="login" className="mt-0">
+          <TabsContent value="login" className="mt-0 space-y-4">
             <LoginForm setError={setError} />
           </TabsContent>
 
-          <TabsContent value="register" className="mt-0">
+          <TabsContent value="register" className="mt-0 space-y-4">
             <SignupForm setError={setError} />
           </TabsContent>
         </CardContent>
         
-        <CardFooter className="flex flex-col gap-4">
+        <CardFooter className="flex flex-col gap-4 pt-6">
           <div className="relative w-full">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />

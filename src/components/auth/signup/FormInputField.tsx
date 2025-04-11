@@ -7,14 +7,14 @@ interface FormInputFieldProps {
   id: string;
   label: string;
   type: string;
-  placeholder: string;
+  placeholder?: string;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   required?: boolean;
-  minLength?: number;
   icon?: ReactNode;
   rightIcon?: ReactNode;
   helpText?: string;
+  minLength?: number;
 }
 
 const FormInputField: React.FC<FormInputFieldProps> = ({
@@ -25,10 +25,10 @@ const FormInputField: React.FC<FormInputFieldProps> = ({
   value,
   onChange,
   required = false,
-  minLength,
   icon,
   rightIcon,
   helpText,
+  minLength,
 }) => {
   return (
     <div className="space-y-2">
@@ -39,6 +39,7 @@ const FormInputField: React.FC<FormInputFieldProps> = ({
             {icon}
           </div>
         )}
+        
         <Input
           id={id}
           type={type}
@@ -47,15 +48,15 @@ const FormInputField: React.FC<FormInputFieldProps> = ({
           onChange={onChange}
           required={required}
           minLength={minLength}
-          className={`${icon ? "pl-10" : ""}`}
+          className={`w-full ${icon ? "pl-10" : ""}`}
         />
-        {rightIcon && (
-          <div className="absolute right-2 top-1/2 -translate-y-1/2">
-            {rightIcon}
-          </div>
-        )}
+        
+        {rightIcon && rightIcon}
       </div>
-      {helpText && <p className="text-xs text-muted-foreground">{helpText}</p>}
+      
+      {helpText && (
+        <p className="text-xs text-muted-foreground">{helpText}</p>
+      )}
     </div>
   );
 };
