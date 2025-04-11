@@ -12,12 +12,16 @@ export function useAuthInitializer() {
   useEffect(() => {
     console.log("useAuthInitializer hook initializing");
     
+    let isMounted = true;
+    
     // Set up the auth listener first to capture any auth events
     const setupAuthListener = () => {
       console.log("Setting up auth state listener...");
       
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         (event, session) => {
+          if (!isMounted) return;
+          
           console.log("Auth state changed:", event, {
             hasSession: !!session,
             userId: session?.user?.id || 'none'
@@ -42,6 +46,8 @@ export function useAuthInitializer() {
         console.log("Checking for existing session");
         const { data, error } = await supabase.auth.getSession();
         
+        if (!isMounted) return;
+        
         if (error) {
           console.error("Session check error:", error);
           setAuthError(error.message);
@@ -60,6 +66,8 @@ export function useAuthInitializer() {
         setIsLoading(false);
         setAuthInitialized(true);
       } catch (error: any) {
+        if (!isMounted) return;
+        
         console.error("Unexpected error checking session:", error);
         setAuthError(error.message || "Failed to initialize authentication");
         setIsLoading(false);
@@ -74,6 +82,7 @@ export function useAuthInitializer() {
     // Cleanup on unmount
     return () => {
       console.log("Cleaning up auth listener");
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, []);

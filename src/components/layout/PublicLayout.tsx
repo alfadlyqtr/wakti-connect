@@ -9,6 +9,7 @@ const PublicLayout = () => {
   
   // Check if the current path is a business landing page
   const isBusinessPage = location.pathname.startsWith('/business/');
+  console.log("PublicLayout rendering for path:", location.pathname);
   
   return (
     <div className="flex flex-col min-h-screen">

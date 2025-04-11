@@ -3,8 +3,6 @@ import React, { createContext, useContext, useState } from "react";
 import { User, AuthContextType } from "./types";
 import { useAuthOperations } from "./useAuthOperations";
 import { useAuthInitializer } from "./useAuthInitializer";
-import AuthLoadingState from "@/components/auth/AuthLoadingState";
-import AuthErrorState from "@/components/auth/AuthErrorState";
 
 // Create context with default values
 const AuthContext = createContext<AuthContextType>({
@@ -47,18 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     register,
   };
 
-  // Show a loading state until auth is fully initialized
-  if (!authInitialized) {
-    console.log("Auth not initialized yet, showing loading state");
-    return <AuthLoadingState authError={authError} />;
-  }
-
-  // If we have an auth error but initialization is complete, show a recovery UI
-  if (authError) {
-    console.log("Auth error occurred:", authError);
-    return <AuthErrorState authError={authError} />;
-  }
-
+  // Render children immediately, don't block with loading/error states
   return (
     <AuthContext.Provider value={contextValue}>
       {children}

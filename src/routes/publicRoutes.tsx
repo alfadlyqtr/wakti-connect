@@ -9,49 +9,50 @@ import AboutPage from '@/pages/public/AboutPage';
 import PrivacyPage from '@/pages/public/PrivacyPage';
 import TermsPage from '@/pages/public/TermsPage';
 import FaqPage from '@/pages/public/FaqPage';
+import Index from '@/pages/Index';
 
 // Placeholder component for the Helpdesk page
 const HelpdeskPage = () => <div>Helpdesk Page</div>;
 
 export const publicRoutes = [
   {
-    path: '/',
-    element: <LandingPage />
+    path: '',
+    element: <Index />
   },
   {
-    path: '/privacy',
+    path: 'privacy',
     element: <PrivacyPage />
   },
   {
-    path: '/terms',
+    path: 'terms',
     element: <TermsPage />
   },
   {
-    path: '/help',
+    path: 'help',
     element: <HelpdeskPage />
   },
   {
-    path: '/about',
+    path: 'about',
     element: <AboutPage />
   },
   {
-    path: '/contact',
+    path: 'contact',
     element: <ContactPage />
   },
   {
-    path: '/pricing',
+    path: 'pricing',
     element: <PricingPage />
   },
   {
-    path: '/features',
+    path: 'features',
     element: <FeaturesPage />
   },
   {
-    path: '/faq',
+    path: 'faq',
     element: <FaqPage />
   },
   {
-    path: '/create-super-admin',
+    path: 'create-super-admin',
     element: <CreateSuperAdmin />
   }
 ];
