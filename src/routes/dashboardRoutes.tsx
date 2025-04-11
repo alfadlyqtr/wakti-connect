@@ -1,94 +1,92 @@
+
 import React from "react";
-import SuperAdminGuard from "@/components/auth/SuperAdminGuard";
-import SuperAdminLayout from "@/components/superadmin/SuperAdminLayout";
-import { superadminRoutes } from "./superadminRoutes";
-import Dashboard from "@/pages/dashboard/Dashboard";
-import Tasks from "@/pages/dashboard/Tasks";
-import Settings from "@/pages/dashboard/Settings";
-import Help from "@/pages/dashboard/Help";
-import Events from "@/pages/dashboard/Events";
-import Bookings from "@/pages/dashboard/Bookings";
-import Jobs from "@/pages/dashboard/Jobs";
-import Services from "@/pages/dashboard/Services";
-import Staff from "@/pages/dashboard/Staff";
-import BusinessPage from "@/pages/dashboard/BusinessPage";
-import Analytics from "@/pages/dashboard/Analytics";
-import Reports from "@/pages/dashboard/Reports";
-import AIAssistant from "@/pages/dashboard/AIAssistant";
-import Messages from "@/pages/dashboard/Messages";
-import Subscribers from "@/pages/dashboard/Subscribers";
-import JobCards from "@/pages/dashboard/JobCards";
-import StaffCommunication from "@/pages/dashboard/StaffCommunication";
+import DashboardHome from "@/pages/dashboard/DashboardHome";
+import DashboardTasks from "@/pages/dashboard/DashboardTasks";
+import DashboardSettings from "@/pages/dashboard/DashboardSettings";
+import DashboardHelp from "@/pages/dashboard/DashboardHelp";
+import DashboardEvents from "@/pages/dashboard/DashboardEvents";
+import DashboardBookings from "@/pages/dashboard/DashboardBookings";
+import DashboardJobs from "@/pages/dashboard/DashboardJobs";
+import DashboardServiceManagement from "@/pages/dashboard/DashboardServiceManagement";
+import DashboardStaffManagement from "@/pages/dashboard/DashboardStaffManagement";
+import DashboardBusinessPage from "@/pages/dashboard/DashboardBusinessPage";
+import DashboardBusinessAnalytics from "@/pages/dashboard/DashboardBusinessAnalytics";
+import DashboardBusinessReports from "@/pages/dashboard/DashboardBusinessReports";
+import DashboardAIAssistant from "@/pages/dashboard/DashboardAIAssistant";
+import DashboardMessages from "@/pages/dashboard/DashboardMessages";
+import DashboardSubscribers from "@/pages/dashboard/DashboardSubscribers";
+import DashboardJobCards from "@/pages/dashboard/DashboardJobCards";
+import DashboardStaffCommunication from "@/pages/dashboard/DashboardStaffCommunication";
 
 export const dashboardRoutes = [
   {
     path: "",
-    element: <Dashboard />,
+    element: <DashboardHome />,
     index: true
   },
   {
     path: "tasks",
-    element: <Tasks />
+    element: <DashboardTasks />
   },
   {
     path: "events",
-    element: <Events />
+    element: <DashboardEvents />
   },
   {
     path: "bookings",
-    element: <Bookings />
+    element: <DashboardBookings />
   },
   {
     path: "jobs",
-    element: <Jobs />
+    element: <DashboardJobs />
   },
   {
     path: "job-cards",
-    element: <JobCards />
+    element: <DashboardJobCards />
   },
   {
     path: "services",
-    element: <Services />
+    element: <DashboardServiceManagement />
   },
   {
     path: "staff",
-    element: <Staff />
+    element: <DashboardStaffManagement />
   },
   {
     path: "business-page",
-    element: <BusinessPage />
+    element: <DashboardBusinessPage />
   },
   {
     path: "analytics",
-    element: <Analytics />
+    element: <DashboardBusinessAnalytics />
   },
   {
     path: "reports",
-    element: <Reports />
+    element: <DashboardBusinessReports />
   },
   {
     path: "ai-assistant",
-    element: <AIAssistant />
+    element: <DashboardAIAssistant />
   },
   {
     path: "settings",
-    element: <Settings />
+    element: <DashboardSettings />
   },
   {
     path: "help",
-    element: <Help />
+    element: <DashboardHelp />
   },
   {
     path: "messages",
-    element: <Messages />
+    element: <DashboardMessages />
   },
   {
     path: "subscribers",
-    element: <Subscribers />
+    element: <DashboardSubscribers />
   },
   {
     path: "staff-communication",
-    element: <StaffCommunication />
+    element: <DashboardStaffCommunication />
   }
 ];
 

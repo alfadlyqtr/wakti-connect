@@ -2,14 +2,10 @@
 import React from 'react';
 import SuperAdminDashboard from '@/components/superadmin/dashboard/SuperAdminDashboard';
 import UsersPage from '@/components/superadmin/users/UsersPage';
+import { RouteObject } from 'react-router-dom';
 
-interface SuperAdminRoute {
-  path: string;
-  element: React.ReactNode;
-  index?: boolean;
-}
-
-export const superadminRoutes: SuperAdminRoute[] = [
+// Using React Router's RouteObject instead of a custom interface
+export const superadminRoutes: RouteObject[] = [
   {
     path: '',
     element: <SuperAdminDashboard />,
