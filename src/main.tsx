@@ -24,6 +24,7 @@ const rootElement = document.getElementById("root");
 const root = createRoot(rootElement!);
 
 // Add a simple check to the window for debugging
+// Using a type assertion to avoid TypeScript errors 
 window.WAKTI_DEBUG = true;
 console.log("Application initializing...");
 
