@@ -7,6 +7,9 @@ import { toast } from "@/components/ui/use-toast";
 import { slugifyBusinessName } from "@/utils/authUtils";
 import { AccountType, UserRole, getEffectiveRole } from "@/types/user";
 
+// Known super admin ID
+const SUPER_ADMIN_ID = "28e663b3-0a91-4220-8330-fbee7ecd3f96";
+
 export interface DashboardUserProfile {
   account_type: AccountType;
   display_name: string | null;
@@ -30,6 +33,7 @@ export function useDashboardUserProfile() {
         // Clear stored user role on sign out
         localStorage.removeItem('userRole');
         localStorage.removeItem('isStaff');
+        localStorage.removeItem('isSuperAdmin');
         navigate("/auth");
       }
     });
@@ -50,6 +54,48 @@ export function useDashboardUserProfile() {
           console.log("No active session found, redirecting to auth page");
           navigate("/auth");
           return null;
+        }
+        
+        // Check for hard-coded super admin ID
+        if (session.user.id === SUPER_ADMIN_ID) {
+          console.log("Hard-coded super admin detected");
+          localStorage.setItem('isSuperAdmin', 'true');
+          localStorage.setItem('userRole', 'super-admin');
+          setUserId(session.user.id);
+
+          // Return a minimal profile for the super admin
+          return {
+            account_type: 'business' as AccountType, // Map to business for UI compatibility
+            display_name: 'System Administrator',
+            business_name: 'WAKTI Administration',
+            full_name: 'System Administrator',
+            theme_preference: 'dark'
+          };
+        }
+
+        // Check if user is a super admin in the database
+        const { data: superAdminData } = await supabase
+          .from('super_admins')
+          .select('id')
+          .eq('id', session.user.id)
+          .maybeSingle();
+        
+        if (superAdminData) {
+          console.log("Database super admin detected");
+          localStorage.setItem('isSuperAdmin', 'true');
+          localStorage.setItem('userRole', 'super-admin');
+          setUserId(session.user.id);
+
+          // Return a minimal profile for the super admin
+          return {
+            account_type: 'business' as AccountType, // Map to business for UI compatibility
+            display_name: 'System Administrator',
+            business_name: 'WAKTI Administration',
+            full_name: 'System Administrator',
+            theme_preference: 'dark'
+          };
+        } else {
+          localStorage.setItem('isSuperAdmin', 'false');
         }
         
         // Store userId for StaffDashboardHeader
@@ -118,10 +164,14 @@ export function useDashboardUserProfile() {
           return null;
         }
         
+        // Check if this is a super admin (from localStorage, already set earlier)
+        const isSuperAdmin = localStorage.getItem('isSuperAdmin') === 'true';
+        
         // Set userRole based on account_type and staff status
         const effectiveRole = getEffectiveRole(
           profileData?.account_type as AccountType, 
-          !!staffData
+          !!staffData,
+          isSuperAdmin
         );
         
         // Store role in localStorage for components that need it
@@ -161,10 +211,14 @@ export function useDashboardUserProfile() {
     }
   }, [profileData?.theme_preference]);
 
+  // Check if this is a super admin (from localStorage)
+  const isSuperAdmin = localStorage.getItem('isSuperAdmin') === 'true';
+
   // Determine effective user role using our helper
   const userRole = getEffectiveRole(
     profileData?.account_type as AccountType, 
-    isStaff
+    isStaff,
+    isSuperAdmin
   );
 
   return {

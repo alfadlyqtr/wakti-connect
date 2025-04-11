@@ -5,6 +5,8 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { useAuth } from "@/hooks/useAuth";
 import { createAuditLog } from "@/types/auditLogs";
 
+const SUPER_ADMIN_ID = "28e663b3-0a91-4220-8330-fbee7ecd3f96";
+
 interface SuperAdminGuardProps {
   children: React.ReactNode;
 }
@@ -35,6 +37,13 @@ const SuperAdminGuard: React.FC<SuperAdminGuardProps> = ({ children }) => {
           // Still verify in the background but don't block UI
           setTimeout(async () => {
             try {
+              // Hard-coded ID-based check first (for development and fallback)
+              if (user.id === SUPER_ADMIN_ID) {
+                console.log("SuperAdminGuard: User matches hard-coded super admin ID");
+                localStorage.setItem('isSuperAdmin', 'true');
+                return;
+              }
+                
               // Verify against database to keep cache fresh
               const { data } = await supabase
                 .from('super_admins')
@@ -56,6 +65,15 @@ const SuperAdminGuard: React.FC<SuperAdminGuardProps> = ({ children }) => {
         } else if (cachedIsSuperAdmin === 'false') {
           console.log("SuperAdminGuard: Using cached super admin status (false)");
           setIsSuperAdmin(false);
+          setIsChecking(false);
+          return;
+        }
+
+        // Hard-coded ID-based check first (for development and fallback)
+        if (user.id === SUPER_ADMIN_ID) {
+          console.log("SuperAdminGuard: User matches hard-coded super admin ID");
+          localStorage.setItem('isSuperAdmin', 'true');
+          setIsSuperAdmin(true);
           setIsChecking(false);
           return;
         }

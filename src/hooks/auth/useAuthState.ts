@@ -4,6 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "./types";
 import { UserRole } from "@/types/user";
 
+// Known super admin ID
+const SUPER_ADMIN_ID = "28e663b3-0a91-4220-8330-fbee7ecd3f96";
+
 export function useAuthState() {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -21,14 +24,17 @@ export function useAuthState() {
             
             if (event === 'SIGNED_IN' && session) {
               try {
-                // Check if user is a super admin first
+                // Check if user is the hard-coded super admin ID
+                const isHardCodedAdmin = session.user.id === SUPER_ADMIN_ID;
+                
+                // Check if user is a super admin in the database
                 const { data: superAdminData, error: superAdminError } = await supabase
                   .from('super_admins')
                   .select('id')
                   .eq('id', session.user.id)
                   .maybeSingle();
                   
-                const isSuperAdmin = !!superAdminData;
+                const isSuperAdmin = isHardCodedAdmin || !!superAdminData;
                 
                 if (isSuperAdmin) {
                   console.log("Auth state: User is a super admin");
@@ -90,14 +96,17 @@ export function useAuthState() {
         
         if (session?.user) {
           try {
-            // Check if user is a super admin first
+            // Check if user is the hard-coded super admin ID
+            const isHardCodedAdmin = session.user.id === SUPER_ADMIN_ID;
+            
+            // Check if user is a super admin in the database
             const { data: superAdminData, error: superAdminError } = await supabase
               .from('super_admins')
               .select('id')
               .eq('id', session.user.id)
               .maybeSingle();
               
-            const isSuperAdmin = !!superAdminData;
+            const isSuperAdmin = isHardCodedAdmin || !!superAdminData;
             
             if (isSuperAdmin) {
               console.log("Initial session: User is a super admin");
