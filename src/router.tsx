@@ -1,11 +1,10 @@
 
 import React from "react";
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, RouteObject } from "react-router-dom";
 import { publicRoutes } from "./routes/publicRoutes";
 import { dashboardRoutes } from "./routes/dashboardRoutes";
 import { authRoutes } from "./routes/authRoutes";
 import { businessRoutes, bookingRoutes } from "./routes/businessRoutes";
-import { superadminRoutes } from "./routes/superadminRoutes";
 import NotFound from "./pages/NotFound";
 import PublicLayout from "./components/layout/PublicLayout";
 import DashboardLayout from "./components/dashboard/DashboardLayout";
@@ -105,7 +104,9 @@ export const router = createBrowserRouter([
               <NotificationListener />
               <Toaster />
               <Sonner />
-              <DashboardLayout />
+              <DashboardLayout>
+                {/* This fixes the missing children prop error */}
+              </DashboardLayout>
             </TaskProvider>
           </TooltipProvider>
         </ErrorBoundary>
@@ -126,13 +127,15 @@ export const router = createBrowserRouter([
               <NotificationListener />
               <Toaster />
               <Sonner />
-              <SuperAdminLayout />
+              <SuperAdminLayout>
+                {/* This fixes the missing children prop error */}
+              </SuperAdminLayout>
             </TaskProvider>
           </TooltipProvider>
         </ErrorBoundary>
       </SuperAdminGuard>
     ),
-    children: superadminRoutes,
+    children: superadminRoutes as RouteObject[],
   },
   
   // 404 page

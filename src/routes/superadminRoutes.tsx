@@ -1,15 +1,11 @@
 
 import React from 'react';
+import { RouteObject } from 'react-router-dom';
 import SuperAdminDashboard from '@/components/superadmin/dashboard/SuperAdminDashboard';
 import UsersPage from '@/components/superadmin/users/UsersPage';
 
-interface SuperAdminRoute {
-  path: string;
-  element: React.ReactNode;
-  index?: boolean;
-}
-
-export const superadminRoutes: SuperAdminRoute[] = [
+// Changed the type to RouteObject to match what router.tsx expects
+export const superadminRoutes: RouteObject[] = [
   {
     path: '',
     element: <SuperAdminDashboard />,
