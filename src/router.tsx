@@ -2,7 +2,6 @@
 import React from "react";
 import { createBrowserRouter, RouteObject } from "react-router-dom";
 import { publicRoutes } from "./routes/publicRoutes";
-import { dashboardRoutes } from "./routes/dashboardRoutes";
 import { authRoutes } from "./routes/authRoutes";
 import { businessRoutes, bookingRoutes } from "./routes/businessRoutes";
 import { superadminRoutes } from "./routes/superadminRoutes";
@@ -17,9 +16,101 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import ScrollToTop from "./components/ui/scroll-to-top";
 import { TaskProvider } from "@/contexts/TaskContext";
-import NotificationListener from "@/components/notifications/NotificationListener";
-import ErrorBoundary from "@/components/ui/ErrorBoundary";
+import NotificationListener from "./components/notifications/NotificationListener";
+import ErrorBoundary from "./components/ui/ErrorBoundary";
 import AuthShell from "@/components/auth/AuthShell";
+
+// Lazy load dashboard pages
+import { lazy, Suspense } from "react";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
+
+// Dashboard pages with lazy loading
+const DashboardHome = lazy(() => import("@/pages/dashboard/DashboardHome"));
+const DashboardTasks = lazy(() => import("@/pages/dashboard/DashboardTasks"));
+const DashboardEvents = lazy(() => import("@/pages/dashboard/DashboardEvents"));
+const DashboardServiceManagement = lazy(() => import("@/pages/dashboard/DashboardServiceManagement"));
+const DashboardStaffManagement = lazy(() => import("@/pages/dashboard/DashboardStaffManagement"));
+const DashboardBookings = lazy(() => import("@/pages/dashboard/DashboardBookings"));
+const DashboardMessages = lazy(() => import("@/pages/dashboard/DashboardMessages"));
+const DashboardNotifications = lazy(() => import("@/pages/dashboard/DashboardNotifications"));
+const DashboardAIAssistant = lazy(() => import("@/pages/dashboard/DashboardAIAssistant"));
+const DashboardSettings = lazy(() => import("@/pages/dashboard/DashboardSettings"));
+const DashboardHelp = lazy(() => import("@/pages/dashboard/DashboardHelp"));
+const DashboardContacts = lazy(() => import("@/pages/dashboard/DashboardContacts"));
+const StaffDashboard = lazy(() => import("@/pages/dashboard/StaffDashboard"));
+const DashboardJobs = lazy(() => import("@/pages/dashboard/DashboardJobs"));
+const DashboardJobCards = lazy(() => import("@/pages/dashboard/DashboardJobCards"));
+
+// Wrap components with Suspense for lazy loading
+const withSuspense = (Component: React.ComponentType) => (
+  <Suspense fallback={<LoadingSpinner />}>
+    <Component />
+  </Suspense>
+);
+
+// Define dashboard routes
+const dashboardRoutes: RouteObject[] = [
+  {
+    index: true,
+    element: withSuspense(DashboardHome),
+  },
+  {
+    path: "tasks/*",
+    element: withSuspense(DashboardTasks),
+  },
+  {
+    path: "events",
+    element: withSuspense(DashboardEvents),
+  },
+  {
+    path: "services",
+    element: withSuspense(DashboardServiceManagement),
+  },
+  {
+    path: "staff",
+    element: withSuspense(DashboardStaffManagement),
+  },
+  {
+    path: "staff-dashboard",
+    element: withSuspense(StaffDashboard),
+  },
+  {
+    path: "bookings",
+    element: withSuspense(DashboardBookings),
+  },
+  {
+    path: "messages",
+    element: withSuspense(DashboardMessages),
+  },
+  {
+    path: "notifications",
+    element: withSuspense(DashboardNotifications),
+  },
+  {
+    path: "ai-assistant",
+    element: withSuspense(DashboardAIAssistant),
+  },
+  {
+    path: "settings",
+    element: withSuspense(DashboardSettings),
+  },
+  {
+    path: "help",
+    element: withSuspense(DashboardHelp),
+  },
+  {
+    path: "contacts",
+    element: withSuspense(DashboardContacts),
+  },
+  {
+    path: "jobs",
+    element: withSuspense(DashboardJobs),
+  },
+  {
+    path: "job-cards",
+    element: withSuspense(DashboardJobCards),
+  },
+];
 
 export const router = createBrowserRouter([
   // Auth routes with AuthShell wrapper
@@ -95,7 +186,7 @@ export const router = createBrowserRouter([
     children: businessRoutes,
   },
   
-  // Dashboard routes
+  // Dashboard routes - now properly protected and with children defined inline
   {
     path: "/dashboard",
     element: (
@@ -107,10 +198,7 @@ export const router = createBrowserRouter([
               <NotificationListener />
               <Toaster />
               <Sonner />
-              <DashboardLayout>
-                {/* This fixes the children prop error by explicitly passing an outlet placeholder */}
-                <></>
-              </DashboardLayout>
+              <DashboardLayout />
             </TaskProvider>
           </TooltipProvider>
         </ErrorBoundary>
@@ -119,7 +207,7 @@ export const router = createBrowserRouter([
     children: dashboardRoutes,
   },
   
-  // Super Admin Dashboard routes
+  // Super Admin Dashboard routes - kept untouched
   {
     path: "/gohabsgo",
     element: (

@@ -6,12 +6,12 @@ import "@/components/layout/sidebar/sidebar.css";
 import { useDashboardUserProfile } from "@/hooks/useDashboardUserProfile";
 import { useSidebarToggle } from "@/hooks/useSidebarToggle";
 import DashboardContent from "./DashboardContent";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { UserRole, getEffectiveRole } from "@/types/user";
 import CommandSearch from "@/components/search/CommandSearch";
 
 interface DashboardLayoutProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   userRole?: UserRole;
 }
 
@@ -103,7 +103,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
     if (!profileLoading && isAnalyticsPath && userRoleValue === 'business' && location.state?.fromInitialRedirect) {
       navigate('/dashboard');
     }
-  }, [profileLoading, location.pathname, userRoleValue, isStaff, navigate, location.state, profileData?.account_type, accountType, isSuperAdmin]);
+  }, [profileLoading, location.pathname, userRoleValue, isStaff, navigate, location.state, profileData?.account_type, accountType, isSuperAdmin, redirectAttempts, lastRedirectTime]);
 
   // For components that don't recognize super-admin yet, map it to business role
   const mapRoleForCompatibility = (role: UserRole): "free" | "individual" | "business" | "staff" => {
@@ -145,7 +145,8 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
           userRole={displayRole}
           sidebarCollapsed={sidebarCollapsed}
         >
-          {children}
+          {/* Render the outlet for nested routes instead of children */}
+          <Outlet />
         </DashboardContent>
       </div>
 
