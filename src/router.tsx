@@ -5,9 +5,6 @@ import { publicRoutes } from "./routes/publicRoutes";
 import { dashboardRoutes } from "./routes/dashboardRoutes";
 import { authRoutes } from "./routes/authRoutes";
 import { businessRoutes, bookingRoutes } from "./routes/businessRoutes";
-import { superadminRoutes } from "./routes/superadminRoutes";
-import SuperAdminGuard from "./components/auth/SuperAdminGuard";
-import SuperAdminLayout from "./components/superadmin/SuperAdminLayout";
 import NotFound from "./pages/NotFound";
 
 const router = createBrowserRouter([
@@ -21,19 +18,6 @@ const router = createBrowserRouter([
   {
     path: "/business",
     children: businessRoutes,
-  },
-  
-  // Super Admin routes - secured with SuperAdminGuard
-  {
-    path: "/gohabsgo",
-    element: (
-      <SuperAdminGuard>
-        <SuperAdminLayout>
-          <></>
-        </SuperAdminLayout>
-      </SuperAdminGuard>
-    ),
-    children: superadminRoutes,
   },
   
   // Auth routes  

@@ -1,94 +1,143 @@
+import { RouteObject } from "react-router-dom";
+import { lazy, Suspense } from "react";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import StaffRoleGuard from "@/components/auth/StaffRoleGuard";
 
-import React from "react";
-import DashboardHome from "@/pages/dashboard/DashboardHome";
-import DashboardTasks from "@/pages/dashboard/DashboardTasks";
-import DashboardSettings from "@/pages/dashboard/DashboardSettings";
-import DashboardHelp from "@/pages/dashboard/DashboardHelp";
-import DashboardEvents from "@/pages/dashboard/DashboardEvents";
-import DashboardBookings from "@/pages/dashboard/DashboardBookings";
-import DashboardJobs from "@/pages/dashboard/DashboardJobs";
-import DashboardServiceManagement from "@/pages/dashboard/DashboardServiceManagement";
-import DashboardStaffManagement from "@/pages/dashboard/DashboardStaffManagement";
-import DashboardBusinessPage from "@/pages/dashboard/DashboardBusinessPage";
-import DashboardBusinessAnalytics from "@/pages/dashboard/DashboardBusinessAnalytics";
-import DashboardBusinessReports from "@/pages/dashboard/DashboardBusinessReports";
-import DashboardAIAssistant from "@/pages/dashboard/DashboardAIAssistant";
-import DashboardMessages from "@/pages/dashboard/DashboardMessages";
-import DashboardSubscribers from "@/pages/dashboard/DashboardSubscribers";
-import DashboardJobCards from "@/pages/dashboard/DashboardJobCards";
-import DashboardStaffCommunication from "@/pages/dashboard/DashboardStaffCommunication";
+// Use dynamic imports for better code splitting
+const DashboardHome = lazy(() => import("@/pages/dashboard/DashboardHome"));
+const DashboardTasks = lazy(() => import("@/pages/dashboard/DashboardTasks"));
+const DashboardEvents = lazy(() => import("@/pages/dashboard/DashboardEvents"));
+const DashboardServiceManagement = lazy(() => import("@/pages/dashboard/DashboardServiceManagement"));
+const DashboardStaffManagement = lazy(() => import("@/pages/dashboard/DashboardStaffManagement"));
+const DashboardBookings = lazy(() => import("@/pages/dashboard/DashboardBookings"));
+const DashboardTeamManagement = lazy(() => import("@/pages/dashboard/DashboardTeamManagement"));
+const DashboardWorkManagement = lazy(() => import("@/pages/dashboard/DashboardWorkManagement"));
+const DashboardSettings = lazy(() => import("@/pages/dashboard/DashboardSettings"));
+const DashboardBusinessAnalytics = lazy(() => import("@/pages/dashboard/DashboardBusinessAnalytics"));
+const DashboardMessages = lazy(() => import("@/pages/dashboard/DashboardMessages"));
+const DashboardNotifications = lazy(() => import("@/pages/dashboard/DashboardNotifications"));
+const DashboardAIAssistant = lazy(() => import("@/pages/dashboard/DashboardAIAssistant"));
+const DashboardBusinessPage = lazy(() => import("@/pages/dashboard/DashboardBusinessPage"));
+const StaffDashboard = lazy(() => import("@/pages/dashboard/StaffDashboard"));
+const DashboardJobs = lazy(() => import("@/pages/dashboard/DashboardJobs"));
+const DashboardJobCards = lazy(() => import("@/pages/dashboard/DashboardJobCards"));
+const DashboardBusinessReports = lazy(() => import("@/pages/dashboard/DashboardBusinessReports"));
+const DashboardContacts = lazy(() => import("@/pages/dashboard/DashboardContacts"));
+const DashboardSubscribers = lazy(() => import("@/pages/dashboard/DashboardSubscribers"));
+const DashboardUserSubscriptions = lazy(() => import("@/pages/dashboard/DashboardUserSubscriptions"));
+const DashboardStaffCommunication = lazy(() => import("@/pages/dashboard/DashboardStaffCommunication"));
 
-export const dashboardRoutes = [
+// Wrap dynamic imports with suspense
+const withSuspense = (Component: React.ComponentType) => (
+  <Suspense fallback={<LoadingSpinner />}>
+    <Component />
+  </Suspense>
+);
+
+export const dashboardRoutes: RouteObject[] = [
   {
-    path: "",
-    element: <DashboardHome />,
-    index: true
+    index: true,
+    element: withSuspense(DashboardHome),
   },
   {
-    path: "tasks",
-    element: <DashboardTasks />
+    path: "tasks/*",
+    element: (
+      <StaffRoleGuard 
+        disallowStaff={true}
+        messageTitle="Tasks Not Available" 
+        messageDescription="Task management is not available for staff accounts"
+      >
+        {withSuspense(DashboardTasks)}
+      </StaffRoleGuard>
+    ),
   },
   {
     path: "events",
-    element: <DashboardEvents />
-  },
-  {
-    path: "bookings",
-    element: <DashboardBookings />
-  },
-  {
-    path: "jobs",
-    element: <DashboardJobs />
-  },
-  {
-    path: "job-cards",
-    element: <DashboardJobCards />
+    element: withSuspense(DashboardEvents),
   },
   {
     path: "services",
-    element: <DashboardServiceManagement />
+    element: withSuspense(DashboardServiceManagement),
   },
   {
     path: "staff",
-    element: <DashboardStaffManagement />
+    element: withSuspense(DashboardStaffManagement),
   },
   {
-    path: "business-page",
-    element: <DashboardBusinessPage />
+    path: "staff-dashboard",
+    element: withSuspense(StaffDashboard),
   },
   {
-    path: "analytics",
-    element: <DashboardBusinessAnalytics />
+    path: "bookings",
+    element: withSuspense(DashboardBookings),
   },
   {
-    path: "reports",
-    element: <DashboardBusinessReports />
+    path: "team",
+    element: withSuspense(DashboardTeamManagement),
   },
   {
-    path: "ai-assistant",
-    element: <DashboardAIAssistant />
+    path: "work",
+    element: withSuspense(DashboardWorkManagement),
+  },
+  {
+    path: "jobs",
+    element: withSuspense(DashboardJobs),
+  },
+  {
+    path: "job-cards",
+    element: withSuspense(DashboardJobCards),
   },
   {
     path: "settings",
-    element: <DashboardSettings />
+    element: withSuspense(DashboardSettings),
   },
   {
-    path: "help",
-    element: <DashboardHelp />
+    path: "analytics",
+    element: withSuspense(DashboardBusinessAnalytics),
   },
   {
     path: "messages",
-    element: <DashboardMessages />
+    element: withSuspense(DashboardMessages),
+  },
+  {
+    path: "notifications",
+    element: withSuspense(DashboardNotifications),
+  },
+  {
+    path: "ai-assistant",
+    element: withSuspense(DashboardAIAssistant),
+  },
+  {
+    path: "business-page",
+    element: withSuspense(DashboardBusinessPage),
+  },
+  {
+    path: "reports",
+    element: withSuspense(DashboardBusinessReports),
+  },
+  {
+    path: "contacts",
+    element: (
+      <StaffRoleGuard
+        disallowStaff={true}
+        messageTitle="Contacts Not Available"
+        messageDescription="Contact management is not available for staff accounts"
+        redirectTo="/dashboard/messages"
+      >
+        {withSuspense(DashboardContacts)}
+      </StaffRoleGuard>
+    ),
   },
   {
     path: "subscribers",
-    element: <DashboardSubscribers />
+    element: withSuspense(DashboardSubscribers),
+  },
+  {
+    path: "subscriptions",
+    element: withSuspense(DashboardUserSubscriptions),
   },
   {
     path: "staff-communication",
-    element: <DashboardStaffCommunication />
-  }
+    element: withSuspense(DashboardStaffCommunication),
+  },
 ];
-
-// Super Admin routes - these are routed separately via App.tsx
-// to the /gohabsgo/* path with SuperAdminGuard and SuperAdminLayout
