@@ -53,10 +53,10 @@ const Header = () => {
             {theme === "dark" ? <Sun className="h-[1.2rem] w-[1.2rem]" /> : <Moon className="h-[1.2rem] w-[1.2rem]" />}
           </Button>
           <Button asChild size="sm" className="ml-2">
-            <Link to="/auth">Get Started</Link>
+            <Link to="/auth/login">Sign In / Create Account</Link>
           </Button>
           <Button asChild variant="ghost" size="icon" className="rounded-full bg-muted text-foreground ml-2">
-            <Link to="/auth" aria-label="Sign In" title="Sign In">
+            <Link to="/auth/login" aria-label="Sign In" title="Sign In / Create Account">
               <User className="h-[1.2rem] w-[1.2rem]" />
             </Link>
           </Button>
@@ -115,19 +115,19 @@ const Header = () => {
               <span className="font-medium">Contact</span>
             </Link>
             <Link 
-              to="/auth" 
+              to="/auth/login" 
               className="flex items-center px-4 py-3 hover:bg-muted rounded-md transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
               <User className="h-4 w-4 mr-2" />
-              <span className="font-medium">Sign In</span>
+              <span className="font-medium">Sign In / Create Account</span>
             </Link>
             <div className="pt-2 px-4">
               <Button asChild size="sm" className="w-full">
                 <Link 
-                  to="/auth"
+                  to="/auth/login"
                   onClick={() => setIsMenuOpen(false)}
-                >Get Started</Link>
+                >Sign In / Create Account</Link>
               </Button>
             </div>
           </div>
