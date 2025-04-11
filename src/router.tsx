@@ -19,36 +19,21 @@ import ScrollToTop from "./components/ui/scroll-to-top";
 import { TaskProvider } from "@/contexts/TaskContext";
 import NotificationListener from "@/components/notifications/NotificationListener";
 import ErrorBoundary from "@/components/ui/ErrorBoundary";
-import Auth from "@/pages/Auth";
+import AuthShell from "@/components/auth/AuthShell";
 
 export const router = createBrowserRouter([
-  // Auth route at the top level for better precedence
+  // Auth routes with AuthShell wrapper
   {
-    path: "/auth",
+    path: "/auth/*",
     element: (
       <ErrorBoundary>
         <TooltipProvider>
           <ScrollToTop />
           <Toaster />
           <Sonner />
-          <Auth />
-        </TooltipProvider>
-      </ErrorBoundary>
-    ),
-  },
-  
-  // Auth routes with children  
-  {
-    path: "/auth/*",
-    element: (
-      <ErrorBoundary>
-        <TooltipProvider>
-          <TaskProvider>
-            <ScrollToTop />
-            <NotificationListener />
-            <Toaster />
-            <Sonner />
-          </TaskProvider>
+          <AuthShell>
+            <></>
+          </AuthShell>
         </TooltipProvider>
       </ErrorBoundary>
     ),
@@ -74,7 +59,7 @@ export const router = createBrowserRouter([
     children: publicRoutes,
   },
   
-  // Booking routes - kept completely separate from business routes
+  // Booking routes
   {
     path: "/booking",
     element: (
@@ -92,7 +77,7 @@ export const router = createBrowserRouter([
     children: bookingRoutes,
   },
   
-  // Business routes - completely separate path
+  // Business routes
   {
     path: "/business",
     element: (
