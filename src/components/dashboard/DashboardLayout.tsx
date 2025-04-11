@@ -9,6 +9,7 @@ import DashboardContent from "./DashboardContent";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { UserRole, getEffectiveRole } from "@/types/user";
 import CommandSearch from "@/components/search/CommandSearch";
+import FreeAccountBanner from "./FreeAccountBanner";
 
 interface DashboardLayoutProps {
   children?: React.ReactNode;
@@ -44,6 +45,9 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
   const userRoleValue: UserRole = isSuperAdmin 
     ? 'super-admin' 
     : getEffectiveRole(accountType as any, isStaff);
+
+  // Determine if the banner should be shown (only for free individual accounts)
+  const showUpgradeBanner = accountType === 'free' && !isStaff && userRoleValue !== 'business' && userRoleValue !== 'super-admin';
 
   // Handle sidebar collapse state
   const handleCollapseChange = (collapsed: boolean) => {
@@ -118,6 +122,9 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
     <div className={`min-h-screen flex flex-col overflow-hidden ${isSidebarOpen && isMobile ? 'sidebar-open-body' : ''}`}>
       <Navbar toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
       
+      {/* Free Account Banner - Only shown for free individual accounts */}
+      {showUpgradeBanner && <FreeAccountBanner />}
+      
       <div className="flex flex-1 relative overflow-hidden">
         {/* Backdrop overlay - only visible on mobile when sidebar is open */}
         {isMobile && isSidebarOpen && (
@@ -134,6 +141,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
           onCollapseChange={handleCollapseChange}
           closeSidebar={closeSidebar}
           openCommandSearch={openCommandSearch}
+          showUpgradeButton={showUpgradeBanner}
         />
         
         <DashboardContent

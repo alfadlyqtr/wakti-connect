@@ -10,6 +10,7 @@ import CollapseToggle from "./sidebar/CollapseToggle";
 import SidebarContainer from "./sidebar/SidebarContainer";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { UserRole } from "@/types/user";
+import SidebarUpgradeButton from "./sidebar/SidebarUpgradeButton";
 
 // Define profile type to ensure TypeScript knows about our new columns
 interface SidebarProfileData {
@@ -27,6 +28,7 @@ interface SidebarProps {
   onCollapseChange?: (collapsed: boolean) => void;
   closeSidebar?: () => void;
   openCommandSearch?: () => void;
+  showUpgradeButton?: boolean;
 }
 
 const Sidebar = ({ 
@@ -34,7 +36,8 @@ const Sidebar = ({
   userRole, 
   onCollapseChange, 
   closeSidebar,
-  openCommandSearch
+  openCommandSearch,
+  showUpgradeButton = false
 }: SidebarProps) => {
   const [collapsed, setCollapsed] = useState(true); // Default to collapsed
   
@@ -112,6 +115,11 @@ const Sidebar = ({
           isCollapsed={collapsed} 
           openCommandSearch={openCommandSearch}
         />
+        
+        {/* Upgrade Button - Only shown for free accounts that need to upgrade */}
+        {showUpgradeButton && (
+          <SidebarUpgradeButton collapsed={collapsed} />
+        )}
       </ScrollArea>
       
       {/* Upgrade Banner - Only show for free users and when not collapsed */}
