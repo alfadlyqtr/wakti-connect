@@ -1,7 +1,8 @@
 
 // Import React and ReactDOM
 import { createRoot } from 'react-dom/client';
-import App from './App.tsx';
+import { RouterProvider } from 'react-router-dom';
+import { router } from './router';
 import './index.css';
 import './App.css';
 import { AuthProvider } from './hooks/auth';
@@ -15,7 +16,7 @@ const root = createRoot(rootElement!);
 root.render(
   <AuthProvider>
     <CurrencyProvider>
-      <App />
+      <RouterProvider router={router} />
     </CurrencyProvider>
   </AuthProvider>
 );
