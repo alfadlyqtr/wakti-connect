@@ -106,7 +106,8 @@ export const router = createBrowserRouter([
               <Toaster />
               <Sonner />
               <DashboardLayout>
-                {/* This fixes the missing children prop error */}
+                {/* This fixes the children prop error by explicitly passing an outlet placeholder */}
+                <></>
               </DashboardLayout>
             </TaskProvider>
           </TooltipProvider>
@@ -129,7 +130,8 @@ export const router = createBrowserRouter([
               <Toaster />
               <Sonner />
               <SuperAdminLayout>
-                {/* This fixes the missing children prop error */}
+                {/* This fixes the children prop error by explicitly passing an outlet placeholder */}
+                <></>
               </SuperAdminLayout>
             </TaskProvider>
           </TooltipProvider>
