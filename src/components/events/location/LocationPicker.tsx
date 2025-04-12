@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -6,21 +7,40 @@ import { GOOGLE_MAPS_API_KEY, generateGoogleMapsUrl } from '@/config/maps';
 import { useTranslation } from 'react-i18next';
 import { toast } from '@/components/ui/use-toast';
 
-// Define the minimal Google Maps types we need without using namespace
-interface GoogleMapsPlaceAutocomplete {
-  addListener: (event: string, callback: () => void) => void;
-  getPlace: () => {
-    formatted_address?: string;
-    geometry?: {
-      location?: {
-        lat: () => number;
-        lng: () => number;
+// Add TypeScript types for Google Maps
+declare global {
+  interface Window {
+    google: {
+      maps: {
+        places: {
+          Autocomplete: new (
+            input: HTMLInputElement,
+            options?: any
+          ) => google.maps.places.Autocomplete;
+        };
+        Map: any;
       };
     };
-    name?: string;
-    place_id?: string;
-    url?: string;
-  };
+  }
+}
+
+// Define the minimal Google Maps types we need
+namespace google.maps.places {
+  export interface Autocomplete {
+    addListener: (event: string, callback: () => void) => void;
+    getPlace: () => {
+      formatted_address?: string;
+      geometry?: {
+        location?: {
+          lat: () => number;
+          lng: () => number;
+        };
+      };
+      name?: string;
+      place_id?: string;
+      url?: string;
+    };
+  }
 }
 
 interface LocationPickerProps {
@@ -40,7 +60,7 @@ const LocationPickerComponent: React.FC<LocationPickerProps> = ({
 }) => {
   const { t } = useTranslation();
   const [inputValue, setInputValue] = useState(value || '');
-  const autocompleteRef = useRef<GoogleMapsPlaceAutocomplete | null>(null);
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
   const [placeDetails, setPlaceDetails] = useState<{
@@ -53,7 +73,7 @@ const LocationPickerComponent: React.FC<LocationPickerProps> = ({
 
   // Load Google Maps script directly with the static API key
   useEffect(() => {
-    if (window.google?.maps) {
+    if (window.google) {
       setScriptLoaded(true);
       return;
     }
@@ -76,7 +96,7 @@ const LocationPickerComponent: React.FC<LocationPickerProps> = ({
 
   // Initialize autocomplete
   useEffect(() => {
-    if (scriptLoaded && inputRef.current && window.google?.maps) {
+    if (scriptLoaded && inputRef.current && window.google) {
       try {
         autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
           fields: ['formatted_address', 'geometry', 'name', 'place_id', 'url'],
