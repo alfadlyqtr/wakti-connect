@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
@@ -821,3 +822,60 @@ const UsersPage: React.FC = () => {
                 <>
                   This will send a password reset email to <span className="font-medium text-white">{selectedUser.email}</span>.
                   The user will need to click the link in the email to set a new password.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-gray-800 text-gray-300 hover:bg-gray-700">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              className="bg-yellow-600 hover:bg-yellow-700"
+              onClick={confirmResetPassword}
+            >
+              Send Reset Email
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      {/* Delete User Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent className="bg-gray-900 border-gray-800 text-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-white flex items-center">
+              <Trash className="h-5 w-5 text-red-500 mr-2" />
+              Delete User
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-400">
+              {selectedUser && (
+                <>
+                  Are you sure you want to delete the user <span className="font-medium text-white">{selectedUser.full_name || selectedUser.email}</span>?
+                  <div className="mt-2 text-sm text-red-300">
+                    This action cannot be undone. All data associated with this user will be permanently removed.
+                  </div>
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-gray-800 text-gray-300 hover:bg-gray-700">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              className="bg-red-600 hover:bg-red-700"
+              onClick={confirmDeleteUser}
+            >
+              Delete User
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+};
+
+export default UsersPage;
