@@ -6,6 +6,7 @@ import { Mic, Square, Send, Loader2, RefreshCw } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/components/ui/use-toast';
 import { testEdgeFunction } from '@/integrations/supabase/helper';
+import { cn } from '@/lib/utils';
 
 interface VoiceInteractionToolCardProps {
   onSpeechRecognized: (text: string) => void;
