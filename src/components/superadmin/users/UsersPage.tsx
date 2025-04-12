@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   Search, Filter, MoreHorizontal, UserPlus, Trash, Shield, 
   Download, PenTool, Eye, Users, Clock, X, CheckCircle2, 
-  AlertTriangle, Lock, Unlock, UserX, UserCheck
+  AlertTriangle, Lock, Unlock, UserX, UserCheck, AlertCircle
 } from "lucide-react";
 import { 
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
@@ -39,6 +39,7 @@ import {
   AlertDialogTitle
 } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 interface User {
   id: string;
@@ -65,7 +66,7 @@ const UsersPage: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   // Fetch users data from Supabase using the admin_get_all_users RPC function
-  const { data: users = [], isLoading, refetch } = useQuery({
+  const { data: users = [], isLoading, error, refetch } = useQuery({
     queryKey: ['admin', 'users'],
     queryFn: async () => {
       try {
@@ -76,11 +77,6 @@ const UsersPage: React.FC = () => {
         
         if (error) {
           console.error("Error fetching users:", error);
-          toast({
-            title: "Error loading users",
-            description: error.message,
-            variant: "destructive"
-          });
           throw error;
         }
         
@@ -88,7 +84,7 @@ const UsersPage: React.FC = () => {
         return data as User[];
       } catch (error) {
         console.error("Error fetching users:", error);
-        return [];
+        throw error;
       }
     },
   });
@@ -436,6 +432,35 @@ const UsersPage: React.FC = () => {
     staff: users.filter(u => u.account_type === 'staff').length
   };
 
+  // Show error state
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-white">User Management</h1>
+        </div>
+        
+        <div className="p-8 text-center bg-gray-900 border border-red-900 rounded-lg">
+          <div className="flex flex-col items-center justify-center text-red-500 mb-4">
+            <AlertCircle className="h-12 w-12 mb-4" />
+            <h2 className="text-xl font-bold">Error Loading Users</h2>
+          </div>
+          <p className="text-gray-400 mb-4">
+            There was a problem loading user data: {error instanceof Error ? error.message : 'Unknown error'}
+          </p>
+          <Button 
+            onClick={() => refetch()} 
+            variant="outline" 
+            className="border-red-700 text-red-400 hover:bg-red-900/30"
+          >
+            <Clock className="h-4 w-4 mr-2" />
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -568,8 +593,11 @@ const UsersPage: React.FC = () => {
                 <TableBody>
                   {isLoading ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center text-gray-500 p-8">
-                        Loading users...
+                      <TableCell colSpan={6} className="text-center py-10">
+                        <div className="flex flex-col items-center justify-center">
+                          <LoadingSpinner size="lg" color="primary" />
+                          <p className="mt-4 text-gray-500">Loading users data...</p>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ) : filteredUsers.length > 0 ? (
