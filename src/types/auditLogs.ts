@@ -1,57 +1,36 @@
 
-/**
- * Types for audit logging system
- */
-
-export interface AuditLog {
-  id: string;
-  user_id: string;
-  action_type: string;
-  metadata: Record<string, any>;
-  created_at: string;
-}
-
-export type ActionType = 
-  | 'super_admin_access'
-  | 'impersonate_user'
-  | 'system_configuration_change'
-  | 'security_change'
-  | 'user_status_change';
+import { SupabaseClient } from '@supabase/supabase-js';
 
 /**
- * Helper function to create an audit log entry
- * Falls back gracefully if the audit_logs table doesn't exist
+ * Creates an audit log entry in the database
+ * 
+ * @param supabase Supabase client instance
+ * @param userId User ID performing the action
+ * @param actionType Type of action being audited
+ * @param metadata Additional data related to the action
+ * @returns Promise with the result of the operation
  */
-export const createAuditLog = async (
-  supabase: any,
+export async function createAuditLog(
+  supabase: SupabaseClient,
   userId: string,
-  actionType: ActionType,
-  metadata: Record<string, any>
-): Promise<void> => {
+  actionType: string,
+  metadata: Record<string, any> = {}
+): Promise<void> {
   try {
-    // First check if table exists to avoid error
-    const { data: tableExists } = await supabase
-      .from('_metadata')
-      .select('*')
-      .eq('table_name', 'audit_logs')
-      .single();
+    const { error } = await supabase
+      .from('audit_logs')
+      .insert({
+        user_id: userId,
+        action_type: actionType,
+        metadata
+      });
       
-    if (tableExists) {
-      try {
-        await supabase
-          .from('audit_logs')
-          .insert({
-            user_id: userId,
-            action_type: actionType,
-            metadata
-          });
-      } catch (error) {
-        console.warn("Could not log to audit system:", error);
-      }
-    } else {
-      console.warn("Audit logs table does not exist yet - skipping audit logging");
+    if (error) {
+      console.error("Error creating audit log:", error);
+      throw error;
     }
   } catch (error) {
-    console.warn("Error checking for audit_logs table:", error);
+    console.error("Failed to create audit log:", error);
+    // We don't want to throw here as audit logging should not block main functionality
   }
-};
+}

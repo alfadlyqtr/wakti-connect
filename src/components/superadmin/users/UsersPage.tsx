@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
@@ -64,15 +63,18 @@ const UsersPage: React.FC = () => {
   const [sortBy, setSortBy] = useState<'created_at' | 'last_login_at'>('created_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
-  // Fetch users data
+  // Fetch users data from Supabase using the admin_get_all_users RPC function
   const { data: users = [], isLoading, refetch } = useQuery({
     queryKey: ['admin', 'users'],
     queryFn: async () => {
       try {
+        console.log("Fetching users from Supabase admin_get_all_users RPC function");
+        
         const { data, error } = await supabase
           .rpc('admin_get_all_users');
         
         if (error) {
+          console.error("Error fetching users:", error);
           toast({
             title: "Error loading users",
             description: error.message,
@@ -81,6 +83,7 @@ const UsersPage: React.FC = () => {
           throw error;
         }
         
+        console.log("Fetched users data:", data);
         return data as User[];
       } catch (error) {
         console.error("Error fetching users:", error);
@@ -89,7 +92,7 @@ const UsersPage: React.FC = () => {
     },
   });
 
-  // Reset password mutation
+  // Reset password mutation - placeholder functionality with toast notification
   const resetPasswordMutation = useMutation({
     mutationFn: async (email: string) => {
       const { data, error } = await supabase.rpc('admin_reset_user_password', {
@@ -116,7 +119,7 @@ const UsersPage: React.FC = () => {
     }
   });
 
-  // Update user role mutation
+  // Update user role mutation - placeholder functionality with toast notification
   const updateRoleMutation = useMutation({
     mutationFn: async ({ userId, role }: { userId: string, role: string }) => {
       const { data, error } = await supabase.rpc('admin_update_user_role', {
@@ -145,7 +148,7 @@ const UsersPage: React.FC = () => {
     }
   });
 
-  // Toggle user active status mutation
+  // Toggle user active status mutation - placeholder functionality with toast notification
   const toggleActiveStatusMutation = useMutation({
     mutationFn: async ({ userId, isActive }: { userId: string, isActive: boolean }) => {
       const { data, error } = await supabase.rpc('admin_toggle_user_active', {
@@ -173,7 +176,7 @@ const UsersPage: React.FC = () => {
     }
   });
 
-  // Delete user mutation
+  // Delete user mutation - placeholder functionality with toast notification
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: string) => {
       const { data, error } = await supabase.rpc('admin_delete_user', {
@@ -818,56 +821,3 @@ const UsersPage: React.FC = () => {
                 <>
                   This will send a password reset email to <span className="font-medium text-white">{selectedUser.email}</span>.
                   The user will need to click the link in the email to set a new password.
-                </>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="bg-gray-800 text-white border-gray-700 hover:bg-gray-700">
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-yellow-600 text-white hover:bg-yellow-700"
-              onClick={confirmResetPassword}
-            >
-              Send Reset Email
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Delete User Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent className="bg-gray-900 border-gray-800 text-white">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-white flex items-center">
-              <Trash className="h-5 w-5 text-red-500 mr-2" />
-              Delete User
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-gray-400">
-              {selectedUser && (
-                <>
-                  Are you sure you want to delete <span className="font-medium text-white">{selectedUser.full_name || selectedUser.email}</span>?
-                  This action cannot be undone and will permanently delete the user and all associated data.
-                </>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="bg-gray-800 text-white border-gray-700 hover:bg-gray-700">
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-red-600 text-white hover:bg-red-700"
-              onClick={confirmDeleteUser}
-            >
-              Delete User
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
-  );
-};
-
-export default UsersPage;
