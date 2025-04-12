@@ -46,7 +46,7 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
     isListening: openAIIsListening,
     startListening: startOpenAIListening,
     stopListening: stopOpenAIListening,
-    isProcessing,
+    isProcessing: openAIProcessing,
     supportsVoice,
     apiKeyStatus,
     apiKeyErrorDetails,
@@ -55,7 +55,7 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
   
   // Combined state for UI
   const isListening = browserIsListening || openAIIsListening;
-  const isProcessing = browserProcessing || isProcessing;
+  const isProcessing = browserProcessing || openAIProcessing;
   
   // Handle API key retry
   const handleApiKeyRetry = async () => {
