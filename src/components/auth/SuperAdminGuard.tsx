@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,9 +5,6 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { useAuth } from "@/hooks/useAuth";
 import { createAuditLog } from "@/types/auditLogs";
 import { toast } from "@/components/ui/use-toast";
-
-// Hard-coded super admin ID for testing
-const SUPER_ADMIN_ID = "28e863b3-0a91-4220-8330-fbee7ecd3f96";
 
 interface SuperAdminGuardProps {
   children: React.ReactNode;
@@ -32,23 +28,42 @@ const SuperAdminGuard: React.FC<SuperAdminGuardProps> = ({ children }) => {
 
         console.log("SuperAdminGuard: Checking super admin status for", user.id);
         
-        // Force super admin status for testing
-        // IMPORTANT: This is just for testing - remove in production
-        localStorage.setItem('isSuperAdmin', 'true');
-        setIsSuperAdmin(true);
-        setIsChecking(false);
+        // Check if the user is a super admin in the super_admins table
+        const { data: superAdminData, error: superAdminError } = await supabase
+          .from('super_admins')
+          .select('id')
+          .eq('id', user.id)
+          .single();
         
-        // Log the access attempt
-        try {
-          await createAuditLog(
-            supabase,
-            user.id,
-            'super_admin_access',
-            { path: location.pathname, success: true }
-          );
-        } catch (logError) {
-          console.warn("SuperAdminGuard: Could not log to audit system:", logError);
+        if (superAdminError) {
+          console.error("SuperAdminGuard: Error checking super admin status:", superAdminError);
+          if (superAdminError.code === 'PGRST116') {
+            // No rows found - User is not a super admin
+            console.log("SuperAdminGuard: User is not a super admin");
+            setIsSuperAdmin(false);
+          } else {
+            // Other error occurred
+            throw superAdminError;
+          }
+        } else if (superAdminData) {
+          // User is a super admin
+          console.log("SuperAdminGuard: User is a super admin");
+          setIsSuperAdmin(true);
+          
+          // Log the access attempt
+          try {
+            await createAuditLog(
+              supabase,
+              user.id,
+              'super_admin_access',
+              { path: location.pathname, success: true }
+            );
+          } catch (logError) {
+            console.warn("SuperAdminGuard: Could not log to audit system:", logError);
+          }
         }
+        
+        setIsChecking(false);
       } catch (error) {
         console.error("SuperAdminGuard: Unexpected error checking super admin status:", error);
         setIsSuperAdmin(false);

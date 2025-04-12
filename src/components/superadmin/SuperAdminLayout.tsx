@@ -72,7 +72,7 @@ const SuperAdminLayout: React.FC<SuperAdminLayoutProps> = ({ children }) => {
           onToggle={toggleSidebar} 
         />
 
-        {/* Main content area - maroon background now */}
+        {/* Main content area - dark maroon background */}
         <main className={cn(
           "flex-1 p-4 transition-all duration-300 ease-in-out text-white",
           isSidebarOpen ? "ml-64" : "ml-16"
