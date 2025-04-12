@@ -1390,7 +1390,9 @@ export type Database = {
           full_name: string | null
           gender: string | null
           id: string
+          is_active: boolean
           is_searchable: boolean | null
+          last_login_at: string | null
           occupation: string | null
           po_box: string | null
           postal_code: string | null
@@ -1418,7 +1420,9 @@ export type Database = {
           full_name?: string | null
           gender?: string | null
           id: string
+          is_active?: boolean
           is_searchable?: boolean | null
+          last_login_at?: string | null
           occupation?: string | null
           po_box?: string | null
           postal_code?: string | null
@@ -1446,7 +1450,9 @@ export type Database = {
           full_name?: string | null
           gender?: string | null
           id?: string
+          is_active?: boolean
           is_searchable?: boolean | null
+          last_login_at?: string | null
           occupation?: string | null
           po_box?: string | null
           postal_code?: string | null
@@ -1833,6 +1839,34 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_delete_user: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
+      admin_get_all_users: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          email: string
+          full_name: string
+          account_type: string
+          is_active: boolean
+          created_at: string
+          last_login_at: string
+        }[]
+      }
+      admin_reset_user_password: {
+        Args: { user_email: string }
+        Returns: boolean
+      }
+      admin_toggle_user_active: {
+        Args: { user_id: string; is_active: boolean }
+        Returns: boolean
+      }
+      admin_update_user_role: {
+        Args: { user_id: string; new_role: string }
+        Returns: boolean
+      }
       approve_no_show: {
         Args: { booking_id_param: string }
         Returns: boolean
