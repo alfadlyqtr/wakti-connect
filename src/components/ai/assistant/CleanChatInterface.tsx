@@ -265,14 +265,14 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
           </div>
         )}
         
-        <form onSubmit={handleSendMessage} className="flex items-center gap-1 md:gap-2">
-          <div className="relative flex-1">
+        <form onSubmit={handleSendMessage} className="flex flex-col gap-3">
+          <div className="relative w-full">
             <Input
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               placeholder="Type your message here..."
               className={cn(
-                "pr-10 py-5 text-sm",
+                "py-6 text-sm md:text-base",
                 isListening && "bg-rose-50 border-rose-200"
               )}
               disabled={isLoading || !canAccess || !!detectedTask}
@@ -287,64 +287,70 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
             )}
           </div>
           
-          {onStartVoiceInput && onStopVoiceInput && (
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              {onStartVoiceInput && onStopVoiceInput && (
+                <Button 
+                  type="button" 
+                  size="icon" 
+                  variant="ghost" 
+                  className={cn("h-10 w-10 rounded-full", isListening ? "text-rose-500 hover:text-rose-600" : "")}
+                  onClick={handleVoiceToggle}
+                  disabled={isLoading || !canAccess || !!detectedTask}
+                  title={isListening ? "Stop voice input" : "Start voice input"}
+                >
+                  {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+                </Button>
+              )}
+              
+              {onFileUpload && (
+                <>
+                  <Button 
+                    type="button" 
+                    size="icon" 
+                    variant="ghost" 
+                    onClick={handleFileUploadClick}
+                    disabled={isLoading || !canAccess || !!detectedTask}
+                    title="Attach file"
+                    className="h-10 w-10 rounded-full"
+                  >
+                    <Paperclip className="h-5 w-5" />
+                  </Button>
+                  <input 
+                    type="file" 
+                    ref={fileInputRef}
+                    className="hidden" 
+                    onChange={handleFileChange}
+                    accept=".pdf,.doc,.docx,.txt,.md,.jpg,.jpeg,.png"
+                  />
+                </>
+              )}
+              
+              {onCameraCapture && (
+                <Button 
+                  type="button" 
+                  size="icon" 
+                  variant="ghost" 
+                  onClick={onCameraCapture}
+                  disabled={isLoading || !canAccess || !!detectedTask}
+                  title="Take photo"
+                  className="h-10 w-10 rounded-full"
+                >
+                  <Camera className="h-5 w-5" />
+                </Button>
+              )}
+            </div>
+            
             <Button 
-              type="button" 
-              size="icon" 
-              variant="ghost" 
-              className={isListening ? "text-rose-500 hover:text-rose-600" : ""}
-              onClick={handleVoiceToggle}
-              disabled={isLoading || !canAccess || !!detectedTask}
-              title={isListening ? "Stop voice input" : "Start voice input"}
+              type="submit" 
+              disabled={!inputMessage.trim() || isLoading || !canAccess || !!detectedTask}
+              title="Send message"
+              className="h-10 px-5 rounded-full"
             >
-              {isListening ? <MicOff className="h-4 w-4 md:h-5 md:w-5" /> : <Mic className="h-4 w-4 md:h-5 md:w-5" />}
+              <Send className="h-5 w-5 mr-1" />
+              <span>Send</span>
             </Button>
-          )}
-          
-          {onFileUpload && (
-            <>
-              <Button 
-                type="button" 
-                size="icon" 
-                variant="ghost" 
-                onClick={handleFileUploadClick}
-                disabled={isLoading || !canAccess || !!detectedTask}
-                title="Attach file"
-              >
-                <Paperclip className="h-4 w-4 md:h-5 md:w-5" />
-              </Button>
-              <input 
-                type="file" 
-                ref={fileInputRef}
-                className="hidden" 
-                onChange={handleFileChange}
-                accept=".pdf,.doc,.docx,.txt,.md,.jpg,.jpeg,.png"
-              />
-            </>
-          )}
-          
-          {onCameraCapture && (
-            <Button 
-              type="button" 
-              size="icon" 
-              variant="ghost" 
-              onClick={onCameraCapture}
-              disabled={isLoading || !canAccess || !!detectedTask}
-              title="Take photo"
-            >
-              <Camera className="h-4 w-4 md:h-5 md:w-5" />
-            </Button>
-          )}
-          
-          <Button 
-            type="submit" 
-            size="icon" 
-            disabled={!inputMessage.trim() || isLoading || !canAccess || !!detectedTask}
-            title="Send message"
-            className="h-9 w-9 md:h-10 md:w-10"
-          >
-            <Send className="h-4 w-4 md:h-5 md:w-5" />
-          </Button>
+          </div>
         </form>
       </div>
     </Card>

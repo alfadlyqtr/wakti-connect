@@ -47,68 +47,72 @@ const MessageInput: React.FC<MessageInputProps> = ({
   };
 
   return (
-    <div className="p-3 border-t bg-background">
-      <form onSubmit={handleSubmit} className="flex gap-2">
+    <div className="p-4 border-t bg-background">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <Input
           placeholder="Type a message..."
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          className="flex-1 text-sm md:text-base"
+          className="flex-1 text-sm md:text-base py-6"
           disabled={isSending}
         />
 
-        {canShareLocation && onSendLocation && (
-          <Dialog open={isLocationDialogOpen} onOpenChange={setIsLocationDialogOpen}>
-            <DialogTrigger asChild>
-              <Button 
-                type="button" 
-                size="icon" 
-                variant="outline"
-                disabled={isSending}
-              >
-                <MapPin className="h-4 w-4" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Share Location</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="location">Location</Label>
-                  <Input
-                    id="location"
-                    placeholder="Enter location (e.g., Doha, Qatar)"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    className="text-sm md:text-base"
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end">
+        <div className="flex justify-between items-center">
+          {canShareLocation && onSendLocation && (
+            <Dialog open={isLocationDialogOpen} onOpenChange={setIsLocationDialogOpen}>
+              <DialogTrigger asChild>
                 <Button 
                   type="button" 
-                  onClick={handleLocationSubmit}
-                  disabled={!location.trim()}
+                  size="icon" 
+                  variant="outline"
+                  disabled={isSending}
+                  className="h-10 w-10 rounded-full"
                 >
-                  Share Location
+                  <MapPin className="h-5 w-5" />
                 </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-        )}
-
-        <Button 
-          type="submit" 
-          size="icon"
-          disabled={!message.trim() || isSending}
-        >
-          {isSending ? (
-            <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <Send className="h-4 w-4" />
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Share Location</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="location">Location</Label>
+                    <Input
+                      id="location"
+                      placeholder="Enter location (e.g., Doha, Qatar)"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      className="text-sm md:text-base"
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end">
+                  <Button 
+                    type="button" 
+                    onClick={handleLocationSubmit}
+                    disabled={!location.trim()}
+                  >
+                    Share Location
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           )}
-        </Button>
+
+          <Button 
+            type="submit" 
+            disabled={!message.trim() || isSending}
+            className="ml-auto rounded-full px-5"
+          >
+            {isSending ? (
+              <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-1" />
+            ) : (
+              <Send className="h-4 w-4 mr-1" />
+            )}
+            <span>Send</span>
+          </Button>
+        </div>
       </form>
     </div>
   );

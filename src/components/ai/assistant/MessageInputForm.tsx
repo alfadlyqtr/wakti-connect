@@ -114,98 +114,102 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
           handleSendMessage(e);
         }
       }}
-      className="border-t p-2 sm:p-3"
+      className="border-t p-3 sm:p-4"
     >
-      <div className="flex items-end gap-2 relative">
-        <div className="relative flex-1">
+      <div className="flex flex-col gap-3">
+        <div className="relative w-full">
           <Textarea
             placeholder="Type a message..."
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyDown={handleKeyDown}
             className={cn(
-              "min-h-[45px] sm:min-h-[60px] max-h-[120px] sm:max-h-[180px] resize-none py-2 pr-12 text-sm sm:text-base",
+              "min-h-[60px] sm:min-h-[80px] max-h-[150px] sm:max-h-[200px] resize-none py-3 px-4 text-sm md:text-base",
               activeListening && "bg-primary/5 border-primary/20"
             )}
             disabled={isLoading || activeListening}
           />
-          <div className="absolute bottom-2 right-2 flex gap-1">
+          <div className="absolute bottom-3 right-3 flex gap-1">
             {supportsVoice && (
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
                 className={cn(
-                  "h-6 w-6 sm:h-8 sm:w-8 rounded-full", 
+                  "h-8 w-8 sm:h-9 sm:w-9 rounded-full", 
                   activeListening && "bg-primary text-white hover:bg-primary hover:text-white"
                 )}
                 onClick={handleVoiceClick}
                 disabled={isLoading}
               >
-                <Mic className="h-3 w-3 sm:h-4 sm:w-4" />
+                <Mic className="h-4 w-4 sm:h-5 sm:w-5" />
                 <span className="sr-only">{activeListening ? "Stop recording" : "Start recording"}</span>
               </Button>
             )}
           </div>
         </div>
         
-        {/* File Upload */}
-        {onFileUpload && (
-          <>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 sm:h-10 sm:w-10 rounded-full shrink-0"
-              onClick={handleFileUploadClick}
-              disabled={isLoading}
-            >
-              <Paperclip className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              <span className="sr-only">Attach file</span>
-            </Button>
-            <input
-              type="file"
-              ref={fileInputRef}
-              className="hidden"
-              onChange={handleFileChange}
-              accept=".pdf,.doc,.docx,.txt,.md"
-            />
-          </>
-        )}
-        
-        {/* Camera */}
-        {onCameraCapture && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 sm:h-10 sm:w-10 rounded-full shrink-0"
-            onClick={onCameraCapture}
-            disabled={isLoading}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {/* File Upload */}
+            {onFileUpload && (
+              <>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 sm:h-10 sm:w-10 rounded-full"
+                  onClick={handleFileUploadClick}
+                  disabled={isLoading}
+                >
+                  <Paperclip className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <span className="sr-only">Attach file</span>
+                </Button>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  onChange={handleFileChange}
+                  accept=".pdf,.doc,.docx,.txt,.md"
+                />
+              </>
+            )}
+            
+            {/* Camera */}
+            {onCameraCapture && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 sm:h-10 sm:w-10 rounded-full"
+                onClick={onCameraCapture}
+                disabled={isLoading}
+              >
+                <Camera className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="sr-only">Take photo</span>
+              </Button>
+            )}
+          </div>
+          
+          <Button 
+            type="submit" 
+            size="default" 
+            disabled={!inputMessage.trim() || isLoading}
+            className="h-9 px-4 sm:h-10 sm:px-5 rounded-full"
           >
-            <Camera className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            <span className="sr-only">Take photo</span>
+            {isLoading ? (
+              <div className="animate-spin h-4 w-4 sm:h-5 sm:w-5 border-2 border-primary border-opacity-50 border-t-primary rounded-full mr-1" />
+            ) : (
+              <Send className="h-4 w-4 sm:h-5 sm:w-5 mr-1" />
+            )}
+            <span>Send</span>
           </Button>
-        )}
-        
-        <Button 
-          type="submit" 
-          size="icon" 
-          disabled={!inputMessage.trim() || isLoading}
-          className="h-8 w-8 sm:h-10 sm:w-10 rounded-full shrink-0"
-        >
-          {isLoading ? (
-            <div className="animate-spin h-3.5 w-3.5 sm:h-4 sm:w-4 border-2 border-primary border-opacity-50 border-t-primary rounded-full" />
-          ) : (
-            <Send className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-          )}
-          <span className="sr-only">Send message</span>
-        </Button>
+        </div>
       </div>
       
       {/* Mobile note */}
       {isMobile && (
-        <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1">
+        <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
           <AlertCircle className="h-3 w-3" /> 
           Tap send button to submit your message
         </p>
@@ -213,7 +217,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
       
       {/* Desktop note */}
       {!isMobile && (
-        <p className="text-xs text-muted-foreground mt-1.5 hidden sm:flex items-center gap-1">
+        <p className="text-xs text-muted-foreground mt-2 hidden sm:flex items-center gap-1">
           <AlertCircle className="h-3 w-3" /> 
           Press Enter to send, Shift+Enter for new line
         </p>
