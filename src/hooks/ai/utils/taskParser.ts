@@ -127,7 +127,14 @@ export const parseTaskFromMessage = (message: string): ParsedTaskInfo | null => 
   }
   
   // Check for specific time like "at noon" or "5pm"
-  const timePatterns = [
+  // Define the proper type for time patterns
+  interface TimePattern {
+    regex: RegExp;
+    time?: string;
+    formatter?: (matches: RegExpMatchArray) => string;
+  }
+
+  const timePatterns: TimePattern[] = [
     { regex: /at\s+noon/i, time: "12:00" },
     { regex: /at\s+midnight/i, time: "00:00" },
     { regex: /at\s+(\d+)(?::(\d+))?\s*(am|pm)/i, formatter: (matches: RegExpMatchArray) => {
@@ -145,7 +152,7 @@ export const parseTaskFromMessage = (message: string): ParsedTaskInfo | null => 
   for (const pattern of timePatterns) {
     const matches = message.match(pattern.regex);
     if (matches) {
-      dueTime = typeof pattern.time === 'string' ? pattern.time : pattern.formatter(matches);
+      dueTime = pattern.time || (pattern.formatter ? pattern.formatter(matches) : undefined);
       hasTimeConstraint = true;
       
       // If we have a time but no date, assume it's for today
