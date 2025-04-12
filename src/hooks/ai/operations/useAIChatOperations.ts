@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { AIMessage } from "@/types/ai-assistant.types";
@@ -20,7 +19,14 @@ const WAKTI_TOPICS = [
 // List of confirmation words that accept task creation
 const CONFIRMATION_PHRASES = [
   "go", "do it", "yes", "sure", "okay", "ok", "confirm", "approved", 
-  "create it", "create task", "make it", "create", "make", "proceed"
+  "create it", "create task", "make it", "create", "make", "proceed",
+  "looks good", "that's right", "correct", "perfect", "good", "great"
+];
+
+// List of rejection words that cancel task creation
+const REJECTION_PHRASES = [
+  "no", "cancel", "stop", "don't", "abort", "cancel it", "nevermind",
+  "forget it", "delete", "remove", "discard", "change", "wrong"
 ];
 
 /**
@@ -119,20 +125,42 @@ export const useAIChatOperations = () => {
   // Check if a message is a task confirmation
   const isTaskConfirmation = useCallback((messageText: string): boolean => {
     const normalizedText = messageText.trim().toLowerCase();
+    
+    // Check for explicit confirmations
     return CONFIRMATION_PHRASES.some(phrase => 
       normalizedText === phrase || 
       normalizedText.startsWith(phrase + " ") || 
-      normalizedText.endsWith(" " + phrase)
+      normalizedText.endsWith(" " + phrase) ||
+      normalizedText.includes(" " + phrase + " ")
+    );
+  }, []);
+  
+  // Check if a message is a task rejection
+  const isTaskRejection = useCallback((messageText: string): boolean => {
+    const normalizedText = messageText.trim().toLowerCase();
+    
+    // Check for explicit rejections
+    return REJECTION_PHRASES.some(phrase => 
+      normalizedText === phrase || 
+      normalizedText.startsWith(phrase + " ") || 
+      normalizedText.endsWith(" " + phrase) ||
+      normalizedText.includes(" " + phrase + " ")
     );
   }, []);
   
   // Process message for task intent and extract task data
   const processMessageForTaskIntent = useCallback((messageText: string) => {
     // If we're awaiting confirmation and this is a confirmation message
-    if (pendingTaskConfirmation && detectedTask && isTaskConfirmation(messageText)) {
-      console.log("Detected task confirmation, proceeding with task creation");
-      confirmCreateTask(detectedTask);
-      return true;
+    if (pendingTaskConfirmation && detectedTask) {
+      if (isTaskConfirmation(messageText)) {
+        console.log("Detected task confirmation, proceeding with task creation");
+        confirmCreateTask(detectedTask);
+        return true;
+      } else if (isTaskRejection(messageText)) {
+        console.log("Detected task rejection, cancelling task creation");
+        cancelCreateTask();
+        return true;
+      }
     }
     
     // If we're not already waiting for a confirmation, check for task intent
@@ -170,7 +198,7 @@ export const useAIChatOperations = () => {
     }
     
     return false;
-  }, [pendingTaskConfirmation, detectedTask, isTaskConfirmation, confirmCreateTask]);
+  }, [pendingTaskConfirmation, detectedTask, isTaskConfirmation, isTaskRejection, confirmCreateTask, cancelCreateTask]);
 
   // Mutation for sending a message to AI Assistant
   const sendMessage = useMutation({

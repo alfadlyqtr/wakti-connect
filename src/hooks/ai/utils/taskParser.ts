@@ -1,308 +1,302 @@
 
-import { TaskFormData, TaskPriority, SubTask } from "@/types/task.types";
+import { TaskFormData, TaskPriority } from "@/types/task.types";
 
-/**
- * Interface for parsed task information from user messages
- */
 export interface ParsedTaskInfo {
   title: string;
   description?: string;
-  priority: TaskPriority;
-  dueDate?: string;
-  dueTime?: string;
-  subtasks: string[];
+  due_date?: string | Date;
+  priority?: TaskPriority;
   location?: string;
-  hasTimeConstraint: boolean;
-  needsReview: boolean;
+  subtasks: string[];
 }
 
 /**
- * Parses natural language to extract task information
+ * Parses natural language text to extract task information
  */
-export const parseTaskFromMessage = (message: string): ParsedTaskInfo | null => {
-  // If the message doesn't seem to be about creating a task, return null
-  if (!message.toLowerCase().includes("task") && 
-      !message.toLowerCase().includes("todo") && 
-      !message.toLowerCase().includes("reminder") &&
-      !message.toLowerCase().includes("list") &&
-      !message.toLowerCase().includes("shopping")) {
+export function parseTaskFromMessage(text: string): ParsedTaskInfo | null {
+  if (!text || typeof text !== 'string') {
     return null;
   }
-
-  // Try to extract a task title
-  let title = "";
-  const titleMatches = message.match(/(?:create|add|make|new)\s+(?:a|an)?\s*(?:task|todo|reminder)\s+(?:to|for|about)?\s*["']?([^"'\n.]+)["']?/i);
   
-  if (titleMatches && titleMatches[1]) {
-    title = titleMatches[1].trim();
-  } else {
-    // Try a different pattern for title extraction
-    const altTitleMatches = message.match(/(?:create|add|make|new)\s+(?:a|an)?\s*(?:task|todo|reminder)\s*(?:called|named|titled)?\s*["']?([^"'\n.]+)["']?/i);
-    if (altTitleMatches && altTitleMatches[1]) {
-      title = altTitleMatches[1].trim();
-    } else {
-      // Look for shopping list specifically
-      const shoppingListMatch = message.match(/(?:create|add|make|new)\s+(?:a|an)?\s*(?:shopping\s*list)/i);
-      if (shoppingListMatch) {
-        title = "Shopping List";
-      } else {
-        // Generic title based on message
-        title = "Task from AI Assistant";
-      }
+  // Check if the message is about creating a task
+  const taskIntentRegex = /(?:create|add|make|set up|schedule|remind me to|new) (?:a |an )?(?:task|to-do|todo|reminder|appointment|event)/i;
+  
+  // If not explicitly asking to create a task, check for task-like phrases
+  const taskPhraseRegex = /(?:i need to|i have to|i want to|i should|need to|let's|let me|should|must|going to)/i;
+  
+  // Common date/time expressions
+  const todayRegex = /(?:today|this evening|tonight|this afternoon|this morning)/i;
+  const tomorrowRegex = /(?:tomorrow|next day)/i;
+  const weekdayRegex = /(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i;
+  const timeRegex = /(?:at|by|before|after)?\s*(\d{1,2}(?::\d{2})?\s*(?:am|pm|a\.m\.|p\.m\.|a|p)?)/i;
+  
+  // Priority expressions
+  const highPriorityRegex = /(?:urgent|high priority|important|critical|asap|right away|immediately|vital)/i;
+  const mediumPriorityRegex = /(?:medium priority|normal priority|moderate|somewhat important)/i;
+  const lowPriorityRegex = /(?:low priority|not urgent|can wait|whenever|no rush)/i;
+  
+  // Location expressions
+  const locationRegex = /(?:at|in|near|by)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/g;
+  const atLocationRegex = /at\s+([A-Z][a-zA-Z0-9\s]+(?:\s+[A-Z][a-zA-Z0-9\s]+)*)/i;
+  
+  // Extract location with flexibility for places like "Doha Festival City"
+  const extractLocation = (text: string): string | undefined => {
+    // Check for "at [Location]" pattern
+    const atMatch = text.match(atLocationRegex);
+    if (atMatch && atMatch[1]) {
+      return atMatch[1].trim();
     }
-  }
-
-  // Extract priority
-  let priority: TaskPriority = "normal";
-  let needsReview = false;
-  
-  // Check explicit priority indications
-  if (message.toLowerCase().includes("urgent") || 
-      message.toLowerCase().includes("high priority") || 
-      message.toLowerCase().includes("important") ||
-      message.toLowerCase().includes("asap") ||
-      message.toLowerCase().includes("as soon as possible") ||
-      message.toLowerCase().includes("right away") ||
-      message.toLowerCase().includes("immediately")) {
-    priority = "urgent";
-  } else if (message.toLowerCase().includes("medium priority")) {
-    priority = "medium";
-  } else {
-    // Check context clues for urgency
-    const urgencyClues = [
-      /before\s+(?:lunch|dinner|breakfast|noon|evening)/i,
-      /need\s+(?:it|this)\s+(?:done|completed|finished)\s+(?:today|this\s+evening|tonight|this\s+morning)/i,
-      /(?:by|until)\s+(?:the\s+end\s+of\s+(?:today|the\s+day|this\s+afternoon|business\s+hours))/i,
-      /due\s+(?:today|in\s+a\s+few\s+hours)/i
-    ];
     
-    if (urgencyClues.some(clue => message.match(clue))) {
-      priority = "high";
-    } else {
-      // If no explicit priority or urgency clues are found, suggest review
-      needsReview = true;
+    // Try to find location mentions
+    let locationMatches = [];
+    let match;
+    while ((match = locationRegex.exec(text)) !== null) {
+      locationMatches.push(match[1]);
     }
+    
+    // Return the first location found or undefined
+    return locationMatches.length > 0 ? locationMatches[0] : undefined;
+  };
+  
+  // Is this a task creation intent?
+  const hasTaskIntent = taskIntentRegex.test(text) || taskPhraseRegex.test(text);
+  
+  if (!hasTaskIntent) {
+    return null;
   }
-
-  // Parse due date and time
-  let dueDate: string | undefined;
-  let dueTime: string | undefined;
-  let hasTimeConstraint = false;
-
-  // Check for timeframes mentioned in the message
-  if (message.toLowerCase().includes("due today") || 
-      message.toLowerCase().includes("by today") ||
-      message.toLowerCase().includes("for today")) {
+  
+  // Extract potential task title - first sentence or segment before date/time/priority indicators
+  const titleMatch = text.match(/(?:create|add|make|set up|schedule|remind me to|new|i need to|i have to|i want to|i should|need to|let's|let me|should|must|going to)\s+(?:a |an )?(?:task|to-do|todo|reminder|appointment|event)?\s*(?:to|about|for|about|:)?\s*([^.,!?;]+)/i);
+  
+  let title = '';
+  
+  if (titleMatch && titleMatch[1]) {
+    title = titleMatch[1].trim();
+  } else {
+    // Fallback - use first part of text
+    const firstSegment = text.split(/[.,!?;]/)[0];
+    title = firstSegment.trim();
+  }
+  
+  // Clean up title
+  title = title.replace(/^(to|about|for|about|:)\s+/i, '');
+  
+  // Handle "with" in title
+  const withIndex = title.indexOf(' with ');
+  if (withIndex > 0) {
+    title = title.substring(0, withIndex);
+  }
+  
+  // Extract priority
+  let priority: TaskPriority = 'medium';
+  if (highPriorityRegex.test(text)) {
+    priority = 'high';
+  } else if (mediumPriorityRegex.test(text)) {
+    priority = 'medium';
+  } else if (lowPriorityRegex.test(text)) {
+    priority = 'low';
+  }
+  
+  // Extract due date
+  let dueDate: Date | undefined;
+  
+  if (todayRegex.test(text)) {
+    dueDate = new Date();
+    
+    // If "tonight" is mentioned, set to 9 PM today
+    if (/tonight/.test(text)) {
+      dueDate.setHours(21, 0, 0, 0);
+    } else if (/this evening/.test(text)) {
+      dueDate.setHours(18, 0, 0, 0);
+    } else if (/this afternoon/.test(text)) {
+      dueDate.setHours(15, 0, 0, 0);
+    } else if (/this morning/.test(text)) {
+      dueDate.setHours(9, 0, 0, 0);
+    }
+  } else if (tomorrowRegex.test(text)) {
+    dueDate = new Date();
+    dueDate.setDate(dueDate.getDate() + 1);
+    dueDate.setHours(9, 0, 0, 0); // Default to morning
+  } else if (weekdayRegex.test(text)) {
+    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
     const today = new Date();
-    dueDate = today.toISOString().split('T')[0];
-    hasTimeConstraint = true;
-  } else if (message.toLowerCase().includes("due tomorrow") || 
-             message.toLowerCase().includes("by tomorrow") ||
-             message.toLowerCase().includes("for tomorrow")) {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    dueDate = tomorrow.toISOString().split('T')[0];
-    hasTimeConstraint = true;
-  } else if (message.toLowerCase().includes("hour") || 
-             message.toLowerCase().includes("hr")) {
-    // Due in X hours
-    const hourMatches = message.match(/(\d+)\s*(?:hour|hr)/i);
-    if (hourMatches && hourMatches[1]) {
-      const hours = parseInt(hourMatches[1]);
-      const dueDateTime = new Date();
-      dueDateTime.setHours(dueDateTime.getHours() + hours);
+    const todayDay = today.getDay();
+    
+    const dayMatch = text.match(weekdayRegex);
+    if (dayMatch) {
+      const targetDay = days.indexOf(dayMatch[0].toLowerCase());
       
-      dueDate = dueDateTime.toISOString().split('T')[0];
-      dueTime = dueDateTime.toTimeString().substring(0, 5);
-      hasTimeConstraint = true;
-    } else {
-      // Just "in an hour" or similar
-      const dueDateTime = new Date();
-      dueDateTime.setHours(dueDateTime.getHours() + 1);
-      
-      dueDate = dueDateTime.toISOString().split('T')[0];
-      dueTime = dueDateTime.toTimeString().substring(0, 5);
-      hasTimeConstraint = true;
+      if (targetDay !== -1) {
+        const daysToAdd = (targetDay - todayDay + 7) % 7;
+        dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + (daysToAdd === 0 ? 7 : daysToAdd));
+        dueDate.setHours(9, 0, 0, 0); // Default to morning
+      }
     }
   }
   
-  // Check for specific time like "at noon" or "5pm"
-  // Define the proper type for time patterns
-  interface TimePattern {
-    regex: RegExp;
-    time?: string;
-    formatter?: (matches: RegExpMatchArray) => string;
-  }
-
-  const timePatterns: TimePattern[] = [
-    { regex: /at\s+noon/i, time: "12:00" },
-    { regex: /at\s+midnight/i, time: "00:00" },
-    { regex: /at\s+(\d+)(?::(\d+))?\s*(am|pm)/i, formatter: (matches: RegExpMatchArray) => {
-      let hours = parseInt(matches[1]);
-      const minutes = matches[2] ? parseInt(matches[2]) : 0;
-      const period = matches[3].toLowerCase();
+  // Try to extract specific time
+  const timeMatch = text.match(timeRegex);
+  if (timeMatch && timeMatch[1] && dueDate) {
+    const timeStr = timeMatch[1].toLowerCase();
+    let hours = 0;
+    let minutes = 0;
+    
+    // Parse time formats like "3pm", "3:30pm", "15:00"
+    if (timeStr.includes(':')) {
+      const [hoursStr, minutesWithAmPm] = timeStr.split(':');
+      hours = parseInt(hoursStr, 10);
       
-      if (period === "pm" && hours < 12) hours += 12;
-      if (period === "am" && hours === 12) hours = 0;
-      
-      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-    }}
-  ];
-  
-  for (const pattern of timePatterns) {
-    const matches = message.match(pattern.regex);
-    if (matches) {
-      dueTime = pattern.time || (pattern.formatter ? pattern.formatter(matches) : undefined);
-      hasTimeConstraint = true;
-      
-      // If we have a time but no date, assume it's for today
-      if (!dueDate) {
-        const today = new Date();
-        dueDate = today.toISOString().split('T')[0];
+      if (minutesWithAmPm.includes('pm') || minutesWithAmPm.includes('p.m.') || minutesWithAmPm.includes('p')) {
+        if (hours < 12) hours += 12;
+      } else if ((minutesWithAmPm.includes('am') || minutesWithAmPm.includes('a.m.') || minutesWithAmPm.includes('a')) && hours === 12) {
+        hours = 0;
       }
       
-      break;
+      minutes = parseInt(minutesWithAmPm.replace(/[^\d]/g, ''), 10);
+    } else {
+      // Handle formats like "3pm"
+      let hoursStr = timeStr.replace(/[^\d]/g, '');
+      hours = parseInt(hoursStr, 10);
+      
+      if (timeStr.includes('pm') || timeStr.includes('p.m.') || timeStr.includes('p')) {
+        if (hours < 12) hours += 12;
+      } else if ((timeStr.includes('am') || timeStr.includes('a.m.') || timeStr.includes('a')) && hours === 12) {
+        hours = 0;
+      }
     }
+    
+    dueDate.setHours(hours, minutes, 0, 0);
   }
-
-  // Extract location information
-  let location: string | undefined;
-  const locationPatterns = [
-    /(?:at|in|near|by|@)\s+(?:the\s+)?([A-Z][a-zA-Z\s]+(?:Center|Mall|Plaza|Building|Park|Office|Store|Shop|Market|Restaurant|Café|Cafe|Hotel|Airport|Station))/,
-    /(?:at|in|near|by|@)\s+(?:the\s+)?([A-Z][a-zA-Z\s]+(?:Street|Avenue|Road|Lane|Drive|Place|Boulevard|Highway|Freeway))/,
-    /location:?\s+([^,;\n]+)/i,
-    /(?:at|in|near|by|@)\s+([A-Z][a-zA-Z0-9\s]+(?:, [A-Z][a-zA-Z]+)?)/
-  ];
   
-  for (const pattern of locationPatterns) {
-    const matches = message.match(pattern);
-    if (matches && matches[1]) {
-      location = matches[1].trim();
-      break;
-    }
-  }
-
+  // Extract location
+  const location = extractLocation(text);
+  
   // Extract subtasks
   const subtasks: string[] = [];
   
-  // Look for list patterns
-  // - item
-  // * item
-  // 1. item
-  // item 1)
-  // item 1.
-  const listMatches = message.match(/(?:^|\n)(?:[-*]\s|\d+[.)]?\s)(.+)(?=\n|$)/gm);
-  if (listMatches) {
-    listMatches.forEach(item => {
-      const text = item.replace(/^(?:[-*]\s|\d+[.)]?\s)/, '').trim();
-      if (text && !text.toLowerCase().includes("task") && !text.toLowerCase().includes("todo")) {
-        subtasks.push(text);
+  // Look for list indicators
+  const bulletPoints = text.match(/(?:^|\n)[\s-]*([^\n-][^\n]+)/gm);
+  if (bulletPoints && bulletPoints.length > 1) {
+    // Skip the first item as it's likely the main task
+    for (let i = 1; i < bulletPoints.length; i++) {
+      const subtask = bulletPoints[i].replace(/^[\s-]*/, '').trim();
+      if (subtask && subtask.length > 2) {
+        subtasks.push(subtask);
+      }
+    }
+  }
+  
+  // Look for "with" or "including" phrases that might contain subtasks
+  const withMatch = text.match(/(?:with|including|containing|having|containing items like|such as)\s+([^.,!?;]+)/i);
+  if (withMatch && withMatch[1]) {
+    const withList = withMatch[1].split(/\s+and\s+|\s*,\s*/);
+    withList.forEach(item => {
+      const subtask = item.trim();
+      if (subtask && subtask.length > 2 && !subtasks.includes(subtask)) {
+        subtasks.push(subtask);
       }
     });
   }
   
-  // If no list format, look for keywords like "subtasks" followed by text items
-  if (subtasks.length === 0) {
-    const subtaskSectionRegex = /(?:subtasks?|items?|things?|steps?|list|shopping\slist)(?:\s*(?:are|include|:|is|should\s*be|contains?|with))?\s*(?:(?:\s*(?:and|,|-|•)?\s*([^,\n]+))+)/i;
-    const match = message.match(subtaskSectionRegex);
-    
-    if (match && match[0]) {
-      const section = match[0];
-      // Split by commas, ands, or certain punctuation
-      const items = section.split(/(?:,|\sand\s|;|\n|\s*-\s*|\s*•\s*)/);
-      
-      // Filter out the header text and empty items
-      items.forEach(item => {
-        const cleaned = item.trim();
-        if (cleaned && 
-            !cleaned.toLowerCase().includes("subtask") && 
-            !cleaned.toLowerCase().includes("list") &&
-            !cleaned.match(/^(?:are|include|:|is|should\s*be|contains?|with)$/i)) {
-          subtasks.push(cleaned);
-        }
-      });
-    }
+  // Create a basic description
+  let description = '';
+  
+  if (subtasks.length > 0) {
+    description = `Task with ${subtasks.length} items: ${subtasks.join(', ')}`;
   }
-
-  // Extract description (anything not matched by other fields)
-  let description = "";
-  const descriptionMatch = message.match(/(?:description|note|details)\s*(?::|is|are)?\s*(.+?)(?=\n|$)/i);
-  if (descriptionMatch && descriptionMatch[1]) {
-    description = descriptionMatch[1].trim();
+  
+  if (location) {
+    description += description ? ` at ${location}` : `At ${location}`;
   }
-
+  
+  if (dueDate) {
+    const dateStr = dueDate.toLocaleString();
+    description += description ? `. Due ${dateStr}` : `Due ${dateStr}`;
+  }
+  
+  // Add priority if not medium
+  if (priority !== 'medium') {
+    description += description ? `. ${priority.toUpperCase()} priority` : `${priority.toUpperCase()} priority task`;
+  }
+  
   return {
     title,
     description,
+    due_date: dueDate,
     priority,
-    dueDate,
-    dueTime,
-    subtasks,
     location,
-    hasTimeConstraint,
-    needsReview
+    subtasks
   };
-};
+}
 
 /**
- * Convert parsed task info to form data for task creation
+ * Converts parsed task info to task form data
  */
-export const convertParsedTaskToFormData = (parsedTask: ParsedTaskInfo): TaskFormData => {
-  // Create properly shaped SubTask objects with required type shape
-  const subtasksWithType: SubTask[] = parsedTask.subtasks.map((content, index) => ({
-    id: `temp-id-${index}`, // Temporary ID for type matching
-    task_id: 'pending', // Will be assigned when task is created
-    content,
-    is_completed: false
-  }));
-  
+export function convertParsedTaskToFormData(parsedTask: ParsedTaskInfo): TaskFormData {
   return {
     title: parsedTask.title,
-    description: parsedTask.description ? parsedTask.description : (parsedTask.location ? `Location: ${parsedTask.location}` : undefined),
-    priority: parsedTask.priority,
-    due_date: parsedTask.dueDate,
-    due_time: parsedTask.dueTime,
-    subtasks: subtasksWithType,
-    location: parsedTask.location
+    description: parsedTask.description || '',
+    due_date: parsedTask.due_date,
+    priority: parsedTask.priority || 'medium',
+    location: parsedTask.location,
+    subtasks: parsedTask.subtasks.map(text => ({ text, completed: false })),
+    category: 'daily', // Default category
+    start_date: new Date(),
+    color: 'blue',
+    completed: false,
+    repeat_frequency: null,
+    assignees: []
   };
-};
+}
 
 /**
- * Generate a human-readable description of a task for confirmation
+ * Generates a human-friendly confirmation text for a parsed task
  */
-export const generateTaskConfirmationText = (taskInfo: ParsedTaskInfo): string => {
-  let confirmationText = `Task: ${taskInfo.title}`;
+export function generateTaskConfirmationText(parsedTask: ParsedTaskInfo): string {
+  const { title, due_date, priority, location, subtasks } = parsedTask;
   
-  if (taskInfo.priority) {
-    confirmationText += ` (${taskInfo.priority} priority)`;
+  let confirmationText = `I'll create a task: **${title}**\n\n`;
+  
+  // Add card-style preview
+  confirmationText += "**Task Preview:**\n\n";
+  
+  // Add task details in formatted style
+  confirmationText += `**Title:** ${title}\n`;
+  
+  if (priority) {
+    confirmationText += `**Priority:** ${priority.charAt(0).toUpperCase() + priority.slice(1)}\n`;
   }
   
-  if (taskInfo.location) {
-    confirmationText += ` at ${taskInfo.location}`;
+  if (due_date) {
+    const formattedDate = due_date instanceof Date 
+      ? due_date.toLocaleString(undefined, { 
+          weekday: 'short', 
+          month: 'short', 
+          day: 'numeric',
+          hour: 'numeric',
+          minute: 'numeric'
+        })
+      : due_date;
+    confirmationText += `**Due Date:** ${formattedDate}\n`;
   }
   
-  if (taskInfo.dueDate) {
-    const date = new Date(taskInfo.dueDate);
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    
-    if (date.toDateString() === today.toDateString()) {
-      confirmationText += ` due today`;
-    } else if (date.toDateString() === tomorrow.toDateString()) {
-      confirmationText += ` due tomorrow`;
-    } else {
-      confirmationText += ` due on ${date.toLocaleDateString()}`;
-    }
-    
-    if (taskInfo.dueTime) {
-      confirmationText += ` at ${taskInfo.dueTime}`;
-    }
+  if (location) {
+    confirmationText += `**Location:** ${location}\n`;
   }
   
-  if (taskInfo.subtasks && taskInfo.subtasks.length > 0) {
-    confirmationText += `\nSubtasks: ${taskInfo.subtasks.join(', ')}`;
+  if (subtasks && subtasks.length > 0) {
+    confirmationText += `**Subtasks:**\n`;
+    subtasks.forEach((subtask, index) => {
+      confirmationText += `- ${subtask}\n`;
+    });
   }
   
-  return confirmationText + "\n\nSay 'Go', 'Do it', 'Yes', or 'Sure' to confirm.";
-};
+  // Add estimated completion time based on subtasks
+  confirmationText += `\n**Estimated time:** ${getEstimatedTaskTime(parsedTask)}\n\n`;
+  
+  // Add confirmation instructions
+  confirmationText += "Would you like me to create this task? You can say something like 'Yes', 'Go ahead', or 'Create it'.";
+  
+  return confirmationText;
+}

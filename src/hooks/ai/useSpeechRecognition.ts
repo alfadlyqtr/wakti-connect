@@ -4,83 +4,60 @@ import { useVoiceSettings } from '@/store/voiceSettings';
 import { supabase } from '@/integrations/supabase/client';
 
 interface SpeechRecognitionOptions {
-  continuous?: boolean;
-  interimResults?: boolean;
   language?: string;
-  silenceThreshold?: number;
-  silenceTimeout?: number;
 }
 
 export const useSpeechRecognition = (options: SpeechRecognitionOptions = {}) => {
-  const {
-    continuous = false,
-    interimResults = true,
-    language = 'en-US',
-    silenceThreshold = 0.01,
-    silenceTimeout = 1500,
-  } = options;
+  const { language = 'en-US' } = options;
+  const { voiceEnabled } = useVoiceSettings();
   
-  const { autoSilenceDetection, visualFeedback, voiceEnabled } = useVoiceSettings();
-  const [isListening, setIsListening] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState('');
-  const [finalTranscript, setFinalTranscript] = useState('');
-  const [temporaryTranscript, setTemporaryTranscript] = useState<string | undefined>(undefined);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [audioLevel, setAudioLevel] = useState(0);
-  const [processing, setProcessing] = useState(false);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
-  const analyserRef = useRef<AnalyserNode | null>(null);
-  const silenceTimerRef = useRef<number | null>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   
-  const supported = typeof window !== 'undefined' && 
-    (('SpeechRecognition' in window) || 
-    ('webkitSpeechRecognition' in window) || 
-    ('MediaRecorder' in window));
+  const supported = typeof window !== 'undefined' && 'MediaRecorder' in window;
   
-  // Define these stopListening function first to avoid circular references
-  const stopListening = useCallback(() => {
-    console.log("Stopping speech recognition, current status:", {
-      isListening,
-      mediaRecorderState: mediaRecorderRef.current?.state || 'no-recorder'
-    });
-    
-    // Stop the MediaRecorder if it exists and is recording
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      try {
-        console.log("Stopping MediaRecorder");
-        mediaRecorderRef.current.stop();
-      } catch (err) {
-        console.error("Error stopping MediaRecorder:", err);
-      }
+  // Function to stop recording
+  const stopRecording = useCallback(() => {
+    if (!mediaRecorderRef.current || mediaRecorderRef.current.state === 'inactive') {
+      return;
     }
     
+    try {
+      // Stop the MediaRecorder
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      
+      // We don't stop the tracks here - we'll do that after processing the audio
+      console.log("Recording stopped, waiting for data to process");
+    } catch (err) {
+      console.error("Error stopping recording:", err);
+      setError(err instanceof Error ? err : new Error('Unknown error stopping recording'));
+      cleanupRecording();
+    }
+  }, []);
+  
+  // Function to cleanup recording resources
+  const cleanupRecording = useCallback(() => {
     // Stop all tracks from the stream
     if (mediaStreamRef.current) {
-      try {
-        console.log("Stopping media stream tracks");
-        mediaStreamRef.current.getTracks().forEach(track => {
-          console.log("Stopping track:", track.kind, track.readyState);
-          track.stop();
-        });
-        mediaStreamRef.current = null;
-      } catch (err) {
-        console.error("Error stopping media stream tracks:", err);
-      }
+      mediaStreamRef.current.getTracks().forEach(track => {
+        track.stop();
+      });
+      mediaStreamRef.current = null;
     }
     
-    // Clear silence detection timer
-    if (silenceTimerRef.current) {
-      console.log("Clearing silence timer");
-      clearTimeout(silenceTimerRef.current);
-      silenceTimerRef.current = null;
-    }
+    // Reset MediaRecorder
+    mediaRecorderRef.current = null;
     
-    setIsListening(false);
-    setAudioLevel(0);
+    // Reset state
+    setIsRecording(false);
+    setIsProcessing(false);
   }, []);
   
   // Function to convert Blob to base64
@@ -101,19 +78,23 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions = {}) => 
   const processAudio = useCallback(async (audioBlob: Blob) => {
     if (!audioBlob || audioBlob.size === 0) {
       setError(new Error('No audio data captured'));
-      setProcessing(false);
+      setIsProcessing(false);
+      cleanupRecording();
       return;
     }
     
     try {
-      setProcessing(true);
+      setIsProcessing(true);
       
       // Convert audio blob to base64
       const base64Audio = await blobToBase64(audioBlob);
       
       // Call Supabase Edge Function for transcription
       const { data, error } = await supabase.functions.invoke('ai-voice-to-text', {
-        body: { audio: base64Audio }
+        body: { 
+          audio: base64Audio,
+          language
+        }
       });
       
       if (error) {
@@ -121,8 +102,7 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions = {}) => 
       }
       
       if (data && data.text) {
-        // Store the transcript temporarily, waiting for user confirmation
-        setTemporaryTranscript(data.text);
+        setTranscript(data.text);
       } else {
         throw new Error('No transcription returned');
       }
@@ -130,150 +110,76 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions = {}) => 
       console.error('Error processing audio:', err);
       setError(err instanceof Error ? err : new Error('Unknown error processing audio'));
     } finally {
-      setProcessing(false);
+      setIsProcessing(false);
+      cleanupRecording();
     }
-  }, []);
+  }, [language, cleanupRecording]);
   
-  const analyzeAudioLevel = useCallback(() => {
-    if (!analyserRef.current || !visualFeedback) return;
-    
-    const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
-    analyserRef.current.getByteFrequencyData(dataArray);
-    
-    // Calculate average level
-    const average = dataArray.reduce((acc, val) => acc + val, 0) / dataArray.length;
-    const normalizedLevel = average / 255; // Normalize to 0-1
-    
-    setAudioLevel(normalizedLevel);
-    
-    // Check for silence if autoSilenceDetection is enabled
-    if (autoSilenceDetection && isListening && normalizedLevel < silenceThreshold) {
-      if (silenceTimerRef.current === null) {
-        silenceTimerRef.current = window.setTimeout(() => {
-          stopListening();
-          silenceTimerRef.current = null;
-        }, silenceTimeout);
-      }
-    } else if (silenceTimerRef.current !== null) {
-      clearTimeout(silenceTimerRef.current);
-      silenceTimerRef.current = null;
-    }
-    
-    // Continue analyzing if still listening
-    if (isListening) {
-      requestAnimationFrame(analyzeAudioLevel);
-    }
-  }, [autoSilenceDetection, isListening, silenceThreshold, silenceTimeout, visualFeedback, stopListening]);
-  
-  const startListening = useCallback(async () => {
+  // Function to start recording
+  const startRecording = useCallback(async () => {
     if (!supported || !voiceEnabled) {
-      setError(new Error('Speech recognition not supported or disabled'));
+      setError(new Error('Voice recording not supported or disabled'));
       return;
     }
     
     try {
-      setIsListening(true);
+      // Reset state
       setTranscript('');
-      setFinalTranscript('');
-      setTemporaryTranscript(undefined);
       setError(null);
       audioChunksRef.current = [];
       
       // Request microphone access
-      console.log("Requesting microphone access");
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaStreamRef.current = stream;
       
-      // Set up audio context for level analysis
-      if (visualFeedback) {
-        audioContextRef.current = new AudioContext();
-        const source = audioContextRef.current.createMediaStreamSource(stream);
-        analyserRef.current = audioContextRef.current.createAnalyser();
-        analyserRef.current.fftSize = 256;
-        source.connect(analyserRef.current);
-        
-        requestAnimationFrame(analyzeAudioLevel);
-      }
-      
       // Set up MediaRecorder
-      console.log("Setting up MediaRecorder");
-      mediaRecorderRef.current = new MediaRecorder(stream);
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
       
-      mediaRecorderRef.current.ondataavailable = (event) => {
+      mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data);
         }
       };
       
-      mediaRecorderRef.current.onstop = async () => {
+      mediaRecorder.onstop = async () => {
         console.log("MediaRecorder stopped, processing audio chunks:", audioChunksRef.current.length);
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         await processAudio(audioBlob);
-        
-        // Clean up
-        if (audioContextRef.current) {
-          audioContextRef.current.close();
-          audioContextRef.current = null;
-          analyserRef.current = null;
-        }
       };
       
-      mediaRecorderRef.current.start();
-      console.log("MediaRecorder started");
+      // Start recording
+      mediaRecorder.start();
+      setIsRecording(true);
+      console.log("Recording started");
+      
     } catch (err) {
-      console.error('Error starting speech recognition:', err);
-      setError(err instanceof Error ? err : new Error('Unknown error starting recognition'));
-      setIsListening(false);
+      console.error('Error starting recording:', err);
+      setError(err instanceof Error ? err : new Error('Unknown error starting recording'));
+      cleanupRecording();
     }
-  }, [supported, voiceEnabled, visualFeedback, analyzeAudioLevel, processAudio]);
+  }, [supported, voiceEnabled, processAudio, cleanupRecording]);
   
+  // Reset transcript
   const resetTranscript = useCallback(() => {
     setTranscript('');
-    setFinalTranscript('');
-    setTemporaryTranscript(undefined);
   }, []);
-  
-  const confirmTranscript = useCallback(() => {
-    if (temporaryTranscript) {
-      setTranscript(temporaryTranscript);
-      setFinalTranscript(temporaryTranscript);
-      setTemporaryTranscript(undefined);
-    }
-  }, [temporaryTranscript]);
   
   // Clean up on unmount
   useEffect(() => {
     return () => {
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-        mediaRecorderRef.current.stop();
-      }
-      
-      if (mediaStreamRef.current) {
-        mediaStreamRef.current.getTracks().forEach(track => track.stop());
-      }
-      
-      if (silenceTimerRef.current) {
-        clearTimeout(silenceTimerRef.current);
-      }
-      
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
-      }
+      cleanupRecording();
     };
-  }, []);
+  }, [cleanupRecording]);
   
   return {
-    isListening,
-    startListening,
-    stopListening,
+    isRecording,
+    startRecording,
+    stopRecording,
     transcript,
-    finalTranscript,
-    temporaryTranscript,
-    confirmTranscript,
     resetTranscript,
     error,
-    processing,
-    audioLevel,
+    isProcessing,
     supported
   };
 };

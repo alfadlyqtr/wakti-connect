@@ -8,13 +8,13 @@ import {
   Paperclip, 
   Camera, 
   Loader2, 
-  Check, 
   X,
   ChevronRight
 } from "lucide-react";
 import { VoiceTranscriptionControl } from "@/components/ai/voice/VoiceTranscriptionControl";
 import { useVoiceSettings } from "@/store/voiceSettings";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { useSpeechRecognition } from "@/hooks/ai/useSpeechRecognition";
 
 interface ChatMessageInputProps {
   message: string;
@@ -24,16 +24,9 @@ interface ChatMessageInputProps {
   disabled?: boolean;
   onFileUpload?: (file: File) => void;
   onCameraCapture?: () => void;
-  onStartVoiceInput?: () => void;
-  onStopVoiceInput?: () => void;
-  isListening?: boolean;
-  audioLevel?: number;
-  processingVoice?: boolean;
   supportsPendingConfirmation?: boolean;
   pendingConfirmation?: boolean;
   confirmationHint?: string;
-  temporaryTranscript?: string;
-  onConfirmTranscript?: () => void;
 }
 
 export const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
@@ -44,22 +37,25 @@ export const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
   disabled = false,
   onFileUpload,
   onCameraCapture,
-  onStartVoiceInput,
-  onStopVoiceInput,
-  isListening = false,
-  audioLevel = 0,
-  processingVoice = false,
   supportsPendingConfirmation = false,
   pendingConfirmation = false,
-  confirmationHint,
-  temporaryTranscript,
-  onConfirmTranscript
+  confirmationHint
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { voiceEnabled } = useVoiceSettings();
   const isMobile = useIsMobile();
-  const [showVoiceTranscript, setShowVoiceTranscript] = useState(false);
+  
+  // Use speech recognition hook
+  const {
+    isRecording,
+    startRecording,
+    stopRecording,
+    transcript,
+    isProcessing,
+    supported: voiceSupported,
+    error: voiceError
+  } = useSpeechRecognition();
   
   // Auto-resize textarea
   useEffect(() => {
@@ -72,10 +68,24 @@ export const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
   
   // Auto-focus textarea
   useEffect(() => {
-    if (textareaRef.current && !disabled) {
+    if (textareaRef.current && !disabled && !isRecording && !isProcessing) {
       textareaRef.current.focus();
     }
-  }, [disabled]);
+  }, [disabled, isRecording, isProcessing]);
+  
+  // Update message with transcript when available
+  useEffect(() => {
+    if (transcript) {
+      setMessage(transcript);
+      
+      // Focus on textarea for editing after transcription
+      if (textareaRef.current) {
+        setTimeout(() => {
+          textareaRef.current?.focus();
+        }, 100);
+      }
+    }
+  }, [transcript, setMessage]);
   
   // Handle file upload
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -92,31 +102,22 @@ export const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
   
   // Handle key press
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (!isMobile && e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+    if (!isMobile && e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      onSendMessage(e as unknown as React.FormEvent);
-    }
-  };
-  
-  // Handle confirming voice transcript
-  const handleConfirmTranscript = () => {
-    if (temporaryTranscript && onConfirmTranscript) {
-      onConfirmTranscript();
-      setShowVoiceTranscript(false);
-    }
-  };
-  
-  // Start voice transcript session
-  const handleStartVoiceInput = () => {
-    if (onStartVoiceInput) {
-      setShowVoiceTranscript(true);
-      onStartVoiceInput();
+      if (message.trim() && !isLoading) {
+        onSendMessage(e as unknown as React.FormEvent);
+      }
     }
   };
   
   return (
     <form 
-      onSubmit={onSendMessage} 
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (message.trim() && !isLoading) {
+          onSendMessage(e);
+        }
+      }} 
       className={cn(
         "border-t bg-background p-2 pt-3 md:p-4 rounded-b-lg flex flex-col gap-2",
         supportsPendingConfirmation && pendingConfirmation && "bg-green-50/50 border-green-100"
@@ -133,11 +134,21 @@ export const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
             className={cn(
               "min-h-[40px] w-full resize-none bg-background py-3 pr-12 text-sm md:pr-14 rounded-lg transition-colors",
               supportsPendingConfirmation && pendingConfirmation && "bg-green-50 border-green-200 placeholder:text-green-600/80",
-              (isListening || processingVoice) && "bg-blue-50/50 border-blue-100/50"
+              isProcessing && "bg-blue-50/50 border-blue-100/50"
             )}
-            disabled={disabled || isLoading || isListening || processingVoice}
+            disabled={disabled || isLoading || isRecording || isProcessing}
             rows={1}
           />
+          
+          {isProcessing && (
+            <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-md">
+              <div className="flex flex-col items-center gap-2">
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                <span className="text-xs text-muted-foreground">Processing voice...</span>
+              </div>
+            </div>
+          )}
+          
           <div className="absolute bottom-1 right-1 flex items-center">
             <Button
               size="icon"
@@ -151,8 +162,8 @@ export const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
                 (message.trim().length === 0 && !pendingConfirmation) ||
                 isLoading ||
                 disabled ||
-                isListening ||
-                processingVoice
+                isRecording ||
+                isProcessing
               }
             >
               {isLoading ? (
@@ -188,7 +199,7 @@ export const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
             </Button>
           )}
           
-          {onFileUpload && !pendingConfirmation && !isListening && !processingVoice && (
+          {onFileUpload && !pendingConfirmation && !isRecording && !isProcessing && (
             <>
               <input
                 type="file"
@@ -211,7 +222,7 @@ export const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
             </>
           )}
           
-          {onCameraCapture && !pendingConfirmation && !isListening && !processingVoice && (
+          {onCameraCapture && !pendingConfirmation && !isRecording && !isProcessing && (
             <Button
               type="button"
               size="icon"
@@ -224,19 +235,14 @@ export const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
             </Button>
           )}
           
-          {voiceEnabled && onStartVoiceInput && onStopVoiceInput && !pendingConfirmation && (
+          {voiceEnabled && voiceSupported && !pendingConfirmation && (
             <VoiceTranscriptionControl
-              isListening={isListening}
-              startListening={handleStartVoiceInput}
-              stopListening={onStopVoiceInput}
-              processing={processingVoice}
-              audioLevel={audioLevel}
-              supported={true}
+              startRecording={startRecording}
+              stopRecording={stopRecording}
+              isRecording={isRecording}
+              isProcessing={isProcessing}
               disabled={disabled || isLoading}
               size="md"
-              showConfirmButton={temporaryTranscript !== undefined && !isListening && !processingVoice}
-              transcript={temporaryTranscript}
-              confirmTranscript={handleConfirmTranscript}
             />
           )}
         </div>
@@ -244,15 +250,12 @@ export const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
       
       <div className="flex justify-between items-center text-xs text-muted-foreground">
         <div>
-          {isListening && <span className="text-blue-500">Voice recording in progress...</span>}
-          {processingVoice && <span className="text-amber-500">Transcribing voice...</span>}
-          {temporaryTranscript && !isListening && !processingVoice && (
-            <span className="text-blue-500">Press ✓ to use this transcription</span>
-          )}
+          {isRecording && <span className="text-green-500">Recording... Click ✓ when finished</span>}
+          {voiceError && <span className="text-red-500">{voiceError.message}</span>}
         </div>
         {!isMobile && (
           <div>
-            <span>Ctrl+Enter to send</span>
+            <span>Press Enter to send</span>
           </div>
         )}
       </div>
