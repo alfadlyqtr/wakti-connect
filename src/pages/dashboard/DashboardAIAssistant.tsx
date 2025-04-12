@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
 import { useAuth } from "@/hooks/useAuth";
@@ -29,6 +30,7 @@ import {
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AISystemIntegrationPanel } from "@/components/ai/assistant/AISystemIntegrationPanel";
 import { VoiceTranscriptionControl } from "@/components/ai/voice/VoiceTranscriptionControl";
 import { useSpeechRecognition } from "@/hooks/ai/useSpeechRecognition";
 
