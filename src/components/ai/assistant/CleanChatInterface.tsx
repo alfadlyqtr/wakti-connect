@@ -32,6 +32,13 @@ interface CleanChatInterfaceProps {
   onCancelTask?: () => void;
   isCreatingTask?: boolean;
   pendingTaskConfirmation?: boolean;
+  isListening?: boolean;
+  audioLevel?: number;
+  processingVoice?: boolean;
+  temporaryTranscript?: string;
+  onStartVoiceInput?: () => void;
+  onStopVoiceInput?: () => void;
+  onConfirmTranscript?: () => void;
 }
 
 export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
@@ -51,6 +58,13 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
   onCancelTask,
   isCreatingTask = false,
   pendingTaskConfirmation = false,
+  isListening = false,
+  audioLevel = 0,
+  processingVoice = false,
+  temporaryTranscript,
+  onStartVoiceInput,
+  onStopVoiceInput,
+  onConfirmTranscript
 }) => {
   const [showWelcome, setShowWelcome] = useState(messages.length === 0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -213,7 +227,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
                   priority: detectedTask.priority || 'normal',
                   subtasks: detectedTask.subtasks?.map(s => s.content) || [],
                   due_date: detectedTask.due_date,
-                  due_time: detectedTask.due_time,
+                  dueTime: detectedTask.due_time, // Changed from due_time to dueTime to match ParsedTaskInfo type
                   location: detectedTask.location,
                 }}
                 onConfirm={() => onConfirmTask(detectedTask)}
