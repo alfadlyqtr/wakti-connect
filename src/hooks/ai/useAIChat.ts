@@ -4,6 +4,7 @@ import { useAIChatOperations } from "./operations/useAIChatOperations";
 import { AIMessage } from "@/types/ai-assistant.types";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { TaskFormData } from "@/types/task.types";
 
 /**
  * Hook for AI chat functionality with enhanced application integration
@@ -11,9 +12,13 @@ import { useToast } from "@/components/ui/use-toast";
 export const useAIChat = () => {
   const {
     messages,
-    sendMessage,
+    sendMessage: sendOperationsMessage,
     clearMessages,
-    isLoading
+    isLoading,
+    detectedTask,
+    confirmCreateTask,
+    cancelCreateTask,
+    isCreatingTask
   } = useAIChatOperations();
   
   const { toast } = useToast();
@@ -60,7 +65,7 @@ export const useAIChat = () => {
       }
       
       // Send the message (context will be added in the backend)
-      return await sendMessage.mutateAsync(enhancedMessage);
+      return await sendOperationsMessage.mutateAsync(enhancedMessage);
     } catch (error) {
       console.error("Error sending enhanced message:", error);
       
@@ -72,12 +77,16 @@ export const useAIChat = () => {
       
       throw error;
     }
-  }, [sendMessage, getApplicationContext, toast]);
+  }, [sendOperationsMessage, getApplicationContext, toast]);
   
   return {
     messages,
     sendMessage: sendEnhancedMessage,
     clearMessages,
-    isLoading: isLoading || sendMessage.isPending
+    isLoading: isLoading || sendOperationsMessage.isPending,
+    detectedTask,
+    confirmCreateTask,
+    cancelCreateTask,
+    isCreatingTask
   };
 };

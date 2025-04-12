@@ -53,7 +53,11 @@ const DashboardAIAssistant = () => {
     aiSettings,
     updateSettings,
     canUseAI: hookCanUseAI,
-    clearMessages 
+    clearMessages,
+    detectedTask,
+    confirmCreateTask,
+    cancelCreateTask,
+    isCreatingTask 
   } = useAIAssistant();
   const [inputMessage, setInputMessage] = useState("");
   const [isChecking, setIsChecking] = useState(true);
@@ -395,6 +399,10 @@ const DashboardAIAssistant = () => {
                               onStopVoiceInput={handleStopVoiceInput}
                               isListening={isListening}
                               showSuggestions={false}
+                              detectedTask={detectedTask}
+                              onConfirmTask={confirmCreateTask}
+                              onCancelTask={cancelCreateTask}
+                              isCreatingTask={isCreatingTask}
                             />
                           </div>
                         </div>

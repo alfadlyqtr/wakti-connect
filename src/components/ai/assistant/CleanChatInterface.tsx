@@ -1,17 +1,20 @@
 
 import React, { useState, useRef, useEffect } from "react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { AIMessage, AIAssistantRole, RoleContexts } from "@/types/ai-assistant.types";
 import { AnimatePresence, motion } from "framer-motion";
-import { Loader2, Bot, Send, Mic, MicOff, Paperclip, Camera } from "lucide-react";
+import { Loader2, Send, Mic, MicOff, Paperclip, Camera } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useToast } from "@/components/ui/use-toast";
 import { MessageAvatar } from "@/components/ai/message";
+import { TaskConfirmationCard } from "@/components/ai/task/TaskConfirmationCard";
+import { TaskFormData } from "@/types/task.types";
+import { parseTaskFromMessage } from "@/hooks/ai/utils/taskParser";
 
 interface CleanChatInterfaceProps {
   messages: AIMessage[];
@@ -28,6 +31,10 @@ interface CleanChatInterfaceProps {
   onStopVoiceInput?: () => void;
   isListening?: boolean;
   showSuggestions?: boolean;
+  detectedTask?: TaskFormData | null;
+  onConfirmTask?: (task: TaskFormData) => void;
+  onCancelTask?: () => void;
+  isCreatingTask?: boolean;
 }
 
 export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
@@ -45,17 +52,36 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
   onStopVoiceInput,
   isListening = false,
   showSuggestions = true,
+  detectedTask = null,
+  onConfirmTask,
+  onCancelTask,
+  isCreatingTask = false,
 }) => {
   const [showWelcome, setShowWelcome] = useState(messages.length === 0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const [parsedMessage, setParsedMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages, isLoading]);
+  }, [messages, isLoading, detectedTask]);
+
+  // Effect to attempt to parse a task from input for real-time preview
+  useEffect(() => {
+    if (inputMessage.length > 15) {
+      const parsedTask = parseTaskFromMessage(inputMessage);
+      if (parsedTask && parsedTask.title) {
+        setParsedMessage(`Creating task: "${parsedTask.title}"`);
+      } else {
+        setParsedMessage(null);
+      }
+    } else {
+      setParsedMessage(null);
+    }
+  }, [inputMessage]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -102,13 +128,13 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
   };
 
   return (
-    <Card className="w-full overflow-hidden flex flex-col h-[700px]">
-      <div className="flex-1 overflow-auto p-4 space-y-4">
+    <Card className="w-full overflow-hidden flex flex-col h-[700px] md:h-[700px] bg-gradient-to-b from-background to-background/95">
+      <div className="flex-1 overflow-auto p-3 md:p-4 space-y-3 md:space-y-4">
         {showWelcome && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center py-10"
+            className="text-center py-6 md:py-10"
           >
             <div className={`h-16 w-16 rounded-full ${getRoleColor()} mx-auto mb-4 flex items-center justify-center overflow-hidden`}>
               <img 
@@ -120,7 +146,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
             <h2 className="text-xl font-bold mb-2">
               Hello{userName ? ` ${userName}` : ''}, I'm your WAKTI AI Assistant
             </h2>
-            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+            <p className="text-muted-foreground mb-4 max-w-md mx-auto text-sm">
               I'm here to help you with your tasks, answer questions, and provide assistance as needed.
             </p>
             
@@ -150,7 +176,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
               exit={{ opacity: 0, x: -10 }}
               transition={{ duration: 0.3 }}
               className={cn(
-                "flex items-start gap-3 mb-4",
+                "flex items-start gap-3 mb-3 md:mb-4 mx-0.5",
                 msg.role === "user" ? "flex-row-reverse" : ""
               )}
             >
@@ -171,7 +197,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
               )}
 
               <div className={cn(
-                "rounded-lg py-2 px-3 max-w-[80%]",
+                "rounded-lg py-2 px-3 max-w-[85%] md:max-w-[80%]",
                 msg.role === "assistant" ? "bg-background border" : 
                 msg.role === "user" ? "bg-primary text-primary-foreground" : 
                 "bg-orange-50 text-orange-800 border border-orange-100"
@@ -191,7 +217,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex items-start gap-3 mb-4"
+              className="flex items-start gap-3 mb-4 mx-0.5"
             >
               <Avatar className={`h-8 w-8 ${getRoleColor()} overflow-hidden`}>
                 <img 
@@ -205,11 +231,40 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
               </div>
             </motion.div>
           )}
+          
+          {detectedTask && onConfirmTask && onCancelTask && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mx-auto my-4 w-full max-w-md"
+            >
+              <TaskConfirmationCard 
+                taskInfo={parseTaskFromMessage(detectedTask.title || '') || {
+                  title: detectedTask.title || '',
+                  description: detectedTask.description || '',
+                  priority: detectedTask.priority || 'normal',
+                  subtasks: detectedTask.subtasks?.map(s => s.content) || [],
+                  dueDate: detectedTask.due_date,
+                  dueTime: detectedTask.due_time,
+                  hasTimeConstraint: !!detectedTask.due_date
+                }}
+                onConfirm={() => onConfirmTask(detectedTask)}
+                onCancel={onCancelTask}
+                isLoading={isCreatingTask}
+              />
+            </motion.div>
+          )}
         </AnimatePresence>
         <div ref={messagesEndRef} />
       </div>
       
-      <div className="p-4 border-t">
+      <div className="p-3 md:p-4 border-t relative">
+        {parsedMessage && !detectedTask && (
+          <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs bg-background/80 backdrop-blur-sm border border-dashed px-2 py-1 rounded-full text-muted-foreground whitespace-nowrap">
+            {parsedMessage}
+          </div>
+        )}
+        
         <form onSubmit={handleSendMessage} className="flex items-center gap-2">
           <div className="relative flex-1">
             <Input
@@ -217,10 +272,10 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
               onChange={(e) => setInputMessage(e.target.value)}
               placeholder="Type your message here..."
               className={cn(
-                "pr-10",
+                "pr-10 py-5 md:py-6 text-sm",
                 isListening && "bg-rose-50 border-rose-200"
               )}
-              disabled={isLoading || !canAccess}
+              disabled={isLoading || !canAccess || !!detectedTask}
             />
             {isListening && (
               <span className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -239,7 +294,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
               variant="ghost" 
               className={isListening ? "text-rose-500 hover:text-rose-600" : ""}
               onClick={handleVoiceToggle}
-              disabled={isLoading || !canAccess}
+              disabled={isLoading || !canAccess || !!detectedTask}
               title={isListening ? "Stop voice input" : "Start voice input"}
             >
               {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
@@ -253,7 +308,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
                 size="icon" 
                 variant="ghost" 
                 onClick={handleFileUploadClick}
-                disabled={isLoading || !canAccess}
+                disabled={isLoading || !canAccess || !!detectedTask}
                 title="Attach file"
               >
                 <Paperclip className="h-5 w-5" />
@@ -274,7 +329,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
               size="icon" 
               variant="ghost" 
               onClick={onCameraCapture}
-              disabled={isLoading || !canAccess}
+              disabled={isLoading || !canAccess || !!detectedTask}
               title="Take photo"
             >
               <Camera className="h-5 w-5" />
@@ -284,8 +339,9 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
           <Button 
             type="submit" 
             size="icon" 
-            disabled={!inputMessage.trim() || isLoading || !canAccess}
+            disabled={!inputMessage.trim() || isLoading || !canAccess || !!detectedTask}
             title="Send message"
+            className="h-10 w-10"
           >
             <Send className="h-5 w-5" />
           </Button>

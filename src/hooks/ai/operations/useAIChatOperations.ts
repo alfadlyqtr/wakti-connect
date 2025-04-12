@@ -1,11 +1,15 @@
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { AIMessage } from "@/types/ai-assistant.types";
 import { callAIAssistant } from "../utils/callAIAssistant";
 import { v4 as uuidv4 } from "uuid";
 import { useAuth } from "@/hooks/useAuth";
 import { useWAKTIFocusedConversation } from "../useWAKTIFocusedConversation";
+import { parseTaskFromMessage, convertParsedTaskToFormData } from "../utils/taskParser";
+import { createAITask, getEstimatedTaskTime } from "@/services/ai/aiTaskService";
+import { TaskFormData } from "@/types/task.types";
+import { toast } from "@/components/ui/use-toast";
 
 const WAKTI_TOPICS = [
   "task management", "to-do lists", "appointments", "bookings", 
@@ -18,6 +22,8 @@ const WAKTI_TOPICS = [
  */
 export const useAIChatOperations = () => {
   const [messages, setMessages] = useState<AIMessage[]>([]);
+  const [detectedTask, setDetectedTask] = useState<TaskFormData | null>(null);
+  const [isCreatingTask, setIsCreatingTask] = useState(false);
   const { user } = useAuth();
   const { 
     prepareMessageWithContext, 
@@ -25,6 +31,132 @@ export const useAIChatOperations = () => {
     decreaseFocus 
   } = useWAKTIFocusedConversation();
   
+  // Clear currently detected task
+  const clearDetectedTask = useCallback(() => {
+    setDetectedTask(null);
+  }, []);
+  
+  // Mutation for actually creating the task
+  const createTaskMutation = useMutation({
+    mutationFn: async (taskData: TaskFormData) => {
+      setIsCreatingTask(true);
+      try {
+        const result = await createAITask(taskData);
+        return result;
+      } finally {
+        setIsCreatingTask(false);
+      }
+    },
+    onSuccess: (task) => {
+      if (task) {
+        // Add AI confirmation message
+        const confirmationMessageId = uuidv4();
+        const confirmationMessage: AIMessage = {
+          id: confirmationMessageId,
+          role: "assistant",
+          content: `✅ I've created your task "${task.title}" successfully!${task.due_date ? ` It's due on ${new Date(task.due_date).toLocaleDateString()}.` : ''}${task.subtasks && task.subtasks.length > 0 ? ` Added ${task.subtasks.length} subtasks.` : ''}`,
+          timestamp: new Date()
+        };
+        
+        setMessages(prevMessages => [...prevMessages, confirmationMessage]);
+        
+        toast({
+          title: "Task Created",
+          description: `Your task "${task.title}" has been created successfully.`,
+          variant: "success"
+        });
+      }
+      
+      // Clear detected task
+      clearDetectedTask();
+    },
+    onError: (error) => {
+      // Add error message
+      const errorMessageId = uuidv4();
+      const errorMessage: AIMessage = {
+        id: errorMessageId,
+        role: "assistant",
+        content: `❌ I couldn't create your task. ${error instanceof Error ? error.message : 'Please try again or create it manually.'}`,
+        timestamp: new Date()
+      };
+      
+      setMessages(prevMessages => [...prevMessages, errorMessage]);
+      clearDetectedTask();
+    }
+  });
+  
+  // Confirm task creation
+  const confirmCreateTask = useCallback((taskData: TaskFormData) => {
+    createTaskMutation.mutate(taskData);
+  }, [createTaskMutation]);
+  
+  // Cancel task creation
+  const cancelCreateTask = useCallback(() => {
+    // Add cancellation message
+    const cancellationMessageId = uuidv4();
+    const cancellationMessage: AIMessage = {
+      id: cancellationMessageId,
+      role: "assistant",
+      content: "I've cancelled the task creation. Is there anything else you'd like help with?",
+      timestamp: new Date()
+    };
+    
+    setMessages(prevMessages => [...prevMessages, cancellationMessage]);
+    clearDetectedTask();
+  }, [clearDetectedTask]);
+  
+  // Process message for task intent and extract task data
+  const processMessageForTaskIntent = useCallback((messageText: string) => {
+    // Try to parse task from message
+    const parsedTask = parseTaskFromMessage(messageText);
+    
+    if (parsedTask && parsedTask.title) {
+      console.log("Detected task in message:", parsedTask);
+      
+      // Convert parsed task to form data
+      const taskFormData = convertParsedTaskToFormData(parsedTask);
+      
+      // Create task confirmation message
+      const confirmationMessageId = uuidv4();
+      
+      // Get estimated time based on subtasks
+      const estimatedTime = getEstimatedTaskTime(parsedTask);
+      
+      let confirmationContent = `I've detected a task request. Would you like me to create a ${parsedTask.priority} priority task "${parsedTask.title}"`;
+      
+      if (parsedTask.dueDate) {
+        confirmationContent += ` due on ${new Date(parsedTask.dueDate).toLocaleDateString()}`;
+        if (parsedTask.dueTime) {
+          confirmationContent += ` at ${parsedTask.dueTime}`;
+        }
+      }
+      
+      confirmationContent += "?";
+      
+      if (parsedTask.subtasks.length > 0) {
+        confirmationContent += `\n\nI'll include ${parsedTask.subtasks.length} subtasks (estimated completion time: ${estimatedTime}).`;
+      }
+      
+      confirmationContent += "\n\nShould I create this task for you?";
+      
+      const confirmationMessage: AIMessage = {
+        id: confirmationMessageId,
+        role: "assistant",
+        content: confirmationContent,
+        timestamp: new Date()
+      };
+      
+      setMessages(prevMessages => [...prevMessages, confirmationMessage]);
+      
+      // Set detected task for confirmation
+      setDetectedTask(taskFormData);
+      
+      return true;
+    }
+    
+    return false;
+  }, []);
+
   // Mutation for sending a message to AI Assistant
   const sendMessage = useMutation({
     mutationFn: async (messageText: string) => {
@@ -60,6 +192,14 @@ export const useAIChatOperations = () => {
       };
       
       setMessages(prevMessages => [...prevMessages, userMessage]);
+      
+      // Check if message contains task intent before sending to AI
+      const isTaskIntent = processMessageForTaskIntent(messageText);
+      
+      // If this is a task intent, don't send to the AI yet
+      if (isTaskIntent) {
+        return null;
+      }
       
       try {
         // Get the token for authentication
@@ -106,12 +246,17 @@ export const useAIChatOperations = () => {
   // Clear all messages
   const clearMessages = () => {
     setMessages([]);
+    clearDetectedTask();
   };
   
   return {
     messages,
     sendMessage,
     clearMessages,
-    isLoading: sendMessage.isPending
+    isLoading: sendMessage.isPending,
+    detectedTask,
+    confirmCreateTask,
+    cancelCreateTask,
+    isCreatingTask
   };
 };

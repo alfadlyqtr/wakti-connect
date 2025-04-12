@@ -13,7 +13,16 @@ interface SendMessageFunction {
 }
 
 export const useAIAssistant = () => {
-  const { messages, sendMessage, isLoading, clearMessages } = useAIChat();
+  const { 
+    messages, 
+    sendMessage, 
+    isLoading, 
+    clearMessages,
+    detectedTask,
+    confirmCreateTask,
+    cancelCreateTask,
+    isCreatingTask
+  } = useAIChat();
   const { aiSettings, isLoadingSettings, updateSettings, canUseAI } = useAISettings();
   const { addKnowledge, knowledgeUploads, isLoadingKnowledge, deleteKnowledge } = useAIKnowledge();
 
@@ -23,6 +32,12 @@ export const useAIAssistant = () => {
     sendMessage,
     isLoading,
     clearMessages,
+    
+    // Task features
+    detectedTask,
+    confirmCreateTask,
+    cancelCreateTask,
+    isCreatingTask,
     
     // Settings features
     aiSettings,
