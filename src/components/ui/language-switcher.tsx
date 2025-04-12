@@ -46,24 +46,17 @@ const LanguageSwitcher = () => {
       // Save language preference
       localStorage.setItem('wakti-language', 'ar');
       
-      toast({
-        title: "Language Changed",
-        description: (
-          <div className="flex items-center gap-2">
-            <span>Switched to Arabic</span>
-            <br />
-            <span dir="rtl">تم التبديل إلى اللغة العربية</span>
-            <Flag className="h-4 w-4" />
-          </div>
-        ),
-        duration: 3000,
-      });
+      toast(
+        <div className="flex items-center gap-2">
+          <span>Switched to Arabic</span>
+          <br />
+          <span dir="rtl">تم التبديل إلى اللغة العربية</span>
+          <Flag className="h-4 w-4" />
+        </div>
+      );
     } catch (error) {
       console.error("Translation error:", error);
-      toast({
-        title: "Translation Error",
-        description: "Could not load translation. Please try again.",
-      });
+      toast("Could not load translation. Please try again.");
     }
   };
 
