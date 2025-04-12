@@ -44,7 +44,7 @@ export const useProfileSettings = () => {
               account_type: 'free',
               is_searchable: true,
               auto_approve_contacts: false,
-              auto_add_staff_to_contacts: true, // Add missing field
+              auto_add_staff_to_contacts: true,
               avatar_url: '',
               business_name: '',
               created_at: new Date().toISOString(),
@@ -65,6 +65,9 @@ export const useProfileSettings = () => {
               po_box: '',
               business_type: '',
               business_address: '',
+              // Add the missing properties that were added in our SQL migration
+              is_active: true,
+              last_login_at: null,
               email: session.user.email
             };
             return defaultProfile;
