@@ -11,14 +11,14 @@ interface AIToolsTabContentProps {
   onPromptSubmit?: (prompt: string) => void;
   onUseDocumentContent?: (content: string) => void;
   selectedRole?: AIAssistantRole;
-  canAccess?: boolean; // Add the missing prop
+  canAccess?: boolean;
 }
 
 export const AIToolsTabContent: React.FC<AIToolsTabContentProps> = ({ 
   onPromptSubmit, 
   onUseDocumentContent,
   selectedRole,
-  canAccess = true // Default to true
+  canAccess = true
 }) => {
   const handleSubmitPrompt = (prompt: string) => {
     if (onPromptSubmit) {

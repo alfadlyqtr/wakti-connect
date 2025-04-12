@@ -1,4 +1,5 @@
-import React, { useRef, useEffect, useState } from "react";
+
+import React, { useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -9,12 +10,11 @@ import {
   Loader2, 
   X,
   ChevronRight,
-  Mic
+  Mic,
+  MicOff
 } from "lucide-react";
-import { VoiceTranscriptionControl } from "@/components/ai/voice/VoiceTranscriptionControl";
-import { useVoiceSettings } from "@/store/voiceSettings";
+import { SimplifiedVoiceRecorder } from "@/components/ai/voice/SimplifiedVoiceRecorder";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { useSpeechRecognition } from "@/hooks/ai/useSpeechRecognition";
 
 interface ChatMessageInputProps {
   message: string;
@@ -24,13 +24,6 @@ interface ChatMessageInputProps {
   disabled?: boolean;
   onFileUpload?: (file: File) => void;
   onCameraCapture?: () => void;
-  onStartVoiceInput?: () => void;
-  onStopVoiceInput?: () => void;
-  onConfirmTranscript?: () => void;
-  isListening?: boolean;
-  audioLevel?: number;
-  processingVoice?: boolean;
-  temporaryTranscript?: string | null;
   supportsPendingConfirmation?: boolean;
   pendingConfirmation?: boolean;
   confirmationHint?: string;
@@ -44,32 +37,14 @@ export const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
   disabled = false,
   onFileUpload,
   onCameraCapture,
-  onStartVoiceInput,
-  onStopVoiceInput,
-  onConfirmTranscript,
-  isListening = false,
-  processingVoice = false,
-  temporaryTranscript,
   supportsPendingConfirmation = false,
   pendingConfirmation = false,
   confirmationHint
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { voiceEnabled } = useVoiceSettings();
   const isMobile = useIsMobile();
-  
-  const {
-    isRecording,
-    startRecording,
-    stopRecording,
-    transcript,
-    temporaryTranscript: internalTemporaryTranscript,
-    confirmTranscript: internalConfirmTranscript,
-    isProcessing,
-    supported: voiceSupported,
-    error: voiceError
-  } = useSpeechRecognition();
+  const [showVoiceRecorder, setShowVoiceRecorder] = React.useState(false);
   
   useEffect(() => {
     if (textareaRef.current) {
@@ -80,35 +55,10 @@ export const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
   }, [message]);
   
   useEffect(() => {
-    if (textareaRef.current && !disabled && !isRecording && !isProcessing) {
+    if (textareaRef.current && !disabled && !showVoiceRecorder) {
       textareaRef.current.focus();
     }
-  }, [disabled, isRecording, isProcessing]);
-  
-  useEffect(() => {
-    if (transcript) {
-      setMessage(transcript);
-      
-      if (textareaRef.current) {
-        setTimeout(() => {
-          textareaRef.current?.focus();
-        }, 100);
-      }
-    }
-  }, [transcript, setMessage]);
-  
-  useEffect(() => {
-    if (internalTemporaryTranscript && !isRecording && !isProcessing) {
-      setMessage(internalTemporaryTranscript);
-      internalConfirmTranscript();
-      
-      if (textareaRef.current) {
-        setTimeout(() => {
-          textareaRef.current?.focus();
-        }, 100);
-      }
-    }
-  }, [internalTemporaryTranscript, isRecording, isProcessing, setMessage, internalConfirmTranscript]);
+  }, [disabled, showVoiceRecorder]);
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0] && onFileUpload) {
@@ -130,17 +80,14 @@ export const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
     }
   };
   
-  const handleVoiceRecording = () => {
-    if (onStartVoiceInput && onStopVoiceInput) {
-      if (isListening) {
-        onStopVoiceInput();
-      } else {
-        onStartVoiceInput();
-      }
-    } else if (isRecording) {
-      stopRecording();
-    } else {
-      startRecording();
+  const handleVoiceTranscriptReady = (transcript: string) => {
+    setMessage(transcript);
+    setShowVoiceRecorder(false);
+    
+    if (textareaRef.current) {
+      setTimeout(() => {
+        textareaRef.current?.focus();
+      }, 100);
     }
   };
   
@@ -157,152 +104,139 @@ export const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
         supportsPendingConfirmation && pendingConfirmation && "bg-green-50/50 border-green-100"
       )}
     >
-      <div className="flex items-end gap-2">
-        <div className="relative flex-1">
-          <Textarea
-            ref={textareaRef}
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={pendingConfirmation ? (confirmationHint || "Type 'Go' to confirm") : "Type a message..."}
-            className={cn(
-              "min-h-[40px] w-full resize-none bg-background py-3 pr-12 text-sm md:pr-14 rounded-lg transition-colors",
-              supportsPendingConfirmation && pendingConfirmation && "bg-green-50 border-green-200 placeholder:text-green-600/80",
-              isProcessing && "bg-blue-50/50 border-blue-100/50"
-            )}
-            disabled={disabled || isLoading || isRecording || isProcessing}
-            rows={1}
-          />
-          
-          {isProcessing && (
-            <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-md">
-              <div className="flex flex-col items-center gap-2">
-                <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                <span className="text-xs text-muted-foreground">Processing voice...</span>
-              </div>
-            </div>
-          )}
-          
-          <div className="absolute bottom-1 right-1 flex items-center">
-            <Button
-              size="icon"
-              type="submit"
-              variant={pendingConfirmation ? "success" : "default"}
+      {showVoiceRecorder ? (
+        <SimplifiedVoiceRecorder 
+          onTranscriptReady={handleVoiceTranscriptReady}
+          onCancel={() => setShowVoiceRecorder(false)}
+          compact
+        />
+      ) : (
+        <div className="flex items-end gap-2">
+          <div className="relative flex-1">
+            <Textarea
+              ref={textareaRef}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={pendingConfirmation ? (confirmationHint || "Type 'Go' to confirm") : "Type a message..."}
               className={cn(
-                "h-7 w-7 sm:h-8 sm:w-8 rounded-full",
-                pendingConfirmation && "bg-green-600 hover:bg-green-700 text-white"
+                "min-h-[40px] w-full resize-none bg-background py-3 pr-12 text-sm md:pr-14 rounded-lg transition-colors",
+                supportsPendingConfirmation && pendingConfirmation && "bg-green-50 border-green-200 placeholder:text-green-600/80"
               )}
-              disabled={
-                (message.trim().length === 0 && !pendingConfirmation) ||
-                isLoading ||
-                disabled ||
-                isRecording ||
-                isProcessing
-              }
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : pendingConfirmation ? (
-                <ChevronRight className="h-4 w-4" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-1.5">
-          {pendingConfirmation && (
-            <Button
-              type="button"
-              size="icon"
-              variant="outline"
-              className="h-9 w-9 rounded-full bg-white border-red-200 text-red-500 hover:text-red-600 hover:bg-red-50"
-              onClick={() => {
-                if (textareaRef.current) {
-                  textareaRef.current.focus();
+              disabled={disabled || isLoading}
+              rows={1}
+            />
+            
+            <div className="absolute bottom-1 right-1 flex items-center">
+              <Button
+                size="icon"
+                type="submit"
+                variant={pendingConfirmation ? "success" : "default"}
+                className={cn(
+                  "h-7 w-7 sm:h-8 sm:w-8 rounded-full",
+                  pendingConfirmation && "bg-green-600 hover:bg-green-700 text-white"
+                )}
+                disabled={
+                  (message.trim().length === 0 && !pendingConfirmation) ||
+                  isLoading ||
+                  disabled
                 }
-                setMessage("cancel");
-                setTimeout(() => {
-                  onSendMessage(new Event('submit') as unknown as React.FormEvent);
-                }, 100);
-              }}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          )}
+              >
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : pendingConfirmation ? (
+                  <ChevronRight className="h-4 w-4" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+          </div>
           
-          {onFileUpload && !pendingConfirmation && !isRecording && !isProcessing && (
-            <>
-              <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                onChange={handleFileChange}
-                accept=".pdf,.doc,.docx,.txt,.csv,.xlsx"
-                disabled={disabled || isLoading}
-              />
+          <div className="flex items-center gap-1.5">
+            {pendingConfirmation && (
+              <Button
+                type="button"
+                size="icon"
+                variant="outline"
+                className="h-9 w-9 rounded-full bg-white border-red-200 text-red-500 hover:text-red-600 hover:bg-red-50"
+                onClick={() => {
+                  if (textareaRef.current) {
+                    textareaRef.current.focus();
+                  }
+                  setMessage("cancel");
+                  setTimeout(() => {
+                    onSendMessage(new Event('submit') as unknown as React.FormEvent);
+                  }, 100);
+                }}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+            
+            {onFileUpload && !pendingConfirmation && !showVoiceRecorder && (
+              <>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  onChange={handleFileChange}
+                  accept=".pdf,.doc,.docx,.txt,.csv,.xlsx"
+                  disabled={disabled || isLoading}
+                />
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="outline"
+                  className="h-9 w-9 rounded-full"
+                  onClick={handleFileButtonClick}
+                  disabled={disabled || isLoading}
+                >
+                  <Paperclip className="h-4 w-4" />
+                </Button>
+              </>
+            )}
+            
+            {onCameraCapture && !pendingConfirmation && !showVoiceRecorder && (
               <Button
                 type="button"
                 size="icon"
                 variant="outline"
                 className="h-9 w-9 rounded-full"
-                onClick={handleFileButtonClick}
+                onClick={onCameraCapture}
                 disabled={disabled || isLoading}
               >
-                <Paperclip className="h-4 w-4" />
+                <Camera className="h-4 w-4" />
               </Button>
-            </>
-          )}
-          
-          {onCameraCapture && !pendingConfirmation && !isRecording && !isProcessing && (
-            <Button
-              type="button"
-              size="icon"
-              variant="outline"
-              className="h-9 w-9 rounded-full"
-              onClick={onCameraCapture}
-              disabled={disabled || isLoading}
-            >
-              <Camera className="h-4 w-4" />
-            </Button>
-          )}
-          
-          {voiceEnabled && voiceSupported && !pendingConfirmation && (
-            <Button
-              type="button"
-              size="icon"
-              variant={isRecording ? "destructive" : "outline"}
-              className={cn(
-                "h-9 w-9 rounded-full relative",
-                isRecording && "bg-red-500 hover:bg-red-600"
-              )}
-              onClick={handleVoiceRecording}
-              disabled={disabled || isLoading || isProcessing}
-            >
-              {isProcessing ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : isRecording ? (
-                <span className="h-3 w-3 bg-white rounded-sm" />
-              ) : (
-                <Mic className="h-4 w-4" />
-              )}
-              
-              {isRecording && (
-                <span className="absolute -inset-0.5 rounded-full border-2 border-red-400 animate-pulse" />
-              )}
-            </Button>
-          )}
+            )}
+            
+            {!pendingConfirmation && (
+              <Button
+                type="button"
+                size="icon"
+                variant={showVoiceRecorder ? "destructive" : "outline"}
+                className="h-9 w-9 rounded-full"
+                onClick={() => setShowVoiceRecorder(!showVoiceRecorder)}
+                disabled={disabled || isLoading}
+              >
+                {showVoiceRecorder ? (
+                  <MicOff className="h-4 w-4" />
+                ) : (
+                  <Mic className="h-4 w-4" />
+                )}
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
       
       <div className="flex justify-between items-center text-xs text-muted-foreground">
         <div>
-          {isListening && <span className="text-green-500">Recording... Click ✓ when finished</span>}
-          {processingVoice && <span className="text-blue-500">Processing your voice...</span>}
-          {voiceError && <span className="text-red-500">{voiceError.message}</span>}
+          {showVoiceRecorder && (
+            <span className="text-green-500">Click the mic button to start recording</span>
+          )}
         </div>
-        {!isMobile && (
+        {!isMobile && !showVoiceRecorder && (
           <div>
             <span>Press Enter to send</span>
           </div>

@@ -1,11 +1,11 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button"; // Added missing import
-import { Avatar } from "@/components/ui/avatar"; // Added missing import
+import { Button } from "@/components/ui/button";
+import { Avatar } from "@/components/ui/avatar";
 import { AIMessage, AIAssistantRole, RoleContexts } from "@/types/ai-assistant.types";
 import { AnimatePresence, motion } from "framer-motion";
-import { Loader2, Clock, Check } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -26,13 +26,6 @@ interface CleanChatInterfaceProps {
   canAccess: boolean;
   onFileUpload?: (file: File) => void;
   onCameraCapture?: () => void;
-  onStartVoiceInput?: () => void;
-  onStopVoiceInput?: () => void;
-  onConfirmTranscript?: () => void;
-  isListening?: boolean;
-  audioLevel?: number;
-  processingVoice?: boolean;
-  temporaryTranscript?: string;
   showSuggestions?: boolean;
   detectedTask?: TaskFormData | null;
   onConfirmTask?: (task: TaskFormData) => void;
@@ -52,13 +45,6 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
   canAccess,
   onFileUpload,
   onCameraCapture,
-  onStartVoiceInput,
-  onStopVoiceInput,
-  onConfirmTranscript,
-  isListening = false,
-  audioLevel = 0,
-  processingVoice = false,
-  temporaryTranscript,
   showSuggestions = true,
   detectedTask = null,
   onConfirmTask,
@@ -227,10 +213,8 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
                   priority: detectedTask.priority || 'normal',
                   subtasks: detectedTask.subtasks?.map(s => s.content) || [],
                   due_date: detectedTask.due_date,
-                  dueTime: detectedTask.due_time,
+                  due_time: detectedTask.due_time,
                   location: detectedTask.location,
-                  hasTimeConstraint: !!detectedTask.due_date,
-                  needsReview: false
                 }}
                 onConfirm={() => onConfirmTask(detectedTask)}
                 onCancel={onCancelTask}
@@ -260,12 +244,6 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
           disabled={!canAccess || isCreatingTask}
           onFileUpload={onFileUpload}
           onCameraCapture={onCameraCapture}
-          onStartVoiceInput={onStartVoiceInput}
-          onStopVoiceInput={onStopVoiceInput}
-          onConfirmTranscript={onConfirmTranscript}
-          isListening={isListening}
-          processingVoice={processingVoice}
-          temporaryTranscript={temporaryTranscript}
           supportsPendingConfirmation={true}
           pendingConfirmation={pendingTaskConfirmation}
           confirmationHint="Confirm task creation"
