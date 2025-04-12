@@ -8,6 +8,7 @@ interface LanguageChangeListenerProps {
 const LanguageChangeListener: React.FC<LanguageChangeListenerProps> = ({ onLanguageChange }) => {
   useEffect(() => {
     const handleLanguageChange = () => {
+      console.log('Language change detected, triggering component updates');
       onLanguageChange();
     };
     

@@ -15,11 +15,11 @@ const LanguageSwitcher = () => {
     if (savedLanguage === 'ar') {
       setCurrentLanguage('ar');
       // If the page loads with Arabic preference, apply Arabic settings
-      applyArabicSettings();
+      applyArabicSettings(false);
     }
   }, []);
 
-  const applyArabicSettings = () => {
+  const applyArabicSettings = (showToast = true) => {
     try {
       setIsChangingLanguage(true);
       
@@ -34,20 +34,29 @@ const LanguageSwitcher = () => {
       // Save language preference
       localStorage.setItem('wakti-language', 'ar');
       
+      // Force a light refresh to trigger browser translation detection
       setTimeout(() => {
+        // Trigger a layout recalculation to help browser detect language change
+        document.body.style.display = 'none';
+        // This forces a reflow
+        void document.body.offsetHeight;
+        document.body.style.display = '';
+        
         setIsChangingLanguage(false);
         
-        // Show a clean, professional toast with minimal text
-        toast(
-          <div className="flex items-center justify-center gap-2">
-            <span>Switched to Arabic</span>
-            <Check className="h-4 w-4 text-green-500" />
-          </div>
-        );
+        if (showToast) {
+          // Show a clean, professional toast with minimal text
+          toast(
+            <div className="flex items-center justify-center gap-2">
+              <span>Switched to Arabic</span>
+              <Check className="h-4 w-4 text-green-500" />
+            </div>
+          );
+        }
+        
+        // Force a re-render of components
+        window.dispatchEvent(new Event('language-change'));
       }, 800);
-      
-      // Force a re-render of components
-      window.dispatchEvent(new Event('language-change'));
     } catch (error) {
       console.error("Translation error:", error);
       setIsChangingLanguage(false);
@@ -63,18 +72,24 @@ const LanguageSwitcher = () => {
     document.documentElement.setAttribute('dir', 'ltr');
     
     // Add notranslate meta tag for English (default language)
-    const metaTag = document.createElement('meta');
-    metaTag.setAttribute('name', 'google');
-    metaTag.setAttribute('content', 'notranslate');
-    document.head.appendChild(metaTag);
+    if (!document.querySelector('meta[name="google"]')) {
+      const metaTag = document.createElement('meta');
+      metaTag.setAttribute('name', 'google');
+      metaTag.setAttribute('content', 'notranslate');
+      document.head.appendChild(metaTag);
+    }
     
     // Save language preference
     localStorage.setItem('wakti-language', 'en');
     
-    // Force a re-render of components
-    window.dispatchEvent(new Event('language-change'));
-    
+    // Force a light refresh to help browser detect language change
     setTimeout(() => {
+      // Trigger a layout recalculation
+      document.body.style.display = 'none';
+      // This forces a reflow
+      void document.body.offsetHeight;
+      document.body.style.display = '';
+      
       setIsChangingLanguage(false);
       
       // Clean, professional toast without technical details
@@ -84,10 +99,16 @@ const LanguageSwitcher = () => {
           <Check className="h-4 w-4 text-green-500" />
         </div>
       );
+      
+      // Force a re-render of components
+      window.dispatchEvent(new Event('language-change'));
     }, 800);
   };
 
   const handleLanguageChange = () => {
+    // Prevent multiple clicks while processing
+    if (isChangingLanguage) return;
+    
     if (currentLanguage === 'en') {
       setCurrentLanguage('ar');
       applyArabicSettings();
@@ -102,7 +123,7 @@ const LanguageSwitcher = () => {
       onClick={handleLanguageChange}
       variant="ghost" 
       size="sm" 
-      className="w-8 px-0 relative"
+      className="w-auto px-2 relative"
       disabled={isChangingLanguage}
     >
       {isChangingLanguage ? (
