@@ -34,6 +34,7 @@ export interface Task {
   snoozed_until?: string | null;
   archived_at?: string | null;
   archive_reason?: ArchiveReason | null;
+  location?: string | null;
 }
 
 export interface TaskFormData {
@@ -49,4 +50,5 @@ export interface TaskFormData {
   is_recurring?: boolean;
   archived_at?: string | null;
   archive_reason?: ArchiveReason | null;
+  location?: string | null;
 }

@@ -21,7 +21,8 @@ export const useAIAssistant = () => {
     detectedTask,
     confirmCreateTask,
     cancelCreateTask,
-    isCreatingTask
+    isCreatingTask,
+    pendingTaskConfirmation
   } = useAIChat();
   const { aiSettings, isLoadingSettings, updateSettings, canUseAI } = useAISettings();
   const { addKnowledge, knowledgeUploads, isLoadingKnowledge, deleteKnowledge } = useAIKnowledge();
@@ -38,6 +39,7 @@ export const useAIAssistant = () => {
     confirmCreateTask,
     cancelCreateTask,
     isCreatingTask,
+    pendingTaskConfirmation,
     
     // Settings features
     aiSettings,

@@ -18,7 +18,8 @@ export const useAIChat = () => {
     detectedTask,
     confirmCreateTask,
     cancelCreateTask,
-    isCreatingTask
+    isCreatingTask,
+    pendingTaskConfirmation
   } = useAIChatOperations();
   
   const { toast } = useToast();
@@ -87,6 +88,7 @@ export const useAIChat = () => {
     detectedTask,
     confirmCreateTask,
     cancelCreateTask,
-    isCreatingTask
+    isCreatingTask,
+    pendingTaskConfirmation
   };
 };

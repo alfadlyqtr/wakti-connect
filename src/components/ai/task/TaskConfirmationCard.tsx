@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, Clock, ListTodo, CalendarClock, AlertTriangle } from "lucide-react";
+import { Check, Clock, ListTodo, CalendarClock, AlertTriangle, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ParsedTaskInfo } from "@/hooks/ai/utils/taskParser";
@@ -80,6 +80,13 @@ export const TaskConfirmationCard: React.FC<TaskConfirmationCardProps> = ({
             {formatDate(taskInfo.dueDate)}
             {taskInfo.dueTime && ` at ${taskInfo.dueTime}`}
           </Badge>
+          
+          {taskInfo.location && (
+            <Badge variant="outline" className="py-1 flex items-center gap-1 bg-blue-50">
+              <MapPin className="h-3 w-3" />
+              {taskInfo.location}
+            </Badge>
+          )}
         </div>
         
         {taskInfo.subtasks && taskInfo.subtasks.length > 0 && (
@@ -107,6 +114,13 @@ export const TaskConfirmationCard: React.FC<TaskConfirmationCardProps> = ({
           <div className="flex items-center gap-2 text-xs text-amber-500 mt-2">
             <AlertTriangle className="h-3.5 w-3.5" />
             <span>This task has a time constraint</span>
+          </div>
+        )}
+        
+        {taskInfo.needsReview && (
+          <div className="flex items-center gap-2 text-xs text-blue-500 mt-2">
+            <AlertTriangle className="h-3.5 w-3.5" />
+            <span>Priority may need review</span>
           </div>
         )}
       </CardContent>

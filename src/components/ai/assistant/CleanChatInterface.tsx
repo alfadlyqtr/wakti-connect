@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -35,6 +34,7 @@ interface CleanChatInterfaceProps {
   onConfirmTask?: (task: TaskFormData) => void;
   onCancelTask?: () => void;
   isCreatingTask?: boolean;
+  pendingTaskConfirmation?: boolean;
 }
 
 export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
@@ -56,6 +56,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
   onConfirmTask,
   onCancelTask,
   isCreatingTask = false,
+  pendingTaskConfirmation = false,
 }) => {
   const [showWelcome, setShowWelcome] = useState(messages.length === 0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -69,19 +70,28 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
     }
   }, [messages, isLoading, detectedTask]);
 
-  // Effect to attempt to parse a task from input for real-time preview
   useEffect(() => {
-    if (inputMessage.length > 15) {
+    if (inputMessage.length > 15 && !pendingTaskConfirmation) {
       const parsedTask = parseTaskFromMessage(inputMessage);
       if (parsedTask && parsedTask.title) {
-        setParsedMessage(`Creating task: "${parsedTask.title}"`);
+        let previewText = `Creating task: "${parsedTask.title}"`;
+        if (parsedTask.location) {
+          previewText += ` at ${parsedTask.location}`;
+        }
+        setParsedMessage(previewText);
       } else {
         setParsedMessage(null);
       }
     } else {
       setParsedMessage(null);
     }
-  }, [inputMessage]);
+  }, [inputMessage, pendingTaskConfirmation]);
+
+  useEffect(() => {
+    if (pendingTaskConfirmation) {
+      setParsedMessage("Quick confirmation: Type 'Go', 'Yes', 'Do it', or 'Sure'");
+    }
+  }, [pendingTaskConfirmation]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -232,7 +242,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
             </motion.div>
           )}
           
-          {detectedTask && onConfirmTask && onCancelTask && (
+          {detectedTask && onConfirmTask && onCancelTask && !pendingTaskConfirmation && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -246,7 +256,9 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
                   subtasks: detectedTask.subtasks?.map(s => s.content) || [],
                   dueDate: detectedTask.due_date,
                   dueTime: detectedTask.due_time,
-                  hasTimeConstraint: !!detectedTask.due_date
+                  location: detectedTask.location,
+                  hasTimeConstraint: !!detectedTask.due_date,
+                  needsReview: false
                 }}
                 onConfirm={() => onConfirmTask(detectedTask)}
                 onCancel={onCancelTask}
@@ -259,8 +271,11 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
       </div>
       
       <div className="p-2 md:p-3 border-t relative">
-        {parsedMessage && !detectedTask && (
-          <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs bg-background/80 backdrop-blur-sm border border-dashed px-2 py-1 rounded-full text-muted-foreground whitespace-nowrap">
+        {parsedMessage && (
+          <div className={cn(
+            "absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs bg-background/80 backdrop-blur-sm border border-dashed px-2 py-1 rounded-full whitespace-nowrap",
+            pendingTaskConfirmation ? "text-green-600 border-green-300" : "text-muted-foreground"
+          )}>
             {parsedMessage}
           </div>
         )}
@@ -270,12 +285,13 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
             <Input
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              placeholder="Type your message here..."
+              placeholder={pendingTaskConfirmation ? "Type 'Go' or 'Yes' to confirm..." : "Type your message here..."}
               className={cn(
                 "py-6 text-sm md:text-base",
-                isListening && "bg-rose-50 border-rose-200"
+                isListening && "bg-rose-50 border-rose-200",
+                pendingTaskConfirmation && "bg-green-50 border-green-200"
               )}
-              disabled={isLoading || !canAccess || !!detectedTask}
+              disabled={isLoading || !canAccess}
             />
             {isListening && (
               <span className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -296,21 +312,21 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
                   variant="ghost" 
                   className={cn("h-10 w-10 rounded-full", isListening ? "text-rose-500 hover:text-rose-600" : "")}
                   onClick={handleVoiceToggle}
-                  disabled={isLoading || !canAccess || !!detectedTask}
+                  disabled={isLoading || !canAccess || isCreatingTask}
                   title={isListening ? "Stop voice input" : "Start voice input"}
                 >
                   {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
                 </Button>
               )}
               
-              {onFileUpload && (
+              {onFileUpload && !pendingTaskConfirmation && (
                 <>
                   <Button 
                     type="button" 
                     size="icon" 
                     variant="ghost" 
                     onClick={handleFileUploadClick}
-                    disabled={isLoading || !canAccess || !!detectedTask}
+                    disabled={isLoading || !canAccess || isCreatingTask}
                     title="Attach file"
                     className="h-10 w-10 rounded-full"
                   >
@@ -326,13 +342,13 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
                 </>
               )}
               
-              {onCameraCapture && (
+              {onCameraCapture && !pendingTaskConfirmation && (
                 <Button 
                   type="button" 
                   size="icon" 
                   variant="ghost" 
                   onClick={onCameraCapture}
-                  disabled={isLoading || !canAccess || !!detectedTask}
+                  disabled={isLoading || !canAccess || isCreatingTask}
                   title="Take photo"
                   className="h-10 w-10 rounded-full"
                 >
@@ -343,12 +359,24 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
             
             <Button 
               type="submit" 
-              disabled={!inputMessage.trim() || isLoading || !canAccess || !!detectedTask}
-              title="Send message"
-              className="h-10 px-5 rounded-full"
+              disabled={!inputMessage.trim() || isLoading || !canAccess || isCreatingTask}
+              title={pendingTaskConfirmation ? "Confirm task creation" : "Send message"}
+              className={cn(
+                "h-10 px-5 rounded-full",
+                pendingTaskConfirmation && "bg-green-600 hover:bg-green-700"
+              )}
             >
-              <Send className="h-5 w-5 mr-1" />
-              <span>Send</span>
+              {pendingTaskConfirmation ? (
+                <>
+                  <Check className="h-5 w-5 mr-1" />
+                  <span>Confirm</span>
+                </>
+              ) : (
+                <>
+                  <Send className="h-5 w-5 mr-1" />
+                  <span>Send</span>
+                </>
+              )}
             </Button>
           </div>
         </form>

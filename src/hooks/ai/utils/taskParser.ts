@@ -11,7 +11,9 @@ export interface ParsedTaskInfo {
   dueDate?: string;
   dueTime?: string;
   subtasks: string[];
+  location?: string;
   hasTimeConstraint: boolean;
+  needsReview: boolean;
 }
 
 /**
@@ -52,12 +54,34 @@ export const parseTaskFromMessage = (message: string): ParsedTaskInfo | null => 
 
   // Extract priority
   let priority: TaskPriority = "normal";
+  let needsReview = false;
+  
+  // Check explicit priority indications
   if (message.toLowerCase().includes("urgent") || 
       message.toLowerCase().includes("high priority") || 
-      message.toLowerCase().includes("important")) {
+      message.toLowerCase().includes("important") ||
+      message.toLowerCase().includes("asap") ||
+      message.toLowerCase().includes("as soon as possible") ||
+      message.toLowerCase().includes("right away") ||
+      message.toLowerCase().includes("immediately")) {
     priority = "urgent";
   } else if (message.toLowerCase().includes("medium priority")) {
     priority = "medium";
+  } else {
+    // Check context clues for urgency
+    const urgencyClues = [
+      /before\s+(?:lunch|dinner|breakfast|noon|evening)/i,
+      /need\s+(?:it|this)\s+(?:done|completed|finished)\s+(?:today|this\s+evening|tonight|this\s+morning)/i,
+      /(?:by|until)\s+(?:the\s+end\s+of\s+(?:today|the\s+day|this\s+afternoon|business\s+hours))/i,
+      /due\s+(?:today|in\s+a\s+few\s+hours)/i
+    ];
+    
+    if (urgencyClues.some(clue => message.match(clue))) {
+      priority = "high";
+    } else {
+      // If no explicit priority or urgency clues are found, suggest review
+      needsReview = true;
+    }
   }
 
   // Parse due date and time
@@ -99,6 +123,55 @@ export const parseTaskFromMessage = (message: string): ParsedTaskInfo | null => 
       dueDate = dueDateTime.toISOString().split('T')[0];
       dueTime = dueDateTime.toTimeString().substring(0, 5);
       hasTimeConstraint = true;
+    }
+  }
+  
+  // Check for specific time like "at noon" or "5pm"
+  const timePatterns = [
+    { regex: /at\s+noon/i, time: "12:00" },
+    { regex: /at\s+midnight/i, time: "00:00" },
+    { regex: /at\s+(\d+)(?::(\d+))?\s*(am|pm)/i, formatter: (matches: RegExpMatchArray) => {
+      let hours = parseInt(matches[1]);
+      const minutes = matches[2] ? parseInt(matches[2]) : 0;
+      const period = matches[3].toLowerCase();
+      
+      if (period === "pm" && hours < 12) hours += 12;
+      if (period === "am" && hours === 12) hours = 0;
+      
+      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    }}
+  ];
+  
+  for (const pattern of timePatterns) {
+    const matches = message.match(pattern.regex);
+    if (matches) {
+      dueTime = typeof pattern.time === 'string' ? pattern.time : pattern.formatter(matches);
+      hasTimeConstraint = true;
+      
+      // If we have a time but no date, assume it's for today
+      if (!dueDate) {
+        const today = new Date();
+        dueDate = today.toISOString().split('T')[0];
+      }
+      
+      break;
+    }
+  }
+
+  // Extract location information
+  let location: string | undefined;
+  const locationPatterns = [
+    /(?:at|in|near|by|@)\s+(?:the\s+)?([A-Z][a-zA-Z\s]+(?:Center|Mall|Plaza|Building|Park|Office|Store|Shop|Market|Restaurant|Café|Cafe|Hotel|Airport|Station))/,
+    /(?:at|in|near|by|@)\s+(?:the\s+)?([A-Z][a-zA-Z\s]+(?:Street|Avenue|Road|Lane|Drive|Place|Boulevard|Highway|Freeway))/,
+    /location:?\s+([^,;\n]+)/i,
+    /(?:at|in|near|by|@)\s+([A-Z][a-zA-Z0-9\s]+(?:, [A-Z][a-zA-Z]+)?)/
+  ];
+  
+  for (const pattern of locationPatterns) {
+    const matches = message.match(pattern);
+    if (matches && matches[1]) {
+      location = matches[1].trim();
+      break;
     }
   }
 
@@ -158,7 +231,9 @@ export const parseTaskFromMessage = (message: string): ParsedTaskInfo | null => 
     dueDate,
     dueTime,
     subtasks,
-    hasTimeConstraint
+    location,
+    hasTimeConstraint,
+    needsReview
   };
 };
 
@@ -176,11 +251,51 @@ export const convertParsedTaskToFormData = (parsedTask: ParsedTaskInfo): TaskFor
   
   return {
     title: parsedTask.title,
-    description: parsedTask.description,
+    description: parsedTask.description ? parsedTask.description : (parsedTask.location ? `Location: ${parsedTask.location}` : undefined),
     priority: parsedTask.priority,
     due_date: parsedTask.dueDate,
     due_time: parsedTask.dueTime,
-    subtasks: subtasksWithType
+    subtasks: subtasksWithType,
+    location: parsedTask.location
   };
 };
 
+/**
+ * Generate a human-readable description of a task for confirmation
+ */
+export const generateTaskConfirmationText = (taskInfo: ParsedTaskInfo): string => {
+  let confirmationText = `Task: ${taskInfo.title}`;
+  
+  if (taskInfo.priority) {
+    confirmationText += ` (${taskInfo.priority} priority)`;
+  }
+  
+  if (taskInfo.location) {
+    confirmationText += ` at ${taskInfo.location}`;
+  }
+  
+  if (taskInfo.dueDate) {
+    const date = new Date(taskInfo.dueDate);
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    if (date.toDateString() === today.toDateString()) {
+      confirmationText += ` due today`;
+    } else if (date.toDateString() === tomorrow.toDateString()) {
+      confirmationText += ` due tomorrow`;
+    } else {
+      confirmationText += ` due on ${date.toLocaleDateString()}`;
+    }
+    
+    if (taskInfo.dueTime) {
+      confirmationText += ` at ${taskInfo.dueTime}`;
+    }
+  }
+  
+  if (taskInfo.subtasks && taskInfo.subtasks.length > 0) {
+    confirmationText += `\nSubtasks: ${taskInfo.subtasks.join(', ')}`;
+  }
+  
+  return confirmationText + "\n\nSay 'Go', 'Do it', 'Yes', or 'Sure' to confirm.";
+};

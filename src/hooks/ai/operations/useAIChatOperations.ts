@@ -6,7 +6,7 @@ import { callAIAssistant } from "../utils/callAIAssistant";
 import { v4 as uuidv4 } from "uuid";
 import { useAuth } from "@/hooks/useAuth";
 import { useWAKTIFocusedConversation } from "../useWAKTIFocusedConversation";
-import { parseTaskFromMessage, convertParsedTaskToFormData } from "../utils/taskParser";
+import { parseTaskFromMessage, convertParsedTaskToFormData, generateTaskConfirmationText } from "../utils/taskParser";
 import { createAITask, getEstimatedTaskTime } from "@/services/ai/aiTaskService";
 import { TaskFormData } from "@/types/task.types";
 import { toast } from "@/components/ui/use-toast";
@@ -17,12 +17,19 @@ const WAKTI_TOPICS = [
   "staff", "productivity", "organization", "time management"
 ];
 
+// List of confirmation words that accept task creation
+const CONFIRMATION_PHRASES = [
+  "go", "do it", "yes", "sure", "okay", "ok", "confirm", "approved", 
+  "create it", "create task", "make it", "create", "make", "proceed"
+];
+
 /**
  * Hook containing chat operations for AI Assistant
  */
 export const useAIChatOperations = () => {
   const [messages, setMessages] = useState<AIMessage[]>([]);
   const [detectedTask, setDetectedTask] = useState<TaskFormData | null>(null);
+  const [pendingTaskConfirmation, setPendingTaskConfirmation] = useState<boolean>(false);
   const [isCreatingTask, setIsCreatingTask] = useState(false);
   const { user } = useAuth();
   const { 
@@ -34,6 +41,7 @@ export const useAIChatOperations = () => {
   // Clear currently detected task
   const clearDetectedTask = useCallback(() => {
     setDetectedTask(null);
+    setPendingTaskConfirmation(false);
   }, []);
   
   // Mutation for actually creating the task
@@ -54,7 +62,10 @@ export const useAIChatOperations = () => {
         const confirmationMessage: AIMessage = {
           id: confirmationMessageId,
           role: "assistant",
-          content: `✅ I've created your task "${task.title}" successfully!${task.due_date ? ` It's due on ${new Date(task.due_date).toLocaleDateString()}.` : ''}${task.subtasks && task.subtasks.length > 0 ? ` Added ${task.subtasks.length} subtasks.` : ''}`,
+          content: `✅ I've created your task "${task.title}" successfully!${
+            task.due_date ? ` It's due on ${new Date(task.due_date).toLocaleDateString()}.` : ''}${
+            task.subtasks && task.subtasks.length > 0 ? ` Added ${task.subtasks.length} subtasks.` : ''}${
+            task.location ? ` Location: ${task.location}` : ''}`,
           timestamp: new Date()
         };
         
@@ -105,64 +116,61 @@ export const useAIChatOperations = () => {
     clearDetectedTask();
   }, [clearDetectedTask]);
   
+  // Check if a message is a task confirmation
+  const isTaskConfirmation = useCallback((messageText: string): boolean => {
+    const normalizedText = messageText.trim().toLowerCase();
+    return CONFIRMATION_PHRASES.some(phrase => 
+      normalizedText === phrase || 
+      normalizedText.startsWith(phrase + " ") || 
+      normalizedText.endsWith(" " + phrase)
+    );
+  }, []);
+  
   // Process message for task intent and extract task data
   const processMessageForTaskIntent = useCallback((messageText: string) => {
-    // Try to parse task from message
-    const parsedTask = parseTaskFromMessage(messageText);
-    
-    if (parsedTask && parsedTask.title) {
-      console.log("Detected task in message:", parsedTask);
-      
-      // Convert parsed task to form data
-      const taskFormData = convertParsedTaskToFormData(parsedTask);
-      
-      // Create task confirmation message
-      const confirmationMessageId = uuidv4();
-      
-      // Get estimated time based on subtasks
-      const estimatedTime = getEstimatedTaskTime(parsedTask);
-      
-      let confirmationContent = `I've detected a task request. Here's what I'll create:
-
-**Task**: ${parsedTask.title} (${parsedTask.priority} priority)`;
-      
-      if (parsedTask.dueDate) {
-        confirmationContent += `
-**Due Date**: ${new Date(parsedTask.dueDate).toLocaleDateString()}`;
-        if (parsedTask.dueTime) {
-          confirmationContent += ` at ${parsedTask.dueTime}`;
-        }
-      }
-      
-      if (parsedTask.subtasks.length > 0) {
-        confirmationContent += `
-**Subtasks (${parsedTask.subtasks.length})**: 
-${parsedTask.subtasks.map((subtask, index) => `${index + 1}. ${subtask}`).join('\n')}
-
-Estimated completion time: ${estimatedTime}`;
-      }
-      
-      confirmationContent += `
-
-Would you like me to create this task for you?`;
-      
-      const confirmationMessage: AIMessage = {
-        id: confirmationMessageId,
-        role: "assistant",
-        content: confirmationContent,
-        timestamp: new Date()
-      };
-      
-      setMessages(prevMessages => [...prevMessages, confirmationMessage]);
-      
-      // Set detected task for confirmation
-      setDetectedTask(taskFormData);
-      
+    // If we're awaiting confirmation and this is a confirmation message
+    if (pendingTaskConfirmation && detectedTask && isTaskConfirmation(messageText)) {
+      console.log("Detected task confirmation, proceeding with task creation");
+      confirmCreateTask(detectedTask);
       return true;
     }
     
+    // If we're not already waiting for a confirmation, check for task intent
+    if (!pendingTaskConfirmation) {
+      // Try to parse task from message
+      const parsedTask = parseTaskFromMessage(messageText);
+      
+      if (parsedTask && parsedTask.title) {
+        console.log("Detected task in message:", parsedTask);
+        
+        // Convert parsed task to form data
+        const taskFormData = convertParsedTaskToFormData(parsedTask);
+        
+        // Create task confirmation message
+        const confirmationMessageId = uuidv4();
+        
+        // Generate a human-friendly confirmation text
+        const confirmationContent = generateTaskConfirmationText(parsedTask);
+        
+        const confirmationMessage: AIMessage = {
+          id: confirmationMessageId,
+          role: "assistant",
+          content: confirmationContent,
+          timestamp: new Date()
+        };
+        
+        setMessages(prevMessages => [...prevMessages, confirmationMessage]);
+        
+        // Set detected task for confirmation
+        setDetectedTask(taskFormData);
+        setPendingTaskConfirmation(true);
+        
+        return true;
+      }
+    }
+    
     return false;
-  }, []);
+  }, [pendingTaskConfirmation, detectedTask, isTaskConfirmation, confirmCreateTask]);
 
   // Mutation for sending a message to AI Assistant
   const sendMessage = useMutation({
@@ -200,10 +208,10 @@ Would you like me to create this task for you?`;
       
       setMessages(prevMessages => [...prevMessages, userMessage]);
       
-      // Check if message contains task intent before sending to AI
+      // Check if message contains task intent or is a confirmation before sending to AI
       const isTaskIntent = processMessageForTaskIntent(messageText);
       
-      // If this is a task intent, don't send to the AI yet
+      // If this is a task intent or confirmation, don't send to the AI yet
       if (isTaskIntent) {
         return null;
       }
@@ -264,6 +272,7 @@ Would you like me to create this task for you?`;
     detectedTask,
     confirmCreateTask,
     cancelCreateTask,
-    isCreatingTask
+    isCreatingTask,
+    pendingTaskConfirmation
   };
 };

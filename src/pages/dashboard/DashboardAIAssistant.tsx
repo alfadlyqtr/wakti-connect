@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
 import { useAuth } from "@/hooks/useAuth";
@@ -57,7 +56,8 @@ const DashboardAIAssistant = () => {
     detectedTask,
     confirmCreateTask,
     cancelCreateTask,
-    isCreatingTask 
+    isCreatingTask,
+    pendingTaskConfirmation
   } = useAIAssistant();
   const [inputMessage, setInputMessage] = useState("");
   const [isChecking, setIsChecking] = useState(true);
@@ -403,6 +403,7 @@ const DashboardAIAssistant = () => {
                               onConfirmTask={confirmCreateTask}
                               onCancelTask={cancelCreateTask}
                               isCreatingTask={isCreatingTask}
+                              pendingTaskConfirmation={pendingTaskConfirmation}
                             />
                           </div>
                         </div>
