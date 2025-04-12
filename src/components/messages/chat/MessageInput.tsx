@@ -53,7 +53,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
           placeholder="Type a message..."
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          className="flex-1"
+          className="flex-1 text-sm md:text-base"
           disabled={isSending}
         />
 
@@ -81,6 +81,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
                     placeholder="Enter location (e.g., Doha, Qatar)"
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
+                    className="text-sm md:text-base"
                   />
                 </div>
               </div>

@@ -124,7 +124,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyDown={handleKeyDown}
             className={cn(
-              "min-h-[45px] sm:min-h-[60px] max-h-[120px] sm:max-h-[180px] resize-none py-2 pr-12 text-xs sm:text-sm",
+              "min-h-[45px] sm:min-h-[60px] max-h-[120px] sm:max-h-[180px] resize-none py-2 pr-12 text-sm sm:text-base",
               activeListening && "bg-primary/5 border-primary/20"
             )}
             disabled={isLoading || activeListening}
