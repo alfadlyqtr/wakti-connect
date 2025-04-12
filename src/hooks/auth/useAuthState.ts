@@ -14,13 +14,14 @@ export function useAuthState() {
   // Initialize auth state from Supabase
   useEffect(() => {
     let isMounted = true;
+    let authListenerSubscription: { subscription: { unsubscribe: () => void } } | null = null;
     
     const initializeAuth = async () => {
       try {
         setIsLoading(true);
         
         // First set up the auth listener to catch any auth changes
-        const { data: authListener } = supabase.auth.onAuthStateChange(
+        const { data: listener } = supabase.auth.onAuthStateChange(
           async (event, session) => {
             console.log("Auth state changed:", event, session?.user?.id);
             
@@ -102,6 +103,9 @@ export function useAuthState() {
             if (isMounted) setIsLoading(false);
           }
         );
+        
+        // Store the listener subscription for cleanup
+        authListenerSubscription = listener;
         
         // Then check for existing session
         const { data: { session }, error } = await supabase.auth.getSession();
@@ -200,7 +204,10 @@ export function useAuthState() {
     
     return () => {
       isMounted = false;
-      authListener?.subscription.unsubscribe();
+      // Safely unsubscribe from auth listener if it exists
+      if (authListenerSubscription?.subscription) {
+        authListenerSubscription.subscription.unsubscribe();
+      }
     };
   }, []);
 
