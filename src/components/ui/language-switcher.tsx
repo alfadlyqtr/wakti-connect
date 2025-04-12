@@ -31,10 +31,12 @@ const LanguageSwitcher = () => {
         }
         
         // Use Google's translation widget
-        new window.google.translate.TranslateElement(
-          { pageLanguage: 'en', includedLanguages: 'ar' },
-          'google_translate_element'
-        );
+        if (window.google.translate.TranslateElement) {
+          new window.google.translate.TranslateElement(
+            { pageLanguage: 'en', includedLanguages: 'ar' },
+            'google_translate_element'
+          );
+        }
       } else {
         // Fallback to redirect through Google Translate
         window.location.href = 'https://translate.google.com/translate?sl=en&tl=ar&u=' + 
@@ -44,7 +46,8 @@ const LanguageSwitcher = () => {
       // Save language preference
       localStorage.setItem('wakti-language', 'ar');
       
-      toast("Language Changed", {
+      toast({
+        title: "Language Changed",
         description: (
           <div className="flex items-center gap-2">
             <span>Switched to Arabic</span>
@@ -57,9 +60,9 @@ const LanguageSwitcher = () => {
       });
     } catch (error) {
       console.error("Translation error:", error);
-      toast("Translation Error", {
+      toast({
+        title: "Translation Error",
         description: "Could not load translation. Please try again.",
-        variant: "destructive",
       });
     }
   };
