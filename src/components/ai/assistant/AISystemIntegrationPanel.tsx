@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { Button } from "@/components/ui/button";
-import { AIAssistantRole } from "@/types/ai-assistant.types";
-import { PanelTopOpen, UsersRound, BarChart, Calendar, ClipboardList } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { AIAssistantRole } from '@/types/ai-assistant.types';
+import { Calendar, ClipboardList, Building2, Users, Settings, Heading1 } from 'lucide-react';
 
 interface AISystemIntegrationPanelProps {
   selectedRole: AIAssistantRole;
@@ -13,49 +13,58 @@ export const AISystemIntegrationPanel: React.FC<AISystemIntegrationPanelProps> =
   selectedRole,
   onExampleClick
 }) => {
-  // Business-specific examples
+  // Example business operations prompts
   const businessExamples = [
-    "Show me my staff attendance for this week",
-    "Create a new service called 'Premium Consultation' that costs QAR 200",
-    "What's my business performance like this month?",
-    "Summarize my customer feedback from the last month"
+    {
+      icon: <ClipboardList className="h-3.5 w-3.5" />,
+      text: "Create a task to review marketing plan tomorrow at 3pm with high priority"
+    },
+    {
+      icon: <Calendar className="h-3.5 w-3.5" />,
+      text: "Schedule a team meeting on Thursday morning about Q2 planning"
+    },
+    {
+      icon: <Users className="h-3.5 w-3.5" />,
+      text: "Assign Ali to contact our suppliers about the delayed shipment"
+    },
+    {
+      icon: <Building2 className="h-3.5 w-3.5" />,
+      text: "Create a task to prepare the monthly financial report by Friday"
+    },
+    {
+      icon: <Settings className="h-3.5 w-3.5" />,
+      text: "Set up a reminder to review staff performance next week"
+    }
   ];
-  
-  // General WAKTI information examples
-  const waktiInfoExamples = [
-    "What features are included in the Business plan?", 
-    "What makes WAKTI different from other task managers?",
-    "Can you explain the pricing of WAKTI plans?",
-    "Tell me about WAKTI's task management system"
-  ];
-  
-  // Show business examples for business role, WAKTI info for others
-  const examples = selectedRole === "business_owner" ? businessExamples : waktiInfoExamples;
-  
+
   return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2 mb-2 text-xs text-muted-foreground">
-        <PanelTopOpen className="h-3.5 w-3.5" />
-        <span>Try these examples</span>
-      </div>
-      
-      <div className="space-y-2">
-        {examples.map((example, index) => (
+    <div className="space-y-2">
+      <p className="text-xs text-muted-foreground mb-1">Try these examples:</p>
+      <div className="space-y-1.5">
+        {businessExamples.map((example, index) => (
           <Button
             key={index}
             variant="ghost"
-            className="text-xs justify-start w-full h-auto py-2 px-2.5"
-            onClick={() => onExampleClick(example)}
+            size="sm"
+            className="w-full justify-start text-xs h-auto py-1.5 px-2 rounded-sm font-normal"
+            onClick={() => onExampleClick(example.text)}
           >
-            {example}
+            <span className="mr-1.5 text-muted-foreground">{example.icon}</span>
+            <span className="truncate">{example.text}</span>
           </Button>
         ))}
       </div>
       
-      <div className="pt-2 border-t mt-3">
-        <p className="text-xs text-muted-foreground">
-          The AI assistant knows all about WAKTI's features, plans, and capabilities.
-        </p>
+      <div className="pt-2">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="w-full text-xs"
+          onClick={() => onExampleClick("What tasks can you help me create?")}
+        >
+          <Heading1 className="h-3 w-3 mr-1.5" />
+          Learn about smart tasks
+        </Button>
       </div>
     </div>
   );

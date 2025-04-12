@@ -29,6 +29,8 @@ interface CleanChatInterfaceProps {
   onStartVoiceInput?: () => void;
   onStopVoiceInput?: () => void;
   isListening?: boolean;
+  audioLevel?: number;
+  processingVoice?: boolean;
   showSuggestions?: boolean;
   detectedTask?: TaskFormData | null;
   onConfirmTask?: (task: TaskFormData) => void;
@@ -48,6 +50,11 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
   canAccess,
   onFileUpload,
   onCameraCapture,
+  onStartVoiceInput,
+  onStopVoiceInput,
+  isListening = false,
+  audioLevel = 0,
+  processingVoice = false,
   showSuggestions = true,
   detectedTask = null,
   onConfirmTask,
@@ -249,6 +256,11 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
           disabled={!canAccess || isCreatingTask}
           onFileUpload={onFileUpload}
           onCameraCapture={onCameraCapture}
+          onStartVoiceInput={onStartVoiceInput}
+          onStopVoiceInput={onStopVoiceInput}
+          isListening={isListening}
+          audioLevel={audioLevel}
+          processingVoice={processingVoice}
           supportsPendingConfirmation={true}
           pendingConfirmation={pendingTaskConfirmation}
           confirmationHint="Confirm task creation"

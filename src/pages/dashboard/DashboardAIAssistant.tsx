@@ -18,7 +18,6 @@ import { KnowledgeProfileToolCard } from "@/components/ai/tools/KnowledgeProfile
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AIRoleSelector } from "@/components/ai/assistant/AIRoleSelector";
 import { Button } from "@/components/ui/button";
-import { QuickToolsCard } from "@/components/ai/tools/QuickToolsCard";
 import { 
   MessageSquare, 
   Wrench, 
@@ -75,22 +74,26 @@ const DashboardAIAssistant = () => {
   const { toast } = useToast();
   
   const {
-    transcript,
     isListening,
     startListening,
     stopListening,
     resetTranscript,
+    transcript,
+    audioLevel,
+    processing: processingVoice,
     supported: recognitionSupported
   } = useSpeechRecognition({
-    continuous: true,
-    interimResults: true
+    continuous: false,
+    interimResults: true,
+    silenceThreshold: 0.02,
+    silenceTimeout: 2000
   });
 
   useEffect(() => {
-    if (transcript) {
+    if (transcript && !isListening && !processingVoice) {
       setInputMessage(transcript);
     }
-  }, [transcript]);
+  }, [transcript, isListening, processingVoice]);
 
   useEffect(() => {
     if (aiSettings?.role) {
@@ -284,6 +287,7 @@ const DashboardAIAssistant = () => {
     console.log("Sending message:", inputMessage);
     await sendMessage(inputMessage);
     setInputMessage("");
+    resetTranscript();
   };
 
   const handleToolContent = (content: string) => {
@@ -397,6 +401,8 @@ const DashboardAIAssistant = () => {
                               onStartVoiceInput={handleStartVoiceInput}
                               onStopVoiceInput={handleStopVoiceInput}
                               isListening={isListening}
+                              audioLevel={audioLevel}
+                              processingVoice={processingVoice}
                               showSuggestions={false}
                               detectedTask={detectedTask}
                               onConfirmTask={confirmCreateTask}
