@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,14 +27,14 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
     transcript,
     temporaryTranscript,
     confirmTranscript,
-    isListening: browserIsListening,
-    startListening: startBrowserListening,
-    stopListening: stopBrowserListening,
+    isRecording: browserIsRecording,
+    startRecording: startBrowserRecording,
+    stopRecording: stopBrowserRecording,
     resetTranscript,
     audioLevel: browserAudioLevel,
     supported,
     error: browserError,
-    processing: browserProcessing
+    isProcessing: browserProcessing
   } = useSpeechRecognition({
     silenceThreshold: 0.02,
     silenceTimeout: 2000
@@ -55,7 +54,7 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
   } = useVoiceInteraction();
   
   // Combined state for UI
-  const isListening = browserIsListening || openAIIsListening;
+  const isListening = browserIsRecording || openAIIsListening;
   const isProcessing = browserProcessing || openAIProcessing;
   
   // Handle API key retry
@@ -118,10 +117,10 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
       if (apiKeyStatus === 'valid' && startOpenAIListening) {
         console.log("Starting OpenAI voice recognition");
         startOpenAIListening();
-      } else if (supported && startBrowserListening) {
+      } else if (supported && startBrowserRecording) {
         // Fall back to browser-based recognition
         console.log("Falling back to browser-based speech recognition");
-        startBrowserListening();
+        startBrowserRecording();
       } else {
         console.error("No speech recognition method available");
         setError("Speech recognition is not available in your browser");
@@ -144,16 +143,16 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
   
   const handleStopListening = async () => {
     try {
-      console.log("Stopping speech recognition", { openAIIsListening, browserIsListening });
+      console.log("Stopping speech recognition", { openAIIsListening, browserIsRecording });
       
       if (openAIIsListening && stopOpenAIListening) {
         console.log("Stopping OpenAI speech recognition");
         await stopOpenAIListening();
       }
       
-      if (browserIsListening && stopBrowserListening) {
+      if (browserIsRecording && stopBrowserRecording) {
         console.log("Stopping browser-based speech recognition");
-        stopBrowserListening();
+        stopBrowserRecording();
       }
     } catch (err) {
       console.error("Error stopping speech recognition:", err);
@@ -323,12 +322,6 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
         <CardTitle className="flex items-center gap-2">
           <Mic className="h-5 w-5 text-wakti-blue" />
           Voice Recognition
-          {apiKeyStatus === 'invalid' && (
-            <span className="text-xs text-amber-600 font-normal flex items-center ml-2">
-              <AlertTriangle className="h-3 w-3 mr-1" />
-              Enhanced voice features unavailable
-            </span>
-          )}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">

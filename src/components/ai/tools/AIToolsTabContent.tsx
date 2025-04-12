@@ -1,63 +1,87 @@
 
-import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { DocumentUploadTool } from "./DocumentUploadTool";
-import { AIAssistantSettings } from "@/components/settings/ai/AIAssistantSettings";
-import { AIUpgradeRequired } from "@/components/ai/AIUpgradeRequired";
-import { AIAssistantRole } from "@/types/ai-assistant.types";
-import { QuickToolsCard } from "./QuickToolsCard";
-import { ImageGenerationToolCard } from "./ImageGenerationToolCard";
-import { ImageTransformationToolCard } from "./ImageTransformationToolCard";
-import { KnowledgeProfileToolCard } from "./KnowledgeProfileToolCard";
-import { VoiceToTextTool } from "./VoiceToTextTool";
-import { VoiceInteractionToolCard } from "./VoiceInteractionToolCard";
+import React from 'react';
+import { ImageGenerationToolCard } from './ImageGenerationToolCard';
+import { VoiceInteractionToolCard } from './VoiceInteractionToolCard';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Mic, Image, FileText, Code, GitBranch } from 'lucide-react';
 
 interface AIToolsTabContentProps {
-  canAccess: boolean;
-  onUseDocumentContent: (content: string) => void;
-  selectedRole: AIAssistantRole;
+  onPromptSubmit: (prompt: string) => void;
 }
 
-export const AIToolsTabContent: React.FC<AIToolsTabContentProps> = ({
-  canAccess,
-  onUseDocumentContent,
-  selectedRole,
-}) => {
-  if (!canAccess) {
-    return <AIUpgradeRequired />;
-  }
-
+export const AIToolsTabContent: React.FC<AIToolsTabContentProps> = ({ onPromptSubmit }) => {
   return (
-    <div className="space-y-8">
-      {/* Quick Tools Section */}
-      <div className="grid grid-cols-1 gap-4">
-        <QuickToolsCard
-          selectedRole={selectedRole}
-          onToolSelect={(example) => onUseDocumentContent(example)}
-        />
-      </div>
+    <Tabs defaultValue="image" className="w-full">
+      <TabsList className="grid grid-cols-5 h-auto">
+        <TabsTrigger value="image" className="text-xs flex flex-col gap-1 py-2 h-auto">
+          <Image className="h-4 w-4" />
+          <span>Image</span>
+        </TabsTrigger>
+        <TabsTrigger value="voice" className="text-xs flex flex-col gap-1 py-2 h-auto">
+          <Mic className="h-4 w-4" />
+          <span>Voice</span>
+        </TabsTrigger>
+        <TabsTrigger value="document" className="text-xs flex flex-col gap-1 py-2 h-auto">
+          <FileText className="h-4 w-4" />
+          <span>Document</span>
+        </TabsTrigger>
+        <TabsTrigger value="code" className="text-xs flex flex-col gap-1 py-2 h-auto">
+          <Code className="h-4 w-4" />
+          <span>Code</span>
+        </TabsTrigger>
+        <TabsTrigger value="diagram" className="text-xs flex flex-col gap-1 py-2 h-auto">
+          <GitBranch className="h-4 w-4" />
+          <span>Diagram</span>
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="image" className="mt-4">
+        <ImageGenerationToolCard onSubmitPrompt={onPromptSubmit} />
+      </TabsContent>
       
-      {/* Tools Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <DocumentUploadTool
-          canAccess={canAccess}
-          onUseDocumentContent={onUseDocumentContent}
-        />
-        <VoiceToTextTool onUseSummary={onUseDocumentContent} />
-      </div>
-
-      {/* Voice Interaction */}
-      <div className="grid grid-cols-1 gap-4">
-        <VoiceInteractionToolCard onSpeechRecognized={onUseDocumentContent} />
-      </div>
-
-      {/* Image Tools Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <ImageGenerationToolCard 
-          onPromptUse={onUseDocumentContent}
-        />
-        <ImageTransformationToolCard />
-      </div>
-    </div>
+      <TabsContent value="voice" className="mt-4">
+        <VoiceInteractionToolCard onSpeechRecognized={onPromptSubmit} />
+      </TabsContent>
+      
+      <TabsContent value="document" className="mt-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Document Analysis</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">
+              Document analysis will be available soon. This feature will allow you to upload and analyze PDFs, DOCs, and other text documents.
+            </p>
+          </CardContent>
+        </Card>
+      </TabsContent>
+      
+      <TabsContent value="code" className="mt-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Code Generation</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">
+              Code generation tools will be available in an upcoming update.
+            </p>
+          </CardContent>
+        </Card>
+      </TabsContent>
+      
+      <TabsContent value="diagram" className="mt-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Diagram Creation</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">
+              Diagram generation for flowcharts, mind maps, and process diagrams will be available soon.
+            </p>
+          </CardContent>
+        </Card>
+      </TabsContent>
+    </Tabs>
   );
 };

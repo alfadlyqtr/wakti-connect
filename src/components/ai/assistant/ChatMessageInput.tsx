@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,6 +24,13 @@ interface ChatMessageInputProps {
   disabled?: boolean;
   onFileUpload?: (file: File) => void;
   onCameraCapture?: () => void;
+  onStartVoiceInput?: () => void;
+  onStopVoiceInput?: () => void;
+  onConfirmTranscript?: () => void;
+  isListening?: boolean;
+  audioLevel?: number;
+  processingVoice?: boolean;
+  temporaryTranscript?: string | null;
   supportsPendingConfirmation?: boolean;
   pendingConfirmation?: boolean;
   confirmationHint?: string;
@@ -38,6 +44,12 @@ export const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
   disabled = false,
   onFileUpload,
   onCameraCapture,
+  onStartVoiceInput,
+  onStopVoiceInput,
+  onConfirmTranscript,
+  isListening = false,
+  processingVoice = false,
+  temporaryTranscript,
   supportsPendingConfirmation = false,
   pendingConfirmation = false,
   confirmationHint
@@ -47,20 +59,18 @@ export const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
   const { voiceEnabled } = useVoiceSettings();
   const isMobile = useIsMobile();
   
-  // Use speech recognition hook
   const {
     isRecording,
     startRecording,
     stopRecording,
     transcript,
-    temporaryTranscript,
-    confirmTranscript,
+    temporaryTranscript: internalTemporaryTranscript,
+    confirmTranscript: internalConfirmTranscript,
     isProcessing,
     supported: voiceSupported,
     error: voiceError
   } = useSpeechRecognition();
   
-  // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "0";
@@ -69,19 +79,16 @@ export const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
     }
   }, [message]);
   
-  // Auto-focus textarea
   useEffect(() => {
     if (textareaRef.current && !disabled && !isRecording && !isProcessing) {
       textareaRef.current.focus();
     }
   }, [disabled, isRecording, isProcessing]);
   
-  // Update message with transcript when available
   useEffect(() => {
     if (transcript) {
       setMessage(transcript);
       
-      // Focus on textarea for editing after transcription
       if (textareaRef.current) {
         setTimeout(() => {
           textareaRef.current?.focus();
@@ -90,26 +97,22 @@ export const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
     }
   }, [transcript, setMessage]);
   
-  // Handle temporary transcript (from Whisper API)
   useEffect(() => {
-    if (temporaryTranscript && !isRecording && !isProcessing) {
-      setMessage(temporaryTranscript);
-      confirmTranscript();
+    if (internalTemporaryTranscript && !isRecording && !isProcessing) {
+      setMessage(internalTemporaryTranscript);
+      internalConfirmTranscript();
       
-      // Focus on textarea for editing after transcription
       if (textareaRef.current) {
         setTimeout(() => {
           textareaRef.current?.focus();
         }, 100);
       }
     }
-  }, [temporaryTranscript, isRecording, isProcessing, setMessage, confirmTranscript]);
+  }, [internalTemporaryTranscript, isRecording, isProcessing, setMessage, internalConfirmTranscript]);
   
-  // Handle file upload
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0] && onFileUpload) {
       onFileUpload(e.target.files[0]);
-      // Reset the input
       e.target.value = '';
     }
   };
@@ -118,7 +121,6 @@ export const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
     fileInputRef.current?.click();
   };
   
-  // Handle key press
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (!isMobile && e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -128,9 +130,14 @@ export const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
     }
   };
   
-  // Handle voice recording
   const handleVoiceRecording = () => {
-    if (isRecording) {
+    if (onStartVoiceInput && onStopVoiceInput) {
+      if (isListening) {
+        onStopVoiceInput();
+      } else {
+        onStartVoiceInput();
+      }
+    } else if (isRecording) {
       stopRecording();
     } else {
       startRecording();
@@ -216,7 +223,6 @@ export const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
                   textareaRef.current.focus();
                 }
                 setMessage("cancel");
-                // Submit the cancel message automatically
                 setTimeout(() => {
                   onSendMessage(new Event('submit') as unknown as React.FormEvent);
                 }, 100);
@@ -292,8 +298,8 @@ export const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
       
       <div className="flex justify-between items-center text-xs text-muted-foreground">
         <div>
-          {isRecording && <span className="text-green-500">Recording... Click ✓ when finished</span>}
-          {isProcessing && <span className="text-blue-500">Processing your voice...</span>}
+          {isListening && <span className="text-green-500">Recording... Click ✓ when finished</span>}
+          {processingVoice && <span className="text-blue-500">Processing your voice...</span>}
           {voiceError && <span className="text-red-500">{voiceError.message}</span>}
         </div>
         {!isMobile && (

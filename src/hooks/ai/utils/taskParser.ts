@@ -9,9 +9,9 @@ export interface ParsedTaskInfo {
   location?: string | null;
   subtasks: string[];
   // Additional fields for UI presentation
+  dueTime?: string | null;
   hasTimeConstraint?: boolean;
   needsReview?: boolean;
-  dueTime?: string | null;
 }
 
 /**
@@ -256,9 +256,9 @@ export function parseTaskFromMessage(text: string): ParsedTaskInfo | null {
     priority,
     location,
     subtasks,
+    dueTime,
     hasTimeConstraint,
-    needsReview,
-    dueTime
+    needsReview
   };
 }
 

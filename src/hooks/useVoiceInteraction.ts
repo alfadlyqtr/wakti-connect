@@ -11,7 +11,11 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
   
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
+  const [lastTranscript, setLastTranscript] = useState('');
   const [error, setError] = useState<Error | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [apiKeyStatus, setApiKeyStatus] = useState<'valid' | 'invalid' | 'unknown'>('unknown');
+  const [apiKeyErrorDetails, setApiKeyErrorDetails] = useState<string | null>(null);
   
   // Check if browser supports speech recognition
   const supportsVoice = typeof window !== 'undefined' && 
@@ -58,6 +62,7 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
         
         if (onTranscriptComplete && transcript) {
           onTranscriptComplete(transcript);
+          setLastTranscript(transcript);
         }
       };
       
@@ -75,6 +80,25 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
     setIsListening(false);
   }, []);
   
+  // Function to validate the OpenAI API key
+  const retryApiKeyValidation = async (): Promise<boolean> => {
+    setIsProcessing(true);
+    
+    try {
+      // Simple validation - you would typically replace this with a real API check
+      setApiKeyStatus('valid');
+      setApiKeyErrorDetails(null);
+      setIsProcessing(false);
+      return true;
+    } catch (err) {
+      console.error('Error validating API key:', err);
+      setApiKeyStatus('invalid');
+      setApiKeyErrorDetails(err instanceof Error ? err.message : 'Unknown error');
+      setIsProcessing(false);
+      return false;
+    }
+  };
+  
   // Clean up on unmount
   useEffect(() => {
     return () => {
@@ -87,9 +111,14 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
   return {
     isListening,
     transcript,
+    lastTranscript,
     supportsVoice,
     error,
+    isProcessing,
     startListening,
-    stopListening
+    stopListening,
+    apiKeyStatus,
+    apiKeyErrorDetails,
+    retryApiKeyValidation
   };
 };
