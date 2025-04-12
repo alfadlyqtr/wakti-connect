@@ -1,14 +1,18 @@
-import React, { useEffect, useState } from "react";
+
+import React, { useCallback, useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
 import "@/components/layout/sidebar/sidebar.css";
 import { useDashboardUserProfile } from "@/hooks/useDashboardUserProfile";
 import { useSidebarToggle } from "@/hooks/useSidebarToggle";
 import DashboardContent from "./DashboardContent";
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { UserRole, getEffectiveRole } from "@/types/user";
 import CommandSearch from "@/components/search/CommandSearch";
 import FreeAccountBanner from "./FreeAccountBanner";
+import { useRoleBasedRedirect } from "@/hooks/useRoleBasedRedirect";
+import { mapRoleForCompatibility, shouldShowUpgradeBanner } from "./utils/dashboardUtils";
+import LanguageChangeListener from "./LanguageChangeListener";
 
 interface DashboardLayoutProps {
   children?: React.ReactNode;
@@ -19,11 +23,8 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
   // Get sidebar toggle state and mobile detection
   const { isSidebarOpen, toggleSidebar, closeSidebar, isMobile } = useSidebarToggle();
   const location = useLocation();
-  const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [commandSearchOpen, setCommandSearchOpen] = useState(false);
-  const [redirectAttempts, setRedirectAttempts] = useState(0);
-  const [lastRedirectTime, setLastRedirectTime] = useState(0);
   
   // Fetch user profile data
   const { 
@@ -46,7 +47,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
     : getEffectiveRole(accountType as any, isStaff);
 
   // Determine if the banner should be shown (only for free individual accounts)
-  const showUpgradeBanner = accountType === 'free' && !isStaff && userRoleValue !== 'business' && userRoleValue !== 'super-admin';
+  const showUpgradeBanner = shouldShowUpgradeBanner(accountType, isStaff, userRoleValue);
 
   // Handle sidebar collapse state
   const handleCollapseChange = (collapsed: boolean) => {
@@ -58,82 +59,32 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
     setCommandSearchOpen(true);
   };
 
-  // Listen for language changes to update UI
-  useEffect(() => {
-    const handleLanguageChange = () => {
-      // Force re-render of components
-      setSidebarCollapsed(prev => {
-        setTimeout(() => setSidebarCollapsed(prev), 0);
-        return !prev;
-      });
-    };
-    
-    window.addEventListener('language-change', handleLanguageChange);
-    return () => window.removeEventListener('language-change', handleLanguageChange);
+  // Handle language change
+  const handleLanguageChange = useCallback(() => {
+    // Force re-render of components
+    setSidebarCollapsed(prev => {
+      setTimeout(() => setSidebarCollapsed(prev), 0);
+      return !prev;
+    });
   }, []);
 
-  // Redirect to appropriate dashboard based on role if on main dashboard
-  useEffect(() => {
-    // Fix: Check for both "/dashboard" and "/dashboard/" paths
-    const isMainDashboardPath = location.pathname === "/dashboard" || location.pathname === "/dashboard/";
-    const isAnalyticsPath = location.pathname === "/dashboard/analytics";
-    
-    console.log("DashboardLayout user role check:", {
-      userRoleValue,
-      accountType: profileData?.account_type,
-      isStaff,
-      isMainDashboardPath,
-      isSuperAdmin
-    });
-    
-    if (!profileLoading && isMainDashboardPath) {
-      // Prevent redirect floods by limiting frequency and number of attempts
-      const now = Date.now();
-      if (redirectAttempts > 5 || (now - lastRedirectTime < 2000 && redirectAttempts > 0)) {
-        console.warn("Too many redirect attempts, stopping to prevent a loop");
-        return;
-      }
-      
-      // Super admin should be redirected to their special dashboard
-      if (userRoleValue === 'super-admin' || isSuperAdmin) {
-        console.log("Super admin detected, redirecting to super admin dashboard");
-        setRedirectAttempts(prev => prev + 1);
-        setLastRedirectTime(now);
-        navigate('/gohabsgo', { replace: true });
-        return;
-      }
-      
-      // Only staff users (who are not also business owners) go to staff dashboard
-      if (userRoleValue === 'staff') {
-        console.log("Staff user detected, redirecting to staff dashboard");
-        setRedirectAttempts(prev => prev + 1);
-        setLastRedirectTime(now);
-        navigate('/dashboard/staff-dashboard', { replace: true });
-      } else {
-        // All users (including business) go to the main dashboard
-        // We're already on the main dashboard path, so no redirect needed
-        console.log(`${userRoleValue} account detected, already on main dashboard`);
-      }
-    }
-    
-    // If business user is on analytics page but should be redirected to main dashboard
-    if (!profileLoading && isAnalyticsPath && userRoleValue === 'business' && location.state?.fromInitialRedirect) {
-      navigate('/dashboard');
-    }
-  }, [profileLoading, location.pathname, userRoleValue, isStaff, navigate, location.state, profileData?.account_type, accountType, isSuperAdmin, redirectAttempts, lastRedirectTime]);
+  // Use our custom hook for role-based redirects
+  useRoleBasedRedirect({
+    profileLoading,
+    userRoleValue,
+    isStaff,
+    isSuperAdmin
+  });
 
   // For components that don't recognize super-admin yet, map it to business role
-  const mapRoleForCompatibility = (role: UserRole): "free" | "individual" | "business" | "staff" => {
-    if (role === 'super-admin') return 'business';
-    return role as "free" | "individual" | "business" | "staff";
-  };
-
-  // Get display role that's compatible with components expecting the old type
   const displayRole = mapRoleForCompatibility(userRoleValue);
 
   return (
     <div className={`min-h-screen flex flex-col overflow-hidden ${isSidebarOpen && isMobile ? 'sidebar-open-body' : ''}`}>
       <Navbar toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
+      
+      {/* Language change listener component */}
+      <LanguageChangeListener onLanguageChange={handleLanguageChange} />
       
       {/* Free Account Banner - Only shown for free individual accounts */}
       {showUpgradeBanner && <FreeAccountBanner />}
