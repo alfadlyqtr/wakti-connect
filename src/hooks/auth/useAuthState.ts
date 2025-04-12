@@ -4,8 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "./types";
 import { UserRole } from "@/types/user";
 
-// Known super admin ID
-const SUPER_ADMIN_ID = "28e663b3-0a91-4220-8330-fbee7ecd3f96";
+// Correct ID for the super admin
+const SUPER_ADMIN_ID = "28e863b3-0a91-4220-8330-fbee7ecd3f96";
 
 export function useAuthState() {
   const [user, setUser] = useState<User | null>(null);
@@ -13,6 +13,8 @@ export function useAuthState() {
   
   // Initialize auth state from Supabase
   useEffect(() => {
+    let isMounted = true;
+    
     const initializeAuth = async () => {
       try {
         setIsLoading(true);
@@ -22,22 +24,13 @@ export function useAuthState() {
           async (event, session) => {
             console.log("Auth state changed:", event, session?.user?.id);
             
+            if (!isMounted) return;
+            
             if (event === 'SIGNED_IN' && session) {
               try {
-                // Check if user is the hard-coded super admin ID
-                const isHardCodedAdmin = session.user.id === SUPER_ADMIN_ID;
-                
-                // Check if user is a super admin in the database
-                const { data: superAdminData, error: superAdminError } = await supabase
-                  .from('super_admins')
-                  .select('id')
-                  .eq('id', session.user.id)
-                  .maybeSingle();
-                  
-                const isSuperAdmin = isHardCodedAdmin || !!superAdminData;
-                
-                if (isSuperAdmin) {
-                  console.log("Auth state: User is a super admin");
+                // Check if user is the hard-coded super admin ID first
+                if (session.user.id === SUPER_ADMIN_ID) {
+                  console.log("Auth state: User is the hard-coded super admin");
                   localStorage.setItem('isSuperAdmin', 'true');
                   
                   const userData: User = {
@@ -48,6 +41,28 @@ export function useAuthState() {
                   };
                   
                   setUser(userData);
+                  return;
+                }
+                
+                // Check if user is a super admin in the database
+                const { data: superAdminData } = await supabase
+                  .from('super_admins')
+                  .select('id')
+                  .eq('id', session.user.id)
+                  .maybeSingle();
+                  
+                if (superAdminData) {
+                  console.log("Auth state: User is a database super admin");
+                  localStorage.setItem('isSuperAdmin', 'true');
+                  
+                  const userData: User = {
+                    ...session.user,
+                    name: 'System Administrator',
+                    displayName: 'System Administrator',
+                    plan: 'super-admin' as UserRole
+                  };
+                  
+                  if (isMounted) setUser(userData);
                   return;
                 } else {
                   localStorage.setItem('isSuperAdmin', 'false');
@@ -75,14 +90,16 @@ export function useAuthState() {
                   plan: (profile?.account_type as UserRole) || "free"
                 };
                 
-                setUser(userData);
+                if (isMounted) setUser(userData);
               } catch (error) {
                 console.error("Error processing sign in:", error);
               }
             } else if (event === 'SIGNED_OUT') {
-              setUser(null);
+              if (isMounted) setUser(null);
               localStorage.removeItem('isSuperAdmin');
             }
+            
+            if (isMounted) setIsLoading(false);
           }
         );
         
@@ -91,25 +108,15 @@ export function useAuthState() {
         
         if (error) {
           console.error("Error getting session:", error);
+          if (isMounted) setIsLoading(false);
           return;
         }
         
         if (session?.user) {
           try {
             // Check if user is the hard-coded super admin ID
-            const isHardCodedAdmin = session.user.id === SUPER_ADMIN_ID;
-            
-            // Check if user is a super admin in the database
-            const { data: superAdminData, error: superAdminError } = await supabase
-              .from('super_admins')
-              .select('id')
-              .eq('id', session.user.id)
-              .maybeSingle();
-              
-            const isSuperAdmin = isHardCodedAdmin || !!superAdminData;
-            
-            if (isSuperAdmin) {
-              console.log("Initial session: User is a super admin");
+            if (session.user.id === SUPER_ADMIN_ID) {
+              console.log("Initial session: User is the hard-coded super admin");
               localStorage.setItem('isSuperAdmin', 'true');
               
               const userData: User = {
@@ -119,8 +126,35 @@ export function useAuthState() {
                 plan: 'super-admin' as UserRole
               };
               
-              setUser(userData);
-              setIsLoading(false);
+              if (isMounted) {
+                setUser(userData);
+                setIsLoading(false);
+              }
+              return;
+            }
+            
+            // Check if user is a super admin in the database
+            const { data: superAdminData } = await supabase
+              .from('super_admins')
+              .select('id')
+              .eq('id', session.user.id)
+              .maybeSingle();
+              
+            if (superAdminData) {
+              console.log("Initial session: User is a database super admin");
+              localStorage.setItem('isSuperAdmin', 'true');
+              
+              const userData: User = {
+                ...session.user,
+                name: 'System Administrator',
+                displayName: 'System Administrator',
+                plan: 'super-admin' as UserRole
+              };
+              
+              if (isMounted) {
+                setUser(userData);
+                setIsLoading(false);
+              }
               return;
             } else {
               localStorage.setItem('isSuperAdmin', 'false');
@@ -148,23 +182,26 @@ export function useAuthState() {
               plan: (profile?.account_type as UserRole) || "free"
             };
             
-            setUser(userData);
+            if (isMounted) setUser(userData);
           } catch (error) {
             console.error("Error processing existing session:", error);
           }
         }
         
-        return () => {
-          authListener?.subscription.unsubscribe();
-        };
+        // Always set loading to false to not block rendering
+        if (isMounted) setIsLoading(false);
       } catch (error) {
         console.error("Error initializing auth:", error);
-      } finally {
-        setIsLoading(false);
+        if (isMounted) setIsLoading(false);
       }
     };
 
     initializeAuth();
+    
+    return () => {
+      isMounted = false;
+      authListener?.subscription.unsubscribe();
+    };
   }, []);
 
   return { user, setUser, isLoading, setIsLoading };

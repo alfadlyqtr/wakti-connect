@@ -19,7 +19,11 @@ export function hasRoleAccess(userRole: UserRole, allowedRoles: UserRole[]): boo
  * @param isSuperAdmin Whether the user is a super admin
  * @returns The effective user role
  */
-export function getEffectiveRole(accountType: string, isStaff: boolean, isSuperAdmin: boolean = false): UserRole {
+export function getEffectiveRole(
+  accountType: string | undefined, 
+  isStaff: boolean, 
+  isSuperAdmin: boolean = false
+): UserRole {
   // Super-admin has highest priority
   if (isSuperAdmin) return 'super-admin';
   

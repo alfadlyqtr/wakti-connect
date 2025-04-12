@@ -7,8 +7,8 @@ import { toast } from "@/components/ui/use-toast";
 import { slugifyBusinessName } from "@/utils/authUtils";
 import { AccountType, UserRole, getEffectiveRole } from "@/types/user";
 
-// Known super admin ID
-const SUPER_ADMIN_ID = "28e663b3-0a91-4220-8330-fbee7ecd3f96";
+// Correct ID for the super admin
+const SUPER_ADMIN_ID = "28e863b3-0a91-4220-8330-fbee7ecd3f96";
 
 export interface DashboardUserProfile {
   account_type: AccountType;
@@ -23,6 +23,7 @@ export function useDashboardUserProfile() {
   const [errorLogged, setErrorLogged] = useState(false);
   const [isStaff, setIsStaff] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [isSuperAdmin, setIsSuperAdmin] = useState<boolean>(localStorage.getItem('isSuperAdmin') === 'true');
 
   // Setup auth listener
   useEffect(() => {
@@ -58,7 +59,8 @@ export function useDashboardUserProfile() {
         
         // Check for hard-coded super admin ID
         if (session.user.id === SUPER_ADMIN_ID) {
-          console.log("Hard-coded super admin detected");
+          console.log("Hard-coded super admin detected in dashboard profile check");
+          setIsSuperAdmin(true);
           localStorage.setItem('isSuperAdmin', 'true');
           localStorage.setItem('userRole', 'super-admin');
           setUserId(session.user.id);
@@ -81,7 +83,8 @@ export function useDashboardUserProfile() {
           .maybeSingle();
         
         if (superAdminData) {
-          console.log("Database super admin detected");
+          console.log("Database super admin detected in dashboard profile check");
+          setIsSuperAdmin(true);
           localStorage.setItem('isSuperAdmin', 'true');
           localStorage.setItem('userRole', 'super-admin');
           setUserId(session.user.id);
@@ -95,6 +98,7 @@ export function useDashboardUserProfile() {
             theme_preference: 'dark'
           };
         } else {
+          setIsSuperAdmin(false);
           localStorage.setItem('isSuperAdmin', 'false');
         }
         
@@ -164,9 +168,6 @@ export function useDashboardUserProfile() {
           return null;
         }
         
-        // Check if this is a super admin (from localStorage, already set earlier)
-        const isSuperAdmin = localStorage.getItem('isSuperAdmin') === 'true';
-        
         // Set userRole based on account_type and staff status
         const effectiveRole = getEffectiveRole(
           profileData?.account_type as AccountType, 
@@ -199,8 +200,8 @@ export function useDashboardUserProfile() {
         return null;
       }
     },
-    retry: 2,
-    retryDelay: 1000,
+    retry: 1, // Reduce retries to avoid unnecessary flickering
+    retryDelay: 500,
   });
 
   // Set theme based on user preference
@@ -210,9 +211,6 @@ export function useDashboardUserProfile() {
       document.documentElement.classList.add(profileData.theme_preference);
     }
   }, [profileData?.theme_preference]);
-
-  // Check if this is a super admin (from localStorage)
-  const isSuperAdmin = localStorage.getItem('isSuperAdmin') === 'true';
 
   // Determine effective user role using our helper
   const userRole = getEffectiveRole(
@@ -227,6 +225,7 @@ export function useDashboardUserProfile() {
     userId,
     isStaff,
     userRole,
+    isSuperAdmin,
     businessSlug: profileData?.business_name ? slugifyBusinessName(profileData.business_name) : undefined
   };
 }
