@@ -55,11 +55,11 @@ export const TaskConfirmationCard: React.FC<TaskConfirmationCardProps> = ({
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto border-primary/20 animate-in fade-in-50 duration-300">
+    <Card className="w-full max-w-md mx-auto border-primary/20 animate-in fade-in-50 duration-300 shadow-lg">
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center gap-2">
           <ListTodo className="h-4 w-4" />
-          Create This Task?
+          Ready to Create This Task
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3 pt-0">
@@ -72,7 +72,7 @@ export const TaskConfirmationCard: React.FC<TaskConfirmationCardProps> = ({
         
         <div className="flex flex-wrap gap-2 items-center text-xs">
           <Badge variant="outline" className={cn("py-1", getPriorityColor(taskInfo.priority))}>
-            {taskInfo.priority.charAt(0).toUpperCase() + taskInfo.priority.slice(1)}
+            {taskInfo.priority.charAt(0).toUpperCase() + taskInfo.priority.slice(1)} Priority
           </Badge>
           
           <Badge variant="outline" className="py-1 flex items-center gap-1">
@@ -87,7 +87,7 @@ export const TaskConfirmationCard: React.FC<TaskConfirmationCardProps> = ({
             <Separator />
             <div className="space-y-2">
               <h4 className="text-xs font-medium text-muted-foreground">Subtasks ({taskInfo.subtasks.length})</h4>
-              <ScrollArea className="max-h-32 pr-2">
+              <ScrollArea className="max-h-28 pr-2">
                 <ul className="space-y-1">
                   {taskInfo.subtasks.map((subtask, index) => (
                     <li key={index} className="text-sm flex gap-2 items-start">
@@ -110,12 +110,13 @@ export const TaskConfirmationCard: React.FC<TaskConfirmationCardProps> = ({
           </div>
         )}
       </CardContent>
-      <CardFooter className="flex justify-end gap-2 pt-2">
+      <CardFooter className="flex justify-between gap-2 pt-2">
         <Button 
-          variant="ghost" 
+          variant="outline" 
           size="sm" 
           onClick={onCancel}
           disabled={isLoading}
+          className="flex-1"
         >
           Cancel
         </Button>
@@ -123,7 +124,7 @@ export const TaskConfirmationCard: React.FC<TaskConfirmationCardProps> = ({
           size="sm" 
           onClick={onConfirm}
           disabled={isLoading}
-          className="gap-1"
+          className="gap-1 flex-1"
         >
           {isLoading ? (
             <>

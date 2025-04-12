@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { AIMessage, AIAssistantRole, RoleContexts } from "@/types/ai-assistant.types";
 import { AnimatePresence, motion } from "framer-motion";
-import { Loader2, Send, Mic, MicOff, Paperclip, Camera } from "lucide-react";
+import { Loader2, Send, Mic, MicOff, Paperclip, Camera, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -128,30 +128,30 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
   };
 
   return (
-    <Card className="w-full overflow-hidden flex flex-col h-[700px] md:h-[700px] bg-gradient-to-b from-background to-background/95">
-      <div className="flex-1 overflow-auto p-3 md:p-4 space-y-3 md:space-y-4">
+    <Card className="w-full overflow-hidden flex flex-col h-[650px] md:h-[700px] bg-gradient-to-b from-background to-background/95">
+      <div className="flex-1 overflow-auto p-2 md:p-4 space-y-2 md:space-y-4">
         {showWelcome && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center py-6 md:py-10"
+            className="text-center py-4 md:py-8 px-2"
           >
-            <div className={`h-16 w-16 rounded-full ${getRoleColor()} mx-auto mb-4 flex items-center justify-center overflow-hidden`}>
+            <div className={`h-14 w-14 rounded-full ${getRoleColor()} mx-auto mb-3 flex items-center justify-center overflow-hidden`}>
               <img 
                 src="/lovable-uploads/9b7d0693-89eb-4cc5-b90b-7834bfabda0e.png" 
                 alt="WAKTI AI" 
                 className="h-full w-full object-cover"
               />
             </div>
-            <h2 className="text-xl font-bold mb-2">
+            <h2 className="text-lg md:text-xl font-bold mb-2">
               Hello{userName ? ` ${userName}` : ''}, I'm your WAKTI AI Assistant
             </h2>
-            <p className="text-muted-foreground mb-4 max-w-md mx-auto text-sm">
-              I'm here to help you with your tasks, answer questions, and provide assistance as needed.
+            <p className="text-muted-foreground mb-3 max-w-md mx-auto text-sm">
+              I'm here to help you manage tasks, schedule events, and answer questions about your WAKTI experience.
             </p>
             
             {showSuggestions && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-2xl mx-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-lg mx-auto px-1">
                 {getSuggestedPrompts().map((prompt, index) => (
                   <Button
                     key={index}
@@ -176,12 +176,12 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
               exit={{ opacity: 0, x: -10 }}
               transition={{ duration: 0.3 }}
               className={cn(
-                "flex items-start gap-3 mb-3 md:mb-4 mx-0.5",
+                "flex items-start gap-2 mb-2.5 md:mb-3.5 mx-0.5",
                 msg.role === "user" ? "flex-row-reverse" : ""
               )}
             >
               {msg.role === "assistant" ? (
-                <Avatar className={`h-8 w-8 ${getRoleColor()} overflow-hidden`}>
+                <Avatar className={`h-7 w-7 md:h-8 md:w-8 ${getRoleColor()} overflow-hidden shrink-0`}>
                   <img 
                     src="/lovable-uploads/9b7d0693-89eb-4cc5-b90b-7834bfabda0e.png" 
                     alt="WAKTI AI" 
@@ -189,15 +189,15 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
                   />
                 </Avatar>
               ) : msg.role === "user" ? (
-                <MessageAvatar isUser={true} />
+                <MessageAvatar isUser={true} className="h-7 w-7 md:h-8 md:w-8 shrink-0" />
               ) : (
-                <Avatar className="h-8 w-8 bg-yellow-100">
+                <Avatar className="h-7 w-7 md:h-8 md:w-8 bg-yellow-100 shrink-0">
                   <span className="text-xs font-medium">System</span>
                 </Avatar>
               )}
 
               <div className={cn(
-                "rounded-lg py-2 px-3 max-w-[85%] md:max-w-[80%]",
+                "rounded-lg py-2 px-3 max-w-[90%] md:max-w-[80%]",
                 msg.role === "assistant" ? "bg-background border" : 
                 msg.role === "user" ? "bg-primary text-primary-foreground" : 
                 "bg-orange-50 text-orange-800 border border-orange-100"
@@ -217,16 +217,16 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex items-start gap-3 mb-4 mx-0.5"
+              className="flex items-start gap-2 mb-3 mx-0.5"
             >
-              <Avatar className={`h-8 w-8 ${getRoleColor()} overflow-hidden`}>
+              <Avatar className={`h-7 w-7 md:h-8 md:w-8 ${getRoleColor()} overflow-hidden shrink-0`}>
                 <img 
                   src="/lovable-uploads/9b7d0693-89eb-4cc5-b90b-7834bfabda0e.png" 
                   alt="WAKTI AI" 
                   className="h-full w-full object-cover"
                 />
               </Avatar>
-              <div className="bg-background rounded-lg py-3 px-4 border">
+              <div className="bg-background rounded-lg py-2.5 px-3.5 border">
                 <Loader2 className="h-5 w-5 animate-spin" />
               </div>
             </motion.div>
@@ -236,7 +236,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mx-auto my-4 w-full max-w-md"
+              className="mx-auto my-2 w-full max-w-md"
             >
               <TaskConfirmationCard 
                 taskInfo={parseTaskFromMessage(detectedTask.title || '') || {
@@ -258,21 +258,21 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
         <div ref={messagesEndRef} />
       </div>
       
-      <div className="p-3 md:p-4 border-t relative">
+      <div className="p-2 md:p-3 border-t relative">
         {parsedMessage && !detectedTask && (
           <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs bg-background/80 backdrop-blur-sm border border-dashed px-2 py-1 rounded-full text-muted-foreground whitespace-nowrap">
             {parsedMessage}
           </div>
         )}
         
-        <form onSubmit={handleSendMessage} className="flex items-center gap-2">
+        <form onSubmit={handleSendMessage} className="flex items-center gap-1 md:gap-2">
           <div className="relative flex-1">
             <Input
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               placeholder="Type your message here..."
               className={cn(
-                "pr-10 py-5 md:py-6 text-sm",
+                "pr-10 py-5 text-sm",
                 isListening && "bg-rose-50 border-rose-200"
               )}
               disabled={isLoading || !canAccess || !!detectedTask}
@@ -297,7 +297,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
               disabled={isLoading || !canAccess || !!detectedTask}
               title={isListening ? "Stop voice input" : "Start voice input"}
             >
-              {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+              {isListening ? <MicOff className="h-4 w-4 md:h-5 md:w-5" /> : <Mic className="h-4 w-4 md:h-5 md:w-5" />}
             </Button>
           )}
           
@@ -311,7 +311,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
                 disabled={isLoading || !canAccess || !!detectedTask}
                 title="Attach file"
               >
-                <Paperclip className="h-5 w-5" />
+                <Paperclip className="h-4 w-4 md:h-5 md:w-5" />
               </Button>
               <input 
                 type="file" 
@@ -332,7 +332,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
               disabled={isLoading || !canAccess || !!detectedTask}
               title="Take photo"
             >
-              <Camera className="h-5 w-5" />
+              <Camera className="h-4 w-4 md:h-5 md:w-5" />
             </Button>
           )}
           
@@ -341,9 +341,9 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
             size="icon" 
             disabled={!inputMessage.trim() || isLoading || !canAccess || !!detectedTask}
             title="Send message"
-            className="h-10 w-10"
+            className="h-9 w-9 md:h-10 md:w-10"
           >
-            <Send className="h-5 w-5" />
+            <Send className="h-4 w-4 md:h-5 md:w-5" />
           </Button>
         </form>
       </div>

@@ -1,5 +1,5 @@
 
-import { TaskFormData, TaskPriority } from "@/types/task.types";
+import { TaskFormData, TaskPriority, SubTask } from "@/types/task.types";
 
 /**
  * Interface for parsed task information from user messages
@@ -21,7 +21,9 @@ export const parseTaskFromMessage = (message: string): ParsedTaskInfo | null => 
   // If the message doesn't seem to be about creating a task, return null
   if (!message.toLowerCase().includes("task") && 
       !message.toLowerCase().includes("todo") && 
-      !message.toLowerCase().includes("reminder")) {
+      !message.toLowerCase().includes("reminder") &&
+      !message.toLowerCase().includes("list") &&
+      !message.toLowerCase().includes("shopping")) {
     return null;
   }
 
@@ -37,8 +39,14 @@ export const parseTaskFromMessage = (message: string): ParsedTaskInfo | null => 
     if (altTitleMatches && altTitleMatches[1]) {
       title = altTitleMatches[1].trim();
     } else {
-      // Generic title based on message
-      title = "Task from AI Assistant";
+      // Look for shopping list specifically
+      const shoppingListMatch = message.match(/(?:create|add|make|new)\s+(?:a|an)?\s*(?:shopping\s*list)/i);
+      if (shoppingListMatch) {
+        title = "Shopping List";
+      } else {
+        // Generic title based on message
+        title = "Task from AI Assistant";
+      }
     }
   }
 
@@ -115,7 +123,7 @@ export const parseTaskFromMessage = (message: string): ParsedTaskInfo | null => 
   
   // If no list format, look for keywords like "subtasks" followed by text items
   if (subtasks.length === 0) {
-    const subtaskSectionRegex = /(?:subtasks?|items?|things?|steps?|list|shopping\slist)(?:\s*(?:are|include|:|is|should\s*be|contains?))?\s*(?:(?:\s*(?:and|,|-|•)?\s*([^,\n]+))+)/i;
+    const subtaskSectionRegex = /(?:subtasks?|items?|things?|steps?|list|shopping\slist)(?:\s*(?:are|include|:|is|should\s*be|contains?|with))?\s*(?:(?:\s*(?:and|,|-|•)?\s*([^,\n]+))+)/i;
     const match = message.match(subtaskSectionRegex);
     
     if (match && match[0]) {
@@ -129,7 +137,7 @@ export const parseTaskFromMessage = (message: string): ParsedTaskInfo | null => 
         if (cleaned && 
             !cleaned.toLowerCase().includes("subtask") && 
             !cleaned.toLowerCase().includes("list") &&
-            !cleaned.match(/^(?:are|include|:|is|should\s*be|contains?)$/i)) {
+            !cleaned.match(/^(?:are|include|:|is|should\s*be|contains?|with)$/i)) {
           subtasks.push(cleaned);
         }
       });
@@ -158,15 +166,21 @@ export const parseTaskFromMessage = (message: string): ParsedTaskInfo | null => 
  * Convert parsed task info to form data for task creation
  */
 export const convertParsedTaskToFormData = (parsedTask: ParsedTaskInfo): TaskFormData => {
+  // Create properly shaped SubTask objects with required type shape
+  const subtasksWithType: SubTask[] = parsedTask.subtasks.map((content, index) => ({
+    id: `temp-id-${index}`, // Temporary ID for type matching
+    task_id: 'pending', // Will be assigned when task is created
+    content,
+    is_completed: false
+  }));
+  
   return {
     title: parsedTask.title,
     description: parsedTask.description,
     priority: parsedTask.priority,
     due_date: parsedTask.dueDate,
     due_time: parsedTask.dueTime,
-    subtasks: parsedTask.subtasks.map(content => ({
-      content,
-      is_completed: false
-    }))
+    subtasks: subtasksWithType
   };
 };
+

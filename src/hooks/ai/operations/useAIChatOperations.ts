@@ -122,22 +122,29 @@ export const useAIChatOperations = () => {
       // Get estimated time based on subtasks
       const estimatedTime = getEstimatedTaskTime(parsedTask);
       
-      let confirmationContent = `I've detected a task request. Would you like me to create a ${parsedTask.priority} priority task "${parsedTask.title}"`;
+      let confirmationContent = `I've detected a task request. Here's what I'll create:
+
+**Task**: ${parsedTask.title} (${parsedTask.priority} priority)`;
       
       if (parsedTask.dueDate) {
-        confirmationContent += ` due on ${new Date(parsedTask.dueDate).toLocaleDateString()}`;
+        confirmationContent += `
+**Due Date**: ${new Date(parsedTask.dueDate).toLocaleDateString()}`;
         if (parsedTask.dueTime) {
           confirmationContent += ` at ${parsedTask.dueTime}`;
         }
       }
       
-      confirmationContent += "?";
-      
       if (parsedTask.subtasks.length > 0) {
-        confirmationContent += `\n\nI'll include ${parsedTask.subtasks.length} subtasks (estimated completion time: ${estimatedTime}).`;
+        confirmationContent += `
+**Subtasks (${parsedTask.subtasks.length})**: 
+${parsedTask.subtasks.map((subtask, index) => `${index + 1}. ${subtask}`).join('\n')}
+
+Estimated completion time: ${estimatedTime}`;
       }
       
-      confirmationContent += "\n\nShould I create this task for you?";
+      confirmationContent += `
+
+Would you like me to create this task for you?`;
       
       const confirmationMessage: AIMessage = {
         id: confirmationMessageId,
