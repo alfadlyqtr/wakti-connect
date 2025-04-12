@@ -72,11 +72,19 @@ const UsersPage = () => {
         const combinedUsers: UserTableRow[] = authUsers.users.map(authUser => {
           const profile = profiles?.find(p => p.id === authUser.id);
           
+          // Determine the user's status as a valid UserStatus type
+          let userStatus: UserStatus = "pending";
+          if (authUser.banned) {
+            userStatus = "banned";
+          } else if (authUser.email_confirmed_at) {
+            userStatus = "active";
+          }
+          
           return {
             id: authUser.id,
             email: authUser.email || "No email",
             accountType: profile?.account_type || "free",
-            status: authUser.banned ? "banned" : (authUser.email_confirmed_at ? "active" : "pending"),
+            status: userStatus, // Now properly typed as UserStatus
             created_at: new Date(authUser.created_at).toLocaleDateString(),
             lastLogin: authUser.last_sign_in_at 
               ? new Date(authUser.last_sign_in_at).toLocaleDateString() 
