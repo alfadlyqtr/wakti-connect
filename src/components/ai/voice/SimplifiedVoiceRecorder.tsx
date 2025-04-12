@@ -3,6 +3,8 @@ import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Mic, Square, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/lib/supabase';
+import { useToast } from '@/components/ui/use-toast';
 
 interface SimplifiedVoiceRecorderProps {
   onTranscriptReady: (transcript: string) => void;
@@ -15,6 +17,7 @@ export const SimplifiedVoiceRecorder: React.FC<SimplifiedVoiceRecorderProps> = (
   onCancel,
   compact = false
 }) => {
+  const { toast } = useToast();
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -58,10 +61,47 @@ export const SimplifiedVoiceRecorder: React.FC<SimplifiedVoiceRecorderProps> = (
       
       const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
       
-      // Simple browser-based speech recognition
-      const transcription = await processAudioWithBrowserAPI(audioBlob);
-      onTranscriptReady(transcription);
-      setIsProcessing(false);
+      // Convert the blob to base64
+      const reader = new FileReader();
+      reader.readAsDataURL(audioBlob);
+      reader.onloadend = async () => {
+        try {
+          // Extract the base64 string (removing data URL prefix)
+          const base64data = reader.result?.toString().split(',')[1];
+          
+          if (!base64data) {
+            throw new Error('Failed to convert audio to base64');
+          }
+          
+          console.log('Sending audio to Edge Function for transcription...');
+          
+          // Call the Supabase Edge Function for transcription
+          const { data, error } = await supabase.functions.invoke('ai-voice-to-text', {
+            body: { audio: base64data }
+          });
+          
+          if (error) {
+            throw new Error(`Edge function error: ${error.message}`);
+          }
+          
+          if (!data.text) {
+            throw new Error('No transcription returned');
+          }
+          
+          console.log('Transcription received:', data.text);
+          onTranscriptReady(data.text);
+        } catch (err) {
+          console.error('Transcription error:', err);
+          toast({
+            title: "Transcription Failed",
+            description: err instanceof Error ? err.message : "Could not process your recording",
+            variant: "destructive"
+          });
+          setError('Failed to transcribe audio. Please try again.');
+        } finally {
+          setIsProcessing(false);
+        }
+      };
       
       // Stop the microphone track
       if (mediaRecorderRef.current) {
@@ -73,17 +113,6 @@ export const SimplifiedVoiceRecorder: React.FC<SimplifiedVoiceRecorderProps> = (
       setError('Error processing your voice. Please try again.');
       setIsProcessing(false);
     }
-  };
-  
-  const processAudioWithBrowserAPI = async (audioBlob: Blob): Promise<string> => {
-    return new Promise((resolve) => {
-      // This is a simplified version - in a real implementation, 
-      // you would use an actual speech recognition service
-      // Here we're just simulating with a timeout
-      setTimeout(() => {
-        resolve("This is a test transcription of what you said. In production, this would be the result from a real speech-to-text service.");
-      }, 1500);
-    });
   };
   
   if (compact) {
