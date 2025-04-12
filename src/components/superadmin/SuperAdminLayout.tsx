@@ -26,7 +26,7 @@ const SuperAdminLayout: React.FC<SuperAdminLayoutProps> = ({ children }) => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#121212]">
+    <div className="min-h-screen flex flex-col">
       {/* Top bar - dark with red accents for super admin */}
       <header className="bg-[#0a0a0a] border-b border-red-900 py-2 px-4 flex items-center justify-between sticky top-0 z-50">
         <div className="flex items-center">
@@ -72,9 +72,9 @@ const SuperAdminLayout: React.FC<SuperAdminLayoutProps> = ({ children }) => {
           onToggle={toggleSidebar} 
         />
 
-        {/* Main content area */}
+        {/* Main content area - removed the dark background */}
         <main className={cn(
-          "flex-1 p-4 transition-all duration-300 ease-in-out bg-gray-950",
+          "flex-1 p-4 transition-all duration-300 ease-in-out",
           isSidebarOpen ? "ml-64" : "ml-16"
         )}>
           {/* Emergency panel */}
