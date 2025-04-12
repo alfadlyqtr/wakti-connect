@@ -1,230 +1,220 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useVoiceSettings } from '@/store/voiceSettings';
-import { supabase } from '@/integrations/supabase/client';
 
 interface SpeechRecognitionOptions {
-  language?: string;
   silenceThreshold?: number;
   silenceTimeout?: number;
 }
 
-export const useSpeechRecognition = (options: SpeechRecognitionOptions = {}) => {
-  const { language = 'en-US', silenceThreshold = 0.01, silenceTimeout = 1500 } = options;
-  const { voiceEnabled } = useVoiceSettings();
+interface UseSpeechRecognitionResult {
+  isRecording: boolean;
+  startRecording: () => Promise<void>;
+  stopRecording: () => void;
+  transcript: string;
+  resetTranscript: () => void;
+  error: Error | null;
+  isProcessing: boolean;
+  supported: boolean;
+  temporaryTranscript: string;
+  confirmTranscript: () => void;
+  audioLevel: number;
+}
+
+export const useSpeechRecognition = (options: SpeechRecognitionOptions = {}): UseSpeechRecognitionResult => {
+  const { silenceThreshold = 0.01, silenceTimeout = 1500 } = options;
   
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState('');
-  const [temporaryTranscript, setTemporaryTranscript] = useState<string | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [temporaryTranscript, setTemporaryTranscript] = useState('');
   const [error, setError] = useState<Error | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
   
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
-  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const recognitionRef = useRef<any>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const microphoneStreamRef = useRef<MediaStream | null>(null);
+  const silenceTimerRef = useRef<number | null>(null);
   
-  const supported = typeof window !== 'undefined' && 'MediaRecorder' in window;
+  // Check if browser supports speech recognition
+  const supported = typeof window !== 'undefined' && 
+    ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
   
-  // Alias properties to maintain compatibility with components expecting different property names
-  const isListening = isRecording;
+  const SpeechRecognition = typeof window !== 'undefined' 
+    ? window.SpeechRecognition || (window as any).webkitSpeechRecognition 
+    : null;
   
-  // Function to stop recording
-  const stopRecording = useCallback(() => {
-    if (!mediaRecorderRef.current || mediaRecorderRef.current.state === 'inactive') {
-      return;
-    }
-    
-    try {
-      // Stop the MediaRecorder
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-      
-      // We don't stop the tracks here - we'll do that after processing the audio
-      console.log("Recording stopped, waiting for data to process");
-    } catch (err) {
-      console.error("Error stopping recording:", err);
-      setError(err instanceof Error ? err : new Error('Unknown error stopping recording'));
-      cleanupRecording();
-    }
+  const resetTranscript = useCallback(() => {
+    setTranscript('');
+    setTemporaryTranscript('');
   }, []);
   
-  // Function to cleanup recording resources
-  const cleanupRecording = useCallback(() => {
-    // Stop all tracks from the stream
-    if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach(track => {
-        track.stop();
-      });
-      mediaStreamRef.current = null;
-    }
-    
-    // Reset MediaRecorder
-    mediaRecorderRef.current = null;
-    
-    // Reset state
-    setIsRecording(false);
-    setIsProcessing(false);
-  }, []);
-  
-  // Function to convert Blob to base64
-  const blobToBase64 = (blob: Blob): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64 = reader.result as string;
-        const base64Data = base64.split(',')[1];
-        resolve(base64Data);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  };
-  
-  // Process recorded audio with Whisper API
-  const processAudio = useCallback(async (audioBlob: Blob) => {
-    if (!audioBlob || audioBlob.size === 0) {
-      setError(new Error('No audio data captured'));
-      setIsProcessing(false);
-      cleanupRecording();
-      return;
-    }
-    
-    try {
-      setIsProcessing(true);
-      
-      // Convert audio blob to base64
-      const base64Audio = await blobToBase64(audioBlob);
-      
-      // Set temporary transcript while processing
-      setTemporaryTranscript("Processing your voice...");
-      
-      // Call Supabase Edge Function for transcription
-      const { data, error } = await supabase.functions.invoke('ai-voice-to-text', {
-        body: { 
-          audio: base64Audio,
-          language
-        }
-      });
-      
-      if (error) {
-        throw new Error(`API error: ${error.message}`);
-      }
-      
-      if (data && data.text) {
-        setTemporaryTranscript(data.text);
-      } else {
-        throw new Error('No transcription returned');
-      }
-    } catch (err) {
-      console.error('Error processing audio:', err);
-      setError(err instanceof Error ? err : new Error('Unknown error processing audio'));
-      setTemporaryTranscript(null);
-    } finally {
-      setIsProcessing(false);
-      cleanupRecording();
-    }
-  }, [language, cleanupRecording]);
-  
-  // Function to start recording
-  const startRecording = useCallback(async () => {
-    if (!supported || !voiceEnabled) {
-      setError(new Error('Voice recording not supported or disabled'));
-      return;
-    }
-    
-    try {
-      // Reset state
-      setTranscript('');
-      setTemporaryTranscript(null);
-      setError(null);
-      audioChunksRef.current = [];
-      
-      // Request microphone access
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaStreamRef.current = stream;
-      
-      // Set up MediaRecorder
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-      
-      // Set up audio level detection
-      const audioContext = new AudioContext();
-      const analyser = audioContext.createAnalyser();
-      const microphone = audioContext.createMediaStreamSource(stream);
-      microphone.connect(analyser);
-      analyser.fftSize = 256;
-      const bufferLength = analyser.frequencyBinCount;
-      const dataArray = new Uint8Array(bufferLength);
-      
-      // Function to update audio level
-      const updateAudioLevel = () => {
-        if (isRecording) {
-          analyser.getByteFrequencyData(dataArray);
-          let sum = 0;
-          for (let i = 0; i < bufferLength; i++) {
-            sum += dataArray[i];
-          }
-          const average = sum / bufferLength;
-          const level = average / 128; // Normalize to 0-1
-          setAudioLevel(level);
-          
-          requestAnimationFrame(updateAudioLevel);
-        }
-      };
-      
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
-      };
-      
-      mediaRecorder.onstop = async () => {
-        console.log("MediaRecorder stopped, processing audio chunks:", audioChunksRef.current.length);
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        await processAudio(audioBlob);
-      };
-      
-      // Start recording
-      mediaRecorder.start();
-      setIsRecording(true);
-      console.log("Recording started");
-      
-      // Start updating audio level
-      requestAnimationFrame(updateAudioLevel);
-      
-    } catch (err) {
-      console.error('Error starting recording:', err);
-      setError(err instanceof Error ? err : new Error('Unknown error starting recording'));
-      cleanupRecording();
-    }
-  }, [supported, voiceEnabled, processAudio, cleanupRecording, isRecording]);
-  
-  // Confirm the temporary transcript
   const confirmTranscript = useCallback(() => {
     if (temporaryTranscript) {
       setTranscript(temporaryTranscript);
-      setTemporaryTranscript(null);
+      setTemporaryTranscript('');
     }
   }, [temporaryTranscript]);
   
-  // Reset transcript
-  const resetTranscript = useCallback(() => {
-    setTranscript('');
-    setTemporaryTranscript(null);
+  const setupAudioAnalysis = useCallback(async () => {
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('MediaDevices API not supported');
+      }
+      
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      microphoneStreamRef.current = stream;
+      
+      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      analyserRef.current = audioContextRef.current.createAnalyser();
+      
+      const source = audioContextRef.current.createMediaStreamSource(stream);
+      source.connect(analyserRef.current);
+      
+      analyserRef.current.fftSize = 256;
+      const bufferLength = analyserRef.current.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+      
+      const checkAudioLevel = () => {
+        if (!analyserRef.current) return;
+        
+        analyserRef.current.getByteFrequencyData(dataArray);
+        
+        let sum = 0;
+        for (let i = 0; i < bufferLength; i++) {
+          sum += dataArray[i];
+        }
+        
+        const average = sum / bufferLength / 255; // Normalize to 0-1
+        setAudioLevel(average);
+        
+        // Check for silence
+        if (average < silenceThreshold) {
+          if (silenceTimerRef.current === null) {
+            silenceTimerRef.current = window.setTimeout(() => {
+              if (isRecording) {
+                stopRecording();
+              }
+            }, silenceTimeout);
+          }
+        } else {
+          if (silenceTimerRef.current !== null) {
+            clearTimeout(silenceTimerRef.current);
+            silenceTimerRef.current = null;
+          }
+        }
+        
+        if (isRecording) {
+          requestAnimationFrame(checkAudioLevel);
+        }
+      };
+      
+      requestAnimationFrame(checkAudioLevel);
+    } catch (err) {
+      console.error('Error setting up audio analysis:', err);
+      setError(err instanceof Error ? err : new Error('Failed to access microphone'));
+    }
+  }, [isRecording, silenceThreshold, silenceTimeout]);
+  
+  const startRecording = useCallback(async () => {
+    if (!supported) {
+      setError(new Error('Speech recognition not supported in this browser'));
+      return;
+    }
+    
+    try {
+      resetTranscript();
+      setIsProcessing(true);
+      setError(null);
+      
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.interimResults = true;
+      recognitionRef.current.lang = 'en-US';
+      
+      recognitionRef.current.onstart = () => {
+        setIsRecording(true);
+        setIsProcessing(false);
+      };
+      
+      recognitionRef.current.onresult = (event: any) => {
+        const current = event.resultIndex;
+        const transcript = event.results[current][0].transcript;
+        
+        setTemporaryTranscript(transcript);
+      };
+      
+      recognitionRef.current.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        setError(new Error(event.error));
+        setIsRecording(false);
+        setIsProcessing(false);
+      };
+      
+      recognitionRef.current.onend = () => {
+        if (temporaryTranscript) {
+          setTranscript(temporaryTranscript);
+        }
+        
+        setIsRecording(false);
+        setIsProcessing(false);
+        setTemporaryTranscript('');
+      };
+      
+      await setupAudioAnalysis();
+      recognitionRef.current.start();
+    } catch (err) {
+      console.error('Error starting speech recognition:', err);
+      setError(err instanceof Error ? err : new Error('Failed to start speech recognition'));
+      setIsRecording(false);
+      setIsProcessing(false);
+    }
+  }, [resetTranscript, setupAudioAnalysis, supported, temporaryTranscript]);
+  
+  const stopRecording = useCallback(() => {
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch (err) {
+        console.error('Error stopping recognition:', err);
+      }
+    }
+    
+    // Clean up audio analysis
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
+    
+    if (microphoneStreamRef.current) {
+      microphoneStreamRef.current.getTracks().forEach(track => track.stop());
+      microphoneStreamRef.current = null;
+    }
+    
+    if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+      audioContextRef.current.close().catch(console.error);
+    }
+    
+    setIsRecording(false);
   }, []);
   
   // Clean up on unmount
   useEffect(() => {
     return () => {
-      cleanupRecording();
+      stopRecording();
+      
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
+      }
+      
+      if (microphoneStreamRef.current) {
+        microphoneStreamRef.current.getTracks().forEach(track => track.stop());
+      }
+      
+      if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+        audioContextRef.current.close().catch(console.error);
+      }
     };
-  }, [cleanupRecording]);
-  
-  // Alias methods to maintain backward compatibility
-  const startListening = startRecording;
-  const stopListening = stopRecording;
-  const processing = isProcessing;
+  }, [stopRecording]);
   
   return {
     isRecording,
@@ -235,11 +225,6 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions = {}) => 
     error,
     isProcessing,
     supported,
-    // Aliases for backward compatibility
-    isListening,
-    startListening,
-    stopListening,
-    processing,
     temporaryTranscript,
     confirmTranscript,
     audioLevel

@@ -5,12 +5,29 @@ import { VoiceInteractionToolCard } from './VoiceInteractionToolCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Mic, Image, FileText, Code, GitBranch } from 'lucide-react';
+import { AIAssistantRole } from '@/types/ai-assistant.types';
 
 interface AIToolsTabContentProps {
-  onPromptSubmit: (prompt: string) => void;
+  onPromptSubmit?: (prompt: string) => void;
+  onUseDocumentContent?: (content: string) => void;
+  selectedRole?: AIAssistantRole;
+  canAccess?: boolean; // Add the missing prop
 }
 
-export const AIToolsTabContent: React.FC<AIToolsTabContentProps> = ({ onPromptSubmit }) => {
+export const AIToolsTabContent: React.FC<AIToolsTabContentProps> = ({ 
+  onPromptSubmit, 
+  onUseDocumentContent,
+  selectedRole,
+  canAccess = true // Default to true
+}) => {
+  const handleSubmitPrompt = (prompt: string) => {
+    if (onPromptSubmit) {
+      onPromptSubmit(prompt);
+    } else if (onUseDocumentContent) {
+      onUseDocumentContent(prompt);
+    }
+  };
+
   return (
     <Tabs defaultValue="image" className="w-full">
       <TabsList className="grid grid-cols-5 h-auto">
@@ -37,11 +54,11 @@ export const AIToolsTabContent: React.FC<AIToolsTabContentProps> = ({ onPromptSu
       </TabsList>
 
       <TabsContent value="image" className="mt-4">
-        <ImageGenerationToolCard onSubmitPrompt={onPromptSubmit} />
+        <ImageGenerationToolCard onSubmitPrompt={handleSubmitPrompt} />
       </TabsContent>
       
       <TabsContent value="voice" className="mt-4">
-        <VoiceInteractionToolCard onSpeechRecognized={onPromptSubmit} />
+        <VoiceInteractionToolCard onSpeechRecognized={handleSubmitPrompt} />
       </TabsContent>
       
       <TabsContent value="document" className="mt-4">

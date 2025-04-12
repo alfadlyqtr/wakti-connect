@@ -1,5 +1,8 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button"; // Added missing import
+import { Avatar } from "@/components/ui/avatar"; // Added missing import
 import { AIMessage, AIAssistantRole, RoleContexts } from "@/types/ai-assistant.types";
 import { AnimatePresence, motion } from "framer-motion";
 import { Loader2, Clock, Check } from "lucide-react";
