@@ -34,11 +34,54 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions = {}) => 
   const analyserRef = useRef<AnalyserNode | null>(null);
   const silenceTimerRef = useRef<number | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
   
   const supported = typeof window !== 'undefined' && 
     (('SpeechRecognition' in window) || 
     ('webkitSpeechRecognition' in window) || 
     ('MediaRecorder' in window));
+  
+  // Define these stopListening function first to avoid circular references
+  const stopListening = useCallback(() => {
+    console.log("Stopping speech recognition, current status:", {
+      isListening,
+      mediaRecorderState: mediaRecorderRef.current?.state || 'no-recorder'
+    });
+    
+    // Stop the MediaRecorder if it exists and is recording
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      try {
+        console.log("Stopping MediaRecorder");
+        mediaRecorderRef.current.stop();
+      } catch (err) {
+        console.error("Error stopping MediaRecorder:", err);
+      }
+    }
+    
+    // Stop all tracks from the stream
+    if (mediaStreamRef.current) {
+      try {
+        console.log("Stopping media stream tracks");
+        mediaStreamRef.current.getTracks().forEach(track => {
+          console.log("Stopping track:", track.kind, track.readyState);
+          track.stop();
+        });
+        mediaStreamRef.current = null;
+      } catch (err) {
+        console.error("Error stopping media stream tracks:", err);
+      }
+    }
+    
+    // Clear silence detection timer
+    if (silenceTimerRef.current) {
+      console.log("Clearing silence timer");
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
+    
+    setIsListening(false);
+    setAudioLevel(0);
+  }, []);
   
   // Function to convert Blob to base64
   const blobToBase64 = (blob: Blob): Promise<string> => {
@@ -91,26 +134,6 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions = {}) => 
     }
   }, []);
   
-  // Define stopListening function first to avoid the circular reference
-  const stopListening = useCallback(() => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop();
-      
-      // Stop all tracks from the stream
-      if (mediaRecorderRef.current.stream) {
-        mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
-      }
-    }
-    
-    if (silenceTimerRef.current) {
-      clearTimeout(silenceTimerRef.current);
-      silenceTimerRef.current = null;
-    }
-    
-    setIsListening(false);
-    setAudioLevel(0);
-  }, []);
-  
   const analyzeAudioLevel = useCallback(() => {
     if (!analyserRef.current || !visualFeedback) return;
     
@@ -157,7 +180,9 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions = {}) => 
       audioChunksRef.current = [];
       
       // Request microphone access
+      console.log("Requesting microphone access");
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaStreamRef.current = stream;
       
       // Set up audio context for level analysis
       if (visualFeedback) {
@@ -171,6 +196,7 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions = {}) => 
       }
       
       // Set up MediaRecorder
+      console.log("Setting up MediaRecorder");
       mediaRecorderRef.current = new MediaRecorder(stream);
       
       mediaRecorderRef.current.ondataavailable = (event) => {
@@ -180,6 +206,7 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions = {}) => 
       };
       
       mediaRecorderRef.current.onstop = async () => {
+        console.log("MediaRecorder stopped, processing audio chunks:", audioChunksRef.current.length);
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         await processAudio(audioBlob);
         
@@ -192,6 +219,7 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions = {}) => 
       };
       
       mediaRecorderRef.current.start();
+      console.log("MediaRecorder started");
     } catch (err) {
       console.error('Error starting speech recognition:', err);
       setError(err instanceof Error ? err : new Error('Unknown error starting recognition'));
@@ -218,10 +246,10 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions = {}) => 
     return () => {
       if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
         mediaRecorderRef.current.stop();
-        
-        if (mediaRecorderRef.current.stream) {
-          mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
-        }
+      }
+      
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach(track => track.stop());
       }
       
       if (silenceTimerRef.current) {

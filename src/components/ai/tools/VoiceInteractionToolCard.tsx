@@ -8,6 +8,7 @@ import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
 import { motion } from 'framer-motion';
 import { useToast } from '@/components/ui/use-toast';
 import { VoiceRecordingVisualizer } from '@/components/ai/voice/VoiceRecordingVisualizer';
+import { cn } from '@/lib/utils';
 
 interface VoiceInteractionToolCardProps {
   onSpeechRecognized: (text: string) => void;
@@ -143,10 +144,14 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
   
   const handleStopListening = async () => {
     try {
+      console.log("Stopping speech recognition", { openAIIsListening, browserIsListening });
+      
       if (openAIIsListening && stopOpenAIListening) {
         console.log("Stopping OpenAI speech recognition");
         await stopOpenAIListening();
-      } else if (browserIsListening && stopBrowserListening) {
+      }
+      
+      if (browserIsListening && stopBrowserListening) {
         console.log("Stopping browser-based speech recognition");
         stopBrowserListening();
       }
@@ -244,7 +249,7 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
             <Button 
               variant={isListening ? "destructive" : "default"}
               size="sm"
-              className="h-7 text-xs"
+              className="h-7 text-xs relative"
               onClick={isListening ? handleStopListening : handleStartListening}
               disabled={isProcessing}
             >
@@ -258,6 +263,14 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
                   <Mic className="h-3 w-3 mr-1" />
                   Speak
                 </>
+              )}
+              
+              {isListening && (
+                <motion.div
+                  className="absolute -inset-0.5 rounded-md border border-red-300"
+                  animate={{ scale: [1, 1.08, 1] }}
+                  transition={{ repeat: Infinity, duration: 1, ease: "easeInOut" }}
+                />
               )}
             </Button>
           </div>
@@ -465,9 +478,4 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
       </CardContent>
     </Card>
   );
-};
-
-// Helper function to conditionally join classNames
-const cn = (...classes: (string | boolean | undefined)[]) => {
-  return classes.filter(Boolean).join(' ');
 };

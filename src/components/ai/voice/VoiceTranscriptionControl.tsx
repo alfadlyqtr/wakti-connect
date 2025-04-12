@@ -63,6 +63,7 @@ export const VoiceTranscriptionControl: React.FC<VoiceTranscriptionControlProps>
   };
   
   const handleStopListening = () => {
+    console.log("VoiceTranscriptionControl: stopping listening");
     stopListening();
   };
   
@@ -107,7 +108,7 @@ export const VoiceTranscriptionControl: React.FC<VoiceTranscriptionControlProps>
         
         {isListening && (
           <motion.div
-            className="absolute -inset-2 rounded-full border-2 border-red-400"
+            className="absolute -inset-1 rounded-full border-2 border-red-400"
             animate={{ scale: [1, 1.15, 1] }}
             transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
           />
