@@ -7,6 +7,7 @@ import { useSpeechRecognition } from '@/hooks/ai/useSpeechRecognition';
 import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
 import { motion } from 'framer-motion';
 import { useToast } from '@/components/ui/use-toast';
+import { VoiceRecordingVisualizer } from '@/components/ai/voice/VoiceRecordingVisualizer';
 
 interface VoiceInteractionToolCardProps {
   onSpeechRecognized: (text: string) => void;
@@ -24,15 +25,19 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
   // Use browser-based speech recognition
   const {
     transcript,
+    temporaryTranscript,
+    confirmTranscript,
     isListening: browserIsListening,
     startListening: startBrowserListening,
     stopListening: stopBrowserListening,
     resetTranscript,
+    audioLevel: browserAudioLevel,
     supported,
-    error: browserError
+    error: browserError,
+    processing: browserProcessing
   } = useSpeechRecognition({
-    continuous: true,
-    interimResults: true
+    continuous: false,
+    interimResults: false
   });
   
   // Use OpenAI based voice interaction
@@ -50,6 +55,7 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
   
   // Combined state for UI
   const isListening = browserIsListening || openAIIsListening;
+  const isProcessing = browserProcessing || isProcessing;
   
   // Handle API key retry
   const handleApiKeyRetry = async () => {
@@ -144,10 +150,6 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
         console.log("Stopping browser-based speech recognition");
         stopBrowserListening();
       }
-      
-      if (transcribedText.trim()) {
-        onSpeechRecognized(transcribedText);
-      }
     } catch (err) {
       console.error("Error stopping speech recognition:", err);
       setError(`Error stopping speech recognition: ${err instanceof Error ? err.message : String(err)}`);
@@ -156,6 +158,20 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
         description: "Failed to stop speech recognition",
         variant: "destructive",
       });
+    }
+  };
+  
+  const handleConfirmTranscript = () => {
+    if (confirmTranscript && temporaryTranscript) {
+      confirmTranscript();
+      
+      if (temporaryTranscript.trim()) {
+        onSpeechRecognized(temporaryTranscript);
+        toast({
+          title: "Voice transcription complete",
+          description: "Your spoken text has been processed",
+        });
+      }
     }
   };
   
@@ -209,30 +225,58 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
       <div className="space-y-2">
         <div className="flex justify-between items-center">
           <span className="text-xs">Voice Input</span>
-          <Button 
-            variant={isListening ? "destructive" : "default"}
-            size="sm"
-            className="h-7 text-xs"
-            onClick={isListening ? handleStopListening : handleStartListening}
-            disabled={isProcessing}
-          >
-            {isListening ? (
-              <>
-                <Square className="h-3 w-3 mr-1" />
-                Stop
-              </>
-            ) : (
-              <>
-                <Mic className="h-3 w-3 mr-1" />
-                Speak
-              </>
+          <div className="flex items-center gap-1">
+            {temporaryTranscript && !isListening && !isProcessing && (
+              <Button 
+                variant="success"
+                size="sm"
+                className="h-7 w-7 text-xs rounded-full p-0"
+                onClick={handleConfirmTranscript}
+              >
+                <motion.div
+                  animate={{ scale: [0.9, 1, 0.9] }}
+                  transition={{ repeat: Infinity, duration: 1.5 }}
+                >
+                  ✓
+                </motion.div>
+              </Button>
             )}
-          </Button>
+            <Button 
+              variant={isListening ? "destructive" : "default"}
+              size="sm"
+              className="h-7 text-xs"
+              onClick={isListening ? handleStopListening : handleStartListening}
+              disabled={isProcessing}
+            >
+              {isListening ? (
+                <>
+                  <Square className="h-3 w-3 mr-1" />
+                  Stop
+                </>
+              ) : (
+                <>
+                  <Mic className="h-3 w-3 mr-1" />
+                  Speak
+                </>
+              )}
+            </Button>
+          </div>
         </div>
         
         {isListening && (
-          <p className="text-xs italic">
-            {transcribedText || "Listening..."}
+          <div className="flex justify-center">
+            <VoiceRecordingVisualizer
+              isActive={isListening}
+              audioLevel={browserAudioLevel}
+              size="sm"
+              className="w-full"
+            />
+          </div>
+        )}
+        
+        {temporaryTranscript && !isListening && !isProcessing && (
+          <p className="text-xs italic bg-blue-50 border border-blue-100 p-2 rounded-md">
+            {temporaryTranscript}
           </p>
         )}
         
@@ -287,45 +331,95 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
         )}
         
         <div className="flex justify-center">
-          <Button 
-            onClick={isListening ? handleStopListening : handleStartListening}
-            variant={isListening ? "destructive" : "default"}
+          <motion.div
+            initial={false}
+            animate={isListening ? { scale: [1, 1.05, 1] } : { scale: 1 }}
+            transition={{ repeat: isListening ? Infinity : 0, duration: 1.5 }}
             className="relative"
-            size="lg"
-            disabled={isProcessing}
           >
-            {isListening ? (
-              <>
-                <Square className="h-4 w-4 mr-2" />
-                Stop Listening
-                <motion.div
-                  className="absolute inset-0 rounded-md border-2 border-red-500"
-                  animate={{ scale: [1, 1.1, 1] }}
-                  transition={{ repeat: Infinity, duration: 1.5 }}
-                />
-              </>
-            ) : (
-              <>
-                <Mic className="h-4 w-4 mr-2" />
-                Start Listening
-              </>
+            <Button 
+              onClick={isListening ? handleStopListening : handleStartListening}
+              variant={isListening ? "destructive" : "default"}
+              className={cn("relative", isListening && "border-4 border-red-200")}
+              size="lg"
+              disabled={isProcessing}
+            >
+              {isListening ? (
+                <>
+                  <Square className="h-4 w-4 mr-2" />
+                  Stop Recording
+                </>
+              ) : (
+                <>
+                  <Mic className="h-4 w-4 mr-2" />
+                  Start Recording
+                </>
+              )}
+            </Button>
+            
+            {isListening && (
+              <motion.div
+                className="absolute -inset-2 rounded-md border-2 border-red-400"
+                animate={{ scale: [1, 1.15, 1] }}
+                transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+              />
             )}
-          </Button>
+          </motion.div>
         </div>
         
-        <div className={`rounded-md p-3 bg-muted/50 min-h-[100px] relative ${isListening ? 'border-2 border-primary' : 'border border-border'}`}>
-          {isListening && !transcribedText && (
-            <div className="flex items-center justify-center h-full text-muted-foreground">
-              <p>Listening...</p>
+        <div className="rounded-md bg-muted/50 relative overflow-hidden">
+          {isListening && (
+            <div className="p-4 flex justify-center">
+              <VoiceRecordingVisualizer
+                isActive={isListening}
+                audioLevel={browserAudioLevel}
+                size="lg"
+                className="w-full max-w-md"
+              />
             </div>
           )}
-          {transcribedText && (
-            <p className="text-sm">{transcribedText}</p>
+          
+          {temporaryTranscript && !isListening && !isProcessing && (
+            <div className="p-4 bg-blue-50 border border-blue-100 rounded-md">
+              <p className="text-sm mb-2">{temporaryTranscript}</p>
+              <div className="flex justify-end">
+                <Button 
+                  variant="success" 
+                  onClick={handleConfirmTranscript}
+                  className="flex items-center gap-2"
+                >
+                  <motion.div
+                    animate={{ scale: [0.9, 1, 0.9] }}
+                    transition={{ repeat: Infinity, duration: 1.5 }}
+                  >
+                    ✓
+                  </motion.div>
+                  <span>Confirm Transcript</span>
+                </Button>
+              </div>
+            </div>
           )}
-          {!isListening && !transcribedText && (
-            <p className="text-muted-foreground text-center">
-              Click "Start Listening" and speak. Your words will appear here.
-            </p>
+          
+          {!isListening && !temporaryTranscript && !isProcessing && (
+            <div className="p-4">
+              <p className="text-muted-foreground text-center">
+                Click "Start Recording" and speak. When you stop recording, your words will be transcribed.
+              </p>
+            </div>
+          )}
+          
+          {isProcessing && (
+            <div className="p-4 bg-amber-50 border border-amber-100 rounded-md">
+              <p className="text-amber-700 text-center flex items-center justify-center gap-2">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                >
+                  <RefreshCcw className="h-4 w-4" />
+                </motion.div>
+                <span>Processing your voice...</span>
+              </p>
+            </div>
           )}
         </div>
         
@@ -371,4 +465,9 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
       </CardContent>
     </Card>
   );
+};
+
+// Helper function to conditionally join classNames
+const cn = (...classes: (string | boolean | undefined)[]) => {
+  return classes.filter(Boolean).join(' ');
 };

@@ -28,9 +28,11 @@ interface CleanChatInterfaceProps {
   onCameraCapture?: () => void;
   onStartVoiceInput?: () => void;
   onStopVoiceInput?: () => void;
+  onConfirmTranscript?: () => void;
   isListening?: boolean;
   audioLevel?: number;
   processingVoice?: boolean;
+  temporaryTranscript?: string;
   showSuggestions?: boolean;
   detectedTask?: TaskFormData | null;
   onConfirmTask?: (task: TaskFormData) => void;
@@ -52,9 +54,11 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
   onCameraCapture,
   onStartVoiceInput,
   onStopVoiceInput,
+  onConfirmTranscript,
   isListening = false,
   audioLevel = 0,
   processingVoice = false,
+  temporaryTranscript,
   showSuggestions = true,
   detectedTask = null,
   onConfirmTask,
@@ -264,6 +268,8 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
           supportsPendingConfirmation={true}
           pendingConfirmation={pendingTaskConfirmation}
           confirmationHint="Confirm task creation"
+          temporaryTranscript={temporaryTranscript}
+          onConfirmTranscript={onConfirmTranscript}
         />
       </div>
     </Card>

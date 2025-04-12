@@ -24,6 +24,7 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions = {}) => 
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [finalTranscript, setFinalTranscript] = useState('');
+  const [temporaryTranscript, setTemporaryTranscript] = useState<string | undefined>(undefined);
   const [error, setError] = useState<Error | null>(null);
   const [audioLevel, setAudioLevel] = useState(0);
   const [processing, setProcessing] = useState(false);
@@ -77,8 +78,8 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions = {}) => 
       }
       
       if (data && data.text) {
-        setFinalTranscript(data.text);
-        setTranscript(data.text);
+        // Store the transcript temporarily, waiting for user confirmation
+        setTemporaryTranscript(data.text);
       } else {
         throw new Error('No transcription returned');
       }
@@ -151,6 +152,7 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions = {}) => 
       setIsListening(true);
       setTranscript('');
       setFinalTranscript('');
+      setTemporaryTranscript(undefined);
       setError(null);
       audioChunksRef.current = [];
       
@@ -200,7 +202,16 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions = {}) => 
   const resetTranscript = useCallback(() => {
     setTranscript('');
     setFinalTranscript('');
+    setTemporaryTranscript(undefined);
   }, []);
+  
+  const confirmTranscript = useCallback(() => {
+    if (temporaryTranscript) {
+      setTranscript(temporaryTranscript);
+      setFinalTranscript(temporaryTranscript);
+      setTemporaryTranscript(undefined);
+    }
+  }, [temporaryTranscript]);
   
   // Clean up on unmount
   useEffect(() => {
@@ -229,6 +240,8 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions = {}) => 
     stopListening,
     transcript,
     finalTranscript,
+    temporaryTranscript,
+    confirmTranscript,
     resetTranscript,
     error,
     processing,

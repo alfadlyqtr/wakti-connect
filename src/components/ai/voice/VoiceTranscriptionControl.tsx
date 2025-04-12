@@ -1,13 +1,16 @@
 
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Mic, MicOff, Loader2 } from 'lucide-react';
+import { Mic, MicOff, Loader2, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
+import { VoiceRecordingVisualizer } from './VoiceRecordingVisualizer';
 
 interface VoiceTranscriptionControlProps {
   isListening: boolean;
   startListening: () => void;
   stopListening: () => void;
+  confirmTranscript?: () => void;
   processing: boolean;
   audioLevel: number;
   supported: boolean;
@@ -15,88 +18,43 @@ interface VoiceTranscriptionControlProps {
   transcript?: string;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
+  showConfirmButton?: boolean;
 }
 
 export const VoiceTranscriptionControl: React.FC<VoiceTranscriptionControlProps> = ({
   isListening,
   startListening,
   stopListening,
+  confirmTranscript,
   processing,
   audioLevel,
   supported,
   disabled = false,
   transcript,
   size = 'md',
-  className
+  className,
+  showConfirmButton = false
 }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  
   // Size mappings
   const sizeMap = {
     sm: {
       button: 'h-8 w-8',
       icon: 'h-4 w-4',
-      canvas: 'h-8',
-      waveContainerClass: 'h-8 max-w-[100px]'
+      container: 'space-x-1'
     },
     md: {
       button: 'h-10 w-10',
       icon: 'h-5 w-5',
-      canvas: 'h-10',
-      waveContainerClass: 'h-10 max-w-[150px]'
+      container: 'space-x-2'
     },
     lg: {
       button: 'h-12 w-12',
       icon: 'h-6 w-6',
-      canvas: 'h-12',
-      waveContainerClass: 'h-12 max-w-[200px]'
+      container: 'space-x-3'
     }
   };
   
-  const { button, icon, canvas, waveContainerClass } = sizeMap[size];
-  
-  // Draw audio waveform
-  useEffect(() => {
-    if (!canvasRef.current || !isListening) return;
-    
-    const ctx = canvasRef.current.getContext('2d');
-    if (!ctx) return;
-    
-    const width = canvasRef.current.width;
-    const height = canvasRef.current.height;
-    
-    // Clear canvas
-    ctx.clearRect(0, 0, width, height);
-    
-    // Draw visualized audio level as a wave
-    const centerY = height / 2;
-    const maxAmplitude = height / 3;
-    const frequency = 0.05;
-    const waves = 3;
-    
-    // Use audioLevel to determine wave amplitude
-    const amplitude = audioLevel * maxAmplitude;
-    
-    ctx.beginPath();
-    ctx.moveTo(0, centerY);
-    
-    for (let x = 0; x < width; x++) {
-      // Create multiple sine waves with different frequencies
-      let y = centerY;
-      for (let i = 1; i <= waves; i++) {
-        y += Math.sin(x * frequency * i / waves + Date.now() * 0.002 * i) * amplitude / i;
-      }
-      
-      ctx.lineTo(x, y);
-    }
-    
-    ctx.strokeStyle = 'rgb(59 130 246)'; // Blue color
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    
-    // Request next frame
-    requestAnimationFrame(() => {});
-  }, [isListening, audioLevel]);
+  const { button, icon, container } = sizeMap[size];
   
   const handleStartListening = () => {
     if (!disabled && supported) {
@@ -113,36 +71,60 @@ export const VoiceTranscriptionControl: React.FC<VoiceTranscriptionControlProps>
   }
   
   return (
-    <div className={cn("flex items-center space-x-2", className)}>
+    <div className={cn("flex items-center", container, className)}>
       {isListening && (
-        <div className={cn("relative overflow-hidden rounded-md bg-blue-50 border border-blue-200", waveContainerClass)}>
-          <canvas 
-            ref={canvasRef} 
-            width={200} 
-            height={40} 
-            className={cn("w-full", canvas)}
-          />
-        </div>
+        <VoiceRecordingVisualizer 
+          isActive={isListening}
+          audioLevel={audioLevel}
+          size={size}
+        />
       )}
       
-      <Button
-        type="button"
-        size="icon"
-        variant={isListening ? "destructive" : "secondary"}
-        className={cn(button, "rounded-full flex-shrink-0", 
-          isListening && "animate-pulse"
-        )}
-        onClick={isListening ? handleStopListening : handleStartListening}
-        disabled={disabled || processing}
+      <motion.div
+        initial={false}
+        animate={isListening ? { scale: [1, 1.05, 1] } : { scale: 1 }}
+        transition={{ repeat: isListening ? Infinity : 0, duration: 1.5 }}
+        className="relative"
       >
-        {processing ? (
-          <Loader2 className={cn(icon, "animate-spin")} />
-        ) : isListening ? (
-          <MicOff className={icon} />
-        ) : (
-          <Mic className={icon} />
+        <Button
+          type="button"
+          size="icon"
+          variant={isListening ? "destructive" : "secondary"}
+          className={cn(button, "rounded-full flex-shrink-0", 
+            isListening && "border-4 border-red-200"
+          )}
+          onClick={isListening ? handleStopListening : handleStartListening}
+          disabled={disabled || processing}
+        >
+          {processing ? (
+            <Loader2 className={cn(icon, "animate-spin")} />
+          ) : isListening ? (
+            <MicOff className={icon} />
+          ) : (
+            <Mic className={icon} />
+          )}
+        </Button>
+        
+        {isListening && (
+          <motion.div
+            className="absolute -inset-2 rounded-full border-2 border-red-400"
+            animate={{ scale: [1, 1.15, 1] }}
+            transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+          />
         )}
-      </Button>
+      </motion.div>
+      
+      {showConfirmButton && transcript && !isListening && !processing && (
+        <Button
+          type="button"
+          size="icon"
+          variant="success"
+          className={button}
+          onClick={confirmTranscript}
+        >
+          <Check className={icon} />
+        </Button>
+      )}
     </div>
   );
 };

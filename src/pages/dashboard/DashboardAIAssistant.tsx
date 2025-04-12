@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
 import { useAuth } from "@/hooks/useAuth";
@@ -29,7 +30,6 @@ import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AISystemIntegrationPanel } from "@/components/ai/assistant/AISystemIntegrationPanel";
-import { VoiceTranscriptionControl } from "@/components/ai/voice/VoiceTranscriptionControl";
 import { useSpeechRecognition } from "@/hooks/ai/useSpeechRecognition";
 import { QuickToolsCard } from "@/components/ai/tools/QuickToolsCard";
 
@@ -79,16 +79,19 @@ const DashboardAIAssistant = () => {
     stopListening,
     resetTranscript,
     transcript,
+    temporaryTranscript,
+    confirmTranscript,
     audioLevel,
     processing: processingVoice,
     supported: recognitionSupported
   } = useSpeechRecognition({
     continuous: false,
-    interimResults: true,
+    interimResults: false,
     silenceThreshold: 0.02,
     silenceTimeout: 2000
   });
 
+  // When a new transcript is confirmed, update the input message
   useEffect(() => {
     if (transcript && !isListening && !processingVoice) {
       setInputMessage(transcript);
@@ -308,6 +311,13 @@ const DashboardAIAssistant = () => {
     }
   };
 
+  const handleConfirmTranscript = () => {
+    if (confirmTranscript && temporaryTranscript) {
+      confirmTranscript();
+      setInputMessage(temporaryTranscript);
+    }
+  };
+
   if (isChecking) {
     console.log("Still checking access, showing loader");
     return <AIAssistantLoader />;
@@ -400,9 +410,11 @@ const DashboardAIAssistant = () => {
                               onCameraCapture={handleCameraCapture}
                               onStartVoiceInput={handleStartVoiceInput}
                               onStopVoiceInput={handleStopVoiceInput}
+                              onConfirmTranscript={handleConfirmTranscript}
                               isListening={isListening}
                               audioLevel={audioLevel}
                               processingVoice={processingVoice}
+                              temporaryTranscript={temporaryTranscript}
                               showSuggestions={false}
                               detectedTask={detectedTask}
                               onConfirmTask={confirmCreateTask}
