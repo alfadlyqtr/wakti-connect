@@ -13,83 +13,86 @@ const LanguageSwitcher = () => {
     if (savedLanguage === 'ar') {
       setCurrentLanguage('ar');
       // If the page loads with Arabic preference, trigger translation
-      triggerArabicTranslation();
+      triggerBrowserTranslation();
     }
   }, []);
 
-  const triggerArabicTranslation = () => {
+  const triggerBrowserTranslation = () => {
     try {
-      // First try to use Google Translate API if available on the page
-      if (window.google && window.google.translate) {
-        const translateElement = document.getElementById('google_translate_element');
-        if (!translateElement) {
-          // Create the element if it doesn't exist
-          const div = document.createElement('div');
-          div.id = 'google_translate_element';
-          div.style.display = 'none';
-          document.body.appendChild(div);
-        }
-        
-        // Use Google's translation widget
-        if (window.google.translate.TranslateElement) {
-          new window.google.translate.TranslateElement(
-            { pageLanguage: 'en', includedLanguages: 'ar' },
-            'google_translate_element'
-          );
-        }
-      } else {
-        // Fallback to redirect through Google Translate
-        window.location.href = 'https://translate.google.com/translate?sl=en&tl=ar&u=' + 
-          encodeURIComponent(window.location.href);
-      }
+      // Set data-language attribute on html tag to help browsers detect language
+      document.documentElement.setAttribute('lang', 'en');
+      document.documentElement.setAttribute('data-translate-target', 'ar');
+      
+      // Show browser translation bar - this works in Chrome, Edge, and some other browsers
+      // by leveraging the browser's detection of language mismatch
+      const metaTag = document.querySelector('meta[name="google"]') || document.createElement('meta');
+      metaTag.setAttribute('name', 'google');
+      metaTag.setAttribute('value', 'notranslate');
+      metaTag.remove(); // Remove if exists, which triggers browser to re-evaluate
+      
+      setTimeout(() => {
+        document.head.appendChild(metaTag);
+      }, 100);
       
       // Save language preference
       localStorage.setItem('wakti-language', 'ar');
       
+      // Show a toast to guide the user if browser doesn't automatically prompt
       toast(
-        <div className="flex items-center gap-2">
-          <span>Switched to Arabic</span>
-          <br />
+        <div className="flex items-center gap-2 flex-col">
+          <div className="flex items-center">
+            <span>Switched to Arabic</span>
+            <Flag className="h-4 w-4 ml-2" />
+          </div>
           <span dir="rtl">تم التبديل إلى اللغة العربية</span>
-          <Flag className="h-4 w-4" />
+          <small className="text-xs mt-1">
+            If translation doesn't appear, check your browser's translation options
+          </small>
         </div>
       );
     } catch (error) {
       console.error("Translation error:", error);
-      toast("Could not load translation. Please try again.");
+      toast("Could not trigger translation. Try using your browser's translate feature.");
     }
   };
 
-  const switchToEnglish = () => {
-    // For switching back to English, simply reload the page
+  const resetToEnglish = () => {
+    // Remove translation attributes
+    document.documentElement.setAttribute('lang', 'en');
+    document.documentElement.removeAttribute('data-translate-target');
+    
+    // Remove meta tag to restore original state
+    const metaTag = document.querySelector('meta[name="google"]');
+    if (metaTag) metaTag.remove();
+    
+    // Save language preference
     localStorage.setItem('wakti-language', 'en');
-    window.location.href = window.location.origin + window.location.pathname;
+    
+    // Force a re-render of components without reloading
+    window.dispatchEvent(new Event('language-change'));
+    
+    toast("Switched back to English");
   };
 
   const handleLanguageChange = () => {
     if (currentLanguage === 'en') {
       setCurrentLanguage('ar');
-      triggerArabicTranslation();
+      triggerBrowserTranslation();
     } else {
       setCurrentLanguage('en');
-      switchToEnglish();
+      resetToEnglish();
     }
   };
 
   return (
-    <>
-      {/* Hidden container for Google Translate widget */}
-      <div id="google_translate_element" style={{ display: 'none' }}></div>
-      
-      <Button 
-        onClick={handleLanguageChange}
-        variant="ghost" 
-        size="sm" 
-        className="w-8 px-0"
-      >
-        {currentLanguage === 'en' ? 'العربية' : 'English'}
-      </Button>
-    </>
+    <Button 
+      onClick={handleLanguageChange}
+      variant="ghost" 
+      size="sm" 
+      className="w-8 px-0"
+    >
+      {currentLanguage === 'en' ? 'العربية' : 'English'}
+    </Button>
   );
 };
 
