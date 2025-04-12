@@ -4,8 +4,9 @@ import { ImageGenerationToolCard } from './ImageGenerationToolCard';
 import { VoiceInteractionToolCard } from './VoiceInteractionToolCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Mic, Image, FileText, Code, GitBranch } from 'lucide-react';
+import { Mic, Image, FileText, Code, GitBranch, Calendar } from 'lucide-react';
 import { AIAssistantRole } from '@/types/ai-assistant.types';
+import { MeetingSummaryTool } from './MeetingSummaryTool';
 
 interface AIToolsTabContentProps {
   onPromptSubmit?: (prompt: string) => void;
@@ -30,7 +31,7 @@ export const AIToolsTabContent: React.FC<AIToolsTabContentProps> = ({
 
   return (
     <Tabs defaultValue="image" className="w-full">
-      <TabsList className="grid grid-cols-5 h-auto">
+      <TabsList className="grid grid-cols-6 h-auto">
         <TabsTrigger value="image" className="text-xs flex flex-col gap-1 py-2 h-auto">
           <Image className="h-4 w-4" />
           <span>Image</span>
@@ -38,6 +39,10 @@ export const AIToolsTabContent: React.FC<AIToolsTabContentProps> = ({
         <TabsTrigger value="voice" className="text-xs flex flex-col gap-1 py-2 h-auto">
           <Mic className="h-4 w-4" />
           <span>Voice</span>
+        </TabsTrigger>
+        <TabsTrigger value="meeting" className="text-xs flex flex-col gap-1 py-2 h-auto">
+          <Calendar className="h-4 w-4" />
+          <span>Meeting</span>
         </TabsTrigger>
         <TabsTrigger value="document" className="text-xs flex flex-col gap-1 py-2 h-auto">
           <FileText className="h-4 w-4" />
@@ -59,6 +64,10 @@ export const AIToolsTabContent: React.FC<AIToolsTabContentProps> = ({
       
       <TabsContent value="voice" className="mt-4">
         <VoiceInteractionToolCard onSpeechRecognized={handleSubmitPrompt} />
+      </TabsContent>
+      
+      <TabsContent value="meeting" className="mt-4">
+        <MeetingSummaryTool onUseSummary={handleSubmitPrompt} />
       </TabsContent>
       
       <TabsContent value="document" className="mt-4">
