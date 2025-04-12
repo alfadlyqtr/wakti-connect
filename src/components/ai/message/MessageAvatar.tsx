@@ -6,9 +6,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface MessageAvatarProps {
   isUser: boolean;
+  className?: string; // Add optional className prop
 }
 
-export function MessageAvatar({ isUser }: MessageAvatarProps) {
+export function MessageAvatar({ isUser, className }: MessageAvatarProps) {
   const { user } = useAuth();
   
   // Get the avatar URL or user initials
@@ -22,7 +23,7 @@ export function MessageAvatar({ isUser }: MessageAvatarProps) {
       isUser 
         ? "bg-gray-200" 
         : "bg-wakti-blue"
-    }`}>
+    } ${className || ''}`}> {/* Apply the className if provided */}
       {isUser ? (
         <>
           <AvatarImage src={userAvatarUrl || ''} alt="User" />
