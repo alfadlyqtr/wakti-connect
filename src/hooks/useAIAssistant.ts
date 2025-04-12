@@ -1,5 +1,5 @@
 
-import { useAIChat } from "./ai/useAIChat";
+import { useAIChatEnhanced } from "./ai/useAIChatEnhanced";
 import { useAISettings } from "./ai/settings";
 import { useAIKnowledge } from "./ai/useAIKnowledge";
 import { AIMessage, AISettings, AIKnowledgeUpload } from "@/types/ai-assistant.types";
@@ -22,8 +22,9 @@ export const useAIAssistant = () => {
     confirmCreateTask,
     cancelCreateTask,
     isCreatingTask,
-    pendingTaskConfirmation
-  } = useAIChat();
+    pendingTaskConfirmation,
+    getRecentContext
+  } = useAIChatEnhanced();
   const { aiSettings, isLoadingSettings, updateSettings, canUseAI } = useAISettings();
   const { addKnowledge, knowledgeUploads, isLoadingKnowledge, deleteKnowledge } = useAIKnowledge();
 
@@ -33,6 +34,7 @@ export const useAIAssistant = () => {
     sendMessage,
     isLoading,
     clearMessages,
+    getRecentContext,
     
     // Task features
     detectedTask,

@@ -16,7 +16,6 @@ import { RoleSpecificKnowledge } from "@/components/ai/tools/RoleSpecificKnowled
 import { KnowledgeProfileToolCard } from "@/components/ai/tools/KnowledgeProfileToolCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AIRoleSelector } from "@/components/ai/assistant/AIRoleSelector";
-import { useSpeechRecognition } from "@/hooks/ai/useSpeechRecognition";
 import { Button } from "@/components/ui/button";
 import { QuickToolsCard } from "@/components/ai/tools/QuickToolsCard";
 import { 
@@ -25,15 +24,13 @@ import {
   BookCopy,
   Bot,
   Camera,
-  Settings,
   Cpu,
-  Briefcase,
-  Archive
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AISystemIntegrationPanel } from "@/components/ai/assistant/AISystemIntegrationPanel";
+import { VoiceTranscriptionControl } from "@/components/ai/voice/VoiceTranscriptionControl";
 
 declare global {
   class ImageCapture {

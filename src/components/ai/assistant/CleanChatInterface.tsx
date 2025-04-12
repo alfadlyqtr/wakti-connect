@@ -1,19 +1,18 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { AIMessage, AIAssistantRole, RoleContexts } from "@/types/ai-assistant.types";
 import { AnimatePresence, motion } from "framer-motion";
-import { Loader2, Send, Mic, MicOff, Paperclip, Camera, Check, X } from "lucide-react";
+import { Loader2, Clock, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { useToast } from "@/components/ui/use-toast";
 import { MessageAvatar } from "@/components/ai/message";
 import { TaskConfirmationCard } from "@/components/ai/task/TaskConfirmationCard";
 import { TaskFormData } from "@/types/task.types";
 import { parseTaskFromMessage } from "@/hooks/ai/utils/taskParser";
+import { ChatMessageInput } from "./ChatMessageInput";
 
 interface CleanChatInterfaceProps {
   messages: AIMessage[];
@@ -48,9 +47,6 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
   canAccess,
   onFileUpload,
   onCameraCapture,
-  onStartVoiceInput,
-  onStopVoiceInput,
-  isListening = false,
   showSuggestions = true,
   detectedTask = null,
   onConfirmTask,
@@ -60,8 +56,6 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
 }) => {
   const [showWelcome, setShowWelcome] = useState(messages.length === 0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const { toast } = useToast();
   const [parsedMessage, setParsedMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -93,36 +87,6 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
     }
   }, [pendingTaskConfirmation]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0 || !onFileUpload) return;
-    
-    const file = files[0];
-    if (file.size > 10 * 1024 * 1024) {
-      toast({
-        title: "File too large",
-        description: "File size must be less than 10MB",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    onFileUpload(file);
-    e.target.value = ''; // Reset the file input
-  };
-
-  const handleVoiceToggle = () => {
-    if (isListening && onStopVoiceInput) {
-      onStopVoiceInput();
-    } else if (!isListening && onStartVoiceInput) {
-      onStartVoiceInput();
-    }
-  };
-
-  const handleFileUploadClick = () => {
-    fileInputRef.current?.click();
-  };
-
   const getRoleColor = () => {
     switch (selectedRole) {
       case "student": return "bg-blue-500";
@@ -131,10 +95,6 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
       case "business_owner": return "bg-amber-500";
       default: return "bg-wakti-blue";
     }
-  };
-
-  const getSuggestedPrompts = () => {
-    return RoleContexts[selectedRole]?.suggestedPrompts || [];
   };
 
   return (
@@ -162,7 +122,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
             
             {showSuggestions && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-lg mx-auto px-1">
-                {getSuggestedPrompts().map((prompt, index) => (
+                {RoleContexts[selectedRole]?.suggestedPrompts.map((prompt, index) => (
                   <Button
                     key={index}
                     variant="outline"
@@ -270,7 +230,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
         <div ref={messagesEndRef} />
       </div>
       
-      <div className="p-2 md:p-3 border-t relative">
+      <div className="relative">
         {parsedMessage && (
           <div className={cn(
             "absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs bg-background/80 backdrop-blur-sm border border-dashed px-2 py-1 rounded-full whitespace-nowrap",
@@ -280,106 +240,18 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
           </div>
         )}
         
-        <form onSubmit={handleSendMessage} className="flex flex-col gap-3">
-          <div className="relative w-full">
-            <Input
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              placeholder={pendingTaskConfirmation ? "Type 'Go' or 'Yes' to confirm..." : "Type your message here..."}
-              className={cn(
-                "py-6 text-sm md:text-base",
-                isListening && "bg-rose-50 border-rose-200",
-                pendingTaskConfirmation && "bg-green-50 border-green-200"
-              )}
-              disabled={isLoading || !canAccess}
-            />
-            {isListening && (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
-                </span>
-              </span>
-            )}
-          </div>
-          
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              {onStartVoiceInput && onStopVoiceInput && (
-                <Button 
-                  type="button" 
-                  size="icon" 
-                  variant="ghost" 
-                  className={cn("h-10 w-10 rounded-full", isListening ? "text-rose-500 hover:text-rose-600" : "")}
-                  onClick={handleVoiceToggle}
-                  disabled={isLoading || !canAccess || isCreatingTask}
-                  title={isListening ? "Stop voice input" : "Start voice input"}
-                >
-                  {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-                </Button>
-              )}
-              
-              {onFileUpload && !pendingTaskConfirmation && (
-                <>
-                  <Button 
-                    type="button" 
-                    size="icon" 
-                    variant="ghost" 
-                    onClick={handleFileUploadClick}
-                    disabled={isLoading || !canAccess || isCreatingTask}
-                    title="Attach file"
-                    className="h-10 w-10 rounded-full"
-                  >
-                    <Paperclip className="h-5 w-5" />
-                  </Button>
-                  <input 
-                    type="file" 
-                    ref={fileInputRef}
-                    className="hidden" 
-                    onChange={handleFileChange}
-                    accept=".pdf,.doc,.docx,.txt,.md,.jpg,.jpeg,.png"
-                  />
-                </>
-              )}
-              
-              {onCameraCapture && !pendingTaskConfirmation && (
-                <Button 
-                  type="button" 
-                  size="icon" 
-                  variant="ghost" 
-                  onClick={onCameraCapture}
-                  disabled={isLoading || !canAccess || isCreatingTask}
-                  title="Take photo"
-                  className="h-10 w-10 rounded-full"
-                >
-                  <Camera className="h-5 w-5" />
-                </Button>
-              )}
-            </div>
-            
-            <Button 
-              type="submit" 
-              disabled={!inputMessage.trim() || isLoading || !canAccess || isCreatingTask}
-              title={pendingTaskConfirmation ? "Confirm task creation" : "Send message"}
-              className={cn(
-                "h-10 px-5 rounded-full",
-                pendingTaskConfirmation && "bg-green-600 hover:bg-green-700"
-              )}
-            >
-              {pendingTaskConfirmation ? (
-                <>
-                  <Check className="h-5 w-5 mr-1" />
-                  <span>Confirm</span>
-                </>
-              ) : (
-                <>
-                  <Send className="h-5 w-5 mr-1" />
-                  <span>Send</span>
-                </>
-              )}
-            </Button>
-          </div>
-        </form>
+        <ChatMessageInput 
+          message={inputMessage}
+          setMessage={setInputMessage}
+          onSendMessage={handleSendMessage}
+          isLoading={isLoading}
+          disabled={!canAccess || isCreatingTask}
+          onFileUpload={onFileUpload}
+          onCameraCapture={onCameraCapture}
+          supportsPendingConfirmation={true}
+          pendingConfirmation={pendingTaskConfirmation}
+          confirmationHint="Confirm task creation"
+        />
       </div>
     </Card>
   );
