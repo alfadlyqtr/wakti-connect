@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
@@ -34,6 +33,34 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
     isStaff, 
     userRole: detectedUserRole 
   } = useDashboardUserProfile();
+
+  // Load Google Translate script dynamically
+  useEffect(() => {
+    // Check if we should load the script
+    if (document.getElementById('google-translate-script')) return;
+    
+    const script = document.createElement('script');
+    script.id = 'google-translate-script';
+    script.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+    script.async = true;
+    
+    // Define the callback function that Google Translate will use
+    window.googleTranslateElementInit = function() {
+      // This function will be called by Google's script
+      // The actual translation will be handled by the LanguageSwitcher component
+    };
+    
+    document.body.appendChild(script);
+    
+    // Clean up function
+    return () => {
+      const scriptElement = document.getElementById('google-translate-script');
+      if (scriptElement) {
+        document.body.removeChild(scriptElement);
+      }
+      delete window.googleTranslateElementInit;
+    };
+  }, []);
 
   // Use provided role or detected role
   const accountType = profileData?.account_type || propUserRole || detectedUserRole || "free";
@@ -164,6 +191,9 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
         setOpen={setCommandSearchOpen}
         userRole={displayRole}
       />
+      
+      {/* Hidden container for Google Translate widget */}
+      <div id="google_translate_element" style={{ display: 'none' }}></div>
     </div>
   );
 };
