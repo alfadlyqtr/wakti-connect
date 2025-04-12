@@ -5,22 +5,29 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface SpeechRecognitionOptions {
   language?: string;
+  silenceThreshold?: number;
+  silenceTimeout?: number;
 }
 
 export const useSpeechRecognition = (options: SpeechRecognitionOptions = {}) => {
-  const { language = 'en-US' } = options;
+  const { language = 'en-US', silenceThreshold = 0.01, silenceTimeout = 1500 } = options;
   const { voiceEnabled } = useVoiceSettings();
   
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState('');
+  const [temporaryTranscript, setTemporaryTranscript] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [audioLevel, setAudioLevel] = useState(0);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   
   const supported = typeof window !== 'undefined' && 'MediaRecorder' in window;
+  
+  // Alias properties to maintain compatibility with components expecting different property names
+  const isListening = isRecording;
   
   // Function to stop recording
   const stopRecording = useCallback(() => {
@@ -89,6 +96,9 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions = {}) => 
       // Convert audio blob to base64
       const base64Audio = await blobToBase64(audioBlob);
       
+      // Set temporary transcript while processing
+      setTemporaryTranscript("Processing your voice...");
+      
       // Call Supabase Edge Function for transcription
       const { data, error } = await supabase.functions.invoke('ai-voice-to-text', {
         body: { 
@@ -102,13 +112,14 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions = {}) => 
       }
       
       if (data && data.text) {
-        setTranscript(data.text);
+        setTemporaryTranscript(data.text);
       } else {
         throw new Error('No transcription returned');
       }
     } catch (err) {
       console.error('Error processing audio:', err);
       setError(err instanceof Error ? err : new Error('Unknown error processing audio'));
+      setTemporaryTranscript(null);
     } finally {
       setIsProcessing(false);
       cleanupRecording();
@@ -125,6 +136,7 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions = {}) => 
     try {
       // Reset state
       setTranscript('');
+      setTemporaryTranscript(null);
       setError(null);
       audioChunksRef.current = [];
       
@@ -135,6 +147,31 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions = {}) => 
       // Set up MediaRecorder
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
+      
+      // Set up audio level detection
+      const audioContext = new AudioContext();
+      const analyser = audioContext.createAnalyser();
+      const microphone = audioContext.createMediaStreamSource(stream);
+      microphone.connect(analyser);
+      analyser.fftSize = 256;
+      const bufferLength = analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+      
+      // Function to update audio level
+      const updateAudioLevel = () => {
+        if (isRecording) {
+          analyser.getByteFrequencyData(dataArray);
+          let sum = 0;
+          for (let i = 0; i < bufferLength; i++) {
+            sum += dataArray[i];
+          }
+          const average = sum / bufferLength;
+          const level = average / 128; // Normalize to 0-1
+          setAudioLevel(level);
+          
+          requestAnimationFrame(updateAudioLevel);
+        }
+      };
       
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
@@ -153,16 +190,28 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions = {}) => 
       setIsRecording(true);
       console.log("Recording started");
       
+      // Start updating audio level
+      requestAnimationFrame(updateAudioLevel);
+      
     } catch (err) {
       console.error('Error starting recording:', err);
       setError(err instanceof Error ? err : new Error('Unknown error starting recording'));
       cleanupRecording();
     }
-  }, [supported, voiceEnabled, processAudio, cleanupRecording]);
+  }, [supported, voiceEnabled, processAudio, cleanupRecording, isRecording]);
+  
+  // Confirm the temporary transcript
+  const confirmTranscript = useCallback(() => {
+    if (temporaryTranscript) {
+      setTranscript(temporaryTranscript);
+      setTemporaryTranscript(null);
+    }
+  }, [temporaryTranscript]);
   
   // Reset transcript
   const resetTranscript = useCallback(() => {
     setTranscript('');
+    setTemporaryTranscript(null);
   }, []);
   
   // Clean up on unmount
@@ -172,6 +221,11 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions = {}) => 
     };
   }, [cleanupRecording]);
   
+  // Alias methods to maintain backward compatibility
+  const startListening = startRecording;
+  const stopListening = stopRecording;
+  const processing = isProcessing;
+  
   return {
     isRecording,
     startRecording,
@@ -180,6 +234,14 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions = {}) => 
     resetTranscript,
     error,
     isProcessing,
-    supported
+    supported,
+    // Aliases for backward compatibility
+    isListening,
+    startListening,
+    stopListening,
+    processing,
+    temporaryTranscript,
+    confirmTranscript,
+    audioLevel
   };
 };

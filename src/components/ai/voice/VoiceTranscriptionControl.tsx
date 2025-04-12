@@ -1,7 +1,7 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Mic, Check, Loader2 } from 'lucide-react';
+import { Mic, Check, Loader2, Square } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 
@@ -66,17 +66,15 @@ export const VoiceTranscriptionControl: React.FC<VoiceTranscriptionControlProps>
         <Button
           type="button"
           size="icon"
-          variant={isRecording ? "secondary" : "secondary"}
-          className={cn(button, "rounded-full flex-shrink-0", 
-            isRecording && "border-2 border-green-200 bg-green-50 hover:bg-green-100"
-          )}
+          variant={isRecording ? "destructive" : "secondary"}
+          className={cn(button, "rounded-full flex-shrink-0")}
           onClick={handleClick}
           disabled={disabled || isProcessing}
         >
           {isProcessing ? (
             <Loader2 className={cn(icon, "animate-spin")} />
           ) : isRecording ? (
-            <Check className={cn(icon, "text-green-600")} />
+            <Square className={cn(icon, "text-white")} />
           ) : (
             <Mic className={icon} />
           )}
@@ -84,7 +82,7 @@ export const VoiceTranscriptionControl: React.FC<VoiceTranscriptionControlProps>
         
         {isRecording && (
           <motion.div
-            className="absolute -inset-1 rounded-full border-2 border-green-400"
+            className="absolute -inset-1 rounded-full border-2 border-red-400"
             animate={{ scale: [1, 1.15, 1] }}
             transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
           />

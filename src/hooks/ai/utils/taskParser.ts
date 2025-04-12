@@ -1,13 +1,17 @@
 
-import { TaskFormData, TaskPriority } from "@/types/task.types";
+import { TaskFormData, TaskPriority, SubTask } from "@/types/task.types";
 
 export interface ParsedTaskInfo {
   title: string;
   description?: string;
-  due_date?: string | Date;
+  due_date?: string | Date | null;
   priority?: TaskPriority;
-  location?: string;
+  location?: string | null;
   subtasks: string[];
+  // Additional fields for UI presentation
+  hasTimeConstraint?: boolean;
+  needsReview?: boolean;
+  dueTime?: string | null;
 }
 
 /**
@@ -94,11 +98,12 @@ export function parseTaskFromMessage(text: string): ParsedTaskInfo | null {
   } else if (mediumPriorityRegex.test(text)) {
     priority = 'medium';
   } else if (lowPriorityRegex.test(text)) {
-    priority = 'low';
+    priority = 'normal'; // Using 'normal' instead of 'low' to match TaskPriority type
   }
   
   // Extract due date
   let dueDate: Date | undefined;
+  let dueTime: string | undefined;
   
   if (todayRegex.test(text)) {
     dueDate = new Date();
@@ -106,17 +111,22 @@ export function parseTaskFromMessage(text: string): ParsedTaskInfo | null {
     // If "tonight" is mentioned, set to 9 PM today
     if (/tonight/.test(text)) {
       dueDate.setHours(21, 0, 0, 0);
+      dueTime = '9:00 PM';
     } else if (/this evening/.test(text)) {
       dueDate.setHours(18, 0, 0, 0);
+      dueTime = '6:00 PM';
     } else if (/this afternoon/.test(text)) {
       dueDate.setHours(15, 0, 0, 0);
+      dueTime = '3:00 PM';
     } else if (/this morning/.test(text)) {
       dueDate.setHours(9, 0, 0, 0);
+      dueTime = '9:00 AM';
     }
   } else if (tomorrowRegex.test(text)) {
     dueDate = new Date();
     dueDate.setDate(dueDate.getDate() + 1);
     dueDate.setHours(9, 0, 0, 0); // Default to morning
+    dueTime = '9:00 AM';
   } else if (weekdayRegex.test(text)) {
     const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
     const today = new Date();
@@ -131,6 +141,7 @@ export function parseTaskFromMessage(text: string): ParsedTaskInfo | null {
         dueDate = new Date();
         dueDate.setDate(dueDate.getDate() + (daysToAdd === 0 ? 7 : daysToAdd));
         dueDate.setHours(9, 0, 0, 0); // Default to morning
+        dueTime = '9:00 AM';
       }
     }
   }
@@ -167,6 +178,12 @@ export function parseTaskFromMessage(text: string): ParsedTaskInfo | null {
     }
     
     dueDate.setHours(hours, minutes, 0, 0);
+    
+    // Format time for display (12-hour format)
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = hours % 12 || 12;
+    const displayMinutes = minutes.toString().padStart(2, '0');
+    dueTime = `${displayHours}:${displayMinutes} ${period}`;
   }
   
   // Extract location
@@ -220,13 +237,28 @@ export function parseTaskFromMessage(text: string): ParsedTaskInfo | null {
     description += description ? `. ${priority.toUpperCase()} priority` : `${priority.toUpperCase()} priority task`;
   }
   
+  // Determine if task has time constraints
+  const hasTimeConstraint = dueDate !== undefined && (
+    todayRegex.test(text) || 
+    timeMatch !== null || 
+    /urgent|asap|immediately|right away/.test(text.toLowerCase())
+  );
+  
+  // Determine if priority needs review (e.g., no priority specified for a task due today or tomorrow)
+  const needsReview = (priority === 'medium' || priority === 'normal') && 
+    (todayRegex.test(text) || tomorrowRegex.test(text)) && 
+    !mediumPriorityRegex.test(text);
+  
   return {
     title,
     description,
     due_date: dueDate,
     priority,
     location,
-    subtasks
+    subtasks,
+    hasTimeConstraint,
+    needsReview,
+    dueTime
   };
 }
 
@@ -234,27 +266,74 @@ export function parseTaskFromMessage(text: string): ParsedTaskInfo | null {
  * Converts parsed task info to task form data
  */
 export function convertParsedTaskToFormData(parsedTask: ParsedTaskInfo): TaskFormData {
+  // Convert dueDate to string format if it's a Date object
+  const dueDateString = parsedTask.due_date instanceof Date 
+    ? parsedTask.due_date.toISOString().split('T')[0]
+    : parsedTask.due_date as string;
+  
+  // Create subtasks in the expected format
+  const formattedSubtasks: SubTask[] = parsedTask.subtasks.map((text, index) => ({
+    id: `temp-${index}`, // Temporary ID until saved
+    task_id: 'pending', // Will be assigned when task is created
+    content: text,
+    is_completed: false
+  }));
+  
   return {
     title: parsedTask.title,
     description: parsedTask.description || '',
-    due_date: parsedTask.due_date,
+    due_date: dueDateString,
+    due_time: parsedTask.dueTime,
     priority: parsedTask.priority || 'medium',
     location: parsedTask.location,
-    subtasks: parsedTask.subtasks.map(text => ({ text, completed: false })),
-    category: 'daily', // Default category
-    start_date: new Date(),
-    color: 'blue',
-    completed: false,
-    repeat_frequency: null,
-    assignees: []
+    subtasks: formattedSubtasks,
+    status: 'pending',
+    is_recurring: false
   };
+}
+
+/**
+ * Get estimated time to complete a task based on subtasks and priority
+ */
+export function getEstimatedTaskTime(parsedTask: ParsedTaskInfo): string {
+  const { subtasks, priority } = parsedTask;
+  
+  // Base time depends on number of subtasks
+  let baseMinutes = 15; // Minimum 15 minutes
+  
+  if (subtasks.length > 0) {
+    baseMinutes += subtasks.length * 10; // 10 minutes per subtask
+  }
+  
+  // Adjust based on priority
+  const priorityMultiplier = priority === 'high' || priority === 'urgent' 
+    ? 0.8  // High priority tasks often take less time due to focus
+    : priority === 'medium' 
+      ? 1.0 
+      : 1.2; // Low priority tasks might take longer due to less focus
+  
+  const estimatedMinutes = Math.round(baseMinutes * priorityMultiplier);
+  
+  // Format the result
+  if (estimatedMinutes < 60) {
+    return `${estimatedMinutes} minutes`;
+  } else {
+    const hours = Math.floor(estimatedMinutes / 60);
+    const minutes = estimatedMinutes % 60;
+    
+    if (minutes === 0) {
+      return hours === 1 ? "1 hour" : `${hours} hours`;
+    } else {
+      return `${hours} hour${hours > 1 ? 's' : ''} ${minutes} min`;
+    }
+  }
 }
 
 /**
  * Generates a human-friendly confirmation text for a parsed task
  */
 export function generateTaskConfirmationText(parsedTask: ParsedTaskInfo): string {
-  const { title, due_date, priority, location, subtasks } = parsedTask;
+  const { title, due_date: dueDate, priority, location, subtasks } = parsedTask;
   
   let confirmationText = `I'll create a task: **${title}**\n\n`;
   
@@ -268,16 +347,16 @@ export function generateTaskConfirmationText(parsedTask: ParsedTaskInfo): string
     confirmationText += `**Priority:** ${priority.charAt(0).toUpperCase() + priority.slice(1)}\n`;
   }
   
-  if (due_date) {
-    const formattedDate = due_date instanceof Date 
-      ? due_date.toLocaleString(undefined, { 
+  if (dueDate) {
+    const formattedDate = dueDate instanceof Date 
+      ? dueDate.toLocaleString(undefined, { 
           weekday: 'short', 
           month: 'short', 
           day: 'numeric',
           hour: 'numeric',
           minute: 'numeric'
         })
-      : due_date;
+      : dueDate;
     confirmationText += `**Due Date:** ${formattedDate}\n`;
   }
   

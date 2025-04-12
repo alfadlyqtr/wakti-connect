@@ -226,7 +226,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
                   description: detectedTask.description || '',
                   priority: detectedTask.priority || 'normal',
                   subtasks: detectedTask.subtasks?.map(s => s.content) || [],
-                  dueDate: detectedTask.due_date,
+                  due_date: detectedTask.due_date,
                   dueTime: detectedTask.due_time,
                   location: detectedTask.location,
                   hasTimeConstraint: !!detectedTask.due_date,
@@ -260,16 +260,9 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
           disabled={!canAccess || isCreatingTask}
           onFileUpload={onFileUpload}
           onCameraCapture={onCameraCapture}
-          onStartVoiceInput={onStartVoiceInput}
-          onStopVoiceInput={onStopVoiceInput}
-          isListening={isListening}
-          audioLevel={audioLevel}
-          processingVoice={processingVoice}
           supportsPendingConfirmation={true}
           pendingConfirmation={pendingTaskConfirmation}
           confirmationHint="Confirm task creation"
-          temporaryTranscript={temporaryTranscript}
-          onConfirmTranscript={onConfirmTranscript}
         />
       </div>
     </Card>

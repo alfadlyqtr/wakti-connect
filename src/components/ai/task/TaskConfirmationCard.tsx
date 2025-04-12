@@ -32,8 +32,8 @@ export const TaskConfirmationCard: React.FC<TaskConfirmationCardProps> = ({
     }
   };
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "No due date";
+  const formatDate = (dateValue?: string | Date | null) => {
+    if (!dateValue) return "No due date";
     
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -41,7 +41,14 @@ export const TaskConfirmationCard: React.FC<TaskConfirmationCardProps> = ({
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
     
-    const date = new Date(dateString);
+    let date: Date;
+    
+    if (dateValue instanceof Date) {
+      date = new Date(dateValue);
+    } else {
+      date = new Date(dateValue);
+    }
+    
     date.setHours(0, 0, 0, 0);
     
     if (date.getTime() === today.getTime()) return "Today";
@@ -71,13 +78,13 @@ export const TaskConfirmationCard: React.FC<TaskConfirmationCardProps> = ({
         </div>
         
         <div className="flex flex-wrap gap-2 items-center text-xs">
-          <Badge variant="outline" className={cn("py-1", getPriorityColor(taskInfo.priority))}>
-            {taskInfo.priority.charAt(0).toUpperCase() + taskInfo.priority.slice(1)} Priority
+          <Badge variant="outline" className={cn("py-1", getPriorityColor(taskInfo.priority || 'normal'))}>
+            {(taskInfo.priority || 'normal').charAt(0).toUpperCase() + (taskInfo.priority || 'normal').slice(1)} Priority
           </Badge>
           
           <Badge variant="outline" className="py-1 flex items-center gap-1">
             <CalendarClock className="h-3 w-3" />
-            {formatDate(taskInfo.dueDate)}
+            {formatDate(taskInfo.due_date)}
             {taskInfo.dueTime && ` at ${taskInfo.dueTime}`}
           </Badge>
           

@@ -42,8 +42,8 @@ export interface TaskFormData {
   description?: string;
   status?: TaskStatus;
   priority?: TaskPriority;
-  due_date?: string;
-  due_time?: string;
+  due_date?: string | null;
+  due_time?: string | null;
   subtasks?: SubTask[];
   snooze_count?: number;
   snoozed_until?: string | null;

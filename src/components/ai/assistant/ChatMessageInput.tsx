@@ -9,7 +9,8 @@ import {
   Camera, 
   Loader2, 
   X,
-  ChevronRight
+  ChevronRight,
+  Mic
 } from "lucide-react";
 import { VoiceTranscriptionControl } from "@/components/ai/voice/VoiceTranscriptionControl";
 import { useVoiceSettings } from "@/store/voiceSettings";
@@ -52,6 +53,8 @@ export const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
     startRecording,
     stopRecording,
     transcript,
+    temporaryTranscript,
+    confirmTranscript,
     isProcessing,
     supported: voiceSupported,
     error: voiceError
@@ -87,6 +90,21 @@ export const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
     }
   }, [transcript, setMessage]);
   
+  // Handle temporary transcript (from Whisper API)
+  useEffect(() => {
+    if (temporaryTranscript && !isRecording && !isProcessing) {
+      setMessage(temporaryTranscript);
+      confirmTranscript();
+      
+      // Focus on textarea for editing after transcription
+      if (textareaRef.current) {
+        setTimeout(() => {
+          textareaRef.current?.focus();
+        }, 100);
+      }
+    }
+  }, [temporaryTranscript, isRecording, isProcessing, setMessage, confirmTranscript]);
+  
   // Handle file upload
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0] && onFileUpload) {
@@ -107,6 +125,15 @@ export const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
       if (message.trim() && !isLoading) {
         onSendMessage(e as unknown as React.FormEvent);
       }
+    }
+  };
+  
+  // Handle voice recording
+  const handleVoiceRecording = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
     }
   };
   
@@ -236,14 +263,29 @@ export const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
           )}
           
           {voiceEnabled && voiceSupported && !pendingConfirmation && (
-            <VoiceTranscriptionControl
-              startRecording={startRecording}
-              stopRecording={stopRecording}
-              isRecording={isRecording}
-              isProcessing={isProcessing}
-              disabled={disabled || isLoading}
-              size="md"
-            />
+            <Button
+              type="button"
+              size="icon"
+              variant={isRecording ? "destructive" : "outline"}
+              className={cn(
+                "h-9 w-9 rounded-full relative",
+                isRecording && "bg-red-500 hover:bg-red-600"
+              )}
+              onClick={handleVoiceRecording}
+              disabled={disabled || isLoading || isProcessing}
+            >
+              {isProcessing ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : isRecording ? (
+                <span className="h-3 w-3 bg-white rounded-sm" />
+              ) : (
+                <Mic className="h-4 w-4" />
+              )}
+              
+              {isRecording && (
+                <span className="absolute -inset-0.5 rounded-full border-2 border-red-400 animate-pulse" />
+              )}
+            </Button>
           )}
         </div>
       </div>
@@ -251,6 +293,7 @@ export const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
       <div className="flex justify-between items-center text-xs text-muted-foreground">
         <div>
           {isRecording && <span className="text-green-500">Recording... Click ✓ when finished</span>}
+          {isProcessing && <span className="text-blue-500">Processing your voice...</span>}
           {voiceError && <span className="text-red-500">{voiceError.message}</span>}
         </div>
         {!isMobile && (

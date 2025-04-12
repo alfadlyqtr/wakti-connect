@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
 import { useAuth } from "@/hooks/useAuth";
@@ -74,29 +73,26 @@ const DashboardAIAssistant = () => {
   const { toast } = useToast();
   
   const {
-    isListening,
-    startListening,
-    stopListening,
+    isRecording,
+    startRecording,
+    stopRecording,
     resetTranscript,
     transcript,
     temporaryTranscript,
     confirmTranscript,
     audioLevel,
-    processing: processingVoice,
+    isProcessing: processingVoice,
     supported: recognitionSupported
   } = useSpeechRecognition({
-    continuous: false,
-    interimResults: false,
     silenceThreshold: 0.02,
     silenceTimeout: 2000
   });
 
-  // When a new transcript is confirmed, update the input message
   useEffect(() => {
-    if (transcript && !isListening && !processingVoice) {
+    if (transcript && !isRecording && !processingVoice) {
       setInputMessage(transcript);
     }
-  }, [transcript, isListening, processingVoice]);
+  }, [transcript, isRecording, processingVoice]);
 
   useEffect(() => {
     if (aiSettings?.role) {
@@ -299,15 +295,15 @@ const DashboardAIAssistant = () => {
   };
 
   const handleStartVoiceInput = () => {
-    if (startListening) {
+    if (startRecording) {
       resetTranscript();
-      startListening();
+      startRecording();
     }
   };
 
   const handleStopVoiceInput = () => {
-    if (stopListening) {
-      stopListening();
+    if (stopRecording) {
+      stopRecording();
     }
   };
 
@@ -411,7 +407,7 @@ const DashboardAIAssistant = () => {
                               onStartVoiceInput={handleStartVoiceInput}
                               onStopVoiceInput={handleStopVoiceInput}
                               onConfirmTranscript={handleConfirmTranscript}
-                              isListening={isListening}
+                              isListening={isRecording}
                               audioLevel={audioLevel}
                               processingVoice={processingVoice}
                               temporaryTranscript={temporaryTranscript}
