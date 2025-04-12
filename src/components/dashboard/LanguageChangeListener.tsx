@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 
 interface LanguageChangeListenerProps {
   onLanguageChange: () => void;

@@ -2,10 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Flag } from "lucide-react";
+import { Flag, Check } from "lucide-react";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 const LanguageSwitcher = () => {
   const [currentLanguage, setCurrentLanguage] = useState<'en' | 'ar'>('en');
+  const [isChangingLanguage, setIsChangingLanguage] = useState(false);
 
   // Check if there's a saved language preference on component mount
   useEffect(() => {
@@ -19,6 +21,8 @@ const LanguageSwitcher = () => {
 
   const triggerBrowserTranslation = () => {
     try {
+      setIsChangingLanguage(true);
+      
       // Set data-language attribute on html tag to help browsers detect language
       document.documentElement.setAttribute('lang', 'en');
       document.documentElement.setAttribute('data-translate-target', 'ar');
@@ -32,31 +36,30 @@ const LanguageSwitcher = () => {
       
       setTimeout(() => {
         document.head.appendChild(metaTag);
-      }, 100);
+        setIsChangingLanguage(false);
+      }, 800);
       
       // Save language preference
       localStorage.setItem('wakti-language', 'ar');
       
-      // Show a toast to guide the user if browser doesn't automatically prompt
+      // Show a clean, professional toast with minimal text
       toast(
-        <div className="flex items-center gap-2 flex-col">
-          <div className="flex items-center">
-            <span>Switched to Arabic</span>
-            <Flag className="h-4 w-4 ml-2" />
-          </div>
-          <span dir="rtl">تم التبديل إلى اللغة العربية</span>
-          <small className="text-xs mt-1">
-            If translation doesn't appear, check your browser's translation options
-          </small>
+        <div className="flex items-center justify-center gap-2">
+          <span>Switched to Arabic</span>
+          <Check className="h-4 w-4 text-green-500" />
         </div>
       );
     } catch (error) {
       console.error("Translation error:", error);
-      toast("Could not trigger translation. Try using your browser's translate feature.");
+      setIsChangingLanguage(false);
+      // Simplified error message without technical details
+      toast("Could not change language. Please try again.");
     }
   };
 
   const resetToEnglish = () => {
+    setIsChangingLanguage(true);
+    
     // Remove translation attributes
     document.documentElement.setAttribute('lang', 'en');
     document.documentElement.removeAttribute('data-translate-target');
@@ -71,7 +74,17 @@ const LanguageSwitcher = () => {
     // Force a re-render of components without reloading
     window.dispatchEvent(new Event('language-change'));
     
-    toast("Switched back to English");
+    setTimeout(() => {
+      setIsChangingLanguage(false);
+      
+      // Clean, professional toast without technical details
+      toast(
+        <div className="flex items-center justify-center gap-2">
+          <span>Switched to English</span>
+          <Check className="h-4 w-4 text-green-500" />
+        </div>
+      );
+    }, 800);
   };
 
   const handleLanguageChange = () => {
@@ -89,9 +102,14 @@ const LanguageSwitcher = () => {
       onClick={handleLanguageChange}
       variant="ghost" 
       size="sm" 
-      className="w-8 px-0"
+      className="w-8 px-0 relative"
+      disabled={isChangingLanguage}
     >
-      {currentLanguage === 'en' ? 'العربية' : 'English'}
+      {isChangingLanguage ? (
+        <LoadingSpinner size="sm" />
+      ) : (
+        currentLanguage === 'en' ? 'العربية' : 'English'
+      )}
     </Button>
   );
 };
