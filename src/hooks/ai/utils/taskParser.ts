@@ -269,7 +269,7 @@ export function convertParsedTaskToFormData(parsedTask: ParsedTaskInfo): TaskFor
   // Convert dueDate to string format if it's a Date object
   const dueDateString = parsedTask.due_date instanceof Date 
     ? parsedTask.due_date.toISOString().split('T')[0]
-    : parsedTask.due_date as string;
+    : parsedTask.due_date as string | null;
   
   // Create subtasks in the expected format
   const formattedSubtasks: SubTask[] = parsedTask.subtasks.map((text, index) => ({
@@ -283,9 +283,9 @@ export function convertParsedTaskToFormData(parsedTask: ParsedTaskInfo): TaskFor
     title: parsedTask.title,
     description: parsedTask.description || '',
     due_date: dueDateString,
-    due_time: parsedTask.dueTime,
+    due_time: parsedTask.dueTime || null,
     priority: parsedTask.priority || 'medium',
-    location: parsedTask.location,
+    location: parsedTask.location || null,
     subtasks: formattedSubtasks,
     status: 'pending',
     is_recurring: false

@@ -37,8 +37,8 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
     error: browserError,
     processing: browserProcessing
   } = useSpeechRecognition({
-    continuous: false,
-    interimResults: false
+    silenceThreshold: 0.02,
+    silenceTimeout: 2000
   });
   
   // Use OpenAI based voice interaction

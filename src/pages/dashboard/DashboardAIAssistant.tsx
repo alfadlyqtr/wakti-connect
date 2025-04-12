@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
 import { useAuth } from "@/hooks/useAuth";
@@ -295,16 +296,12 @@ const DashboardAIAssistant = () => {
   };
 
   const handleStartVoiceInput = () => {
-    if (startRecording) {
-      resetTranscript();
-      startRecording();
-    }
+    resetTranscript();
+    startRecording();
   };
 
   const handleStopVoiceInput = () => {
-    if (stopRecording) {
-      stopRecording();
-    }
+    stopRecording();
   };
 
   const handleConfirmTranscript = () => {
