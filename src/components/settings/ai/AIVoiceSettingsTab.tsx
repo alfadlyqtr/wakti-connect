@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,7 +35,7 @@ export const AIVoiceSettingsTab: React.FC = () => {
     });
   };
   
-  const handleRetryApiKey = async () => {
+  const handleApiKeyRetry = async () => {
     toast({
       title: "Testing OpenAI API Connection",
       description: "Please wait while we verify the connection..."
