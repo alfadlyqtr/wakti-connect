@@ -97,7 +97,7 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
   // Update error state if browser recognition has an error
   useEffect(() => {
     if (browserError) {
-      setError(browserError);
+      setError(browserError.message || "Speech recognition error");
     }
   }, [browserError]);
   

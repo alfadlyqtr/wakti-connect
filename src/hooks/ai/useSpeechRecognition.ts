@@ -90,6 +90,26 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions = {}) => 
     }
   }, []);
   
+  // Define stopListening function first to avoid the circular reference
+  const stopListening = useCallback(() => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+      
+      // Stop all tracks from the stream
+      if (mediaRecorderRef.current.stream) {
+        mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+      }
+    }
+    
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
+    
+    setIsListening(false);
+    setAudioLevel(0);
+  }, []);
+  
   const analyzeAudioLevel = useCallback(() => {
     if (!analyserRef.current || !visualFeedback) return;
     
@@ -176,25 +196,6 @@ export const useSpeechRecognition = (options: SpeechRecognitionOptions = {}) => 
       setIsListening(false);
     }
   }, [supported, voiceEnabled, visualFeedback, analyzeAudioLevel, processAudio]);
-  
-  const stopListening = useCallback(() => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop();
-      
-      // Stop all tracks from the stream
-      if (mediaRecorderRef.current.stream) {
-        mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
-      }
-    }
-    
-    if (silenceTimerRef.current) {
-      clearTimeout(silenceTimerRef.current);
-      silenceTimerRef.current = null;
-    }
-    
-    setIsListening(false);
-    setAudioLevel(0);
-  }, []);
   
   const resetTranscript = useCallback(() => {
     setTranscript('');

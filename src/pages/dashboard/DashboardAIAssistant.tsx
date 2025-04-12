@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
 import { useAuth } from "@/hooks/useAuth";
@@ -32,6 +31,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { AISystemIntegrationPanel } from "@/components/ai/assistant/AISystemIntegrationPanel";
 import { VoiceTranscriptionControl } from "@/components/ai/voice/VoiceTranscriptionControl";
 import { useSpeechRecognition } from "@/hooks/ai/useSpeechRecognition";
+import { QuickToolsCard } from "@/components/ai/tools/QuickToolsCard";
 
 declare global {
   class ImageCapture {
