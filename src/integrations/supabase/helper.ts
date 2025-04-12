@@ -67,4 +67,27 @@ export const testEdgeFunction = async (
   }
 };
 
-export default { fromTable, safeSupabaseCall, testEdgeFunction };
+/**
+ * Tests if the OpenAI API key is configured correctly
+ * 
+ * @returns A Promise that resolves to true if the API key is valid, false otherwise
+ */
+export const checkOpenAIAPIKey = async (): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase.functions.invoke('test-openai-connection', {
+      body: { test: true }
+    });
+    
+    if (error || !data || !data.success) {
+      console.error('OpenAI API key validation failed:', error || 'No success response');
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error testing OpenAI API key:', error);
+    return false;
+  }
+};
+
+export default { fromTable, safeSupabaseCall, testEdgeFunction, checkOpenAIAPIKey };

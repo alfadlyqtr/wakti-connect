@@ -5,6 +5,7 @@ import { Mic, Square, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/components/ui/use-toast';
+import { testEdgeFunction } from '@/integrations/supabase/helper';
 
 interface SimplifiedVoiceRecorderProps {
   onTranscriptReady: (transcript: string) => void;
@@ -30,7 +31,14 @@ export const SimplifiedVoiceRecorder: React.FC<SimplifiedVoiceRecorderProps> = (
       setError(null);
       audioChunksRef.current = [];
       
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        } 
+      });
+      
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       
@@ -40,7 +48,7 @@ export const SimplifiedVoiceRecorder: React.FC<SimplifiedVoiceRecorderProps> = (
         }
       };
       
-      mediaRecorder.start();
+      mediaRecorder.start(100); // Collect data every 100ms
       setIsRecording(true);
     } catch (err) {
       console.error('Error accessing microphone:', err);
@@ -49,7 +57,7 @@ export const SimplifiedVoiceRecorder: React.FC<SimplifiedVoiceRecorderProps> = (
   };
   
   const stopRecording = async () => {
-    if (!mediaRecorderRef.current) return;
+    if (!mediaRecorderRef.current || mediaRecorderRef.current.state === 'inactive') return;
     
     try {
       mediaRecorderRef.current.stop();
@@ -57,9 +65,15 @@ export const SimplifiedVoiceRecorder: React.FC<SimplifiedVoiceRecorderProps> = (
       setIsProcessing(true);
       
       // Wait for the last ondataavailable event
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 200));
       
       const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+      
+      // Test the edge function connection first
+      const isConnected = await testEdgeFunction('ai-voice-to-text');
+      if (!isConnected) {
+        throw new Error('Could not connect to voice transcription service');
+      }
       
       // Convert the blob to base64
       const reader = new FileReader();
@@ -76,15 +90,17 @@ export const SimplifiedVoiceRecorder: React.FC<SimplifiedVoiceRecorderProps> = (
           console.log('Sending audio to Edge Function for transcription...');
           
           // Call the Supabase Edge Function for transcription
-          const { data, error } = await supabase.functions.invoke('ai-voice-to-text', {
+          const { data, error: fnError } = await supabase.functions.invoke('ai-voice-to-text', {
             body: { audio: base64data }
           });
           
-          if (error) {
-            throw new Error(`Edge function error: ${error.message}`);
+          if (fnError) {
+            console.error('Edge function error:', fnError);
+            throw new Error(`Edge function error: ${fnError.message || 'Unknown error'}`);
           }
           
-          if (!data.text) {
+          if (!data || !data.text) {
+            console.error('No transcription returned:', data);
             throw new Error('No transcription returned');
           }
           
@@ -110,6 +126,11 @@ export const SimplifiedVoiceRecorder: React.FC<SimplifiedVoiceRecorderProps> = (
       }
     } catch (err) {
       console.error('Error stopping recording:', err);
+      toast({
+        title: "Recording Error",
+        description: err instanceof Error ? err.message : "Error processing your voice",
+        variant: "destructive"
+      });
       setError('Error processing your voice. Please try again.');
       setIsProcessing(false);
     }

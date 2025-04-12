@@ -38,15 +38,27 @@ function processBase64Chunks(base64String: string, chunkSize = 32768) {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
     console.log("Voice-to-text request received");
-    const { audio } = await req.json();
+    
+    // Parse the request body
+    let requestData;
+    try {
+      requestData = await req.json();
+    } catch (e) {
+      console.error("Failed to parse request JSON:", e);
+      throw new Error('Invalid JSON in request body');
+    }
+    
+    const { audio } = requestData;
     
     if (!audio) {
+      console.error("No audio data provided");
       throw new Error('No audio data provided');
     }
 
@@ -82,8 +94,8 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`OpenAI API error: ${errorText}`);
-      throw new Error(`OpenAI API error: ${errorText}`);
+      console.error(`OpenAI API error (${response.status}):`, errorText);
+      throw new Error(`OpenAI API error (${response.status}): ${errorText}`);
     }
 
     const result = await response.json();
@@ -91,13 +103,22 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ text: result.text }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200
+      }
     );
 
   } catch (error) {
     console.error("Error in voice-to-text function:", error);
+    
+    // Return a more detailed error response
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message, 
+        details: error.stack,
+        timestamp: new Date().toISOString()
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

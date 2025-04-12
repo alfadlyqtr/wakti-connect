@@ -2,9 +2,10 @@
 import React, { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mic, Square, Send, Loader2 } from 'lucide-react';
+import { Mic, Square, Send, Loader2, RefreshCw } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/components/ui/use-toast';
+import { testEdgeFunction } from '@/integrations/supabase/helper';
 
 interface VoiceInteractionToolCardProps {
   onSpeechRecognized: (text: string) => void;
@@ -16,6 +17,7 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
   const [isProcessing, setIsProcessing] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [isRetrying, setIsRetrying] = useState(false);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -25,7 +27,14 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
       setError(null);
       audioChunksRef.current = [];
       
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        } 
+      });
+      
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       
@@ -35,7 +44,7 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
         }
       };
       
-      mediaRecorder.start();
+      mediaRecorder.start(100); // Collect chunks every 100ms
       setIsRecording(true);
     } catch (err) {
       console.error('Error accessing microphone:', err);
@@ -44,7 +53,7 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
   };
   
   const stopRecording = async () => {
-    if (!mediaRecorderRef.current) return;
+    if (!mediaRecorderRef.current || mediaRecorderRef.current.state === 'inactive') return;
     
     try {
       mediaRecorderRef.current.stop();
@@ -52,9 +61,20 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
       setIsProcessing(true);
       
       // Wait for the last ondataavailable event
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 200));
       
       const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+      
+      // Test connection to edge function
+      try {
+        const isConnected = await testEdgeFunction('ai-voice-to-text');
+        if (!isConnected) {
+          throw new Error('Could not connect to voice transcription service');
+        }
+      } catch (connErr) {
+        console.error('Connection test failed:', connErr);
+        // Continue anyway as the test might fail but the function might still work
+      }
       
       // Convert the blob to base64
       const reader = new FileReader();
@@ -71,21 +91,22 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
           console.log('Sending audio to Edge Function for transcription...');
           
           // Call the Supabase Edge Function for transcription
-          const { data, error } = await supabase.functions.invoke('ai-voice-to-text', {
+          const { data, error: fnError } = await supabase.functions.invoke('ai-voice-to-text', {
             body: { audio: base64data }
           });
           
-          if (error) {
-            throw new Error(`Edge function error: ${error.message}`);
+          if (fnError) {
+            console.error('Edge function error:', fnError);
+            throw new Error(`Edge function error: ${fnError.message || 'Unknown error'}`);
           }
           
-          if (!data.text) {
+          if (!data || !data.text) {
+            console.error('No transcription returned:', data);
             throw new Error('No transcription returned');
           }
           
           console.log('Transcription received:', data.text);
           setTranscript(data.text);
-          setIsProcessing(false);
         } catch (err) {
           console.error('Transcription error:', err);
           toast({
@@ -94,6 +115,7 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
             variant: "destructive"
           });
           setError('Failed to transcribe audio. Please try again.');
+        } finally {
           setIsProcessing(false);
         }
       };
@@ -116,6 +138,38 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
       setTranscript('');
     }
   };
+
+  const handleRetry = async () => {
+    setIsRetrying(true);
+    setError(null);
+    
+    try {
+      // Check if OpenAI API key is configured
+      const { data, error: testError } = await supabase.functions.invoke('test-openai-connection', {
+        body: { test: true }
+      });
+      
+      if (testError || !data || !data.success) {
+        throw new Error('OpenAI API key validation failed. Voice transcription may not work.');
+      }
+      
+      toast({
+        title: "Connection Successful",
+        description: "Voice transcription service is available now",
+        variant: "default"
+      });
+    } catch (err) {
+      console.error('API connection test error:', err);
+      toast({
+        title: "Service Unavailable",
+        description: err instanceof Error ? err.message : "Voice transcription service is unavailable",
+        variant: "destructive"
+      });
+      setError('Voice transcription service is currently unavailable');
+    } finally {
+      setIsRetrying(false);
+    }
+  };
   
   return (
     <Card>
@@ -123,6 +177,7 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
         <CardTitle className="flex items-center gap-2">
           <Mic className="h-5 w-5 text-wakti-blue" />
           Voice to Text
+          {isRetrying && <RefreshCw className="h-4 w-4 animate-spin ml-2" />}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -150,7 +205,19 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
         </div>
         
         {error && (
-          <p className="text-destructive text-sm">{error}</p>
+          <div className="text-destructive text-sm p-3 bg-destructive/10 rounded-md flex items-center justify-between">
+            <span>{error}</span>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleRetry}
+              disabled={isRetrying}
+              className="h-8 text-xs"
+            >
+              <RefreshCw className={cn("h-3 w-3 mr-1", isRetrying && "animate-spin")} />
+              Retry
+            </Button>
+          </div>
         )}
         
         <div className="flex gap-2 justify-between">
@@ -158,7 +225,7 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
             type="button"
             variant={isRecording ? "destructive" : "outline"}
             onClick={isRecording ? stopRecording : startRecording}
-            disabled={isProcessing}
+            disabled={isProcessing || isRetrying}
             className={isRecording ? "gap-2" : ""}
           >
             {isRecording ? (

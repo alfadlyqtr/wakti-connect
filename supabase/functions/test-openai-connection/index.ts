@@ -1,65 +1,86 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+};
 
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // No need to request the API key from the frontend
-    // Just use the one stored in the Edge Function secrets
-    const apiKey = Deno.env.get('OPENAI_API_KEY');
+    console.log("Testing OpenAI API connection");
     
-    if (!apiKey) {
+    // Get the OpenAI API key from environment variables
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    
+    if (!OPENAI_API_KEY) {
+      console.error("OpenAI API key is not configured");
       return new Response(
         JSON.stringify({ 
-          valid: false, 
-          message: 'OpenAI API key not configured',
-          details: 'The OPENAI_API_KEY is not set in the Edge Function secrets'
+          success: false, 
+          error: "OpenAI API key is not configured" 
         }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
     
-    // Create a simple test request to OpenAI API
-    const url = 'https://api.openai.com/v1/models'
-    
-    const openaiResponse = await fetch(url, {
+    // Make a simple request to OpenAI API to verify the key
+    const response = await fetch('https://api.openai.com/v1/models', {
       method: 'GET',
       headers: {
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      }
-    })
+      },
+    });
     
-    // Check if the API key is valid
-    if (openaiResponse.status === 200) {
-      return new Response(
-        JSON.stringify({ valid: true, message: 'OpenAI API key is valid' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    } else {
-      const errorData = await openaiResponse.json()
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error(`OpenAI API error: ${response.status}`, errorData);
+      
       return new Response(
         JSON.stringify({ 
-          valid: false, 
-          message: 'Invalid OpenAI API key',
-          details: errorData.error?.message || 'Unknown error'
+          success: false, 
+          error: `OpenAI API returned error ${response.status}: ${errorData.error?.message || 'Unknown error'}` 
         }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+        { 
+          status: response.status, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
-  } catch (error) {
+    
+    // API key is valid
+    console.log("OpenAI API connection successful");
     return new Response(
-      JSON.stringify({ valid: false, message: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-    )
+      JSON.stringify({ 
+        success: true, 
+        message: "OpenAI API connection successful" 
+      }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
+
+  } catch (error) {
+    console.error("Error testing OpenAI connection:", error);
+    
+    return new Response(
+      JSON.stringify({ 
+        success: false, 
+        error: error.message || "Unexpected error testing OpenAI connection" 
+      }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
   }
-})
+});
