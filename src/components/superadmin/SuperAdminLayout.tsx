@@ -6,9 +6,10 @@ import { Separator } from "@/components/ui/separator";
 import SuperAdminSidebar from "./SuperAdminSidebar";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
+import { Outlet } from "react-router-dom";
 
 interface SuperAdminLayoutProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 const SuperAdminLayout: React.FC<SuperAdminLayoutProps> = ({ children }) => {
@@ -104,7 +105,8 @@ const SuperAdminLayout: React.FC<SuperAdminLayoutProps> = ({ children }) => {
             </div>
           )}
           
-          {/* Content from child routes */}
+          {/* Content from child routes - render Outlet first, then children if provided */}
+          <Outlet />
           {children}
         </main>
       </div>
