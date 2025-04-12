@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Flag, Check } from "lucide-react";
+import { Check } from "lucide-react";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 const LanguageSwitcher = () => {
@@ -14,64 +14,64 @@ const LanguageSwitcher = () => {
     const savedLanguage = localStorage.getItem('wakti-language');
     if (savedLanguage === 'ar') {
       setCurrentLanguage('ar');
-      // If the page loads with Arabic preference, trigger translation
-      triggerBrowserTranslation();
+      // If the page loads with Arabic preference, apply Arabic settings
+      applyArabicSettings();
     }
   }, []);
 
-  const triggerBrowserTranslation = () => {
+  const applyArabicSettings = () => {
     try {
       setIsChangingLanguage(true);
       
-      // Set data-language attribute on html tag to help browsers detect language
-      document.documentElement.setAttribute('lang', 'en');
-      document.documentElement.setAttribute('data-translate-target', 'ar');
+      // Set proper HTML attributes for Arabic
+      document.documentElement.setAttribute('lang', 'ar');
+      document.documentElement.setAttribute('dir', 'rtl');
       
-      // Show browser translation bar - this works in Chrome, Edge, and some other browsers
-      // by leveraging the browser's detection of language mismatch
-      const metaTag = document.querySelector('meta[name="google"]') || document.createElement('meta');
-      metaTag.setAttribute('name', 'google');
-      metaTag.setAttribute('value', 'notranslate');
-      metaTag.remove(); // Remove if exists, which triggers browser to re-evaluate
-      
-      setTimeout(() => {
-        document.head.appendChild(metaTag);
-        setIsChangingLanguage(false);
-      }, 800);
+      // Remove notranslate meta tag to encourage browser translation
+      const metaTag = document.querySelector('meta[name="google"]');
+      if (metaTag) metaTag.remove();
       
       // Save language preference
       localStorage.setItem('wakti-language', 'ar');
       
-      // Show a clean, professional toast with minimal text
-      toast(
-        <div className="flex items-center justify-center gap-2">
-          <span>Switched to Arabic</span>
-          <Check className="h-4 w-4 text-green-500" />
-        </div>
-      );
+      setTimeout(() => {
+        setIsChangingLanguage(false);
+        
+        // Show a clean, professional toast with minimal text
+        toast(
+          <div className="flex items-center justify-center gap-2">
+            <span>Switched to Arabic</span>
+            <Check className="h-4 w-4 text-green-500" />
+          </div>
+        );
+      }, 800);
+      
+      // Force a re-render of components
+      window.dispatchEvent(new Event('language-change'));
     } catch (error) {
       console.error("Translation error:", error);
       setIsChangingLanguage(false);
-      // Simplified error message without technical details
       toast("Could not change language. Please try again.");
     }
   };
 
-  const resetToEnglish = () => {
+  const applyEnglishSettings = () => {
     setIsChangingLanguage(true);
     
-    // Remove translation attributes
+    // Set proper HTML attributes for English
     document.documentElement.setAttribute('lang', 'en');
-    document.documentElement.removeAttribute('data-translate-target');
+    document.documentElement.setAttribute('dir', 'ltr');
     
-    // Remove meta tag to restore original state
-    const metaTag = document.querySelector('meta[name="google"]');
-    if (metaTag) metaTag.remove();
+    // Add notranslate meta tag for English (default language)
+    const metaTag = document.createElement('meta');
+    metaTag.setAttribute('name', 'google');
+    metaTag.setAttribute('content', 'notranslate');
+    document.head.appendChild(metaTag);
     
     // Save language preference
     localStorage.setItem('wakti-language', 'en');
     
-    // Force a re-render of components without reloading
+    // Force a re-render of components
     window.dispatchEvent(new Event('language-change'));
     
     setTimeout(() => {
@@ -90,10 +90,10 @@ const LanguageSwitcher = () => {
   const handleLanguageChange = () => {
     if (currentLanguage === 'en') {
       setCurrentLanguage('ar');
-      triggerBrowserTranslation();
+      applyArabicSettings();
     } else {
       setCurrentLanguage('en');
-      resetToEnglish();
+      applyEnglishSettings();
     }
   };
 
