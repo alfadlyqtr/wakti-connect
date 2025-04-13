@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { TaskPriority, TaskStatus, SubTask } from "@/types/task.types";
@@ -18,7 +19,7 @@ interface TaskCardProps {
   priority: TaskPriority;
   userRole: "free" | "individual" | "business" | "staff" | null;
   isArchived?: boolean;
-  subtasks?: SubTask[];
+  subtasks?: SubTask[] | any[]; // Allow nested subtask structure
   completedDate?: Date | null;
   isRecurring?: boolean;
   isRecurringInstance?: boolean;
@@ -64,11 +65,19 @@ const TaskCard: React.FC<TaskCardProps> = ({
   // Show or hide certain features based on the task status
   const isCompleted = status === "completed";
   const isSnoozed = status === "snoozed";
+  
+  // For tasks without specific time, treat the due date as end of day
   const isOverdue = status !== 'completed' && 
                     status !== 'snoozed' && 
                     status !== 'archived' &&
                     isPast(dueDate) && 
-                    dueDate.getTime() < new Date().getTime();
+                    dueDate.getTime() < new Date().getTime() &&
+                    (dueTime ? true : new Date().getHours() >= 23);
+
+  // Check if subtasks have a nested structure
+  const hasNestedSubtasks = subtasks.some(st => 
+    typeof st === 'object' && (st.subtasks || st.title || st.content)
+  );
 
   return (
     <Card className={`overflow-hidden border-l-4 ${

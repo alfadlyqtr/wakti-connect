@@ -1,6 +1,6 @@
 
 import React from "react";
-import { formatDistanceToNow, isPast, format } from "date-fns";
+import { formatDistanceToNow, isPast, format, isToday, endOfDay } from "date-fns";
 import { CalendarIcon, BellOff } from "lucide-react";
 import { formatTimeString } from "@/utils/dateTimeFormatter";
 
@@ -22,8 +22,15 @@ export const TaskDueDate: React.FC<TaskDueDateProps> = ({
   const formatDueDate = () => {
     if (!dueDate || isNaN(dueDate.getTime())) return "Invalid date";
     
-    if (isPast(dueDate) && status !== 'completed') {
-      return `Overdue: ${formatDistanceToNow(dueDate, { addSuffix: true })}`;
+    // For tasks without specific time, treat the due date as end of day
+    const effectiveDueDate = dueTime ? dueDate : endOfDay(dueDate);
+    
+    if (isPast(effectiveDueDate) && status !== 'completed' && status !== 'archived') {
+      return `Overdue: ${formatDistanceToNow(effectiveDueDate, { addSuffix: true })}`;
+    }
+    
+    if (isToday(dueDate)) {
+      return dueTime ? `Due today at ${formatTimeString(dueTime)}` : "Due today";
     }
     
     return formatDistanceToNow(dueDate, { addSuffix: true });
@@ -35,7 +42,7 @@ export const TaskDueDate: React.FC<TaskDueDateProps> = ({
         <CalendarIcon className="h-4 w-4" />
         <span>
           {formatDueDate()}
-          {dueTime && (
+          {dueTime && !isToday(dueDate) && (
             <span className="font-medium ml-1">at {formatTimeString(dueTime)}</span>
           )}
         </span>

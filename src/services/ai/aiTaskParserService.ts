@@ -7,7 +7,7 @@ export interface ParsedTask {
   due_date: string | null;
   due_time: string | null;
   priority: 'urgent' | 'high' | 'medium' | 'normal';
-  subtasks: string[];
+  subtasks: any[]; // Allow various subtask formats
   location: string | null;
 }
 
@@ -34,15 +34,7 @@ export const parseTaskWithAI = async (text: string): Promise<ParsedTask | null> 
     
     console.log("Successfully parsed task with AI:", data);
     
-    // Process subtasks if they're in a hierarchical structure
-    let flattenedSubtasks: string[] = [];
-    
-    if (Array.isArray(data.subtasks)) {
-      // Handle potential nested subtask structures to flatten them
-      flattenedSubtasks = flattenSubtasks(data.subtasks);
-    }
-    
-    // Return the task with flattened subtasks if needed
+    // Return the parsed task with its potentially nested subtask structure intact
     return {
       title: data.title,
       due_date: data.due_date,
@@ -66,6 +58,7 @@ export const parseTaskWithAI = async (text: string): Promise<ParsedTask | null> 
 
 /**
  * Helper function to flatten nested subtask structures if needed
+ * This is kept for backward compatibility but we now preserve the nested structure
  */
 const flattenSubtasks = (subtasks: any[]): string[] => {
   let flattened: string[] = [];
@@ -90,10 +83,15 @@ const flattenSubtasks = (subtasks: any[]): string[] => {
 
 /**
  * Converts ParsedTask to TaskFormData for task creation
+ * Handles both flat and nested subtask structures
  */
 export const convertParsedTaskToFormData = (parsedTask: ParsedTask) => {
+  // Preserve the original subtask structure but also create a flattened version
+  // for backward compatibility with forms
+  const flatSubtasks = flattenSubtasks(parsedTask.subtasks);
+  
   // Convert subtasks to the format expected by the task form
-  const subtasks = parsedTask.subtasks.map((content, index) => ({
+  const subtasks = flatSubtasks.map((content, index) => ({
     id: `temp-${index}`,
     task_id: 'pending',
     content,
@@ -122,6 +120,8 @@ export const convertParsedTaskToFormData = (parsedTask: ParsedTask) => {
     status: 'pending',
     location: parsedTask.location,
     enableSubtasks: subtasks.length > 0,
-    is_recurring: false
+    is_recurring: false,
+    // Store the original subtask structure for display in TaskCard
+    originalSubtasks: parsedTask.subtasks
   };
 };
