@@ -15,14 +15,21 @@ export const fetchKnowledgeUploads = async (): Promise<AIKnowledgeUpload[]> => {
   
   if (error) throw error;
   
-  return data as AIKnowledgeUpload[];
+  return data.map(item => ({
+    id: item.id,
+    user_id: item.user_id,
+    title: item.title,
+    content: item.content,
+    created_at: item.created_at,
+    role: (item.role as AIAssistantRole | undefined) || 'general'
+  })) as AIKnowledgeUpload[];
 };
 
 // Add a new knowledge upload
 export const addKnowledgeUpload = async (
   title: string, 
-  content: string,
-  role?: AIAssistantRole
+  content: string, 
+  role: AIAssistantRole = 'general'
 ): Promise<AIKnowledgeUpload> => {
   const { data: userData } = await supabase.auth.getUser();
   if (!userData?.user) throw new Error('Not authenticated');
@@ -31,7 +38,7 @@ export const addKnowledgeUpload = async (
     user_id: userData.user.id,
     title,
     content,
-    role: role || 'general'
+    role
   };
   
   const { data, error } = await supabase

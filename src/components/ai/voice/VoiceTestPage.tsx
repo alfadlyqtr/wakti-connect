@@ -1,147 +1,205 @@
 
 import React, { useState, useEffect } from 'react';
-import { useVoiceInteraction } from '@/hooks/useVoiceInteraction';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mic, MicOff, Volume2, AlertCircle, CheckCircle } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
+import { Mic, MicOff, Volume2, Settings, CheckCircle, XCircle } from 'lucide-react';
+import { VoiceRecordingVisualizer } from './VoiceRecordingVisualizer';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Slider } from '@/components/ui/slider';
 
-const VoiceTestPage: React.FC = () => {
-  const {
-    isListening,
-    transcript,
-    lastTranscript,
-    error,
-    supportsVoice,
-    startListening,
-    stopListening
-  } = useVoiceInteraction({
-    continuousListening: false
+export const VoiceTestPage = () => {
+  const [isRecording, setIsRecording] = useState(false);
+  const [transcription, setTranscription] = useState('');
+  const [browserSupport, setBrowserSupport] = useState<{
+    speechRecognition: boolean;
+    speechSynthesis: boolean;
+  }>({
+    speechRecognition: false,
+    speechSynthesis: false,
   });
+  const [testVoice, setTestVoice] = useState('');
+  const [volume, setVolume] = useState(50);
 
-  const [audioLevel, setAudioLevel] = useState(0);
-  const [transcriptHistory, setTranscriptHistory] = useState<string[]>([]);
-
-  // Simulate audio level for visualization
   useEffect(() => {
-    let interval: number;
-    if (isListening) {
-      interval = window.setInterval(() => {
-        setAudioLevel(Math.random());
-      }, 100);
-    } else {
-      setAudioLevel(0);
-    }
-    return () => clearInterval(interval);
-  }, [isListening]);
+    // Check browser support
+    const hasSpeechRecognition =
+      'SpeechRecognition' in window || 'webkitSpeechRecognition' in window;
+    const hasSpeechSynthesis = 'speechSynthesis' in window;
 
-  // Add completed transcripts to history
-  useEffect(() => {
-    if (lastTranscript && lastTranscript.trim() !== '') {
-      setTranscriptHistory(prev => [lastTranscript, ...prev].slice(0, 5));
-    }
-  }, [lastTranscript]);
+    setBrowserSupport({
+      speechRecognition: hasSpeechRecognition,
+      speechSynthesis: hasSpeechSynthesis,
+    });
+  }, []);
+
+  const startRecording = () => {
+    setIsRecording(true);
+    setTranscription('');
+    
+    // Simulate recording for demo
+    setTimeout(() => {
+      setTranscription('This is a test transcription from your voice input.');
+      setIsRecording(false);
+    }, 3000);
+  };
+
+  const stopRecording = () => {
+    setIsRecording(false);
+  };
+
+  const speakText = () => {
+    if (!browserSupport.speechSynthesis) return;
+    
+    const utterance = new SpeechSynthesisUtterance(testVoice || 'Hello, this is a test of the voice synthesis feature.');
+    utterance.volume = volume / 100;
+    window.speechSynthesis.speak(utterance);
+  };
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold mb-6 text-center">Voice Input Test</h1>
-      
-      <div className="max-w-2xl mx-auto">
-        {!supportsVoice ? (
-          <Alert variant="destructive" className="mb-6">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Browser Not Supported</AlertTitle>
-            <AlertDescription>
-              Your browser doesn't support voice recognition. Please try Chrome, Edge, or Safari.
-            </AlertDescription>
-          </Alert>
-        ) : (
-          <Alert variant="default" className="mb-6 bg-green-50 border-green-200">
-            <CheckCircle className="h-4 w-4 text-green-600" />
-            <AlertTitle>Voice Recognition Supported</AlertTitle>
-            <AlertDescription>
-              Your browser supports voice recognition. You can test it below.
-            </AlertDescription>
-          </Alert>
-        )}
-        
-        <Card className="mb-6">
+    <div className="container mx-auto p-4 max-w-4xl space-y-8">
+      <h1 className="text-3xl font-bold">Voice Input/Output Test</h1>
+      <p className="text-muted-foreground">
+        Test your browser's voice recognition and synthesis capabilities.
+      </p>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Mic className="h-5 w-5 text-primary" />
-              Voice Input Test
+              <Mic className="h-5 w-5 text-wakti-blue" />
+              Voice Recognition Test
             </CardTitle>
             <CardDescription>
-              Click the button below to start recording, and speak into your microphone.
+              Test if your browser supports speech recognition
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="flex flex-col items-center space-y-6">
+          <CardContent className="space-y-4">
+            <div className="flex items-center space-x-2 text-sm">
+              <span>Browser Support:</span>
+              {browserSupport.speechRecognition ? (
+                <span className="flex items-center text-green-500">
+                  <CheckCircle className="h-4 w-4 mr-1" /> Supported
+                </span>
+              ) : (
+                <span className="flex items-center text-red-500">
+                  <XCircle className="h-4 w-4 mr-1" /> Not Supported
+                </span>
+              )}
+            </div>
+
+            <div className="h-24 bg-muted rounded-md flex items-center justify-center">
+              {isRecording ? (
+                <VoiceRecordingVisualizer />
+              ) : (
+                <span className="text-muted-foreground text-sm">
+                  {transcription || "Press 'Start Recording' to begin"}
+                </span>
+              )}
+            </div>
+
+            <div className="flex justify-center space-x-2">
               <Button
-                size="lg"
-                disabled={!supportsVoice}
-                onClick={isListening ? stopListening : startListening}
-                className={`rounded-full w-16 h-16 ${isListening ? 'bg-red-500 hover:bg-red-600' : ''}`}
+                onClick={startRecording}
+                disabled={isRecording || !browserSupport.speechRecognition}
+                variant="default"
               >
-                {isListening ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
+                <Mic className="mr-2 h-4 w-4" />
+                Start Recording
               </Button>
-              
-              <div className="w-full max-w-md">
-                <div className="flex justify-between text-sm mb-1">
-                  <span>Audio Level</span>
-                  <span>{Math.round(audioLevel * 100)}%</span>
-                </div>
-                <Progress value={audioLevel * 100} className="h-2" />
-              </div>
-              
-              <div className="w-full p-4 border rounded-md min-h-[100px] bg-muted/30">
-                {isListening ? (
-                  <p className="text-primary animate-pulse">{transcript || "Listening..."}</p>
-                ) : (
-                  <p className="text-muted-foreground">
-                    {lastTranscript || "Press the microphone button and speak"}
-                  </p>
-                )}
-              </div>
+              <Button
+                onClick={stopRecording}
+                disabled={!isRecording}
+                variant="outline"
+              >
+                <MicOff className="mr-2 h-4 w-4" />
+                Stop Recording
+              </Button>
             </div>
           </CardContent>
-          <CardFooter className="flex-col">
-            {error && (
-              <Alert variant="destructive" className="mb-4 w-full">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Error</AlertTitle>
-                <AlertDescription>
-                  {error.message || "There was an error with voice recognition."}
-                </AlertDescription>
-              </Alert>
-            )}
-            
-            {transcriptHistory.length > 0 && (
-              <>
-                <Separator className="my-4" />
-                <div className="w-full">
-                  <h3 className="font-medium mb-2">Recent Transcripts</h3>
-                  <ul className="space-y-2">
-                    {transcriptHistory.map((text, index) => (
-                      <li key={index} className="text-sm border-l-2 border-primary pl-2">
-                        "{text}"
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </>
-            )}
-          </CardFooter>
         </Card>
-        
-        <div className="text-center">
-          <Button variant="outline" onClick={() => window.history.back()}>
-            Back to Settings
-          </Button>
-        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Volume2 className="h-5 w-5 text-wakti-blue" />
+              Voice Synthesis Test
+            </CardTitle>
+            <CardDescription>
+              Test if your browser supports speech synthesis
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center space-x-2 text-sm">
+              <span>Browser Support:</span>
+              {browserSupport.speechSynthesis ? (
+                <span className="flex items-center text-green-500">
+                  <CheckCircle className="h-4 w-4 mr-1" /> Supported
+                </span>
+              ) : (
+                <span className="flex items-center text-red-500">
+                  <XCircle className="h-4 w-4 mr-1" /> Not Supported
+                </span>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="test-voice">Text to Speak</Label>
+              <Input
+                id="test-voice"
+                value={testVoice}
+                onChange={(e) => setTestVoice(e.target.value)}
+                placeholder="Enter text to be spoken"
+              />
+            </div>
+
+            <Separator />
+
+            <div className="space-y-2">
+              <Label>Volume: {volume}%</Label>
+              <Slider
+                value={[volume]}
+                onValueChange={(values) => setVolume(values[0])}
+                min={0}
+                max={100}
+                step={1}
+              />
+            </div>
+
+            <Button
+              onClick={speakText}
+              disabled={!browserSupport.speechSynthesis}
+              className="w-full"
+            >
+              <Volume2 className="mr-2 h-4 w-4" />
+              Test Voice Output
+            </Button>
+          </CardContent>
+        </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5 text-wakti-blue" />
+            Voice Settings
+          </CardTitle>
+          <CardDescription>
+            Configure voice settings for the AI assistant
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-center text-muted-foreground">
+            You can configure AI voice settings in your account settings under the AI Assistant tab.
+          </p>
+          <div className="flex justify-center mt-4">
+            <Button variant="outline" onClick={() => window.location.href = '/dashboard/settings?tab=ai-assistant'}>
+              Go to Voice Settings
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
