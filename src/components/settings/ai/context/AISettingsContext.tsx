@@ -77,7 +77,7 @@ export const AISettingsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     onError: (error) => {
       toast({
         title: "Update failed",
-        description: `Failed to update settings: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        description: `Failed to update settings: ${error.message}`,
         variant: "destructive",
       });
     },
@@ -164,7 +164,7 @@ export const AISettingsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     onError: (error) => {
       toast({
         title: "Failed to add knowledge",
-        description: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        description: `Error: ${error.message}`,
         variant: "destructive",
       });
     },
@@ -194,7 +194,7 @@ export const AISettingsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     onError: (error) => {
       toast({
         title: "Failed to delete",
-        description: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        description: `Error: ${error.message}`,
         variant: "destructive",
       });
     },
@@ -209,7 +209,7 @@ export const AISettingsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     knowledgeUploads,
     isLoadingKnowledge,
     canUseAI,
-    error: settingsError ? (settingsError instanceof Error ? settingsError.message : String(settingsError)) : null,
+    error: settingsError ? (settingsError instanceof Error ? settingsError : new Error("Unknown error")) : null,
     updateSettings: async (newSettings) => {
       try {
         await updateSettingsMutation.mutateAsync(newSettings);
