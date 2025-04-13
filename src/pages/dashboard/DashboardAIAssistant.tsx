@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,7 +9,7 @@ import { useBreakpoint } from "@/hooks/useBreakpoint";
 import { AISettingsProvider } from "@/components/settings/ai";
 import StaffRoleGuard from "@/components/auth/StaffRoleGuard";
 import { AIAssistantRole } from "@/types/ai-assistant.types";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/card";
 import { CleanChatInterface } from "@/components/ai/assistant/CleanChatInterface";
 import { EnhancedToolsTab } from "@/components/ai/tools/EnhancedToolsTab";
 import { RoleSpecificKnowledge } from "@/components/ai/tools/RoleSpecificKnowledge";
@@ -32,6 +31,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { AISystemIntegrationPanel } from "@/components/ai/assistant/AISystemIntegrationPanel";
 import { useSpeechRecognition } from "@/hooks/ai/useSpeechRecognition";
 import { QuickToolsCard } from "@/components/ai/tools/QuickToolsCard";
+import { ParsedTaskInfo } from "@/hooks/ai/utils/taskParser.types";
+import { TaskFormData } from "@/types/task.types";
 
 declare global {
   class ImageCapture {
@@ -327,6 +328,25 @@ const DashboardAIAssistant = () => {
   };
 
   const shouldShowSystemIntegration = selectedRole === "business_owner";
+
+  // Update the function that converts a task to TaskFormData to match the required type
+  const convertToTaskFormData = (parsedTask: ParsedTaskInfo): TaskFormData => {
+    return {
+      title: parsedTask.title,
+      description: parsedTask.description || '',
+      priority: parsedTask.priority,
+      due_date: parsedTask.due_date ? 
+        (parsedTask.due_date instanceof Date ? 
+          parsedTask.due_date.toISOString().split('T')[0] : 
+          parsedTask.due_date) : 
+        null,
+      due_time: parsedTask.dueTime || null,
+      subtasks: [], // Will be filled with actual subtasks
+      location: parsedTask.location || null,
+      originalSubtasks: parsedTask.subtasks,
+      preserveNestedStructure: true
+    };
+  };
 
   return (
     <StaffRoleGuard 

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
 import { useVoiceSettings } from '@/store/voiceSettings';
@@ -29,7 +28,10 @@ export const VoiceTestPage = () => {
     stopListening,
     apiKeyStatus,
     apiKeyErrorDetails,
-    retryApiKeyValidation
+    retryApiKeyValidation,
+    isRecording,
+    audioLevel,
+    showVisualizer
   } = useVoiceInteraction({
     onTranscriptComplete: (text) => {
       if (text) {

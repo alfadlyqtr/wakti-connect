@@ -1,113 +1,66 @@
 
-import React from 'react';
-import { ImageGenerationToolCard } from './ImageGenerationToolCard';
+import React, { useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/card';
+import { AIImageGenerationTool } from './AIImageGenerationTool';
 import { VoiceInteractionToolCard } from './VoiceInteractionToolCard';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Mic, Image, FileText, Code, GitBranch, Calendar } from 'lucide-react';
-import { AIAssistantRole } from '@/types/ai-assistant.types';
+import { QuickToolsCard } from './QuickToolsCard';
 import { MeetingSummaryTool } from './MeetingSummaryTool';
+import { KnowledgeProfileToolCard } from './KnowledgeProfileToolCard';
+import { toast } from '@/components/ui/use-toast';
+import { useAIAssistant } from '@/hooks/useAIAssistant';
 
 interface AIToolsTabContentProps {
-  onPromptSubmit?: (prompt: string) => void;
-  onUseDocumentContent?: (content: string) => void;
-  selectedRole?: AIAssistantRole;
-  canAccess?: boolean;
+  onSendMessage: (text: string) => void;
 }
 
-export const AIToolsTabContent: React.FC<AIToolsTabContentProps> = ({ 
-  onPromptSubmit, 
-  onUseDocumentContent,
-  selectedRole,
-  canAccess = true
-}) => {
-  const handleSubmitPrompt = (prompt: string) => {
-    if (onPromptSubmit) {
-      onPromptSubmit(prompt);
-    } else if (onUseDocumentContent) {
-      onUseDocumentContent(prompt);
+export function AIToolsTabContent({ onSendMessage }: AIToolsTabContentProps) {
+  const [activeTab, setActiveTab] = useState<string>('voice');
+  const { aiSettings } = useAIAssistant();
+  
+  const handleSpeechRecognized = (text: string) => {
+    if (text.trim()) {
+      onSendMessage(text);
+    } else {
+      toast({
+        title: "Empty text",
+        description: "Please speak clearly to convert your voice to text",
+        variant: "destructive"
+      });
     }
   };
-
+  
+  const handleUseSummary = (prompt: string) => {
+    if (prompt.trim()) {
+      onSendMessage(prompt);
+    }
+  };
+  
+  const isBusinessUser = aiSettings?.role === 'business';
+  
   return (
-    <Tabs defaultValue="image" className="w-full">
-      <TabsList className="grid grid-cols-6 h-auto">
-        <TabsTrigger value="image" className="text-xs flex flex-col gap-1 py-2 h-auto">
-          <Image className="h-4 w-4" />
-          <span>Image</span>
-        </TabsTrigger>
-        <TabsTrigger value="voice" className="text-xs flex flex-col gap-1 py-2 h-auto">
-          <Mic className="h-4 w-4" />
-          <span>Voice</span>
-        </TabsTrigger>
-        <TabsTrigger value="meeting" className="text-xs flex flex-col gap-1 py-2 h-auto">
-          <Calendar className="h-4 w-4" />
-          <span>Meeting</span>
-        </TabsTrigger>
-        <TabsTrigger value="document" className="text-xs flex flex-col gap-1 py-2 h-auto">
-          <FileText className="h-4 w-4" />
-          <span>Document</span>
-        </TabsTrigger>
-        <TabsTrigger value="code" className="text-xs flex flex-col gap-1 py-2 h-auto">
-          <Code className="h-4 w-4" />
-          <span>Code</span>
-        </TabsTrigger>
-        <TabsTrigger value="diagram" className="text-xs flex flex-col gap-1 py-2 h-auto">
-          <GitBranch className="h-4 w-4" />
-          <span>Diagram</span>
-        </TabsTrigger>
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <TabsList className="grid grid-cols-4 mb-4">
+        <TabsTrigger value="voice">Voice</TabsTrigger>
+        <TabsTrigger value="tools">Quick Tools</TabsTrigger>
+        <TabsTrigger value="knowledge">Knowledge</TabsTrigger>
+        <TabsTrigger value="meetings">Meetings</TabsTrigger>
       </TabsList>
-
-      <TabsContent value="image" className="mt-4">
-        <ImageGenerationToolCard onSubmitPrompt={handleSubmitPrompt} />
+      
+      <TabsContent value="voice" className="m-0">
+        <VoiceInteractionToolCard onSpeechRecognized={handleSpeechRecognized} />
       </TabsContent>
       
-      <TabsContent value="voice" className="mt-4">
-        <VoiceInteractionToolCard onSpeechRecognized={handleSubmitPrompt} />
+      <TabsContent value="tools" className="m-0">
+        <QuickToolsCard onSendMessage={onSendMessage} />
       </TabsContent>
       
-      <TabsContent value="meeting" className="mt-4">
-        <MeetingSummaryTool onUseSummary={handleSubmitPrompt} />
+      <TabsContent value="knowledge" className="m-0">
+        <KnowledgeProfileToolCard />
       </TabsContent>
       
-      <TabsContent value="document" className="mt-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Document Analysis</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">
-              Document analysis will be available soon. This feature will allow you to upload and analyze PDFs, DOCs, and other text documents.
-            </p>
-          </CardContent>
-        </Card>
-      </TabsContent>
-      
-      <TabsContent value="code" className="mt-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Code Generation</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">
-              Code generation tools will be available in an upcoming update.
-            </p>
-          </CardContent>
-        </Card>
-      </TabsContent>
-      
-      <TabsContent value="diagram" className="mt-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Diagram Creation</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">
-              Diagram generation for flowcharts, mind maps, and process diagrams will be available soon.
-            </p>
-          </CardContent>
-        </Card>
+      <TabsContent value="meetings" className="m-0">
+        <MeetingSummaryTool onUseSummary={handleUseSummary} />
       </TabsContent>
     </Tabs>
   );
-};
+}

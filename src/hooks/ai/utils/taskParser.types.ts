@@ -13,3 +13,19 @@ export interface ParsedTaskInfo {
   hasTimeConstraint?: boolean;
   needsReview?: boolean;
 }
+
+// Adding DeepSeek-specific types to handle the structured output
+export interface DeepSeekSubtask {
+  title?: string;
+  content?: string;
+  subtasks?: (DeepSeekSubtask | string)[];
+}
+
+export interface DeepSeekParsedTask {
+  title: string;
+  due_date?: string;
+  due_time?: string;
+  priority: TaskPriority;
+  subtasks: (string | DeepSeekSubtask)[];
+  location?: string;
+}
