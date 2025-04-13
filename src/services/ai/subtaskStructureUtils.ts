@@ -5,6 +5,7 @@
 
 import { NestedSubtask } from "./aiTaskParserService";
 import { SubTask } from "@/types/task.types";
+import { v4 as uuidv4 } from "uuid";
 
 /**
  * Maps a nested structure of subtasks to a flat array suitable for database storage
@@ -19,9 +20,9 @@ export const mapNestedStructureToFlatSubtasks = (
   
   nestedItems.forEach((item, index) => {
     if (typeof item === 'string') {
-      // Simple string item
+      // Simple string item - generate proper UUID
       flatSubtasks.push({
-        id: `temp-${Date.now()}-${index}`,
+        id: uuidv4(),
         task_id: taskId,
         content: item,
         is_completed: false,
@@ -34,8 +35,8 @@ export const mapNestedStructureToFlatSubtasks = (
       const title = item.title || item.content || 'Group';
       const content = item.content || item.title || 'Group';
       
-      // Generate a unique ID for this group
-      const groupId = `temp-group-${Date.now()}-${index}`;
+      // Generate a proper UUID for this group
+      const groupId = uuidv4();
       
       // Add the group itself to the flat list
       flatSubtasks.push({
