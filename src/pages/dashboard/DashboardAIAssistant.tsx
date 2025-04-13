@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "@/hooks/use-theme"; // Fixed theme provider import
+import { useTheme } from "@/hooks/use-theme"; // Correct import path
 import { useAIAssistant } from "@/hooks/useAIAssistant";
 import {
   Card,
@@ -262,23 +262,19 @@ const DashboardAIAssistant = () => {
 
   const handleConfirmTask = () => {
     if (confirmCreateTask && detectedTask) {
-      // Safely check if due_date is a Date object
-      if (detectedTask.due_date && typeof detectedTask.due_date !== 'string' && 'toISOString' in detectedTask.due_date) {
-        // Converting Date to string for TaskFormData compatibility
-        const formattedTask: TaskFormData = {
-          ...detectedTask,
-          due_date: detectedTask.due_date.toISOString().split('T')[0],
-          priority: detectedTask.priority || 'normal' // Ensure priority is not undefined
-        };
-        confirmCreateTask(formattedTask);
-      } else {
-        // If it's already in the right format, just ensure priority is set
-        const formattedTask: TaskFormData = {
-          ...detectedTask,
-          priority: detectedTask.priority || 'normal'
-        };
-        confirmCreateTask(formattedTask);
-      }
+      // Fix #1: Check and handle date conversion properly for due_date
+      const formattedTask: TaskFormData = {
+        ...detectedTask,
+        // Safely handle the date conversion by checking the type first
+        due_date: detectedTask.due_date ? 
+          (typeof detectedTask.due_date === 'object' && detectedTask.due_date instanceof Date) ?
+            detectedTask.due_date.toISOString().split('T')[0] : 
+            String(detectedTask.due_date) : 
+          null,
+        priority: detectedTask.priority || 'normal' // Ensure priority is not undefined
+      };
+      
+      confirmCreateTask(formattedTask);
     }
   };
   
@@ -296,7 +292,11 @@ const DashboardAIAssistant = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {/* Left Panel */}
         <div className="md:col-span-1 space-y-4">
-          <AIRoleSelector onRoleChange={handleRoleChange} />
+          {/* Fix #2: Add the required selectedRole prop */}
+          <AIRoleSelector 
+            onRoleChange={handleRoleChange} 
+            selectedRole={currentRole}
+          />
           
           <AIAssistantHistoryCard canAccess={!!canUseAI} />
           
@@ -319,7 +319,11 @@ const DashboardAIAssistant = () => {
                 <Bot className="mr-2 h-5 w-5" />
                 WAKTI AI Assistant
                 {isAIThinking && (
-                  <AIAssistantMouthAnimation />
+                  {/* Fix #3: Add the required isActive prop */}
+                  <AIAssistantMouthAnimation 
+                    isActive={true}
+                    isSpeaking={isAIThinking}
+                  />
                 )}
               </CardTitle>
               <CardDescription>
@@ -333,13 +337,18 @@ const DashboardAIAssistant = () => {
               <ScrollArea ref={chatContainerRef} className="h-full">
                 <div className="flex flex-col space-y-4 p-4">
                   {isFirstMessage && (
-                    <EmptyStateView onPromptClick={setMessageText} selectedRole={currentRole} />
+                    <EmptyStateView 
+                      onPromptClick={setMessageText} 
+                      selectedRole={currentRole}
+                      lastDetectedIntent={lastDetectedIntent}
+                    />
                   )}
                   
                   {messages.map((message) => (
                     <AIMessageBubble
                       key={message.id}
                       message={message}
+                      isAIThinking={isAIThinking}
                     />
                   ))}
                   
@@ -351,6 +360,7 @@ const DashboardAIAssistant = () => {
                         content: "Thinking...",
                         timestamp: new Date(),
                       }}
+                      isAIThinking={isAIThinking}
                     />
                   )}
                 </div>
@@ -376,10 +386,7 @@ const DashboardAIAssistant = () => {
                 
                 <div className="absolute right-2 bottom-2 flex items-center space-x-2">
                   {isVoiceActive && (
-                    <div className="flex items-center space-x-1">
-                      <span className="animate-pulse">●</span>
-                      <span>Recording...</span>
-                    </div>
+                    <AIVoiceVisualizer isRecording={isVoiceActive} />
                   )}
                   
                   <Button
@@ -414,7 +421,10 @@ const DashboardAIAssistant = () => {
             </CardFooter>
           </Card>
           
-          <SuggestionPrompts onPromptClick={setMessageText} selectedRole={currentRole} />
+          <SuggestionPrompts 
+            onPromptClick={setMessageText} 
+            selectedRole={currentRole} 
+          />
         </div>
       </div>
       
