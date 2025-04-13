@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { AISettings } from "@/types/ai-assistant.types";
+import { AISettings, AIAssistantRole } from "@/types/ai-assistant.types";
 
 /**
  * Create default AI settings for a user
@@ -10,10 +10,13 @@ export const createDefaultAISettings = async (userId: string) => {
     throw new Error("User ID is required");
   }
 
+  // Ensure role is one of the valid enum values
+  const defaultRole: AIAssistantRole = "general";
+  
   const defaultSettings = {
     user_id: userId,
     assistant_name: "WAKTI",
-    role: "general", 
+    role: defaultRole,
     tone: "balanced",
     response_length: "balanced",
     proactiveness: true,
@@ -25,10 +28,11 @@ export const createDefaultAISettings = async (userId: string) => {
       analytics: true,
       messaging: true,
     },
-    language: "en",
-    voiceEnabled: false,
-    memoryEnabled: false,
-    includePersonalContext: false,
+    // These fields might need to be removed or adjusted based on the database schema
+    // language: "en",
+    // voice_enabled: false,
+    // memory_enabled: false,
+    // include_personal_context: false,
   };
 
   const { data, error } = await supabase

@@ -1,148 +1,166 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Mic, MicOff, Loader2 } from 'lucide-react';
 import { useVoiceInteraction } from '@/hooks/useVoiceInteraction';
-import { useVoiceSettings } from '@/store/voiceSettings';
-import { AIVoiceVisualizer } from '@/components/ai/animation/AIVoiceVisualizer';
-import { Mic, Send, Square, Loader2 } from 'lucide-react';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { parseTaskWithAI } from '@/services/ai/aiTaskParserService';
-import { toast } from '@/components/ui/use-toast';
+import { AIVoiceVisualizer } from '../animation/AIVoiceVisualizer';
 
 interface VoiceToTextToolProps {
-  onSendText: (text: string) => void;
+  onTextCapture: (text: string) => void;
+  autoSubmit?: boolean;
+  compact?: boolean;
 }
 
-export const VoiceToTextTool: React.FC<VoiceToTextToolProps> = ({ onSendText }) => {
-  const [message, setMessage] = useState('');
-  const [detectTasks, setDetectTasks] = useState(true);
-  const [isProcessingTask, setIsProcessingTask] = useState(false);
-  const { language, visualFeedback } = useVoiceSettings();
+export const VoiceToTextTool: React.FC<VoiceToTextToolProps> = ({
+  onTextCapture,
+  autoSubmit = false,
+  compact = false,
+}) => {
+  const [capturedText, setCapturedText] = useState('');
+  const [showTranscript, setShowTranscript] = useState(false);
   
   const {
     isListening,
     transcript,
-    error,
     startListening,
-    stopListening
+    stopListening,
+    supportsVoice,
+    isProcessing,
+    error
   } = useVoiceInteraction({
     onTranscriptComplete: (text) => {
-      setMessage(text);
-      detectTasksInText(text);
+      if (text) {
+        setCapturedText(text);
+        if (autoSubmit) {
+          onTextCapture(text);
+        } else {
+          setShowTranscript(true);
+        }
+      }
     }
   });
   
-  const detectTasksInText = async (text: string) => {
-    if (!detectTasks || !text) return;
-    
-    // Check if text seems task-related
-    const taskIndicators = ['task', 'todo', 'to do', 'to-do', 'remind', 'remember', 'don\'t forget', 'need to', 'have to'];
-    const lowerText = text.toLowerCase();
-    
-    const containsTaskIndicator = taskIndicators.some(indicator => 
-      lowerText.includes(indicator)
-    );
-    
-    if (containsTaskIndicator) {
-      setIsProcessingTask(true);
-      try {
-        const parsedTask = await parseTaskWithAI(text);
-        
-        if (parsedTask && parsedTask.title) {
-          toast({
-            title: "Task detected",
-            description: `Your voice input appears to be a task: "${parsedTask.title}"`,
-            variant: "default"
-          });
-        }
-      } catch (error) {
-        console.error("Error detecting task:", error);
-      } finally {
-        setIsProcessingTask(false);
-      }
-    }
+  const handleSubmitTranscript = () => {
+    onTextCapture(capturedText);
+    setCapturedText('');
+    setShowTranscript(false);
   };
   
-  const handleSend = () => {
-    if (message.trim()) {
-      onSendText(message.trim());
-      setMessage('');
-    }
+  const handleCancelTranscript = () => {
+    setCapturedText('');
+    setShowTranscript(false);
   };
+  
+  if (!supportsVoice) {
+    return compact ? null : (
+      <div className="text-center py-4">
+        <p className="text-sm text-muted-foreground">
+          Voice recognition is not supported in your browser.
+        </p>
+      </div>
+    );
+  }
+  
+  // Show a simplified button if in compact mode
+  if (compact) {
+    return (
+      <Button
+        variant="ghost"
+        size="sm"
+        className={`p-2 h-8 w-8 rounded-full ${isListening ? 'bg-red-100 text-red-600' : ''}`}
+        onClick={isListening ? stopListening : startListening}
+        disabled={isProcessing}
+      >
+        {isProcessing ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : isListening ? (
+          <MicOff className="h-4 w-4" />
+        ) : (
+          <Mic className="h-4 w-4" />
+        )}
+      </Button>
+    );
+  }
   
   return (
-    <Card className="mb-4">
-      <CardHeader>
-        <CardTitle className="text-base font-medium flex items-center gap-2">
-          <Mic className="h-4 w-4 text-wakti-blue" />
-          Voice to Text
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="relative">
-          <Textarea
-            placeholder="Speech will appear here after recording..."
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            className="min-h-[120px]"
-          />
+    <div className="space-y-3">
+      {showTranscript ? (
+        <div className="space-y-2">
+          <div className="p-3 bg-muted rounded-md text-sm">
+            {capturedText}
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button 
+              variant="default" 
+              size="sm" 
+              className="flex-1"
+              onClick={handleSubmitTranscript}
+            >
+              Use Text
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleCancelTranscript}
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center gap-2">
+          {isListening && (
+            <div className="min-h-[60px] flex items-center justify-center">
+              <AIVoiceVisualizer isActive={true} audioLevel={50} />
+            </div>
+          )}
           
-          {isProcessingTask && (
-            <div className="absolute inset-0 flex items-center justify-center bg-background/80">
-              <div className="flex flex-col items-center">
-                <Loader2 className="h-5 w-5 animate-spin mb-2" />
-                <p className="text-sm">Checking for task content...</p>
-              </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant={isListening ? "destructive" : "outline"}
+              size="sm"
+              onClick={isListening ? stopListening : startListening}
+              disabled={isProcessing}
+              className="flex-1"
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : isListening ? (
+                <>
+                  <MicOff className="mr-2 h-4 w-4" />
+                  Stop Listening
+                </>
+              ) : (
+                <>
+                  <Mic className="mr-2 h-4 w-4" />
+                  Start Voice Input
+                </>
+              )}
+            </Button>
+          </div>
+          
+          {isListening && (
+            <div className="mt-2 text-sm text-center text-muted-foreground animate-pulse">
+              Listening...
+            </div>
+          )}
+          
+          {transcript && isListening && (
+            <div className="mt-2 text-sm text-muted-foreground p-2 bg-muted/50 rounded w-full">
+              {transcript}
+            </div>
+          )}
+          
+          {error && (
+            <div className="text-sm text-red-500 mt-2">
+              Error: {error.message}
             </div>
           )}
         </div>
-        
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="detect-tasks"
-              checked={detectTasks}
-              onCheckedChange={setDetectTasks}
-            />
-            <Label htmlFor="detect-tasks" className="text-sm">
-              Auto-detect tasks
-            </Label>
-          </div>
-          
-          {visualFeedback && isListening && (
-            <AIVoiceVisualizer isActive={isListening} />
-          )}
-        </div>
-      </CardContent>
-      <CardFooter className="flex justify-between">
-        <Button
-          variant={isListening ? "destructive" : "secondary"}
-          onClick={isListening ? stopListening : startListening}
-          disabled={isProcessingTask}
-        >
-          {isListening ? (
-            <>
-              <Square className="mr-2 h-4 w-4" />
-              Stop Recording
-            </>
-          ) : (
-            <>
-              <Mic className="mr-2 h-4 w-4" />
-              Start Recording ({language === 'en' ? 'English' : 'Arabic'})
-            </>
-          )}
-        </Button>
-        
-        <Button 
-          onClick={handleSend}
-          disabled={!message.trim() || isProcessingTask}
-        >
-          <Send className="mr-2 h-4 w-4" />
-          Send Text
-        </Button>
-      </CardFooter>
-    </Card>
+      )}
+    </div>
   );
 };

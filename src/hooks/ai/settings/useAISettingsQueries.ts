@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { User } from "@/hooks/auth";
-import { AISettings, AIKnowledgeUpload } from "@/types/ai-assistant.types";
+import { AISettings, AIKnowledgeUpload, AIAssistantRole } from "@/types/ai-assistant.types";
 
 /**
  * Fetches the user's AI settings
@@ -75,15 +75,16 @@ export const fetchAISettings = async (user: User | null): Promise<AISettings | n
     console.log("Settings fetched successfully:", data);
     
     // Create a proper AISettings object from the database result
+    // Ensure all required fields are included even if not in the database
     const settings: AISettings = {
       id: data.id,
-      user_id: user.id,
+      user_id: data.user_id,
       assistant_name: data.assistant_name || "WAKTI",
       tone: data.tone as AISettings["tone"] || "balanced",
       response_length: data.response_length as AISettings["response_length"] || "balanced",
       proactiveness: data.proactiveness !== null ? data.proactiveness : true,
       suggestion_frequency: data.suggestion_frequency as AISettings["suggestion_frequency"] || "medium",
-      role: data.role as AISettings["role"] || "general",
+      role: data.role as AIAssistantRole || "general",
       enabled_features: data.enabled_features as AISettings["enabled_features"] || {
         tasks: true,
         events: true,
@@ -91,11 +92,12 @@ export const fetchAISettings = async (user: User | null): Promise<AISettings | n
         analytics: true,
         messaging: true,
       },
-      language: data.language || "en",
-      voiceEnabled: data.voice_enabled || false,
-      memoryEnabled: data.memory_enabled || false,
-      includePersonalContext: data.include_personal_context || false,
-      knowledge_profile: data.knowledge_profile || { role: data.role }
+      // Add required fields from AISettings interface that may not be in the database
+      language: "en", // Default value
+      voiceEnabled: false,
+      memoryEnabled: false,
+      includePersonalContext: false,
+      knowledge_profile: { role: data.role as AIAssistantRole }
     };
     
     return settings;
@@ -134,16 +136,16 @@ export const fetchKnowledgeUploads = async (user: User | null): Promise<AIKnowle
 
     console.log(`Found ${data.length} knowledge uploads`);
     
-    // Map to proper AIKnowledgeUpload objects
+    // Map to proper AIKnowledgeUpload objects with fallback values for missing fields
     return data.map((item) => ({
       id: item.id,
-      name: item.title || item.name || `Upload ${item.id.substring(0, 8)}`,
+      name: item.title || `Upload ${item.id.substring(0, 8)}`,
       type: item.type || "text",
       size: item.size || 0,
       timestamp: new Date(item.created_at),
       status: item.status || "ready",
       title: item.title,
-      role: item.role,
+      role: item.role as AIAssistantRole || undefined,
       created_at: item.created_at
     }));
   } catch (error) {

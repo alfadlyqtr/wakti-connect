@@ -39,3 +39,18 @@ export const formatMapsUrl = (url: string): string => {
     return url;
   }
 };
+
+/**
+ * Google Maps API key
+ */
+export const GOOGLE_MAPS_API_KEY = 'AIzaSyD5QBJ4O3ovpZ9UI6ZekiZ7H4h9gN_lDg0';
+
+/**
+ * Generate a Google Maps URL from a location string
+ */
+export const generateGoogleMapsUrl = (location: string): string => {
+  if (!location) return '';
+  
+  const encodedLocation = encodeURIComponent(location);
+  return `https://www.google.com/maps/search/?api=1&query=${encodedLocation}`;
+};

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useVoiceInteraction } from '@/hooks/useVoiceInteraction';
 import { useVoiceSettings } from '@/store/voiceSettings';
@@ -253,4 +254,4 @@ export const VoiceTestPage = () => {
       </Card>
     </div>
   );
-}
+};
