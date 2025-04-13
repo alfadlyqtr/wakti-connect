@@ -317,8 +317,8 @@ const DashboardAIAssistant = () => {
   };
 
   const handleConfirmTask = () => {
-    if (confirmCreateTask) {
-      confirmCreateTask();
+    if (confirmCreateTask && detectedTask) {
+      confirmCreateTask(detectedTask);
     }
   };
 
