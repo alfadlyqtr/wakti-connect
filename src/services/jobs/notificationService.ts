@@ -20,7 +20,7 @@ export const sendJobCardNotification = async (
     }
     
     // Get job details
-    const { data: jobCard } = await supabase
+    const { data: jobCard, error } = await supabase
       .from('job_cards')
       .select(`
         id,
@@ -31,6 +31,11 @@ export const sendJobCardNotification = async (
       .eq('id', jobCardId)
       .single();
       
+    if (error) {
+      console.error("Job card not found for notification:", error);
+      return false;
+    }
+    
     if (!jobCard) {
       console.error("Job card not found for notification");
       return false;
@@ -39,8 +44,14 @@ export const sendJobCardNotification = async (
     // Determine notification content based on event type
     let title = '';
     let message = '';
-    const staffDisplayName = staffName || jobCard.business_staff?.name || 'A staff member';
-    const jobName = jobCard.jobs?.name || 'a job';
+    
+    // Safely access nested properties
+    const staffDisplayName = staffName || 
+      (jobCard.business_staff && 'name' in jobCard.business_staff ? 
+        jobCard.business_staff.name : 'A staff member');
+        
+    const jobName = (jobCard.jobs && 'name' in jobCard.jobs) ? 
+      jobCard.jobs.name : 'a job';
     
     switch (eventType) {
       case 'created':
