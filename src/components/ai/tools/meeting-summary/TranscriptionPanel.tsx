@@ -1,48 +1,47 @@
 
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Wand2 } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { Loader2 } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 
-export interface TranscriptionPanelProps {
-  transcription: string;
-  onGenerateSummary: () => Promise<void>;
-  isLoading: boolean;
+interface TranscriptionPanelProps {
+  transcribedText: string;
+  isSummarizing: boolean;
+  generateSummary: () => Promise<void>;
 }
 
 const TranscriptionPanel: React.FC<TranscriptionPanelProps> = ({
-  transcription,
-  onGenerateSummary,
-  isLoading
+  transcribedText,
+  isSummarizing,
+  generateSummary
 }) => {
+  if (!transcribedText) {
+    return null;
+  }
+
   return (
-    <Card className="mb-4">
-      <CardContent className="pt-6 space-y-4">
-        <div className="relative">
-          <h3 className="font-medium mb-2">Meeting Transcription</h3>
-          <div className="bg-muted p-3 rounded-md max-h-[200px] overflow-y-auto text-sm whitespace-pre-wrap">
-            {transcription ? transcription : "No transcription available. Record your meeting first."}
-          </div>
-        </div>
-        
-        <Button 
-          onClick={onGenerateSummary} 
-          disabled={!transcription || isLoading}
-          className="w-full"
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Generating Summary...
-            </>
-          ) : (
-            <>
-              <Wand2 className="mr-2 h-4 w-4" />
-              Generate Summary
-            </>
-          )}
-        </Button>
-      </CardContent>
+    <Card className="p-4 mt-4">
+      <h3 className="text-lg font-semibold mb-2">Transcribed Text</h3>
+      <Textarea
+        value={transcribedText}
+        readOnly
+        className="w-full h-40 mb-3"
+      />
+      <Button 
+        onClick={generateSummary}
+        disabled={isSummarizing || !transcribedText}
+        className="bg-blue-600 hover:bg-blue-700"
+      >
+        {isSummarizing ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Generating Summary...
+          </>
+        ) : (
+          "Generate Summary"
+        )}
+      </Button>
     </Card>
   );
 };

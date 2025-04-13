@@ -1,36 +1,51 @@
 
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+
+type Language = 'en' | 'ar' | 'es' | 'fr' | 'de';
 
 interface VoiceSettingsState {
   autoSilenceDetection: boolean;
-  language: 'en' | 'ar' | 'es' | 'fr' | 'de';
   visualFeedback: boolean;
+  language: Language;
+  voiceEnabled: boolean;
   toggleAutoSilenceDetection: () => void;
-  setLanguage: (lang: 'en' | 'ar' | 'es' | 'fr' | 'de') => void;
   toggleVisualFeedback: () => void;
+  setLanguage: (language: Language) => void;
+  toggleVoiceEnabled: () => void;
   resetSettings: () => void;
 }
 
-const defaultSettings = {
-  autoSilenceDetection: true,
-  language: 'en' as const,
-  visualFeedback: true,
-};
-
-export const useVoiceSettings = create<VoiceSettingsState>((set) => ({
-  ...defaultSettings,
-  
-  toggleAutoSilenceDetection: () => set((state) => ({ 
-    autoSilenceDetection: !state.autoSilenceDetection 
-  })),
-  
-  setLanguage: (lang: 'en' | 'ar' | 'es' | 'fr' | 'de') => set({ 
-    language: lang 
-  }),
-  
-  toggleVisualFeedback: () => set((state) => ({
-    visualFeedback: !state.visualFeedback
-  })),
-  
-  resetSettings: () => set(defaultSettings)
-}));
+export const useVoiceSettings = create<VoiceSettingsState>()(
+  persist(
+    (set) => ({
+      autoSilenceDetection: true,
+      visualFeedback: true,
+      language: 'en',
+      voiceEnabled: true,
+      
+      toggleAutoSilenceDetection: () => 
+        set((state) => ({ autoSilenceDetection: !state.autoSilenceDetection })),
+      
+      toggleVisualFeedback: () => 
+        set((state) => ({ visualFeedback: !state.visualFeedback })),
+      
+      setLanguage: (language) => 
+        set({ language }),
+      
+      toggleVoiceEnabled: () => 
+        set((state) => ({ voiceEnabled: !state.voiceEnabled })),
+      
+      resetSettings: () => 
+        set({ 
+          autoSilenceDetection: true, 
+          visualFeedback: true, 
+          language: 'en',
+          voiceEnabled: true 
+        })
+    }),
+    {
+      name: 'wakti-voice-settings',
+    }
+  )
+);

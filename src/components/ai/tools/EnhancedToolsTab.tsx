@@ -16,10 +16,6 @@ export const EnhancedToolsTab: React.FC<EnhancedToolsTabProps> = ({
   onUseContent,
   canAccess
 }) => {
-  if (!canAccess) {
-    return null;
-  }
-  
   return (
     <Card className="w-full">
       <CardHeader className="pb-2">
@@ -30,7 +26,8 @@ export const EnhancedToolsTab: React.FC<EnhancedToolsTabProps> = ({
       </CardHeader>
       <CardContent>
         <AIToolsTabContent 
-          onSendMessage={onUseContent}
+          canAccess={canAccess} 
+          onUseDocumentContent={onUseContent}
           selectedRole={selectedRole}
         />
       </CardContent>

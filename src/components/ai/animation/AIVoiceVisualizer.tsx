@@ -2,35 +2,46 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 
-export interface VoiceRecordingVisualizerProps {
+interface AIVoiceVisualizerProps {
   isActive: boolean;
-  audioLevel?: number;
+  className?: string;
 }
 
-export const AIVoiceVisualizer: React.FC<VoiceRecordingVisualizerProps> = ({ 
-  isActive, 
-  audioLevel = 50 
-}) => {
+export function AIVoiceVisualizer({ 
+  isActive,
+  className
+}: AIVoiceVisualizerProps) {
+  // A simple voice visualizer component that shows when the system is listening
   return (
-    <div className={cn(
-      "h-8 flex items-end justify-center gap-1",
-      !isActive && "opacity-30"
-    )}>
-      {Array.from({ length: 9 }, (_, i) => (
+    <div className={cn('flex items-center justify-center gap-1', className)}>
+      {/* Create simple bars that animate slightly differently */}
+      {Array.from({ length: 5 }).map((_, i) => (
         <div
           key={i}
           className={cn(
-            "w-1 bg-wakti-blue rounded-full transition-all duration-150",
-            isActive && "animate-pulse"
+            'h-4 w-1 rounded-full bg-wakti-blue',
+            isActive ? 'opacity-100' : 'opacity-30',
+            isActive && isListening(i)
           )}
           style={{
-            height: isActive 
-              ? `${Math.max(3, Math.min(28, 12 + Math.sin(i * 0.8) * (audioLevel / 5)))}px` 
-              : '3px',
-            animationDelay: `${i * 100}ms`
+            animationDelay: `${i * 0.1}s`,
+            animationDuration: `${0.5 + Math.random() * 0.5}s`
           }}
         ></div>
       ))}
     </div>
   );
-};
+}
+
+// Helper to determine if a bar should be "listening"
+function isListening(index: number): string {
+  const animations = [
+    'animate-[height_0.5s_ease-in-out_infinite]',
+    'animate-[height_0.6s_ease-in-out_infinite]',
+    'animate-[height_0.7s_ease-in-out_infinite]',
+    'animate-[height_0.5s_ease-in-out_infinite]',
+    'animate-[height_0.6s_ease-in-out_infinite]'
+  ];
+  
+  return animations[index % animations.length];
+}

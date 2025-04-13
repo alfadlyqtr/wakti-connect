@@ -78,7 +78,7 @@ export const QuickToolsCard: React.FC<QuickToolsCardProps> = ({
   if (inSidebar) {
     return (
       <div className="space-y-3">
-        {quickTools.map((tool: any, index: number) => (
+        {quickTools.map((tool, index) => (
           <Button 
             key={index} 
             variant="ghost" 
@@ -116,7 +116,7 @@ export const QuickToolsCard: React.FC<QuickToolsCardProps> = ({
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 gap-3">
-          {quickTools.map((tool: any, index: number) => (
+          {quickTools.map((tool, index) => (
             <Button 
               key={index} 
               variant="outline" 

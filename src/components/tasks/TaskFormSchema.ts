@@ -23,7 +23,7 @@ const SubtaskSchema = z.object({
   is_group: z.boolean().optional(),
   parent_id: z.string().optional(),
   subtasks: z.array(z.any()).optional(), // Recursive subtasks
-  title: z.string().optional() // Add title field for group subtasks
+  title: z.string().optional() // Explicitly add title field for group subtasks
 });
 
 // Define the main form schema - simplified for personal tasks only

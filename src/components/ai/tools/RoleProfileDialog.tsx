@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { AIAssistantRole, KnowledgeProfile } from "@/types/ai-assistant.types";
+import { AIAssistantRole } from "@/types/ai-assistant.types";
 import { useAISettings } from "@/components/settings/ai/context/AISettingsContext";
 import { Loader2, Save, X } from "lucide-react";
 
@@ -111,23 +112,23 @@ export const RoleProfileDialog: React.FC<RoleProfileDialogProps> = ({
     
     setIsUpdating(true);
     try {
-      let knowledgeProfile: KnowledgeProfile = { role };
+      let knowledgeProfile = {};
       
       switch (role) {
         case "student":
-          knowledgeProfile = { ...knowledgeProfile, ...studentProfile };
+          knowledgeProfile = studentProfile;
           break;
         case "business_owner":
-          knowledgeProfile = { ...knowledgeProfile, ...businessProfile };
+          knowledgeProfile = businessProfile;
           break;
         case "employee":
-          knowledgeProfile = { ...knowledgeProfile, ...employeeProfile };
+          knowledgeProfile = employeeProfile;
           break;
         case "writer":
-          knowledgeProfile = { ...knowledgeProfile, ...writerProfile };
+          knowledgeProfile = writerProfile;
           break;
         default:
-          knowledgeProfile = { role }; 
+          knowledgeProfile = {}; 
       }
       
       const updatedSettings = {

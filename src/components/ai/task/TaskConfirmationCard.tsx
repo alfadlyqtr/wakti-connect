@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -66,11 +65,10 @@ export const TaskConfirmationCard: React.FC<TaskConfirmationCardProps> = ({
     });
   };
 
-  // Toggle group expansion
-  const toggleGroupExpansion = (groupId: string) => {
+  const toggleGroupExpanded = (itemId: string) => {
     setExpandedGroups(prev => ({
       ...prev,
-      [groupId]: !prev[groupId]
+      [itemId]: !prev[itemId]
     }));
   };
 
@@ -97,20 +95,32 @@ export const TaskConfirmationCard: React.FC<TaskConfirmationCardProps> = ({
     if (isGroup) {
       return (
         <li key={itemId} className="space-y-1">
-          <Collapsible open={isExpanded} onOpenChange={() => toggleGroupExpansion(itemId)}>
-            <CollapsibleTrigger asChild>
-              <div className="flex items-start gap-2 cursor-pointer">
+          <Collapsible 
+            open={isExpanded} 
+            onOpenChange={(open) => {
+              setExpandedGroups(prev => ({
+                ...prev,
+                [itemId]: open
+              }));
+            }}
+          >
+            <div className="flex items-start gap-2">
+              <CollapsibleTrigger asChild>
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
                   className="h-5 w-5 p-0"
+                  onClick={() => toggleGroupExpanded(itemId)}
                 >
-                  {isExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                  {isExpanded ? 
+                    <ChevronDown className="h-3.5 w-3.5" /> : 
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  }
                 </Button>
-                <span className="text-sm font-medium">{item.title || item.content || 'Group'}</span>
-              </div>
-            </CollapsibleTrigger>
+              </CollapsibleTrigger>
+              <span className="text-sm font-medium">{item.title || item.content || 'Group'}</span>
+            </div>
             
             <CollapsibleContent>
               <ul className="ml-5 space-y-1.5 mt-1 pl-2 border-l-2 border-gray-200 dark:border-gray-700">

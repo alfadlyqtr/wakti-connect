@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useVoiceInteraction } from '@/hooks/useVoiceInteraction';
+import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
 import { useVoiceSettings } from '@/store/voiceSettings';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -18,10 +18,7 @@ export const VoiceTestPage = () => {
     toggleAutoSilenceDetection, 
     autoSilenceDetection, 
     language, 
-    setLanguage,
-    visualFeedback,
-    toggleVisualFeedback,
-    resetSettings
+    setLanguage 
   } = useVoiceSettings();
   
   const {
@@ -32,9 +29,7 @@ export const VoiceTestPage = () => {
     stopListening,
     apiKeyStatus,
     apiKeyErrorDetails,
-    retryApiKeyValidation,
-    isProcessing,
-    error
+    retryApiKeyValidation
   } = useVoiceInteraction({
     onTranscriptComplete: (text) => {
       if (text) {
@@ -42,9 +37,6 @@ export const VoiceTestPage = () => {
       }
     }
   });
-  
-  // Use isListening for visualization instead of missing isRecording, audioLevel and showVisualizer
-  const dummyAudioLevel = isListening ? 50 : 0;
   
   const handleApiTest = async () => {
     try {
@@ -153,20 +145,6 @@ export const VoiceTestPage = () => {
               />
             </div>
             
-            <div className="flex items-center justify-between space-x-2 mt-2">
-              <div className="space-y-0.5">
-                <Label htmlFor="visual-feedback">Visual Voice Feedback</Label>
-                <p className="text-[0.8rem] text-muted-foreground">
-                  Show animations when voice recognition is active
-                </p>
-              </div>
-              <Switch
-                id="visual-feedback"
-                checked={visualFeedback}
-                onCheckedChange={toggleVisualFeedback}
-              />
-            </div>
-            
             {/* Language toggle */}
             <div className="flex items-center justify-between space-x-2 mt-4">
               <div className="space-y-0.5">
@@ -197,9 +175,7 @@ export const VoiceTestPage = () => {
           <div className="flex items-center justify-center py-4 space-y-2">
             <div className="flex flex-col items-center gap-3">
               <AIAssistantMouthAnimation isActive={isListening} size="medium" />
-              {visualFeedback && (
-                <AIVoiceVisualizer isActive={isListening} audioLevel={dummyAudioLevel} />
-              )}
+              <AIVoiceVisualizer isActive={isListening} />
             </div>
           </div>
   
@@ -247,11 +223,8 @@ export const VoiceTestPage = () => {
               "Browser does not support speech recognition"
             )}
           </div>
-          <Button variant="outline" size="sm" onClick={resetSettings}>
-            Reset Settings
-          </Button>
         </CardFooter>
       </Card>
     </div>
   );
-};
+}

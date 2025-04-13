@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { UseFormReturn, useFieldArray } from "react-hook-form";
 import { TaskFormValues } from "../TaskFormSchema";
@@ -42,6 +41,14 @@ export const SubtasksSection: React.FC<SubtasksSectionProps> = ({
     control: form.control,
     name: "subtasks",
   });
+
+  // Function to toggle group expansion
+  const toggleGroupExpanded = (groupId: string) => {
+    setExpandedGroups(prev => ({
+      ...prev,
+      [groupId]: !prev[groupId]
+    }));
+  };
 
   // Function to add a new subtask group
   const addSubtaskGroup = () => {
@@ -98,14 +105,6 @@ export const SubtasksSection: React.FC<SubtasksSectionProps> = ({
     form.setValue('subtasks', updatedSubtasks);
   };
 
-  // Toggle group expansion
-  const toggleGroupExpansion = (groupId: string) => {
-    setExpandedGroups(prev => ({
-      ...prev,
-      [groupId]: !prev[groupId]
-    }));
-  };
-
   // Render a subtask item with proper indentation and grouping
   const renderSubtaskItem = (field: any, index: number, parentId: string | null = null, nestLevel = 0) => {
     const isGroup = !!field.is_group;
@@ -115,6 +114,26 @@ export const SubtasksSection: React.FC<SubtasksSectionProps> = ({
     
     return (
       <div key={field.id} className={`border rounded-md p-3 space-y-3 ${isGroup ? 'bg-muted/30' : indent}`}>
+        {isGroup && (
+          <FormField
+            control={form.control}
+            name={`subtasks.${index}.title`}
+            render={({ field: titleField }) => (
+              <FormItem className="flex-1">
+                <FormLabel className="text-xs">Group Title</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Group title"
+                    {...titleField}
+                    className="font-medium"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+        
         <div className="flex gap-2 items-start">
           {!isGroup && (
             <FormField
@@ -134,19 +153,36 @@ export const SubtasksSection: React.FC<SubtasksSectionProps> = ({
           )}
           
           {isGroup && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 mt-1"
-              onClick={() => toggleGroupExpansion(field.id)}
+            <Collapsible 
+              open={isExpanded} 
+              onOpenChange={(open) => {
+                setExpandedGroups(prev => ({
+                  ...prev,
+                  [field.id]: open
+                }));
+              }}
             >
-              {isExpanded ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
-            </Button>
+              <div className="flex items-center">
+                <CollapsibleTrigger asChild>
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="icon"
+                    className="h-5 w-5 p-0"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleGroupExpanded(field.id);
+                    }}
+                  >
+                    {isExpanded ? (
+                      <ChevronDown className="h-4 w-4" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4" />
+                    )}
+                  </Button>
+                </CollapsibleTrigger>
+              </div>
+            </Collapsible>
           )}
           
           <FormField
@@ -156,19 +192,8 @@ export const SubtasksSection: React.FC<SubtasksSectionProps> = ({
               <FormItem className="flex-1">
                 <FormControl>
                   <Input
-                    placeholder={isGroup ? "Group name" : "Subtask description"}
+                    placeholder={isGroup ? "Group description (optional)" : "Subtask description"}
                     {...contentField}
-                    className={isGroup ? "font-medium" : ""}
-                    onChange={(e) => {
-                      contentField.onChange(e);
-                      // If this is a group, also update the title field
-                      if (isGroup) {
-                        const currentSubtasks = form.getValues().subtasks;
-                        const updatedSubtasks = [...currentSubtasks];
-                        updatedSubtasks[index].title = e.target.value;
-                        form.setValue('subtasks', updatedSubtasks);
-                      }
-                    }}
                   />
                 </FormControl>
                 <FormMessage />
@@ -188,7 +213,15 @@ export const SubtasksSection: React.FC<SubtasksSectionProps> = ({
         </div>
         
         {isGroup && (
-          <Collapsible open={isExpanded} onOpenChange={() => toggleGroupExpansion(field.id)}>
+          <Collapsible 
+            open={isExpanded}
+            onOpenChange={(open) => {
+              setExpandedGroups(prev => ({
+                ...prev,
+                [field.id]: open
+              }));
+            }}
+          >
             <CollapsibleContent>
               {/* Render nested subtasks if this is a group */}
               {field.subtasks && field.subtasks.length > 0 && (

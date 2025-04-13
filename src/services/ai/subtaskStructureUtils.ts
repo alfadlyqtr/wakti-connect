@@ -1,101 +1,102 @@
 
-import { SubTask } from "@/types/task.types";
+/**
+ * Utilities for handling nested subtask structures
+ */
+
 import { NestedSubtask } from "./aiTaskParserService";
+import { SubTask } from "@/types/task.types";
+import { v4 as uuidv4 } from "uuid";
 
 /**
- * Maps a nested subtask structure to flat subtasks with parent-child relationships
+ * Maps a nested structure of subtasks to a flat array suitable for database storage
+ * while preserving parent-child relationships
  */
 export const mapNestedStructureToFlatSubtasks = (
   nestedItems: (string | NestedSubtask)[],
   taskId: string,
   parentId: string | null = null
-): Partial<SubTask>[] => {
-  const result: Partial<SubTask>[] = [];
+): SubTask[] => {
+  let flatSubtasks: SubTask[] = [];
   
   nestedItems.forEach((item, index) => {
     if (typeof item === 'string') {
-      // Add single item as a regular subtask
-      result.push({
+      // Simple string item - generate proper UUID
+      flatSubtasks.push({
+        id: uuidv4(),
         task_id: taskId,
         content: item,
         is_completed: false,
-        is_group: false,
-        parent_id: parentId
+        parent_id: parentId,
+        is_group: false
       });
-    } else if (typeof item === 'object' && item !== null) {
-      // This is a group or complex subtask
+    } else {
+      // Group or nested item
       const isGroup = item.subtasks && item.subtasks.length > 0;
+      const title = item.title || item.content || 'Group';
       const content = item.content || item.title || 'Group';
       
-      // Generate a temporary ID for this item that we'll use as parent ID for children
-      const tempId = `temp-${Date.now()}-${index}`;
+      // Generate a proper UUID for this group
+      const groupId = uuidv4();
       
-      // Add the group item itself
-      const groupSubtask: Partial<SubTask> = {
+      // Add the group itself to the flat list
+      flatSubtasks.push({
+        id: groupId,
         task_id: taskId,
         content: content,
-        title: item.title,
+        title: title,
         is_completed: item.is_completed || false,
         is_group: isGroup,
         parent_id: parentId
-      };
+      });
       
-      result.push(groupSubtask);
-      
-      // Add all children with this group as parent
+      // Process child subtasks if they exist
       if (isGroup && item.subtasks) {
+        // Recursively flatten all child subtasks with this group as their parent
         const childSubtasks = mapNestedStructureToFlatSubtasks(
           item.subtasks,
           taskId,
-          tempId
+          groupId
         );
         
-        result.push(...childSubtasks);
+        // Add all children to the flat list
+        flatSubtasks = [...flatSubtasks, ...childSubtasks];
       }
     }
   });
   
-  return result;
+  return flatSubtasks;
 };
 
 /**
- * Utility to reconstruct a hierarchical structure from flat subtasks
+ * Converts a flat list of subtasks back into a nested structure
+ * This is useful for displaying the hierarchical view
  */
-export const reconstructHierarchicalSubtasks = (
-  flatSubtasks: SubTask[]
-): (string | NestedSubtask)[] => {
-  // First identify all root level items (those without parent_id)
-  const rootItems = flatSubtasks.filter(item => !item.parent_id);
+export const reconstructNestedSubtasks = (flatSubtasks: SubTask[]): (string | NestedSubtask)[] => {
+  // First identify all top-level items (those with no parent or parent_id is null)
+  const topLevelItems = flatSubtasks.filter(item => !item.parent_id);
   
-  // Create a map for quick lookup of children by parent_id
-  const childrenMap = new Map<string, SubTask[]>();
-  
-  flatSubtasks.forEach(subtask => {
-    if (subtask.parent_id) {
-      if (!childrenMap.has(subtask.parent_id)) {
-        childrenMap.set(subtask.parent_id, []);
-      }
-      childrenMap.get(subtask.parent_id)?.push(subtask);
-    }
-  });
-  
-  // Recursive function to build the tree
-  const buildSubtaskTree = (items: SubTask[]): (string | NestedSubtask)[] => {
-    return items.map(item => {
-      const children = childrenMap.get(item.id) || [];
-      
-      if (item.is_group && children.length > 0) {
-        // This is a group with children
-        return {
-          title: item.title || item.content,
-          subtasks: buildSubtaskTree(children)
+  // Function to recursively build the tree
+  const buildSubtaskTree = (parentId: string | null): (string | NestedSubtask)[] => {
+    // Get all direct children of this parent
+    const children = flatSubtasks.filter(item => item.parent_id === parentId);
+    
+    return children.map(child => {
+      // If this is a group, process its children recursively
+      if (child.is_group) {
+        const nestedItem: NestedSubtask = {
+          title: child.title || child.content,
+          content: child.content,
+          is_completed: child.is_completed,
+          subtasks: buildSubtaskTree(child.id)
         };
-      } else {
-        // This is a leaf item
-        return item.content;
+        return nestedItem;
       }
+      
+      // For leaf nodes (not groups), just return the content string
+      return child.content;
     });
   };
   
-  return buildSubtaskTree(rootItems);
+  // Start the recursion with null parent (top level)
+  return buildSubtaskTree(null);
 };
