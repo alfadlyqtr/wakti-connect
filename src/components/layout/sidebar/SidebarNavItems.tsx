@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { CommandIcon, Search } from 'lucide-react';
 import { UserRole } from '@/types/user';
@@ -7,7 +7,7 @@ import { shouldHideMenuItem } from '@/utils/menuItemUtils';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { navItems } from '@/config/navItems';
-import { usePermission } from '@/hooks/usePermission';
+import { hasPermission } from '@/services/auth/accessControl';
 
 interface SidebarNavItemsProps {
   onNavClick?: () => void;
@@ -23,6 +23,40 @@ const SidebarNavItems: React.FC<SidebarNavItemsProps> = ({
   const location = useLocation();
   const navigate = useNavigate();
   const userRole = (localStorage.getItem('userRole') as UserRole) || 'free';
+  const [permissionsMap, setPermissionsMap] = useState<Record<string, boolean>>({});
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Fetch all permissions at once for nav items with permission keys
+  useEffect(() => {
+    const permissionKeys = navItems
+      .filter(item => item.permissionKey)
+      .map(item => item.permissionKey as string);
+    
+    if (permissionKeys.length === 0) {
+      setIsLoading(false);
+      return;
+    }
+    
+    const checkAllPermissions = async () => {
+      try {
+        setIsLoading(true);
+        const permissionsResult: Record<string, boolean> = {};
+        
+        // Check each permission individually
+        for (const key of permissionKeys) {
+          permissionsResult[key] = await hasPermission(key);
+        }
+        
+        setPermissionsMap(permissionsResult);
+      } catch (error) {
+        console.error('Error checking permissions for sidebar:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    checkAllPermissions();
+  }, []);
 
   const handleNavigation = (path: string) => {
     navigate(path);
@@ -47,17 +81,15 @@ const SidebarNavItems: React.FC<SidebarNavItemsProps> = ({
         </Button>
       )}
 
-      {navItems.map((item) => {
+      {!isLoading && navItems.map((item) => {
         // Skip this menu item if it should be hidden for current user role
         if (shouldHideMenuItem(item.href, userRole)) {
           return null;
         }
         
         // Check permission for this nav item if it has a permission key
-        if (item.permissionKey) {
-          // Use our custom permission hook to check access
-          const { isAllowed } = usePermission(item.permissionKey);
-          if (!isAllowed) return null;
+        if (item.permissionKey && !permissionsMap[item.permissionKey]) {
+          return null;
         }
 
         const isActive = location.pathname === item.href;
