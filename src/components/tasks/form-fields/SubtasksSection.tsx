@@ -57,11 +57,11 @@ export const SubtasksSection: React.FC<SubtasksSectionProps> = ({
     // Add the group as a special subtask with is_group=true
     append({ 
       content: newGroupName.trim(), 
-      title: newGroupName.trim(),
       isCompleted: false, 
       dueDate: "", 
       dueTime: "",
       is_group: true,
+      title: newGroupName.trim(),  // Explicitly add title field
       subtasks: []
     });
     
