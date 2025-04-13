@@ -156,133 +156,91 @@ export const useAIChatOperations = () => {
         if (parsedTask && parsedTask.title) {
           console.log("Task parsed successfully with AI:", parsedTask);
           
-          try {
-            const taskFormData = convertParsedTaskToFormData({
-              title: parsedTask.title,
-              description: parsedTask.location ? `Location: ${parsedTask.location}` : undefined,
-              priority: parsedTask.priority,
-              subtasks: parsedTask.subtasks,
-              due_date: parsedTask.due_date,
-              dueTime: parsedTask.due_time,
-              location: parsedTask.location,
-              hasTimeConstraint: true,
-              needsReview: false
-            });
+          const taskFormData = convertParsedTaskToFormData({
+            title: parsedTask.title,
+            description: parsedTask.location ? `Location: ${parsedTask.location}` : undefined,
+            priority: parsedTask.priority,
+            subtasks: parsedTask.subtasks,
+            due_date: parsedTask.due_date,
+            dueTime: parsedTask.due_time,
+            location: parsedTask.location,
+            hasTimeConstraint: true,
+            needsReview: false
+          });
+          
+          const confirmationMessageId = uuidv4();
+          
+          let confirmationContent = `I'll create a task: **${parsedTask.title}**\n\n`;
+          confirmationContent += "**Task Preview:**\n\n";
+          confirmationContent += `**Title:** ${parsedTask.title}\n`;
+          
+          if (parsedTask.priority) {
+            confirmationContent += `**Priority:** ${parsedTask.priority.charAt(0).toUpperCase() + parsedTask.priority.slice(1)}\n`;
+          }
+          
+          if (parsedTask.due_date) {
+            confirmationContent += `**Due Date:** ${new Date(parsedTask.due_date).toLocaleDateString()}\n`;
             
-            console.log("Converted to task form data:", taskFormData);
-            
-            const confirmationMessageId = uuidv4();
-            
-            let confirmationContent = `I'll create a task: **${parsedTask.title}**\n\n`;
-            confirmationContent += "**Task Preview:**\n\n";
-            confirmationContent += `**Title:** ${parsedTask.title}\n`;
-            
-            if (parsedTask.priority) {
-              confirmationContent += `**Priority:** ${parsedTask.priority.charAt(0).toUpperCase() + parsedTask.priority.slice(1)}\n`;
+            if (parsedTask.due_time) {
+              confirmationContent += `**Time:** ${parsedTask.due_time}\n`;
             }
+          }
+          
+          if (parsedTask.location) {
+            confirmationContent += `**Location:** ${parsedTask.location}\n`;
+          }
+          
+          if (parsedTask.subtasks && parsedTask.subtasks.length > 0) {
+            confirmationContent += `**Subtasks:**\n`;
             
-            if (parsedTask.due_date) {
-              const formattedDate = typeof parsedTask.due_date === 'string'
-                ? parsedTask.due_date
-                : typeof parsedTask.due_date === 'object' && 'toLocaleDateString' in parsedTask.due_date
-                  ? (parsedTask.due_date as Date).toLocaleDateString()
-                  : String(parsedTask.due_date);
-                  
-              confirmationContent += `**Due Date:** ${formattedDate}\n`;
+            const renderSubtasks = (items: (string | NestedSubtask)[], indent = '') => {
+              let result = '';
               
-              if (parsedTask.due_time) {
-                confirmationContent += `**Time:** ${parsedTask.due_time}\n`;
-              }
-            }
-            
-            if (parsedTask.location) {
-              confirmationContent += `**Location:** ${parsedTask.location}\n`;
-            }
-            
-            if (parsedTask.subtasks && parsedTask.subtasks.length > 0) {
-              confirmationContent += `**Subtasks:**\n`;
-              
-              const renderSubtasks = (items: (string | NestedSubtask)[], indent = '') => {
-                let result = '';
-                
-                items.forEach((item) => {
-                  if (typeof item === 'string') {
-                    result += `${indent}- ${item}\n`;
-                  } else if (item && typeof item === 'object') {
-                    if (item.title || item.content) {
-                      result += `${indent}- **${item.title || item.content}**\n`;
-                    }
-                    
-                    if (item.subtasks && item.subtasks.length > 0) {
-                      result += renderSubtasks(item.subtasks, `${indent}  `);
-                    }
-                  }
-                });
-                
-                return result;
-              };
-              
-              confirmationContent += renderSubtasks(parsedTask.subtasks);
-            }
-            
-            const countAllSubtasks = (items: (string | NestedSubtask)[]): number => {
-              let count = 0;
-              
-              items.forEach(item => {
+              items.forEach((item) => {
                 if (typeof item === 'string') {
-                  count += 1;
-                } else if (item && typeof item === 'object') {
-                  count += 1;
+                  result += `${indent}- ${item}\n`;
+                } else {
+                  if (item.title || item.content) {
+                    result += `${indent}- **${item.title || item.content}**\n`;
+                  }
                   
                   if (item.subtasks && item.subtasks.length > 0) {
-                    count += countAllSubtasks(item.subtasks);
+                    result += renderSubtasks(item.subtasks, `${indent}  `);
                   }
                 }
               });
               
-              return count;
+              return result;
             };
             
-            const totalSubtasks = countAllSubtasks(parsedTask.subtasks);
-            const estimatedTime = totalSubtasks > 0 
-              ? `${10 + (totalSubtasks * 5)} minutes` 
-              : "a few minutes";
-              
-            confirmationContent += `\n**Estimated time:** ${estimatedTime}\n\n`;
-            confirmationContent += "Would you like me to create this task? You can say something like 'Yes', 'Go ahead', or 'Create it'.";
-            
-            const confirmationMessage: AIMessage = {
-              id: confirmationMessageId,
-              role: "assistant",
-              content: confirmationContent,
-              timestamp: new Date()
-            };
-            
-            setMessages(prevMessages => [...prevMessages, confirmationMessage]);
-            
-            setDetectedTask(taskFormData);
-            setPendingTaskConfirmation(true);
-            
-            return true;
-          } catch (conversionError) {
-            console.error("Error converting parsed task to form data:", conversionError);
+            confirmationContent += renderSubtasks(parsedTask.subtasks);
           }
-        }
-      } catch (err) {
-        console.error("Error parsing task with enhanced AI parser:", err);
-      }
-      
-      try {
-        const basicParsedTask = parseTaskFromMessage(messageText);
-        
-        if (basicParsedTask && basicParsedTask.title) {
-          console.log("Detected task in message using basic parser:", basicParsedTask);
           
-          const taskFormData = convertParsedTaskToFormData(basicParsedTask);
+          const countAllSubtasks = (items: (string | NestedSubtask)[]): number => {
+            let count = 0;
+            
+            items.forEach(item => {
+              if (typeof item === 'string') {
+                count += 1;
+              } else {
+                count += 1;
+                
+                if (item.subtasks && item.subtasks.length > 0) {
+                  count += countAllSubtasks(item.subtasks);
+                }
+              }
+            });
+            
+            return count;
+          };
           
-          const confirmationMessageId = uuidv4();
-          
-          const confirmationContent = generateTaskConfirmationText(basicParsedTask);
+          const totalSubtasks = countAllSubtasks(parsedTask.subtasks);
+          const estimatedTime = totalSubtasks > 0 
+            ? `${10 + (totalSubtasks * 5)} minutes` 
+            : "a few minutes";
+            
+          confirmationContent += `\n**Estimated time:** ${estimatedTime}\n\n`;
+          confirmationContent += "Would you like me to create this task? You can say something like 'Yes', 'Go ahead', or 'Create it'.";
           
           const confirmationMessage: AIMessage = {
             id: confirmationMessageId,
@@ -298,8 +256,34 @@ export const useAIChatOperations = () => {
           
           return true;
         }
-      } catch (basicParserError) {
-        console.error("Error using basic task parser:", basicParserError);
+      } catch (err) {
+        console.error("Error parsing task with enhanced AI parser:", err);
+      }
+      
+      const basicParsedTask = parseTaskFromMessage(messageText);
+      
+      if (basicParsedTask && basicParsedTask.title) {
+        console.log("Detected task in message using basic parser:", basicParsedTask);
+        
+        const taskFormData = convertParsedTaskToFormData(basicParsedTask);
+        
+        const confirmationMessageId = uuidv4();
+        
+        const confirmationContent = generateTaskConfirmationText(basicParsedTask);
+        
+        const confirmationMessage: AIMessage = {
+          id: confirmationMessageId,
+          role: "assistant",
+          content: confirmationContent,
+          timestamp: new Date()
+        };
+        
+        setMessages(prevMessages => [...prevMessages, confirmationMessage]);
+        
+        setDetectedTask(taskFormData);
+        setPendingTaskConfirmation(true);
+        
+        return true;
       }
     }
     

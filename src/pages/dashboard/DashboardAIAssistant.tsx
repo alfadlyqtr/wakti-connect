@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
 import { useAuth } from "@/hooks/useAuth";
@@ -54,10 +55,8 @@ const DashboardAIAssistant = () => {
     confirmCreateTask,
     cancelCreateTask,
     isCreatingTask,
-    pendingTaskConfirmation,
-    storeCurrentRole
+    pendingTaskConfirmation
   } = useAIAssistant();
-  
   const [inputMessage, setInputMessage] = useState("");
   const [isChecking, setIsChecking] = useState(true);
   const [canAccess, setCanAccess] = useState(false);
@@ -109,10 +108,6 @@ const DashboardAIAssistant = () => {
       try {
         const updatedSettings = { ...aiSettings, role };
         await updateSettings.mutateAsync(updatedSettings);
-        
-        if (storeCurrentRole) {
-          storeCurrentRole(role);
-        }
       } catch (error) {
         console.error("Failed to update AI role:", error);
         toast({
@@ -316,25 +311,6 @@ const DashboardAIAssistant = () => {
     }
   };
 
-  const handleConfirmTask = () => {
-    if (detectedTask) {
-      // Convert TaskFormData to ParsedTaskInfo
-      const parsedTaskInfo: ParsedTaskInfo = {
-        title: detectedTask.title,
-        description: detectedTask.description,
-        priority: detectedTask.priority || 'normal', // Ensure priority is always defined
-        subtasks: detectedTask.originalSubtasks || [],
-        due_date: detectedTask.due_date,
-        dueTime: detectedTask.due_time,
-        location: detectedTask.location,
-        hasTimeConstraint: false,
-        needsReview: false
-      };
-      
-      confirmCreateTask(parsedTaskInfo);
-    }
-  };
-
   if (isChecking) {
     console.log("Still checking access, showing loader");
     return <AIAssistantLoader />;
@@ -434,7 +410,7 @@ const DashboardAIAssistant = () => {
                               temporaryTranscript={temporaryTranscript}
                               showSuggestions={false}
                               detectedTask={detectedTask}
-                              onConfirmTask={handleConfirmTask}
+                              onConfirmTask={confirmCreateTask}
                               onCancelTask={cancelCreateTask}
                               isCreatingTask={isCreatingTask}
                               pendingTaskConfirmation={pendingTaskConfirmation}

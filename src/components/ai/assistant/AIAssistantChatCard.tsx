@@ -46,8 +46,8 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
   const getRoleTitle = () => {
     switch (selectedRole) {
       case 'student': return "Student Assistant";
-      case 'employee': return "Employee Assistant";
-      case 'writer': return "Writer Assistant";
+      case 'employee': return "Creative Assistant";
+      case 'writer': return "Creative Assistant";
       case 'business_owner': return "Business Assistant";
       default: return "AI Assistant";
     }
@@ -139,22 +139,15 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
       <div className="flex-1 flex flex-col overflow-hidden">
         <CardContent className="flex-1 overflow-y-auto p-0 pt-4">
           <div className="px-4 space-y-4 pb-4">
-            {messages.length === 0 ? (
-              <EmptyStateView
-                onPromptClick={handlePromptClick}
-                selectedRole={selectedRole}
-              />
-            ) : (
-              <AIAssistantChat
-                messages={messages}
-                isLoading={isLoading}
-                inputMessage={inputMessage}
-                setInputMessage={setInputMessage}
-                handleSendMessage={handleSendMessage}
-                canAccess={canAccess}
-                selectedRole={selectedRole}
-              />
-            )}
+            <AIAssistantChat
+              messages={messages}
+              isLoading={isLoading}
+              inputMessage={inputMessage}
+              setInputMessage={setInputMessage}
+              handleSendMessage={handleSendMessage}
+              canAccess={canAccess}
+              selectedRole={selectedRole}
+            />
             <div ref={messagesEndRef} />
           </div>
         </CardContent>

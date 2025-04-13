@@ -38,7 +38,7 @@ export const SubtasksSection: React.FC<SubtasksSectionProps> = ({
   const [showGroupCreator, setShowGroupCreator] = useState(false);
   const [newGroupName, setNewGroupName] = useState("");
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, update } = useFieldArray({
     control: form.control,
     name: "subtasks",
   });
@@ -98,6 +98,14 @@ export const SubtasksSection: React.FC<SubtasksSectionProps> = ({
     form.setValue('subtasks', updatedSubtasks);
   };
 
+  // Toggle group expansion
+  const toggleGroupExpansion = (groupId: string) => {
+    setExpandedGroups(prev => ({
+      ...prev,
+      [groupId]: !prev[groupId]
+    }));
+  };
+
   // Render a subtask item with proper indentation and grouping
   const renderSubtaskItem = (field: any, index: number, parentId: string | null = null, nestLevel = 0) => {
     const isGroup = !!field.is_group;
@@ -146,32 +154,19 @@ export const SubtasksSection: React.FC<SubtasksSectionProps> = ({
           )}
           
           {isGroup && (
-            <Collapsible 
-              open={isExpanded} 
-              onOpenChange={(open) => {
-                setExpandedGroups(prev => ({
-                  ...prev,
-                  [field.id]: open
-                }));
-              }}
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 mt-1"
+              onClick={() => toggleGroupExpansion(field.id)}
             >
-              <div className="flex items-center">
-                <CollapsibleTrigger asChild>
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    size="icon"
-                    className="h-5 w-5 p-0"
-                  >
-                    {isExpanded ? (
-                      <ChevronDown className="h-4 w-4" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4" />
-                    )}
-                  </Button>
-                </CollapsibleTrigger>
-              </div>
-            </Collapsible>
+              {isExpanded ? (
+                <ChevronDown className="h-4 w-4" />
+              ) : (
+                <ChevronRight className="h-4 w-4" />
+              )}
+            </Button>
           )}
           
           <FormField
@@ -202,15 +197,7 @@ export const SubtasksSection: React.FC<SubtasksSectionProps> = ({
         </div>
         
         {isGroup && (
-          <Collapsible 
-            open={isExpanded}
-            onOpenChange={(open) => {
-              setExpandedGroups(prev => ({
-                ...prev,
-                [field.id]: open
-              }));
-            }}
-          >
+          <Collapsible open={isExpanded} onOpenChange={() => toggleGroupExpansion(field.id)}>
             <CollapsibleContent>
               {/* Render nested subtasks if this is a group */}
               {field.subtasks && field.subtasks.length > 0 && (

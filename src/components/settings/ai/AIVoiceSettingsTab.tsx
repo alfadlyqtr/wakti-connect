@@ -1,150 +1,210 @@
+import React from 'react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useVoiceSettings } from '@/store/voiceSettings';
+import { Switch } from '@/components/ui/switch';
+import { useToast } from '@/components/ui/use-toast';
+import { Mic, RefreshCcw } from 'lucide-react';
+import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-import React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { useVoiceInteraction } from "@/hooks/ai/useVoiceInteraction";
-import { AlertCircle, CheckCircle2, Loader2, Mic, RefreshCw } from "lucide-react";
-
-export const AIVoiceSettingsTab = () => {
+export const AIVoiceSettingsTab: React.FC = () => {
   const { 
-    supportsVoice, 
-    isListening, 
-    startListening, 
-    stopListening,
+    autoSilenceDetection, 
+    visualFeedback,
+    language,
+    toggleAutoSilenceDetection,
+    toggleVisualFeedback,
+    setLanguage,
+    resetSettings
+  } = useVoiceSettings();
+  
+  const { toast } = useToast();
+  
+  const {
     apiKeyStatus,
-    retryApiKeyValidation,
-    apiKeyErrorDetails 
+    apiKeyErrorDetails,
+    retryApiKeyValidation
   } = useVoiceInteraction();
   
-  if (!supportsVoice) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Voice Features</CardTitle>
-          <CardDescription>Configure voice recognition and speech settings</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Not Supported</AlertTitle>
-            <AlertDescription>
-              Your browser does not support the Web Speech API needed for voice features.
-              Please try using a modern browser like Chrome, Edge, or Safari.
-            </AlertDescription>
-          </Alert>
-        </CardContent>
-      </Card>
-    );
-  }
+  const handleReset = () => {
+    resetSettings();
+    toast({
+      title: "Settings Reset",
+      description: "Voice settings have been reset to defaults",
+    });
+  };
+  
+  const handleApiKeyRetry = async () => {
+    toast({
+      title: "Testing OpenAI API Connection",
+      description: "Please wait while we verify the connection..."
+    });
+    
+    const success = await retryApiKeyValidation();
+    
+    if (success) {
+      toast({
+        title: "Connection Successful",
+        description: "OpenAI API key is valid for voice recognition features",
+        variant: "success"
+      });
+    }
+  };
   
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Voice Features</CardTitle>
-        <CardDescription>Configure voice recognition and speech settings</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* API Key Status */}
-        <div className="space-y-2">
-          <h3 className="text-sm font-medium">OpenAI API Connection</h3>
-          
-          {apiKeyStatus === "valid" ? (
-            <Alert variant="default" className="bg-green-50 border-green-200">
-              <CheckCircle2 className="h-4 w-4 text-green-500" />
-              <AlertTitle>Connected</AlertTitle>
-              <AlertDescription>
-                Your OpenAI API key is properly configured and working.
-              </AlertDescription>
-            </Alert>
-          ) : apiKeyStatus === "invalid" ? (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Connection Error</AlertTitle>
-              <AlertDescription>
-                {apiKeyErrorDetails || "Your OpenAI API key is invalid or has expired. Please update your API key in the settings."}
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Mic className="h-5 w-5 text-wakti-blue" />
+            Voice Recognition Settings
+          </CardTitle>
+          <CardDescription>
+            Configure how the AI assistant listens and responds to your voice
+          </CardDescription>
+        </CardHeader>
+        
+        <CardContent className="space-y-6">
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium">Voice Recognition</h3>
+            
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <label htmlFor="silence-detection" className="text-sm font-medium">
+                  Automatic Silence Detection
+                </label>
+                <p className="text-sm text-muted-foreground">
+                  Automatically stop listening when you pause speaking
+                </p>
+              </div>
+              <Switch
+                id="silence-detection"
+                checked={autoSilenceDetection}
+                onCheckedChange={toggleAutoSilenceDetection}
+              />
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <label htmlFor="visual-feedback" className="text-sm font-medium">
+                  Visual Voice Feedback
+                </label>
+                <p className="text-sm text-muted-foreground">
+                  Show animations when voice recognition is active
+                </p>
+              </div>
+              <Switch
+                id="visual-feedback"
+                checked={visualFeedback}
+                onCheckedChange={toggleVisualFeedback}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label htmlFor="language-select" className="text-sm font-medium">
+                Voice Recognition Language
+              </label>
+              <p className="text-sm text-muted-foreground mb-2">
+                Select the language for voice recognition
+              </p>
+              <Select value={language} onValueChange={setLanguage}>
+                <SelectTrigger id="language-select" className="w-full">
+                  <SelectValue placeholder="Language" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="en">English</SelectItem>
+                  <SelectItem value="ar">Arabic</SelectItem>
+                  <SelectItem value="es">Spanish</SelectItem>
+                  <SelectItem value="fr">French</SelectItem>
+                  <SelectItem value="de">German</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {apiKeyStatus === 'invalid' && (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 mt-4">
+                <h4 className="text-sm font-medium mb-2 flex items-center gap-1 text-amber-800">
+                  <RefreshCcw className="h-4 w-4" />
+                  OpenAI API Connection Issue
+                </h4>
+                <p className="text-sm text-amber-800 mb-3">
+                  {apiKeyErrorDetails || "There's an issue with the OpenAI API key. Enhanced voice recognition features are unavailable."}
+                </p>
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="mt-2"
-                  onClick={retryApiKeyValidation}
+                  onClick={handleApiKeyRetry}
+                  className="text-amber-800 border-amber-300 hover:bg-amber-100"
                 >
-                  <RefreshCw className="mr-2 h-4 w-4" />
                   Retry Connection
                 </Button>
-              </AlertDescription>
-            </Alert>
-          ) : (
-            <Alert>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <AlertTitle>Checking Connection</AlertTitle>
-              <AlertDescription>
-                Verifying your OpenAI API connection...
-              </AlertDescription>
-            </Alert>
-          )}
-        </div>
-        
-        {/* Voice Recognition Settings */}
-        <div className="space-y-4">
-          <h3 className="text-sm font-medium">Voice Recognition</h3>
-          
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Enable Voice Commands</p>
-              <p className="text-sm text-muted-foreground">
-                Allow AI assistant to respond to voice commands
-              </p>
-            </div>
-            <Switch checked={true} />
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Voice Activation Keyword</p>
-              <p className="text-sm text-muted-foreground">
-                Set a keyword to activate voice listening
-              </p>
-            </div>
-            <Switch checked={false} />
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Continuous Listening</p>
-              <p className="text-sm text-muted-foreground">
-                Keep microphone active for multiple commands
-              </p>
-            </div>
-            <Switch checked={false} />
-          </div>
-        </div>
-        
-        {/* Test Voice Recognition */}
-        <div className="space-y-2 pt-2">
-          <h3 className="text-sm font-medium">Test Voice Recognition</h3>
-          <p className="text-sm text-muted-foreground mb-2">
-            Click the button below to test your microphone and voice recognition
-          </p>
-          
-          <Button 
-            onClick={isListening ? stopListening : startListening}
-            disabled={apiKeyStatus === "invalid"}
-          >
-            {isListening ? (
-              <>Stop Test</>
-            ) : (
-              <>
-                <Mic className="mr-2 h-4 w-4" />
-                Start Voice Test
-              </>
+              </div>
             )}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+          </div>
+          
+          <div className="border-t pt-4">
+            <p className="text-sm text-muted-foreground mb-4">
+              Voice processing for WAKTI Assistant can now use OpenAI Whisper for enhanced recognition. 
+              Your voice is only processed after you finish speaking, and you can edit the transcription 
+              before sending.
+            </p>
+            
+            <div className="flex justify-end">
+              <Button variant="outline" size="sm" onClick={handleReset}>
+                Reset to Defaults
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Voice Recognition Features</CardTitle>
+          <CardDescription>
+            Enhanced voice features now available
+          </CardDescription>
+        </CardHeader>
+        
+        <CardContent className="space-y-3">
+          <div className="flex items-start gap-2">
+            <div className="bg-green-100 p-1 rounded-full text-green-700">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            </div>
+            <div>
+              <h4 className="text-sm font-medium">Complete Voice Recording</h4>
+              <p className="text-xs text-muted-foreground">
+                Records your full message before processing, no more live transcription
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-start gap-2">
+            <div className="bg-green-100 p-1 rounded-full text-green-700">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            </div>
+            <div>
+              <h4 className="text-sm font-medium">Post-Record Controls</h4>
+              <p className="text-xs text-muted-foreground">
+                Edit, retry, or send transcription after recording
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-start gap-2">
+            <div className="bg-green-100 p-1 rounded-full text-green-700">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            </div>
+            <div>
+              <h4 className="text-sm font-medium">Multilingual Support</h4>
+              <p className="text-xs text-muted-foreground">
+                Added support for multiple languages (English, Arabic, and more)
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
-
-export default AIVoiceSettingsTab;
