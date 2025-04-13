@@ -7,8 +7,8 @@ import Header from './Header';
 import MobileNavBar from './navbar/MobileNavBar';
 import { Toaster } from '@/components/ui/toaster';
 import NotificationListener from '../notifications/NotificationListener';
+import JobCardNotificationListener from '../job/JobCardNotificationListener';
 import ProgressierInitializer from '../ProgressierInitializer';
-import { useState, useEffect } from 'react';
 
 const AppLayout: React.FC = () => {
   return (
@@ -18,6 +18,9 @@ const AppLayout: React.FC = () => {
       
       {/* Listen for realtime notifications */}
       <NotificationListener />
+      
+      {/* Listen for job card notifications (business owners only) */}
+      <JobCardNotificationListener />
       
       {/* Main sidebar (desktop only) */}
       <MainSidebar />

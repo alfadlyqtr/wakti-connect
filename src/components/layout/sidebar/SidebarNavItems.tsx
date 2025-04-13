@@ -1,9 +1,12 @@
 
-import React from "react";
-import { NavLink, useLocation } from "react-router-dom";
-import { cn } from "@/lib/utils";
-import { Search } from "lucide-react";
-import { navItems } from "./sidebarNavConfig";
+import React from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { CommandIcon, Search } from 'lucide-react';
+import { UserRole } from '@/types/user';
+import { shouldHideMenuItem } from '@/utils/menuItemUtils';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { navItems } from '@/config/navItems';
 
 interface SidebarNavItemsProps {
   onNavClick?: () => void;
@@ -11,68 +14,61 @@ interface SidebarNavItemsProps {
   openCommandSearch?: () => void;
 }
 
-const SidebarNavItems = ({ 
-  onNavClick, 
+const SidebarNavItems: React.FC<SidebarNavItemsProps> = ({
+  onNavClick,
   isCollapsed = false,
-  openCommandSearch 
-}: SidebarNavItemsProps) => {
+  openCommandSearch,
+}) => {
   const location = useLocation();
-  const userRole = localStorage.getItem('userRole');
-  
-  // Filter the navigation items based on the user's role
-  const filteredNavItems = navItems.filter(item => {
-    // If the item should only be shown for certain roles
-    if (item.showFor && !item.showFor.includes(userRole as any)) {
-      return false;
-    }
-    
-    return true;
-  });
+  const navigate = useNavigate();
+  const userRole = (localStorage.getItem('userRole') as UserRole) || 'free';
 
-  // Add the search item for non-staff users
-  const shouldShowSearch = userRole !== 'staff' && openCommandSearch;
+  const handleNavigation = (path: string) => {
+    navigate(path);
+    if (onNavClick) {
+      onNavClick();
+    }
+  };
 
   return (
-    <nav className="space-y-1 px-3 py-2">
-      {shouldShowSearch && (
-        <button 
+    <div className="space-y-1 py-2">
+      {openCommandSearch && (
+        <Button
+          variant="ghost"
           className={cn(
-            "w-full flex items-center px-3 py-2 text-sm group rounded-md text-muted-foreground hover:bg-muted transition-colors",
-            isCollapsed ? "justify-center" : "justify-start"
+            "w-full justify-start px-2",
+            isCollapsed ? "justify-center" : "px-2"
           )}
           onClick={openCommandSearch}
         >
-          <Search className="h-5 w-5 shrink-0" />
-          {!isCollapsed && <span className="ml-3">Search</span>}
-        </button>
+          <Search className="h-4 w-4 mr-2" />
+          {!isCollapsed && <span>Search</span>}
+        </Button>
       )}
-      
-      {filteredNavItems.map((item) => (
-        <NavLink
-          key={item.path}
-          to={`/dashboard/${item.path}`}
-          onClick={onNavClick}
-          end={item.path === ""}
-          className={({ isActive }) => 
-            cn(
-              "flex items-center px-3 py-2 text-sm group rounded-md transition-colors",
-              isActive 
-                ? "bg-accent text-accent-foreground font-medium" 
-                : "text-muted-foreground hover:bg-muted hover:text-foreground",
-              isCollapsed ? "justify-center" : "justify-start"
-            )
-          }
-        >
-          <item.icon className="h-5 w-5 shrink-0" />
-          {!isCollapsed && <span className="ml-3">{item.label}</span>}
-          {!isCollapsed && item.badge && (
-            <span className="ml-auto bg-primary/10 text-primary px-1.5 py-0.5 rounded-full text-xs font-medium">
-              {item.badge}
-            </span>
-          )}
-        </NavLink>
-      ))}
-    </nav>
+
+      {navItems.map((item) => {
+        // Skip this menu item if it should be hidden for current user role
+        if (shouldHideMenuItem(item.href, userRole)) {
+          return null;
+        }
+
+        const isActive = location.pathname === item.href;
+        return (
+          <Button
+            key={item.href}
+            variant={isActive ? "secondary" : "ghost"}
+            className={cn(
+              "w-full justify-start",
+              isCollapsed ? "justify-center" : "px-2"
+            )}
+            onClick={() => handleNavigation(item.href)}
+          >
+            {item.icon}
+            {!isCollapsed && <span className="ml-2">{item.label}</span>}
+          </Button>
+        );
+      })}
+    </div>
   );
 };
 
