@@ -123,6 +123,19 @@ export const callAIAssistant = async (token: string, message: string, userName: 
       context += `User name: ${userName}. `;
     }
     
+    // Get AI assistant settings from localStorage for the selected role
+    try {
+      const aiSettingsString = localStorage.getItem('ai_settings');
+      if (aiSettingsString) {
+        const aiSettings = JSON.parse(aiSettingsString);
+        if (aiSettings && aiSettings.role) {
+          context += `Selected AI mode: ${aiSettings.role}. `;
+        }
+      }
+    } catch (error) {
+      console.warn("Error getting AI settings from localStorage:", error);
+    }
+    
     console.log("Sending AI request with context:", context);
     
     // Call the Supabase Edge Function

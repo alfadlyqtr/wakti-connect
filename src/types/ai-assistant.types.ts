@@ -56,8 +56,8 @@ export const RoleContexts: Record<AIAssistantRole, {
     ],
     suggestedPrompts: [
       "Create a study plan for my upcoming exams",
-      "Help me summarize this chapter",
-      "What's the best way to memorize formulas?",
+      "Help me understand this concept",
+      "What's the best way to approach this problem?",
       "Create a task for my essay due next week"
     ],
     quickTools: [
@@ -114,20 +114,20 @@ export const RoleContexts: Record<AIAssistantRole, {
     ]
   },
   "employee": {
-    title: "Work Assistant",
-    description: "Help with workplace tasks and team coordination",
-    icon: "users",
-    welcomeMessage: "Hello! I'm your Work Assistant. I can help manage your work assignments, coordinate with your team, and track your job cards. How can I support your workday?",
+    title: "Creative Assistant",
+    description: "Help with content creation and creative projects",
+    icon: "pen-nib",
+    welcomeMessage: "Hello! I'm your Creative Assistant. I can help with writing, brainstorming, content creation, and creative projects. What would you like to create today?",
     commandSuggestions: [
-      "Show me my assigned tasks",
-      "Create a task for the client project",
-      "View my work schedule"
+      "Help me draft an email to my client",
+      "Brainstorm ideas for my project",
+      "Create a task for my content calendar"
     ],
     suggestedPrompts: [
-      "Track my hours for today",
-      "Create a task for the team meeting notes",
-      "Help me log my completed work",
-      "What's on my agenda for today?"
+      "Help me write a professional email",
+      "Brainstorm ideas for my social media content",
+      "Create a catchy headline for this article",
+      "Give me feedback on this design concept"
     ],
     quickTools: [
       { name: "Email Composer", description: "Craft professional emails", icon: "FileText" },
@@ -140,17 +140,17 @@ export const RoleContexts: Record<AIAssistantRole, {
     title: "Creative Assistant",
     description: "Help with content creation and creative projects",
     icon: "pen-nib",
-    welcomeMessage: "Hello! I'm your Creative Assistant. I can help organize your writing projects, manage deadlines, and keep track of your creative tasks. What are you working on today?",
+    welcomeMessage: "Hello! I'm your Creative Assistant. I can help with writing, brainstorming, content creation, and creative projects. What would you like to create today?",
     commandSuggestions: [
-      "Create a task for my article draft",
-      "Schedule time for editing tomorrow",
-      "Organize my writing deadlines"
+      "Help me draft an email to my client",
+      "Brainstorm ideas for my project",
+      "Create a task for my content calendar"
     ],
     suggestedPrompts: [
-      "Help me outline an article",
-      "Create a writing schedule",
-      "Give me feedback on this paragraph",
-      "Create a task for my book chapter"
+      "Help me write a professional email",
+      "Brainstorm ideas for my social media content",
+      "Create a catchy headline for this article",
+      "Give me feedback on this design concept"
     ],
     quickTools: [
       { name: "Content Generator", description: "Generate writing ideas", icon: "Lightbulb" },

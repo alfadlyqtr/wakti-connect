@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
 import { useAuth } from "@/hooks/useAuth";
@@ -108,6 +107,10 @@ const DashboardAIAssistant = () => {
       try {
         const updatedSettings = { ...aiSettings, role };
         await updateSettings.mutateAsync(updatedSettings);
+        
+        if (storeCurrentRole) {
+          storeCurrentRole(role);
+        }
       } catch (error) {
         console.error("Failed to update AI role:", error);
         toast({

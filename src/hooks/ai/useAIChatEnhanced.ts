@@ -1,6 +1,7 @@
+
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useAIChatOperations } from "./operations/useAIChatOperations";
-import { AIMessage } from "@/types/ai-assistant.types";
+import { AIMessage, AIAssistantRole } from "@/types/ai-assistant.types";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { TaskFormData } from "@/types/task.types";
@@ -33,6 +34,21 @@ export const useAIChatEnhanced = () => {
       contextMemoryRef.current = messages.slice(-MAX_CONTEXT_MESSAGES);
     }
   }, [messages]);
+  
+  // Store the current AI role in localStorage when it changes
+  const storeCurrentRole = useCallback((role: AIAssistantRole) => {
+    try {
+      const aiSettingsString = localStorage.getItem('ai_settings');
+      let aiSettings = aiSettingsString ? JSON.parse(aiSettingsString) : {};
+      
+      aiSettings.role = role;
+      localStorage.setItem('ai_settings', JSON.stringify(aiSettings));
+      
+      console.log("Stored current AI role in localStorage:", role);
+    } catch (error) {
+      console.error("Error storing AI role in localStorage:", error);
+    }
+  }, []);
   
   // Enhanced integration: Get application context for better responses
   const getApplicationContext = useCallback(async () => {
@@ -101,6 +117,7 @@ export const useAIChatEnhanced = () => {
     cancelCreateTask,
     isCreatingTask,
     pendingTaskConfirmation,
-    getRecentContext: () => contextMemoryRef.current
+    getRecentContext: () => contextMemoryRef.current,
+    storeCurrentRole
   };
 };

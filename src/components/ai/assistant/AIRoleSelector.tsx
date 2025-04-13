@@ -29,12 +29,12 @@ export const AIRoleSelector: React.FC<AIRoleSelectorProps> = ({
   // Check if current role is either employee or writer for the combined creative tab
   const isCreativeActive = selectedRole === "employee" || selectedRole === "writer";
   
-  // Role descriptions for tooltips
+  // Enhanced role descriptions for tooltips
   const roleDescriptions = {
-    general: "Daily productivity assistant: tasks, reminders, schedules, and general assistance",
-    student: "Academic assistant: study plans, research help, assignments, and educational support",
-    creative: "Content creation assistant: emails, professional writing, creative content, and marketing",
-    business_owner: "Business assistant: team management, analytics, business operations, and reports"
+    general: "Daily productivity assistant: Answer questions, manage tasks, create reminders, and provide general assistance",
+    student: "Academic assistant: Homework help, study plans, research support, and guided learning (not just answers)",
+    creative: "Content creation assistant: Write emails, draft content, develop creative ideas, and enhance communications",
+    business_owner: "Business assistant: Analyze performance, manage staff, handle bookings, and optimize operations"
   };
 
   return (
