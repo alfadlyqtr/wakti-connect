@@ -21,8 +21,9 @@ export const fetchKnowledgeUploads = async (): Promise<AIKnowledgeUpload[]> => {
     title: item.title,
     content: item.content,
     created_at: item.created_at,
-    // Set default role if not present in the database
-    role: (item.role as AIAssistantRole | undefined) || 'general'
+    updated_at: item.updated_at || item.created_at,
+    // Handle the case where role might not exist in the database
+    role: (item as any).role as AIAssistantRole || 'general'
   })) as AIKnowledgeUpload[];
 };
 
