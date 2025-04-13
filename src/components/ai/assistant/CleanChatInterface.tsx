@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from "react";
 import { SendHorizontal, Loader2, Mic, MicOff, ImagePlus, Volume2, Camera } from "lucide-react";
 import { AIMessage, AIAssistantRole } from "@/types/ai-assistant.types";
@@ -9,12 +10,12 @@ import { AIMessageBubble } from "./AIMessageBubble";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { parseTaskFromMessage } from "@/hooks/ai/utils/taskParser";
-import { ParsedTaskInfo } from "@/hooks/ai/utils/taskParser.types";
+import { parseTaskFromMessage, ParsedTaskInfo } from "@/hooks/ai/utils/taskParser";
 import { cn } from "@/lib/utils";
 import { TypographyP } from "@/components/ui/typography";
 import { TaskConfirmationCard } from "../task/TaskConfirmationCard";
 
+// Animated audio level visualization component
 const AudioLevelIndicator = ({ level }: { level: number }) => {
   const bars = 5;
   const activeCount = Math.min(bars, Math.ceil(level * bars));
@@ -93,6 +94,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
   const [showControls, setShowControls] = useState(false);
   const [useTextarea, setUseTextarea] = useState(false);
   
+  // Get placeholder text based on selected role
   const getPlaceholderText = () => {
     switch (selectedRole) {
       case "student":
@@ -108,12 +110,14 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
   };
 
   useEffect(() => {
+    // Scroll to bottom when messages change
     if (endOfMessagesRef.current) {
       endOfMessagesRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, isLoading, temporaryTranscript, pendingTaskConfirmation]);
 
   useEffect(() => {
+    // Switch to textarea for longer inputs
     if (inputMessage.length > 100 && !useTextarea) {
       setUseTextarea(true);
     } else if (inputMessage.length === 0 && useTextarea) {
@@ -126,6 +130,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
     if (file && onFileUpload) {
       onFileUpload(file);
     }
+    // Reset the input
     if (e.target.value) e.target.value = '';
   };
 
@@ -144,6 +149,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
 
   return (
     <div className="flex flex-col h-[calc(100vh-14rem)] sm:h-[600px] max-h-[700px] bg-card rounded-md border shadow-sm">
+      {/* Hidden file input */}
       <input 
         type="file" 
         ref={fileInputRef} 
@@ -152,6 +158,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
         accept="image/*,.pdf,.doc,.docx,.txt"
       />
       
+      {/* Message Area */}
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
           {messages.length === 0 ? (
@@ -178,6 +185,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
             ))
           )}
           
+          {/* Loading indicator */}
           {isLoading && (
             <div className="flex items-start gap-3 animate-in fade-in-50">
               <Avatar className="h-8 w-8">
@@ -191,6 +199,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
             </div>
           )}
           
+          {/* Voice recognition in progress */}
           {isListening && (
             <div className="flex items-start gap-3 animate-in fade-in-50">
               <Avatar className="h-8 w-8">
@@ -232,6 +241,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
             </div>
           )}
           
+          {/* Voice processing indicator */}
           {!isListening && processingVoice && (
             <div className="flex items-start gap-3 animate-in fade-in-50">
               <Avatar className="h-8 w-8">
@@ -246,6 +256,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
             </div>
           )}
           
+          {/* Task confirmation card */}
           {pendingTaskConfirmation && detectedTask && (
             <div className="py-2">
               <TaskConfirmationCard
@@ -261,6 +272,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
         </div>
       </ScrollArea>
       
+      {/* Input Area */}
       <div className="p-4 border-t">
         <form onSubmit={handleSendMessage}>
           <div className="relative">
@@ -288,6 +300,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
             )}
             
             <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+              {/* Media controls */}
               {(showControls || !isInputEmpty) && (
                 <>
                   {onCameraCapture && (
@@ -337,6 +350,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
                 </>
               )}
               
+              {/* Send button */}
               <Button 
                 type="submit" 
                 size="icon" 

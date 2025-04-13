@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { AIMessage, AIAssistantRole } from "@/types/ai-assistant.types";
+import { AIMessage } from "@/types/ai-assistant.types";
 import { callAIAssistant } from "../utils/callAIAssistant";
 import { v4 as uuidv4 } from "uuid";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,12 +10,6 @@ import { createAITask, getEstimatedTaskTime } from "@/services/ai/aiTaskService"
 import { parseTaskWithAI, NestedSubtask } from "@/services/ai/aiTaskParserService";
 import { TaskFormData, SubTask } from "@/types/task.types";
 import { toast } from "@/components/ui/use-toast";
-import { 
-  detectUserIntent, 
-  UserIntent,
-  shouldSuggestTaskCreation,
-  enhanceAIResponse
-} from "@/services/ai/aiConversationService";
 
 const WAKTI_TOPICS = [
   "task management", "to-do lists", "appointments", "bookings", 
@@ -42,9 +36,6 @@ export const useAIChatOperations = () => {
   const [detectedTask, setDetectedTask] = useState<TaskFormData | null>(null);
   const [pendingTaskConfirmation, setPendingTaskConfirmation] = useState<boolean>(false);
   const [isCreatingTask, setIsCreatingTask] = useState(false);
-  const [currentRole, setCurrentRole] = useState<AIAssistantRole>("general");
-  const [lastDetectedIntent, setLastDetectedIntent] = useState<UserIntent>(UserIntent.CHAT_CONTINUATION);
-  
   const { user } = useAuth();
   const { 
     prepareMessageWithContext, 
@@ -157,23 +148,7 @@ export const useAIChatOperations = () => {
       }
     }
     
-    const intent = detectUserIntent(messageText, currentRole);
-    setLastDetectedIntent(intent);
-    
-    const isExplicitTaskRequest = intent === UserIntent.TASK_CREATION;
-    const isTaskSuggestion = shouldSuggestTaskCreation(intent, messageText);
-    
-    if (!isExplicitTaskRequest && !isTaskSuggestion) {
-      console.log("Not a task creation intent, continuing normal conversation");
-      return false;
-    }
-    
-    if (isTaskSuggestion && !isExplicitTaskRequest) {
-      console.log("Task suggestion detected, but not automatically creating task");
-      return false;
-    }
-    
-    if (isExplicitTaskRequest && !pendingTaskConfirmation) {
+    if (!pendingTaskConfirmation) {
       try {
         console.log("Attempting to parse task with AI:", messageText);
         const parsedTask = await parseTaskWithAI(messageText);
@@ -313,7 +288,7 @@ export const useAIChatOperations = () => {
     }
     
     return false;
-  }, [pendingTaskConfirmation, detectedTask, isTaskConfirmation, isTaskRejection, confirmCreateTask, cancelCreateTask, currentRole]);
+  }, [pendingTaskConfirmation, detectedTask, isTaskConfirmation, isTaskRejection, confirmCreateTask, cancelCreateTask]);
   
   const sendMessage = useMutation({
     mutationFn: async (messageText: string) => {
@@ -356,24 +331,12 @@ export const useAIChatOperations = () => {
         
         await new Promise(resolve => setTimeout(resolve, 500));
         
-        let enhancedContextualMessage = contextualMessage;
-        enhancedContextualMessage += `\n\nCurrent AI Assistant mode: ${currentRole}. Please respond appropriately for this mode.`;
-        
-        const intent = detectUserIntent(messageText, currentRole);
-        setLastDetectedIntent(intent);
-        
-        const response = await callAIAssistant(token, enhancedContextualMessage, userName);
-        
-        const enhancedResponse = enhanceAIResponse(
-          response.response,
-          intent,
-          currentRole
-        );
+        const response = await callAIAssistant(token, contextualMessage, userName);
         
         const aiMessage: AIMessage = {
           id: aiMessageId,
           role: "assistant",
-          content: enhancedResponse,
+          content: response.response,
           timestamp: new Date()
         };
         
@@ -403,10 +366,6 @@ export const useAIChatOperations = () => {
     clearDetectedTask();
   };
   
-  const updateCurrentRole = useCallback((role: AIAssistantRole) => {
-    setCurrentRole(role);
-  }, []);
-  
   return {
     messages,
     sendMessage,
@@ -416,9 +375,6 @@ export const useAIChatOperations = () => {
     confirmCreateTask,
     cancelCreateTask,
     isCreatingTask,
-    pendingTaskConfirmation,
-    currentRole,
-    updateCurrentRole,
-    lastDetectedIntent
+    pendingTaskConfirmation
   };
 };

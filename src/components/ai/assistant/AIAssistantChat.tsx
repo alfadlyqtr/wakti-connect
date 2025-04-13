@@ -1,9 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { AIMessage, AIAssistantRole, RoleContexts } from '@/types/ai-assistant.types';
 import { AIAssistantMessage } from '../message/AIAssistantMessage';
 import { Loader2 } from 'lucide-react';
 import { getTimeBasedGreeting } from '@/lib/dateUtils';
-import { UI_LOCKED } from '@/constants/system';
 
 export interface AIAssistantChatProps {
   messages: AIMessage[];
@@ -24,42 +24,55 @@ export const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
   canAccess,
   selectedRole
 }) => {
+  // State to track which message is currently being "spoken"
   const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
   
+  // Determine if it's the first message (welcome message)
   const isFirstMessage = messages.length <= 1;
   
+  // Get welcome message with time-based greeting
   const getWelcomeMessage = () => {
     const roleContext = RoleContexts[selectedRole];
+    // Check if welcomeMessage exists, otherwise use a default message
     const baseMessage = roleContext.welcomeMessage || 
       `Hello! I'm your ${roleContext.title}. I can help with a variety of tasks. How can I assist you today?`;
     
     const timeGreeting = getTimeBasedGreeting();
     
+    // Check if the welcomeMessage has a comma or exclamation to split it
     if (baseMessage.includes(',') || baseMessage.includes('!')) {
+      // Extract just the greeting part (before the first comma or exclamation)
       const firstPart = baseMessage.split(/[,!]/)[0];
       const restOfMessage = baseMessage.substring(firstPart.length);
       
+      // Replace the initial greeting with a time-based one
       return `${timeGreeting}${restOfMessage}`;
     }
     
+    // If no specific pattern, just return with time greeting
     return `${timeGreeting}! ${baseMessage}`;
   };
   
+  // Effect to simulate "speaking" animation for the latest assistant message
   useEffect(() => {
     if (messages.length === 0) return;
     
+    // Find the latest assistant message
     const latestAssistantMessage = [...messages]
       .reverse()
       .find(msg => msg.role === 'assistant');
     
     if (latestAssistantMessage) {
+      // Set this message as the speaking message
       setSpeakingMessageId(latestAssistantMessage.id);
       
+      // Simulate speaking time based on message length (1 second per 20 characters)
       const speakingTime = Math.min(
         Math.max(latestAssistantMessage.content.length / 20, 3), 
         10
       ) * 1000;
       
+      // Clear the speaking state after the calculated time
       const timer = setTimeout(() => {
         setSpeakingMessageId(null);
       }, speakingTime);
@@ -68,6 +81,7 @@ export const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
     }
   }, [messages]);
   
+  // If there are no messages (besides welcome), show role context welcome message
   if (isFirstMessage) {
     const welcomeMessage: AIMessage = {
       id: "role-welcome",
