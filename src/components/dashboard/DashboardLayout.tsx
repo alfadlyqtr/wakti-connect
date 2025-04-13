@@ -32,19 +32,19 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
     profileLoading, 
     userId, 
     isStaff, 
-    userRole: detectedUserRole,
-    isSuperAdmin
+    userRole: detectedUserRole 
   } = useDashboardUserProfile();
 
   // Use provided role or detected role
   const accountType = profileData?.account_type || propUserRole || detectedUserRole || "free";
   
+  // Check if user is super admin from localStorage first
+  const isSuperAdmin = localStorage.getItem('isSuperAdmin') === 'true';
+  
   // Get effective user role with proper prioritization
-  const userRoleValue: UserRole = getEffectiveRole(
-    accountType as any, 
-    isStaff,
-    isSuperAdmin
-  );
+  const userRoleValue: UserRole = isSuperAdmin 
+    ? 'super-admin' 
+    : getEffectiveRole(accountType as any, isStaff);
 
   // Determine if the banner should be shown (only for free individual accounts)
   const showUpgradeBanner = accountType === 'free' && !isStaff && userRoleValue !== 'business' && userRoleValue !== 'super-admin';
@@ -81,8 +81,8 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
         return;
       }
       
-      // Only super admins should be redirected to their special dashboard
-      if (userRoleValue === 'super-admin' && isSuperAdmin) {
+      // Super admin should be redirected to their special dashboard
+      if (userRoleValue === 'super-admin' || isSuperAdmin) {
         console.log("Super admin detected, redirecting to super admin dashboard");
         setRedirectAttempts(prev => prev + 1);
         setLastRedirectTime(now);

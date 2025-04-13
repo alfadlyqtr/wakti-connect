@@ -1664,7 +1664,6 @@ export type Database = {
           id: string
           is_recurring: boolean | null
           is_recurring_instance: boolean | null
-          location: string | null
           parent_recurring_id: string | null
           priority: string
           snooze_count: number | null
@@ -1685,7 +1684,6 @@ export type Database = {
           id?: string
           is_recurring?: boolean | null
           is_recurring_instance?: boolean | null
-          location?: string | null
           parent_recurring_id?: string | null
           priority?: string
           snooze_count?: number | null
@@ -1706,7 +1704,6 @@ export type Database = {
           id?: string
           is_recurring?: boolean | null
           is_recurring_instance?: boolean | null
-          location?: string | null
           parent_recurring_id?: string | null
           priority?: string
           snooze_count?: number | null
@@ -1726,10 +1723,7 @@ export type Database = {
           due_time: string | null
           id: string
           is_completed: boolean
-          is_group: boolean | null
-          parent_id: string | null
           task_id: string
-          title: string | null
           updated_at: string
         }
         Insert: {
@@ -1739,10 +1733,7 @@ export type Database = {
           due_time?: string | null
           id?: string
           is_completed?: boolean
-          is_group?: boolean | null
-          parent_id?: string | null
           task_id: string
-          title?: string | null
           updated_at?: string
         }
         Update: {
@@ -1752,10 +1743,7 @@ export type Database = {
           due_time?: string | null
           id?: string
           is_completed?: boolean
-          is_group?: boolean | null
-          parent_id?: string | null
           task_id?: string
-          title?: string | null
           updated_at?: string
         }
         Relationships: [

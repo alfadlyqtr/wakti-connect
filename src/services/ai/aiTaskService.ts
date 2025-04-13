@@ -58,8 +58,7 @@ export const createAITask = async (taskData: TaskFormData): Promise<Task | null>
           due_date: subtask.due_date || null,
           due_time: subtask.due_time || null,
           is_group: subtask.is_group || false,
-          parent_id: subtask.parent_id || null,
-          title: subtask.title || null
+          parent_id: subtask.parent_id || null
         }));
       }
       

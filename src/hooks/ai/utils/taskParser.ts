@@ -1,7 +1,8 @@
 import { TaskFormData, TaskPriority, SubTask } from "@/types/task.types";
 import { NestedSubtask } from "@/services/ai/aiTaskParserService";
+
+// Import the updated interface from taskParser.types.ts
 import { ParsedTaskInfo } from "./taskParser.types";
-import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Parses natural language text to extract task information
@@ -343,9 +344,9 @@ export function convertParsedTaskToFormData(parsedTask: ParsedTaskInfo): TaskFor
   // Handle both string-based and nested subtasks
   parsedTask.subtasks.forEach((item, index) => {
     if (typeof item === 'string') {
-      // Handle simple string subtask - use UUID instead of temp string ID
+      // Handle simple string subtask
       formattedSubtasks.push({
-        id: uuidv4(), // Use proper UUID
+        id: `temp-${index}`, // Temporary ID until saved
         task_id: 'pending', // Will be assigned when task is created
         content: item,
         is_completed: false
@@ -353,7 +354,7 @@ export function convertParsedTaskToFormData(parsedTask: ParsedTaskInfo): TaskFor
     } else {
       // Handle nested subtask structure
       const isGroup = !!(item.subtasks && item.subtasks.length > 0);
-      const groupId = uuidv4(); // Use proper UUID for group ID
+      const groupId = `temp-group-${index}`;
       
       // Add the group itself
       formattedSubtasks.push({
@@ -367,13 +368,13 @@ export function convertParsedTaskToFormData(parsedTask: ParsedTaskInfo): TaskFor
       
       // Add child items if this is a group
       if (isGroup && item.subtasks) {
-        item.subtasks.forEach((subitem) => {
+        item.subtasks.forEach((subitem, subindex) => {
           const subtaskContent = typeof subitem === 'string' 
             ? subitem 
             : subitem.content || subitem.title || '';
             
           formattedSubtasks.push({
-            id: uuidv4(), // Use proper UUID for child ID
+            id: `temp-${groupId}-${subindex}`,
             task_id: 'pending',
             content: subtaskContent,
             is_completed: false,

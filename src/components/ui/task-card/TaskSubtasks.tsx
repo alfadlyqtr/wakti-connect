@@ -27,6 +27,13 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({
 
   if (!subtasks || subtasks.length === 0) return null;
 
+  const toggleGroup = (groupId: string) => {
+    setExpandedGroups(prev => ({
+      ...prev,
+      [groupId]: !prev[groupId]
+    }));
+  };
+
   // Check if we have the nested structure from AI parser
   const hasNestedStructure = subtasks.some(st => 
     typeof st === 'object' && st !== null && 
@@ -105,10 +112,10 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({
       const groupId = `${parentPath}-${index}`;
       const isExpanded = expandedGroups[groupId] !== false; // Default to expanded
       
-      // Get the group title - prioritize the dedicated title field
+      // Get the group title
       const title = 
-        (item as SubTask).title || 
         (item as NestedSubtask).title || 
+        (item as SubTask).title || 
         (item as SubTask).content || 
         (item as NestedSubtask).content || 
         "Group";
@@ -121,31 +128,20 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({
       
       return (
         <li key={groupId} className="space-y-1">
-          <Collapsible 
-            open={isExpanded} 
-            onOpenChange={(open) => {
-              setExpandedGroups(prev => ({
-                ...prev,
-                [groupId]: open
-              }));
-            }}
-          >
-            <div className="flex items-start gap-2">
-              <CollapsibleTrigger asChild>
+          <Collapsible open={isExpanded} onOpenChange={() => toggleGroup(groupId)}>
+            <CollapsibleTrigger asChild>
+              <div className="flex items-start gap-2 cursor-pointer">
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
                   className="h-5 w-5 p-0"
                 >
-                  {isExpanded ? 
-                    <ChevronDown className="h-3.5 w-3.5" /> : 
-                    <ChevronRight className="h-3.5 w-3.5" />
-                  }
+                  {isExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
                 </Button>
-              </CollapsibleTrigger>
-              <span className="text-sm font-medium">{title}</span>
-            </div>
+                <span className="text-sm font-medium">{title}</span>
+              </div>
+            </CollapsibleTrigger>
             
             <CollapsibleContent>
               <ul className="ml-5 space-y-1.5 mt-1 pl-2 border-l-2 border-gray-200 dark:border-gray-700">

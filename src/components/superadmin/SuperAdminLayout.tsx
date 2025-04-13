@@ -1,14 +1,12 @@
 
 import React, { useState } from "react";
-import { Shield, AlertTriangle, Activity, Bell, ChevronLeft, Menu, LogOut } from "lucide-react";
+import { Shield, AlertTriangle, Activity, Bell, ChevronLeft, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import SuperAdminSidebar from "./SuperAdminSidebar";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
-import { Outlet, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/use-toast";
+import { Outlet } from "react-router-dom";
 
 interface SuperAdminLayoutProps {
   children?: React.ReactNode;
@@ -18,7 +16,6 @@ const SuperAdminLayout: React.FC<SuperAdminLayoutProps> = ({ children }) => {
   const { user } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isEmergencyPanelOpen, setIsEmergencyPanelOpen] = useState(false);
-  const navigate = useNavigate();
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -26,25 +23,6 @@ const SuperAdminLayout: React.FC<SuperAdminLayoutProps> = ({ children }) => {
 
   const toggleEmergencyPanel = () => {
     setIsEmergencyPanelOpen(!isEmergencyPanelOpen);
-  };
-
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-      localStorage.removeItem('isSuperAdmin');
-      toast({
-        title: "Logged out",
-        description: "You have been successfully logged out",
-      });
-      navigate('/auth/login');
-    } catch (error) {
-      console.error("Logout error:", error);
-      toast({
-        title: "Logout failed",
-        description: "An error occurred while logging out",
-        variant: "destructive"
-      });
-    }
   };
 
   return (
@@ -84,16 +62,6 @@ const SuperAdminLayout: React.FC<SuperAdminLayoutProps> = ({ children }) => {
             <p className="font-medium">{user?.email}</p>
             <p className="text-xs text-gray-500">Super Administrator</p>
           </div>
-          {/* Added logout button */}
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="text-red-400 flex items-center gap-1"
-            onClick={handleLogout}
-          >
-            <LogOut className="h-4 w-4" />
-            <span>Logout</span>
-          </Button>
         </div>
       </header>
 

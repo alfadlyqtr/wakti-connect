@@ -2,8 +2,6 @@
 import { supabase } from "@/lib/supabase";
 import { toast } from "@/components/ui/use-toast";
 import { SubTask } from "@/types/task.types";
-import { v4 as uuidv4 } from "uuid";
-import { mapNestedStructureToFlatSubtasks } from "./subtaskStructureUtils";
 
 export interface NestedSubtask {
   title?: string;
@@ -104,7 +102,7 @@ export const convertNestedSubtasksToSubTasks = (
   parentId: string | null = null
 ): SubTask[] => {
   return nestedItems.map((item, index) => {
-    const tempId = uuidv4(); // Using proper UUID for subtask IDs
+    const tempId = `temp-${Date.now()}-${index}`;
     
     if (typeof item === 'string') {
       return {
@@ -151,8 +149,8 @@ export const convertParsedTaskToFormData = (parsedTask: ParsedTask) => {
   const flatSubtasks = flattenSubtasks(parsedTask.subtasks);
   
   // Convert subtasks to the format expected by the task form
-  const simpleSubtasks = flatSubtasks.map((content) => ({
-    id: uuidv4(), // Using proper UUID for subtask IDs
+  const simpleSubtasks = flatSubtasks.map((content, index) => ({
+    id: `temp-flat-${index}`,
     task_id: 'pending',
     content,
     is_completed: false
