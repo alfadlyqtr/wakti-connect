@@ -24,7 +24,7 @@ interface SidebarProfileData {
 
 interface SidebarProps {
   isOpen: boolean;
-  userRole: "free" | "individual" | "business" | "staff";
+  userRole: UserRole;
   onCollapseChange?: (collapsed: boolean) => void;
   closeSidebar?: () => void;
   openCommandSearch?: () => void;
