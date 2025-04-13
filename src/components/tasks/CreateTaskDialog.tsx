@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { taskFormSchema, TaskFormValues } from "@/components/tasks/TaskFormSchema";
 import { Button } from "@/components/ui/button";
@@ -14,23 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import {
   Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,21 +25,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PlusCircle, Trash2, CalendarIcon } from "lucide-react";
+import { Clock } from "lucide-react";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
+import TaskFormFields from "./form-fields/TaskFormFields";
 
 interface CreateTaskDialogProps {
   open: boolean;
@@ -71,8 +44,6 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   userRole,
 }) => {
   const [loading, setLoading] = useState(false);
-  const [showSubtasks, setShowSubtasks] = useState(false);
-  const [showRecurring, setShowRecurring] = useState(false);
   const [freeAccountAlertOpen, setFreeAccountAlertOpen] = useState(false);
 
   const form = useForm<TaskFormValues>({
@@ -89,17 +60,41 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       recurring: {
         frequency: "weekly",
         interval: 1,
-      }
+      },
+      preserveNestedStructure: true
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: "subtasks",
-  });
-
-  const handleAddSubtask = () => {
-    append({ content: "", isCompleted: false });
+  // Function to process nested subtasks before submission
+  const processNestedSubtasks = (subtasks: any[]) => {
+    return subtasks.map(subtask => {
+      // Create a clean subtask object
+      const cleanSubtask: any = {
+        content: subtask.content,
+        is_completed: subtask.isCompleted || false,
+        due_date: subtask.dueDate || null,
+        due_time: subtask.dueTime || null,
+      };
+      
+      // Add group-specific properties if this is a group
+      if (subtask.is_group) {
+        cleanSubtask.is_group = true;
+        cleanSubtask.title = subtask.title || subtask.content;
+        
+        // Process nested subtasks if they exist
+        if (subtask.subtasks && subtask.subtasks.length > 0) {
+          cleanSubtask.subtasks = subtask.subtasks.map((nestedSubtask: any) => ({
+            content: nestedSubtask.content,
+            is_completed: nestedSubtask.isCompleted || false,
+            due_date: nestedSubtask.dueDate || null,
+            due_time: nestedSubtask.dueTime || null,
+            parent_id: 'pending' // Will be replaced with actual parent ID after creation
+          }));
+        }
+      }
+      
+      return cleanSubtask;
+    });
   };
 
   const handleCreateTask = async (values: TaskFormValues) => {
@@ -117,19 +112,15 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
         priority: values.priority,
         due_date: values.dueDate,
         due_time: values.dueTime || null,
-        is_recurring: values.isRecurring
+        is_recurring: values.isRecurring,
+        preserve_nested_structure: values.preserveNestedStructure
       };
 
       console.log("Form values:", values);
-      console.log("Creating task with data:", taskData);
 
       if (values.enableSubtasks && values.subtasks && values.subtasks.length > 0) {
-        taskData.subtasks = values.subtasks.map((subtask) => ({
-          content: subtask.content,
-          is_completed: subtask.isCompleted || false,
-          due_date: subtask.dueDate || null,
-          due_time: subtask.dueTime || null,
-        }));
+        // Process subtasks to handle nested structure
+        taskData.subtasks = processNestedSubtasks(values.subtasks);
       } else {
         taskData.subtasks = [];
       }
@@ -194,309 +185,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
               onSubmit={form.handleSubmit(handleCreateTask)}
               className="space-y-6"
             >
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Task Title</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Enter task title"
-                        {...field}
-                        autoFocus
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Enter task description"
-                        {...field}
-                        className="min-h-[100px]"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="priority"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Priority</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select Priority" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="urgent">Urgent</SelectItem>
-                          <SelectItem value="high">High</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="normal">Normal</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="dueDate"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Due Date</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(new Date(field.value), "PPP")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={
-                              field.value
-                                ? new Date(field.value)
-                                : new Date()
-                            }
-                            onSelect={(date) =>
-                              field.onChange(
-                                date
-                                  ? format(date, "yyyy-MM-dd")
-                                  : format(new Date(), "yyyy-MM-dd")
-                              )
-                            }
-                            disabled={(date) => date < new Date("1900-01-01")}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="dueTime"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Due Time</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="time"
-                          placeholder="Select time"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="enable-subtasks"
-                  checked={showSubtasks}
-                  onCheckedChange={setShowSubtasks}
-                />
-                <Label htmlFor="enable-subtasks">Add Subtasks</Label>
-              </div>
-
-              {showSubtasks && (
-                <div className="border rounded-md p-4 space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="enableSubtasks"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>Enable Subtasks</FormLabel>
-                          <FormDescription>
-                            Break down your task into smaller subtasks
-                          </FormDescription>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-
-                  {form.watch("enableSubtasks") && (
-                    <div className="space-y-4">
-                      {fields.map((field, index) => (
-                        <div
-                          key={field.id}
-                          className="flex items-center space-x-2"
-                        >
-                          <div className="flex-1">
-                            <FormField
-                              control={form.control}
-                              name={`subtasks.${index}.content`}
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormControl>
-                                    <Input
-                                      placeholder="Subtask content"
-                                      {...field}
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="icon"
-                            onClick={() => remove(index)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleAddSubtask}
-                      >
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Add Subtask
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="enable-recurring"
-                  checked={showRecurring}
-                  onCheckedChange={setShowRecurring}
-                />
-                <Label htmlFor="enable-recurring">Make Recurring</Label>
-              </div>
-
-              {showRecurring && (
-                <div className="border rounded-md p-4 space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="isRecurring"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>Enable Recurring</FormLabel>
-                          <FormDescription>
-                            Set this task to repeat automatically
-                          </FormDescription>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-
-                  {form.watch("isRecurring") && (
-                    <div className="space-y-4">
-                      <FormField
-                        control={form.control}
-                        name="recurring.frequency"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Frequency</FormLabel>
-                            <Select
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select frequency" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="daily">Daily</SelectItem>
-                                <SelectItem value="weekly">Weekly</SelectItem>
-                                <SelectItem value="monthly">Monthly</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="recurring.interval"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Interval</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                min={1}
-                                placeholder="Enter interval"
-                                {...field}
-                                onChange={(e) =>
-                                  field.onChange(parseInt(e.target.value))
-                                }
-                              />
-                            </FormControl>
-                            <FormDescription>
-                              How often to repeat (e.g. every 2 weeks)
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
+              <TaskFormFields form={form} />
 
               <DialogFooter>
                 <Button
@@ -512,7 +201,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                 >
                   {loading ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Clock className="mr-2 h-4 w-4 animate-spin" />
                       Creating...
                     </>
                   ) : (

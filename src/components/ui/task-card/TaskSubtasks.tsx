@@ -112,10 +112,10 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({
       const groupId = `${parentPath}-${index}`;
       const isExpanded = expandedGroups[groupId] !== false; // Default to expanded
       
-      // Get the group title
+      // Get the group title - prioritize the dedicated title field
       const title = 
-        (item as NestedSubtask).title || 
         (item as SubTask).title || 
+        (item as NestedSubtask).title || 
         (item as SubTask).content || 
         (item as NestedSubtask).content || 
         "Group";

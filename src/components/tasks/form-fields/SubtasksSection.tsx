@@ -115,6 +115,26 @@ export const SubtasksSection: React.FC<SubtasksSectionProps> = ({
     
     return (
       <div key={field.id} className={`border rounded-md p-3 space-y-3 ${isGroup ? 'bg-muted/30' : indent}`}>
+        {isGroup && (
+          <FormField
+            control={form.control}
+            name={`subtasks.${index}.title`}
+            render={({ field: titleField }) => (
+              <FormItem className="flex-1">
+                <FormLabel className="text-xs">Group Title</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Group title"
+                    {...titleField}
+                    className="font-medium"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+        
         <div className="flex gap-2 items-start">
           {!isGroup && (
             <FormField
@@ -156,19 +176,8 @@ export const SubtasksSection: React.FC<SubtasksSectionProps> = ({
               <FormItem className="flex-1">
                 <FormControl>
                   <Input
-                    placeholder={isGroup ? "Group name" : "Subtask description"}
+                    placeholder={isGroup ? "Group description (optional)" : "Subtask description"}
                     {...contentField}
-                    className={isGroup ? "font-medium" : ""}
-                    onChange={(e) => {
-                      contentField.onChange(e);
-                      // If this is a group, also update the title field
-                      if (isGroup) {
-                        const currentSubtasks = form.getValues().subtasks;
-                        const updatedSubtasks = [...currentSubtasks];
-                        updatedSubtasks[index].title = e.target.value;
-                        form.setValue('subtasks', updatedSubtasks);
-                      }
-                    }}
                   />
                 </FormControl>
                 <FormMessage />
