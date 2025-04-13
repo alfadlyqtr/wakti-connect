@@ -10,7 +10,7 @@ export interface AISettingsContextType {
   isLoadingKnowledge: boolean;
   canUseAI: boolean;  // Changed from function to boolean
   error: string | null;
-  updateSettings: (newSettings: AISettings) => Promise<boolean>;
+  updateSettings: (newSettings: Partial<AISettings>) => Promise<boolean>;
   addKnowledge: (title: string, content: string, role?: AIAssistantRole) => Promise<boolean>;
   deleteKnowledge: (id: string) => Promise<boolean>;
   createDefaultSettings: () => Promise<void>;

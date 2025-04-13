@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { User } from "@/hooks/auth";
-import { AISettings, AIAssistantRole } from "@/types/ai-assistant.types";
+import { AISettings, AIAssistantRole, KnowledgeProfile } from "@/types/ai-assistant.types";
 
 /**
  * Mutation hook for updating AI settings
@@ -12,7 +12,7 @@ export const useUpdateAISettings = (user: User | null) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (newSettings: AISettings) => {
+    mutationFn: async (newSettings: Partial<AISettings>) => {
       if (!user) throw new Error("User not authenticated");
 
       console.log("Updating AI settings:", newSettings);
@@ -22,7 +22,7 @@ export const useUpdateAISettings = (user: User | null) => {
       let roleValue = newSettings.role;
       
       // Make sure the role is one of the database-allowed values
-      if (!["student", "business_owner", "general", "employee", "writer"].includes(roleValue)) {
+      if (roleValue && !["student", "business_owner", "general", "employee", "writer"].includes(roleValue)) {
         console.warn(`Role '${roleValue}' is not valid for the database, defaulting to 'general'`);
         roleValue = "general";
       }
@@ -30,13 +30,19 @@ export const useUpdateAISettings = (user: User | null) => {
       // Prepare the basic settings object (without knowledge_profile)
       const baseSettings = {
         user_id: user.id,
-        assistant_name: newSettings.assistant_name,
-        tone: newSettings.tone,
-        response_length: newSettings.response_length,
-        proactiveness: newSettings.proactiveness,
-        suggestion_frequency: newSettings.suggestion_frequency,
+        assistant_name: newSettings.assistant_name || "WAKTI",
+        tone: newSettings.tone || "balanced",
+        response_length: newSettings.response_length || "balanced",
+        proactiveness: newSettings.proactiveness !== undefined ? newSettings.proactiveness : true,
+        suggestion_frequency: newSettings.suggestion_frequency || "medium",
         role: roleValue, // Use the validated role value
-        enabled_features: newSettings.enabled_features,
+        enabled_features: newSettings.enabled_features || {
+          tasks: true,
+          events: true,
+          staff: true,
+          analytics: true,
+          messaging: true,
+        },
       };
       
       // If we have an id, update the existing record
@@ -57,19 +63,23 @@ export const useUpdateAISettings = (user: User | null) => {
           id: data.id,
           user_id: user.id,
           assistant_name: data.assistant_name || "WAKTI",
-          tone: data.tone || "balanced",
-          response_length: data.response_length || "balanced",
+          tone: (data.tone as AISettings['tone']) || "balanced",
+          response_length: (data.response_length as AISettings['response_length']) || "balanced",
           proactiveness: data.proactiveness !== null ? data.proactiveness : true,
-          suggestion_frequency: data.suggestion_frequency || "medium",
+          suggestion_frequency: (data.suggestion_frequency as AISettings['suggestion_frequency']) || "medium",
           role: data.role as AIAssistantRole || "general",
-          enabled_features: data.enabled_features as Record<string, boolean> || {
+          enabled_features: data.enabled_features as Required<AISettings['enabled_features']> || {
             tasks: true,
             events: true,
             staff: true,
             analytics: true,
             messaging: true,
           },
-          knowledge_profile: newSettings.knowledge_profile || { role: data.role }
+          language: newSettings.language || "en",
+          voiceEnabled: newSettings.voiceEnabled || false,
+          memoryEnabled: newSettings.memoryEnabled || false,
+          includePersonalContext: newSettings.includePersonalContext || false,
+          knowledge_profile: newSettings.knowledge_profile || { role: data.role as AIAssistantRole }
         };
         
         return updatedSettings;
@@ -90,19 +100,23 @@ export const useUpdateAISettings = (user: User | null) => {
           id: data.id,
           user_id: user.id,
           assistant_name: data.assistant_name || "WAKTI",
-          tone: data.tone || "balanced", 
-          response_length: data.response_length || "balanced",
+          tone: (data.tone as AISettings['tone']) || "balanced", 
+          response_length: (data.response_length as AISettings['response_length']) || "balanced",
           proactiveness: data.proactiveness !== null ? data.proactiveness : true,
-          suggestion_frequency: data.suggestion_frequency || "medium",
+          suggestion_frequency: (data.suggestion_frequency as AISettings['suggestion_frequency']) || "medium",
           role: data.role as AIAssistantRole || "general",
-          enabled_features: data.enabled_features as Record<string, boolean> || {
+          enabled_features: data.enabled_features as Required<AISettings['enabled_features']> || {
             tasks: true,
             events: true,
             staff: true,
             analytics: true,
             messaging: true,
           },
-          knowledge_profile: newSettings.knowledge_profile || { role: data.role }
+          language: newSettings.language || "en",
+          voiceEnabled: newSettings.voiceEnabled || false,
+          memoryEnabled: newSettings.memoryEnabled || false,
+          includePersonalContext: newSettings.includePersonalContext || false,
+          knowledge_profile: newSettings.knowledge_profile || { role: data.role as AIAssistantRole }
         };
         
         return createdSettings;

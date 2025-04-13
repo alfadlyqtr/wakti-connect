@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
+import { useVoiceInteraction } from '@/hooks/useVoiceInteraction';
 import { useVoiceSettings } from '@/store/voiceSettings';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -33,7 +32,7 @@ export const VoiceTestPage = () => {
     apiKeyStatus,
     apiKeyErrorDetails,
     retryApiKeyValidation,
-    isLoading,
+    isProcessing,
     error
   } = useVoiceInteraction({
     onTranscriptComplete: (text) => {
@@ -43,8 +42,7 @@ export const VoiceTestPage = () => {
     }
   });
   
-  // Use isListening from useVoiceInteraction for visualization
-  // Since isRecording, audioLevel and showVisualizer are missing
+  // Use isListening for visualization
   const dummyAudioLevel = isListening ? 50 : 0;
   
   const handleApiTest = async () => {

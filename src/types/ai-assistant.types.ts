@@ -11,14 +11,43 @@ export interface AIMessage {
   metadata?: Record<string, any>;
 }
 
+export interface KnowledgeProfile {
+  role?: AIAssistantRole;
+  // Student profile fields
+  grade?: string;
+  schoolType?: string;
+  subjects?: string;
+  learningStyle?: string;
+  goals?: string;
+  // Business profile fields
+  industry?: string;
+  businessType?: string;
+  employeeCount?: string;
+  targetAudience?: string;
+  challenges?: string;
+  // Employee profile fields
+  field?: string;
+  experienceLevel?: string;
+  skills?: string;
+  currentProjects?: string;
+  workStyle?: string;
+  // Writer profile fields
+  genre?: string;
+  audience?: string;
+  style?: string;
+}
+
 export interface AISettings {
+  id?: string;
+  user_id?: string;
   role: AIAssistantRole;
   language: string;
   voiceEnabled: boolean;
   memoryEnabled: boolean;
   includePersonalContext: boolean;
   
-  // Added missing properties
+  // Added properties
+  assistant_name?: string;
   tone?: 'professional' | 'friendly' | 'balanced' | 'formal' | 'casual';
   response_length?: 'concise' | 'balanced' | 'detailed';
   proactiveness?: boolean;
@@ -30,8 +59,7 @@ export interface AISettings {
     analytics: boolean;
     messaging: boolean;
   };
-  knowledge_profile?: string;
-  id?: string;
+  knowledge_profile?: KnowledgeProfile;
 }
 
 export interface AIKnowledgeUpload {
@@ -42,7 +70,7 @@ export interface AIKnowledgeUpload {
   timestamp: Date;
   status: 'processing' | 'ready' | 'error';
   
-  // Added missing properties
+  // Added properties
   title?: string;
   role?: AIAssistantRole;
   created_at?: string | Date;
@@ -62,7 +90,7 @@ export interface RoleContext {
   quickTools: RoleContextTool[];
   features?: string[];
   
-  // Add missing properties
+  // Adding missing properties
   welcomeMessage?: string;
   commandSuggestions?: string[];
 }

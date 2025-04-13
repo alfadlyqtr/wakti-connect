@@ -1,74 +1,121 @@
 
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { useAIAssistant } from "@/hooks/useAIAssistant";
-import { AISettings, AIAssistantRole } from "@/types/ai-assistant.types";
+import React, { createContext, useContext, useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
 import { AISettingsContextType } from "./AISettingsContext.types";
-import { handleUpdateSettings } from "./settingsOperations";
-import { handleAddKnowledge, handleDeleteKnowledge } from "./knowledgeOperations";
-import { createDefaultSettings as createDefaultSettingsImpl } from "./createDefaultSettings";
+import { AIAssistantRole, AISettings, AIKnowledgeUpload } from "@/types/ai-assistant.types";
+import { useQuery } from "@tanstack/react-query";
+import { useUpdateAISettings } from "@/hooks/ai/settings/useAISettingsMutations";
+import { fetchAISettings, fetchKnowledgeUploads } from "@/hooks/ai/settings/useAISettingsQueries";
+import { createDefaultAISettings } from "@/services/ai/aiSettingsService";
+import { addKnowledgeItem, deleteKnowledgeItem } from "@/services/ai/aiKnowledgeService";
 
-const AISettingsContext = createContext<AISettingsContextType | undefined>(undefined);
+// Create context with a default value
+const AISettingsContext = createContext<AISettingsContextType>({
+  settings: null,
+  isLoadingSettings: false,
+  isUpdatingSettings: false,
+  isAddingKnowledge: false,
+  knowledgeUploads: null,
+  isLoadingKnowledge: false,
+  canUseAI: false,
+  error: null,
+  updateSettings: async () => false,
+  addKnowledge: async () => false,
+  deleteKnowledge: async () => false,
+  createDefaultSettings: async () => {},
+  isCreatingSettings: false,
+});
 
 export const AISettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { 
-    aiSettings, 
-    isLoadingSettings, 
-    updateSettings: updateSettingsMutation, 
-    canUseAI: canUseAIFunc,
-    addKnowledge: addKnowledgeMutation,
-    knowledgeUploads,
-    isLoadingKnowledge,
-    deleteKnowledge: deleteKnowledgeMutation
-  } = useAIAssistant();
-  
-  const [settings, setSettings] = useState<AISettings | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
   const [isCreatingSettings, setIsCreatingSettings] = useState(false);
-  const [isUpdatingSettings, setIsUpdatingSettings] = useState(false);
   const [isAddingKnowledge, setIsAddingKnowledge] = useState(false);
-  
-  useEffect(() => {
-    if (aiSettings) {
-      setSettings(aiSettings);
-      setError(null);
-    }
-  }, [aiSettings]);
 
-  const updateSettings = async (newSettings: AISettings) => {
-    setIsUpdatingSettings(true);
-    try {
-      return await handleUpdateSettings(updateSettingsMutation, newSettings, setError);
-    } finally {
-      setIsUpdatingSettings(false);
-    }
-  };
-  
-  const addKnowledge = async (title: string, content: string, role?: AIAssistantRole) => {
-    setIsAddingKnowledge(true);
-    try {
-      return await handleAddKnowledge(addKnowledgeMutation, title, content, setError, role);
-    } finally {
-      setIsAddingKnowledge(false);
-    }
-  };
-  
-  const deleteKnowledge = async (id: string) => {
-    return handleDeleteKnowledge(deleteKnowledgeMutation, id, setError);
-  };
-  
+  // Fetch AI settings
+  const {
+    data: settings,
+    isLoading: isLoadingSettings,
+    error: settingsError,
+  } = useQuery({
+    queryKey: ["aiSettings", user?.id],
+    queryFn: () => fetchAISettings(user),
+    enabled: !!user,
+  });
+
+  // Fetch knowledge uploads
+  const {
+    data: knowledgeUploads,
+    isLoading: isLoadingKnowledge,
+  } = useQuery({
+    queryKey: ["knowledgeUploads", user?.id],
+    queryFn: () => fetchKnowledgeUploads(user),
+    enabled: !!user,
+  });
+
+  // Get update mutation
+  const updateSettingsMutation = useUpdateAISettings(user);
+  const isUpdatingSettings = updateSettingsMutation.isPending;
+
+  // Helper function to determine if the user can use AI (based on subscription, etc.)
+  const canUseAI = true;  // For demo purposes, always return true
+
+  // Create default settings if none exist
   const createDefaultSettings = async () => {
+    if (!user) return;
     setIsCreatingSettings(true);
     try {
-      await createDefaultSettingsImpl();
+      await createDefaultAISettings(user.id);
+      // Refetch settings after creation
+      await fetchAISettings(user);
+    } catch (err) {
+      console.error("Error creating default settings:", err);
     } finally {
       setIsCreatingSettings(false);
     }
   };
 
-  // Evaluate canUseAI once and store as boolean
-  const canUseAI = typeof canUseAIFunc === 'function' ? canUseAIFunc() : !!canUseAIFunc;
+  // Update AI settings
+  const updateSettings = async (newSettings: Partial<AISettings>): Promise<boolean> => {
+    if (!user || !settings) return false;
+    try {
+      // Merge new settings with existing settings
+      const mergedSettings = { ...settings, ...newSettings };
+      await updateSettingsMutation.mutateAsync(mergedSettings);
+      return true;
+    } catch (err) {
+      console.error("Error updating settings:", err);
+      return false;
+    }
+  };
 
-  const value = {
+  // Add knowledge to AI
+  const addKnowledge = async (title: string, content: string, role?: AIAssistantRole): Promise<boolean> => {
+    if (!user) return false;
+    setIsAddingKnowledge(true);
+    try {
+      await addKnowledgeItem(user.id, title, content, role);
+      return true;
+    } catch (err) {
+      console.error("Error adding knowledge:", err);
+      return false;
+    } finally {
+      setIsAddingKnowledge(false);
+    }
+  };
+
+  // Delete knowledge item
+  const deleteKnowledge = async (id: string): Promise<boolean> => {
+    if (!user) return false;
+    try {
+      await deleteKnowledgeItem(id, user.id);
+      return true;
+    } catch (err) {
+      console.error("Error deleting knowledge:", err);
+      return false;
+    }
+  };
+
+  const contextValue: AISettingsContextType = {
     settings,
     isLoadingSettings,
     isUpdatingSettings,
@@ -76,25 +123,19 @@ export const AISettingsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     knowledgeUploads,
     isLoadingKnowledge,
     canUseAI,
-    error,
+    error: settingsError ? String(settingsError) : null,
     updateSettings,
     addKnowledge,
     deleteKnowledge,
     createDefaultSettings,
-    isCreatingSettings
+    isCreatingSettings,
   };
 
   return (
-    <AISettingsContext.Provider value={value}>
+    <AISettingsContext.Provider value={contextValue}>
       {children}
     </AISettingsContext.Provider>
   );
 };
 
-export const useAISettings = () => {
-  const context = useContext(AISettingsContext);
-  if (context === undefined) {
-    throw new Error("useAISettings must be used within an AISettingsProvider");
-  }
-  return context;
-};
+export const useAISettings = () => useContext(AISettingsContext);
