@@ -20,6 +20,7 @@ import { getTimeBasedGreeting } from '@/lib/dateUtils';
 import { Badge } from '@/components/ui/badge';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { ParsedTaskInfo } from '@/hooks/ai/utils/taskParser.types';
+import { NestedSubtask } from '@/services/ai/aiTaskParserService';
 
 const DashboardAIAssistant = () => {
   const { 
@@ -103,11 +104,71 @@ const DashboardAIAssistant = () => {
       };
     }
     
-    // Ensure required properties exist
+    // Ensure subtasks are properly formatted as (string | NestedSubtask)[]
+    const formattedSubtasks: (string | NestedSubtask)[] = [];
+    
+    if (detectedTask.subtasks && Array.isArray(detectedTask.subtasks)) {
+      detectedTask.subtasks.forEach(subtask => {
+        if (typeof subtask === 'string') {
+          formattedSubtasks.push(subtask);
+        } else if (subtask && typeof subtask === 'object') {
+          // Handle conversion from SubTask to NestedSubtask
+          if (subtask.is_group && (subtask.title || subtask.content)) {
+            const nestedSubtask: NestedSubtask = {
+              title: subtask.title || subtask.content || "Untitled Group",
+              subtasks: []
+            };
+            
+            // Add children if they exist
+            if (subtask.subtasks && Array.isArray(subtask.subtasks)) {
+              subtask.subtasks.forEach(child => {
+                if (typeof child === 'string') {
+                  nestedSubtask.subtasks.push(child);
+                } else if (child && typeof child === 'object') {
+                  // Convert child SubTask to either string or nested object
+                  if (child.is_group) {
+                    // Child is also a group
+                    const childGroup: NestedSubtask = {
+                      title: child.title || child.content || "Untitled Subgroup",
+                      subtasks: []
+                    };
+                    nestedSubtask.subtasks.push(childGroup);
+                  } else {
+                    // Child is a regular subtask
+                    nestedSubtask.subtasks.push(child.content || "Untitled Task");
+                  }
+                }
+              });
+            }
+            
+            formattedSubtasks.push(nestedSubtask);
+          } else {
+            // It's a regular SubTask, not a group
+            formattedSubtasks.push(subtask.content || "Untitled Task");
+          }
+        }
+      });
+    } else if (detectedTask.originalSubtasks && Array.isArray(detectedTask.originalSubtasks)) {
+      // If we have originalSubtasks (preserved nested structure), use those instead
+      detectedTask.originalSubtasks.forEach(item => {
+        if (typeof item === 'string') {
+          formattedSubtasks.push(item);
+        } else if (item && typeof item === 'object' && 'title' in item) {
+          // Ensure it has required properties for NestedSubtask
+          const nestedItem: NestedSubtask = {
+            title: item.title || "Untitled Group",
+            subtasks: Array.isArray(item.subtasks) ? item.subtasks : []
+          };
+          formattedSubtasks.push(nestedItem);
+        }
+      });
+    }
+    
+    // Ensure required properties exist with fallbacks
     return {
       title: detectedTask.title || "Untitled Task",
       priority: detectedTask.priority || "normal",
-      subtasks: Array.isArray(detectedTask.subtasks) ? detectedTask.subtasks : [],
+      subtasks: formattedSubtasks,
       description: detectedTask.description,
       due_date: detectedTask.due_date,
       dueTime: detectedTask.due_time,
