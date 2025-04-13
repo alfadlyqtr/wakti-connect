@@ -72,25 +72,46 @@ export const SimplifiedVoiceRecorder: React.FC<SimplifiedVoiceRecorderProps> = (
       const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
       console.log(`Audio recorded: ${audioBlob.size} bytes, type: ${audioBlob.type}`);
       
-      // Test the edge function connection first
-      const isConnected = await testEdgeFunction('ai-voice-to-text');
-      if (!isConnected) {
-        throw new Error('Could not connect to voice transcription service');
+      // Try the edge function connection first
+      try {
+        const isConnected = await testEdgeFunction('ai-voice-to-text');
+        if (!isConnected) {
+          console.warn("Edge function connection test failed, but we'll try sending data anyway");
+        }
+      } catch (connErr) {
+        console.warn('Connection test error:', connErr);
+        // Continue anyway as the test might fail but the function might still work
       }
       
-      // Use FormData to send the audio file (method 1)
-      const formData = new FormData();
-      formData.append('audio', audioBlob, 'recording.webm');
-      
-      const { data: formDataResult, error: formDataError } = await supabase.functions.invoke('ai-voice-to-text', {
-        body: formData
-      });
-      
-      if (formDataError) {
-        console.error('FormData method failed:', formDataError);
-        console.log('Falling back to base64 method...');
+      // First try: Use FormData method
+      try {
+        const formData = new FormData();
+        formData.append('audio', audioBlob, 'recording.webm');
         
-        // Convert blob to base64 as fallback (method 2)
+        console.log("Sending audio via FormData...");
+        const { data, error } = await supabase.functions.invoke('ai-voice-to-text', {
+          body: formData
+        });
+        
+        if (error) {
+          console.error('FormData method failed:', error);
+          throw error;
+        }
+        
+        if (data && data.text) {
+          console.log('Transcription received:', data.text);
+          onTranscriptReady(data.text);
+          setIsProcessing(false);
+          return;
+        }
+      } catch (err) {
+        console.warn('FormData method failed, falling back to base64:', err);
+        // Continue to base64 method as fallback
+      }
+      
+      // Second try: Convert to base64 and send as JSON
+      try {
+        // Convert blob to base64
         const reader = new FileReader();
         reader.readAsDataURL(audioBlob);
         
@@ -134,20 +155,13 @@ export const SimplifiedVoiceRecorder: React.FC<SimplifiedVoiceRecorderProps> = (
             setIsProcessing(false);
           }
         };
-        
-        return;
+      } catch (err) {
+        console.error('Base64 conversion error:', err);
+        setError('Error processing your voice. Please try again.');
+        setIsProcessing(false);
       }
       
-      if (!formDataResult || !formDataResult.text) {
-        console.error('No transcription returned:', formDataResult);
-        throw new Error('No transcription returned');
-      }
-      
-      console.log('Transcription received:', formDataResult.text);
-      onTranscriptReady(formDataResult.text);
-      setIsProcessing(false);
-      
-      // Stop the microphone track
+      // Stop all audio tracks
       if (mediaRecorderRef.current) {
         const tracks = (mediaRecorderRef.current.stream as MediaStream).getTracks();
         tracks.forEach(track => track.stop());
@@ -164,6 +178,7 @@ export const SimplifiedVoiceRecorder: React.FC<SimplifiedVoiceRecorderProps> = (
     }
   };
   
+  // Compact view for inline usage
   if (compact) {
     return (
       <div className="flex items-center gap-2">
@@ -215,6 +230,7 @@ export const SimplifiedVoiceRecorder: React.FC<SimplifiedVoiceRecorderProps> = (
     );
   }
   
+  // Full view for standalone usage
   return (
     <div className="p-4 border rounded-md space-y-4">
       <div className="flex items-center justify-between">

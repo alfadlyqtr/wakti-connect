@@ -16,7 +16,7 @@ serve(async (req) => {
   try {
     console.log("Voice-to-text request received");
     
-    // Check content type
+    // Check content type and determine how to process the request
     const contentType = req.headers.get('content-type') || '';
     console.log("Content-Type:", contentType);
     
@@ -25,6 +25,7 @@ serve(async (req) => {
     if (contentType.includes('multipart/form-data')) {
       // Handle multipart form data
       try {
+        console.log("Processing as multipart/form-data");
         const formData = await req.formData();
         const audioFile = formData.get('audio');
         
@@ -42,24 +43,31 @@ serve(async (req) => {
     } else {
       // Handle base64 encoded data in JSON
       try {
+        console.log("Processing as JSON with base64 data");
         const requestData = await req.json();
-        const { audio } = requestData;
+        console.log("JSON payload received, parsing...");
         
-        if (!audio) {
-          console.error("No audio data in JSON");
-          throw new Error('No audio data provided in JSON');
+        if (requestData && typeof requestData === 'object') {
+          const { audio } = requestData;
+          
+          if (!audio) {
+            console.error("No audio data in JSON");
+            throw new Error('No audio data provided in JSON');
+          }
+          
+          console.log(`Received base64 audio data of length: ${audio.length}`);
+          // Convert base64 to binary
+          const binaryString = atob(audio);
+          const bytes = new Uint8Array(binaryString.length);
+          
+          for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
+          
+          audioData = bytes.buffer;
+        } else {
+          throw new Error('Invalid JSON format');
         }
-        
-        console.log(`Received base64 audio data of length: ${audio.length}`);
-        // Convert base64 to binary
-        const binaryString = atob(audio);
-        const bytes = new Uint8Array(binaryString.length);
-        
-        for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
-        }
-        
-        audioData = bytes.buffer;
       } catch (e) {
         console.error("Error processing JSON request:", e);
         throw new Error('Failed to process JSON request: ' + e.message);
