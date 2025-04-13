@@ -7,7 +7,7 @@ import { toast } from "@/components/ui/use-toast";
 import { slugifyBusinessName } from "@/utils/authUtils";
 import { AccountType, UserRole, getEffectiveRole } from "@/types/user";
 
-// Correct ID for the super admin
+// Correct ID for the super admin - used for direct comparison to avoid RLS issues
 const SUPER_ADMIN_ID = "28e863b3-0a91-4220-8330-fbee7ecd3f96";
 
 export interface DashboardUserProfile {
@@ -57,7 +57,7 @@ export function useDashboardUserProfile() {
           return null;
         }
         
-        // Check for hard-coded super admin ID
+        // Direct check for hard-coded super admin ID - avoids RLS issues
         if (session.user.id === SUPER_ADMIN_ID) {
           console.log("Hard-coded super admin detected in dashboard profile check");
           setIsSuperAdmin(true);
@@ -75,15 +75,23 @@ export function useDashboardUserProfile() {
           };
         }
 
-        // Check if user is a super admin in the database
-        const { data: superAdminData } = await supabase
-          .from('super_admins')
-          .select('id')
-          .eq('id', session.user.id)
-          .maybeSingle();
+        // Attempt to use RPC function to check super admin status
+        let isUserSuperAdmin = false;
+        try {
+          const { data: isSuperAdminResult, error: rpcError } = await supabase.rpc('is_super_admin');
+          
+          if (!rpcError && isSuperAdminResult === true) {
+            console.log("RPC confirmed user is super admin");
+            isUserSuperAdmin = true;
+          }
+        } catch (rpcError) {
+          console.error("Error checking super admin status via RPC:", rpcError);
+          // Fall back to localStorage if RPC fails
+          isUserSuperAdmin = localStorage.getItem('isSuperAdmin') === 'true';
+        }
         
-        if (superAdminData) {
-          console.log("Database super admin detected in dashboard profile check");
+        if (isUserSuperAdmin) {
+          console.log("User confirmed as super admin in dashboard profile check");
           setIsSuperAdmin(true);
           localStorage.setItem('isSuperAdmin', 'true');
           localStorage.setItem('userRole', 'super-admin');
@@ -168,7 +176,7 @@ export function useDashboardUserProfile() {
           return null;
         }
         
-        // Set userRole based on account_type and staff status
+        // Set userRole based on account_type and staff status - IMPORTANT, use our helper
         const effectiveRole = getEffectiveRole(
           profileData?.account_type as AccountType, 
           !!staffData,
