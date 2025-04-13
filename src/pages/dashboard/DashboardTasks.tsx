@@ -9,7 +9,7 @@ import { useTasksPageState } from "@/hooks/tasks/useTasksPageState";
 import { TaskStatusFilter, TaskPriorityFilter } from "@/components/tasks/types";
 import TaskTabs from "@/components/tasks/TaskTabs";
 import { Archive } from "lucide-react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { UserRole } from "@/types/user";
 import TasksContainer from "@/components/tasks/TasksContainer";
 import { TaskTab } from "@/types/task.types";
@@ -17,9 +17,6 @@ import RemindersContainer from "@/components/reminders/RemindersContainer";
 import { useReminders } from "@/hooks/useReminders";
 
 const DashboardTasks = () => {
-  const navigate = useNavigate();
-  
-  // Initialize hooks first, before any conditional returns
   const {
     isLoading,
     searchQuery,
@@ -46,8 +43,14 @@ const DashboardTasks = () => {
     setActiveTab
   } = useTasksPageState();
   
-  // Initialize the reminders hook - always initialize hooks at the top level
+  // Initialize the reminders hook
   const { requestNotificationPermission } = useReminders();
+
+  // Redirect staff users away from tasks page
+  // Super-admin users have full access to everything
+  if (userRole === "staff") {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   // Set default filters to "all" on component mount
   useEffect(() => {
@@ -56,15 +59,17 @@ const DashboardTasks = () => {
     
     // Request notification permissions for reminders
     requestNotificationPermission();
-    
-    // Check if staff user needs to be redirected
-    if (userRole === "staff") {
-      console.log("Staff user detected on tasks page, redirecting to dashboard");
-      navigate("/dashboard", { replace: true });
-    }
-  }, [setFilterStatus, setFilterPriority, requestNotificationPermission, userRole, navigate]);
+  }, [setFilterStatus, setFilterPriority, requestNotificationPermission]);
 
-  // When a task is selected for editing - define all functions before conditionals
+  if (isLoading) {
+    return <TasksLoading />;
+  }
+
+  // Cast the filter values to their appropriate types
+  const statusFilter = (filterStatus || "all") as TaskStatusFilter;
+  const priorityFilter = (filterPriority || "all") as TaskPriorityFilter;
+  
+  // When a task is selected for editing
   const handleEditTask = (task: any) => {
     setCurrentEditTask(task);
     setEditTaskDialogOpen(true);
@@ -72,20 +77,6 @@ const DashboardTasks = () => {
 
   // Convert UserRole to the expected type for components that don't recognize super-admin yet
   const displayRole = userRole === 'super-admin' ? 'business' : userRole;
-  
-  // Show loading state
-  if (isLoading) {
-    return <TasksLoading />;
-  }
-
-  // Redirect for staff users - handled in the useEffect now to avoid hook ordering issues
-  if (userRole === "staff") {
-    return null; // Return empty since the useEffect will handle the redirect
-  }
-
-  // Cast the filter values to their appropriate types
-  const statusFilter = (filterStatus || "all") as TaskStatusFilter;
-  const priorityFilter = (filterPriority || "all") as TaskPriorityFilter;
 
   return (
     <div className="space-y-6">

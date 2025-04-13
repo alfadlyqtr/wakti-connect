@@ -1,45 +1,16 @@
-// This is a sample update - the actual file structure may differ
-// We're simply adding a hook to pre-fetch and cache common permissions
 
-import { useEffect } from 'react';
-import { hasPermission } from '@/services/auth/accessControl';
-import { useAuth } from '@/hooks/useAuth';
+// This file is now just a wrapper with no routing logic
+// All routing has been moved to router.tsx
 
-// Common permissions that should be pre-cached for better performance
-const COMMON_PERMISSIONS = [
-  'tasks_view',
-  'tasks_management',
-  'bookings_view',
-  'messages_basic',
-  'analytics_view'
-];
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { ThemeProvider } from "@/hooks/use-theme";
+import { HelmetProvider } from "react-helmet-async";
+import { TaskProvider } from "@/contexts/TaskContext";
+import ErrorBoundary from "@/components/ui/ErrorBoundary";
 
-export function App() {
-  const { isAuthenticated, isLoading } = useAuth();
-  
-  // Pre-cache common permissions when user is authenticated
-  useEffect(() => {
-    if (isAuthenticated && !isLoading) {
-      // Cache common permissions in the background
-      const cachePermissions = async () => {
-        try {
-          const results = await Promise.all(
-            COMMON_PERMISSIONS.map(async (key) => {
-              const allowed = await hasPermission(key);
-              return { key, allowed };
-            })
-          );
-          
-          console.log('Permissions pre-cached:', results);
-        } catch (error) {
-          console.error('Error pre-caching permissions:', error);
-        }
-      };
-      
-      cachePermissions();
-    }
-  }, [isAuthenticated, isLoading]);
-  
+function App() {
   return (
     <div>App is no longer used for routing. Please check router.tsx.</div>
   );

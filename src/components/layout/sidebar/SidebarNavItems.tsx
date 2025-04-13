@@ -1,13 +1,9 @@
 
-import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { CommandIcon, Search } from 'lucide-react';
-import { UserRole } from '@/types/user';
-import { shouldHideMenuItem } from '@/utils/menuItemUtils';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { navItems } from '@/config/navItems';
-import { hasPermission } from '@/services/auth/accessControl';
+import React from "react";
+import { NavLink, useLocation } from "react-router-dom";
+import { cn } from "@/lib/utils";
+import { Search } from "lucide-react";
+import { navItems } from "./sidebarNavConfig";
 
 interface SidebarNavItemsProps {
   onNavClick?: () => void;
@@ -15,128 +11,68 @@ interface SidebarNavItemsProps {
   openCommandSearch?: () => void;
 }
 
-const SidebarNavItems: React.FC<SidebarNavItemsProps> = ({
-  onNavClick,
+const SidebarNavItems = ({ 
+  onNavClick, 
   isCollapsed = false,
-  openCommandSearch,
-}) => {
+  openCommandSearch 
+}: SidebarNavItemsProps) => {
   const location = useLocation();
-  const navigate = useNavigate();
-  const userRole = (localStorage.getItem('userRole') as UserRole) || 'free';
-  const [permissionsMap, setPermissionsMap] = useState<Record<string, boolean>>({});
-  const [isLoading, setIsLoading] = useState(true);
+  const userRole = localStorage.getItem('userRole');
   
-  // Fetch all permissions at once for nav items with permission keys
-  useEffect(() => {
-    const permissionKeys = navItems
-      .filter(item => item.permissionKey)
-      .map(item => item.permissionKey as string);
-    
-    if (permissionKeys.length === 0) {
-      setIsLoading(false);
-      return;
+  // Filter the navigation items based on the user's role
+  const filteredNavItems = navItems.filter(item => {
+    // If the item should only be shown for certain roles
+    if (item.showFor && !item.showFor.includes(userRole as any)) {
+      return false;
     }
     
-    const checkAllPermissions = async () => {
-      try {
-        setIsLoading(true);
-        const permissionsResult: Record<string, boolean> = {};
-        
-        // Check each permission individually
-        for (const key of permissionKeys) {
-          permissionsResult[key] = await hasPermission(key);
-        }
-        
-        setPermissionsMap(permissionsResult);
-      } catch (error) {
-        console.error('Error checking permissions for sidebar:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    checkAllPermissions();
-  }, []);
+    return true;
+  });
 
-  const handleNavigation = (path: string) => {
-    navigate(path);
-    if (onNavClick) {
-      onNavClick();
-    }
-  };
-
-  // If still loading permissions, show a placeholder loader
-  if (isLoading) {
-    return (
-      <div className="space-y-1 py-2">
-        {openCommandSearch && (
-          <Button
-            variant="ghost"
-            className={cn(
-              "w-full justify-start px-2",
-              isCollapsed ? "justify-center" : "px-2"
-            )}
-            onClick={openCommandSearch}
-          >
-            <Search className="h-4 w-4 mr-2" />
-            {!isCollapsed && <span>Search</span>}
-          </Button>
-        )}
-        
-        {/* Loading placeholders */}
-        {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="w-full h-9 bg-muted/20 animate-pulse rounded-md mb-1" />
-        ))}
-      </div>
-    );
-  }
+  // Add the search item for non-staff users
+  const shouldShowSearch = userRole !== 'staff' && openCommandSearch;
 
   return (
-    <div className="space-y-1 py-2">
-      {openCommandSearch && (
-        <Button
-          variant="ghost"
+    <nav className="space-y-1 px-3 py-2">
+      {shouldShowSearch && (
+        <button 
           className={cn(
-            "w-full justify-start px-2",
-            isCollapsed ? "justify-center" : "px-2"
+            "w-full flex items-center px-3 py-2 text-sm group rounded-md text-muted-foreground hover:bg-muted transition-colors",
+            isCollapsed ? "justify-center" : "justify-start"
           )}
           onClick={openCommandSearch}
         >
-          <Search className="h-4 w-4 mr-2" />
-          {!isCollapsed && <span>Search</span>}
-        </Button>
+          <Search className="h-5 w-5 shrink-0" />
+          {!isCollapsed && <span className="ml-3">Search</span>}
+        </button>
       )}
-
-      {navItems.map((item) => {
-        // Skip this menu item if it should be hidden for current user role
-        if (shouldHideMenuItem(item.href, userRole)) {
-          return null;
-        }
-        
-        // Check permission for this nav item if it has a permission key
-        if (item.permissionKey && !permissionsMap[item.permissionKey]) {
-          return null;
-        }
-
-        const isActive = location.pathname === item.href;
-        const Icon = item.icon; // Get the icon component
-
-        return (
-          <Button
-            key={item.href}
-            variant={isActive ? "secondary" : "ghost"}
-            className={cn(
-              "w-full justify-start",
-              isCollapsed ? "justify-center" : "px-2"
-            )}
-            onClick={() => handleNavigation(item.href)}
-          >
-            <Icon className="h-4 w-4" />
-            {!isCollapsed && <span className="ml-2">{item.label}</span>}
-          </Button>
-        );
-      })}
-    </div>
+      
+      {filteredNavItems.map((item) => (
+        <NavLink
+          key={item.path}
+          to={`/dashboard/${item.path}`}
+          onClick={onNavClick}
+          end={item.path === ""}
+          className={({ isActive }) => 
+            cn(
+              "flex items-center px-3 py-2 text-sm group rounded-md transition-colors",
+              isActive 
+                ? "bg-accent text-accent-foreground font-medium" 
+                : "text-muted-foreground hover:bg-muted hover:text-foreground",
+              isCollapsed ? "justify-center" : "justify-start"
+            )
+          }
+        >
+          <item.icon className="h-5 w-5 shrink-0" />
+          {!isCollapsed && <span className="ml-3">{item.label}</span>}
+          {!isCollapsed && item.badge && (
+            <span className="ml-auto bg-primary/10 text-primary px-1.5 py-0.5 rounded-full text-xs font-medium">
+              {item.badge}
+            </span>
+          )}
+        </NavLink>
+      ))}
+    </nav>
   );
 };
 

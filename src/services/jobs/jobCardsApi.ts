@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { JobCard, JobCardFormData, PaymentMethod, Job } from "@/types/jobs.types";
 
@@ -113,27 +114,30 @@ export const createJobCard = async (
   }
   
   console.log("Created job card:", data);
+  console.log("Created job with relation data:", {
+    id: data.id,
+    job_id: data.job_id,
+    joined_job: data.jobs,
+    has_job_data: !!data.jobs
+  });
+  
+  // Create a properly typed Job object with defaults for missing fields
+  const jobData = data.jobs ? {
+    ...data.jobs,
+    business_id: '', // Add missing required field
+    created_at: '', // Add missing required field
+    updated_at: ''  // Add missing required field
+  } as Job : undefined;
   
   // Create a properly typed JobCard object
   const jobCard: JobCard = {
     ...data,
-    job: data.jobs ? {
-      ...data.jobs,
-      business_id: '', // Add missing required field
-      created_at: '', // Add missing required field
-      updated_at: ''  // Add missing required field
-    } as Job : undefined,
+    job: jobData,
     payment_method: ensurePaymentMethodType(data.payment_method)
   };
   
   // Remove the 'jobs' property to avoid duplication
   delete (jobCard as any).jobs;
-  
-  // Send notification to business owner about new job card
-  import('./notificationService').then(({ sendJobCardNotification }) => {
-    sendJobCardNotification(jobCard.id, 'created')
-      .catch(err => console.error("Error sending job card creation notification:", err));
-  });
   
   return jobCard;
 };
@@ -164,7 +168,7 @@ export const completeJobCard = async (jobCardId: string): Promise<JobCard> => {
     throw new Error('Job card not found or already completed');
   }
   
-  // Fetch the updated job card
+  // Fetch the updated job card - ensure we get the jobs relation
   const { data, error } = await supabase
     .from('job_cards')
     .select(`
@@ -183,6 +187,14 @@ export const completeJobCard = async (jobCardId: string): Promise<JobCard> => {
   if (error) throw new Error(`Error fetching completed job card: ${error.message}`);
   if (!data) throw new Error(`Job card with ID ${jobCardId} not found after completion`);
   
+  console.log("Completed job card data:", data);
+  console.log("Completed job relation data:", {
+    id: data.id,
+    job_id: data.job_id,
+    joined_job: data.jobs,
+    has_job_data: !!data.jobs
+  });
+  
   // Create a properly typed Job object with defaults for missing fields
   const jobData = data.jobs ? {
     ...data.jobs,
@@ -200,12 +212,6 @@ export const completeJobCard = async (jobCardId: string): Promise<JobCard> => {
   
   // Remove the 'jobs' property to avoid duplication
   delete (jobCard as any).jobs;
-  
-  // Send notification to business owner about completed job card
-  import('./notificationService').then(({ sendJobCardNotification }) => {
-    sendJobCardNotification(jobCard.id, 'completed')
-      .catch(err => console.error("Error sending job completion notification:", err));
-  });
   
   return jobCard;
 };
