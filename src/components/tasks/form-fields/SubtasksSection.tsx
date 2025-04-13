@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { UseFormReturn, useFieldArray } from "react-hook-form";
 import { TaskFormValues } from "../TaskFormSchema";
@@ -98,20 +97,19 @@ export const SubtasksSection: React.FC<SubtasksSectionProps> = ({
     form.setValue('subtasks', updatedSubtasks);
   };
 
-  // Toggle group expansion
-  const toggleGroupExpansion = (groupId: string) => {
-    setExpandedGroups(prev => ({
-      ...prev,
-      [groupId]: !prev[groupId]
-    }));
-  };
-
   // Render a subtask item with proper indentation and grouping
   const renderSubtaskItem = (field: any, index: number, parentId: string | null = null, nestLevel = 0) => {
     const isGroup = !!field.is_group;
     const hasParent = !!field.parent_id;
     const indent = hasParent ? "ml-6" : "";
     const isExpanded = expandedGroups[field.id] !== false; // Default to expanded
+    
+    const toggleGroup = () => {
+      setExpandedGroups(prev => ({
+        ...prev,
+        [field.id]: !prev[field.id]
+      }));
+    };
     
     return (
       <div key={field.id} className={`border rounded-md p-3 space-y-3 ${isGroup ? 'bg-muted/30' : indent}`}>
@@ -154,19 +152,13 @@ export const SubtasksSection: React.FC<SubtasksSectionProps> = ({
           )}
           
           {isGroup && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 mt-1"
-              onClick={() => toggleGroupExpansion(field.id)}
-            >
+            <div onClick={toggleGroup} className="cursor-pointer">
               {isExpanded ? (
-                <ChevronDown className="h-4 w-4" />
+                <ChevronDown className="h-4 w-4 mt-2" />
               ) : (
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-4 w-4 mt-2" />
               )}
-            </Button>
+            </div>
           )}
           
           <FormField
@@ -197,7 +189,15 @@ export const SubtasksSection: React.FC<SubtasksSectionProps> = ({
         </div>
         
         {isGroup && (
-          <Collapsible open={isExpanded} onOpenChange={() => toggleGroupExpansion(field.id)}>
+          <Collapsible 
+            open={isExpanded} 
+            onOpenChange={(open) => {
+              setExpandedGroups(prev => ({
+                ...prev,
+                [field.id]: open
+              }));
+            }}
+          >
             <CollapsibleContent>
               {/* Render nested subtasks if this is a group */}
               {field.subtasks && field.subtasks.length > 0 && (
