@@ -1,4 +1,5 @@
 
+// Fix the import for GOOGLE_MAPS_API_KEY by creating a maps config file
 import { GOOGLE_MAPS_API_KEY } from "@/config/maps";
 
 /**

@@ -2,7 +2,7 @@
 // Add or verify TaskTab type is exported from this file
 export type TaskStatus = "pending" | "in-progress" | "completed" | "snoozed" | "archived" | "late";
 export type TaskPriority = "urgent" | "high" | "medium" | "normal";
-export type TaskTab = "my-tasks" | "archived";
+export type TaskTab = "my-tasks" | "archived" | "reminders";
 export type ArchiveReason = "deleted" | "canceled";
 
 export interface SubTask {

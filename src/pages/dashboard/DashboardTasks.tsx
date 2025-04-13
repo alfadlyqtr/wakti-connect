@@ -13,6 +13,8 @@ import { Navigate } from "react-router-dom";
 import { UserRole } from "@/types/user";
 import TasksContainer from "@/components/tasks/TasksContainer";
 import { TaskTab } from "@/types/task.types";
+import RemindersContainer from "@/components/reminders/RemindersContainer";
+import { useReminders } from "@/hooks/useReminders";
 
 const DashboardTasks = () => {
   const {
@@ -40,6 +42,9 @@ const DashboardTasks = () => {
     activeTab,
     setActiveTab
   } = useTasksPageState();
+  
+  // Initialize the reminders hook
+  const { requestNotificationPermission } = useReminders();
 
   // Redirect staff users away from tasks page
   // Super-admin users have full access to everything
@@ -51,7 +56,10 @@ const DashboardTasks = () => {
   useEffect(() => {
     setFilterStatus("all");
     setFilterPriority("all");
-  }, [setFilterStatus, setFilterPriority]);
+    
+    // Request notification permissions for reminders
+    requestNotificationPermission();
+  }, [setFilterStatus, setFilterPriority, requestNotificationPermission]);
 
   if (isLoading) {
     return <TasksLoading />;
@@ -94,36 +102,45 @@ const DashboardTasks = () => {
         </div>
       )}
       
-      <TaskControls
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        filterStatus={statusFilter}
-        onStatusChange={(status) => {
-          console.log(`Setting status filter to: ${status}`);
-          setFilterStatus(status as string | null);
-        }}
-        filterPriority={priorityFilter}
-        onPriorityChange={(priority) => {
-          console.log(`Setting priority filter to: ${priority}`);
-          setFilterPriority(priority as string | null);
-        }}
-        onCreateTask={() => setCreateTaskDialogOpen(true)}
-        isPaidAccount={isPaidAccount}
-        userRole={displayRole as "free" | "individual" | "business" | "staff"}
-        showCreateButton={activeTab === "my-tasks"}
-      />
+      {activeTab !== "reminders" && (
+        <TaskControls
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          filterStatus={statusFilter}
+          onStatusChange={(status) => {
+            console.log(`Setting status filter to: ${status}`);
+            setFilterStatus(status as string | null);
+          }}
+          filterPriority={priorityFilter}
+          onPriorityChange={(priority) => {
+            console.log(`Setting priority filter to: ${priority}`);
+            setFilterPriority(priority as string | null);
+          }}
+          onCreateTask={() => setCreateTaskDialogOpen(true)}
+          isPaidAccount={isPaidAccount}
+          userRole={displayRole as "free" | "individual" | "business" | "staff"}
+          showCreateButton={activeTab === "my-tasks"}
+        />
+      )}
       
-      <TasksContainer
-        tasks={filteredTasks}
-        userRole={displayRole as "free" | "individual" | "business" | "staff"}
-        refetch={refetchTasks}
-        isPaidAccount={isPaidAccount}
-        onCreateTask={() => setCreateTaskDialogOpen(true)}
-        isArchiveView={activeTab === "archived"}
-        onEdit={handleEditTask}
-        onArchive={handleArchiveTask}
-        onRestore={handleRestoreTask}
-      />
+      {activeTab === "reminders" ? (
+        <RemindersContainer 
+          userRole={displayRole as "free" | "individual" | "business" | "staff"}
+          isPaidAccount={isPaidAccount}
+        />
+      ) : (
+        <TasksContainer
+          tasks={filteredTasks}
+          userRole={displayRole as "free" | "individual" | "business" | "staff"}
+          refetch={refetchTasks}
+          isPaidAccount={isPaidAccount}
+          onCreateTask={() => setCreateTaskDialogOpen(true)}
+          isArchiveView={activeTab === "archived"}
+          onEdit={handleEditTask}
+          onArchive={handleArchiveTask}
+          onRestore={handleRestoreTask}
+        />
+      )}
       
       <CreateTaskDialog
         open={createTaskDialogOpen}

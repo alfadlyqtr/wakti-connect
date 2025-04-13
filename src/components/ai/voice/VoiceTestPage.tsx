@@ -1,230 +1,417 @@
-
-import React, { useState } from 'react';
-import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
-import { useVoiceSettings } from '@/store/voiceSettings';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { AIVoiceVisualizer } from '../animation/AIVoiceVisualizer';
-import { AIAssistantMouthAnimation } from '../animation/AIAssistantMouthAnimation';
-import { Mic, MicOff, RefreshCcw } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { Mic, MicOff, Play, Square, Volume2, VolumeX } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { stopMediaTracks } from '@/utils/audio/audioProcessing';
+import { useVoiceSettings } from '@/store/voiceSettings';
 
-export const VoiceTestPage = () => {
-  const [testResult, setTestResult] = useState('');
-  const { toast } = useToast();
+type MicStatus = 'valid' | 'invalid' | 'unknown' | 'checking';
+
+const VoiceTestPage = () => {
+  const [isRecording, setIsRecording] = useState(false);
+  const [transcript, setTranscript] = useState('');
+  const [micStatus, setMicStatus] = useState<MicStatus>('unknown');
+  const [audioEnabled, setAudioEnabled] = useState(true);
+  const [volume, setVolume] = useState(0);
+  const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
+  const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
+  const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
+  const [speechRecognition, setSpeechRecognition] = useState<any>(null);
+  
+  const animationRef = useRef<number>();
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  
   const { 
-    toggleAutoSilenceDetection, 
     autoSilenceDetection, 
-    language, 
-    setLanguage 
+    toggleAutoSilenceDetection,
+    visualFeedback,
+    toggleVisualFeedback,
+    language,
+    setLanguage
   } = useVoiceSettings();
-  
-  const {
-    isListening,
-    transcript,
-    supportsVoice,
-    startListening,
-    stopListening,
-    apiKeyStatus,
-    apiKeyErrorDetails,
-    retryApiKeyValidation
-  } = useVoiceInteraction({
-    onTranscriptComplete: (text) => {
-      if (text) {
-        setTestResult(text);
-      }
+
+  // Initialize audio context and speech recognition
+  useEffect(() => {
+    // Check if browser supports speech recognition
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = language;
+      
+      recognition.onresult = (event: any) => {
+        const current = event.resultIndex;
+        const result = event.results[current];
+        const transcriptText = result[0].transcript;
+        setTranscript(transcriptText);
+      };
+      
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error', event.error);
+        if (event.error === 'not-allowed') {
+          setMicStatus('invalid');
+        }
+      };
+      
+      setSpeechRecognition(recognition);
+    } else {
+      console.error('Speech recognition not supported in this browser');
     }
-  });
-  
-  const handleApiTest = async () => {
+    
+    // Initialize audio context
+    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    setAudioContext(audioCtx);
+    
+    const analyserNode = audioCtx.createAnalyser();
+    analyserNode.fftSize = 256;
+    setAnalyser(analyserNode);
+    
+    return () => {
+      if (audioStream) {
+        stopMediaTracks(audioStream);
+      }
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [language]);
+
+  // Check microphone access
+  useEffect(() => {
+    const checkMicrophone = async () => {
+      setMicStatus('checking');
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stopMediaTracks(stream);
+        setMicStatus('valid');
+      } catch (error) {
+        console.error('Microphone access error:', error);
+        setMicStatus('invalid');
+      }
+    };
+    
+    checkMicrophone();
+  }, []);
+
+  // Draw audio visualization
+  const drawVisualization = () => {
+    if (!analyser || !canvasRef.current || !visualFeedback) return;
+    
+    const canvas = canvasRef.current;
+    const canvasCtx = canvas.getContext('2d');
+    if (!canvasCtx) return;
+    
+    const width = canvas.width;
+    const height = canvas.height;
+    
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+    
+    const draw = () => {
+      animationRef.current = requestAnimationFrame(draw);
+      
+      analyser.getByteFrequencyData(dataArray);
+      
+      canvasCtx.fillStyle = 'rgb(20, 20, 20)';
+      canvasCtx.fillRect(0, 0, width, height);
+      
+      const barWidth = (width / bufferLength) * 2.5;
+      let x = 0;
+      
+      for (let i = 0; i < bufferLength; i++) {
+        const barHeight = dataArray[i] / 2;
+        
+        // Calculate volume level (average of frequency data)
+        if (i === 0) {
+          let sum = 0;
+          for (let j = 0; j < bufferLength; j++) {
+            sum += dataArray[j];
+          }
+          const avgVolume = sum / bufferLength;
+          setVolume(avgVolume);
+        }
+        
+        canvasCtx.fillStyle = `rgb(50, ${75 + barHeight}, 255)`;
+        canvasCtx.fillRect(x, height - barHeight, barWidth, barHeight);
+        
+        x += barWidth + 1;
+      }
+    };
+    
+    draw();
+  };
+
+  // Start recording
+  const startRecording = async () => {
     try {
-      const testResults = [];
-      
-      // Test API connection
-      toast({
-        title: "Testing OpenAI connection...",
-        description: "Verifying OpenAI API key"
-      });
-      
-      const success = await retryApiKeyValidation();
-      
-      if (success) {
-        testResults.push("✅ OpenAI API key is valid");
+      if (micStatus !== "checking" && micStatus !== 'valid') {
+        // Try to get microphone access again
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        setAudioStream(stream);
+        setMicStatus('valid');
         
-        // Test speech recognition
-        toast({
-          title: "Testing voice recognition...",
-          description: "Checking connection to OpenAI Speech-to-Text API"
-        });
-        
-        const recognitionResponse = await fetch('/api/v1/ai-voice-to-text', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ 
-            test: true 
-          })
-        });
-        
-        const recognitionData = await recognitionResponse.json();
-        if (recognitionData.success) {
-          testResults.push("✅ Voice-to-Text API connection successful");
-        } else {
-          testResults.push(`❌ Voice-to-Text API error: ${recognitionData.error || 'Unknown error'}`);
+        if (audioContext && analyser) {
+          const source = audioContext.createMediaStreamSource(stream);
+          source.connect(analyser);
+          drawVisualization();
+        }
+      } else if (audioStream) {
+        if (audioContext && analyser) {
+          const source = audioContext.createMediaStreamSource(audioStream);
+          source.connect(analyser);
+          drawVisualization();
         }
       } else {
-        testResults.push(`❌ OpenAI API key is invalid or not configured: ${apiKeyErrorDetails || 'Unknown error'}`);
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        setAudioStream(stream);
+        
+        if (audioContext && analyser) {
+          const source = audioContext.createMediaStreamSource(stream);
+          source.connect(analyser);
+          drawVisualization();
+        }
       }
       
-      // Show final results
-      setTestResult(testResults.join("\n"));
+      if (speechRecognition) {
+        speechRecognition.start();
+      }
       
-      toast({
-        title: "API Test Complete",
-        description: testResults.length > 0 ? testResults[0] : "Test completed"
-      });
+      setIsRecording(true);
     } catch (error) {
-      console.error("API test error:", error);
-      setTestResult(`Error testing APIs: ${error.message}`);
-      toast({
-        title: "API Test Failed",
-        description: `Error connecting to APIs: ${error.message}`,
-        variant: "destructive"
-      });
+      console.error('Error starting recording:', error);
+      setMicStatus('invalid');
     }
   };
-  
+
+  // Stop recording
+  const stopRecording = () => {
+    if (speechRecognition) {
+      speechRecognition.stop();
+    }
+    
+    if (audioStream) {
+      stopMediaTracks(audioStream);
+      setAudioStream(null);
+    }
+    
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+    }
+    
+    setIsRecording(false);
+    setVolume(0);
+  };
+
+  // Toggle audio
+  const toggleAudio = () => {
+    setAudioEnabled(!audioEnabled);
+  };
+
   return (
-    <div className="container max-w-3xl py-8 space-y-8">
-      <Card>
-        <CardHeader>
-          <CardTitle>Voice Recognition Test</CardTitle>
-          <CardDescription>
-            Test voice-to-text recognition features
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="space-y-2">
-            <Label>API Connection Status</Label>
-            <div className="text-sm p-3 bg-muted rounded-md">
-              {apiKeyStatus === 'checking' && "Checking API connection..."}
-              {apiKeyStatus === 'valid' && "✅ OpenAI API key is valid"}
-              {apiKeyStatus === 'invalid' && (
-                <div className="flex items-center gap-2">
-                  <div className="text-destructive">❌ OpenAI API key is invalid or has restricted access</div>
-                  <Button size="sm" variant="outline" onClick={retryApiKeyValidation}>
-                    <RefreshCcw className="h-3 w-3 mr-1" />
-                    Retry
-                  </Button>
-                </div>
-              )}
-              {apiKeyStatus === 'unknown' && "⚠️ OpenAI API key status unknown"}
-              {apiKeyErrorDetails && <p className="text-xs mt-1 text-destructive">{apiKeyErrorDetails}</p>}
-            </div>
-            <Button onClick={handleApiTest} variant="outline" size="sm" className="mt-2">
-              Test API Connection
-            </Button>
-          </div>
+    <div className="container py-8">
+      <h1 className="text-2xl font-bold mb-6">Voice Recognition Test</h1>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Microphone Test</CardTitle>
+            <CardDescription>
+              Test your microphone and voice recognition capabilities
+            </CardDescription>
+          </CardHeader>
           
-          <div className="space-y-2">
-            <Label>Voice Settings</Label>
-            <div className="flex items-center justify-between space-x-2">
-              <div className="space-y-0.5">
-                <Label htmlFor="silence-detection">Auto Silence Detection</Label>
-                <p className="text-[0.8rem] text-muted-foreground">
-                  Automatically stop listening when there's silence
-                </p>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Label>Microphone Status:</Label>
+                {micStatus === 'checking' ? (
+                  <Badge variant="outline" className="animate-pulse">Checking...</Badge>
+                ) : micStatus === 'valid' ? (
+                  <Badge variant="success">Available</Badge>
+                ) : (
+                  <Badge variant="destructive">Not Available</Badge>
+                )}
               </div>
-              <Switch
-                id="silence-detection"
+              
+              <div className="flex items-center space-x-2">
+                <Label>Audio:</Label>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={toggleAudio}
+                >
+                  {audioEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+            
+            {visualFeedback && (
+              <div className="w-full h-32 bg-black rounded-md overflow-hidden">
+                <canvas 
+                  ref={canvasRef} 
+                  width={500} 
+                  height={128} 
+                  className="w-full h-full"
+                />
+              </div>
+            )}
+            
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Label>Volume:</Label>
+                <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-blue-500 transition-all duration-100"
+                    style={{ width: `${Math.min(volume * 100 / 128, 100)}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <Separator />
+            
+            <div className="p-4 bg-muted rounded-md">
+              <p className="text-sm font-medium mb-2">Transcript:</p>
+              <p className="text-sm">{transcript || "Speak to see transcription..."}</p>
+            </div>
+          </CardContent>
+          
+          <CardFooter className="flex justify-between">
+            {!isRecording ? (
+              <Button 
+                onClick={startRecording}
+                disabled={micStatus === 'invalid'}
+                className="w-full"
+              >
+                <Mic className="mr-2 h-4 w-4" />
+                Start Recording
+              </Button>
+            ) : (
+              <Button 
+                onClick={stopRecording}
+                variant="destructive"
+                className="w-full"
+              >
+                <Square className="mr-2 h-4 w-4" />
+                Stop Recording
+              </Button>
+            )}
+          </CardFooter>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Voice Settings</CardTitle>
+            <CardDescription>
+              Configure voice recognition settings
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent className="space-y-6">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="auto-silence">Auto Silence Detection</Label>
+              <Switch 
+                id="auto-silence" 
                 checked={autoSilenceDetection}
                 onCheckedChange={toggleAutoSilenceDetection}
               />
             </div>
             
-            {/* Language toggle */}
-            <div className="flex items-center justify-between space-x-2 mt-4">
-              <div className="space-y-0.5">
-                <Label htmlFor="language-select">Recognition Language</Label>
-                <p className="text-[0.8rem] text-muted-foreground">
-                  Select the language for voice recognition
-                </p>
-              </div>
-              <div className="flex items-center space-x-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="visual-feedback">Visual Feedback</Label>
+              <Switch 
+                id="visual-feedback" 
+                checked={visualFeedback}
+                onCheckedChange={toggleVisualFeedback}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Language</Label>
+              <div className="grid grid-cols-3 gap-2">
                 <Button 
-                  size="sm" 
-                  variant={language === 'en' ? "default" : "outline"}
+                  variant={language === 'en' ? 'default' : 'outline'}
+                  size="sm"
                   onClick={() => setLanguage('en')}
                 >
                   English
                 </Button>
                 <Button 
-                  size="sm" 
-                  variant={language === 'ar' ? "default" : "outline"}
+                  variant={language === 'es' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setLanguage('es')}
+                >
+                  Spanish
+                </Button>
+                <Button 
+                  variant={language === 'fr' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setLanguage('fr')}
+                >
+                  French
+                </Button>
+                <Button 
+                  variant={language === 'de' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setLanguage('de')}
+                >
+                  German
+                </Button>
+                <Button 
+                  variant={language === 'ar' ? 'default' : 'outline'}
+                  size="sm"
                   onClick={() => setLanguage('ar')}
                 >
                   Arabic
                 </Button>
               </div>
             </div>
+          </CardContent>
+          
+          <CardFooter>
+            <div className="text-sm text-muted-foreground">
+              Voice settings are automatically saved to your profile.
+            </div>
+          </CardFooter>
+        </Card>
+      </div>
+      
+      <div className="mt-8">
+        <h2 className="text-xl font-bold mb-4">How to Use Voice Recognition</h2>
+        <div className="space-y-4">
+          <div className="p-4 bg-muted rounded-md">
+            <h3 className="font-medium mb-2">1. Allow Microphone Access</h3>
+            <p className="text-sm">
+              When prompted, allow microphone access in your browser. If you denied access, 
+              you'll need to reset permissions in your browser settings.
+            </p>
           </div>
           
-          <div className="flex items-center justify-center py-4 space-y-2">
-            <div className="flex flex-col items-center gap-3">
-              <AIAssistantMouthAnimation isActive={isListening} size="medium" />
-              <AIVoiceVisualizer isActive={isListening} />
-            </div>
+          <div className="p-4 bg-muted rounded-md">
+            <h3 className="font-medium mb-2">2. Start Recording</h3>
+            <p className="text-sm">
+              Click the "Start Recording" button and speak clearly. The transcript will appear 
+              in real-time as you speak.
+            </p>
           </div>
-  
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label>Voice Recognition</Label>
-              {supportsVoice ? (
-                <Button 
-                  size="sm" 
-                  variant={isListening ? "destructive" : "outline"}
-                  onClick={isListening ? stopListening : startListening}
-                >
-                  {isListening ? <MicOff className="mr-2 h-4 w-4" /> : <Mic className="mr-2 h-4 w-4" />}
-                  {isListening ? "Stop Listening" : "Start Listening"}
-                </Button>
-              ) : (
-                <span className="text-sm text-muted-foreground">
-                  Speech recognition not supported in this browser
-                </span>
-              )}
-            </div>
-            
-            {isListening && (
-              <div className="text-sm p-3 bg-muted rounded-md h-24 overflow-y-auto">
-                <p className="font-medium">Listening in {language === 'en' ? 'English' : 'Arabic'}...</p>
-                {transcript && (
-                  <p className="text-muted-foreground">{transcript}</p>
-                )}
-              </div>
-            )}
-            
-            {testResult && (
-              <div className="p-3 border rounded-md">
-                <p className="font-medium">Result:</p>
-                <p className="whitespace-pre-line">{testResult}</p>
-              </div>
-            )}
+          
+          <div className="p-4 bg-muted rounded-md">
+            <h3 className="font-medium mb-2">3. Adjust Settings</h3>
+            <p className="text-sm">
+              Configure voice settings to improve recognition accuracy. Auto silence detection 
+              will automatically stop recording after a period of silence.
+            </p>
           </div>
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          <div className="text-sm text-muted-foreground">
-            {supportsVoice ? (
-              isListening ? "Listening active" : "Ready to listen"
-            ) : (
-              "Browser does not support speech recognition"
-            )}
-          </div>
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
     </div>
   );
-}
+};
+
+export default VoiceTestPage;

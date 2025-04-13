@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
 import { useAuth } from "@/hooks/useAuth";
@@ -414,6 +413,7 @@ const DashboardAIAssistant = () => {
                               onCancelTask={cancelCreateTask}
                               isCreatingTask={isCreatingTask}
                               pendingTaskConfirmation={pendingTaskConfirmation}
+                              clearMessages={() => setMessages([])}
                             />
                           </div>
                         </div>

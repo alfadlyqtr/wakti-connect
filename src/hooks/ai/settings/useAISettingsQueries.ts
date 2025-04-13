@@ -1,12 +1,81 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { AISettings, AIKnowledgeUpload } from '@/types/ai-assistant.types';
 
-import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
-import { User } from "@/hooks/auth";
-import { AISettings } from "@/types/ai-assistant.types";
+export function useAISettingsQuery(user: any) {
+  return useQuery({
+    queryKey: ['ai-settings'],
+    queryFn: async () => {
+      if (!user) return null;
+      
+      const { data, error } = await supabase
+        .from('ai_assistant_settings')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+        
+      if (error) {
+        if (error.code === 'PGRST116') {
+          return null;
+        }
+        throw error;
+      }
+      
+      return {
+        id: data.id,
+        userId: data.user_id,
+        assistantName: data.assistant_name,
+        role: data.role,
+        tone: data.tone,
+        responseLength: data.response_length,
+        proactiveness: data.proactiveness,
+        suggestionFrequency: data.suggestion_frequency,
+        enabledFeatures: data.enabled_features,
+        language: 'en',
+        voiceEnabled: false,
+        memoryEnabled: true,
+        includePersonalContext: false,
+        knowledgeProfile: 'default',
+      } as AISettings;
+    },
+    enabled: !!user
+  });
+}
 
-/**
- * Fetches the user's AI settings
- */
+export function useAIKnowledgeUploadsQuery(user: any) {
+  return useQuery({
+    queryKey: ['ai-knowledge-uploads'],
+    queryFn: async () => {
+      if (!user) return [];
+      
+      const { data, error } = await supabase
+        .from('ai_knowledge_uploads')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      
+      return data.map(item => ({
+        id: item.id,
+        userId: item.user_id,
+        title: item.title,
+        content: item.content,
+        createdAt: item.created_at,
+        updatedAt: item.updated_at,
+        name: item.title,
+        type: 'text',
+        size: item.content.length,
+        url: null,
+        status: 'completed',
+        processingErrors: null,
+        role: 'general',
+      })) as AIKnowledgeUpload[];
+    },
+    enabled: !!user
+  });
+}
+
 export const useAISettingsQuery = (user: User | null) => {
   return useQuery({
     queryKey: ["aiSettings", user?.id],
@@ -108,9 +177,6 @@ export const useAISettingsQuery = (user: User | null) => {
   });
 };
 
-/**
- * Checks if the user can use the AI assistant
- */
 export const useCanUseAIQuery = (user: User | null) => {
   return useQuery({
     queryKey: ["canUseAI", user?.id],
