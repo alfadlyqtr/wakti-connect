@@ -101,9 +101,12 @@ export function parseTaskFromMessage(text: string): ParsedTaskInfo | null {
     priority = 'normal'; // Using 'normal' instead of 'low' to match TaskPriority type
   }
   
-  // Extract due date
+  // Extract due date - UPDATED to use current year
   let dueDate: Date | undefined;
   let dueTime: string | undefined;
+  
+  // Get current year to use as default
+  const currentYear = new Date().getFullYear();
   
   if (todayRegex.test(text)) {
     dueDate = new Date();
