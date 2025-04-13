@@ -39,6 +39,34 @@ export const TaskConfirmationCard: React.FC<TaskConfirmationCardProps> = ({
     }
   };
 
+  // Function to render nested subtasks recursively
+  const renderSubtasks = (subtasks: any[], level = 0) => {
+    return (
+      <ul className={`text-xs ${level > 0 ? 'pl-3 mt-1' : 'pl-5'} space-y-1`}>
+        {subtasks.map((subtask, index) => {
+          if (typeof subtask === 'string') {
+            return (
+              <li key={index} className="list-disc text-muted-foreground">
+                {subtask}
+              </li>
+            );
+          } else if (subtask && typeof subtask === 'object') {
+            // This is a group/nested subtask
+            return (
+              <li key={index} className="mt-1">
+                <span className="font-medium">{subtask.title || subtask.content}</span>
+                {subtask.subtasks && subtask.subtasks.length > 0 && (
+                  renderSubtasks(subtask.subtasks, level + 1)
+                )}
+              </li>
+            );
+          }
+          return null;
+        })}
+      </ul>
+    );
+  };
+
   return (
     <Card className="border-primary/20 bg-background/95 backdrop-blur-sm">
       <CardHeader className="pb-2">
@@ -81,13 +109,7 @@ export const TaskConfirmationCard: React.FC<TaskConfirmationCardProps> = ({
         {taskInfo.subtasks && taskInfo.subtasks.length > 0 && (
           <div className="mt-2">
             <div className="text-xs font-medium mb-1">Subtasks:</div>
-            <ul className="text-xs pl-5 space-y-1">
-              {taskInfo.subtasks.map((subtask, index) => (
-                <li key={index} className="list-disc text-muted-foreground">
-                  {typeof subtask === 'string' ? subtask : subtask.content || subtask.title}
-                </li>
-              ))}
-            </ul>
+            {renderSubtasks(taskInfo.subtasks)}
           </div>
         )}
       </CardContent>
