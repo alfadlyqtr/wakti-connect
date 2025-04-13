@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,13 +12,14 @@ import { AIAssistantDocumentsCard } from '@/components/ai/AIAssistantDocumentsCa
 import { AIAssistantUpgradeCard } from '@/components/ai/AIAssistantUpgradeCard';
 import { AIAssistantChatCard } from '@/components/ai/assistant/AIAssistantChatCard';
 import { AIMessage, AIAssistantRole } from '@/types/ai-assistant.types';
-import { useUser } from '@/hooks/useUser';
+import { useAuth } from '@/hooks/useAuth';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { TaskConfirmationCard } from '@/components/ai/task/TaskConfirmationCard';
 import { Bot, Trash2, Settings, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { getTimeBasedGreeting } from '@/lib/dateUtils';
 import { Badge } from '@/components/ui/badge';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { ParsedTaskInfo } from '@/hooks/ai/utils/taskParser.types';
 
 const DashboardAIAssistant = () => {
   const { 
@@ -34,7 +36,7 @@ const DashboardAIAssistant = () => {
     storeCurrentRole
   } = useAIAssistant();
   
-  const { user, profile } = useUser();
+  const { user } = useAuth();
   const [inputMessage, setInputMessage] = useState('');
   const [selectedRole, setSelectedRole] = useState<AIAssistantRole>('general');
   const [storedRole, setStoredRole] = useLocalStorage<AIAssistantRole>('ai_assistant_role', 'general');
@@ -89,7 +91,7 @@ const DashboardAIAssistant = () => {
   };
   
   // Get user's first name for greeting
-  const userName = profile?.full_name?.split(' ')[0] || '';
+  const userName = user?.user_metadata?.full_name?.split(' ')[0] || '';
   
   return (
     <div className="flex flex-col h-full">
@@ -98,8 +100,8 @@ const DashboardAIAssistant = () => {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="max-w-md w-full">
             <TaskConfirmationCard
-              taskInfo={detectedTask}
-              onConfirm={confirmCreateTask}
+              taskInfo={detectedTask as ParsedTaskInfo}
+              onConfirm={() => confirmCreateTask(detectedTask)}
               onCancel={cancelCreateTask}
               isLoading={isCreatingTask}
             />
