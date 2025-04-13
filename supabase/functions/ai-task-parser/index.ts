@@ -36,7 +36,7 @@ serve(async (req) => {
     const currentMonth = currentDate.getMonth() + 1; // JavaScript months are 0-based
     const currentDay = currentDate.getDate();
     
-    // Prepare the prompt for DeepSeek with explicit date handling instructions
+    // Prepare the prompt for DeepSeek with enhanced subtask organization rules
     const prompt = `
 You are a sophisticated task parser that can intelligently structure natural language into organized tasks.
 
@@ -52,29 +52,49 @@ CURRENT DATE: ${currentYear}-${currentMonth.toString().padStart(2, '0')}-${curre
 
 SUBTASK ORGANIZATION RULES (VERY IMPORTANT):
 1. Group related items by type and context, not just by commas
-2. Create hierarchical subtasks where appropriate
+2. Create hierarchical subtasks with this structure:
+   {
+     "title": "Group Title",
+     "subtasks": ["subtask1", "subtask2", { "title": "Nested Group", "subtasks": [...] }]
+   }
 3. For shopping lists:
-   - Group items by store (e.g., "Get from Lulu: milk, eggs, bread")
+   - Group items by store into a titled group like: 
+     { "title": "Get from Lulu", "subtasks": ["milk", "eggs", "bread"] }
    - Preserve exact store/brand names (Lulu, Carrefour, H&M, Zara, etc.)
 4. For transportation tasks:
    - Keep as a single action (e.g., "Pick up sister from school")
    - Don't split into multiple subtasks unless truly distinct actions
 5. For sequential tasks:
    - Maintain the sequence if it's a step-by-step process
+   - Use a nested structure for dependencies
 6. Never treat commas in normal sentences as subtask separators
 7. For mixed task types, separate by context (transportation, shopping, etc.)
+8. ALWAYS use hierarchical nesting for organization
 
 EXAMPLE TRANSFORMATIONS:
 - Input: "Buy milk, eggs, bread from Lulu and pick up sister from school"
-  Output: Two separate subtasks:
-    1. "Get groceries from Lulu" with subtasks: "milk", "eggs", "bread"
-    2. "Pick up sister from school"
+  Output JSON:
+  {
+    "title": "Shopping and pickup errands",
+    "subtasks": [
+      { 
+        "title": "Get groceries from Lulu", 
+        "subtasks": ["milk", "eggs", "bread"] 
+      },
+      "Pick up sister from school"
+    ]
+  }
 
 - Input: "Meet John at 3pm, discuss project timeline, then email Sarah the summary"
-  Output: Sequential subtasks:
-    1. "Meet John at 3pm"
-    2. "Discuss project timeline"
-    3. "Email Sarah the summary"
+  Output JSON:
+  {
+    "title": "Meeting with John",
+    "subtasks": [
+      "Meet John at 3pm",
+      "Discuss project timeline",
+      "Email Sarah the summary"
+    ]
+  }
 
 DATE HANDLING RULES:
 - Today's date is ${currentYear}-${currentMonth.toString().padStart(2, '0')}-${currentDay.toString().padStart(2, '0')}
@@ -88,7 +108,7 @@ Respond with ONLY a valid JSON object containing these fields. If a field can't 
 Text to parse: ${text}
 `;
 
-    console.log("Calling DeepSeek API for task parsing with updated subtask organization rules");
+    console.log("Calling DeepSeek API for task parsing with enhanced subtask hierarchy rules");
 
     // Call DeepSeek API
     const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
@@ -106,7 +126,8 @@ Text to parse: ${text}
                       Return only valid JSON.
                       The current date is ${currentYear}-${currentMonth.toString().padStart(2, '0')}-${currentDay.toString().padStart(2, '0')}.
                       ALWAYS use ${currentYear} as the default year for any dates mentioned.
-                      FOCUS ON INTELLIGENT SUBTASK ORGANIZATION.` 
+                      FOCUS ON HIERARCHICAL SUBTASK ORGANIZATION.
+                      Use nested objects for groups with { "title": "Group Name", "subtasks": [...] }` 
           },
           { role: "user", content: prompt }
         ],

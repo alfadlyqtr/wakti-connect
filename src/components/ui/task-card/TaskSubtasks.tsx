@@ -1,21 +1,15 @@
+
 import React, { useState } from "react";
 import { SubTask } from "@/types/task.types";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { ChevronDown, ChevronRight } from "lucide-react";
-
-interface NestedSubtask {
-  title?: string;
-  content?: string;
-  subtasks?: (NestedSubtask | string)[];
-  is_completed?: boolean;
-  id?: string;
-}
+import { NestedSubtask } from "@/services/ai/aiTaskParserService";
 
 interface TaskSubtasksProps {
   taskId: string;
-  subtasks?: SubTask[] | NestedSubtask[];
+  subtasks?: SubTask[] | (string | NestedSubtask)[];
   onSubtaskToggle?: (taskId: string, subtaskIndex: number, isCompleted: boolean) => void;
   refetch?: () => void;
 }
@@ -37,8 +31,13 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({
     }));
   };
 
+  // Check if we have the nested structure from AI parser
   const hasNestedStructure = subtasks.some(st => 
-    typeof st === 'object' && (st as NestedSubtask).subtasks
+    typeof st === 'object' && st !== null && 
+    (
+      (st as NestedSubtask).subtasks || 
+      (st as NestedSubtask).title
+    )
   );
 
   const handleSubtaskToggle = async (index: number, subtaskId?: string) => {
@@ -99,7 +98,7 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({
     
     if (item.subtasks && item.subtasks.length > 0) {
       const groupId = `${parentPath}-${index}`;
-      const isExpanded = expandedGroups[groupId] !== false;
+      const isExpanded = expandedGroups[groupId] !== false; // Default to expanded
       
       return (
         <li key={groupId} className="space-y-1">
@@ -111,7 +110,7 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({
               {isExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
             </button>
             <span className="text-sm font-medium">
-              {item.title || item.content}
+              {item.title || item.content || "Group"}
             </span>
           </div>
           
@@ -138,13 +137,14 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({
           htmlFor={`subtask-${taskId}-${parentPath}-${index}`}
           className={`text-sm ${item.is_completed ? 'line-through text-muted-foreground' : ''}`}
         >
-          {item.content}
+          {item.content || item.title}
         </label>
       </li>
     );
   };
 
   if (!hasNestedStructure) {
+    // Standard flat subtasks rendering (for backward compatibility)
     return (
       <div className="space-y-2 mt-3">
         <h4 className="text-sm font-medium">
@@ -172,6 +172,7 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({
     );
   }
 
+  // Enhanced rendering for nested subtasks
   return (
     <div className="space-y-2 mt-3">
       <h4 className="text-sm font-medium">
@@ -179,7 +180,7 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({
       </h4>
       <ul className="space-y-1.5">
         {subtasks.map((item, index) => 
-          renderSubtaskItem(item as NestedSubtask | string, index)
+          renderSubtaskItem(item, index)
         )}
       </ul>
     </div>

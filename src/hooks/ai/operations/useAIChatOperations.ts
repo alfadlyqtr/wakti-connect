@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { AIMessage } from "@/types/ai-assistant.types";
@@ -175,28 +174,42 @@ export const useAIChatOperations = () => {
         if (parsedTask && parsedTask.title) {
           console.log("Task parsed successfully with AI:", parsedTask);
           
-          // Convert parsed task to form data
+          // Convert parsed task to form data - this now preserves nested subtasks
           const taskFormData = {
             title: parsedTask.title,
             description: parsedTask.location ? `Location: ${parsedTask.location}` : '',
             due_date: parsedTask.due_date,
             due_time: parsedTask.due_time,
             priority: parsedTask.priority,
-            subtasks: parsedTask.subtasks.map((content, index) => ({
-              id: `temp-${index}`,
-              task_id: 'pending',
-              content,
-              is_completed: false
-            })),
+            subtasks: parsedTask.subtasks.map((content, index) => {
+              if (typeof content === 'string') {
+                return {
+                  id: `temp-${index}`,
+                  task_id: 'pending',
+                  content,
+                  is_completed: false
+                };
+              } else {
+                // For nested subtasks, we'll flatten for form data but keep original structure
+                return {
+                  id: `temp-${index}`,
+                  task_id: 'pending',
+                  content: content.title || content.content || 'Task group',
+                  is_completed: false
+                };
+              }
+            }),
             location: parsedTask.location,
             status: 'pending' as const,
-            is_recurring: false
+            is_recurring: false,
+            // Store the original nested structure
+            originalSubtasks: parsedTask.subtasks
           };
           
           // Create task confirmation message
           const confirmationMessageId = uuidv4();
           
-          // Generate confirmation text
+          // Generate confirmation text with improved handling for nested subtasks
           let confirmationContent = `I'll create a task: **${parsedTask.title}**\n\n`;
           confirmationContent += "**Task Preview:**\n\n";
           confirmationContent += `**Title:** ${parsedTask.title}\n`;
@@ -219,14 +232,54 @@ export const useAIChatOperations = () => {
           
           if (parsedTask.subtasks && parsedTask.subtasks.length > 0) {
             confirmationContent += `**Subtasks:**\n`;
-            parsedTask.subtasks.forEach((subtask, index) => {
-              confirmationContent += `- ${subtask}\n`;
-            });
+            
+            // Improved subtask presentation for confirmation message
+            const renderSubtasks = (items: (string | NestedSubtask)[], indent = '') => {
+              let result = '';
+              
+              items.forEach((item) => {
+                if (typeof item === 'string') {
+                  result += `${indent}- ${item}\n`;
+                } else {
+                  // Handle nested structure
+                  if (item.title || item.content) {
+                    result += `${indent}- ${item.title || item.content}\n`;
+                  }
+                  
+                  if (item.subtasks && item.subtasks.length > 0) {
+                    result += renderSubtasks(item.subtasks, `${indent}  `);
+                  }
+                }
+              });
+              
+              return result;
+            };
+            
+            confirmationContent += renderSubtasks(parsedTask.subtasks);
           }
           
-          // Add estimated completion time
-          const estimatedTime = parsedTask.subtasks.length > 0 
-            ? `${10 + (parsedTask.subtasks.length * 5)} minutes` 
+          // Add estimated completion time based on all subtasks (flat + nested)
+          const countAllSubtasks = (items: (string | NestedSubtask)[]): number => {
+            let count = 0;
+            
+            items.forEach(item => {
+              if (typeof item === 'string') {
+                count += 1;
+              } else {
+                count += 1; // Count the group itself
+                
+                if (item.subtasks && item.subtasks.length > 0) {
+                  count += countAllSubtasks(item.subtasks);
+                }
+              }
+            });
+            
+            return count;
+          };
+          
+          const totalSubtasks = countAllSubtasks(parsedTask.subtasks);
+          const estimatedTime = totalSubtasks > 0 
+            ? `${10 + (totalSubtasks * 5)} minutes` 
             : "a few minutes";
             
           confirmationContent += `\n**Estimated time:** ${estimatedTime}\n\n`;

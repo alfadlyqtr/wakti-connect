@@ -2,12 +2,19 @@
 import { supabase } from "@/lib/supabase";
 import { toast } from "@/components/ui/use-toast";
 
+export interface NestedSubtask {
+  title?: string;
+  content?: string;
+  subtasks?: (NestedSubtask | string)[];
+  is_completed?: boolean;
+}
+
 export interface ParsedTask {
   title: string;
   due_date: string | null;
   due_time: string | null;
   priority: 'urgent' | 'high' | 'medium' | 'normal';
-  subtasks: any[]; // Allow various subtask formats
+  subtasks: (string | NestedSubtask)[]; // Support both flat and nested structures
   location: string | null;
 }
 
@@ -60,7 +67,7 @@ export const parseTaskWithAI = async (text: string): Promise<ParsedTask | null> 
  * Helper function to flatten nested subtask structures if needed
  * This is kept for backward compatibility but we now preserve the nested structure
  */
-const flattenSubtasks = (subtasks: any[]): string[] => {
+const flattenSubtasks = (subtasks: (string | NestedSubtask)[]): string[] => {
   let flattened: string[] = [];
   
   for (const item of subtasks) {
@@ -68,12 +75,17 @@ const flattenSubtasks = (subtasks: any[]): string[] => {
       flattened.push(item);
     } else if (typeof item === 'object' && item !== null) {
       // Handle case where subtask is an object with a title and children
-      if (item.title && Array.isArray(item.subtasks)) {
+      if (item.title) {
         flattened.push(item.title);
-        flattened = flattened.concat(flattenSubtasks(item.subtasks));
-      } else if (item.content) {
-        // Handle case where subtask has a content property
+      }
+      
+      if (item.content) {
         flattened.push(item.content);
+      }
+      
+      // Recursively flatten nested subtasks
+      if (Array.isArray(item.subtasks)) {
+        flattened = flattened.concat(flattenSubtasks(item.subtasks));
       }
     }
   }
@@ -121,7 +133,7 @@ export const convertParsedTaskToFormData = (parsedTask: ParsedTask) => {
     location: parsedTask.location,
     enableSubtasks: subtasks.length > 0,
     is_recurring: false,
-    // Store the original subtask structure for display in TaskCard
+    // Store the original nested subtask structure for display in TaskCard
     originalSubtasks: parsedTask.subtasks
   };
 };
