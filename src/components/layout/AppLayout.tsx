@@ -8,6 +8,7 @@ import MobileNavBar from './navbar/MobileNavBar';
 import { Toaster } from '@/components/ui/toaster';
 import NotificationListener from '../notifications/NotificationListener';
 import ProgressierInitializer from '../ProgressierInitializer';
+import { useState, useEffect } from 'react';
 
 const AppLayout: React.FC = () => {
   return (
