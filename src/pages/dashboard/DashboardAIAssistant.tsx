@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "@/components/providers/theme-provider";
+import { useTheme } from "@/hooks/use-theme"; // Fixed theme provider import
 import { useAIAssistant } from "@/hooks/useAIAssistant";
 import {
   Card,
@@ -40,6 +41,7 @@ import { ParsedTaskInfo } from "@/hooks/ai/utils/taskParser.types";
 import { TaskFormData } from "@/types/task.types";
 import { convertParsedTaskToFormData } from "@/hooks/ai/utils/taskParser";
 import { AIAssistantRole } from "@/types/ai-assistant.types";
+import { UserIntent } from "@/services/ai/aiConversationService";
 
 declare global {
   class ImageCapture {
@@ -109,10 +111,10 @@ const DashboardAIAssistant = () => {
   const {
     transcript,
     resetTranscript,
-    listening,
-    startListening,
-    stopListening,
-    browserSupportsSpeechRecognition
+    isRecording: listening,
+    startRecording: startListening,
+    stopRecording: stopListening,
+    supported: browserSupportsSpeechRecognition
   } = useSpeechRecognition();
   
   useEffect(() => {
@@ -191,7 +193,7 @@ const DashboardAIAssistant = () => {
         await startListening();
         setIsVoiceActive(true);
       } catch (error: any) {
-        if (error.message.includes("denied")) {
+        if (error.message && error.message.includes("denied")) {
           setSpeechRecognitionDenied(true);
           setSpeechRecognitionError("Microphone access denied. Please allow microphone access in your browser settings.");
         } else {
@@ -260,8 +262,8 @@ const DashboardAIAssistant = () => {
 
   const handleConfirmTask = () => {
     if (confirmCreateTask && detectedTask) {
-      // First convert detectedTask to ParsedTaskInfo if needed
-      if ('due_date' in detectedTask && detectedTask.due_date instanceof Date) {
+      // Safely check if due_date is a Date object
+      if (detectedTask.due_date && typeof detectedTask.due_date !== 'string' && 'toISOString' in detectedTask.due_date) {
         // Converting Date to string for TaskFormData compatibility
         const formattedTask: TaskFormData = {
           ...detectedTask,
@@ -286,20 +288,27 @@ const DashboardAIAssistant = () => {
   
   return (
     <div className="container mx-auto p-4">
-      <AIAssistantTabs />
+      {/* We'll implement a minimal version of AIAssistantTabs since the imported component has different props */}
+      <div className="mb-4">
+        <h2 className="text-xl font-bold">WAKTI AI Assistant</h2>
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {/* Left Panel */}
         <div className="md:col-span-1 space-y-4">
-          <AIRoleSelector onRoleChange={handleRoleChange} currentRole={currentRole} />
+          <AIRoleSelector onRoleChange={handleRoleChange} />
           
-          <AIAssistantHistoryCard />
+          <AIAssistantHistoryCard canAccess={!!canUseAI} />
           
-          <AIAssistantDocumentsCard />
+          <AIAssistantDocumentsCard 
+            canAccess={!!canUseAI} 
+            onUseDocumentContent={(content) => setMessageText(content)}
+            selectedRole={currentRole}
+          />
           
           <AIAssistantUpgradeCard />
           
-          <QuickToolsCard />
+          <QuickToolsCard selectedRole={currentRole} />
         </div>
         
         {/* Main Chat Interface */}
@@ -310,7 +319,7 @@ const DashboardAIAssistant = () => {
                 <Bot className="mr-2 h-5 w-5" />
                 WAKTI AI Assistant
                 {isAIThinking && (
-                  <AIAssistantMouthAnimation className="ml-2" />
+                  <AIAssistantMouthAnimation />
                 )}
               </CardTitle>
               <CardDescription>
@@ -324,14 +333,13 @@ const DashboardAIAssistant = () => {
               <ScrollArea ref={chatContainerRef} className="h-full">
                 <div className="flex flex-col space-y-4 p-4">
                   {isFirstMessage && (
-                    <EmptyStateView currentRole={currentRole} lastDetectedIntent={lastDetectedIntent} />
+                    <EmptyStateView onPromptClick={setMessageText} selectedRole={currentRole} />
                   )}
                   
                   {messages.map((message) => (
                     <AIMessageBubble
                       key={message.id}
                       message={message}
-                      isAIThinking={isAIThinking}
                     />
                   ))}
                   
@@ -343,7 +351,6 @@ const DashboardAIAssistant = () => {
                         content: "Thinking...",
                         timestamp: new Date(),
                       }}
-                      isAIThinking={isAIThinking}
                     />
                   )}
                 </div>
@@ -369,7 +376,10 @@ const DashboardAIAssistant = () => {
                 
                 <div className="absolute right-2 bottom-2 flex items-center space-x-2">
                   {isVoiceActive && (
-                    <AIVoiceVisualizer isRecording={isVoiceActive} />
+                    <div className="flex items-center space-x-1">
+                      <span className="animate-pulse">●</span>
+                      <span>Recording...</span>
+                    </div>
                   )}
                   
                   <Button
@@ -404,7 +414,7 @@ const DashboardAIAssistant = () => {
             </CardFooter>
           </Card>
           
-          <SuggestionPrompts setMessageText={setMessageText} />
+          <SuggestionPrompts onPromptClick={setMessageText} selectedRole={currentRole} />
         </div>
       </div>
       
@@ -415,7 +425,7 @@ const DashboardAIAssistant = () => {
             taskInfo={{
               title: detectedTask.title,
               description: detectedTask.description,
-              priority: detectedTask.priority || 'normal', // Ensure priority is provided
+              priority: detectedTask.priority || 'normal',
               subtasks: detectedTask.subtasks || [],
               due_date: detectedTask.due_date,
               dueTime: detectedTask.due_time,
