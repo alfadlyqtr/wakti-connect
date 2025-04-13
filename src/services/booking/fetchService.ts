@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { BookingTab, BookingWithRelations, BookingsResult } from "@/types/booking.types";
 import { getStaffRelationId } from "@/utils/staffUtils";
