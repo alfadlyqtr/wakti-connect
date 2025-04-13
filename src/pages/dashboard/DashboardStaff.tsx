@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useStaffMembers } from '@/hooks/useStaffMembers';
+import { useStaffMembers } from '@/hooks/staff/useStaffMembers';
 import { Button } from '@/components/ui/button';
 import { UserPlus, RefreshCw } from 'lucide-react';
 import StaffManagementTab from '@/components/staff/StaffManagementTab';

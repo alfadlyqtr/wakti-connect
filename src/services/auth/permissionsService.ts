@@ -89,7 +89,20 @@ export async function getUserPermissions(): Promise<Record<string, boolean>> {
       return {};
     }
     
-    return data?.permissions || {};
+    // Fix the type issue by explicitly converting the JSON to the correct type
+    const permissions = data?.permissions ? data.permissions : {};
+    
+    // Convert JSONB to Record<string, boolean>
+    const typedPermissions: Record<string, boolean> = {};
+    if (typeof permissions === 'object' && permissions !== null) {
+      Object.entries(permissions).forEach(([key, value]) => {
+        if (typeof value === 'boolean') {
+          typedPermissions[key] = value;
+        }
+      });
+    }
+    
+    return typedPermissions;
   } catch (error) {
     console.error("Error in getUserPermissions:", error);
     return {};
