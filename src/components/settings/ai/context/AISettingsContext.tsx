@@ -14,7 +14,7 @@ export const AISettingsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     aiSettings, 
     isLoadingSettings, 
     updateSettings: updateSettingsMutation, 
-    canUseAI,
+    canUseAI: canUseAIFunc,
     addKnowledge: addKnowledgeMutation,
     knowledgeUploads,
     isLoadingKnowledge,
@@ -24,6 +24,8 @@ export const AISettingsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [settings, setSettings] = useState<AISettings | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isCreatingSettings, setIsCreatingSettings] = useState(false);
+  const [isUpdatingSettings, setIsUpdatingSettings] = useState(false);
+  const [isAddingKnowledge, setIsAddingKnowledge] = useState(false);
   
   useEffect(() => {
     if (aiSettings) {
@@ -33,11 +35,21 @@ export const AISettingsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   }, [aiSettings]);
 
   const updateSettings = async (newSettings: AISettings) => {
-    return handleUpdateSettings(updateSettingsMutation, newSettings, setError);
+    setIsUpdatingSettings(true);
+    try {
+      return await handleUpdateSettings(updateSettingsMutation, newSettings, setError);
+    } finally {
+      setIsUpdatingSettings(false);
+    }
   };
   
   const addKnowledge = async (title: string, content: string, role?: AIAssistantRole) => {
-    return handleAddKnowledge(addKnowledgeMutation, title, content, setError, role);
+    setIsAddingKnowledge(true);
+    try {
+      return await handleAddKnowledge(addKnowledgeMutation, title, content, setError, role);
+    } finally {
+      setIsAddingKnowledge(false);
+    }
   };
   
   const deleteKnowledge = async (id: string) => {
@@ -53,11 +65,14 @@ export const AISettingsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   };
 
+  // Evaluate canUseAI once and store as boolean
+  const canUseAI = typeof canUseAIFunc === 'function' ? canUseAIFunc() : !!canUseAIFunc;
+
   const value = {
     settings,
     isLoadingSettings,
-    isUpdatingSettings: updateSettingsMutation.isPending,
-    isAddingKnowledge: addKnowledgeMutation.isPending,
+    isUpdatingSettings,
+    isAddingKnowledge,
     knowledgeUploads,
     isLoadingKnowledge,
     canUseAI,

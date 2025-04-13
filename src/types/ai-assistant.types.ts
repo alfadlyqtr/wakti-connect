@@ -17,6 +17,21 @@ export interface AISettings {
   voiceEnabled: boolean;
   memoryEnabled: boolean;
   includePersonalContext: boolean;
+  
+  // Added missing properties
+  tone?: 'professional' | 'friendly' | 'balanced' | 'formal' | 'casual';
+  response_length?: 'concise' | 'balanced' | 'detailed';
+  proactiveness?: boolean;
+  suggestion_frequency?: 'low' | 'medium' | 'high';
+  enabled_features?: {
+    tasks: boolean;
+    events: boolean;
+    staff: boolean;
+    analytics: boolean;
+    messaging: boolean;
+  };
+  knowledge_profile?: string;
+  id?: string;
 }
 
 export interface AIKnowledgeUpload {
@@ -26,6 +41,11 @@ export interface AIKnowledgeUpload {
   size: number;
   timestamp: Date;
   status: 'processing' | 'ready' | 'error';
+  
+  // Added missing properties
+  title?: string;
+  role?: AIAssistantRole;
+  created_at?: string | Date;
 }
 
 export interface RoleContextTool {
@@ -41,6 +61,10 @@ export interface RoleContext {
   suggestedPrompts: string[];
   quickTools: RoleContextTool[];
   features?: string[];
+  
+  // Add missing properties
+  welcomeMessage?: string;
+  commandSuggestions?: string[];
 }
 
 export const RoleContexts: Record<AIAssistantRole, RoleContext> = {
@@ -58,6 +82,12 @@ export const RoleContexts: Record<AIAssistantRole, RoleContext> = {
       { name: "Task Creator", icon: "CheckSquare", description: "Create and organize tasks" },
       { name: "Quick Answer", icon: "HelpCircle", description: "Get quick answers to questions" },
       { name: "Idea Generator", icon: "Lightbulb", description: "Generate creative ideas" }
+    ],
+    welcomeMessage: "Hello! I'm your WAKTI AI assistant. How can I help you today?",
+    commandSuggestions: [
+      "Help me plan my day",
+      "Write a to-do list for me",
+      "Give me some productivity tips"
     ]
   },
   student: {
@@ -74,6 +104,12 @@ export const RoleContexts: Record<AIAssistantRole, RoleContext> = {
       { name: "Note Summarizer", icon: "FileText", description: "Summarize your notes" },
       { name: "Research Assistant", icon: "Search", description: "Find academic sources" },
       { name: "Concept Explainer", icon: "BookOpen", description: "Get simple explanations" }
+    ],
+    welcomeMessage: "Hi there! I'm your student assistant. How can I help with your studies today?",
+    commandSuggestions: [
+      "Help me prepare for my exam",
+      "Explain this concept to me",
+      "Create a study schedule for me"
     ]
   },
   business_owner: {
@@ -90,6 +126,12 @@ export const RoleContexts: Record<AIAssistantRole, RoleContext> = {
       { name: "Business Analytics", icon: "BarChart", description: "Analyze business performance" },
       { name: "Customer Service", icon: "HeartHandshake", description: "Improve customer interactions" },
       { name: "Service Manager", icon: "Settings", description: "Optimize your services" }
+    ],
+    welcomeMessage: "Welcome! I'm your business assistant. How can I help optimize your business today?",
+    commandSuggestions: [
+      "Create a business plan",
+      "Help me with marketing strategies",
+      "Analyze my business performance"
     ]
   },
   employee: {
@@ -106,6 +148,12 @@ export const RoleContexts: Record<AIAssistantRole, RoleContext> = {
       { name: "Content Creator", icon: "FileText", description: "Create work documents" },
       { name: "Creative Writing", icon: "Edit", description: "Generate creative content" },
       { name: "Meeting Organizer", icon: "Calendar", description: "Plan effective meetings" }
+    ],
+    welcomeMessage: "Hello! I'm your work assistant. How can I help boost your productivity today?",
+    commandSuggestions: [
+      "Draft an email to my boss",
+      "Prepare for my presentation",
+      "Schedule my team meeting"
     ]
   },
   writer: {
@@ -122,6 +170,12 @@ export const RoleContexts: Record<AIAssistantRole, RoleContext> = {
       { name: "Editor Helper", icon: "Edit", description: "Edit and improve your writing" },
       { name: "Writing Scheduler", icon: "Calendar", description: "Create writing schedules" },
       { name: "Research Tool", icon: "Search", description: "Research for your writing" }
+    ],
+    welcomeMessage: "Greetings! I'm your writing assistant. How can I help with your creative projects today?",
+    commandSuggestions: [
+      "Help me outline my story",
+      "Give me writing prompts",
+      "Edit my paragraph"
     ]
   }
 };

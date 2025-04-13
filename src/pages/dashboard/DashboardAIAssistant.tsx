@@ -9,7 +9,7 @@ import { useBreakpoint } from "@/hooks/useBreakpoint";
 import { AISettingsProvider } from "@/components/settings/ai";
 import StaffRoleGuard from "@/components/auth/StaffRoleGuard";
 import { AIAssistantRole } from "@/types/ai-assistant.types";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CleanChatInterface } from "@/components/ai/assistant/CleanChatInterface";
 import { EnhancedToolsTab } from "@/components/ai/tools/EnhancedToolsTab";
 import { RoleSpecificKnowledge } from "@/components/ai/tools/RoleSpecificKnowledge";
@@ -329,7 +329,6 @@ const DashboardAIAssistant = () => {
 
   const shouldShowSystemIntegration = selectedRole === "business_owner";
 
-  // Update the function that converts a task to TaskFormData to match the required type
   const convertToTaskFormData = (parsedTask: ParsedTaskInfo): TaskFormData => {
     return {
       title: parsedTask.title,

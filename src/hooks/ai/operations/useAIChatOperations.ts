@@ -348,10 +348,8 @@ export const useAIChatOperations = () => {
         
         const errorMessage: AIMessage = {
           id: aiMessageId,
-          role: "error",
-          content: error instanceof Error 
-            ? `Sorry, I encountered an error: ${error.message}` 
-            : "Sorry, I encountered an unexpected error. Please try again.",
+          role: "assistant",
+          content: `Sorry, I encountered an error: ${error instanceof Error ? error.message : 'Please try again or create it manually.'}`,
           timestamp: new Date()
         };
         

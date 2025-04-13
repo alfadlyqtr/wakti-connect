@@ -1,73 +1,78 @@
 
 import React from 'react';
-import { Card } from '@/components/ui/card';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { formatTime } from '@/utils/audio/audioProcessing';
-import { Loader2 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Clock, Trash2 } from 'lucide-react';
+import { format } from 'date-fns';
 
-interface SavedMeeting {
+export interface Meeting {
   id: string;
-  date: string;
-  duration: number;
-  location: string | null;
+  title: string;
+  date: string | Date;
   summary: string;
 }
 
-interface SavedMeetingsListProps {
-  savedMeetings: SavedMeeting[];
-  isLoadingHistory: boolean;
+export interface SavedMeetingsListProps {
+  meetings: Meeting[];
+  onLoadMeeting: (meeting: Meeting) => void;
+  onDeleteMeeting?: (id: string) => void;
 }
 
 const SavedMeetingsList: React.FC<SavedMeetingsListProps> = ({
-  savedMeetings,
-  isLoadingHistory,
+  meetings,
+  onLoadMeeting,
+  onDeleteMeeting
 }) => {
-  if (isLoadingHistory) {
-    return (
-      <div className="flex justify-center items-center p-4">
-        <Loader2 className="h-6 w-6 animate-spin mr-2" />
-        <p>Loading meeting history...</p>
-      </div>
-    );
-  }
-
-  if (savedMeetings.length === 0) {
-    return (
-      <Card className="p-4 text-center text-gray-500">
-        No saved meeting summaries
-      </Card>
-    );
-  }
-
   return (
-    <Card className="p-4">
-      <h3 className="text-lg font-semibold mb-3">Recent Summaries</h3>
-      <Accordion type="single" collapsible className="w-full">
-        {savedMeetings.map((meeting) => {
-          const meetingDate = new Date(meeting.date).toLocaleDateString();
-          return (
-            <AccordionItem key={meeting.id} value={meeting.id}>
-              <AccordionTrigger className="text-left">
-                <div>
-                  <p className="font-medium">{meetingDate}</p>
-                  <p className="text-sm text-gray-500">
-                    Duration: {formatTime(meeting.duration)}
-                    {meeting.location && ` • Location: ${meeting.location}`}
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base">Saved Meetings</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {meetings.length === 0 ? (
+          <div className="text-center py-6 text-muted-foreground">
+            <p>No saved meetings</p>
+            <p className="text-xs">Save meeting summaries to access them here</p>
+          </div>
+        ) : (
+          <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+            {meetings.map((meeting) => (
+              <div
+                key={meeting.id}
+                className="flex items-center justify-between p-2 border rounded-md hover:bg-muted/50 transition-colors"
+              >
+                <div className="truncate flex-1">
+                  <h4 className="font-medium text-sm truncate">{meeting.title}</h4>
+                  <p className="text-xs text-muted-foreground flex items-center">
+                    <Clock className="h-3 w-3 mr-1" />
+                    {format(new Date(meeting.date), 'MMM d, yyyy')}
                   </p>
                 </div>
-              </AccordionTrigger>
-              <AccordionContent>
-                <div 
-                  className="prose dark:prose-invert max-w-none text-sm"
-                  dangerouslySetInnerHTML={{ 
-                    __html: meeting.summary.replace(/\n/g, '<br />') 
-                  }} 
-                />
-              </AccordionContent>
-            </AccordionItem>
-          );
-        })}
-      </Accordion>
+                <div className="flex gap-1 ml-2">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => onLoadMeeting(meeting)}
+                    className="h-7 px-2"
+                  >
+                    Load
+                  </Button>
+                  {onDeleteMeeting && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onDeleteMeeting(meeting.id)}
+                      className="h-7 w-7 text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
     </Card>
   );
 };
