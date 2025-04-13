@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Check, Clock, ListTodo, CalendarClock, AlertTriangle, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ParsedTaskInfo } from "@/hooks/ai/utils/taskParser";
+import { ParsedTaskInfo } from "@/hooks/ai/utils/taskParser.types";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
