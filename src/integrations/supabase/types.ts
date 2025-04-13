@@ -1509,6 +1509,71 @@ export type Database = {
         }
         Relationships: []
       }
+      reminder_notifications: {
+        Row: {
+          id: string
+          is_dismissed: boolean
+          notified_at: string
+          reminder_id: string
+          snoozed_until: string | null
+        }
+        Insert: {
+          id?: string
+          is_dismissed?: boolean
+          notified_at?: string
+          reminder_id: string
+          snoozed_until?: string | null
+        }
+        Update: {
+          id?: string
+          is_dismissed?: boolean
+          notified_at?: string
+          reminder_id?: string
+          snoozed_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminder_notifications_reminder_id_fkey"
+            columns: ["reminder_id"]
+            isOneToOne: false
+            referencedRelation: "reminders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reminders: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          message: string
+          reminder_time: string
+          repeat_type: Database["public"]["Enums"]["reminder_repeat_type"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          message: string
+          reminder_time: string
+          repeat_type?: Database["public"]["Enums"]["reminder_repeat_type"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          message?: string
+          reminder_time?: string
+          repeat_type?: Database["public"]["Enums"]["reminder_repeat_type"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       staff_service_assignments: {
         Row: {
           created_at: string
@@ -2052,6 +2117,7 @@ export type Database = {
         | "in_progress"
       event_status: "draft" | "sent" | "accepted" | "declined" | "recalled"
       invitation_status: "pending" | "accepted" | "declined"
+      reminder_repeat_type: "none" | "daily" | "weekly"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2186,6 +2252,7 @@ export const Constants = {
       ],
       event_status: ["draft", "sent", "accepted", "declined", "recalled"],
       invitation_status: ["pending", "accepted", "declined"],
+      reminder_repeat_type: ["none", "daily", "weekly"],
     },
   },
 } as const
