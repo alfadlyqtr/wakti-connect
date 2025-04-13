@@ -7,36 +7,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Process base64 in chunks to prevent memory issues
-function processBase64Chunks(base64String: string, chunkSize = 32768) {
-  const chunks: Uint8Array[] = [];
-  let position = 0;
-  
-  while (position < base64String.length) {
-    const chunk = base64String.slice(position, position + chunkSize);
-    const binaryChunk = atob(chunk);
-    const bytes = new Uint8Array(binaryChunk.length);
-    
-    for (let i = 0; i < binaryChunk.length; i++) {
-      bytes[i] = binaryChunk.charCodeAt(i);
-    }
-    
-    chunks.push(bytes);
-    position += chunkSize;
-  }
-
-  const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
-  const result = new Uint8Array(totalLength);
-  let offset = 0;
-
-  for (const chunk of chunks) {
-    result.set(chunk, offset);
-    offset += chunk.length;
-  }
-
-  return result;
-}
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -46,27 +16,62 @@ serve(async (req) => {
   try {
     console.log("Voice-to-text request received");
     
-    // Parse the request body
-    let requestData;
-    try {
-      requestData = await req.json();
-    } catch (e) {
-      console.error("Failed to parse request JSON:", e);
-      throw new Error('Invalid JSON in request body');
+    // Check content type
+    const contentType = req.headers.get('content-type') || '';
+    console.log("Content-Type:", contentType);
+    
+    let audioData;
+    
+    if (contentType.includes('multipart/form-data')) {
+      // Handle multipart form data
+      try {
+        const formData = await req.formData();
+        const audioFile = formData.get('audio');
+        
+        if (!audioFile || !(audioFile instanceof File)) {
+          console.error("No audio file in form data");
+          throw new Error('No audio file provided in form data');
+        }
+        
+        console.log(`Received audio file: ${audioFile.name}, size: ${audioFile.size} bytes, type: ${audioFile.type}`);
+        audioData = await audioFile.arrayBuffer();
+      } catch (e) {
+        console.error("Error processing form data:", e);
+        throw new Error('Failed to process form data: ' + e.message);
+      }
+    } else {
+      // Handle base64 encoded data in JSON
+      try {
+        const requestData = await req.json();
+        const { audio } = requestData;
+        
+        if (!audio) {
+          console.error("No audio data in JSON");
+          throw new Error('No audio data provided in JSON');
+        }
+        
+        console.log(`Received base64 audio data of length: ${audio.length}`);
+        // Convert base64 to binary
+        const binaryString = atob(audio);
+        const bytes = new Uint8Array(binaryString.length);
+        
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        
+        audioData = bytes.buffer;
+      } catch (e) {
+        console.error("Error processing JSON request:", e);
+        throw new Error('Failed to process JSON request: ' + e.message);
+      }
     }
     
-    const { audio } = requestData;
-    
-    if (!audio) {
-      console.error("No audio data provided");
-      throw new Error('No audio data provided');
+    if (!audioData || audioData.byteLength === 0) {
+      console.error("Empty audio data");
+      throw new Error('Empty audio data received');
     }
-
-    console.log("Audio data received, processing...");
     
-    // Process audio in chunks
-    const binaryAudio = processBase64Chunks(audio);
-    console.log(`Processed ${binaryAudio.length} bytes of audio data`);
+    console.log(`Processing ${audioData.byteLength} bytes of audio data`);
     
     // Check for OpenAI API key
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
@@ -75,11 +80,11 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured');
     }
     
-    // Prepare form data
-    const formData = new FormData();
-    const blob = new Blob([binaryAudio], { type: 'audio/webm' });
-    formData.append('file', blob, 'audio.webm');
-    formData.append('model', 'whisper-1');
+    // Prepare form data for OpenAI API
+    const openAIFormData = new FormData();
+    const blob = new Blob([audioData], { type: 'audio/webm' }); // Assume webm format
+    openAIFormData.append('file', blob, 'audio.webm');
+    openAIFormData.append('model', 'whisper-1');
 
     console.log("Sending to OpenAI API...");
     
@@ -89,7 +94,7 @@ serve(async (req) => {
       headers: {
         'Authorization': `Bearer ${OPENAI_API_KEY}`,
       },
-      body: formData,
+      body: openAIFormData,
     });
 
     if (!response.ok) {

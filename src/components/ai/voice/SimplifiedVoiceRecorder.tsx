@@ -39,7 +39,9 @@ export const SimplifiedVoiceRecorder: React.FC<SimplifiedVoiceRecorderProps> = (
         } 
       });
       
-      const mediaRecorder = new MediaRecorder(stream);
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm' // Specify WebM format explicitly
+      });
       mediaRecorderRef.current = mediaRecorder;
       
       mediaRecorder.ondataavailable = (event) => {
@@ -68,6 +70,7 @@ export const SimplifiedVoiceRecorder: React.FC<SimplifiedVoiceRecorderProps> = (
       await new Promise(resolve => setTimeout(resolve, 200));
       
       const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+      console.log(`Audio recorded: ${audioBlob.size} bytes, type: ${audioBlob.type}`);
       
       // Test the edge function connection first
       const isConnected = await testEdgeFunction('ai-voice-to-text');
@@ -75,49 +78,74 @@ export const SimplifiedVoiceRecorder: React.FC<SimplifiedVoiceRecorderProps> = (
         throw new Error('Could not connect to voice transcription service');
       }
       
-      // Convert the blob to base64
-      const reader = new FileReader();
-      reader.readAsDataURL(audioBlob);
-      reader.onloadend = async () => {
-        try {
-          // Extract the base64 string (removing data URL prefix)
-          const base64data = reader.result?.toString().split(',')[1];
-          
-          if (!base64data) {
-            throw new Error('Failed to convert audio to base64');
+      // Use FormData to send the audio file (method 1)
+      const formData = new FormData();
+      formData.append('audio', audioBlob, 'recording.webm');
+      
+      const { data: formDataResult, error: formDataError } = await supabase.functions.invoke('ai-voice-to-text', {
+        body: formData
+      });
+      
+      if (formDataError) {
+        console.error('FormData method failed:', formDataError);
+        console.log('Falling back to base64 method...');
+        
+        // Convert blob to base64 as fallback (method 2)
+        const reader = new FileReader();
+        reader.readAsDataURL(audioBlob);
+        
+        reader.onloadend = async () => {
+          try {
+            // Extract the base64 string (removing data URL prefix)
+            const base64data = reader.result?.toString().split(',')[1];
+            
+            if (!base64data) {
+              throw new Error('Failed to convert audio to base64');
+            }
+            
+            console.log('Sending audio as base64 to Edge Function...');
+            
+            // Call the Supabase Edge Function with base64 data
+            const { data, error: fnError } = await supabase.functions.invoke('ai-voice-to-text', {
+              body: { audio: base64data }
+            });
+            
+            if (fnError) {
+              console.error('Edge function error:', fnError);
+              throw new Error(`Edge function error: ${fnError.message || 'Unknown error'}`);
+            }
+            
+            if (!data || !data.text) {
+              console.error('No transcription returned:', data);
+              throw new Error('No transcription returned');
+            }
+            
+            console.log('Transcription received:', data.text);
+            onTranscriptReady(data.text);
+          } catch (err) {
+            console.error('Transcription error with base64 method:', err);
+            toast({
+              title: "Transcription Failed",
+              description: err instanceof Error ? err.message : "Could not process your recording",
+              variant: "destructive"
+            });
+            setError('Failed to transcribe audio. Please try again.');
+          } finally {
+            setIsProcessing(false);
           }
-          
-          console.log('Sending audio to Edge Function for transcription...');
-          
-          // Call the Supabase Edge Function for transcription
-          const { data, error: fnError } = await supabase.functions.invoke('ai-voice-to-text', {
-            body: { audio: base64data }
-          });
-          
-          if (fnError) {
-            console.error('Edge function error:', fnError);
-            throw new Error(`Edge function error: ${fnError.message || 'Unknown error'}`);
-          }
-          
-          if (!data || !data.text) {
-            console.error('No transcription returned:', data);
-            throw new Error('No transcription returned');
-          }
-          
-          console.log('Transcription received:', data.text);
-          onTranscriptReady(data.text);
-        } catch (err) {
-          console.error('Transcription error:', err);
-          toast({
-            title: "Transcription Failed",
-            description: err instanceof Error ? err.message : "Could not process your recording",
-            variant: "destructive"
-          });
-          setError('Failed to transcribe audio. Please try again.');
-        } finally {
-          setIsProcessing(false);
-        }
-      };
+        };
+        
+        return;
+      }
+      
+      if (!formDataResult || !formDataResult.text) {
+        console.error('No transcription returned:', formDataResult);
+        throw new Error('No transcription returned');
+      }
+      
+      console.log('Transcription received:', formDataResult.text);
+      onTranscriptReady(formDataResult.text);
+      setIsProcessing(false);
       
       // Stop the microphone track
       if (mediaRecorderRef.current) {

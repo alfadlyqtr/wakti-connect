@@ -13,73 +13,73 @@ serve(async (req) => {
   }
 
   try {
-    console.log("Testing OpenAI API connection");
-    
-    // Get the OpenAI API key from environment variables
+    // Check if OpenAI API key exists
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     
     if (!OPENAI_API_KEY) {
-      console.error("OpenAI API key is not configured");
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: "OpenAI API key is not configured" 
+          valid: false, 
+          message: "OpenAI API key is not configured" 
         }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
     
-    // Make a simple request to OpenAI API to verify the key
-    const response = await fetch('https://api.openai.com/v1/models', {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error(`OpenAI API error: ${response.status}`, errorData);
+    // Attempt a minimal API call to verify the key works
+    try {
+      const response = await fetch('https://api.openai.com/v1/models', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        },
+      });
       
+      if (!response.ok) {
+        const errorData = await response.json();
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            valid: false, 
+            message: "OpenAI API key validation failed",
+            details: errorData
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      // Successfully validated
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          valid: true,
+          message: "OpenAI API key is valid" 
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    } catch (error) {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: `OpenAI API returned error ${response.status}: ${errorData.error?.message || 'Unknown error'}` 
+          valid: false, 
+          message: "Error validating OpenAI API key", 
+          details: error.message 
         }),
-        { 
-          status: response.status, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-    
-    // API key is valid
-    console.log("OpenAI API connection successful");
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: "OpenAI API connection successful" 
-      }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    );
 
   } catch (error) {
-    console.error("Error testing OpenAI connection:", error);
-    
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message || "Unexpected error testing OpenAI connection" 
+        error: error.message,
+        timestamp: new Date().toISOString()
       }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     );
   }
