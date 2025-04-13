@@ -1,6 +1,7 @@
 
 import { supabase } from "@/lib/supabase";
 import { toast } from "@/components/ui/use-toast";
+import { SubTask } from "@/types/task.types";
 
 export interface NestedSubtask {
   title?: string;

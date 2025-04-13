@@ -14,7 +14,7 @@ export interface SubTask {
   due_time?: string | null;
   is_group?: boolean;
   parent_id?: string | null;
-  subtasks?: SubTask[];
+  subtasks?: SubTask[];  // Change to recursive SubTask[] instead of any[]
 }
 
 export interface Task {
@@ -38,7 +38,7 @@ export interface Task {
   archived_at?: string | null;
   archive_reason?: ArchiveReason | null;
   location?: string | null;
-  originalSubtasks?: any[];
+  originalSubtasks?: any[];  // Keep this as any[] for backward compatibility
 }
 
 export interface TaskFormData {
