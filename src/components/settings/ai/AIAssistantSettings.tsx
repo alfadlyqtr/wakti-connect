@@ -54,7 +54,7 @@ const AIAssistantSettingsContent = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-red-500">
-            {typeof error === 'string' ? error : error.message}
+            {typeof error === 'string' ? error : (error as Error).message}
           </p>
           <Button 
             onClick={() => window.location.reload()} 

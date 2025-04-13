@@ -209,7 +209,7 @@ export const AISettingsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     knowledgeUploads,
     isLoadingKnowledge,
     canUseAI,
-    error: settingsError ? (settingsError instanceof Error ? settingsError.message : String(settingsError)) : null,
+    error: settingsError as Error | string | null,
     updateSettings: async (newSettings) => {
       try {
         await updateSettingsMutation.mutateAsync(newSettings);

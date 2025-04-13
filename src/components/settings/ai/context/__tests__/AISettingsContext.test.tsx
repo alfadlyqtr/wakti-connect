@@ -17,7 +17,7 @@ const TestComponent = () => {
   } = useAISettings();
   
   if (isLoadingSettings) return <div>Loading settings...</div>;
-  if (error) return <div>Error: {typeof error === 'string' ? error : error.message}</div>;
+  if (error) return <div>Error: {typeof error === 'string' ? error : (error as Error).message}</div>;
   if (!settings) return <div>No settings found</div>;
   
   return (
