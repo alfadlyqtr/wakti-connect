@@ -1,4 +1,5 @@
 
+// DO NOT MODIFY UI - This component's layout is finalized and locked
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "@/hooks/use-theme"; // Correct import path
@@ -42,6 +43,7 @@ import { TaskFormData } from "@/types/task.types";
 import { convertParsedTaskToFormData } from "@/hooks/ai/utils/taskParser";
 import { AIAssistantRole } from "@/types/ai-assistant.types";
 import { UserIntent } from "@/services/ai/aiConversationService";
+import { UI_LOCKED } from "@/constants/system";
 
 declare global {
   class ImageCapture {
@@ -292,7 +294,7 @@ const DashboardAIAssistant = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {/* Left Panel */}
         <div className="md:col-span-1 space-y-4">
-          {/* Fix #2: Add the required selectedRole prop */}
+          {/* Add the required selectedRole prop */}
           <AIRoleSelector 
             onRoleChange={handleRoleChange} 
             selectedRole={currentRole}
@@ -319,7 +321,6 @@ const DashboardAIAssistant = () => {
                 <Bot className="mr-2 h-5 w-5" />
                 WAKTI AI Assistant
                 {isAIThinking && (
-                  {/* Fix #3: Add the required isActive prop */}
                   <AIAssistantMouthAnimation 
                     isActive={true}
                     isSpeaking={isAIThinking}
