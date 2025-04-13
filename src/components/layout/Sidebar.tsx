@@ -82,10 +82,7 @@ const Sidebar = ({
   };
 
   // Check if upgrade features should be shown - never for staff users
-  const shouldShowUpgradeFeatures = userRole === "free" && userRole !== "staff";
-
-  // Determine if upgrades should be shown - fixed the type comparison
-  const showUpgrades = userRole === "free";
+  const shouldShowUpgradeFeatures = userRole === "free";
   const isStaffUser = userRole === "staff";
 
   return (
@@ -119,7 +116,7 @@ const Sidebar = ({
       </ScrollArea>
       
       {/* Upgrade Banner - Only show for free users and when not collapsed */}
-      {showUpgrades && !collapsed && !isStaffUser && (
+      {shouldShowUpgradeFeatures && !collapsed && !isStaffUser && (
         <div className="mt-auto px-3 pb-5">
           <SidebarUpgradeBanner />
         </div>
