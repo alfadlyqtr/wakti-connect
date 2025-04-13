@@ -32,6 +32,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { AISystemIntegrationPanel } from "@/components/ai/assistant/AISystemIntegrationPanel";
 import { useSpeechRecognition } from "@/hooks/ai/useSpeechRecognition";
 import { QuickToolsCard } from "@/components/ai/tools/QuickToolsCard";
+import { ParsedTaskInfo } from "@/hooks/ai/utils/taskParser.types";
 
 declare global {
   class ImageCapture {
@@ -40,6 +41,20 @@ declare global {
     takePhoto(): Promise<Blob>;
   }
 }
+
+const getRoleColor = (role: AIAssistantRole = "general") => {
+  switch (role) {
+    case "student":
+      return "from-blue-600 to-blue-500";
+    case "employee":
+    case "writer":
+      return "from-purple-600 to-purple-500";
+    case "business_owner":
+      return "from-amber-600 to-amber-500";
+    default:
+      return "from-wakti-blue to-wakti-blue/90";
+  }
+};
 
 const DashboardAIAssistant = () => {
   const { user } = useAuth();
@@ -323,7 +338,8 @@ const DashboardAIAssistant = () => {
 
   const handleConfirmTask = () => {
     if (confirmCreateTask && detectedTask) {
-      confirmCreateTask(detectedTask);
+      const parsedTask = detectedTask as ParsedTaskInfo;
+      confirmCreateTask(parsedTask);
     }
   };
 
@@ -353,7 +369,7 @@ const DashboardAIAssistant = () => {
               <Card className="mb-4">
                 <CardHeader className="pb-2 flex flex-row items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className={`h-10 w-10 rounded-full bg-gradient-to-br ${getRoleColor()} flex items-center justify-center`}>
+                    <div className={`h-10 w-10 rounded-full bg-gradient-to-br ${getRoleColor(selectedRole)} flex items-center justify-center`}>
                       <Bot className="h-5 w-5 text-white" />
                     </div>
                     <div>
