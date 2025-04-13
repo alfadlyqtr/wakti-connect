@@ -7,6 +7,7 @@ import { shouldHideMenuItem } from '@/utils/menuItemUtils';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { navItems } from '@/config/navItems';
+import { usePermission } from '@/hooks/usePermission';
 
 interface SidebarNavItemsProps {
   onNavClick?: () => void;
@@ -50,6 +51,13 @@ const SidebarNavItems: React.FC<SidebarNavItemsProps> = ({
         // Skip this menu item if it should be hidden for current user role
         if (shouldHideMenuItem(item.href, userRole)) {
           return null;
+        }
+        
+        // Check permission for this nav item if it has a permission key
+        if (item.permissionKey) {
+          // Use our custom permission hook to check access
+          const { isAllowed } = usePermission(item.permissionKey);
+          if (!isAllowed) return null;
         }
 
         const isActive = location.pathname === item.href;
