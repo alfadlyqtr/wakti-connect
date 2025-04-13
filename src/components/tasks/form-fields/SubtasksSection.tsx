@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { UseFormReturn, useFieldArray } from "react-hook-form";
 import { TaskFormValues } from "../TaskFormSchema";
@@ -43,7 +44,8 @@ export const SubtasksSection: React.FC<SubtasksSectionProps> = ({
   });
 
   // Function to toggle group expansion
-  const toggleGroupExpanded = (groupId: string) => {
+  const toggleGroupExpanded = (groupId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
     setExpandedGroups(prev => ({
       ...prev,
       [groupId]: !prev[groupId]
@@ -171,7 +173,7 @@ export const SubtasksSection: React.FC<SubtasksSectionProps> = ({
                     className="h-5 w-5 p-0"
                     onClick={(e) => {
                       e.stopPropagation();
-                      toggleGroupExpanded(field.id);
+                      toggleGroupExpanded(field.id, e);
                     }}
                   >
                     {isExpanded ? (

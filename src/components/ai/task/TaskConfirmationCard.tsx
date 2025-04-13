@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -65,7 +66,8 @@ export const TaskConfirmationCard: React.FC<TaskConfirmationCardProps> = ({
     });
   };
 
-  const toggleGroupExpanded = (itemId: string) => {
+  const toggleGroupExpanded = (itemId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
     setExpandedGroups(prev => ({
       ...prev,
       [itemId]: !prev[itemId]
@@ -111,7 +113,7 @@ export const TaskConfirmationCard: React.FC<TaskConfirmationCardProps> = ({
                   variant="ghost"
                   size="icon"
                   className="h-5 w-5 p-0"
-                  onClick={() => toggleGroupExpanded(itemId)}
+                  onClick={(e) => toggleGroupExpanded(itemId, e)}
                 >
                   {isExpanded ? 
                     <ChevronDown className="h-3.5 w-3.5" /> : 
