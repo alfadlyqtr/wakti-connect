@@ -61,9 +61,10 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
     
     try {
       // Check if OpenAI API key is configured
-      const { data, error: testError } = await testEdgeFunction('ai-voice-to-text');
+      const testResult = await testEdgeFunction('ai-voice-to-text');
       
-      if (testError || !data) {
+      // testEdgeFunction returns a boolean, not an object with data and error properties
+      if (!testResult) {
         throw new Error('Voice transcription service unavailable. Please try again later.');
       }
       
