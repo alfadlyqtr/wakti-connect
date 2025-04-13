@@ -8,6 +8,14 @@ import { mapNestedStructureToFlatSubtasks } from "./subtaskStructureUtils";
  */
 export const createAITask = async (taskData: TaskFormData): Promise<Task | null> => {
   try {
+    // Validate the task data before proceeding
+    if (!taskData || !taskData.title) {
+      console.error("Invalid task data provided:", taskData);
+      throw new Error("Task data is missing required fields");
+    }
+
+    console.log("Creating AI-detected task with validated data:", taskData);
+
     // Get current user
     const { data: { session } } = await supabase.auth.getSession();
     
@@ -28,7 +36,7 @@ export const createAITask = async (taskData: TaskFormData): Promise<Task | null>
       is_recurring: false
     };
     
-    console.log("Creating AI-detected task:", taskToCreate);
+    console.log("Sanitized task data for database insert:", taskToCreate);
     
     // Insert the task
     const { data: createdTask, error } = await supabase
@@ -37,7 +45,15 @@ export const createAITask = async (taskData: TaskFormData): Promise<Task | null>
       .select()
       .single();
       
-    if (error) throw error;
+    if (error) {
+      console.error("Database error creating task:", error);
+      throw error;
+    }
+    
+    if (!createdTask) {
+      console.error("No task was created, but no error was returned");
+      throw new Error("Failed to create task in database");
+    }
     
     // Process subtasks based on structure
     if (taskData.subtasks && taskData.subtasks.length > 0) {

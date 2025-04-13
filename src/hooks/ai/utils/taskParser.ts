@@ -337,58 +337,76 @@ export function parseTaskFromMessage(text: string): ParsedTaskInfo | null {
  * Converts parsed task info to task form data
  */
 export function convertParsedTaskToFormData(parsedTask: ParsedTaskInfo): TaskFormData {
+  // Defensively validate the parsed task data
+  if (!parsedTask || !parsedTask.title) {
+    console.error("Invalid parsed task data:", parsedTask);
+    throw new Error("Cannot create task: missing title or invalid data");
+  }
+
   // Initialize subtasks array
   let formattedSubtasks: SubTask[] = [];
   
-  // Handle both string-based and nested subtasks
-  parsedTask.subtasks.forEach((item, index) => {
-    if (typeof item === 'string') {
-      // Handle simple string subtask - use UUID instead of temp string ID
-      formattedSubtasks.push({
-        id: uuidv4(), // Use proper UUID
-        task_id: 'pending', // Will be assigned when task is created
-        content: item,
-        is_completed: false
-      });
-    } else {
-      // Handle nested subtask structure
-      const isGroup = !!(item.subtasks && item.subtasks.length > 0);
-      const groupId = uuidv4(); // Use proper UUID for group ID
-      
-      // Add the group itself
-      formattedSubtasks.push({
-        id: groupId,
-        task_id: 'pending',
-        content: item.content || item.title || '',
-        title: item.title || item.content || '',
-        is_completed: false,
-        is_group: isGroup
-      });
-      
-      // Add child items if this is a group
-      if (isGroup && item.subtasks) {
-        item.subtasks.forEach((subitem) => {
-          const subtaskContent = typeof subitem === 'string' 
-            ? subitem 
-            : subitem.content || subitem.title || '';
-            
-          formattedSubtasks.push({
-            id: uuidv4(), // Use proper UUID for child ID
-            task_id: 'pending',
-            content: subtaskContent,
-            is_completed: false,
-            parent_id: groupId
-          });
+  // Handle both string-based and nested subtasks with validation
+  if (Array.isArray(parsedTask.subtasks)) {
+    parsedTask.subtasks.forEach((item, index) => {
+      if (typeof item === 'string') {
+        // Handle simple string subtask - use UUID instead of temp string ID
+        formattedSubtasks.push({
+          id: uuidv4(), // Use proper UUID
+          task_id: 'pending', // Will be assigned when task is created
+          content: item,
+          is_completed: false
         });
+      } else if (item && typeof item === 'object') {
+        // Handle nested subtask structure
+        const isGroup = !!(item.subtasks && Array.isArray(item.subtasks) && item.subtasks.length > 0);
+        const groupId = uuidv4(); // Use proper UUID for group ID
+        
+        // Add the group itself
+        formattedSubtasks.push({
+          id: groupId,
+          task_id: 'pending',
+          content: item.content || item.title || 'Untitled Group',
+          title: item.title || item.content || 'Untitled Group',
+          is_completed: false,
+          is_group: isGroup
+        });
+        
+        // Add child items if this is a group
+        if (isGroup && item.subtasks) {
+          item.subtasks.forEach((subitem) => {
+            const subtaskContent = typeof subitem === 'string' 
+              ? subitem 
+              : (subitem && typeof subitem === 'object' && (subitem.content || subitem.title)) 
+                ? (subitem.content || subitem.title) 
+                : 'Untitled Task';
+                
+            formattedSubtasks.push({
+              id: uuidv4(), // Use proper UUID for child ID
+              task_id: 'pending',
+              content: subtaskContent,
+              is_completed: false,
+              parent_id: groupId
+            });
+          });
+        }
       }
+    });
+  }
+  
+  // Safely handle date conversion
+  let dueDateString: string | null = null;
+  
+  if (parsedTask.due_date) {
+    // Check if it's a Date object
+    if (typeof parsedTask.due_date === 'object' && 'toISOString' in parsedTask.due_date) {
+      dueDateString = (parsedTask.due_date as Date).toISOString().split('T')[0];
+    } else if (typeof parsedTask.due_date === 'string') {
+      dueDateString = parsedTask.due_date;
     }
-  });
+  }
   
-  // Convert dueDate to string format if it's a Date object
-  const dueDateString = parsedTask.due_date instanceof Date 
-    ? parsedTask.due_date.toISOString().split('T')[0]
-    : parsedTask.due_date as string | null;
-  
+  // Create and return the task form data with all required fields
   return {
     title: parsedTask.title,
     description: parsedTask.description || '',
@@ -400,7 +418,7 @@ export function convertParsedTaskToFormData(parsedTask: ParsedTaskInfo): TaskFor
     status: 'pending',
     is_recurring: false,
     preserveNestedStructure: true, // Enable structure preservation
-    originalSubtasks: parsedTask.subtasks // Store original structure
+    originalSubtasks: parsedTask.subtasks || [] // Store original structure
   };
 }
 
