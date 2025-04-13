@@ -73,14 +73,6 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({
     }
   };
 
-  const toggleGroupExpanded = (groupId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setExpandedGroups(prev => ({
-      ...prev,
-      [groupId]: !prev[groupId]
-    }));
-  };
-
   const renderSubtaskItem = (item: string | NestedSubtask | SubTask, index: number, parentPath: string = ''): React.ReactNode => {
     // Handle string type subtasks (simplest case)
     if (typeof item === 'string') {
@@ -145,7 +137,6 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({
                   variant="ghost"
                   size="icon"
                   className="h-5 w-5 p-0"
-                  onClick={(e) => toggleGroupExpanded(groupId, e)}
                 >
                   {isExpanded ? 
                     <ChevronDown className="h-3.5 w-3.5" /> : 

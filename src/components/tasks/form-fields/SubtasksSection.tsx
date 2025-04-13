@@ -38,19 +38,10 @@ export const SubtasksSection: React.FC<SubtasksSectionProps> = ({
   const [showGroupCreator, setShowGroupCreator] = useState(false);
   const [newGroupName, setNewGroupName] = useState("");
 
-  const { fields, append, remove, update } = useFieldArray({
+  const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "subtasks",
   });
-
-  // Function to toggle group expansion
-  const toggleGroupExpanded = (groupId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setExpandedGroups(prev => ({
-      ...prev,
-      [groupId]: !prev[groupId]
-    }));
-  };
 
   // Function to add a new subtask group
   const addSubtaskGroup = () => {
@@ -171,10 +162,6 @@ export const SubtasksSection: React.FC<SubtasksSectionProps> = ({
                     variant="ghost" 
                     size="icon"
                     className="h-5 w-5 p-0"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleGroupExpanded(field.id, e);
-                    }}
                   >
                     {isExpanded ? (
                       <ChevronDown className="h-4 w-4" />
