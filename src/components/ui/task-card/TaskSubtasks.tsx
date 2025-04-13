@@ -73,6 +73,13 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({
     }
   };
 
+  const toggleGroupExpanded = (groupId: string) => {
+    setExpandedGroups(prev => ({
+      ...prev,
+      [groupId]: !prev[groupId]
+    }));
+  };
+
   const renderSubtaskItem = (item: string | NestedSubtask | SubTask, index: number, parentPath: string = ''): React.ReactNode => {
     // Handle string type subtasks (simplest case)
     if (typeof item === 'string') {
@@ -119,28 +126,25 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({
         (item as SubTask).subtasks || 
         [];
       
-      const toggleGroup = () => {
-        setExpandedGroups(prev => ({
-          ...prev,
-          [groupId]: !prev[groupId]
-        }));
-      };
-      
       return (
         <li key={groupId} className="space-y-1">
-          <Collapsible open={isExpanded} onOpenChange={(open) => {
-            setExpandedGroups(prev => ({
-              ...prev,
-              [groupId]: open
-            }));
-          }}>
-            <div className="flex items-start gap-2 cursor-pointer" onClick={toggleGroup}>
+          <Collapsible 
+            open={isExpanded} 
+            onOpenChange={(open) => {
+              setExpandedGroups(prev => ({
+                ...prev,
+                [groupId]: open
+              }));
+            }}
+          >
+            <div className="flex items-start gap-2">
               <CollapsibleTrigger asChild>
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
                   className="h-5 w-5 p-0"
+                  onClick={() => toggleGroupExpanded(groupId)}
                 >
                   {isExpanded ? 
                     <ChevronDown className="h-3.5 w-3.5" /> : 

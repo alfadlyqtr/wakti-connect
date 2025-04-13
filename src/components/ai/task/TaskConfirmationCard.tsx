@@ -65,6 +65,13 @@ export const TaskConfirmationCard: React.FC<TaskConfirmationCardProps> = ({
     });
   };
 
+  const toggleGroupExpanded = (itemId: string) => {
+    setExpandedGroups(prev => ({
+      ...prev,
+      [itemId]: !prev[itemId]
+    }));
+  };
+
   // Render a subtask item with proper indentation and grouping
   const renderSubtaskItem = (item: string | NestedSubtask, index: number, parentPath: string = ''): React.ReactNode => {
     const itemId = `${parentPath}-${index}`;
@@ -86,13 +93,6 @@ export const TaskConfirmationCard: React.FC<TaskConfirmationCardProps> = ({
     const isExpanded = expandedGroups[itemId] !== false; // Default to expanded
     
     if (isGroup) {
-      const toggleGroup = () => {
-        setExpandedGroups(prev => ({
-          ...prev,
-          [itemId]: !prev[itemId]
-        }));
-      };
-      
       return (
         <li key={itemId} className="space-y-1">
           <Collapsible 
@@ -104,13 +104,14 @@ export const TaskConfirmationCard: React.FC<TaskConfirmationCardProps> = ({
               }));
             }}
           >
-            <div className="flex items-start gap-2 cursor-pointer" onClick={toggleGroup}>
+            <div className="flex items-start gap-2">
               <CollapsibleTrigger asChild>
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
                   className="h-5 w-5 p-0"
+                  onClick={() => toggleGroupExpanded(itemId)}
                 >
                   {isExpanded ? 
                     <ChevronDown className="h-3.5 w-3.5" /> : 
