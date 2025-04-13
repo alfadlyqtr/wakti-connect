@@ -156,7 +156,17 @@ export const useAIChatOperations = () => {
         if (parsedTask && parsedTask.title) {
           console.log("Task parsed successfully with AI:", parsedTask);
           
-          const taskFormData = convertParsedTaskToFormData(parsedTask);
+          const taskFormData = convertParsedTaskToFormData({
+            title: parsedTask.title,
+            description: parsedTask.location ? `Location: ${parsedTask.location}` : undefined,
+            priority: parsedTask.priority,
+            subtasks: parsedTask.subtasks,
+            due_date: parsedTask.due_date,
+            dueTime: parsedTask.due_time,
+            location: parsedTask.location,
+            hasTimeConstraint: true,
+            needsReview: false
+          });
           
           const confirmationMessageId = uuidv4();
           

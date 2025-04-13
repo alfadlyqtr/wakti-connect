@@ -1,18 +1,8 @@
-
 import { TaskFormData, TaskPriority, SubTask } from "@/types/task.types";
+import { NestedSubtask } from "@/services/ai/aiTaskParserService";
 
-export interface ParsedTaskInfo {
-  title: string;
-  description?: string;
-  due_date?: string | Date | null;
-  priority?: TaskPriority;
-  location?: string | null;
-  subtasks: string[];
-  // Additional fields for UI presentation
-  dueTime?: string | null;
-  hasTimeConstraint?: boolean;
-  needsReview?: boolean;
-}
+// Import the updated interface from taskParser.types.ts
+import { ParsedTaskInfo } from "./taskParser.types";
 
 /**
  * Parses natural language text to extract task information
@@ -327,13 +317,17 @@ export function parseTaskFromMessage(text: string): ParsedTaskInfo | null {
     (todayRegex.test(text) || tomorrowRegex.test(text)) && 
     !mediumPriorityRegex.test(text);
   
+  // Convert the flat subtasks array to the new format that supports nested structures
+  // For backward compatibility, we'll keep the subtasks as simple strings
+  const formattedSubtasks = subtasks as (string | NestedSubtask)[];
+  
   return {
     title,
     description,
     due_date: dueDate,
     priority,
     location,
-    subtasks,
+    subtasks: formattedSubtasks,
     dueTime,
     hasTimeConstraint,
     needsReview
@@ -344,18 +338,57 @@ export function parseTaskFromMessage(text: string): ParsedTaskInfo | null {
  * Converts parsed task info to task form data
  */
 export function convertParsedTaskToFormData(parsedTask: ParsedTaskInfo): TaskFormData {
+  // Initialize subtasks array
+  let formattedSubtasks: SubTask[] = [];
+  
+  // Handle both string-based and nested subtasks
+  parsedTask.subtasks.forEach((item, index) => {
+    if (typeof item === 'string') {
+      // Handle simple string subtask
+      formattedSubtasks.push({
+        id: `temp-${index}`, // Temporary ID until saved
+        task_id: 'pending', // Will be assigned when task is created
+        content: item,
+        is_completed: false
+      });
+    } else {
+      // Handle nested subtask structure
+      const isGroup = !!(item.subtasks && item.subtasks.length > 0);
+      const groupId = `temp-group-${index}`;
+      
+      // Add the group itself
+      formattedSubtasks.push({
+        id: groupId,
+        task_id: 'pending',
+        content: item.content || item.title || '',
+        title: item.title || item.content || '',
+        is_completed: false,
+        is_group: isGroup
+      });
+      
+      // Add child items if this is a group
+      if (isGroup && item.subtasks) {
+        item.subtasks.forEach((subitem, subindex) => {
+          const subtaskContent = typeof subitem === 'string' 
+            ? subitem 
+            : subitem.content || subitem.title || '';
+            
+          formattedSubtasks.push({
+            id: `temp-${groupId}-${subindex}`,
+            task_id: 'pending',
+            content: subtaskContent,
+            is_completed: false,
+            parent_id: groupId
+          });
+        });
+      }
+    }
+  });
+  
   // Convert dueDate to string format if it's a Date object
   const dueDateString = parsedTask.due_date instanceof Date 
     ? parsedTask.due_date.toISOString().split('T')[0]
     : parsedTask.due_date as string | null;
-  
-  // Create subtasks in the expected format
-  const formattedSubtasks: SubTask[] = parsedTask.subtasks.map((text, index) => ({
-    id: `temp-${index}`, // Temporary ID until saved
-    task_id: 'pending', // Will be assigned when task is created
-    content: text,
-    is_completed: false
-  }));
   
   return {
     title: parsedTask.title,
@@ -366,7 +399,9 @@ export function convertParsedTaskToFormData(parsedTask: ParsedTaskInfo): TaskFor
     location: parsedTask.location || null,
     subtasks: formattedSubtasks,
     status: 'pending',
-    is_recurring: false
+    is_recurring: false,
+    preserveNestedStructure: true, // Enable structure preservation
+    originalSubtasks: parsedTask.subtasks // Store original structure
   };
 }
 
