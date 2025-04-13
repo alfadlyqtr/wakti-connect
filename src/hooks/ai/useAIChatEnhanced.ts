@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useAIChatOperations } from "./operations/useAIChatOperations";
 import { AIMessage, AIAssistantRole } from "@/types/ai-assistant.types";
