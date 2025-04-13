@@ -81,9 +81,12 @@ const Sidebar = ({
     }
   };
 
-  // Check if upgrade features should be shown - never for staff users
+  // Simple boolean flags for role-based UI decisions
   const isStaffUser = userRole === "staff";
-  const shouldShowUpgradeFeatures = userRole === "free" && !isStaffUser;
+  const isFreeUser = userRole === "free";
+  
+  // Free users who are not staff should see upgrade features
+  const shouldShowUpgradeFeatures = isFreeUser && !isStaffUser;
 
   return (
     <SidebarContainer 

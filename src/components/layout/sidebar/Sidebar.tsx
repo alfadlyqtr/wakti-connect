@@ -81,6 +81,13 @@ const Sidebar = ({
     }
   };
 
+  // Simple boolean flags for role-based UI decisions
+  const isStaffUser = userRole === "staff";
+  const isFreeUser = userRole === "free";
+  
+  // Free users who are not staff should see upgrade features
+  const shouldShowUpgradeFeatures = isFreeUser && !isStaffUser;
+
   return (
     <SidebarContainer 
       isOpen={isOpen} 
@@ -106,13 +113,13 @@ const Sidebar = ({
         />
         
         {/* Upgrade Button - Only shown for free accounts that need to upgrade */}
-        {showUpgradeButton && (
+        {showUpgradeButton && !isStaffUser && (
           <SidebarUpgradeButton collapsed={collapsed} />
         )}
       </ScrollArea>
       
       {/* Upgrade Banner - Only show for free users and when not collapsed */}
-      {userRole === "free" && !collapsed && (
+      {shouldShowUpgradeFeatures && !collapsed && (
         <div className="mt-auto px-3 pb-5">
           <SidebarUpgradeBanner />
         </div>
