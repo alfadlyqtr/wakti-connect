@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { ParsedTaskInfo } from "@/hooks/ai/utils/taskParser.types";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { NestedSubtask } from "@/services/ai/aiTaskParserService";
 
 interface TaskConfirmationCardProps {
   taskInfo: ParsedTaskInfo;
@@ -61,6 +62,30 @@ export const TaskConfirmationCard: React.FC<TaskConfirmationCardProps> = ({
     });
   };
 
+  // Helper function to render a subtask item, handling both string and NestedSubtask types
+  const renderSubtaskItem = (subtask: string | NestedSubtask, index: number) => {
+    if (typeof subtask === 'string') {
+      return (
+        <li key={index} className="text-sm flex gap-2 items-start">
+          <div className="h-4 w-4 mt-0.5 rounded-full border flex items-center justify-center flex-shrink-0">
+            <Check className="h-2.5 w-2.5 text-muted-foreground/50" />
+          </div>
+          <span>{subtask}</span>
+        </li>
+      );
+    } else {
+      // Handle NestedSubtask object
+      return (
+        <li key={index} className="text-sm flex gap-2 items-start">
+          <div className="h-4 w-4 mt-0.5 rounded-full border flex items-center justify-center flex-shrink-0">
+            <Check className="h-2.5 w-2.5 text-muted-foreground/50" />
+          </div>
+          <span>{subtask.title || subtask.content || 'Subtask'}</span>
+        </li>
+      );
+    }
+  };
+
   return (
     <Card className="w-full max-w-md mx-auto border-primary/20 animate-in fade-in-50 duration-300 shadow-lg">
       <CardHeader className="pb-2">
@@ -103,14 +128,7 @@ export const TaskConfirmationCard: React.FC<TaskConfirmationCardProps> = ({
               <h4 className="text-xs font-medium text-muted-foreground">Subtasks ({taskInfo.subtasks.length})</h4>
               <ScrollArea className="max-h-28 pr-2">
                 <ul className="space-y-1">
-                  {taskInfo.subtasks.map((subtask, index) => (
-                    <li key={index} className="text-sm flex gap-2 items-start">
-                      <div className="h-4 w-4 mt-0.5 rounded-full border flex items-center justify-center flex-shrink-0">
-                        <Check className="h-2.5 w-2.5 text-muted-foreground/50" />
-                      </div>
-                      <span>{subtask}</span>
-                    </li>
-                  ))}
+                  {taskInfo.subtasks.map((subtask, index) => renderSubtaskItem(subtask, index))}
                 </ul>
               </ScrollArea>
             </div>
