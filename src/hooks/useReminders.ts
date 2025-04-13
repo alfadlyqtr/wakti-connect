@@ -3,7 +3,6 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Reminder, ReminderNotification } from "@/types/reminder.types";
 import { fetchReminders, createReminderNotification } from "@/services/reminder/reminderService";
-import ReminderToast from "@/components/reminders/ReminderToast";
 import { toast } from "@/components/ui/use-toast";
 
 export function useReminders() {
@@ -68,16 +67,19 @@ export function useReminders() {
         try {
           const notification = await createReminderNotification(reminder.id);
           
-          // Show notification toast
+          // Show notification toast - using a function to render ReminderToast component
+          // instead of directly using JSX in a .ts file
           toast({
             title: "Reminder",
-            description: (
-              <ReminderToast 
-                reminder={reminder} 
-                notification={notification} 
-                onClose={() => {}}
-              />
-            ),
+            description: {
+              // Using an object to pass data that will be rendered as a React component
+              // by the toast system
+              reminder,
+              notification,
+              onClose: () => {},
+              // This identifies this as a reminder toast type
+              type: 'reminder-toast'
+            },
             duration: Infinity, // Don't auto-dismiss
           });
           

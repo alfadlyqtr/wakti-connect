@@ -1,11 +1,19 @@
 
 // Adapted from: https://ui.shadcn.com/docs/components/toast
 import { useState, useEffect } from "react";
+import { Reminder, ReminderNotification } from "@/types/reminder.types";
+
+export interface ReminderToastData {
+  reminder: Reminder;
+  notification: ReminderNotification;
+  onClose: () => void;
+  type: 'reminder-toast';
+}
 
 export interface Toast {
   id: string;
   title?: string;
-  description?: string;
+  description?: string | ReminderToastData;
   action?: React.ReactNode;
   variant?: "default" | "destructive" | "success";
   open?: boolean;
@@ -22,7 +30,7 @@ export interface ToastProps extends Toast {
 
 export interface ToastOptions {
   title?: string;
-  description?: string;
+  description?: string | ReminderToastData;
   action?: React.ReactNode;
   variant?: "default" | "destructive" | "success";
   duration?: number;
@@ -52,9 +60,11 @@ export function toast(opts: ToastOptions) {
   notify();
 
   // Auto-dismiss after duration
-  setTimeout(() => {
-    dismiss(id);
-  }, opts.duration || 5000);
+  if (opts.duration !== Infinity) {
+    setTimeout(() => {
+      dismiss(id);
+    }, opts.duration || 5000);
+  }
 
   return {
     id,

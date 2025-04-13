@@ -2,7 +2,8 @@
 import React from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { dismiss, Toast as ToastType } from "@/hooks/use-toast";
+import { dismiss, Toast as ToastType, ReminderToastData } from "@/hooks/use-toast";
+import ReminderToast from "@/components/reminders/ReminderToast";
 
 interface ToastProps {
   toast: ToastType;
@@ -10,6 +11,12 @@ interface ToastProps {
 
 export function Toast({ toast }: ToastProps) {
   const { id, title, description, action, variant = "default" } = toast;
+
+  // Check if this is a reminder toast
+  const isReminderToast = description && 
+    typeof description === 'object' && 
+    'type' in description && 
+    description.type === 'reminder-toast';
 
   return (
     <div
@@ -20,10 +27,29 @@ export function Toast({ toast }: ToastProps) {
         variant === "success" && "border-green-500 bg-green-500 text-white"
       )}
     >
-      <div className="grid gap-1">
+      <div className="grid gap-1 w-full">
         {title && <h3 className="font-medium">{title}</h3>}
-        {description && <p className="text-sm opacity-90">{description}</p>}
+        
+        {isReminderToast ? (
+          // Render ReminderToast component when description is a reminder toast data
+          <ReminderToast
+            reminder={(description as ReminderToastData).reminder}
+            notification={(description as ReminderToastData).notification}
+            onClose={() => {
+              dismiss(id);
+              if ((description as ReminderToastData).onClose) {
+                (description as ReminderToastData).onClose();
+              }
+            }}
+          />
+        ) : (
+          // Render regular description
+          description && typeof description === 'string' && (
+            <p className="text-sm opacity-90">{description}</p>
+          )
+        )}
       </div>
+      
       <div className="flex items-center gap-2">
         {action}
         <button
