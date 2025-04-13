@@ -54,8 +54,10 @@ const DashboardAIAssistant = () => {
     confirmCreateTask,
     cancelCreateTask,
     isCreatingTask,
-    pendingTaskConfirmation
+    pendingTaskConfirmation,
+    storeCurrentRole
   } = useAIAssistant();
+  
   const [inputMessage, setInputMessage] = useState("");
   const [isChecking, setIsChecking] = useState(true);
   const [canAccess, setCanAccess] = useState(false);
@@ -314,6 +316,12 @@ const DashboardAIAssistant = () => {
     }
   };
 
+  const handleConfirmTask = () => {
+    if (confirmCreateTask) {
+      confirmCreateTask();
+    }
+  };
+
   if (isChecking) {
     console.log("Still checking access, showing loader");
     return <AIAssistantLoader />;
@@ -413,7 +421,7 @@ const DashboardAIAssistant = () => {
                               temporaryTranscript={temporaryTranscript}
                               showSuggestions={false}
                               detectedTask={detectedTask}
-                              onConfirmTask={confirmCreateTask}
+                              onConfirmTask={handleConfirmTask}
                               onCancelTask={cancelCreateTask}
                               isCreatingTask={isCreatingTask}
                               pendingTaskConfirmation={pendingTaskConfirmation}

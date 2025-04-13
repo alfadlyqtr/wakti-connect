@@ -1,5 +1,5 @@
 
-import { TaskPriority, SubTask } from "@/types/task.types";
+import { TaskPriority } from "@/types/task.types";
 import { NestedSubtask } from "@/services/ai/aiTaskParserService";
 
 export interface ParsedTaskInfo {
