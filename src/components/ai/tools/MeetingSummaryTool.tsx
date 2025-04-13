@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
 import { AlertCircle, FileText, Mic, MicOff, Save } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { RecordingControls } from './meeting-summary/RecordingControls';
+import RecordingControls from './meeting-summary/RecordingControls';
 import { TranscriptionPanel } from './meeting-summary/TranscriptionPanel';
 import { SummaryDisplay } from './meeting-summary/SummaryDisplay';
 import { Separator } from '@/components/ui/separator';
@@ -27,6 +27,24 @@ export const MeetingSummaryTool = () => {
   const [keyPoints, setKeyPoints] = useState<string[]>([]);
   const [actionItems, setActionItems] = useState<string[]>([]);
   const [savedMeetings, setSavedMeetings] = useState<any[]>([]);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const [selectedLanguage, setSelectedLanguage] = useState("en");
+  const [recordingError, setRecordingError] = useState<string | null>(null);
+  
+  useEffect(() => {
+    let timer: number | null = null;
+    if (isListening) {
+      timer = window.setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+    } else {
+      setRecordingTime(0);
+    }
+    
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [isListening]);
   
   // For demo purposes only, this would typically be saved to a database
   const saveMeeting = () => {
@@ -69,10 +87,13 @@ export const MeetingSummaryTool = () => {
           )}
           
           <RecordingControls 
-            isListening={isListening}
-            startListening={startListening}
-            stopListening={stopListening}
-            isDisabled={apiKeyStatus === "invalid"}
+            isRecording={isListening}
+            recordingTime={recordingTime}
+            selectedLanguage={selectedLanguage}
+            setSelectedLanguage={setSelectedLanguage}
+            startRecording={startListening}
+            stopRecording={stopListening}
+            recordingError={recordingError}
           />
           
           <TranscriptionPanel 
