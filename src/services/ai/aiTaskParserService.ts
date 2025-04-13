@@ -1,3 +1,4 @@
+
 import { supabase } from "@/lib/supabase";
 import { toast } from "@/components/ui/use-toast";
 import { SubTask } from "@/types/task.types";
@@ -5,9 +6,9 @@ import { v4 as uuidv4 } from "uuid";
 import { mapNestedStructureToFlatSubtasks } from "./subtaskStructureUtils";
 
 export interface NestedSubtask {
-  title: string;  // Required
+  title?: string;
   content?: string;
-  subtasks: (string | NestedSubtask)[];  // Required, but can be empty array
+  subtasks?: (NestedSubtask | string)[];
   is_completed?: boolean;
 }
 

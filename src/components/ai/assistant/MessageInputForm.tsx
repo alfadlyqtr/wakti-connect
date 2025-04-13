@@ -1,12 +1,11 @@
 
-import React, { useState, useRef, useEffect } from 'react';
-import { Mic, Send, AlertCircle, Paperclip, Camera, Square } from 'lucide-react';
+import React from 'react';
+import { Mic, Send, AlertCircle, Paperclip, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { AIAssistantUpgradeCard } from '../AIAssistantUpgradeCard';
-import { useToast } from '@/components/ui/use-toast';
-import { SimplifiedVoiceRecorder } from '../voice/SimplifiedVoiceRecorder';
+import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface MessageInputFormProps {
@@ -39,13 +38,33 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
   isListening = false
 }) => {
   const isMobile = useIsMobile();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const { toast } = useToast();
-  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   
+  const {
+    isListening: internalIsListening,
+    transcript,
+    supportsVoice,
+    startListening: internalStartListening,
+    stopListening: internalStopListening
+  } = useVoiceInteraction({
+    onTranscriptComplete: (text) => {
+      if (text) {
+        const updatedText = inputMessage + (inputMessage && !inputMessage.endsWith(' ') && !text.startsWith(' ') ? ' ' : '') + text;
+        setInputMessage(updatedText);
+      }
+    }
+  });
+
   // Use external listening state if provided, otherwise use internal state
-  const activeListening = onStartVoiceInput && onStopVoiceInput ? isListening : false;
+  const activeListening = onStartVoiceInput && onStopVoiceInput ? isListening : internalIsListening;
   
+  React.useEffect(() => {
+    if (transcript) {
+      const updatedText = inputMessage + (inputMessage && !inputMessage.endsWith(' ') && !transcript.startsWith(' ') ? ' ' : '') + transcript;
+      setInputMessage(updatedText);
+    }
+  }, [transcript, setInputMessage, inputMessage]);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0 || !onFileUpload) return;
@@ -58,29 +77,9 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
     fileInputRef.current?.click();
   };
 
-  const handleVoiceClick = () => {
-    if (onStartVoiceInput && onStopVoiceInput) {
-      if (isListening) {
-        onStopVoiceInput();
-      } else {
-        onStartVoiceInput();
-      }
-    } else {
-      setShowVoiceRecorder(prev => !prev);
-    }
-  };
-
-  const handleTranscriptReady = (transcript: string) => {
-    if (transcript) {
-      const updatedText = inputMessage + (inputMessage && !inputMessage.endsWith(' ') && !transcript.startsWith(' ') ? ' ' : '') + transcript;
-      setInputMessage(updatedText);
-    }
-    setShowVoiceRecorder(false);
-  };
-
-  const handleVoiceCancel = () => {
-    setShowVoiceRecorder(false);
-  };
+  if (!canAccess) {
+    return <AIAssistantUpgradeCard compact={true} />;
+  }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey && !isMobile) {
@@ -91,9 +90,21 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
     }
   };
 
-  if (!canAccess) {
-    return <AIAssistantUpgradeCard compact={true} />;
-  }
+  const handleVoiceClick = () => {
+    if (onStartVoiceInput && onStopVoiceInput) {
+      if (isListening) {
+        onStopVoiceInput();
+      } else {
+        onStartVoiceInput();
+      }
+    } else {
+      if (internalIsListening) {
+        internalStopListening();
+      } else {
+        internalStartListening();
+      }
+    }
+  };
 
   return (
     <form 
@@ -106,26 +117,20 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
       className="border-t p-3 sm:p-4"
     >
       <div className="flex flex-col gap-3">
-        {showVoiceRecorder ? (
-          <SimplifiedVoiceRecorder
-            onTranscriptReady={handleTranscriptReady}
-            onCancel={handleVoiceCancel}
-            compact={true}
+        <div className="relative w-full">
+          <Textarea
+            placeholder="Type a message..."
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            onKeyDown={handleKeyDown}
+            className={cn(
+              "min-h-[60px] sm:min-h-[80px] max-h-[150px] sm:max-h-[200px] resize-none py-3 px-4 text-sm md:text-base",
+              activeListening && "bg-primary/5 border-primary/20"
+            )}
+            disabled={isLoading || activeListening}
           />
-        ) : (
-          <div className="relative w-full">
-            <Textarea
-              placeholder="Type a message..."
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onKeyDown={handleKeyDown}
-              className={cn(
-                "min-h-[60px] sm:min-h-[80px] max-h-[150px] sm:max-h-[200px] resize-none py-3 px-4 text-sm md:text-base",
-                activeListening && "bg-primary/5 border-primary/20"
-              )}
-              disabled={isLoading || activeListening}
-            />
-            <div className="absolute bottom-3 right-3 flex gap-1">
+          <div className="absolute bottom-3 right-3 flex gap-1">
+            {supportsVoice && (
               <Button
                 type="button"
                 variant="ghost"
@@ -137,16 +142,12 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
                 onClick={handleVoiceClick}
                 disabled={isLoading}
               >
-                {activeListening ? (
-                  <Square className="h-4 w-4 sm:h-5 sm:w-5" />
-                ) : (
-                  <Mic className="h-4 w-4 sm:h-5 sm:w-5" />
-                )}
+                <Mic className="h-4 w-4 sm:h-5 sm:w-5" />
                 <span className="sr-only">{activeListening ? "Stop recording" : "Start recording"}</span>
               </Button>
-            </div>
+            )}
           </div>
-        )}
+        </div>
         
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

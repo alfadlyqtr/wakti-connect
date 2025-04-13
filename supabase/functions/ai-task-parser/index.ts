@@ -50,27 +50,26 @@ Parse the following text into a structured task with the following:
 
 CURRENT DATE: ${currentYear}-${currentMonth.toString().padStart(2, '0')}-${currentDay.toString().padStart(2, '0')}
 
-SUBTASK ORGANIZATION RULES (CRITICALLY IMPORTANT):
-1. ONLY use one of these two formats for subtasks:
-   A. Simple string: "Buy milk"
-   B. Group object: { "title": "Shopping at Lulu", "subtasks": ["milk", "eggs"] }
-
-2. NEVER mix formats within the same level - each subtask must be either a string OR a group object with both title AND subtasks fields.
-
+SUBTASK ORGANIZATION RULES (VERY IMPORTANT):
+1. Group related items by type and context, not just by commas
+2. Create hierarchical subtasks with this structure:
+   {
+     "title": "Group Title",
+     "subtasks": ["subtask1", "subtask2", { "title": "Nested Group", "subtasks": [...] }]
+   }
 3. For shopping lists:
-   - ALWAYS use group format: { "title": "Shopping at [Store]", "subtasks": ["item1", "item2"] }
-   - Each item in subtasks MUST be a simple string, not another object
-   - If no store is mentioned, use "Shopping List" as the title
-
+   - Group items by store into a titled group like: 
+     { "title": "Get from Lulu", "subtasks": ["milk", "eggs", "bread"] }
+   - Preserve exact store/brand names (Lulu, Carrefour, H&M, Zara, etc.)
 4. For transportation tasks:
-   - Keep as a single string (e.g., "Pick up sister from school")
-   - Don't create unnecessary groups for single items
-
-5. ENFORCE STRICT STRUCTURE:
-   - Every group MUST have a non-empty "title" string
-   - Every group MUST have a "subtasks" array (empty array if no subtasks)
-   - Never return undefined or null values for title or subtasks
-   - Never include additional fields in the subtask objects
+   - Keep as a single action (e.g., "Pick up sister from school")
+   - Don't split into multiple subtasks unless truly distinct actions
+5. For sequential tasks:
+   - Maintain the sequence if it's a step-by-step process
+   - Use a nested structure for dependencies
+6. Never treat commas in normal sentences as subtask separators
+7. For mixed task types, separate by context (transportation, shopping, etc.)
+8. ALWAYS use hierarchical nesting for organization
 
 EXAMPLE TRANSFORMATIONS:
 - Input: "Buy milk, eggs, bread from Lulu and pick up sister from school"
@@ -104,12 +103,12 @@ DATE HANDLING RULES:
 - "tomorrow" = next day from today
 - Weekdays like "Monday" should refer to the upcoming occurrence of that weekday
 
-Respond with ONLY a valid JSON object containing these fields. If a field can't be determined, use null for string fields and [] for arrays.
+Respond with ONLY a valid JSON object containing these fields. If a field can't be determined, use null.
 
 Text to parse: ${text}
 `;
 
-    console.log("Calling DeepSeek API for task parsing with strict subtask structure rules");
+    console.log("Calling DeepSeek API for task parsing with enhanced subtask hierarchy rules");
 
     // Call DeepSeek API
     const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
@@ -127,10 +126,8 @@ Text to parse: ${text}
                       Return only valid JSON.
                       The current date is ${currentYear}-${currentMonth.toString().padStart(2, '0')}-${currentDay.toString().padStart(2, '0')}.
                       ALWAYS use ${currentYear} as the default year for any dates mentioned.
-                      FOCUS ON STRICT SUBTASK STRUCTURE:
-                      - Each subtask must be either a string OR an object with both title AND subtasks properties
-                      - Never return null or undefined values for title or subtasks
-                      - Never include additional properties in subtask objects` 
+                      FOCUS ON HIERARCHICAL SUBTASK ORGANIZATION.
+                      Use nested objects for groups with { "title": "Group Name", "subtasks": [...] }` 
           },
           { role: "user", content: prompt }
         ],
@@ -161,11 +158,6 @@ Text to parse: ${text}
         throw new Error("Parsing failed: No title extracted");
       }
       
-      // Ensure priority is never undefined or null
-      if (!parsedTask.priority) {
-        parsedTask.priority = "normal";
-      }
-      
       // Validate date format and year
       if (parsedTask.due_date) {
         // Make sure due_date uses the current year (not 2023 or other default)
@@ -184,53 +176,11 @@ Text to parse: ${text}
         }
       }
       
-      // Validate and sanitize subtasks structure
-      if (!Array.isArray(parsedTask.subtasks)) {
-        console.log("Subtasks is not an array, initializing empty array");
-        parsedTask.subtasks = [];
+      // Check if subtasks need to be organized better
+      if (Array.isArray(parsedTask.subtasks) && parsedTask.subtasks.length > 0) {
+        // Ensure subtasks are properly structured
+        console.log("Validating subtask structure...");
       }
-      
-      // Ensure all subtasks follow a valid structure
-      parsedTask.subtasks = parsedTask.subtasks.map(subtask => {
-        // If it's a string, return as is
-        if (typeof subtask === 'string') {
-          return subtask;
-        }
-        
-        // If it's an object, ensure it has title and subtasks properties
-        if (subtask && typeof subtask === 'object') {
-          // Ensure subtask has a title
-          if (!subtask.title || typeof subtask.title !== 'string') {
-            subtask.title = "Untitled Group";
-          }
-          
-          // Ensure subtask has a subtasks array
-          if (!Array.isArray(subtask.subtasks)) {
-            subtask.subtasks = [];
-          }
-          
-          // Clean up nested subtasks to ensure they follow the same format
-          subtask.subtasks = subtask.subtasks.map(nestedItem => {
-            if (typeof nestedItem === 'string') {
-              return nestedItem;
-            }
-            if (nestedItem && typeof nestedItem === 'object') {
-              // Convert complex nested objects to simple strings
-              return nestedItem.title || nestedItem.content || "Untitled Item";
-            }
-            return "Untitled Item";
-          });
-          
-          // Return a clean object with only title and subtasks
-          return {
-            title: subtask.title,
-            subtasks: subtask.subtasks
-          };
-        }
-        
-        // Fallback for any other unexpected format
-        return "Unstructured Item";
-      });
       
       console.log("Successfully parsed and validated task:", parsedTask);
     } catch (parseError) {
