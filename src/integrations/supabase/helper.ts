@@ -1,93 +1,23 @@
 
-import { supabase } from './client';
-import { Database } from './types';
+import { supabase } from '@/lib/supabase';
 
 /**
- * Type-safe helper for accessing Supabase tables
- * 
- * This function wraps the Supabase client's 'from' method to provide better type safety
- * when interacting with database tables.
- * 
- * @param tableName The name of the table to query
- * @returns A query builder for the specified table with proper types
+ * Tests if a Supabase edge function is available and responding
+ * @param functionName Name of the edge function to test
+ * @returns Promise<boolean> True if the function is available, false otherwise
  */
-export const fromTable = <T extends keyof Database['public']['Tables']>(tableName: T) => {
-  return supabase.from(tableName);
-};
-
-/**
- * Safely executes a function that makes a Supabase API call
- * 
- * @param operation A function that makes a Supabase API call
- * @param errorMessage A custom error message to display if the operation fails
- * @returns A Promise that resolves to the data returned by the operation, or throws an error
- */
-export const safeSupabaseCall = async <T>(
-  operation: () => Promise<{ data: T | null; error: Error | null }>,
-  errorMessage = 'Supabase operation failed'
-): Promise<T> => {
+export const testEdgeFunction = async (functionName: string): Promise<boolean> => {
   try {
-    const { data, error } = await operation();
-    if (error) throw error;
-    if (data === null) throw new Error('No data returned');
-    return data;
-  } catch (error) {
-    console.error(`${errorMessage}:`, error);
-    throw new Error(errorMessage);
-  }
-};
-
-/**
- * Validates and tests a Supabase Edge Function connection
- * 
- * @param functionName The name of the Edge Function to test
- * @param testPayload Optional test payload to send to the function
- * @returns A Promise that resolves to true if the function is working, false otherwise
- */
-export const testEdgeFunction = async (
-  functionName: string,
-  testPayload: Record<string, any> = { test: true }
-): Promise<boolean> => {
-  try {
-    console.log(`Testing edge function: ${functionName}`);
+    // Simple ping to test connection
     const { data, error } = await supabase.functions.invoke(functionName, {
-      body: testPayload
+      method: 'OPTIONS'
     });
     
-    if (error) {
-      console.error(`Edge function test failed for ${functionName}:`, error);
-      return false;
-    }
-    
-    console.log(`Edge function ${functionName} is working:`, data);
-    return true;
-  } catch (error) {
-    console.error(`Edge function test error for ${functionName}:`, error);
+    // If we got a response without error, the function is available
+    // Even if it's a CORS preflight response, that means the function exists
+    return !error;
+  } catch (err) {
+    console.error(`Error testing edge function ${functionName}:`, err);
     return false;
   }
 };
-
-/**
- * Tests if the OpenAI API key is configured correctly
- * 
- * @returns A Promise that resolves to true if the API key is valid, false otherwise
- */
-export const checkOpenAIAPIKey = async (): Promise<boolean> => {
-  try {
-    const { data, error } = await supabase.functions.invoke('test-openai-connection', {
-      body: { test: true }
-    });
-    
-    if (error || !data || !data.success) {
-      console.error('OpenAI API key validation failed:', error || 'No success response');
-      return false;
-    }
-    
-    return true;
-  } catch (error) {
-    console.error('Error testing OpenAI API key:', error);
-    return false;
-  }
-};
-
-export default { fromTable, safeSupabaseCall, testEdgeFunction, checkOpenAIAPIKey };
