@@ -142,6 +142,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
           closeSidebar={closeSidebar}
           openCommandSearch={openCommandSearch}
           showUpgradeButton={showUpgradeBanner}
+          collapsed={sidebarCollapsed}
         />
         
         <DashboardContent

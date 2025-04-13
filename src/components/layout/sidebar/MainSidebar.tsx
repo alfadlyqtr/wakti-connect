@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import Sidebar from './Sidebar';
+import Sidebar from '../Sidebar';
 import { useSidebarToggle } from '@/hooks/useSidebarToggle';
+import { UserRole } from '@/types/user';
 
 const MainSidebar: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -14,13 +15,19 @@ const MainSidebar: React.FC = () => {
       setCollapsed(savedState === 'true');
     }
   }, []);
+
+  // Save state when it changes
+  const handleCollapseChange = (newCollapsed: boolean) => {
+    setCollapsed(newCollapsed);
+    localStorage.setItem('sidebarCollapsed', String(newCollapsed));
+  };
   
   return (
     <div className="hidden lg:block">
       <Sidebar 
-        userRole={localStorage.getItem('userRole') as any || 'free'}
+        userRole={localStorage.getItem('userRole') as UserRole || 'free'}
         collapsed={collapsed}
-        onCollapseChange={setCollapsed}
+        onCollapseChange={handleCollapseChange}
         isOpen={isSidebarOpen}
       />
     </div>
