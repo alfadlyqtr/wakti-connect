@@ -53,6 +53,8 @@ const SidebarNavItems: React.FC<SidebarNavItemsProps> = ({
         }
 
         const isActive = location.pathname === item.href;
+        const Icon = item.icon; // Get the icon component
+
         return (
           <Button
             key={item.href}
@@ -63,7 +65,7 @@ const SidebarNavItems: React.FC<SidebarNavItemsProps> = ({
             )}
             onClick={() => handleNavigation(item.href)}
           >
-            {item.icon}
+            <Icon className="h-4 w-4" />
             {!isCollapsed && <span className="ml-2">{item.label}</span>}
           </Button>
         );
