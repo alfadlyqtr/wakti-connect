@@ -326,7 +326,9 @@ const DashboardAIAssistant = () => {
         subtasks: detectedTask.originalSubtasks || [],
         due_date: detectedTask.due_date,
         dueTime: detectedTask.due_time,
-        location: detectedTask.location
+        location: detectedTask.location,
+        hasTimeConstraint: false,
+        needsReview: false
       };
       
       confirmCreateTask(parsedTaskInfo);
