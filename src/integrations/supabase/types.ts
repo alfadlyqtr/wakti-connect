@@ -1723,7 +1723,10 @@ export type Database = {
           due_time: string | null
           id: string
           is_completed: boolean
+          is_group: boolean | null
+          parent_id: string | null
           task_id: string
+          title: string | null
           updated_at: string
         }
         Insert: {
@@ -1733,7 +1736,10 @@ export type Database = {
           due_time?: string | null
           id?: string
           is_completed?: boolean
+          is_group?: boolean | null
+          parent_id?: string | null
           task_id: string
+          title?: string | null
           updated_at?: string
         }
         Update: {
@@ -1743,7 +1749,10 @@ export type Database = {
           due_time?: string | null
           id?: string
           is_completed?: boolean
+          is_group?: boolean | null
+          parent_id?: string | null
           task_id?: string
+          title?: string | null
           updated_at?: string
         }
         Relationships: [

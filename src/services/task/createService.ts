@@ -79,7 +79,10 @@ async function createSubtasks(taskId: string, subtasks: SubTask[]): Promise<void
     content: subtask.content,
     is_completed: subtask.is_completed || false,
     due_date: subtask.due_date || null,
-    due_time: subtask.due_time || null
+    due_time: subtask.due_time || null,
+    is_group: subtask.is_group || false,
+    parent_id: subtask.parent_id || null,
+    title: subtask.title || null
   }));
   
   console.log("Creating subtasks with data:", subtasksToCreate);
