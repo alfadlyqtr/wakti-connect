@@ -82,8 +82,8 @@ const Sidebar = ({
   };
 
   // Check if upgrade features should be shown - never for staff users
-  const shouldShowUpgradeFeatures = userRole === "free";
   const isStaffUser = userRole === "staff";
+  const shouldShowUpgradeFeatures = userRole === "free" && !isStaffUser;
 
   return (
     <SidebarContainer 
@@ -116,7 +116,7 @@ const Sidebar = ({
       </ScrollArea>
       
       {/* Upgrade Banner - Only show for free users and when not collapsed */}
-      {shouldShowUpgradeFeatures && !collapsed && !isStaffUser && (
+      {shouldShowUpgradeFeatures && !collapsed && (
         <div className="mt-auto px-3 pb-5">
           <SidebarUpgradeBanner />
         </div>
