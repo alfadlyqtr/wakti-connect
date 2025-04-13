@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { UseFormReturn, useFieldArray } from "react-hook-form";
 import { TaskFormValues } from "../TaskFormSchema";
 import { 
@@ -12,7 +12,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, FolderPlus } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -30,10 +30,63 @@ export const SubtasksSection: React.FC<SubtasksSectionProps> = ({
   form, 
   enableSubtasks 
 }) => {
-  const { fields, append, remove } = useFieldArray({
+  // Store group state - which subtasks belong to which group
+  const [groupParents, setGroupParents] = useState<Record<string, string>>({});
+  const [showGroupCreator, setShowGroupCreator] = useState(false);
+  const [newGroupName, setNewGroupName] = useState("");
+
+  const { fields, append, remove, update } = useFieldArray({
     control: form.control,
     name: "subtasks",
   });
+
+  // Function to add a new subtask group
+  const addSubtaskGroup = () => {
+    if (!newGroupName.trim()) {
+      toast({
+        title: "Group name required",
+        description: "Please enter a name for the subtask group",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Add the group as a special subtask with is_group=true
+    append({ 
+      content: newGroupName.trim(), 
+      isCompleted: false, 
+      dueDate: "", 
+      dueTime: "",
+      is_group: true 
+    });
+    
+    setNewGroupName("");
+    setShowGroupCreator(false);
+  };
+
+  // Function to add a subtask to a specific group
+  const addSubtaskToGroup = (groupIndex: number) => {
+    // Add a new subtask with the parent_id set to the group's ID
+    const groupId = fields[groupIndex].id;
+    append({ 
+      content: "", 
+      isCompleted: false, 
+      dueDate: "", 
+      dueTime: "",
+      parent_id: groupId
+    });
+  };
+
+  // Determine if a subtask belongs to a group
+  const getSubtaskIndentation = (index: number) => {
+    const subtask = fields[index];
+    return subtask.parent_id ? "ml-6" : "";
+  };
+
+  // Determine if a subtask is a group
+  const isGroup = (index: number) => {
+    return !!fields[index].is_group;
+  };
 
   return (
     <div className="space-y-4">
@@ -61,15 +114,52 @@ export const SubtasksSection: React.FC<SubtasksSectionProps> = ({
           <div className="flex justify-between items-center">
             <h3 className="text-sm font-medium">Subtasks</h3>
             
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => append({ content: "", isCompleted: false, dueDate: "", dueTime: "" })}
-            >
-              <Plus className="h-4 w-4 mr-1" /> Add Subtask
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => append({ content: "", isCompleted: false, dueDate: "", dueTime: "" })}
+              >
+                <Plus className="h-4 w-4 mr-1" /> Add Subtask
+              </Button>
+              
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => setShowGroupCreator(true)}
+              >
+                <FolderPlus className="h-4 w-4 mr-1" /> Add Group
+              </Button>
+            </div>
           </div>
+          
+          {showGroupCreator && (
+            <div className="flex items-center gap-2 border rounded p-3">
+              <Input
+                placeholder="Group name"
+                value={newGroupName}
+                onChange={(e) => setNewGroupName(e.target.value)}
+                className="flex-1"
+              />
+              <Button 
+                type="button" 
+                size="sm" 
+                onClick={addSubtaskGroup}
+              >
+                Add Group
+              </Button>
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setShowGroupCreator(false)}
+              >
+                Cancel
+              </Button>
+            </div>
+          )}
           
           {fields.length === 0 ? (
             <div className="text-sm text-muted-foreground text-center py-2">
@@ -78,22 +168,24 @@ export const SubtasksSection: React.FC<SubtasksSectionProps> = ({
           ) : (
             <div className="space-y-3">
               {fields.map((field, index) => (
-                <div key={field.id} className="border rounded-md p-3 space-y-3">
+                <div key={field.id} className={`border rounded-md p-3 space-y-3 ${isGroup(index) ? 'bg-muted/30' : getSubtaskIndentation(index)}`}>
                   <div className="flex gap-2 items-start">
-                    <FormField
-                      control={form.control}
-                      name={`subtasks.${index}.isCompleted`}
-                      render={({ field: checkboxField }) => (
-                        <FormItem className="mt-2">
-                          <FormControl>
-                            <Checkbox
-                              checked={checkboxField.value}
-                              onCheckedChange={checkboxField.onChange}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
+                    {!isGroup(index) && (
+                      <FormField
+                        control={form.control}
+                        name={`subtasks.${index}.isCompleted`}
+                        render={({ field: checkboxField }) => (
+                          <FormItem className="mt-2">
+                            <FormControl>
+                              <Checkbox
+                                checked={checkboxField.value}
+                                onCheckedChange={checkboxField.onChange}
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    )}
                     
                     <FormField
                       control={form.control}
@@ -102,8 +194,9 @@ export const SubtasksSection: React.FC<SubtasksSectionProps> = ({
                         <FormItem className="flex-1">
                           <FormControl>
                             <Input
-                              placeholder="Subtask description"
+                              placeholder={isGroup(index) ? "Group name" : "Subtask description"}
                               {...contentField}
+                              className={isGroup(index) ? "font-medium" : ""}
                             />
                           </FormControl>
                           <FormMessage />
@@ -122,53 +215,67 @@ export const SubtasksSection: React.FC<SubtasksSectionProps> = ({
                     </Button>
                   </div>
                   
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    {/* Due Date for Subtask */}
-                    <FormField
-                      control={form.control}
-                      name={`subtasks.${index}.dueDate`}
-                      render={({ field: dueDateField }) => (
-                        <FormItem className="flex flex-col">
-                          <FormLabel className="text-xs">Due Date</FormLabel>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <FormControl>
-                                <Button
-                                  variant={"outline"}
-                                  className={cn(
-                                    "w-full pl-3 text-left font-normal text-sm h-8",
-                                    !dueDateField.value && "text-muted-foreground"
-                                  )}
-                                >
-                                  {dueDateField.value ? (
-                                    format(new Date(dueDateField.value), "PPP")
-                                  ) : (
-                                    <span>Optional</span>
-                                  )}
-                                  <CalendarIcon className="ml-auto h-3 w-3 opacity-50" />
-                                </Button>
-                              </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={dueDateField.value ? new Date(dueDateField.value) : undefined}
-                                onSelect={(date) => dueDateField.onChange(date?.toISOString() || "")}
-                                initialFocus
-                              />
-                            </PopoverContent>
-                          </Popover>
-                        </FormItem>
-                      )}
-                    />
-                    
-                    {/* Due Time for Subtask */}
-                    <TimePickerField 
-                      form={form} 
-                      name={`subtasks.${index}.dueTime`} 
-                      label="Due Time" 
-                    />
-                  </div>
+                  {isGroup(index) && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => addSubtaskToGroup(index)}
+                      className="w-full"
+                    >
+                      <Plus className="h-4 w-4 mr-1" /> Add Subtask to Group
+                    </Button>
+                  )}
+                  
+                  {!isGroup(index) && (
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      {/* Due Date for Subtask */}
+                      <FormField
+                        control={form.control}
+                        name={`subtasks.${index}.dueDate`}
+                        render={({ field: dueDateField }) => (
+                          <FormItem className="flex flex-col">
+                            <FormLabel className="text-xs">Due Date</FormLabel>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <FormControl>
+                                  <Button
+                                    variant={"outline"}
+                                    className={cn(
+                                      "w-full pl-3 text-left font-normal text-sm h-8",
+                                      !dueDateField.value && "text-muted-foreground"
+                                    )}
+                                  >
+                                    {dueDateField.value ? (
+                                      format(new Date(dueDateField.value), "PPP")
+                                    ) : (
+                                      <span>Optional</span>
+                                    )}
+                                    <CalendarIcon className="ml-auto h-3 w-3 opacity-50" />
+                                  </Button>
+                                </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={dueDateField.value ? new Date(dueDateField.value) : undefined}
+                                  onSelect={(date) => dueDateField.onChange(date?.toISOString() || "")}
+                                  initialFocus
+                                />
+                              </PopoverContent>
+                            </Popover>
+                          </FormItem>
+                        )}
+                      />
+                      
+                      {/* Due Time for Subtask */}
+                      <TimePickerField 
+                        form={form} 
+                        name={`subtasks.${index}.dueTime`} 
+                        label="Due Time" 
+                      />
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

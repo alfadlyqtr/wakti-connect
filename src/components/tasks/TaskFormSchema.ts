@@ -12,13 +12,17 @@ const RecurringSettingsSchema = z.object({
   maxOccurrences: z.number().optional(),
 });
 
-// Define the subtask schema including due date and time
+// Define the subtask schema including due date and time and hierarchical fields
 const SubtaskSchema = z.object({
   id: z.string().optional(),
   content: z.string().min(1, "Subtask content is required"),
   isCompleted: z.boolean().default(false),
   dueDate: z.string().optional(),
   dueTime: z.string().optional(),
+  // New fields for hierarchical subtasks
+  is_group: z.boolean().optional(),
+  parent_id: z.string().optional(),
+  subtasks: z.array(z.any()).optional() // Recursive subtasks
 });
 
 // Define the main form schema - simplified for personal tasks only
@@ -36,6 +40,9 @@ export const taskFormSchema = z.object({
   // Subtasks
   enableSubtasks: z.boolean().default(false),
   subtasks: z.array(SubtaskSchema).default([]),
+  
+  // Flag to preserve nested structure
+  preserveNestedStructure: z.boolean().optional()
 });
 
 // Export the TypeScript type

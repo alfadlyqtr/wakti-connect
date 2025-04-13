@@ -168,21 +168,27 @@ export const useAIChatOperations = () => {
                   id: `temp-${index}`,
                   task_id: 'pending',
                   content,
-                  is_completed: false
+                  is_completed: false,
+                  is_group: false,
+                  parent_id: null
                 };
               } else {
                 return {
                   id: `temp-${index}`,
                   task_id: 'pending',
                   content: content.title || content.content || 'Task group',
-                  is_completed: false
+                  is_completed: false,
+                  is_group: true,
+                  subtasks: content.subtasks || [],
+                  parent_id: null
                 };
               }
             }),
             location: parsedTask.location,
             status: 'pending' as const,
             is_recurring: false,
-            originalSubtasks: parsedTask.subtasks
+            originalSubtasks: parsedTask.subtasks,
+            preserveNestedStructure: true
           };
           
           const confirmationMessageId = uuidv4();
@@ -218,7 +224,7 @@ export const useAIChatOperations = () => {
                   result += `${indent}- ${item}\n`;
                 } else {
                   if (item.title || item.content) {
-                    result += `${indent}- ${item.title || item.content}\n`;
+                    result += `${indent}- **${item.title || item.content}**\n`;
                   }
                   
                   if (item.subtasks && item.subtasks.length > 0) {

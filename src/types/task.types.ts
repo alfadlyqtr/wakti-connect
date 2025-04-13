@@ -12,6 +12,9 @@ export interface SubTask {
   is_completed: boolean;
   due_date?: string | null;
   due_time?: string | null;
+  is_group?: boolean;
+  parent_id?: string | null;
+  subtasks?: SubTask[];
 }
 
 export interface Task {
@@ -35,6 +38,7 @@ export interface Task {
   archived_at?: string | null;
   archive_reason?: ArchiveReason | null;
   location?: string | null;
+  originalSubtasks?: any[];
 }
 
 export interface TaskFormData {
@@ -51,4 +55,6 @@ export interface TaskFormData {
   archived_at?: string | null;
   archive_reason?: ArchiveReason | null;
   location?: string | null;
+  originalSubtasks?: any[];
+  preserveNestedStructure?: boolean;
 }

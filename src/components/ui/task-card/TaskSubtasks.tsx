@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { SubTask } from "@/types/task.types";
 import { Checkbox } from "@/components/ui/checkbox";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase";
 import { toast } from "@/components/ui/use-toast";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { NestedSubtask } from "@/services/ai/aiTaskParserService";
@@ -36,7 +36,8 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({
     typeof st === 'object' && st !== null && 
     (
       (st as NestedSubtask).subtasks || 
-      (st as NestedSubtask).title
+      (st as NestedSubtask).title || 
+      (st as any).is_group
     )
   );
 
@@ -106,7 +107,12 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({
             className="flex items-start gap-2 cursor-pointer" 
             onClick={() => toggleGroup(groupId)}
           >
-            <button className="w-4 h-4 mt-1 flex items-center justify-center flex-shrink-0">
+            <button 
+              className="w-4 h-4 mt-1 flex items-center justify-center flex-shrink-0"
+              type="button"
+              aria-expanded={isExpanded}
+              aria-label={isExpanded ? "Collapse group" : "Expand group"}
+            >
               {isExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
             </button>
             <span className="text-sm font-medium">
@@ -115,7 +121,7 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({
           </div>
           
           {isExpanded && item.subtasks && (
-            <ul className="ml-4 space-y-1.5 mt-1">
+            <ul className="ml-4 space-y-1.5 mt-1 pl-2 border-l-2 border-gray-200 dark:border-gray-700">
               {item.subtasks.map((subtask, i) => 
                 renderSubtaskItem(subtask, i, `${groupId}`)
               )}
@@ -172,13 +178,13 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({
     );
   }
 
-  // Enhanced rendering for nested subtasks
+  // Enhanced rendering for nested subtasks with improved styling
   return (
     <div className="space-y-2 mt-3">
       <h4 className="text-sm font-medium">
         Subtasks ({subtasks.length})
       </h4>
-      <ul className="space-y-1.5">
+      <ul className="space-y-2">
         {subtasks.map((item, index) => 
           renderSubtaskItem(item, index)
         )}
