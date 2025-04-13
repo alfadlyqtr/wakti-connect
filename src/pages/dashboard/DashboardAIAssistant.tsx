@@ -1,8 +1,6 @@
-
-// DO NOT MODIFY UI - This component's layout is finalized and locked
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "@/hooks/use-theme"; // Correct import path
+import { useTheme } from "@/hooks/use-theme";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
 import {
   Card,
@@ -38,11 +36,7 @@ import { SimplifiedVoiceRecorder } from "@/components/ai/voice/SimplifiedVoiceRe
 import { AISystemIntegrationPanel } from "@/components/ai/assistant/AISystemIntegrationPanel";
 import { useSpeechRecognition } from "@/hooks/ai/useSpeechRecognition";
 import { QuickToolsCard } from "@/components/ai/tools/QuickToolsCard";
-import { ParsedTaskInfo } from "@/hooks/ai/utils/taskParser.types";
 import { TaskFormData } from "@/types/task.types";
-import { convertParsedTaskToFormData } from "@/hooks/ai/utils/taskParser";
-import { AIAssistantRole } from "@/types/ai-assistant.types";
-import { UserIntent } from "@/services/ai/aiConversationService";
 import { UI_LOCKED } from "@/constants/system";
 
 declare global {
@@ -264,18 +258,16 @@ const DashboardAIAssistant = () => {
 
   const handleConfirmTask = () => {
     if (confirmCreateTask && detectedTask) {
-      // Fix for TypeScript errors around date handling
       const formattedTask: TaskFormData = {
         ...detectedTask,
-        // Handle the due_date type safely without instanceof check
         due_date: detectedTask.due_date ? 
           (typeof detectedTask.due_date === 'string') ? 
             detectedTask.due_date : 
-            (detectedTask.due_date && typeof detectedTask.due_date === 'object' && 'toISOString' in detectedTask.due_date) ? 
-              detectedTask.due_date.toISOString().split('T')[0] : 
+            (typeof detectedTask.due_date === 'object' && detectedTask.due_date !== null && 'toISOString' in detectedTask.due_date) ? 
+              (detectedTask.due_date as Date).toISOString().split('T')[0] : 
               String(detectedTask.due_date)
           : null,
-        priority: detectedTask.priority || 'normal' // Ensure priority is not undefined
+        priority: detectedTask.priority || 'normal'
       };
       
       confirmCreateTask(formattedTask);
@@ -288,15 +280,12 @@ const DashboardAIAssistant = () => {
   
   return (
     <div className="container mx-auto p-4">
-      {/* We'll implement a minimal version of AIAssistantTabs since the imported component has different props */}
       <div className="mb-4">
         <h2 className="text-xl font-bold">WAKTI AI Assistant</h2>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {/* Left Panel */}
         <div className="md:col-span-1 space-y-4">
-          {/* Add the required selectedRole prop */}
           <AIRoleSelector 
             onRoleChange={handleRoleChange} 
             selectedRole={currentRole}
@@ -315,7 +304,6 @@ const DashboardAIAssistant = () => {
           <QuickToolsCard selectedRole={currentRole} />
         </div>
         
-        {/* Main Chat Interface */}
         <div className="md:col-span-3 flex flex-col h-[calc(100vh-10rem)]">
           <Card className="flex-grow flex flex-col">
             <CardHeader className="py-2">
@@ -428,7 +416,6 @@ const DashboardAIAssistant = () => {
         </div>
       </div>
       
-      {/* Task confirmation */}
       {pendingTaskConfirmation && detectedTask && (
         <div className="fixed bottom-24 md:bottom-32 left-0 right-0 mx-auto max-w-md px-4 z-20">
           <TaskConfirmationCard
