@@ -4,6 +4,7 @@ import { AIMessage, AIAssistantRole } from "@/types/ai-assistant.types";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { TaskFormData } from "@/types/task.types";
+import { UserIntent } from "@/services/ai/aiConversationService";
 
 // Maximum number of messages to keep in context memory
 const MAX_CONTEXT_MESSAGES = 10;
@@ -21,7 +22,10 @@ export const useAIChatEnhanced = () => {
     confirmCreateTask,
     cancelCreateTask,
     isCreatingTask,
-    pendingTaskConfirmation
+    pendingTaskConfirmation,
+    currentRole,
+    updateCurrentRole,
+    lastDetectedIntent
   } = useAIChatOperations();
   
   const { toast } = useToast();
@@ -43,11 +47,14 @@ export const useAIChatEnhanced = () => {
       aiSettings.role = role;
       localStorage.setItem('ai_settings', JSON.stringify(aiSettings));
       
+      // Update the current role in the operations hook
+      updateCurrentRole(role);
+      
       console.log("Stored current AI role in localStorage:", role);
     } catch (error) {
       console.error("Error storing AI role in localStorage:", error);
     }
-  }, []);
+  }, [updateCurrentRole]);
   
   // Enhanced integration: Get application context for better responses
   const getApplicationContext = useCallback(async () => {
@@ -69,13 +76,14 @@ export const useAIChatEnhanced = () => {
       return {
         taskCount: taskCount !== null ? taskCount : 0,
         upcomingEvents: upcomingEvents || [],
-        recentMessages: contextMemoryRef.current
+        recentMessages: contextMemoryRef.current,
+        currentRole
       };
     } catch (error) {
       console.error("Error fetching application context:", error);
       return null;
     }
-  }, []);
+  }, [currentRole]);
   
   // Enhanced sendMessage that includes application context
   const sendEnhancedMessage = useCallback(async (messageText: string) => {
@@ -117,6 +125,8 @@ export const useAIChatEnhanced = () => {
     isCreatingTask,
     pendingTaskConfirmation,
     getRecentContext: () => contextMemoryRef.current,
-    storeCurrentRole
+    storeCurrentRole,
+    currentRole,
+    lastDetectedIntent
   };
 };

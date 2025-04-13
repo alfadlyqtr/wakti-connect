@@ -17,6 +17,7 @@ import { KnowledgeProfileToolCard } from "@/components/ai/tools/KnowledgeProfile
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AIRoleSelector } from "@/components/ai/assistant/AIRoleSelector";
 import { Button } from "@/components/ui/button";
+import { getModePlaceholderText } from "@/services/ai/aiConversationService";
 import { 
   MessageSquare, 
   Wrench, 
@@ -99,8 +100,12 @@ const DashboardAIAssistant = () => {
   useEffect(() => {
     if (aiSettings?.role) {
       setSelectedRole(aiSettings.role);
+      
+      if (storeCurrentRole) {
+        storeCurrentRole(aiSettings.role);
+      }
     }
-  }, [aiSettings]);
+  }, [aiSettings, storeCurrentRole]);
 
   const handleRoleChange = async (role: AIAssistantRole) => {
     setSelectedRole(role);
@@ -322,22 +327,16 @@ const DashboardAIAssistant = () => {
     }
   };
 
+  const getPlaceholderText = () => {
+    return getModePlaceholderText(selectedRole);
+  };
+
+  const shouldShowSystemIntegration = selectedRole === "business_owner";
+
   if (isChecking) {
     console.log("Still checking access, showing loader");
     return <AIAssistantLoader />;
   }
-
-  const getRoleColor = () => {
-    switch (selectedRole) {
-      case "student": return "from-blue-600 to-blue-500";
-      case "employee": return "from-purple-600 to-purple-500";
-      case "writer": return "from-purple-600 to-purple-500";
-      case "business_owner": return "from-amber-600 to-amber-500";
-      default: return "from-wakti-blue to-wakti-blue/90";
-    }
-  };
-
-  const shouldShowSystemIntegration = selectedRole === "business_owner";
 
   return (
     <StaffRoleGuard 
