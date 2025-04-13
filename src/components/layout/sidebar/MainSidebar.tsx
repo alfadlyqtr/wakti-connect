@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 
 const MainSidebar: React.FC = () => {
@@ -16,7 +16,6 @@ const MainSidebar: React.FC = () => {
   return (
     <div className="hidden lg:block">
       <Sidebar 
-        isOpen={true} 
         userRole={localStorage.getItem('userRole') as any || 'free'}
         collapsed={collapsed}
         onCollapseChange={setCollapsed}
