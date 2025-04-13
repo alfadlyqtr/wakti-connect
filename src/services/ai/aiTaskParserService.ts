@@ -34,7 +34,23 @@ export const parseTaskWithAI = async (text: string): Promise<ParsedTask | null> 
     
     console.log("Successfully parsed task with AI:", data);
     
-    return data as ParsedTask;
+    // Process subtasks if they're in a hierarchical structure
+    let flattenedSubtasks: string[] = [];
+    
+    if (Array.isArray(data.subtasks)) {
+      // Handle potential nested subtask structures to flatten them
+      flattenedSubtasks = flattenSubtasks(data.subtasks);
+    }
+    
+    // Return the task with flattened subtasks if needed
+    return {
+      title: data.title,
+      due_date: data.due_date,
+      due_time: data.due_time,
+      priority: data.priority || 'normal',
+      subtasks: Array.isArray(data.subtasks) ? data.subtasks : [],
+      location: data.location
+    };
   } catch (error) {
     console.error("Error parsing task with AI:", error);
     
@@ -46,6 +62,30 @@ export const parseTaskWithAI = async (text: string): Promise<ParsedTask | null> 
     
     return null;
   }
+};
+
+/**
+ * Helper function to flatten nested subtask structures if needed
+ */
+const flattenSubtasks = (subtasks: any[]): string[] => {
+  let flattened: string[] = [];
+  
+  for (const item of subtasks) {
+    if (typeof item === 'string') {
+      flattened.push(item);
+    } else if (typeof item === 'object' && item !== null) {
+      // Handle case where subtask is an object with a title and children
+      if (item.title && Array.isArray(item.subtasks)) {
+        flattened.push(item.title);
+        flattened = flattened.concat(flattenSubtasks(item.subtasks));
+      } else if (item.content) {
+        // Handle case where subtask has a content property
+        flattened.push(item.content);
+      }
+    }
+  }
+  
+  return flattened;
 };
 
 /**

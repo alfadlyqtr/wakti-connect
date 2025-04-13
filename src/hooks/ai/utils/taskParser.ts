@@ -43,6 +43,9 @@ export function parseTaskFromMessage(text: string): ParsedTaskInfo | null {
   const locationRegex = /(?:at|in|near|by)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/g;
   const atLocationRegex = /at\s+([A-Z][a-zA-Z0-9\s]+(?:\s+[A-Z][a-zA-Z0-9\s]+)*)/i;
   
+  // Store/shop names to preserve
+  const storeNamesRegex = /(?:Lulu|Carrefour|H&M|Zara|Sephora|McDonald's|Starbucks|Ikea|Geant|Mega Mart|Safari|Family Food Centre)/i;
+  
   // Extract location with flexibility for places like "Doha Festival City"
   const extractLocation = (text: string): string | undefined => {
     // Check for "at [Location]" pattern
@@ -60,6 +63,26 @@ export function parseTaskFromMessage(text: string): ParsedTaskInfo | null {
     
     // Return the first location found or undefined
     return locationMatches.length > 0 ? locationMatches[0] : undefined;
+  };
+  
+  // Function to identify shopping-related tasks
+  const isShoppingTask = (text: string): boolean => {
+    const shoppingWords = /(?:buy|purchase|get|shop|pick up|store|mall|shopping)/i;
+    const items = /(?:milk|bread|eggs|cheese|meat|vegetables|fruits|groceries)/i;
+    return shoppingWords.test(text) || items.test(text) || storeNamesRegex.test(text);
+  };
+  
+  // Function to extract store name from text
+  const extractStoreName = (text: string): string | null => {
+    const storeMatch = text.match(storeNamesRegex);
+    return storeMatch ? storeMatch[0] : null;
+  };
+  
+  // Function to identify transportation/pickup tasks
+  const isTransportTask = (text: string): boolean => {
+    const transportWords = /(?:pick up|drop off|drive|take|collect|fetch|meet)/i;
+    const peopleWords = /(?:sister|brother|mom|dad|friend|colleague|wife|husband|partner|John|Mary)/i;
+    return transportWords.test(text) && peopleWords.test(text);
   };
   
   // Is this a task creation intent?
@@ -192,31 +215,83 @@ export function parseTaskFromMessage(text: string): ParsedTaskInfo | null {
   // Extract location
   const location = extractLocation(text);
   
-  // Extract subtasks
-  const subtasks: string[] = [];
+  // Extract subtasks with improved logic
+  let subtasks: string[] = [];
   
-  // Look for list indicators
-  const bulletPoints = text.match(/(?:^|\n)[\s-]*([^\n-][^\n]+)/gm);
-  if (bulletPoints && bulletPoints.length > 1) {
-    // Skip the first item as it's likely the main task
-    for (let i = 1; i < bulletPoints.length; i++) {
-      const subtask = bulletPoints[i].replace(/^[\s-]*/, '').trim();
-      if (subtask && subtask.length > 2) {
-        subtasks.push(subtask);
+  // Process text for subtasks based on context
+  if (isShoppingTask(text)) {
+    // Handle shopping tasks differently - group by store if applicable
+    const storeName = extractStoreName(text);
+    
+    // Look for items in a shopping list
+    const itemsList = text.match(/(?:get|buy|purchase|pick up)(?:\s+some)?(?:\s+the)?\s+([^.,!?;]+)/i);
+    if (itemsList && itemsList[1]) {
+      const items = itemsList[1].split(/\s*,\s*|\s+and\s+/);
+      items.forEach(item => {
+        const cleanedItem = item.trim();
+        if (cleanedItem && cleanedItem.length > 1 && !subtasks.includes(cleanedItem)) {
+          subtasks.push(cleanedItem);
+        }
+      });
+    }
+    
+    // If we have a store name but couldn't extract items normally, try harder
+    if (storeName && subtasks.length === 0) {
+      // Look for items mentioned after the store name
+      const afterStore = new RegExp(`${storeName}[^.,!?;]*?(?:get|buy|:)\\s+([^.,!?;]+)`, 'i');
+      const storeItems = text.match(afterStore);
+      
+      if (storeItems && storeItems[1]) {
+        const items = storeItems[1].split(/\s*,\s*|\s+and\s+/);
+        items.forEach(item => {
+          const cleanedItem = item.trim();
+          if (cleanedItem && cleanedItem.length > 1 && !subtasks.includes(cleanedItem)) {
+            subtasks.push(cleanedItem);
+          }
+        });
       }
     }
-  }
-  
-  // Look for "with" or "including" phrases that might contain subtasks
-  const withMatch = text.match(/(?:with|including|containing|having|containing items like|such as)\s+([^.,!?;]+)/i);
-  if (withMatch && withMatch[1]) {
-    const withList = withMatch[1].split(/\s+and\s+|\s*,\s*/);
-    withList.forEach(item => {
-      const subtask = item.trim();
-      if (subtask && subtask.length > 2 && !subtasks.includes(subtask)) {
-        subtasks.push(subtask);
+  } else if (isTransportTask(text)) {
+    // For transport tasks, generally don't break into subtasks
+    // Just capture the whole transport action as one task
+  } else {
+    // General subtask extraction for other task types
+    
+    // Look for list indicators
+    const bulletPoints = text.match(/(?:^|\n)[\s-]*([^\n-][^\n]+)/gm);
+    if (bulletPoints && bulletPoints.length > 1) {
+      // Skip the first item as it's likely the main task
+      for (let i = 1; i < bulletPoints.length; i++) {
+        const subtask = bulletPoints[i].replace(/^[\s-]*/, '').trim();
+        if (subtask && subtask.length > 2) {
+          subtasks.push(subtask);
+        }
       }
-    });
+    }
+    
+    // Look for "with" or "including" phrases that might contain subtasks
+    const withMatch = text.match(/(?:with|including|containing|having|containing items like|such as)\s+([^.,!?;]+)/i);
+    if (withMatch && withMatch[1]) {
+      const withList = withMatch[1].split(/\s+and\s+|\s*,\s*/);
+      withList.forEach(item => {
+        const subtask = item.trim();
+        if (subtask && subtask.length > 2 && !subtasks.includes(subtask)) {
+          subtasks.push(subtask);
+        }
+      });
+    }
+    
+    // Look for sequential tasks (first X, then Y, finally Z)
+    const sequentialMatches = text.match(/(?:first|then|next|after that|finally|lastly)[^.,!?;]+/gi);
+    if (sequentialMatches) {
+      sequentialMatches.forEach(match => {
+        // Remove the sequence indicator and clean up
+        const cleanedStep = match.replace(/^(?:first|then|next|after that|finally|lastly)\s*/i, '').trim();
+        if (cleanedStep && cleanedStep.length > 2 && !subtasks.includes(cleanedStep)) {
+          subtasks.push(cleanedStep);
+        }
+      });
+    }
   }
   
   // Create a basic description

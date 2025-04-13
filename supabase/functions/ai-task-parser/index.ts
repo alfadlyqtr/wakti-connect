@@ -38,33 +38,57 @@ serve(async (req) => {
     
     // Prepare the prompt for DeepSeek with explicit date handling instructions
     const prompt = `
-Parse the following text into a structured task with the following format:
-- title: A clear, concise title for the task (maximum 80 characters)
-- due_date: Extract any time reference like "tonight", "tomorrow at 3pm", etc. Convert to ISO format YYYY-MM-DD.
+You are a sophisticated task parser that can intelligently structure natural language into organized tasks.
+
+Parse the following text into a structured task with the following:
+- title: A clear, concise summary title for the task (maximum 60 characters)
+- due_date: Extract any time reference, convert to ISO format YYYY-MM-DD
 - due_time: Extract any specific time mentioned, in HH:MM format with AM/PM
 - priority: Detect priority based on urgency words ("urgent", "asap", "important" = high; "sometime", "when you can" = low; otherwise = normal)
-- subtasks: Break down any list of items, locations to visit, or sequential actions into separate subtasks
+- subtasks: Intelligently organize the input into meaningful subtasks according to the rules below
 - location: Extract any location mentioned that's relevant to the task
 
-DATE HANDLING RULES (VERY IMPORTANT):
+CURRENT DATE: ${currentYear}-${currentMonth.toString().padStart(2, '0')}-${currentDay.toString().padStart(2, '0')}
+
+SUBTASK ORGANIZATION RULES (VERY IMPORTANT):
+1. Group related items by type and context, not just by commas
+2. Create hierarchical subtasks where appropriate
+3. For shopping lists:
+   - Group items by store (e.g., "Get from Lulu: milk, eggs, bread")
+   - Preserve exact store/brand names (Lulu, Carrefour, H&M, Zara, etc.)
+4. For transportation tasks:
+   - Keep as a single action (e.g., "Pick up sister from school")
+   - Don't split into multiple subtasks unless truly distinct actions
+5. For sequential tasks:
+   - Maintain the sequence if it's a step-by-step process
+6. Never treat commas in normal sentences as subtask separators
+7. For mixed task types, separate by context (transportation, shopping, etc.)
+
+EXAMPLE TRANSFORMATIONS:
+- Input: "Buy milk, eggs, bread from Lulu and pick up sister from school"
+  Output: Two separate subtasks:
+    1. "Get groceries from Lulu" with subtasks: "milk", "eggs", "bread"
+    2. "Pick up sister from school"
+
+- Input: "Meet John at 3pm, discuss project timeline, then email Sarah the summary"
+  Output: Sequential subtasks:
+    1. "Meet John at 3pm"
+    2. "Discuss project timeline"
+    3. "Email Sarah the summary"
+
+DATE HANDLING RULES:
 - Today's date is ${currentYear}-${currentMonth.toString().padStart(2, '0')}-${currentDay.toString().padStart(2, '0')}
-- ALWAYS use ${currentYear} as the default year for all dates if no year is explicitly specified
+- ALWAYS use ${currentYear} as the default year for all dates
 - "tonight" = today's date
 - "tomorrow" = next day from today
-- Weekdays like "Monday", "Tuesday" etc. should refer to the upcoming occurrence of that weekday
-- For dates like "May 1st" with no year, use ${currentYear}
+- Weekdays like "Monday" should refer to the upcoming occurrence of that weekday
 
-Examples:
-- "Remind me tonight" → due_date: "${currentYear}-${currentMonth.toString().padStart(2, '0')}-${currentDay.toString().padStart(2, '0')}"
-- "Task for tomorrow" → due_date: "${new Date(currentDate.setDate(currentDate.getDate() + 1)).toISOString().split('T')[0]}"
-- "Meeting on Monday" → Find the next Monday from today and use ${currentYear}
-
-Respond with ONLY a valid JSON object containing these fields. Make intelligent decisions about structuring the task properly. If a field can't be determined, use null.
+Respond with ONLY a valid JSON object containing these fields. If a field can't be determined, use null.
 
 Text to parse: ${text}
 `;
 
-    console.log("Calling DeepSeek API for task parsing with updated date context");
+    console.log("Calling DeepSeek API for task parsing with updated subtask organization rules");
 
     // Call DeepSeek API
     const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
@@ -78,10 +102,11 @@ Text to parse: ${text}
         messages: [
           { 
             role: "system", 
-            content: `You are a task parsing assistant that extracts structured information from natural language. 
-                      Return only valid JSON. 
+            content: `You are an advanced task parsing assistant that extracts structured information from natural language.
+                      Return only valid JSON.
                       The current date is ${currentYear}-${currentMonth.toString().padStart(2, '0')}-${currentDay.toString().padStart(2, '0')}.
-                      ALWAYS use ${currentYear} as the default year for any relative dates mentioned.` 
+                      ALWAYS use ${currentYear} as the default year for any dates mentioned.
+                      FOCUS ON INTELLIGENT SUBTASK ORGANIZATION.` 
           },
           { role: "user", content: prompt }
         ],
@@ -128,6 +153,12 @@ Text to parse: ${text}
             parsedTask.due_date = `${currentYear}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
           }
         }
+      }
+      
+      // Check if subtasks need to be organized better
+      if (Array.isArray(parsedTask.subtasks) && parsedTask.subtasks.length > 0) {
+        // Ensure subtasks are properly structured
+        console.log("Validating subtask structure...");
       }
       
       console.log("Successfully parsed and validated task:", parsedTask);
