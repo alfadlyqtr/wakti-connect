@@ -65,6 +65,32 @@ const SidebarNavItems: React.FC<SidebarNavItemsProps> = ({
     }
   };
 
+  // If still loading permissions, show a placeholder loader
+  if (isLoading) {
+    return (
+      <div className="space-y-1 py-2">
+        {openCommandSearch && (
+          <Button
+            variant="ghost"
+            className={cn(
+              "w-full justify-start px-2",
+              isCollapsed ? "justify-center" : "px-2"
+            )}
+            onClick={openCommandSearch}
+          >
+            <Search className="h-4 w-4 mr-2" />
+            {!isCollapsed && <span>Search</span>}
+          </Button>
+        )}
+        
+        {/* Loading placeholders */}
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="w-full h-9 bg-muted/20 animate-pulse rounded-md mb-1" />
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-1 py-2">
       {openCommandSearch && (
@@ -81,7 +107,7 @@ const SidebarNavItems: React.FC<SidebarNavItemsProps> = ({
         </Button>
       )}
 
-      {!isLoading && navItems.map((item) => {
+      {navItems.map((item) => {
         // Skip this menu item if it should be hidden for current user role
         if (shouldHideMenuItem(item.href, userRole)) {
           return null;

@@ -63,6 +63,26 @@ const getBusinessPermissions = (featureKey: string): boolean => {
  */
 const getStaffPermissions = async (featureKey: string): Promise<boolean> => {
   try {
+    // Staff-specific permissions mapping
+    const staffFeatureMap: Record<string, boolean> = {
+      'tasks_view': true,
+      'job_cards_view': true,
+      'jobs_management': true,
+      'messages_view': true,
+      'hours_tracking': true,
+      'earnings_tracking': true,
+    };
+    
+    // If the feature is in our static map, return that value directly
+    if (featureKey in staffFeatureMap) {
+      return staffFeatureMap[featureKey];
+    }
+    
+    // For job cards feature specifically
+    if (featureKey === 'job_cards_view') {
+      return true;
+    }
+    
     // Get staff relation ID
     const staffRelationId = localStorage.getItem('staffRelationId');
     if (!staffRelationId) return false;

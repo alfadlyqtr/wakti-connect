@@ -117,13 +117,13 @@ const Sidebar = ({
         />
         
         {/* Upgrade Button - Only shown for free accounts that need to upgrade */}
-        {showUpgradeButton && (
+        {showUpgradeButton && userRole !== 'staff' && (
           <SidebarUpgradeButton collapsed={collapsed} />
         )}
       </ScrollArea>
       
       {/* Upgrade Banner - Only show for free users and when not collapsed */}
-      {userRole === "free" && !collapsed && (
+      {userRole === "free" && !collapsed && userRole !== 'staff' && (
         <div className="mt-auto px-3 pb-5">
           <SidebarUpgradeBanner />
         </div>
