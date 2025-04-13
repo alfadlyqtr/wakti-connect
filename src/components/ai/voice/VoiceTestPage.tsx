@@ -21,6 +21,7 @@ export const VoiceTestPage = () => {
   });
   const [testVoice, setTestVoice] = useState('');
   const [volume, setVolume] = useState(50);
+  const [audioLevel, setAudioLevel] = useState(0.5); // Add audio level state
 
   useEffect(() => {
     // Check browser support
@@ -33,6 +34,21 @@ export const VoiceTestPage = () => {
       speechSynthesis: hasSpeechSynthesis,
     });
   }, []);
+
+  // Simulate changing audio levels when recording
+  useEffect(() => {
+    let interval: number | null = null;
+    
+    if (isRecording) {
+      interval = window.setInterval(() => {
+        setAudioLevel(Math.random() * 0.7 + 0.2); // Random value between 0.2 and 0.9
+      }, 100);
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isRecording]);
 
   const startRecording = () => {
     setIsRecording(true);
@@ -91,7 +107,7 @@ export const VoiceTestPage = () => {
 
             <div className="h-24 bg-muted rounded-md flex items-center justify-center">
               {isRecording ? (
-                <VoiceRecordingVisualizer />
+                <VoiceRecordingVisualizer isActive={isRecording} audioLevel={audioLevel} />
               ) : (
                 <span className="text-muted-foreground text-sm">
                   {transcription || "Press 'Start Recording' to begin"}

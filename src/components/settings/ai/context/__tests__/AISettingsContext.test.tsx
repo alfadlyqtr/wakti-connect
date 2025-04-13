@@ -3,6 +3,7 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { AISettingsProvider, useAISettings } from '../AISettingsContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import '@testing-library/jest-dom'; // Add this to bring in toBeInTheDocument matcher
 
 // Create a test component that uses the context
 const TestComponent = () => {

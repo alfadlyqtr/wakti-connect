@@ -21,6 +21,7 @@ export const fetchKnowledgeUploads = async (): Promise<AIKnowledgeUpload[]> => {
     title: item.title,
     content: item.content,
     created_at: item.created_at,
+    // Set default role if not present in the database
     role: (item.role as AIAssistantRole | undefined) || 'general'
   })) as AIKnowledgeUpload[];
 };
@@ -42,14 +43,14 @@ export const addKnowledgeUpload = async (
   };
   
   const { data, error } = await supabase
-    .from('ai_knowledge_uploads')
+    .from("ai_knowledge_uploads")
     .insert(newKnowledge)
     .select()
     .single();
   
   if (error) throw error;
   
-  return data as AIKnowledgeUpload;
+  return data as unknown as AIKnowledgeUpload;
 };
 
 // Delete a knowledge upload

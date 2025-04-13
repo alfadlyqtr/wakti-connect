@@ -60,9 +60,9 @@ export function useAIKnowledgeUploadsQuery(user: User | null) {
         title: item.title,
         content: item.content,
         created_at: item.created_at,
-        updated_at: item.updated_at,
-        // Add role with a default if it doesn't exist in the database
-        role: (item.role as AIAssistantRole | undefined) || 'general'
+        updated_at: item.updated_at || item.created_at,
+        // Default to 'general' if role doesn't exist
+        role: (item.role as AIAssistantRole) || 'general'
       })) as AIKnowledgeUpload[];
     },
     enabled: !!user

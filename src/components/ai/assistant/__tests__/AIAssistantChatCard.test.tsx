@@ -4,6 +4,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { AIAssistantChatCard } from '../AIAssistantChatCard';
 import { vi } from 'vitest';
 import { AIMessage, AIAssistantRole } from '@/types/ai-assistant.types';
+import '@testing-library/jest-dom'; // Add this to bring in toBeInTheDocument matcher
 
 // Mock AIRoleSelector
 vi.mock('../AIRoleSelector', () => ({
