@@ -1,4 +1,6 @@
 
+// Update only the props interface to include the missing clearMessages prop:
+
 import React, { useState, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -39,6 +41,7 @@ interface CleanChatInterfaceProps {
   onStartVoiceInput?: () => void;
   onStopVoiceInput?: () => void;
   onConfirmTranscript?: () => void;
+  clearMessages?: () => void; // Add missing prop
 }
 
 export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({

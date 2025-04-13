@@ -18,3 +18,27 @@ export const generateGoogleMapsUrl = (location: string): string => {
   const encodedLocation = encodeURIComponent(location);
   return `https://www.google.com/maps/search/?api=1&query=${encodedLocation}`;
 };
+
+/**
+ * Check if a URL is a valid Google Maps URL
+ * @param url URL to check
+ * @returns boolean indicating if the URL is a valid Google Maps URL
+ */
+export const isValidGoogleMapsUrl = (url: string): boolean => {
+  if (!url) return false;
+  
+  // Simple check if it's a Google Maps URL
+  return url.includes('google.com/maps') || url.includes('goo.gl/maps');
+};
+
+/**
+ * Format a Google Maps URL for display
+ * @param url URL to format
+ * @returns Formatted URL for display
+ */
+export const formatMapsUrl = (url: string): string => {
+  if (!url) return '';
+  
+  // Remove protocol and trailing slashes for display
+  return url.replace(/^https?:\/\//, '').replace(/\/$/, '');
+};

@@ -396,23 +396,20 @@ const DashboardAIAssistant = () => {
                               setInputMessage={setInputMessage}
                               handleSendMessage={handleSendMessage}
                               selectedRole={selectedRole}
-                              userName={userName}
-                              canAccess={canAccess}
-                              onFileUpload={handleFileUpload}
-                              onCameraCapture={handleCameraCapture}
-                              onStartVoiceInput={handleStartVoiceInput}
-                              onStopVoiceInput={handleStopVoiceInput}
-                              onConfirmTranscript={handleConfirmTranscript}
+                              userName={user?.full_name}
+                              canAccess={canUseAI}
+                              detectedTask={detectedTask}
+                              onConfirmTask={handleConfirmTask}
+                              onCancelTask={handleCancelTask}
+                              isCreatingTask={isCreatingTask}
+                              pendingTaskConfirmation={pendingTaskConfirmation}
                               isListening={isRecording}
                               audioLevel={audioLevel}
                               processingVoice={processingVoice}
                               temporaryTranscript={temporaryTranscript}
-                              showSuggestions={false}
-                              detectedTask={detectedTask}
-                              onConfirmTask={confirmCreateTask}
-                              onCancelTask={cancelCreateTask}
-                              isCreatingTask={isCreatingTask}
-                              pendingTaskConfirmation={pendingTaskConfirmation}
+                              onStartVoiceInput={startVoiceInput}
+                              onStopVoiceInput={stopVoiceInput}
+                              onConfirmTranscript={confirmTranscript}
                               clearMessages={() => setMessages([])}
                             />
                           </div>
