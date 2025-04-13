@@ -143,8 +143,9 @@ const mapFeatureToPermissionKey = (featureKey: string): string | null => {
 };
 
 /**
- * Component-level permission check to use in components
+ * Higher-order component for permission checking
  * @param featureKey The feature to check
+ * @param Component The component to render if user has permission
  * @param fallback Optional fallback component to render when permission is denied
  */
 export const withPermission = (

@@ -1,13 +1,14 @@
 
 import React from 'react';
 import { toast } from '@/hooks/use-toast';
-import { usePermission } from '@/hooks/usePermission';
+import { hasPermission } from '@/services/auth/accessControl';
 
 interface RestrictedActionProps {
   featureKey: string;
   children: React.ReactNode;
   fallbackMessage?: string;
   showFallback?: boolean;
+  onPermissionDenied?: () => void;
 }
 
 /**
@@ -18,9 +19,28 @@ const RestrictedAction: React.FC<RestrictedActionProps> = ({
   featureKey,
   children,
   fallbackMessage = "You don't have permission to perform this action",
-  showFallback = false
+  showFallback = false,
+  onPermissionDenied
 }) => {
-  const { isAllowed, isLoading } = usePermission(featureKey);
+  const [isAllowed, setIsAllowed] = React.useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
+  
+  React.useEffect(() => {
+    const checkPermission = async () => {
+      try {
+        setIsLoading(true);
+        const permitted = await hasPermission(featureKey);
+        setIsAllowed(permitted);
+      } catch (error) {
+        console.error("Error checking permission:", error);
+        setIsAllowed(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    checkPermission();
+  }, [featureKey]);
   
   if (isLoading) {
     return <div className="opacity-50 cursor-not-allowed">{children}</div>;
@@ -28,6 +48,11 @@ const RestrictedAction: React.FC<RestrictedActionProps> = ({
   
   if (!isAllowed) {
     const handleRestrictedClick = () => {
+      if (onPermissionDenied) {
+        onPermissionDenied();
+        return;
+      }
+      
       toast({
         title: "Access Restricted",
         description: fallbackMessage,

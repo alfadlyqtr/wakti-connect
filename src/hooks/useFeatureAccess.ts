@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
-import { checkFeatureAccess, handlePermissionError } from '@/services/auth/permissionsService';
+import { hasPermission } from '@/services/auth/accessControl';
+import { toast } from '@/hooks/use-toast';
 
 export function useFeatureAccess(featureKey: string) {
   const [hasAccess, setHasAccess] = useState<boolean>(false);
@@ -10,7 +11,7 @@ export function useFeatureAccess(featureKey: string) {
     const checkAccess = async () => {
       try {
         setIsLoading(true);
-        const allowed = await checkFeatureAccess(featureKey);
+        const allowed = await hasPermission(featureKey);
         setHasAccess(allowed);
       } catch (error) {
         console.error(`Error checking access for feature ${featureKey}:`, error);
@@ -27,7 +28,11 @@ export function useFeatureAccess(featureKey: string) {
     if (hasAccess) {
       action();
     } else {
-      handlePermissionError(featureKey);
+      toast({
+        title: "Access Restricted",
+        description: `You don't have permission to use this feature: ${featureKey}`,
+        variant: "destructive"
+      });
     }
   };
   
