@@ -2,7 +2,7 @@
 import { useAIChatEnhanced } from "./ai/useAIChatEnhanced";
 import { useAISettings } from "./ai/settings";
 import { useAIKnowledge } from "./ai/useAIKnowledge";
-import { AIMessage, AISettings, AIKnowledgeUpload } from "@/types/ai-assistant.types";
+import { AIMessage, AISettings, AIKnowledgeUpload, AIAssistantRole } from "@/types/ai-assistant.types";
 
 // Re-export types for backward compatibility
 export type { AIMessage, AISettings, AIKnowledgeUpload };
@@ -23,7 +23,8 @@ export const useAIAssistant = () => {
     cancelCreateTask,
     isCreatingTask,
     pendingTaskConfirmation,
-    getRecentContext
+    getRecentContext,
+    storeCurrentRole
   } = useAIChatEnhanced();
   const { aiSettings, isLoadingSettings, updateSettings, canUseAI } = useAISettings();
   const { addKnowledge, knowledgeUploads, isLoadingKnowledge, deleteKnowledge } = useAIKnowledge();
@@ -54,5 +55,8 @@ export const useAIAssistant = () => {
     knowledgeUploads,
     isLoadingKnowledge,
     deleteKnowledge,
+    
+    // Role management
+    storeCurrentRole
   };
 };
