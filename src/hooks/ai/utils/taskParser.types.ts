@@ -6,7 +6,7 @@ export interface ParsedTaskInfo {
   title: string;
   description?: string;
   priority: TaskPriority;
-  subtasks: (string | NestedSubtask)[];  // Updated to support nested subtasks
+  subtasks: (string | NestedSubtask)[];  // Explicitly support nested subtasks
   due_date?: string | Date | null;
   dueTime?: string | null;
   location?: string | null;
