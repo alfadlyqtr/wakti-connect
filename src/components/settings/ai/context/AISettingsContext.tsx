@@ -1,224 +1,217 @@
 
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { useAuth } from "@/hooks/useAuth";
-import { toast } from "@/components/ui/use-toast";
-import { AISettings, AIKnowledgeUpload, AIAssistantRole } from "@/types/ai-assistant.types";
-import { 
-  fetchAISettings, 
-  updateAISettings, 
-  createDefaultAISettings 
-} from "@/services/ai/aiSettingsService";
-import { 
-  fetchKnowledgeUploads, 
-  addKnowledgeUpload, 
-  deleteKnowledgeUpload 
-} from "@/services/ai/knowledgeService";
-import { useCanUseAIQuery } from "@/hooks/ai/settings/useAISettingsQueries";
+import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { useAuth } from '@/hooks/auth';
+import { AISettings, AIKnowledgeUpload, AIAssistantRole } from '@/types/ai-assistant.types';
+import { useAISettingsQuery, useCanUseAIQuery } from '@/hooks/ai/settings/useAISettingsQueries';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { createDefaultAISettings, updateAISettings } from '@/services/ai/aiSettingsService';
+import { fetchKnowledgeUploads, addKnowledgeUpload, deleteKnowledgeUpload } from '@/services/ai/knowledgeService';
+import { useToast } from '@/components/ui/use-toast';
 
 interface AISettingsContextType {
   settings: AISettings | null;
   isLoadingSettings: boolean;
   isUpdatingSettings: boolean;
-  isAddingKnowledge: boolean;
-  knowledgeUploads: AIKnowledgeUpload[] | null;
-  isLoadingKnowledge: boolean;
+  error: Error | null;
   canUseAI: boolean;
-  error: string | null;
-  updateSettings: (newSettings: AISettings) => Promise<boolean>;
-  addKnowledge: (title: string, content: string, role?: AIAssistantRole) => Promise<boolean>;
-  deleteKnowledge: (id: string) => Promise<boolean>;
-  createDefaultSettings: () => Promise<void>;
   isCreatingSettings: boolean;
+  createDefaultSettings: () => Promise<void>;
+  updateSettings: (settings: AISettings) => Promise<boolean>;
+  knowledgeUploads: AIKnowledgeUpload[];
+  isLoadingKnowledge: boolean;
+  isAddingKnowledge: boolean;
+  addKnowledge: (title: string, content: string, role?: AIAssistantRole) => Promise<AIKnowledgeUpload>;
+  deleteKnowledge: (id: string) => Promise<void>;
 }
 
 const AISettingsContext = createContext<AISettingsContextType | undefined>(undefined);
 
-export const AISettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export function useAISettings() {
+  const context = useContext(AISettingsContext);
+  if (context === undefined) {
+    throw new Error('useAISettings must be used within an AISettingsProvider');
+  }
+  return context;
+}
+
+interface AISettingsProviderProps {
+  children: ReactNode;
+}
+
+export function AISettingsProvider({ children }: AISettingsProviderProps) {
   const { user } = useAuth();
-  const [settings, setSettings] = useState<AISettings | null>(null);
-  const [knowledgeUploads, setKnowledgeUploads] = useState<AIKnowledgeUpload[] | null>(null);
-  const [isLoadingSettings, setIsLoadingSettings] = useState(true);
-  const [isLoadingKnowledge, setIsLoadingKnowledge] = useState(true);
-  const [isUpdatingSettings, setIsUpdatingSettings] = useState(false);
-  const [isAddingKnowledge, setIsAddingKnowledge] = useState(false);
-  const [isCreatingSettings, setIsCreatingSettings] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [error, setError] = useState<Error | null>(null);
   
-  const { data: canUseData, isLoading: isLoadingAccess } = useCanUseAIQuery(user);
-  const canUseAI = canUseData || false;
+  // AI Settings query
+  const { 
+    data: settings, 
+    isLoading: isLoadingSettings,
+    error: settingsError
+  } = useAISettingsQuery(user);
+
+  // Check if user can use AI
+  const { data: canUseAI = false } = useCanUseAIQuery(user);
   
-  // Load AI settings when user is available
-  useEffect(() => {
-    const loadSettings = async () => {
-      if (!user) {
-        setIsLoadingSettings(false);
-        return;
-      }
-      
-      try {
-        setIsLoadingSettings(true);
-        setError(null);
-        const data = await fetchAISettings();
-        setSettings(data);
-      } catch (err) {
-        console.error("Error loading AI settings:", err);
-        setError("Failed to load AI settings");
-      } finally {
-        setIsLoadingSettings(false);
-      }
-    };
-    
-    loadSettings();
+  // Load knowledge uploads
+  const [knowledgeUploads, setKnowledgeUploads] = useState<AIKnowledgeUpload[]>([]);
+  const [isLoadingKnowledge, setIsLoadingKnowledge] = useState(false);
+  
+  // Load knowledge uploads
+  React.useEffect(() => {
+    if (user) {
+      setIsLoadingKnowledge(true);
+      fetchKnowledgeUploads()
+        .then(uploads => {
+          setKnowledgeUploads(uploads);
+        })
+        .catch(err => {
+          console.error("Error loading knowledge uploads:", err);
+          setError(err instanceof Error ? err : new Error(String(err)));
+        })
+        .finally(() => {
+          setIsLoadingKnowledge(false);
+        });
+    }
   }, [user]);
   
-  // Load knowledge uploads when user is available
-  useEffect(() => {
-    const loadKnowledge = async () => {
-      if (!user || !canUseAI) {
-        setIsLoadingKnowledge(false);
-        return;
-      }
-      
-      try {
-        setIsLoadingKnowledge(true);
-        const data = await fetchKnowledgeUploads();
-        setKnowledgeUploads(data);
-      } catch (err) {
-        console.error("Error loading knowledge uploads:", err);
-      } finally {
-        setIsLoadingKnowledge(false);
-      }
-    };
-    
-    loadKnowledge();
-  }, [user, canUseAI]);
-  
-  const updateSettings = async (newSettings: AISettings): Promise<boolean> => {
-    if (!user) return false;
-    
-    try {
-      setIsUpdatingSettings(true);
-      const updated = await updateAISettings(newSettings);
-      setSettings(updated);
+  // Update settings mutation
+  const updateSettingsMutation = useMutation({
+    mutationFn: updateAISettings,
+    onSuccess: (data) => {
+      queryClient.setQueryData(['ai-settings', user?.id], data);
       toast({
         title: "Settings Updated",
         description: "Your AI assistant settings have been updated.",
-        variant: "success"
       });
-      return true;
-    } catch (err) {
-      console.error("Error updating AI settings:", err);
+    },
+    onError: (err: any) => {
+      setError(err instanceof Error ? err : new Error(String(err)));
       toast({
-        title: "Update Failed",
-        description: "Failed to update AI assistant settings.",
-        variant: "destructive"
+        title: "Error",
+        description: "Failed to update settings. " + (err?.message || "Please try again."),
+        variant: "destructive",
       });
-      return false;
-    } finally {
-      setIsUpdatingSettings(false);
     }
-  };
+  });
   
-  const addKnowledge = async (title: string, content: string, role?: AIAssistantRole): Promise<boolean> => {
-    if (!user || !canUseAI) return false;
-    
-    try {
-      setIsAddingKnowledge(true);
-      const newUpload = await addKnowledgeUpload(title, content, role);
-      setKnowledgeUploads(prev => prev ? [...prev, newUpload] : [newUpload]);
+  // Create default settings mutation
+  const createDefaultSettingsMutation = useMutation({
+    mutationFn: createDefaultAISettings,
+    onSuccess: (data) => {
+      queryClient.setQueryData(['ai-settings', user?.id], data);
+      toast({
+        title: "Settings Created",
+        description: "Default AI assistant settings have been created.",
+      });
+    },
+    onError: (err: any) => {
+      setError(err instanceof Error ? err : new Error(String(err)));
+      toast({
+        title: "Error",
+        description: "Failed to create settings. " + (err?.message || "Please try again."),
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Add knowledge mutation
+  const addKnowledgeMutation = useMutation({
+    mutationFn: (params: { title: string; content: string; role?: AIAssistantRole }) => 
+      addKnowledgeUpload(params.title, params.content, params.role),
+    onSuccess: (data) => {
+      setKnowledgeUploads(prev => [data, ...prev]);
       toast({
         title: "Knowledge Added",
-        description: "Your knowledge has been added to the AI assistant.",
-        variant: "success"
+        description: "Your knowledge item has been added to the AI assistant.",
       });
-      return true;
-    } catch (err) {
-      console.error("Error adding knowledge:", err);
+    },
+    onError: (err: any) => {
+      setError(err instanceof Error ? err : new Error(String(err)));
       toast({
-        title: "Failed to Add Knowledge",
-        description: "There was an error adding your knowledge.",
-        variant: "destructive"
+        title: "Error",
+        description: "Failed to add knowledge. " + (err?.message || "Please try again."),
+        variant: "destructive",
       });
-      return false;
-    } finally {
-      setIsAddingKnowledge(false);
     }
-  };
+  });
   
-  const deleteKnowledge = async (id: string): Promise<boolean> => {
-    if (!user || !canUseAI) return false;
-    
-    try {
-      await deleteKnowledgeUpload(id);
-      setKnowledgeUploads(prev => prev ? prev.filter(item => item.id !== id) : null);
+  // Delete knowledge mutation
+  const deleteKnowledgeMutation = useMutation({
+    mutationFn: deleteKnowledgeUpload,
+    onSuccess: (_, id) => {
+      setKnowledgeUploads(prev => prev.filter(item => item.id !== id));
       toast({
-        title: "Knowledge Removed",
-        description: "The knowledge has been removed from your AI assistant.",
-        variant: "success"
+        title: "Knowledge Deleted",
+        description: "Your knowledge item has been removed.",
       });
-      return true;
-    } catch (err) {
-      console.error("Error deleting knowledge:", err);
+    },
+    onError: (err: any) => {
+      setError(err instanceof Error ? err : new Error(String(err)));
       toast({
-        title: "Failed to Remove Knowledge",
-        description: "There was an error removing your knowledge.",
-        variant: "destructive"
+        title: "Error",
+        description: "Failed to delete knowledge. " + (err?.message || "Please try again."),
+        variant: "destructive",
       });
-      return false;
     }
-  };
+  });
   
-  const createDefaultSettings = async (): Promise<void> => {
+  // Effect to set error from query error
+  React.useEffect(() => {
+    if (settingsError) {
+      setError(settingsError instanceof Error ? settingsError : new Error(String(settingsError)));
+    }
+  }, [settingsError]);
+  
+  // Create default settings function
+  const createDefaultSettings = useCallback(async () => {
     if (!user) return;
-    
+    await createDefaultSettingsMutation.mutateAsync();
+  }, [user, createDefaultSettingsMutation]);
+  
+  // Update settings function
+  const updateSettings = useCallback(async (newSettings: AISettings): Promise<boolean> => {
+    if (!user) return false;
     try {
-      setIsCreatingSettings(true);
-      const newSettings = await createDefaultAISettings();
-      setSettings(newSettings);
-      toast({
-        title: "Default Settings Created",
-        description: "Default AI assistant settings have been created.",
-        variant: "success"
-      });
+      await updateSettingsMutation.mutateAsync(newSettings);
+      return true;
     } catch (err) {
-      console.error("Error creating default settings:", err);
-      toast({
-        title: "Failed to Create Settings",
-        description: "There was an error creating default settings.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsCreatingSettings(false);
+      return false;
     }
+  }, [user, updateSettingsMutation]);
+  
+  // Add knowledge function
+  const addKnowledgeHandler = useCallback(async (title: string, content: string, role?: AIAssistantRole) => {
+    if (!user) throw new Error("Not authenticated");
+    return await addKnowledgeMutation.mutateAsync({ title, content, role });
+  }, [user, addKnowledgeMutation]);
+  
+  // Delete knowledge function
+  const deleteKnowledgeHandler = useCallback(async (id: string) => {
+    if (!user) throw new Error("Not authenticated");
+    await deleteKnowledgeMutation.mutateAsync(id);
+  }, [user, deleteKnowledgeMutation]);
+  
+  const value = {
+    settings,
+    isLoadingSettings,
+    isUpdatingSettings: updateSettingsMutation.isPending,
+    error,
+    canUseAI: !!canUseAI,
+    isCreatingSettings: createDefaultSettingsMutation.isPending,
+    createDefaultSettings,
+    updateSettings,
+    knowledgeUploads,
+    isLoadingKnowledge,
+    isAddingKnowledge: addKnowledgeMutation.isPending,
+    addKnowledge: addKnowledgeHandler,
+    deleteKnowledge: deleteKnowledgeHandler
   };
   
   return (
-    <AISettingsContext.Provider
-      value={{
-        settings,
-        isLoadingSettings,
-        isUpdatingSettings,
-        isAddingKnowledge,
-        knowledgeUploads,
-        isLoadingKnowledge,
-        canUseAI,
-        error,
-        updateSettings,
-        addKnowledge,
-        deleteKnowledge,
-        createDefaultSettings,
-        isCreatingSettings
-      }}
-    >
+    <AISettingsContext.Provider value={value}>
       {children}
     </AISettingsContext.Provider>
   );
-};
-
-export const useAISettings = (): AISettingsContextType => {
-  const context = useContext(AISettingsContext);
-  if (context === undefined) {
-    throw new Error("useAISettings must be used within an AISettingsProvider");
-  }
-  return context;
-};
+}

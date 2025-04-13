@@ -28,7 +28,7 @@ export function useAISettingsQuery(user: User | null) {
         id: data.id,
         user_id: data.user_id,
         assistant_name: data.assistant_name,
-        role: data.role,
+        role: data.role as AIAssistantRole,
         tone: data.tone,
         response_length: data.response_length,
         proactiveness: data.proactiveness,
@@ -61,7 +61,8 @@ export function useAIKnowledgeUploadsQuery(user: User | null) {
         content: item.content,
         created_at: item.created_at,
         updated_at: item.updated_at,
-        role: item.role || 'general',
+        // Add role with a default if it doesn't exist in the database
+        role: (item.role as AIAssistantRole | undefined) || 'general'
       })) as AIKnowledgeUpload[];
     },
     enabled: !!user

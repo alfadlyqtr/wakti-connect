@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { AISettings } from "@/types/ai-assistant.types";
+import { AISettings, AIAssistantRole } from "@/types/ai-assistant.types";
 
 // Fetch AI settings for the current user
 export const fetchAISettings = async (): Promise<AISettings | null> => {
@@ -26,10 +26,13 @@ export const updateAISettings = async (settings: AISettings): Promise<AISettings
   const { data: userData } = await supabase.auth.getUser();
   if (!userData?.user) throw new Error('Not authenticated');
   
+  // Ensure role is a valid enum value
+  const roleValue: AIAssistantRole = settings.role;
+  
   const updateData = {
     user_id: settings.user_id,
     assistant_name: settings.assistant_name,
-    role: settings.role,
+    role: roleValue,
     tone: settings.tone,
     response_length: settings.response_length,
     proactiveness: settings.proactiveness,
@@ -56,7 +59,7 @@ export const createDefaultAISettings = async (): Promise<AISettings> => {
   const defaultSettings = {
     user_id: userData.user.id,
     assistant_name: 'WAKTI',
-    role: 'general',
+    role: 'general' as AIAssistantRole,
     tone: 'balanced',
     response_length: 'balanced',
     proactiveness: true,

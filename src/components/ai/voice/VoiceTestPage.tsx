@@ -1,413 +1,145 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Button } from '@/components/ui/button';
+
+import React, { useState, useEffect } from 'react';
+import { useVoiceInteraction } from '@/hooks/useVoiceInteraction';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Mic, MicOff, Play, Square, Volume2, VolumeX } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Mic, MicOff, Volume2, AlertCircle, CheckCircle } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { stopMediaTracks } from '@/utils/audio/audioProcessing';
-import { useVoiceSettings } from '@/store/voiceSettings';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
-type MicStatus = 'valid' | 'invalid' | 'unknown' | 'checking';
+const VoiceTestPage: React.FC = () => {
+  const {
+    isListening,
+    transcript,
+    lastTranscript,
+    error,
+    supportsVoice,
+    startListening,
+    stopListening
+  } = useVoiceInteraction({
+    continuousListening: false
+  });
 
-const VoiceTestPage = () => {
-  const [isRecording, setIsRecording] = useState(false);
-  const [transcript, setTranscript] = useState('');
-  const [micStatus, setMicStatus] = useState<MicStatus>('unknown');
-  const [audioEnabled, setAudioEnabled] = useState(true);
-  const [volume, setVolume] = useState(0);
-  const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
-  const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
-  const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
-  const [speechRecognition, setSpeechRecognition] = useState<any>(null);
-  
-  const animationRef = useRef<number>();
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  
-  const { 
-    autoSilenceDetection, 
-    toggleAutoSilenceDetection,
-    visualFeedback,
-    toggleVisualFeedback,
-    language,
-    setLanguage
-  } = useVoiceSettings();
+  const [audioLevel, setAudioLevel] = useState(0);
+  const [transcriptHistory, setTranscriptHistory] = useState<string[]>([]);
 
-  // Initialize audio context and speech recognition
+  // Simulate audio level for visualization
   useEffect(() => {
-    // Check if browser supports speech recognition
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    
-    if (SpeechRecognition) {
-      const recognition = new SpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.lang = language;
-      
-      recognition.onresult = (event: any) => {
-        const current = event.resultIndex;
-        const result = event.results[current];
-        const transcriptText = result[0].transcript;
-        setTranscript(transcriptText);
-      };
-      
-      recognition.onerror = (event: any) => {
-        console.error('Speech recognition error', event.error);
-        if (event.error === 'not-allowed') {
-          setMicStatus('invalid');
-        }
-      };
-      
-      setSpeechRecognition(recognition);
+    let interval: number;
+    if (isListening) {
+      interval = window.setInterval(() => {
+        setAudioLevel(Math.random());
+      }, 100);
     } else {
-      console.error('Speech recognition not supported in this browser');
+      setAudioLevel(0);
     }
-    
-    // Initialize audio context
-    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    setAudioContext(audioCtx);
-    
-    const analyserNode = audioCtx.createAnalyser();
-    analyserNode.fftSize = 256;
-    setAnalyser(analyserNode);
-    
-    return () => {
-      if (audioStream) {
-        stopMediaTracks(audioStream);
-      }
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, [language]);
+    return () => clearInterval(interval);
+  }, [isListening]);
 
-  // Check microphone access
+  // Add completed transcripts to history
   useEffect(() => {
-    const checkMicrophone = async () => {
-      setMicStatus('checking');
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        stopMediaTracks(stream);
-        setMicStatus('valid');
-      } catch (error) {
-        console.error('Microphone access error:', error);
-        setMicStatus('invalid');
-      }
-    };
-    
-    checkMicrophone();
-  }, []);
-
-  // Draw audio visualization
-  const drawVisualization = () => {
-    if (!analyser || !canvasRef.current || !visualFeedback) return;
-    
-    const canvas = canvasRef.current;
-    const canvasCtx = canvas.getContext('2d');
-    if (!canvasCtx) return;
-    
-    const width = canvas.width;
-    const height = canvas.height;
-    
-    const bufferLength = analyser.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
-    
-    const draw = () => {
-      animationRef.current = requestAnimationFrame(draw);
-      
-      analyser.getByteFrequencyData(dataArray);
-      
-      canvasCtx.fillStyle = 'rgb(20, 20, 20)';
-      canvasCtx.fillRect(0, 0, width, height);
-      
-      const barWidth = (width / bufferLength) * 2.5;
-      let x = 0;
-      
-      for (let i = 0; i < bufferLength; i++) {
-        const barHeight = dataArray[i] / 2;
-        
-        // Calculate volume level (average of frequency data)
-        if (i === 0) {
-          let sum = 0;
-          for (let j = 0; j < bufferLength; j++) {
-            sum += dataArray[j];
-          }
-          const avgVolume = sum / bufferLength;
-          setVolume(avgVolume);
-        }
-        
-        canvasCtx.fillStyle = `rgb(50, ${75 + barHeight}, 255)`;
-        canvasCtx.fillRect(x, height - barHeight, barWidth, barHeight);
-        
-        x += barWidth + 1;
-      }
-    };
-    
-    draw();
-  };
-
-  // Start recording
-  const startRecording = async () => {
-    try {
-      if (micStatus !== "checking" && micStatus !== 'valid') {
-        // Try to get microphone access again
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        setAudioStream(stream);
-        setMicStatus('valid');
-        
-        if (audioContext && analyser) {
-          const source = audioContext.createMediaStreamSource(stream);
-          source.connect(analyser);
-          drawVisualization();
-        }
-      } else if (audioStream) {
-        if (audioContext && analyser) {
-          const source = audioContext.createMediaStreamSource(audioStream);
-          source.connect(analyser);
-          drawVisualization();
-        }
-      } else {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        setAudioStream(stream);
-        
-        if (audioContext && analyser) {
-          const source = audioContext.createMediaStreamSource(stream);
-          source.connect(analyser);
-          drawVisualization();
-        }
-      }
-      
-      if (speechRecognition) {
-        speechRecognition.start();
-      }
-      
-      setIsRecording(true);
-    } catch (error) {
-      console.error('Error starting recording:', error);
-      setMicStatus('invalid');
+    if (lastTranscript && lastTranscript.trim() !== '') {
+      setTranscriptHistory(prev => [lastTranscript, ...prev].slice(0, 5));
     }
-  };
-
-  // Stop recording
-  const stopRecording = () => {
-    if (speechRecognition) {
-      speechRecognition.stop();
-    }
-    
-    if (audioStream) {
-      stopMediaTracks(audioStream);
-      setAudioStream(null);
-    }
-    
-    if (animationRef.current) {
-      cancelAnimationFrame(animationRef.current);
-    }
-    
-    setIsRecording(false);
-    setVolume(0);
-  };
-
-  // Toggle audio
-  const toggleAudio = () => {
-    setAudioEnabled(!audioEnabled);
-  };
+  }, [lastTranscript]);
 
   return (
-    <div className="container py-8">
-      <h1 className="text-2xl font-bold mb-6">Voice Recognition Test</h1>
+    <div className="container mx-auto py-8 px-4">
+      <h1 className="text-3xl font-bold mb-6 text-center">Voice Input Test</h1>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
+      <div className="max-w-2xl mx-auto">
+        {!supportsVoice ? (
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Browser Not Supported</AlertTitle>
+            <AlertDescription>
+              Your browser doesn't support voice recognition. Please try Chrome, Edge, or Safari.
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <Alert variant="default" className="mb-6 bg-green-50 border-green-200">
+            <CheckCircle className="h-4 w-4 text-green-600" />
+            <AlertTitle>Voice Recognition Supported</AlertTitle>
+            <AlertDescription>
+              Your browser supports voice recognition. You can test it below.
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        <Card className="mb-6">
           <CardHeader>
-            <CardTitle>Microphone Test</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Mic className="h-5 w-5 text-primary" />
+              Voice Input Test
+            </CardTitle>
             <CardDescription>
-              Test your microphone and voice recognition capabilities
+              Click the button below to start recording, and speak into your microphone.
             </CardDescription>
           </CardHeader>
-          
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Label>Microphone Status:</Label>
-                {micStatus === 'checking' ? (
-                  <Badge variant="outline" className="animate-pulse">Checking...</Badge>
-                ) : micStatus === 'valid' ? (
-                  <Badge variant="success">Available</Badge>
-                ) : (
-                  <Badge variant="destructive">Not Available</Badge>
-                )}
+          <CardContent>
+            <div className="flex flex-col items-center space-y-6">
+              <Button
+                size="lg"
+                disabled={!supportsVoice}
+                onClick={isListening ? stopListening : startListening}
+                className={`rounded-full w-16 h-16 ${isListening ? 'bg-red-500 hover:bg-red-600' : ''}`}
+              >
+                {isListening ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
+              </Button>
+              
+              <div className="w-full max-w-md">
+                <div className="flex justify-between text-sm mb-1">
+                  <span>Audio Level</span>
+                  <span>{Math.round(audioLevel * 100)}%</span>
+                </div>
+                <Progress value={audioLevel * 100} className="h-2" />
               </div>
               
-              <div className="flex items-center space-x-2">
-                <Label>Audio:</Label>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  onClick={toggleAudio}
-                >
-                  {audioEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-                </Button>
+              <div className="w-full p-4 border rounded-md min-h-[100px] bg-muted/30">
+                {isListening ? (
+                  <p className="text-primary animate-pulse">{transcript || "Listening..."}</p>
+                ) : (
+                  <p className="text-muted-foreground">
+                    {lastTranscript || "Press the microphone button and speak"}
+                  </p>
+                )}
               </div>
-            </div>
-            
-            {visualFeedback && (
-              <div className="w-full h-32 bg-black rounded-md overflow-hidden">
-                <canvas 
-                  ref={canvasRef} 
-                  width={500} 
-                  height={128} 
-                  className="w-full h-full"
-                />
-              </div>
-            )}
-            
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Label>Volume:</Label>
-                <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-blue-500 transition-all duration-100"
-                    style={{ width: `${Math.min(volume * 100 / 128, 100)}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-            
-            <Separator />
-            
-            <div className="p-4 bg-muted rounded-md">
-              <p className="text-sm font-medium mb-2">Transcript:</p>
-              <p className="text-sm">{transcript || "Speak to see transcription..."}</p>
             </div>
           </CardContent>
-          
-          <CardFooter className="flex justify-between">
-            {!isRecording ? (
-              <Button 
-                onClick={startRecording}
-                disabled={micStatus === 'invalid'}
-                className="w-full"
-              >
-                <Mic className="mr-2 h-4 w-4" />
-                Start Recording
-              </Button>
-            ) : (
-              <Button 
-                onClick={stopRecording}
-                variant="destructive"
-                className="w-full"
-              >
-                <Square className="mr-2 h-4 w-4" />
-                Stop Recording
-              </Button>
+          <CardFooter className="flex-col">
+            {error && (
+              <Alert variant="destructive" className="mb-4 w-full">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>
+                  {error.message || "There was an error with voice recognition."}
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            {transcriptHistory.length > 0 && (
+              <>
+                <Separator className="my-4" />
+                <div className="w-full">
+                  <h3 className="font-medium mb-2">Recent Transcripts</h3>
+                  <ul className="space-y-2">
+                    {transcriptHistory.map((text, index) => (
+                      <li key={index} className="text-sm border-l-2 border-primary pl-2">
+                        "{text}"
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </>
             )}
           </CardFooter>
         </Card>
         
-        <Card>
-          <CardHeader>
-            <CardTitle>Voice Settings</CardTitle>
-            <CardDescription>
-              Configure voice recognition settings
-            </CardDescription>
-          </CardHeader>
-          
-          <CardContent className="space-y-6">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="auto-silence">Auto Silence Detection</Label>
-              <Switch 
-                id="auto-silence" 
-                checked={autoSilenceDetection}
-                onCheckedChange={toggleAutoSilenceDetection}
-              />
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <Label htmlFor="visual-feedback">Visual Feedback</Label>
-              <Switch 
-                id="visual-feedback" 
-                checked={visualFeedback}
-                onCheckedChange={toggleVisualFeedback}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label>Language</Label>
-              <div className="grid grid-cols-3 gap-2">
-                <Button 
-                  variant={language === 'en' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setLanguage('en')}
-                >
-                  English
-                </Button>
-                <Button 
-                  variant={language === 'es' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setLanguage('es')}
-                >
-                  Spanish
-                </Button>
-                <Button 
-                  variant={language === 'fr' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setLanguage('fr')}
-                >
-                  French
-                </Button>
-                <Button 
-                  variant={language === 'de' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setLanguage('de')}
-                >
-                  German
-                </Button>
-                <Button 
-                  variant={language === 'ar' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setLanguage('ar')}
-                >
-                  Arabic
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-          
-          <CardFooter>
-            <div className="text-sm text-muted-foreground">
-              Voice settings are automatically saved to your profile.
-            </div>
-          </CardFooter>
-        </Card>
-      </div>
-      
-      <div className="mt-8">
-        <h2 className="text-xl font-bold mb-4">How to Use Voice Recognition</h2>
-        <div className="space-y-4">
-          <div className="p-4 bg-muted rounded-md">
-            <h3 className="font-medium mb-2">1. Allow Microphone Access</h3>
-            <p className="text-sm">
-              When prompted, allow microphone access in your browser. If you denied access, 
-              you'll need to reset permissions in your browser settings.
-            </p>
-          </div>
-          
-          <div className="p-4 bg-muted rounded-md">
-            <h3 className="font-medium mb-2">2. Start Recording</h3>
-            <p className="text-sm">
-              Click the "Start Recording" button and speak clearly. The transcript will appear 
-              in real-time as you speak.
-            </p>
-          </div>
-          
-          <div className="p-4 bg-muted rounded-md">
-            <h3 className="font-medium mb-2">3. Adjust Settings</h3>
-            <p className="text-sm">
-              Configure voice settings to improve recognition accuracy. Auto silence detection 
-              will automatically stop recording after a period of silence.
-            </p>
-          </div>
+        <div className="text-center">
+          <Button variant="outline" onClick={() => window.history.back()}>
+            Back to Settings
+          </Button>
         </div>
       </div>
     </div>
