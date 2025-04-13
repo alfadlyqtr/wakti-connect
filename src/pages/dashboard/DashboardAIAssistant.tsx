@@ -318,7 +318,18 @@ const DashboardAIAssistant = () => {
 
   const handleConfirmTask = () => {
     if (confirmCreateTask && detectedTask) {
-      confirmCreateTask(detectedTask);
+      // Convert detectedTask (TaskFormData) to ParsedTaskInfo if needed
+      const parsedTaskInfo = {
+        title: detectedTask.title,
+        description: detectedTask.description,
+        priority: detectedTask.priority || 'normal', // Ensure priority is not undefined
+        subtasks: detectedTask.originalSubtasks || [],
+        due_date: detectedTask.due_date,
+        dueTime: detectedTask.due_time,
+        location: detectedTask.location
+      };
+      
+      confirmCreateTask(parsedTaskInfo);
     }
   };
 
