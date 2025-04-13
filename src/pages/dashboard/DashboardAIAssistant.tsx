@@ -93,6 +93,28 @@ const DashboardAIAssistant = () => {
   // Get user's first name for greeting
   const userName = user?.user_metadata?.full_name?.split(' ')[0] || '';
   
+  // Helper function to safely cast the task with default values for required fields
+  const getTaskInfo = (): ParsedTaskInfo => {
+    if (!detectedTask) {
+      return {
+        title: "Untitled Task",
+        priority: "normal",
+        subtasks: []
+      };
+    }
+    
+    // Ensure required properties exist
+    return {
+      title: detectedTask.title || "Untitled Task",
+      priority: detectedTask.priority || "normal",
+      subtasks: Array.isArray(detectedTask.subtasks) ? detectedTask.subtasks : [],
+      description: detectedTask.description,
+      due_date: detectedTask.due_date,
+      dueTime: detectedTask.due_time,
+      location: detectedTask.location
+    };
+  };
+  
   return (
     <div className="flex flex-col h-full">
       {/* Task confirmation overlay */}
@@ -100,7 +122,7 @@ const DashboardAIAssistant = () => {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="max-w-md w-full">
             <TaskConfirmationCard
-              taskInfo={detectedTask as ParsedTaskInfo}
+              taskInfo={getTaskInfo()}
               onConfirm={() => confirmCreateTask(detectedTask)}
               onCancel={cancelCreateTask}
               isLoading={isCreatingTask}

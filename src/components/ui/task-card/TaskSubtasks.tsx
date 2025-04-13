@@ -27,15 +27,17 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({
 
   if (!subtasks || subtasks.length === 0) return null;
 
+  // Safe type checking helper
+  const isNestedStructure = (item: any): item is NestedSubtask => {
+    return (
+      typeof item === 'object' && 
+      item !== null && 
+      ('title' in item || 'subtasks' in item || (item as any).is_group)
+    );
+  };
+
   // Check if we have the nested structure from AI parser
-  const hasNestedStructure = subtasks.some(st => 
-    typeof st === 'object' && st !== null && 
-    (
-      (st as NestedSubtask).subtasks || 
-      (st as NestedSubtask).title || 
-      (st as any).is_group
-    )
-  );
+  const hasNestedStructure = subtasks.some(st => isNestedStructure(st));
 
   const handleSubtaskToggle = async (index: number, subtaskId?: string) => {
     if (!hasNestedStructure) {
@@ -96,7 +98,7 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({
     
     // Check if this is a group or has nested subtasks
     const isGroup = !!(
-      (item as NestedSubtask).subtasks || 
+      (isNestedStructure(item) && item.subtasks) || 
       (item as SubTask).is_group || 
       (item as SubTask).subtasks
     );
@@ -108,16 +110,18 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({
       // Get the group title - prioritize the dedicated title field
       const title = 
         (item as SubTask).title || 
-        (item as NestedSubtask).title || 
+        (isNestedStructure(item) ? item.title : undefined) || 
         (item as SubTask).content || 
-        (item as NestedSubtask).content || 
+        (isNestedStructure(item) ? item.content : undefined) || 
         "Group";
       
-      // Get the group children
-      const children = 
-        (item as NestedSubtask).subtasks || 
-        (item as SubTask).subtasks || 
-        [];
+      // Get the group children safely
+      let children: any[] = [];
+      if (isNestedStructure(item) && Array.isArray(item.subtasks)) {
+        children = item.subtasks;
+      } else if ((item as SubTask).subtasks && Array.isArray((item as SubTask).subtasks)) {
+        children = (item as SubTask).subtasks || [];
+      }
       
       return (
         <li key={groupId} className="space-y-1">
@@ -175,7 +179,7 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({
             (item as SubTask).is_completed && "line-through text-muted-foreground"
           )}
         >
-          {(item as SubTask).content || (item as NestedSubtask).content}
+          {(item as SubTask).content || (isNestedStructure(item) ? item.content : "Untitled")}
         </label>
       </li>
     );

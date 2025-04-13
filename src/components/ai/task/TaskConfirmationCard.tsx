@@ -6,6 +6,7 @@ import { Loader2, Calendar, MapPin, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ParsedTaskInfo } from "@/hooks/ai/utils/taskParser.types";
 import { format } from "date-fns";
+import { NestedSubtask } from "@/services/ai/aiTaskParserService";
 
 interface TaskConfirmationCardProps {
   taskInfo: ParsedTaskInfo;
@@ -27,7 +28,7 @@ export const TaskConfirmationCard: React.FC<TaskConfirmationCardProps> = ({
       : format(taskInfo.due_date as Date, 'MMM d, yyyy')
     : null;
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityColor = (priority: string = 'normal') => {
     switch (priority) {
       case 'high':
       case 'urgent':
@@ -39,8 +40,13 @@ export const TaskConfirmationCard: React.FC<TaskConfirmationCardProps> = ({
     }
   };
 
-  // Function to render nested subtasks recursively
-  const renderSubtasks = (subtasks: any[], level = 0) => {
+  // Function to render nested subtasks recursively with defensive code
+  const renderSubtasks = (subtasks: any[] = [], level = 0) => {
+    if (!Array.isArray(subtasks)) {
+      console.error("Invalid subtasks format:", subtasks);
+      return null;
+    }
+
     return (
       <ul className={`text-xs ${level > 0 ? 'pl-3 mt-1' : 'pl-5'} space-y-1`}>
         {subtasks.map((subtask, index) => {
@@ -51,11 +57,15 @@ export const TaskConfirmationCard: React.FC<TaskConfirmationCardProps> = ({
               </li>
             );
           } else if (subtask && typeof subtask === 'object') {
-            // This is a group/nested subtask
+            // This is a group with title and subtasks
+            if (!subtask.title) {
+              console.warn("Subtask group missing title:", subtask);
+            }
+            
             return (
               <li key={index} className="mt-1">
-                <span className="font-medium">{subtask.title || subtask.content}</span>
-                {subtask.subtasks && subtask.subtasks.length > 0 && (
+                <span className="font-medium">{subtask.title || "Untitled Group"}</span>
+                {Array.isArray(subtask.subtasks) && subtask.subtasks.length > 0 && (
                   renderSubtasks(subtask.subtasks, level + 1)
                 )}
               </li>
@@ -73,12 +83,12 @@ export const TaskConfirmationCard: React.FC<TaskConfirmationCardProps> = ({
         <CardTitle className="text-base flex justify-between items-center">
           <span>Create Task</span>
           <Badge variant="outline" className={getPriorityColor(taskInfo.priority)}>
-            {taskInfo.priority.toUpperCase()}
+            {(taskInfo.priority || 'NORMAL').toUpperCase()}
           </Badge>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
-        <div className="font-medium text-lg">{taskInfo.title}</div>
+        <div className="font-medium text-lg">{taskInfo.title || "Untitled Task"}</div>
         
         {taskInfo.description && (
           <p className="text-sm text-muted-foreground">{taskInfo.description}</p>
@@ -106,7 +116,7 @@ export const TaskConfirmationCard: React.FC<TaskConfirmationCardProps> = ({
           )}
         </div>
         
-        {taskInfo.subtasks && taskInfo.subtasks.length > 0 && (
+        {taskInfo.subtasks && Array.isArray(taskInfo.subtasks) && taskInfo.subtasks.length > 0 && (
           <div className="mt-2">
             <div className="text-xs font-medium mb-1">Subtasks:</div>
             {renderSubtasks(taskInfo.subtasks)}
