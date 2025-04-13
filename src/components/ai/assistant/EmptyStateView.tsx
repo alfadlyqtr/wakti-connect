@@ -12,11 +12,11 @@ interface QuickPrompt {
 }
 
 interface EmptyStateViewProps {
-  onPromptClick: (prompt: string) => void;
   selectedRole: AIAssistantRole;
+  onPromptClick: (prompt: string) => void;
 }
 
-export const EmptyStateView: React.FC<EmptyStateViewProps> = ({ onPromptClick, selectedRole }) => {
+export const EmptyStateView: React.FC<EmptyStateViewProps> = ({ selectedRole, onPromptClick }) => {
   const roleInfo = RoleContexts[selectedRole];
   
   // Generate role-specific quick prompts

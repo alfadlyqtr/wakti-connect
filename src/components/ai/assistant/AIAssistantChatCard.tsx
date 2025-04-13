@@ -51,7 +51,7 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
   } = useVoiceInteraction({
     onTranscriptComplete: (text) => {
       if (text) {
-        setInputMessage(prev => {
+        setInputMessage((prev) => {
           const updatedText = prev + (prev && !prev.endsWith(' ') && !text.startsWith(' ') ? ' ' : '') + text;
           return updatedText;
         });
@@ -81,6 +81,10 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
         </Badge>
       </div>
     );
+  };
+
+  const handlePromptClick = (prompt: string) => {
+    setInputMessage(prompt);
   };
   
   return (
@@ -127,9 +131,20 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
       <CardContent className="p-0 flex-grow flex flex-col min-h-0 overflow-hidden">
         <div className="flex-grow overflow-y-auto">
           {messages.length === 0 ? (
-            <EmptyStateView selectedRole={selectedRole} />
+            <EmptyStateView 
+              selectedRole={selectedRole} 
+              onPromptClick={handlePromptClick}
+            />
           ) : (
-            <AIAssistantChat messages={messages} isLoading={isLoading} />
+            <AIAssistantChat 
+              messages={messages} 
+              isLoading={isLoading}
+              inputMessage={inputMessage}
+              setInputMessage={setInputMessage}
+              handleSendMessage={handleSendMessage}
+              canAccess={canAccess}
+              selectedRole={selectedRole}
+            />
           )}
         </div>
         

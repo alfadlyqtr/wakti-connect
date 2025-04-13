@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
 import { useVoiceSettings } from '@/store/voiceSettings';
@@ -110,7 +109,7 @@ export const VoiceTestPage = () => {
           <div className="space-y-2">
             <Label>API Connection Status</Label>
             <div className="text-sm p-3 bg-muted rounded-md">
-              {apiKeyStatus === 'checking' && "Checking API connection..."}
+              {apiKeyStatus === 'unknown' && "Checking API connection..."}
               {apiKeyStatus === 'valid' && "✅ OpenAI API key is valid"}
               {apiKeyStatus === 'invalid' && (
                 <div className="flex items-center gap-2">
@@ -121,7 +120,6 @@ export const VoiceTestPage = () => {
                   </Button>
                 </div>
               )}
-              {apiKeyStatus === 'unknown' && "⚠️ OpenAI API key status unknown"}
               {apiKeyErrorDetails && <p className="text-xs mt-1 text-destructive">{apiKeyErrorDetails}</p>}
             </div>
             <Button onClick={handleApiTest} variant="outline" size="sm" className="mt-2">
@@ -145,7 +143,6 @@ export const VoiceTestPage = () => {
               />
             </div>
             
-            {/* Language toggle */}
             <div className="flex items-center justify-between space-x-2 mt-4">
               <div className="space-y-0.5">
                 <Label htmlFor="language-select">Recognition Language</Label>

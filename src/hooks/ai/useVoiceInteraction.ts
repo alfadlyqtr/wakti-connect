@@ -18,6 +18,7 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
   const [error, setError] = useState<Error | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [apiKeyStatus, setApiKeyStatus] = useState<'valid' | 'invalid' | 'unknown'>('unknown');
+  const [apiKeyErrorDetails, setApiKeyErrorDetails] = useState<string | null>(null);
   
   // For audio recording
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -172,6 +173,7 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
     } catch (err) {
       console.error('Whisper API error:', err);
       setError(err instanceof Error ? err : new Error('Transcription failed'));
+      setApiKeyErrorDetails(err instanceof Error ? err.message : 'Transcription failed');
       toast({
         title: "Transcription Error",
         description: err instanceof Error ? err.message : "Failed to transcribe audio",
@@ -188,12 +190,20 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
       try {
         const { data, error } = await supabase.functions.invoke('test-openai-connection', {});
         
-        if (error) throw error;
+        if (error) {
+          throw error;
+        }
         
         setApiKeyStatus(data?.valid ? 'valid' : 'invalid');
+        if (!data?.valid && data?.details) {
+          setApiKeyErrorDetails(data.details);
+        } else {
+          setApiKeyErrorDetails(null);
+        }
       } catch (err) {
         console.error('Error checking OpenAI API key:', err);
         setApiKeyStatus('invalid');
+        setApiKeyErrorDetails(err instanceof Error ? err.message : 'Connection error');
       }
     };
     
@@ -220,10 +230,17 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
       if (error) throw error;
       
       setApiKeyStatus(data?.valid ? 'valid' : 'invalid');
+      if (!data?.valid && data?.details) {
+        setApiKeyErrorDetails(data.details);
+      } else {
+        setApiKeyErrorDetails(null);
+      }
+      
       return data?.valid || false;
     } catch (err) {
       console.error('Error validating API key:', err);
       setApiKeyStatus('invalid');
+      setApiKeyErrorDetails(err instanceof Error ? err.message : 'Connection error');
       return false;
     }
   };
@@ -238,6 +255,7 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
     startListening,
     stopListening,
     apiKeyStatus,
+    apiKeyErrorDetails,
     retryApiKeyValidation
   };
 };
