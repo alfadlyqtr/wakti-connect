@@ -1664,6 +1664,7 @@ export type Database = {
           id: string
           is_recurring: boolean | null
           is_recurring_instance: boolean | null
+          location: string | null
           parent_recurring_id: string | null
           priority: string
           snooze_count: number | null
@@ -1684,6 +1685,7 @@ export type Database = {
           id?: string
           is_recurring?: boolean | null
           is_recurring_instance?: boolean | null
+          location?: string | null
           parent_recurring_id?: string | null
           priority?: string
           snooze_count?: number | null
@@ -1704,6 +1706,7 @@ export type Database = {
           id?: string
           is_recurring?: boolean | null
           is_recurring_instance?: boolean | null
+          location?: string | null
           parent_recurring_id?: string | null
           priority?: string
           snooze_count?: number | null
