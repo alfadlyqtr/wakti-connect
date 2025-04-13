@@ -24,11 +24,12 @@ interface SidebarProfileData {
 
 interface SidebarProps {
   isOpen: boolean;
-  userRole: "free" | "individual" | "business" | "staff";
+  userRole: UserRole;
   onCollapseChange?: (collapsed: boolean) => void;
   closeSidebar?: () => void;
   openCommandSearch?: () => void;
   showUpgradeButton?: boolean;
+  collapsed: boolean;
 }
 
 const Sidebar = ({ 
@@ -37,32 +38,16 @@ const Sidebar = ({
   onCollapseChange, 
   closeSidebar,
   openCommandSearch,
-  showUpgradeButton = false
+  showUpgradeButton = false,
+  collapsed
 }: SidebarProps) => {
-  const [collapsed, setCollapsed] = useState(true); // Default to collapsed
-  
   // Check local storage for saved sidebar state
   useEffect(() => {
-    const savedState = localStorage.getItem('sidebarCollapsed');
-    if (savedState !== null) {
-      setCollapsed(savedState === 'true');
-      // Notify parent about initial collapsed state
-      if (onCollapseChange) {
-        onCollapseChange(savedState === 'true');
-      }
-    }
-  }, [onCollapseChange]);
-  
-  // Save sidebar state to local storage
-  const toggleCollapse = () => {
-    const newState = !collapsed;
-    setCollapsed(newState);
-    localStorage.setItem('sidebarCollapsed', String(newState));
-    // Notify parent about changed collapsed state
+    // Notify parent about initial collapsed state
     if (onCollapseChange) {
-      onCollapseChange(newState);
+      onCollapseChange(collapsed);
     }
-  };
+  }, [onCollapseChange, collapsed]);
   
   // Fetch user profile for sidebar
   const { data: profileData } = useQuery({
@@ -96,7 +81,7 @@ const Sidebar = ({
     }
   };
 
-  // Determine if upgrades should be shown - never for staff users
+  // Check if upgrade features should be shown - never for staff users
   const shouldShowUpgradeFeatures = userRole === "free" && userRole !== "staff";
 
   return (
@@ -106,7 +91,11 @@ const Sidebar = ({
       onCollapseChange={onCollapseChange}
     >
       {/* Toggle collapse button - Only visible on desktop */}
-      <CollapseToggle collapsed={collapsed} toggleCollapse={toggleCollapse} />
+      <CollapseToggle collapsed={collapsed} toggleCollapse={() => {
+        if (onCollapseChange) {
+          onCollapseChange(!collapsed);
+        }
+      }} />
       
       {/* User Profile Section */}
       <SidebarProfile profileData={profileData} collapsed={collapsed} />
@@ -120,7 +109,7 @@ const Sidebar = ({
         />
         
         {/* Upgrade Button - Only shown for free accounts that need to upgrade */}
-        {showUpgradeButton && userRole !== 'staff' && (
+        {showUpgradeButton && userRole !== "staff" && (
           <SidebarUpgradeButton collapsed={collapsed} />
         )}
       </ScrollArea>
