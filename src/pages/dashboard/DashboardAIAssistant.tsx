@@ -264,15 +264,17 @@ const DashboardAIAssistant = () => {
 
   const handleConfirmTask = () => {
     if (confirmCreateTask && detectedTask) {
-      // Fix #1: Check and handle date conversion properly for due_date
+      // Fix for TypeScript errors around date handling
       const formattedTask: TaskFormData = {
         ...detectedTask,
         // Safely handle the date conversion by checking the type first
         due_date: detectedTask.due_date ? 
-          (typeof detectedTask.due_date === 'object' && detectedTask.due_date instanceof Date) ?
-            detectedTask.due_date.toISOString().split('T')[0] : 
-            String(detectedTask.due_date) : 
-          null,
+          (typeof detectedTask.due_date === 'string' || detectedTask.due_date instanceof Date) ?
+            typeof detectedTask.due_date === 'string' ? 
+              detectedTask.due_date : 
+              detectedTask.due_date.toISOString().split('T')[0] 
+            : String(detectedTask.due_date) 
+          : null,
         priority: detectedTask.priority || 'normal' // Ensure priority is not undefined
       };
       
@@ -341,7 +343,6 @@ const DashboardAIAssistant = () => {
                     <EmptyStateView 
                       onPromptClick={setMessageText} 
                       selectedRole={currentRole}
-                      lastDetectedIntent={lastDetectedIntent}
                     />
                   )}
                   
@@ -349,7 +350,6 @@ const DashboardAIAssistant = () => {
                     <AIMessageBubble
                       key={message.id}
                       message={message}
-                      isAIThinking={isAIThinking}
                     />
                   ))}
                   
@@ -361,7 +361,6 @@ const DashboardAIAssistant = () => {
                         content: "Thinking...",
                         timestamp: new Date(),
                       }}
-                      isAIThinking={isAIThinking}
                     />
                   )}
                 </div>
@@ -387,7 +386,7 @@ const DashboardAIAssistant = () => {
                 
                 <div className="absolute right-2 bottom-2 flex items-center space-x-2">
                   {isVoiceActive && (
-                    <AIVoiceVisualizer isRecording={isVoiceActive} />
+                    <AIVoiceVisualizer isActive={isVoiceActive} />
                   )}
                   
                   <Button
