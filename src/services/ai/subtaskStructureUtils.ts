@@ -69,12 +69,14 @@ export const mapNestedStructureToFlatSubtasks = (
       // Group/nested subtask
       const isGroup = !!item.subtasks && item.subtasks.length > 0;
       const groupId = `temp-group-${parentId ? `${parentId}-` : ''}${index}`;
+      const title = item.title || item.content || 'Task group';
       
       // Add the group itself
       const group: SubTask = {
         id: groupId,
         task_id: taskId,
-        content: item.title || item.content || 'Task group',
+        content: title,
+        title: title, // Store title separately for clarity
         is_completed: false,
         is_group: isGroup,
         parent_id: parentId
@@ -91,4 +93,49 @@ export const mapNestedStructureToFlatSubtasks = (
   });
   
   return result;
+};
+
+/**
+ * Converts a flat array of subtasks to a nested structure for display
+ * (Used when loading from the database)
+ */
+export const convertFlatSubtasksToNested = (subtasks: SubTask[]): (string | NestedSubtask)[] => {
+  // Create a map of groups
+  const groupMap = new Map<string, NestedSubtask>();
+  const rootItems: (string | NestedSubtask)[] = [];
+  
+  // First pass: identify all groups
+  subtasks.forEach(subtask => {
+    if (subtask.is_group) {
+      groupMap.set(subtask.id, {
+        title: subtask.title || subtask.content,
+        content: subtask.content,
+        subtasks: [],
+        is_completed: subtask.is_completed
+      });
+    }
+  });
+  
+  // Second pass: assign items to their groups
+  subtasks.forEach(subtask => {
+    if (!subtask.is_group && subtask.parent_id && groupMap.has(subtask.parent_id)) {
+      // This is a child of a group
+      const parentGroup = groupMap.get(subtask.parent_id)!;
+      if (parentGroup.subtasks) {
+        parentGroup.subtasks.push(subtask.content);
+      }
+    } else if (!subtask.parent_id && !subtask.is_group) {
+      // This is a root item (not in any group)
+      rootItems.push(subtask.content);
+    }
+  });
+  
+  // Add all groups to the root items
+  groupMap.forEach(group => {
+    if (!rootItems.includes(group)) {
+      rootItems.push(group);
+    }
+  });
+  
+  return rootItems;
 };

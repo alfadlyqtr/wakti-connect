@@ -68,7 +68,7 @@ export const parseTaskWithAI = async (text: string): Promise<ParsedTask | null> 
  * Helper function to flatten nested subtask structures if needed
  * This is kept for backward compatibility but we now preserve the nested structure
  */
-const flattenSubtasks = (subtasks: (string | NestedSubtask)[]): string[] => {
+export const flattenSubtasks = (subtasks: (string | NestedSubtask)[]): string[] => {
   let flattened: string[] = [];
   
   for (const item of subtasks) {
@@ -95,6 +95,51 @@ const flattenSubtasks = (subtasks: (string | NestedSubtask)[]): string[] => {
 };
 
 /**
+ * Converts a nested subtask structure to SubTask[] format
+ */
+export const convertNestedSubtasksToSubTasks = (
+  nestedItems: (string | NestedSubtask)[],
+  parentId: string | null = null
+): SubTask[] => {
+  return nestedItems.map((item, index) => {
+    const tempId = `temp-${Date.now()}-${index}`;
+    
+    if (typeof item === 'string') {
+      return {
+        id: tempId,
+        task_id: 'pending', // Will be replaced with actual task_id
+        content: item,
+        is_completed: false,
+        parent_id: parentId,
+        is_group: false
+      };
+    } else {
+      // This is a group/nested item
+      const isGroup = item.subtasks && item.subtasks.length > 0;
+      const title = item.title || item.content || 'Group';
+      
+      const subtask: SubTask = {
+        id: tempId,
+        task_id: 'pending',
+        content: title,
+        title: title, // Store title separately for clarity
+        is_completed: item.is_completed || false,
+        is_group: isGroup,
+        parent_id: parentId,
+        subtasks: []
+      };
+      
+      // Process child subtasks if they exist
+      if (isGroup && item.subtasks) {
+        subtask.subtasks = convertNestedSubtasksToSubTasks(item.subtasks, tempId);
+      }
+      
+      return subtask;
+    }
+  });
+};
+
+/**
  * Converts ParsedTask to TaskFormData for task creation
  * Handles both flat and nested subtask structures
  */
@@ -104,12 +149,15 @@ export const convertParsedTaskToFormData = (parsedTask: ParsedTask) => {
   const flatSubtasks = flattenSubtasks(parsedTask.subtasks);
   
   // Convert subtasks to the format expected by the task form
-  const subtasks = flatSubtasks.map((content, index) => ({
-    id: `temp-${index}`,
+  const simpleSubtasks = flatSubtasks.map((content, index) => ({
+    id: `temp-flat-${index}`,
     task_id: 'pending',
     content,
     is_completed: false
   }));
+  
+  // Convert nested structure to SubTask[] format
+  const hierarchicalSubtasks = convertNestedSubtasksToSubTasks(parsedTask.subtasks);
   
   // Convert priority from ParsedTask format to TaskFormData format
   let priority: 'urgent' | 'high' | 'medium' | 'normal' = 'normal';
@@ -129,12 +177,13 @@ export const convertParsedTaskToFormData = (parsedTask: ParsedTask) => {
     priority,
     due_date: parsedTask.due_date,
     due_time: parsedTask.due_time,
-    subtasks: subtasks,
+    subtasks: hierarchicalSubtasks,
     status: 'pending',
     location: parsedTask.location,
-    enableSubtasks: subtasks.length > 0,
+    enableSubtasks: parsedTask.subtasks.length > 0,
     is_recurring: false,
     // Store the original nested subtask structure for display in TaskCard
-    originalSubtasks: parsedTask.subtasks
+    originalSubtasks: parsedTask.subtasks,
+    preserveNestedStructure: true
   };
 };

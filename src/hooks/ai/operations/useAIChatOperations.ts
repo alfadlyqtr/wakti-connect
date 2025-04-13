@@ -156,41 +156,7 @@ export const useAIChatOperations = () => {
         if (parsedTask && parsedTask.title) {
           console.log("Task parsed successfully with AI:", parsedTask);
           
-          const convertedSubtasks: SubTask[] = parsedTask.subtasks.map((content, index) => {
-            if (typeof content === 'string') {
-              return {
-                id: `temp-${index}`,
-                task_id: 'pending',
-                content,
-                is_completed: false,
-                is_group: false,
-                parent_id: null
-              };
-            } else {
-              return {
-                id: `temp-${index}`,
-                task_id: 'pending',
-                content: content.title || content.content || 'Task group',
-                is_completed: false,
-                is_group: true,
-                parent_id: null
-              };
-            }
-          });
-          
-          const taskFormData: TaskFormData = {
-            title: parsedTask.title,
-            description: parsedTask.location ? `Location: ${parsedTask.location}` : '',
-            due_date: parsedTask.due_date,
-            due_time: parsedTask.due_time,
-            priority: parsedTask.priority,
-            subtasks: convertedSubtasks,
-            location: parsedTask.location,
-            status: 'pending' as const,
-            is_recurring: false,
-            originalSubtasks: parsedTask.subtasks,
-            preserveNestedStructure: true
-          };
+          const taskFormData = convertParsedTaskToFormData(parsedTask);
           
           const confirmationMessageId = uuidv4();
           

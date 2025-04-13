@@ -6,6 +6,9 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "@/components/ui/use-toast";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { NestedSubtask } from "@/services/ai/aiTaskParserService";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface TaskSubtasksProps {
   taskId: string;
@@ -77,10 +80,11 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({
     }
   };
 
-  const renderSubtaskItem = (item: string | NestedSubtask, index: number, parentPath: string = ''): React.ReactNode => {
+  const renderSubtaskItem = (item: string | NestedSubtask | SubTask, index: number, parentPath: string = ''): React.ReactNode => {
+    // Handle string type subtasks (simplest case)
     if (typeof item === 'string') {
       return (
-        <li key={`${parentPath}-${index}`} className="flex items-start gap-2 ml-6">
+        <li key={`${parentPath}-${index}`} className="flex items-start gap-2">
           <Checkbox 
             id={`subtask-${taskId}-${parentPath}-${index}`}
             checked={false}
@@ -97,60 +101,84 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({
       );
     }
     
-    if (item.subtasks && item.subtasks.length > 0) {
+    // Check if this is a group or has nested subtasks
+    const isGroup = !!(
+      (item as NestedSubtask).subtasks || 
+      (item as SubTask).is_group || 
+      (item as SubTask).subtasks
+    );
+    
+    if (isGroup) {
       const groupId = `${parentPath}-${index}`;
       const isExpanded = expandedGroups[groupId] !== false; // Default to expanded
       
+      // Get the group title
+      const title = 
+        (item as NestedSubtask).title || 
+        (item as SubTask).title || 
+        (item as SubTask).content || 
+        (item as NestedSubtask).content || 
+        "Group";
+      
+      // Get the group children
+      const children = 
+        (item as NestedSubtask).subtasks || 
+        (item as SubTask).subtasks || 
+        [];
+      
       return (
         <li key={groupId} className="space-y-1">
-          <div 
-            className="flex items-start gap-2 cursor-pointer" 
-            onClick={() => toggleGroup(groupId)}
-          >
-            <button 
-              className="w-4 h-4 mt-1 flex items-center justify-center flex-shrink-0"
-              type="button"
-              aria-expanded={isExpanded}
-              aria-label={isExpanded ? "Collapse group" : "Expand group"}
-            >
-              {isExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-            </button>
-            <span className="text-sm font-medium">
-              {item.title || item.content || "Group"}
-            </span>
-          </div>
-          
-          {isExpanded && item.subtasks && (
-            <ul className="ml-4 space-y-1.5 mt-1 pl-2 border-l-2 border-gray-200 dark:border-gray-700">
-              {item.subtasks.map((subtask, i) => 
-                renderSubtaskItem(subtask, i, `${groupId}`)
-              )}
-            </ul>
-          )}
+          <Collapsible open={isExpanded} onOpenChange={() => toggleGroup(groupId)}>
+            <CollapsibleTrigger asChild>
+              <div className="flex items-start gap-2 cursor-pointer">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-5 w-5 p-0"
+                >
+                  {isExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                </Button>
+                <span className="text-sm font-medium">{title}</span>
+              </div>
+            </CollapsibleTrigger>
+            
+            <CollapsibleContent>
+              <ul className="ml-5 space-y-1.5 mt-1 pl-2 border-l-2 border-gray-200 dark:border-gray-700">
+                {children.map((subtask, i) => 
+                  renderSubtaskItem(subtask, i, `${groupId}`)
+                )}
+              </ul>
+            </CollapsibleContent>
+          </Collapsible>
         </li>
       );
     }
     
+    // This is a regular subtask (not a group and not a string)
     return (
       <li key={`${parentPath}-${index}`} className="flex items-start gap-2">
         <Checkbox 
           id={`subtask-${taskId}-${parentPath}-${index}`}
-          checked={item.is_completed}
-          onCheckedChange={() => {}}
+          checked={(item as SubTask).is_completed}
+          onCheckedChange={() => handleSubtaskToggle(index, (item as SubTask).id)}
           className="mt-0.5"
         />
         <label 
           htmlFor={`subtask-${taskId}-${parentPath}-${index}`}
-          className={`text-sm ${item.is_completed ? 'line-through text-muted-foreground' : ''}`}
+          className={cn(
+            "text-sm",
+            (item as SubTask).is_completed && "line-through text-muted-foreground"
+          )}
         >
-          {item.content || item.title}
+          {(item as SubTask).content || (item as NestedSubtask).content}
         </label>
       </li>
     );
   };
 
+  // Standard flat subtasks rendering (for backward compatibility)
   if (!hasNestedStructure) {
-    // Standard flat subtasks rendering (for backward compatibility)
     return (
       <div className="space-y-2 mt-3">
         <h4 className="text-sm font-medium">
@@ -167,7 +195,10 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({
               />
               <label 
                 htmlFor={`subtask-${taskId}-${index}`}
-                className={`text-sm ${subtask.is_completed ? 'line-through text-muted-foreground' : ''}`}
+                className={cn(
+                  "text-sm",
+                  subtask.is_completed && "line-through text-muted-foreground"
+                )}
               >
                 {subtask.content}
               </label>

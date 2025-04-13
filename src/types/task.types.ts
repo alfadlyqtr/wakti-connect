@@ -14,7 +14,8 @@ export interface SubTask {
   due_time?: string | null;
   is_group?: boolean;
   parent_id?: string | null;
-  subtasks?: SubTask[];  // Change to recursive SubTask[] instead of any[]
+  subtasks?: SubTask[];  // Recursive structure for nested subtasks
+  title?: string;  // Title specifically for group subtasks
 }
 
 export interface Task {
