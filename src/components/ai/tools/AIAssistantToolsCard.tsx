@@ -30,8 +30,7 @@ export const AIAssistantToolsCard: React.FC<AIAssistantToolsCardProps> = ({
       </CardHeader>
       <CardContent>
         <AIToolsTabContent 
-          canAccess={canAccess} 
-          onUseDocumentContent={onUseDocumentContent}
+          onSendMessage={onUseDocumentContent}
           selectedRole={selectedRole}
         />
       </CardContent>

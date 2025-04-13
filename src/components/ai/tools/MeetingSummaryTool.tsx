@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +7,6 @@ import { Loader2, Mic, FileText, CheckCircle, ChevronRight } from 'lucide-react'
 import RecordingControls from './meeting-summary/RecordingControls';
 import TranscriptionPanel from './meeting-summary/TranscriptionPanel';
 import SummaryDisplay from './meeting-summary/SummaryDisplay';
-import SendToTaskButton from './meeting-summary/SendToTaskButton';
 import SavedMeetingsList from './meeting-summary/SavedMeetingsList';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -17,35 +17,64 @@ interface MeetingSummaryToolProps {
 export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSummary }) => {
   const [activeTab, setActiveTab] = useState('record');
   const [isRecording, setIsRecording] = useState(false);
-  const [transcription, setTranscription] = useState('');
+  const [transcribedText, setTranscribedText] = useState('');
   const [summary, setSummary] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSummarizing, setIsSummarizing] = useState(false);
   const [savedMeetings, setSavedMeetings] = useState([]);
   const [selectedMeeting, setSelectedMeeting] = useState(null);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const [recordingError, setRecordingError] = useState<string | null>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState('en');
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const summaryRef = React.useRef<HTMLDivElement>(null);
+  const [detectedLocation, setDetectedLocation] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isDownloadingAudio, setIsDownloadingAudio] = useState(false);
+  const [audioData, setAudioData] = useState<Blob | null>(null);
   const { toast } = useToast();
   
-  const handleStartRecording = () => {
+  // Timer for recording
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    
+    if (isRecording) {
+      interval = setInterval(() => {
+        setRecordingTime(prevTime => prevTime + 1);
+      }, 1000);
+    } else if (!isRecording && recordingTime !== 0) {
+      setRecordingTime(0);
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isRecording, recordingTime]);
+  
+  const startRecording = () => {
     setIsRecording(true);
-    setTranscription('');
+    setTranscribedText('');
     setSummary('');
+    setRecordingError(null);
   };
   
-  const handleStopRecording = () => {
+  const stopRecording = () => {
     setIsRecording(false);
+    // In a real implementation, this would trigger the transcription process
+    // For now, we'll just simulate it
+    setTranscribedText('This is a sample transcription of the meeting.');
+    setActiveTab('transcribe');
   };
   
-  const handleTranscriptionUpdate = (text) => {
-    setTranscription(text);
-  };
-  
-  const handleGenerateSummary = async () => {
-    setIsLoading(true);
+  const generateSummary = async () => {
+    setIsSummarizing(true);
     
     // Simulate generating a summary
     await new Promise(resolve => setTimeout(resolve, 2000));
     
     setSummary('This is a sample meeting summary generated from the transcription.');
-    setIsLoading(false);
+    setIsSummarizing(false);
+    setActiveTab('display');
     
     toast({
       title: "Summary Generated",
@@ -55,9 +84,10 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
   
   const handleSaveMeeting = () => {
     const newMeeting = {
-      id: Date.now(),
-      title: `Meeting ${savedMeetings.length + 1}`,
-      transcription: transcription,
+      id: Date.now().toString(),
+      date: new Date().toISOString(),
+      duration: recordingTime,
+      location: detectedLocation || 'Unknown location',
       summary: summary,
     };
     
@@ -70,13 +100,44 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
   
   const handleLoadMeeting = (meeting) => {
     setSelectedMeeting(meeting);
-    setTranscription(meeting.transcription);
+    setTranscribedText(meeting.transcription || '');
     setSummary(meeting.summary);
     setActiveTab('display');
     toast({
       title: "Meeting Loaded",
       description: "The selected meeting has been loaded.",
     });
+  };
+  
+  const copySummary = () => {
+    if (summary) {
+      navigator.clipboard.writeText(summary);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+  
+  const exportAsPDF = async () => {
+    setIsExporting(true);
+    // Simulate PDF export
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    setIsExporting(false);
+    toast({
+      title: "PDF Exported",
+      description: "Meeting summary has been exported as PDF.",
+    });
+  };
+  
+  const downloadAudio = () => {
+    setIsDownloadingAudio(true);
+    // Simulate audio download
+    setTimeout(() => {
+      setIsDownloadingAudio(false);
+      toast({
+        title: "Audio Downloaded",
+        description: "Meeting audio has been downloaded.",
+      });
+    }, 1000);
   };
   
   const handleUseSummary = () => {
@@ -93,21 +154,27 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
   
   useEffect(() => {
     // Load saved meetings from local storage or database here
-    // For now, we'll use a dummy array
-    setSavedMeetings([
-      {
-        id: 1,
-        title: "Sample Meeting 1",
-        transcription: "This is a sample transcription for the first meeting.",
-        summary: "A brief summary of the first meeting.",
-      },
-      {
-        id: 2,
-        title: "Sample Meeting 2",
-        transcription: "This is a sample transcription for the second meeting.",
-        summary: "A brief summary of the second meeting.",
-      },
-    ]);
+    setIsLoadingHistory(true);
+    // Simulate loading
+    setTimeout(() => {
+      setSavedMeetings([
+        {
+          id: "1",
+          date: new Date().toISOString(),
+          duration: 300, // 5 minutes
+          location: "Conference Room A",
+          summary: "A brief summary of the first meeting.",
+        },
+        {
+          id: "2",
+          date: new Date(Date.now() - 86400000).toISOString(), // Yesterday
+          duration: 600, // 10 minutes
+          location: null,
+          summary: "A brief summary of the second meeting.",
+        },
+      ]);
+      setIsLoadingHistory(false);
+    }, 1000);
   }, []);
   
   return (
@@ -139,27 +206,41 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
           <TabsContent value="record" className="space-y-4">
             <RecordingControls
               isRecording={isRecording}
-              onStartRecording={handleStartRecording}
-              onStopRecording={handleStopRecording}
-              onTranscriptionUpdate={handleTranscriptionUpdate}
+              recordingTime={recordingTime}
+              selectedLanguage={selectedLanguage}
+              setSelectedLanguage={setSelectedLanguage}
+              startRecording={startRecording}
+              stopRecording={stopRecording}
+              recordingError={recordingError}
             />
           </TabsContent>
           
           <TabsContent value="transcribe" className="space-y-4">
             <TranscriptionPanel
-              transcription={transcription}
-              onGenerateSummary={handleGenerateSummary}
-              isLoading={isLoading}
+              transcribedText={transcribedText}
+              isSummarizing={isSummarizing}
+              generateSummary={generateSummary}
             />
             <div className="flex justify-end">
-              <Button onClick={handleSaveMeeting} disabled={!transcription}>
+              <Button onClick={handleSaveMeeting} disabled={!transcribedText}>
                 Save Meeting
               </Button>
             </div>
           </TabsContent>
           
           <TabsContent value="display" className="space-y-4">
-            <SummaryDisplay summary={summary} isLoading={isLoading} />
+            <SummaryDisplay
+              summary={summary}
+              detectedLocation={detectedLocation}
+              copied={copied}
+              copySummary={copySummary}
+              exportAsPDF={exportAsPDF}
+              downloadAudio={downloadAudio}
+              isExporting={isExporting}
+              isDownloadingAudio={isDownloadingAudio}
+              audioData={audioData}
+              summaryRef={summaryRef}
+            />
             <div className="flex justify-between">
               <Button variant="secondary" onClick={() => setActiveTab('transcribe')}>
                 <ChevronRight className="mr-2 h-4 w-4 rotate-180" />
@@ -172,7 +253,10 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
           </TabsContent>
         </Tabs>
         
-        <SavedMeetingsList meetings={savedMeetings} onLoadMeeting={handleLoadMeeting} />
+        <SavedMeetingsList
+          savedMeetings={savedMeetings}
+          isLoadingHistory={isLoadingHistory}
+        />
       </CardContent>
     </Card>
   );

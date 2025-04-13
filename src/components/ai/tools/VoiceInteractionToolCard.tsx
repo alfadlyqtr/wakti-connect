@@ -7,7 +7,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { testEdgeFunction } from '@/integrations/supabase/helper';
 import { cn } from '@/lib/utils';
 import { SimplifiedVoiceRecorder } from '../voice/SimplifiedVoiceRecorder';
-import { parseTaskWithAI, convertParsedTaskToFormData } from '@/services/ai/aiTaskParserService';
+import { parseTaskWithAI } from '@/services/ai/aiTaskParserService';
 
 interface VoiceInteractionToolCardProps {
   onSpeechRecognized: (text: string) => void;

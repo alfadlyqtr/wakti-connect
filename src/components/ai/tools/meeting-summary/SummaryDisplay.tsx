@@ -3,8 +3,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Copy, Check, Download, FileDown, Map } from 'lucide-react';
-import { GOOGLE_MAPS_API_KEY, generateGoogleMapsUrl } from '@/config/maps';
-import { useTranslation } from 'react-i18next';
 
 interface SummaryDisplayProps {
   summary: string;
@@ -31,15 +29,14 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
   audioData,
   summaryRef
 }) => {
-  const { t } = useTranslation();
-  const mapRef = useRef<HTMLIFrameElement>(null);
   const [mapUrl, setMapUrl] = useState<string>('');
 
   useEffect(() => {
     if (detectedLocation) {
       try {
         const encodedLocation = encodeURIComponent(detectedLocation);
-        setMapUrl(`https://www.google.com/maps/embed/v1/place?key=${GOOGLE_MAPS_API_KEY}&q=${encodedLocation}`);
+        // Note: in a real app you'd use a proper API key
+        setMapUrl(`https://www.google.com/maps/embed/v1/place?key=DEMO_KEY&q=${encodedLocation}`);
       } catch (error) {
         console.error('Error generating map URL:', error);
       }
@@ -53,7 +50,7 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
   return (
     <Card className="p-4 mt-4">
       <div className="flex justify-between items-center mb-3">
-        <h3 className="text-lg font-semibold">{t('summary.meetingSummary')}</h3>
+        <h3 className="text-lg font-semibold">Meeting Summary</h3>
         <div className="flex space-x-2">
           <Button
             variant="outline"
@@ -62,7 +59,7 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
             className="flex items-center space-x-1"
           >
             {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-            <span>{copied ? t('common.copied') : t('common.copy')}</span>
+            <span>{copied ? "Copied" : "Copy"}</span>
           </Button>
           
           <Button
@@ -73,7 +70,7 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
             className="flex items-center space-x-1"
           >
             <Download className="h-4 w-4" />
-            <span>{t('summary.exportPDF')}</span>
+            <span>Export PDF</span>
           </Button>
           
           {audioData && (
@@ -85,7 +82,7 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
               className="flex items-center space-x-1"
             >
               <FileDown className="h-4 w-4" />
-              <span>{t('summary.downloadAudio')}</span>
+              <span>Download Audio</span>
             </Button>
           )}
         </div>
@@ -109,28 +106,27 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
           <div className="flex items-center justify-between mb-2">
             <h4 className="font-medium flex items-center">
               <Map className="h-4 w-4 mr-2" />
-              {t('summary.detectedLocation')}
+              Detected Location
             </h4>
             <Button
               variant="link"
               size="sm"
               onClick={() => {
-                window.open(generateGoogleMapsUrl(detectedLocation), '_blank');
+                window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(detectedLocation)}`, '_blank');
               }}
             >
-              {t('summary.openInGoogleMaps')}
+              Open in Google Maps
             </Button>
           </div>
           
           {mapUrl && (
             <iframe
-              ref={mapRef}
               width="100%"
               height="200"
               style={{ border: 0 }}
               loading="lazy"
               src={mapUrl}
-              title={t('summary.meetingLocation')}
+              title="Meeting Location"
               className="rounded-md"
             />
           )}
