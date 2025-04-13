@@ -6,17 +6,22 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/components/ui/use-toast';
 import { testEdgeFunction } from '@/integrations/supabase/helper';
+import { parseTaskWithAI } from '@/services/ai/aiTaskParserService';
 
 interface SimplifiedVoiceRecorderProps {
   onTranscriptReady: (transcript: string) => void;
   onCancel: () => void;
   compact?: boolean;
+  processAsTask?: boolean;
+  onTaskParsed?: (taskData: any) => void;
 }
 
 export const SimplifiedVoiceRecorder: React.FC<SimplifiedVoiceRecorderProps> = ({
   onTranscriptReady,
   onCancel,
-  compact = false
+  compact = false,
+  processAsTask = false,
+  onTaskParsed
 }) => {
   const { toast } = useToast();
   const [isRecording, setIsRecording] = useState(false);
@@ -100,8 +105,7 @@ export const SimplifiedVoiceRecorder: React.FC<SimplifiedVoiceRecorderProps> = (
         
         if (data && data.text) {
           console.log('Transcription received:', data.text);
-          onTranscriptReady(data.text);
-          setIsProcessing(false);
+          await processTranscription(data.text);
           return;
         }
       } catch (err) {
@@ -142,7 +146,7 @@ export const SimplifiedVoiceRecorder: React.FC<SimplifiedVoiceRecorderProps> = (
             }
             
             console.log('Transcription received:', data.text);
-            onTranscriptReady(data.text);
+            await processTranscription(data.text);
           } catch (err) {
             console.error('Transcription error with base64 method:', err);
             toast({
@@ -151,7 +155,6 @@ export const SimplifiedVoiceRecorder: React.FC<SimplifiedVoiceRecorderProps> = (
               variant: "destructive"
             });
             setError('Failed to transcribe audio. Please try again.');
-          } finally {
             setIsProcessing(false);
           }
         };
@@ -174,6 +177,36 @@ export const SimplifiedVoiceRecorder: React.FC<SimplifiedVoiceRecorderProps> = (
         variant: "destructive"
       });
       setError('Error processing your voice. Please try again.');
+      setIsProcessing(false);
+    }
+  };
+
+  // Process the transcription, optionally as a task
+  const processTranscription = async (text: string) => {
+    try {
+      if (processAsTask && onTaskParsed) {
+        // Process as a structured task using AI
+        console.log("Processing transcription as task:", text);
+        
+        // Send to our AI task parser
+        const parsedTask = await parseTaskWithAI(text);
+        
+        if (parsedTask) {
+          console.log("Task parsed successfully:", parsedTask);
+          onTaskParsed(parsedTask);
+        } else {
+          // Fallback: still provide the raw text even if parsing failed
+          onTranscriptReady(text);
+        }
+      } else {
+        // Just return the transcription as-is
+        onTranscriptReady(text);
+      }
+    } catch (err) {
+      console.error("Error processing transcription:", err);
+      // Fallback to raw text
+      onTranscriptReady(text);
+    } finally {
       setIsProcessing(false);
     }
   };

@@ -1,9 +1,10 @@
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase";
 import { Task, TaskFormData } from "@/types/task.types";
 import { createTask } from "@/services/task/createService";
 import { toast } from "@/components/ui/use-toast";
 import { ParsedTaskInfo } from "@/hooks/ai/utils/taskParser";
+import { ParsedTask } from "./aiTaskParserService";
 
 /**
  * Creates a task based on AI-parsed information
@@ -40,8 +41,11 @@ export const createAITask = async (taskData: TaskFormData): Promise<Task | null>
 /**
  * Get estimated task completion time based on subtasks
  */
-export const getEstimatedTaskTime = (parsedTask: ParsedTaskInfo): string => {
-  const subtaskCount = parsedTask.subtasks.length;
+export const getEstimatedTaskTime = (parsedTask: ParsedTaskInfo | ParsedTask): string => {
+  // Handle both types of parsed tasks (from basic parser or enhanced AI parser)
+  const subtaskCount = 'subtasks' in parsedTask 
+    ? Array.isArray(parsedTask.subtasks) ? parsedTask.subtasks.length : 0
+    : 0;
   
   if (subtaskCount === 0) {
     return "a few minutes";
