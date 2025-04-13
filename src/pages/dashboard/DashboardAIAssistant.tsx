@@ -1,18 +1,65 @@
 
 import React, { useState } from 'react';
-import { DashboardShell } from '@/components/dashboard/DashboardShell';
+import DashboardShell from '@/components/dashboard/DashboardShell';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AIAssistantChat } from '@/components/ai/assistant/AIAssistantChat';
-import { AISettingsProvider, useAISettings, AIVoiceSettingsTab } from '@/components/settings/ai';
+import { AISettingsProvider, useAISettings } from '@/components/settings/ai/context/AISettingsContext';
+import { AIVoiceSettingsTab } from '@/components/settings/ai/AIVoiceSettingsTab';
 import { useAuth } from '@/hooks/useAuth';
+import { AIAssistantRole } from '@/types/ai-assistant.types';
 
 const DashboardAIAssistantContent = () => {
   const [activeTab, setActiveTab] = useState<string>("chat");
   const { settings, isLoadingSettings, updateSettings, canUseAI } = useAISettings();
   const { user } = useAuth();
+  const [inputMessage, setInputMessage] = useState('');
+  const [messages, setMessages] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inputMessage.trim() || isLoading) return;
+    
+    // Implement the message sending logic
+    setIsLoading(true);
+    
+    try {
+      // Mock implementation - in a real app, this would call an AI service
+      const newMessage = {
+        id: Date.now().toString(),
+        content: inputMessage,
+        role: 'user',
+        timestamp: new Date(),
+      };
+      
+      setMessages((prev) => [...prev, newMessage]);
+      setInputMessage('');
+      
+      // Simulate AI response
+      setTimeout(() => {
+        const aiResponse = {
+          id: (Date.now() + 1).toString(),
+          content: "I'm your AI assistant. How can I help you today?",
+          role: 'assistant',
+          timestamp: new Date(),
+        };
+        
+        setMessages((prev) => [...prev, aiResponse]);
+        setIsLoading(false);
+      }, 1000);
+      
+    } catch (error) {
+      console.error('Error sending message:', error);
+      setIsLoading(false);
+    }
+  };
+  
+  const clearMessages = () => {
+    setMessages([]);
+  };
   
   if (!canUseAI) {
     return (
@@ -39,7 +86,7 @@ const DashboardAIAssistantContent = () => {
     try {
       await updateSettings({
         ...settings,
-        role: newRole as any
+        role: newRole as AIAssistantRole
       });
     } catch (error) {
       console.error("Error updating role:", error);
@@ -57,7 +104,17 @@ const DashboardAIAssistantContent = () => {
       </div>
       
       <TabsContent value="chat" className="space-y-4">
-        <AIAssistantChat />
+        <AIAssistantChat 
+          messages={messages}
+          inputMessage={inputMessage}
+          setInputMessage={setInputMessage}
+          handleSendMessage={handleSendMessage}
+          isLoading={isLoading}
+          canAccess={true}
+          clearMessages={clearMessages}
+          selectedRole={settings?.role || 'general'}
+          onRoleChange={handleChangeRole}
+        />
       </TabsContent>
       
       <TabsContent value="settings" className="space-y-4">

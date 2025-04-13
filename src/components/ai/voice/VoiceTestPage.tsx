@@ -42,7 +42,7 @@ export const VoiceTestPage = () => {
     }
   });
   
-  // Use isListening for visualization
+  // Use isListening for visualization instead of missing isRecording, audioLevel and showVisualizer
   const dummyAudioLevel = isListening ? 50 : 0;
   
   const handleApiTest = async () => {

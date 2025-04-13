@@ -36,6 +36,7 @@ export const AISettingsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     data: settings,
     isLoading: isLoadingSettings,
     error: settingsError,
+    refetch: refetchSettings,
   } = useQuery({
     queryKey: ["aiSettings", user?.id],
     queryFn: () => fetchAISettings(user),
@@ -46,6 +47,7 @@ export const AISettingsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const {
     data: knowledgeUploads,
     isLoading: isLoadingKnowledge,
+    refetch: refetchKnowledge,
   } = useQuery({
     queryKey: ["knowledgeUploads", user?.id],
     queryFn: () => fetchKnowledgeUploads(user),
@@ -56,7 +58,7 @@ export const AISettingsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const updateSettingsMutation = useUpdateAISettings(user);
   const isUpdatingSettings = updateSettingsMutation.isPending;
 
-  // Helper function to determine if the user can use AI (based on subscription, etc.)
+  // Set canUseAI as a boolean value
   const canUseAI = true;  // For demo purposes, always return true
 
   // Create default settings if none exist
@@ -66,7 +68,7 @@ export const AISettingsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     try {
       await createDefaultAISettings(user.id);
       // Refetch settings after creation
-      await fetchAISettings(user);
+      await refetchSettings();
     } catch (err) {
       console.error("Error creating default settings:", err);
     } finally {
@@ -94,6 +96,7 @@ export const AISettingsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setIsAddingKnowledge(true);
     try {
       await addKnowledgeItem(user.id, title, content, role);
+      await refetchKnowledge();
       return true;
     } catch (err) {
       console.error("Error adding knowledge:", err);
@@ -108,6 +111,7 @@ export const AISettingsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     if (!user) return false;
     try {
       await deleteKnowledgeItem(id, user.id);
+      await refetchKnowledge();
       return true;
     } catch (err) {
       console.error("Error deleting knowledge:", err);
