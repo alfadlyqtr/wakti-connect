@@ -267,13 +267,13 @@ const DashboardAIAssistant = () => {
       // Fix for TypeScript errors around date handling
       const formattedTask: TaskFormData = {
         ...detectedTask,
-        // Safely handle the date conversion by checking the type first
+        // Handle the due_date type safely
         due_date: detectedTask.due_date ? 
-          (typeof detectedTask.due_date === 'string' || detectedTask.due_date instanceof Date) ?
-            typeof detectedTask.due_date === 'string' ? 
-              detectedTask.due_date : 
-              detectedTask.due_date.toISOString().split('T')[0] 
-            : String(detectedTask.due_date) 
+          (typeof detectedTask.due_date === 'string') ? 
+            detectedTask.due_date : 
+            (detectedTask.due_date instanceof Date) ? 
+              detectedTask.due_date.toISOString().split('T')[0] : 
+              String(detectedTask.due_date)
           : null,
         priority: detectedTask.priority || 'normal' // Ensure priority is not undefined
       };
