@@ -33,7 +33,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
     userId, 
     isStaff, 
     userRole: detectedUserRole,
-    isSuperAdmin 
+    isSuperAdmin
   } = useDashboardUserProfile();
 
   // Use provided role or detected role

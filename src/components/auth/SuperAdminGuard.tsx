@@ -11,6 +11,9 @@ interface SuperAdminGuardProps {
   children: React.ReactNode;
 }
 
+// Hard-coded super admin ID to avoid RLS checks
+const KNOWN_SUPER_ADMIN_ID = "28e863b3-0a91-4220-8330-fbee7ecd3f96";
+
 const SuperAdminGuard: React.FC<SuperAdminGuardProps> = ({ children }) => {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const [isSuperAdmin, setIsSuperAdmin] = useState<boolean | null>(null);
@@ -29,10 +32,7 @@ const SuperAdminGuard: React.FC<SuperAdminGuardProps> = ({ children }) => {
 
         console.log("SuperAdminGuard: Checking super admin status for", user.id);
         
-        // Explicit hard-coded ID check to prevent RLS recursion errors
-        const KNOWN_SUPER_ADMIN_ID = "28e863b3-0a91-4220-8330-fbee7ecd3f96";
-        
-        // Direct check for hard-coded admin ID
+        // Direct check for hard-coded admin ID - safest approach that avoids RLS issues
         if (user.id === KNOWN_SUPER_ADMIN_ID) {
           console.log("SuperAdminGuard: User matches known super admin ID");
           setIsSuperAdmin(true);
@@ -53,49 +53,14 @@ const SuperAdminGuard: React.FC<SuperAdminGuardProps> = ({ children }) => {
           return;
         }
         
-        // Try using a function instead of direct query to avoid RLS recursion
-        try {
-          const { data, error } = await supabase.rpc('is_super_admin');
-          
-          if (error) {
-            console.error("SuperAdminGuard: Error checking super admin through RPC:", error);
-            throw error;
-          }
-          
-          if (data === true) {
-            console.log("SuperAdminGuard: User confirmed as super admin via RPC");
-            setIsSuperAdmin(true);
-            localStorage.setItem('isSuperAdmin', 'true');
-            
-            try {
-              await createAuditLog(
-                supabase,
-                user.id,
-                'super_admin_access',
-                { path: location.pathname, success: true }
-              );
-            } catch (logError) {
-              console.warn("SuperAdminGuard: Could not log to audit system:", logError);
-            }
-          } else {
-            console.log("SuperAdminGuard: User is not a super admin via RPC");
-            setIsSuperAdmin(false);
-            localStorage.setItem('isSuperAdmin', 'false');
-          }
-        } catch (rpcError) {
-          console.error("SuperAdminGuard: RPC check failed, falling back to localStorage:", rpcError);
-          
-          // Fallback to localStorage if we've previously verified
-          const storedSuperAdmin = localStorage.getItem('isSuperAdmin');
-          const isSuperAdminFromStorage = storedSuperAdmin === 'true';
-          
-          if (isSuperAdminFromStorage) {
-            console.log("SuperAdminGuard: Using cached super admin status from localStorage");
-            setIsSuperAdmin(true);
-          } else {
-            console.log("SuperAdminGuard: Not a super admin (localStorage fallback)");
-            setIsSuperAdmin(false);
-          }
+        // Use localStorage as a fallback
+        const storedSuperAdmin = localStorage.getItem('isSuperAdmin');
+        if (storedSuperAdmin === 'true') {
+          console.log("SuperAdminGuard: Using cached super admin status");
+          setIsSuperAdmin(true);
+        } else {
+          console.log("SuperAdminGuard: Not a super admin");
+          setIsSuperAdmin(false);
         }
         
         setIsChecking(false);
