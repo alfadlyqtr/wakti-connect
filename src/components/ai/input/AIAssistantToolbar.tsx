@@ -12,8 +12,7 @@ import {
   MicOff, 
   Paperclip, 
   Camera, 
-  Loader2, 
-  X
+  Loader2
 } from 'lucide-react';
 
 interface AIAssistantToolbarProps {
@@ -62,7 +61,8 @@ export const AIAssistantToolbar = ({ activeMode }: AIAssistantToolbarProps) => {
     try {
       const messageCopy = inputMessage.trim(); // Save a copy of the message
       await sendMessage(messageCopy);
-      setInputMessage(''); // Only clear after successful send
+      // Only clear input after successful send and not the display of messages
+      setInputMessage('');
     } catch (error) {
       console.error('Failed to send message:', error);
     }

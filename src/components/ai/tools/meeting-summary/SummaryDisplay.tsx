@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Copy, Check, Download, FileDown, Map } from 'lucide-react';
 import { GOOGLE_MAPS_API_KEY, generateGoogleMapsUrl } from '@/config/maps';
 import { useTranslation } from 'react-i18next';
+import { toast } from '@/components/ui/use-toast';
 
 interface SummaryDisplayProps {
   summary: string;
@@ -51,19 +52,29 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
     }
   }, [detectedLocation]);
   
-  // Handle copy feedback
-  useEffect(() => {
-    if (copied) {
-      setCopyFeedback(true);
-      const timer = setTimeout(() => setCopyFeedback(false), 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [copied]);
+  // Custom wrapper for copy with feedback
+  const handleCopy = () => {
+    copySummary();
+    setCopyFeedback(true);
+    toast({
+      title: t('common.success'),
+      description: t('summary.summaryCopied'),
+      variant: 'success',
+      duration: 2000,
+    });
+    setTimeout(() => setCopyFeedback(false), 2000);
+  };
   
   // Custom wrapper for export with feedback
   const handleExport = async () => {
     await exportAsPDF();
     setExportFeedback(true);
+    toast({
+      title: t('common.success'),
+      description: t('summary.pdfExported'),
+      variant: 'success',
+      duration: 2000,
+    });
     setTimeout(() => setExportFeedback(false), 2000);
   };
   
@@ -71,6 +82,12 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
   const handleDownload = () => {
     downloadAudio();
     setDownloadFeedback(true);
+    toast({
+      title: t('common.success'),
+      description: t('summary.audioDownloaded'),
+      variant: 'success',
+      duration: 2000,
+    });
     setTimeout(() => setDownloadFeedback(false), 2000);
   };
 
@@ -84,37 +101,43 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
         <h3 className="text-lg font-semibold">{t('summary.meetingSummary')}</h3>
         <div className="flex space-x-2">
           <Button
-            variant="outline"
+            variant={copyFeedback ? "success" : "outline"}
             size="sm"
-            onClick={copySummary}
+            onClick={handleCopy}
             disabled={copyFeedback}
-            className="flex items-center space-x-1 min-w-[120px]"
+            className="flex items-center space-x-1 min-w-[120px] transition-colors duration-200"
           >
-            {copyFeedback ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+            {copyFeedback ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
             <span>{copyFeedback ? t('common.copied') : t('summary.copySummary')}</span>
           </Button>
           
           <Button
-            variant="outline"
+            variant={exportFeedback ? "success" : "outline"}
             size="sm"
             onClick={handleExport}
             disabled={isExporting || exportFeedback}
-            className="flex items-center space-x-1 min-w-[120px]"
+            className="flex items-center space-x-1 min-w-[120px] transition-colors duration-200"
           >
-            <Download className={`h-4 w-4 ${exportFeedback ? 'text-green-500' : ''}`} />
-            <span>{exportFeedback ? t('summary.exported') : t('summary.exportPDF')}</span>
+            <Download className="h-4 w-4" />
+            <span>
+              {isExporting ? t('common.exporting') : 
+                exportFeedback ? t('summary.exported') : t('summary.exportPDF')}
+            </span>
           </Button>
           
           {audioData && (
             <Button
-              variant="outline"
+              variant={downloadFeedback ? "success" : "outline"}
               size="sm"
               onClick={handleDownload}
               disabled={isDownloadingAudio || downloadFeedback}
-              className="flex items-center space-x-1 min-w-[140px]"
+              className="flex items-center space-x-1 min-w-[140px] transition-colors duration-200"
             >
-              <FileDown className={`h-4 w-4 ${downloadFeedback ? 'text-green-500' : ''}`} />
-              <span>{downloadFeedback ? t('summary.downloaded') : t('summary.downloadAudio')}</span>
+              <FileDown className="h-4 w-4" />
+              <span>
+                {isDownloadingAudio ? t('common.downloading') : 
+                  downloadFeedback ? t('summary.downloaded') : t('summary.downloadAudio')}
+              </span>
             </Button>
           )}
         </div>
@@ -145,6 +168,11 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
               size="sm"
               onClick={() => {
                 window.open(generateGoogleMapsUrl(detectedLocation), '_blank');
+                toast({
+                  title: t('common.openingMap'),
+                  description: t('summary.openingInNewTab'),
+                  duration: 2000,
+                });
               }}
             >
               {t('summary.openInGoogleMaps')}

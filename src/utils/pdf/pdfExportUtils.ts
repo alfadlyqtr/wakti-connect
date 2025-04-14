@@ -23,14 +23,16 @@ export const createPdfHeaderDiv = (isArabicContent: boolean): HTMLDivElement => 
   headerDiv.innerHTML = `
     <div style="display: flex; align-items: center;">
       <div style="margin-right: 15px;">
-        <img src="/lovable-uploads/9b7d0693-89eb-4cc5-b90b-7834bfabda0e.png" style="width: 40px; height: 40px; border-radius: 6px; object-fit: cover;" />
+        <img src="/lovable-uploads/9b7d0693-89eb-4cc5-b90b-7834bfabda0e.png" style="width: 50px; height: 50px; border-radius: 6px; object-fit: cover;" />
       </div>
       <div>
-        <span style="color: #333; font-size: 22px; font-weight: bold;">${isArabicContent ? 'ملخص الاجتماع' : 'Meeting Summary'}</span>
+        <h1 style="color: #0053c3; font-size: 26px; font-weight: bold; margin: 0; padding: 0;">${isArabicContent ? 'ملخص الاجتماع' : 'Meeting Summary'}</h1>
         <div style="color: #666; font-size: 14px; margin-top: 5px;">${isArabicContent ? 'تم إنشاؤه في' : 'Generated on'} ${new Date().toLocaleDateString(isArabicContent ? 'ar-SA' : 'en-US')} ${isArabicContent ? 'في' : 'at'} ${new Date().toLocaleTimeString(isArabicContent ? 'ar-SA' : 'en-US')}</div>
       </div>
     </div>
-    <div style="color: #0053c3; font-size: 14px; font-weight: bold;">${isArabicContent ? 'مدعوم بواسطة مجموعة أدوات وقتي للإنتاجية' : 'Powered by WAKTI Productivity Suite'}</div>
+    <div style="flex-shrink: 0;">
+      <img src="/lovable-uploads/9b7d0693-89eb-4cc5-b90b-7834bfabda0e.png" style="width: 30px; height: 30px; border-radius: 4px; object-fit: cover;" />
+    </div>
   `;
   
   return headerDiv;
@@ -58,6 +60,7 @@ export const createPdfMetadataDiv = (
   
   // Create styled metadata table
   metadataDiv.innerHTML = `
+    <h3 style="margin-top: 0; margin-bottom: 10px; color: #0053c3; font-size: 16px;">Meeting Information</h3>
     <table style="width: 100%; border-collapse: collapse; font-size: 14px; direction: ${isArabicContent ? 'rtl' : 'ltr'}">
       <tr>
         <td style="padding: 8px 15px; width: 120px; font-weight: bold; color: #0053c3;">${isArabicContent ? 'التاريخ:' : 'Date:'}</td>
@@ -88,9 +91,9 @@ export const processSummaryContent = (summary: string): string => {
   
   if (taskMatch) {
     tasks = `
-      <div style="margin-top: 30px; padding: 15px; background-color: #f0f9ff; border-left: 4px solid #0053c3; border-radius: 4px;">
+      <div style="margin-top: 30px; margin-bottom: 30px; padding: 15px; background-color: #f0f9ff; border-left: 4px solid #0053c3; border-radius: 4px;">
         <h3 style="color: #0053c3; margin-top: 0; margin-bottom: 10px;">Action Items:</h3>
-        <ul style="margin-top: 10px;">
+        <ul style="margin-top: 10px; padding-left: 20px;">
           ${taskMatch[0].replace(/^##\s*Action Items\s*/i, '')
             .split('\n')
             .filter(line => line.trim().startsWith('-') || line.trim().startsWith('*'))
@@ -98,9 +101,6 @@ export const processSummaryContent = (summary: string): string => {
             .join('')
           }
         </ul>
-        <div style="margin-top: 15px;">
-          <a href="#" style="color: #0053c3; text-decoration: none; font-weight: bold;">Add to Tasks ➔</a>
-        </div>
       </div>
     `;
   }
@@ -123,13 +123,16 @@ export const processSummaryContent = (summary: string): string => {
     // Convert newlines to breaks
     .replace(/\n\n/g, '<br /><br />');
   
-  // Structure the content into sections
+  // Structure the content into clearly defined sections
   let structuredContent = `
     <div style="font-family: Arial, sans-serif; line-height: 1.6;">
       <section>
+        <h2 style="color: #0053c3; font-size: 20px; margin-top: 30px; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 1px solid #e9ecef;">Key Points</h2>
         ${processedContent}
       </section>
+      
       ${tasks}
+      
       <footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e9ecef; text-align: center; color: #6c757d; font-size: 12px;">
         Powered by WAKTI AI Meeting Summary Tool • Generated on ${new Date().toLocaleDateString()}
       </footer>

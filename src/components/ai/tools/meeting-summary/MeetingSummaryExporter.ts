@@ -70,7 +70,6 @@ export const exportMeetingSummaryAsPDF = async (
     const imgWidth = 210; // A4 width in mm
     const imgHeight = (canvas.height * imgWidth) / canvas.width;
     
-    let pdfHeight = 0;
     let position = 0;
     
     // If content is too tall for one page, split it across multiple pages
