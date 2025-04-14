@@ -12,6 +12,7 @@ import { LockIcon, MessageSquare, Mic, Wrench } from 'lucide-react';
 import { useAuth } from '@/hooks/auth';
 import { useProfile } from '@/hooks/useProfile';
 import { UserRole } from '@/types/user';
+import { useChatMemoryByMode } from '@/hooks/ai/chat/useChatMemoryByMode';
 
 const WAKTIAIAssistant = () => {
   const { user } = useAuth();
@@ -20,6 +21,7 @@ const WAKTIAIAssistant = () => {
   const [activeTab, setActiveTab] = useState('chat');
   const [canAccessAI, setCanAccessAI] = useState(false);
   const [showMeetingTool, setShowMeetingTool] = useState(false);
+  const { getMessages } = useChatMemoryByMode();
 
   // Check if the user can access the AI Assistant based on their role
   useEffect(() => {

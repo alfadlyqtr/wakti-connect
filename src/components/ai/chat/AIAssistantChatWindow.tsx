@@ -10,17 +10,30 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Bot, User } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useChatMemoryByMode } from '@/hooks/ai/chat/useChatMemoryByMode';
 
 interface AIAssistantChatWindowProps {
   activeMode: WAKTIAIMode;
 }
 
 export const AIAssistantChatWindow = ({ activeMode }: AIAssistantChatWindowProps) => {
-  const { messages, isLoading, clearMessages } = useAIAssistant();
+  const { messages, isLoading, clearMessages, setActiveMode } = useAIAssistant();
   const [showWelcomeMessage, setShowWelcomeMessage] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const previousMessagesLength = useRef(messages.length);
   const previousModeRef = useRef(activeMode);
+  const { getMessages } = useChatMemoryByMode();
+  
+  // Update active mode in the useAIAssistant hook when it changes
+  useEffect(() => {
+    setActiveMode(activeMode);
+    const modeMessages = getMessages(activeMode);
+    if (modeMessages.length > 0) {
+      setShowWelcomeMessage(false);
+    } else {
+      setShowWelcomeMessage(true);
+    }
+  }, [activeMode, setActiveMode, getMessages]);
   
   // Scroll to bottom of messages when new messages arrive or loading state changes
   useEffect(() => {
