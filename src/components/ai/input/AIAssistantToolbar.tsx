@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -61,10 +60,12 @@ export const AIAssistantToolbar = ({ activeMode }: AIAssistantToolbarProps) => {
     try {
       const messageCopy = inputMessage.trim(); // Save a copy of the message
       await sendMessage(messageCopy);
-      // Only clear input after successful send and not the display of messages
+      
+      // Clear input ONLY after successful send
       setInputMessage('');
     } catch (error) {
       console.error('Failed to send message:', error);
+      // Keep the input text if send failed
     }
   };
   
