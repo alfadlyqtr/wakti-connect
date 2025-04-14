@@ -17,9 +17,10 @@ interface AIAssistantChatWindowProps {
 
 export const AIAssistantChatWindow = ({ activeMode }: AIAssistantChatWindowProps) => {
   const { messages, isLoading, clearMessages } = useAIAssistant();
-  const [isFirstLoad, setIsFirstLoad] = useState(true);
+  const [showWelcomeMessage, setShowWelcomeMessage] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const previousMessagesLength = useRef(messages.length);
+  const previousModeRef = useRef(activeMode);
   
   // Scroll to bottom of messages when new messages arrive or loading state changes
   useEffect(() => {
@@ -29,16 +30,16 @@ export const AIAssistantChatWindow = ({ activeMode }: AIAssistantChatWindowProps
     }
   }, [messages, isLoading]);
   
-  // Show welcome message on first load or mode change
+  // Only show welcome message on first load or mode change
   useEffect(() => {
-    setIsFirstLoad(true);
-    
-    const timer = setTimeout(() => {
-      setIsFirstLoad(false);
-    }, 500);
-    
-    return () => clearTimeout(timer);
-  }, [activeMode]);
+    // Check if mode has changed
+    if (previousModeRef.current !== activeMode) {
+      setShowWelcomeMessage(true);
+      previousModeRef.current = activeMode;
+    } else if (messages.length > 0) {
+      setShowWelcomeMessage(false);
+    }
+  }, [activeMode, messages.length]);
 
   // Get mode-specific styling
   const getModeStyles = () => {
@@ -58,7 +59,7 @@ export const AIAssistantChatWindow = ({ activeMode }: AIAssistantChatWindowProps
 
   return (
     <ScrollArea className={cn("h-[500px] p-4", getModeStyles())}>
-      {isFirstLoad && messages.length === 0 && (
+      {showWelcomeMessage && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

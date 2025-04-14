@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useVoiceSettings } from '@/store/voiceSettings';
@@ -99,19 +100,11 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
   
   const testElevenLabsConnection = async () => {
     try {
-      // Test the ElevenLabs connection
-      // This is a simple test - in a real implementation, you would make an actual API call
-      const ELEVEN_LABS_API_KEY = 'sk_226b608fe1ec5b8fddc458a0370c7e8006910ee812ccec5d';
+      // Test the ElevenLabs connection via edge function
+      const { data, error } = await supabase.functions.invoke('test-elevenlabs-connection');
       
-      const response = await fetch('https://api.elevenlabs.io/v1/user', {
-        method: 'GET',
-        headers: {
-          'xi-api-key': ELEVEN_LABS_API_KEY,
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      return response.ok;
+      if (error) throw error;
+      return data?.valid || false;
     } catch (error) {
       console.error('ElevenLabs connection test failed:', error);
       return false;
@@ -121,7 +114,7 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
   const testWhisperConnection = async () => {
     try {
       // Test the OpenAI Whisper via our Edge Function
-      const { data, error } = await supabase.functions.invoke('test-openai-connection', {});
+      const { data, error } = await supabase.functions.invoke('test-openai-connection');
       
       if (error) throw error;
       return data?.valid || false;
@@ -262,33 +255,17 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
   };
   
   const transcribeWithElevenLabs = async (audioBlob: Blob): Promise<string | null> => {
-    // This would be the actual implementation for ElevenLabs Speech-to-Text
-    // For now, we're just simulating success/failure
-    const ELEVEN_LABS_API_KEY = 'sk_226b608fe1ec5b8fddc458a0370c7e8006910ee812ccec5d';
-    
     try {
       // Convert blob to base64
       const base64Audio = await blobToBase64(audioBlob);
       
-      // Call ElevenLabs API
-      const response = await fetch('https://api.elevenlabs.io/v1/speech-to-text', {
-        method: 'POST',
-        headers: {
-          'xi-api-key': ELEVEN_LABS_API_KEY,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          audio: base64Audio,
-          model_id: 'whisper-1',
-        }),
+      // Call the Edge Function for ElevenLabs
+      const { data, error } = await supabase.functions.invoke('elevenlabs-speech-to-text', {
+        body: { audio: base64Audio }
       });
       
-      if (!response.ok) {
-        throw new Error(`ElevenLabs API error: ${response.status}`);
-      }
-      
-      const result = await response.json();
-      return result.text || null;
+      if (error) throw error;
+      return data?.text || null;
     } catch (error) {
       console.error('ElevenLabs transcription error:', error);
       return null;

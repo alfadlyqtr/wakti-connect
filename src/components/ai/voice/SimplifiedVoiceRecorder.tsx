@@ -139,31 +139,17 @@ export const SimplifiedVoiceRecorder: React.FC<SimplifiedVoiceRecorderProps> = (
   
   // Transcribe with ElevenLabs - Primary method
   const transcribeWithElevenLabs = async (audioBlob: Blob): Promise<string | null> => {
-    const ELEVEN_LABS_API_KEY = 'sk_226b608fe1ec5b8fddc458a0370c7e8006910ee812ccec5d';
-    
     try {
       // Convert blob to base64
       const base64Audio = await blobToBase64(audioBlob);
       
-      // Call ElevenLabs API
-      const response = await fetch('https://api.elevenlabs.io/v1/speech-to-text', {
-        method: 'POST',
-        headers: {
-          'xi-api-key': ELEVEN_LABS_API_KEY,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          audio: base64Audio,
-          model_id: 'whisper-1',
-        }),
+      // Call edge function for ElevenLabs transcription
+      const { data, error } = await supabase.functions.invoke('elevenlabs-speech-to-text', {
+        body: { audio: base64Audio }
       });
       
-      if (!response.ok) {
-        throw new Error(`ElevenLabs API error: ${response.status}`);
-      }
-      
-      const result = await response.json();
-      return result.text || null;
+      if (error) throw error;
+      return data?.text || null;
     } catch (error) {
       console.error('ElevenLabs transcription error:', error);
       return null;

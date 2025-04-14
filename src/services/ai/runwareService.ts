@@ -1,5 +1,6 @@
 
 import { toast } from '@/components/ui/use-toast';
+import { supabase } from '@/lib/supabase';
 
 const API_ENDPOINT = 'https://api.runware.ai/v1';
 
@@ -24,15 +25,39 @@ export interface GeneratedImage {
 }
 
 export class RunwareService {
-  private apiKey: string;
+  private apiKey: string | null = null;
 
-  constructor(apiKey: string) {
-    this.apiKey = apiKey;
+  constructor() {
+    // We'll get the API key when needed
+  }
+  
+  private async getApiKey(): Promise<string> {
+    if (this.apiKey) return this.apiKey;
+    
+    try {
+      // Get the API key from the Supabase Edge Function
+      const { data, error } = await supabase.functions.invoke('get-runware-api-key');
+      
+      if (error) throw error;
+      
+      if (!data?.apiKey) {
+        throw new Error('Failed to retrieve Runware API key');
+      }
+      
+      this.apiKey = data.apiKey;
+      return this.apiKey;
+    } catch (error) {
+      console.error('Error retrieving Runware API key:', error);
+      throw error;
+    }
   }
 
   async generateImage(params: GenerateImageParams): Promise<GeneratedImage> {
     try {
       const taskUUID = crypto.randomUUID();
+      
+      // Get the API key before making the request
+      const apiKey = await this.getApiKey();
       
       const response = await fetch(API_ENDPOINT, {
         method: 'POST',
@@ -42,7 +67,7 @@ export class RunwareService {
         body: JSON.stringify([
           {
             taskType: "authentication",
-            apiKey: this.apiKey
+            apiKey: apiKey
           },
           {
             taskType: "imageInference",
@@ -91,5 +116,5 @@ export class RunwareService {
   }
 }
 
-// Singleton instance with the API key
-export const runwareService = new RunwareService('yzJMWPrRdkJcge2q0yjSOwTGvlhMeOy1');
+// Create a singleton instance
+export const runwareService = new RunwareService();

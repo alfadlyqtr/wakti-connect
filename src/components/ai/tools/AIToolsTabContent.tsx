@@ -31,9 +31,9 @@ export const AIToolsTabContent: React.FC<AIToolsTabContentProps> = ({
     }
   };
   
-  // Show meeting tool only in creative mode
+  // Always show meeting tool in creative mode
   const showMeetingTab = activeMode === 'creative';
-
+  
   return (
     <Tabs defaultValue="image" className="w-full">
       <TabsList className={`grid ${showMeetingTab ? 'grid-cols-6' : 'grid-cols-5'} h-auto`}>
