@@ -1,11 +1,11 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { WAKTIAIMode } from '@/types/ai-assistant.types';
 import { useAIAssistant } from '@/hooks/useAIAssistant';
 import { cn } from '@/lib/utils';
-import { useVoiceInteraction } from '@/hooks/useVoiceInteraction';
+import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
 import { 
   Send, 
   Mic, 
@@ -35,19 +35,34 @@ export const AIAssistantToolbar = ({ activeMode }: AIAssistantToolbarProps) => {
   } = useVoiceInteraction({
     onTranscriptComplete: (text) => {
       if (text) {
-        setInputMessage(prev => prev + text);
+        // Append to existing text rather than replacing
+        setInputMessage(prev => {
+          const separator = prev && !prev.endsWith(' ') && !text.startsWith(' ') ? ' ' : '';
+          return prev + separator + text;
+        });
         setShowVoiceInput(false);
       }
     }
   });
+  
+  // Update input field with transcript in real-time
+  useEffect(() => {
+    if (transcript && isListening) {
+      setInputMessage(prev => {
+        const separator = prev && !prev.endsWith(' ') && !transcript.startsWith(' ') ? ' ' : '';
+        return prev + separator + transcript;
+      });
+    }
+  }, [transcript, isListening]);
   
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputMessage.trim() || isLoading) return;
     
     try {
-      await sendMessage(inputMessage);
-      setInputMessage('');
+      const messageCopy = inputMessage.trim(); // Save a copy of the message
+      await sendMessage(messageCopy);
+      setInputMessage(''); // Only clear after successful send
     } catch (error) {
       console.error('Failed to send message:', error);
     }
@@ -168,9 +183,9 @@ export const AIAssistantToolbar = ({ activeMode }: AIAssistantToolbarProps) => {
         
         <div className="flex items-center justify-between">
           <div className="text-xs text-muted-foreground">
-            {showVoiceInput && (
+            {showVoiceInput && isListening && (
               <span className="text-pink-600 font-medium animate-pulse">
-                Listening... {transcript && `"${transcript}"`}
+                Listening... {transcript ? `"${transcript}"` : ""}
               </span>
             )}
           </div>

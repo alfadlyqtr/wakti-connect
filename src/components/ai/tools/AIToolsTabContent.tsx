@@ -13,13 +13,15 @@ interface AIToolsTabContentProps {
   onUseDocumentContent?: (content: string) => void;
   selectedRole?: AIAssistantRole;
   canAccess?: boolean;
+  activeMode?: string;
 }
 
 export const AIToolsTabContent: React.FC<AIToolsTabContentProps> = ({ 
   onPromptSubmit, 
   onUseDocumentContent,
   selectedRole,
-  canAccess = true
+  canAccess = true,
+  activeMode = 'general'
 }) => {
   const handleSubmitPrompt = (prompt: string) => {
     if (onPromptSubmit) {
@@ -28,10 +30,13 @@ export const AIToolsTabContent: React.FC<AIToolsTabContentProps> = ({
       onUseDocumentContent(prompt);
     }
   };
+  
+  // Show meeting tool only in creative mode
+  const showMeetingTab = activeMode === 'creative';
 
   return (
     <Tabs defaultValue="image" className="w-full">
-      <TabsList className="grid grid-cols-6 h-auto">
+      <TabsList className={`grid ${showMeetingTab ? 'grid-cols-6' : 'grid-cols-5'} h-auto`}>
         <TabsTrigger value="image" className="text-xs flex flex-col gap-1 py-2 h-auto">
           <Image className="h-4 w-4" />
           <span>Image</span>
@@ -40,10 +45,12 @@ export const AIToolsTabContent: React.FC<AIToolsTabContentProps> = ({
           <Mic className="h-4 w-4" />
           <span>Voice</span>
         </TabsTrigger>
-        <TabsTrigger value="meeting" className="text-xs flex flex-col gap-1 py-2 h-auto">
-          <Calendar className="h-4 w-4" />
-          <span>Meeting</span>
-        </TabsTrigger>
+        {showMeetingTab && (
+          <TabsTrigger value="meeting" className="text-xs flex flex-col gap-1 py-2 h-auto">
+            <Calendar className="h-4 w-4" />
+            <span>Meeting</span>
+          </TabsTrigger>
+        )}
         <TabsTrigger value="document" className="text-xs flex flex-col gap-1 py-2 h-auto">
           <FileText className="h-4 w-4" />
           <span>Document</span>
@@ -66,9 +73,11 @@ export const AIToolsTabContent: React.FC<AIToolsTabContentProps> = ({
         <VoiceInteractionToolCard onSpeechRecognized={handleSubmitPrompt} />
       </TabsContent>
       
-      <TabsContent value="meeting" className="mt-4">
-        <MeetingSummaryTool onUseSummary={handleSubmitPrompt} />
-      </TabsContent>
+      {showMeetingTab && (
+        <TabsContent value="meeting" className="mt-4">
+          <MeetingSummaryTool onUseSummary={handleSubmitPrompt} />
+        </TabsContent>
+      )}
       
       <TabsContent value="document" className="mt-4">
         <Card>

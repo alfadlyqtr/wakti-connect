@@ -19,11 +19,13 @@ export const AIAssistantChatWindow = ({ activeMode }: AIAssistantChatWindowProps
   const { messages, isLoading, clearMessages } = useAIAssistant();
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const previousMessagesLength = useRef(messages.length);
   
-  // Scroll to bottom of messages
+  // Scroll to bottom of messages when new messages arrive or loading state changes
   useEffect(() => {
-    if (messagesEndRef.current) {
+    if (messagesEndRef.current && (messages.length > previousMessagesLength.current || !isLoading)) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      previousMessagesLength.current = messages.length;
     }
   }, [messages, isLoading]);
   
@@ -56,7 +58,7 @@ export const AIAssistantChatWindow = ({ activeMode }: AIAssistantChatWindowProps
 
   return (
     <ScrollArea className={cn("h-[500px] p-4", getModeStyles())}>
-      {isFirstLoad && (
+      {isFirstLoad && messages.length === 0 && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -75,7 +77,7 @@ export const AIAssistantChatWindow = ({ activeMode }: AIAssistantChatWindowProps
       <AnimatePresence>
         {messages.map((message, index) => (
           <motion.div
-            key={index}
+            key={`${message.role}-${index}`} // Use a more reliable key
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}

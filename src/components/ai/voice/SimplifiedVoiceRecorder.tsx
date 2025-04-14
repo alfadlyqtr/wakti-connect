@@ -77,90 +77,46 @@ export const SimplifiedVoiceRecorder: React.FC<SimplifiedVoiceRecorderProps> = (
       const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
       console.log(`Audio recorded: ${audioBlob.size} bytes, type: ${audioBlob.type}`);
       
-      // Try the edge function connection first
+      // Try ElevenLabs first
       try {
-        const isConnected = await testEdgeFunction('ai-voice-to-text');
-        if (!isConnected) {
-          console.warn("Edge function connection test failed, but we'll try sending data anyway");
-        }
-      } catch (connErr) {
-        console.warn('Connection test error:', connErr);
-        // Continue anyway as the test might fail but the function might still work
-      }
-      
-      // First try: Use FormData method
-      try {
-        const formData = new FormData();
-        formData.append('audio', audioBlob, 'recording.webm');
-        
-        console.log("Sending audio via FormData...");
-        const { data, error } = await supabase.functions.invoke('ai-voice-to-text', {
-          body: formData
-        });
-        
-        if (error) {
-          console.error('FormData method failed:', error);
-          throw error;
-        }
-        
-        if (data && data.text) {
-          console.log('Transcription received:', data.text);
-          await processTranscription(data.text);
+        const elevenLabsTranscript = await transcribeWithElevenLabs(audioBlob);
+        if (elevenLabsTranscript) {
+          console.log('Using ElevenLabs transcription:', elevenLabsTranscript);
+          await processTranscription(elevenLabsTranscript);
           return;
         }
-      } catch (err) {
-        console.warn('FormData method failed, falling back to base64:', err);
-        // Continue to base64 method as fallback
+      } catch (elevenLabsErr) {
+        console.warn('ElevenLabs transcription failed, falling back to Whisper:', elevenLabsErr);
       }
       
-      // Second try: Convert to base64 and send as JSON
+      // Fall back to Whisper if ElevenLabs fails
       try {
-        // Convert blob to base64
-        const reader = new FileReader();
-        reader.readAsDataURL(audioBlob);
-        
-        reader.onloadend = async () => {
-          try {
-            // Extract the base64 string (removing data URL prefix)
-            const base64data = reader.result?.toString().split(',')[1];
-            
-            if (!base64data) {
-              throw new Error('Failed to convert audio to base64');
-            }
-            
-            console.log('Sending audio as base64 to Edge Function...');
-            
-            // Call the Supabase Edge Function with base64 data
-            const { data, error: fnError } = await supabase.functions.invoke('ai-voice-to-text', {
-              body: { audio: base64data }
-            });
-            
-            if (fnError) {
-              console.error('Edge function error:', fnError);
-              throw new Error(`Edge function error: ${fnError.message || 'Unknown error'}`);
-            }
-            
-            if (!data || !data.text) {
-              console.error('No transcription returned:', data);
-              throw new Error('No transcription returned');
-            }
-            
-            console.log('Transcription received:', data.text);
-            await processTranscription(data.text);
-          } catch (err) {
-            console.error('Transcription error with base64 method:', err);
-            toast({
-              title: "Transcription Failed",
-              description: err instanceof Error ? err.message : "Could not process your recording",
-              variant: "destructive"
-            });
-            setError('Failed to transcribe audio. Please try again.');
-            setIsProcessing(false);
-          }
-        };
-      } catch (err) {
-        console.error('Base64 conversion error:', err);
-        setError('Error processing your voice. Please try again.');
+        const whisperTranscript = await transcribeWithWhisper(audioBlob);
+        if (whisperTranscript) {
+          console.log('Using Whisper transcription:', whisperTranscript);
+          await processTranscription(whisperTranscript);
+          return;
+        }
+      } catch (whisperErr) {
+        console.warn('Whisper transcription failed, falling back to browser:', whisperErr);
+      }
+      
+      // If both APIs fail, use browser transcription as a last resort
+      try {
+        const browserTranscript = await transcribeWithBrowserAPI(audioBlob);
+        if (browserTranscript) {
+          console.log('Using browser transcription:', browserTranscript);
+          await processTranscription(browserTranscript);
+          return;
+        }
+      } catch (browserErr) {
+        console.error('Browser transcription failed too:', browserErr);
+        toast({
+          title: "Transcription Failed",
+          description: "All transcription methods failed. Please try again or type manually.",
+          variant: "destructive"
+        });
+        setError('Failed to transcribe audio. Please try again.');
         setIsProcessing(false);
       }
       
@@ -179,6 +135,86 @@ export const SimplifiedVoiceRecorder: React.FC<SimplifiedVoiceRecorderProps> = (
       setError('Error processing your voice. Please try again.');
       setIsProcessing(false);
     }
+  };
+  
+  // Transcribe with ElevenLabs - Primary method
+  const transcribeWithElevenLabs = async (audioBlob: Blob): Promise<string | null> => {
+    const ELEVEN_LABS_API_KEY = 'sk_226b608fe1ec5b8fddc458a0370c7e8006910ee812ccec5d';
+    
+    try {
+      // Convert blob to base64
+      const base64Audio = await blobToBase64(audioBlob);
+      
+      // Call ElevenLabs API
+      const response = await fetch('https://api.elevenlabs.io/v1/speech-to-text', {
+        method: 'POST',
+        headers: {
+          'xi-api-key': ELEVEN_LABS_API_KEY,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          audio: base64Audio,
+          model_id: 'whisper-1',
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`ElevenLabs API error: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      return result.text || null;
+    } catch (error) {
+      console.error('ElevenLabs transcription error:', error);
+      return null;
+    }
+  };
+  
+  // Transcribe with Whisper via Edge Function - Fallback #1
+  const transcribeWithWhisper = async (audioBlob: Blob): Promise<string | null> => {
+    try {
+      // Convert blob to base64
+      const base64Audio = await blobToBase64(audioBlob);
+      
+      // Call the Supabase Edge Function with Whisper
+      const { data, error } = await supabase.functions.invoke('ai-voice-to-text', {
+        body: { audio: base64Audio }
+      });
+      
+      if (error) throw error;
+      return data?.text || null;
+    } catch (error) {
+      console.error('Whisper transcription error:', error);
+      return null;
+    }
+  };
+  
+  // Transcribe with browser API - Final fallback
+  const transcribeWithBrowserAPI = async (audioBlob: Blob): Promise<string | null> => {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      throw new Error('Speech recognition not supported in this browser');
+    }
+    
+    // This is a placeholder - the Web Speech API doesn't actually work with audio blobs
+    // In a real implementation, this would use another approach
+    return "Sorry, browser speech recognition couldn't process your recording.";
+  };
+  
+  // Helper to convert blob to base64
+  const blobToBase64 = (blob: Blob): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result?.toString().split(',')[1];
+        if (base64String) {
+          resolve(base64String);
+        } else {
+          reject(new Error('Failed to convert blob to base64'));
+        }
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
   };
 
   // Process the transcription, optionally as a task

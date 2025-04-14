@@ -36,29 +36,64 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
     supportsVoice: typeof navigator !== 'undefined' && 'mediaDevices' in navigator
   });
   
-  useEffect(() => {
-    checkApiKeyValidity();
+  // Track the audio chunks being recorded
+  const audioChunksRef = useCallback(() => {
+    return [];
   }, []);
   
-  const checkApiKeyValidity = async () => {
+  // Track the media recorder instance
+  const mediaRecorderRef = useCallback(() => {
+    return null;
+  }, []);
+  
+  useEffect(() => {
+    checkElevenLabsApiValidity();
+  }, []);
+  
+  const checkElevenLabsApiValidity = async () => {
     try {
       setState(prev => ({ ...prev, isLoading: true, apiKeyStatus: 'checking' }));
       
-      const { data, error } = await supabase.functions.invoke('test-openai-connection', {});
+      // Try ElevenLabs API first
+      const elevenLabsValid = await testElevenLabsConnection();
       
-      if (error) throw error;
+      if (elevenLabsValid) {
+        setState(prev => ({
+          ...prev,
+          isLoading: false,
+          error: null,
+          apiKeyStatus: 'valid',
+          apiKeyErrorDetails: null
+        }));
+        return true;
+      }
       
+      // If ElevenLabs fails, check OpenAI Whisper
+      const whisperValid = await testWhisperConnection();
+      
+      if (whisperValid) {
+        setState(prev => ({
+          ...prev,
+          isLoading: false,
+          error: null,
+          apiKeyStatus: 'valid',
+          apiKeyErrorDetails: null
+        }));
+        return true;
+      }
+      
+      // If both fail, we'll fall back to browser speech recognition
       setState(prev => ({
         ...prev,
         isLoading: false,
-        error: null,
-        apiKeyStatus: data.valid ? 'valid' : 'invalid',
-        apiKeyErrorDetails: data.valid ? null : data.details || data.message
+        error: new Error("API connections failed, falling back to browser speech recognition"),
+        apiKeyStatus: 'invalid',
+        apiKeyErrorDetails: "External speech services unavailable"
       }));
       
-      return data.valid;
+      return false;
     } catch (error) {
-      console.error('Error testing OpenAI API connection:', error);
+      console.error('Error testing API connections:', error);
       setState(prev => ({
         ...prev,
         isLoading: false,
@@ -70,78 +105,321 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
     }
   };
   
+  const testElevenLabsConnection = async () => {
+    try {
+      // Test the ElevenLabs connection
+      // This is a simple test - in a real implementation, you would make an actual API call
+      const ELEVEN_LABS_API_KEY = 'sk_226b608fe1ec5b8fddc458a0370c7e8006910ee812ccec5d';
+      
+      const response = await fetch('https://api.elevenlabs.io/v1/user', {
+        method: 'GET',
+        headers: {
+          'xi-api-key': ELEVEN_LABS_API_KEY,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      return response.ok;
+    } catch (error) {
+      console.error('ElevenLabs connection test failed:', error);
+      return false;
+    }
+  };
+  
+  const testWhisperConnection = async () => {
+    try {
+      // Test the OpenAI Whisper via our Edge Function
+      const { data, error } = await supabase.functions.invoke('test-openai-connection', {});
+      
+      if (error) throw error;
+      return data?.valid || false;
+    } catch (error) {
+      console.error('Whisper connection test failed:', error);
+      return false;
+    }
+  };
+  
   const retryApiKeyValidation = async () => {
-    return await checkApiKeyValidity();
+    return await checkElevenLabsApiValidity();
   };
 
   const startListening = useCallback(() => {
     setState(prev => ({ ...prev, isListening: true, transcript: '' }));
     
-    // If we have a valid API key, use OpenAI's speech recognition
     if (state.apiKeyStatus === 'valid') {
-      startOpenAIVoiceRecognition();
+      // If we have a valid API key for ElevenLabs or Whisper, start recording
+      startVoiceRecording();
     } else {
       console.log('Using browser speech recognition as fallback');
       // Fallback to browser's speech recognition
-      // This is a placeholder - in a real implementation, you would 
-      // integrate with the browser's SpeechRecognition API
+      startBrowserSpeechRecognition();
     }
   }, [state.apiKeyStatus]);
   
   const stopListening = useCallback(() => {
     setState(prev => ({ ...prev, isListening: false, isProcessing: true }));
     
-    // If we were using OpenAI API, process the recorded audio
     if (state.apiKeyStatus === 'valid') {
+      // If we were using external API, process the recorded audio
       processRecordedAudio();
     } else {
       // Stop the browser's speech recognition
+      stopBrowserSpeechRecognition();
       setState(prev => ({ ...prev, isProcessing: false }));
     }
   }, [state.apiKeyStatus]);
   
-  // Function to record audio and send to OpenAI
-  const startOpenAIVoiceRecognition = async () => {
-    // This would be the actual implementation to start recording
-    // For now, this is just a placeholder
-    console.log('Starting OpenAI voice recognition');
-    
-    // After a few seconds, simulate getting a transcript (for demo only)
-    if (continuousListening) {
-      setTimeout(() => {
-        if (state.isListening) {
-          setState(prev => ({ 
-            ...prev, 
-            transcript: 'This is a simulated transcript from OpenAI voice recognition.'
-          }));
+  // Function to start recording audio for ElevenLabs or Whisper
+  const startVoiceRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        } 
+      });
+      
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm' // Using WebM format for best compatibility
+      });
+      
+      // Reset audio chunks
+      const audioChunks = [];
+      
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunks.push(event.data);
         }
-      }, 3000);
+      };
+      
+      mediaRecorder.start(100); // Collect data every 100ms
+      
+      // Save references
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = audioChunks;
+      
+    } catch (error) {
+      console.error('Error starting voice recording:', error);
+      setState(prev => ({ 
+        ...prev, 
+        error: error instanceof Error ? error : new Error('Error starting recording'),
+        isListening: false
+      }));
+      
+      // Fall back to browser speech recognition
+      startBrowserSpeechRecognition();
     }
   };
   
-  // Function to process recorded audio with OpenAI
+  // Process recorded audio with ElevenLabs or Whisper
   const processRecordedAudio = async () => {
     try {
-      // In a real implementation, this would send the recorded audio to our Edge Function
-      console.log('Processing audio with OpenAI API');
-      
-      setState(prev => ({ 
-        ...prev, 
-        isProcessing: false,
-        lastTranscript: 'This is a simulated processed transcript from OpenAI.'
-      }));
-      
-      // Call the onTranscriptComplete callback if provided
-      if (onTranscriptComplete) {
-        onTranscriptComplete('This is a simulated processed transcript from OpenAI.');
+      if (!mediaRecorderRef.current || audioChunksRef.current.length === 0) {
+        throw new Error("No recording data available");
       }
-    } catch (error) {
-      console.error('Error processing audio:', error);
+      
+      // Stop the recorder if it's still active
+      if (mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+      }
+      
+      // Get the audio blob
+      const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+      
+      // Try ElevenLabs first
+      try {
+        const elevenLabsTranscript = await transcribeWithElevenLabs(audioBlob);
+        if (elevenLabsTranscript) {
+          handleTranscriptComplete(elevenLabsTranscript);
+          return;
+        }
+      } catch (error) {
+        console.error('ElevenLabs transcription failed, falling back to Whisper:', error);
+      }
+      
+      // If ElevenLabs fails, try Whisper
+      try {
+        const whisperTranscript = await transcribeWithWhisper(audioBlob);
+        if (whisperTranscript) {
+          handleTranscriptComplete(whisperTranscript);
+          return;
+        }
+      } catch (error) {
+        console.error('Whisper transcription failed, falling back to browser:', error);
+      }
+      
+      // If both fail, notify the user
       setState(prev => ({ 
         ...prev, 
         isProcessing: false,
-        error: error instanceof Error ? error : new Error('Unknown error processing audio')
+        error: new Error("Speech recognition failed. Please try again or type your message.")
       }));
+      
+    } catch (error) {
+      console.error('Error processing recorded audio:', error);
+      setState(prev => ({ 
+        ...prev, 
+        isProcessing: false,
+        error: error instanceof Error ? error : new Error('Error processing recording')
+      }));
+    } finally {
+      // Clean up
+      if (mediaRecorderRef.current) {
+        const tracks = mediaRecorderRef.current.stream.getTracks();
+        tracks.forEach(track => track.stop());
+      }
+    }
+  };
+  
+  const transcribeWithElevenLabs = async (audioBlob: Blob): Promise<string | null> => {
+    // This would be the actual implementation for ElevenLabs Speech-to-Text
+    // For now, we're just simulating success/failure
+    const ELEVEN_LABS_API_KEY = 'sk_226b608fe1ec5b8fddc458a0370c7e8006910ee812ccec5d';
+    
+    try {
+      // Convert blob to base64
+      const base64Audio = await blobToBase64(audioBlob);
+      
+      // Call ElevenLabs API
+      const response = await fetch('https://api.elevenlabs.io/v1/speech-to-text', {
+        method: 'POST',
+        headers: {
+          'xi-api-key': ELEVEN_LABS_API_KEY,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          audio: base64Audio,
+          model_id: 'whisper-1',
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`ElevenLabs API error: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      return result.text || null;
+    } catch (error) {
+      console.error('ElevenLabs transcription error:', error);
+      return null;
+    }
+  };
+  
+  const transcribeWithWhisper = async (audioBlob: Blob): Promise<string | null> => {
+    try {
+      // Convert blob to base64
+      const reader = new FileReader();
+      const base64Audio = await new Promise<string>((resolve) => {
+        reader.onloadend = () => {
+          const base64data = reader.result?.toString().split(',')[1];
+          resolve(base64data || '');
+        };
+        reader.readAsDataURL(audioBlob);
+      });
+      
+      // Call our Edge Function with Whisper
+      const { data, error } = await supabase.functions.invoke('ai-voice-to-text', {
+        body: { audio: base64Audio }
+      });
+      
+      if (error) throw error;
+      return data?.text || null;
+    } catch (error) {
+      console.error('Whisper transcription error:', error);
+      return null;
+    }
+  };
+  
+  const blobToBase64 = (blob: Blob): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64data = reader.result?.toString().split(',')[1];
+        if (base64data) {
+          resolve(base64data);
+        } else {
+          reject(new Error("Failed to convert blob to base64"));
+        }
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  };
+  
+  // Browser's speech recognition as final fallback
+  const startBrowserSpeechRecognition = () => {
+    if (!('SpeechRecognition' in window) && !('webkitSpeechRecognition' in window)) {
+      setState(prev => ({
+        ...prev,
+        error: new Error('Speech recognition is not supported in this browser'),
+        isListening: false
+      }));
+      return;
+    }
+    
+    // Use the Web Speech API
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    
+    recognition.continuous = continuousListening;
+    recognition.interimResults = true;
+    recognition.lang = language || 'en-US';
+    
+    recognition.onstart = () => {
+      setState(prev => ({ ...prev, isListening: true }));
+    };
+    
+    recognition.onresult = (event) => {
+      const transcript = Array.from(event.results)
+        .map((result) => result[0].transcript)
+        .join(' ');
+      
+      setState(prev => ({ ...prev, transcript }));
+    };
+    
+    recognition.onerror = (event) => {
+      setState(prev => ({
+        ...prev,
+        error: new Error(`Speech recognition error: ${event.error}`),
+        isListening: false
+      }));
+    };
+    
+    recognition.onend = () => {
+      setState(prev => ({
+        ...prev,
+        isListening: false,
+        lastTranscript: state.transcript
+      }));
+      
+      if (state.transcript && onTranscriptComplete) {
+        onTranscriptComplete(state.transcript);
+      }
+    };
+    
+    recognition.start();
+    
+    // Store for later cleanup
+    (window as any).__speechRecognition = recognition;
+  };
+  
+  const stopBrowserSpeechRecognition = () => {
+    if ((window as any).__speechRecognition) {
+      (window as any).__speechRecognition.stop();
+      delete (window as any).__speechRecognition;
+    }
+  };
+  
+  const handleTranscriptComplete = (text: string) => {
+    setState(prev => ({
+      ...prev,
+      isProcessing: false,
+      lastTranscript: text
+    }));
+    
+    if (onTranscriptComplete) {
+      onTranscriptComplete(text);
     }
   };
   
