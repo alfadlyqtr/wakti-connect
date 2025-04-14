@@ -85,7 +85,7 @@ export const useAIChatEnhanced = (options: UseChatOptions = {}) => {
   }, []);
 
   const sendMessage = useCallback(
-    async (messageContent: string): Promise<AIMessage> => {
+    async (messageContent: string): Promise<{ success: boolean; error?: any }> => {
       try {
         setIsLoading(true);
         
@@ -125,7 +125,8 @@ export const useAIChatEnhanced = (options: UseChatOptions = {}) => {
         });
 
         if (error) {
-          throw new Error(`Error calling AI assistant: ${error.message}`);
+          console.error('AI assistant error:', error);
+          return { success: false, error };
         }
 
         // Create assistant message
@@ -154,31 +155,15 @@ export const useAIChatEnhanced = (options: UseChatOptions = {}) => {
           setPendingTaskConfirmation(true);
         }
 
-        return assistantMessage;
-      } catch (error) {
-        console.error('Error in sendMessage:', error);
-        toast({
-          title: 'Error',
-          description: error.message || 'Failed to send message',
-          variant: 'destructive',
-        });
-        
-        // Add error message to the chat
-        const errorMessage: AIMessage = {
-          id: uuidv4(),
-          content: 'Sorry, I encountered an error. Please try again.',
-          role: 'assistant',
-          timestamp: new Date(),
-        };
-        
-        setMessages((prev) => [...prev, errorMessage]);
-        
-        return errorMessage;
+        return { success: true };
+      } catch (err) {
+        console.error('Unexpected error in sendMessage:', err);
+        return { success: false, error: err };
       } finally {
         setIsLoading(false);
       }
     },
-    [messages, options.enableTaskCreation, profile]
+    [options.enableTaskCreation, profile]
   );
 
   const clearMessages = useCallback(() => {

@@ -57,18 +57,14 @@ export const AIAssistantToolbar = ({ activeMode }: AIAssistantToolbarProps) => {
     e.preventDefault();
     if (!inputMessage.trim() || isLoading) return;
 
-    try {
-      const messageCopy = inputMessage.trim();
+    const messageCopy = inputMessage.trim();
 
-      const result = await sendMessage(messageCopy);
+    const { success } = await sendMessage(messageCopy);
 
-      if (result?.role === 'assistant' || result?.role === 'user') {
-        setInputMessage('');
-      } else {
-        console.warn('sendMessage returned invalid result:', result);
-      }
-    } catch (error) {
-      console.error('Failed to send message:', error);
+    if (success) {
+      setInputMessage(''); // ✅ Only clear after confirmed success
+    } else {
+      console.warn('Message failed to send. Input preserved.');
     }
   };
   
