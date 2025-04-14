@@ -22,18 +22,26 @@ export const AIAssistantChatWindow = ({ activeMode }: AIAssistantChatWindowProps
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const previousMessagesLength = useRef(messages.length);
   const previousModeRef = useRef(activeMode);
-  const { getMessages } = useChatMemoryByMode();
   
   // Update active mode in the useAIAssistant hook when it changes
   useEffect(() => {
-    setActiveMode(activeMode);
-    const modeMessages = getMessages(activeMode);
-    if (modeMessages.length > 0) {
+    if (previousModeRef.current !== activeMode) {
+      // Set the new active mode in the assistant hook
+      setActiveMode(activeMode);
+      // Update the previous mode reference
+      previousModeRef.current = activeMode;
+    }
+  }, [activeMode, setActiveMode]);
+  
+  // Determine if we should show the welcome message
+  useEffect(() => {
+    // Only hide welcome message if we actually have messages
+    if (messages.length > 0) {
       setShowWelcomeMessage(false);
     } else {
       setShowWelcomeMessage(true);
     }
-  }, [activeMode, setActiveMode, getMessages]);
+  }, [messages, activeMode]);
   
   // Scroll to bottom of messages when new messages arrive or loading state changes
   useEffect(() => {
@@ -42,22 +50,6 @@ export const AIAssistantChatWindow = ({ activeMode }: AIAssistantChatWindowProps
       previousMessagesLength.current = messages.length;
     }
   }, [messages, isLoading]);
-  
-  // Only show welcome message on first load or when messages are empty
-  useEffect(() => {
-    if (previousModeRef.current !== activeMode) {
-      // Just update the previous mode ref but don't change showWelcomeMessage
-      // This preserves chat content when switching modes
-      previousModeRef.current = activeMode;
-    }
-    
-    // Only hide welcome message if we actually have messages
-    if (messages.length > 0) {
-      setShowWelcomeMessage(false);
-    } else {
-      setShowWelcomeMessage(true);
-    }
-  }, [activeMode, messages.length]);
 
   // Get mode-specific styling
   const getModeStyles = () => {
@@ -119,7 +111,7 @@ export const AIAssistantChatWindow = ({ activeMode }: AIAssistantChatWindowProps
       ))}
       
       <AnimatePresence>
-        
+        {/* AnimatePresence for animations */}
       </AnimatePresence>
       
       {isLoading && (

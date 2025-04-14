@@ -17,19 +17,44 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
   const [inputMessage, setInputMessage] = useState('');
   const [showVoiceInput, setShowVoiceInput] = useState(false);
   const { sendMessage, isLoading } = useAIAssistant();
+  const isSendingRef = useRef(false);
+  
+  // Reset the sending ref when loading state changes
+  useEffect(() => {
+    if (!isLoading && isSendingRef.current) {
+      isSendingRef.current = false;
+    }
+  }, [isLoading]);
   
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputMessage.trim() || isLoading) return;
+    
+    // Validate message and prevent duplicate sends
+    if (!inputMessage.trim() || isLoading || isSendingRef.current) return;
 
+    // Save message for potential restoration on failure
     const messageCopy = inputMessage.trim();
+    
+    // Mark as sending to prevent duplicate sends
+    isSendingRef.current = true;
+    
+    try {
+      // Only attempt to send if we're not already sending
+      const { success } = await sendMessage(messageCopy);
 
-    const { success } = await sendMessage(messageCopy);
-
-    if (success) {
-      setInputMessage(''); // ✅ Only clear after confirmed success
-    } else {
-      console.warn('Message failed to send. Input preserved.');
+      if (success) {
+        // Only clear after confirmed success
+        setInputMessage('');
+      } else {
+        console.warn('Message failed to send. Input preserved.');
+        // The message is preserved since we don't clear it on failure
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      // Preserve message on error
+    } finally {
+      // Reset sending state after completion
+      isSendingRef.current = false;
     }
   };
   
