@@ -60,16 +60,15 @@ export const AIAssistantToolbar = ({ activeMode }: AIAssistantToolbarProps) => {
     try {
       const messageCopy = inputMessage.trim();
 
-      const success = await sendMessage(messageCopy);
+      const result = await sendMessage(messageCopy);
 
-      if (success) {
-        setInputMessage(''); // Only clear if fully processed
+      if (result?.role === 'assistant' || result?.role === 'user') {
+        setInputMessage('');
       } else {
-        console.warn('sendMessage did not confirm success.');
+        console.warn('sendMessage returned invalid result:', result);
       }
     } catch (error) {
       console.error('Failed to send message:', error);
-      // Leave input as-is for retry
     }
   };
   
