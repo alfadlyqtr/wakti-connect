@@ -2,13 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { WAKTIAIMode, WAKTIAIModes } from '@/types/ai-assistant.types';
 import { AIModeSwitcher } from './mode/AIModeSwitcher';
 import { AIAssistantChatWindow } from './chat/AIAssistantChatWindow';
 import { AIAssistantToolbar } from './input/AIAssistantToolbar';
 import { MeetingSummaryTool } from './tools/MeetingSummaryTool';
-import { LockIcon } from 'lucide-react';
+import { LockIcon, MessageSquare, Mic, Wrench } from 'lucide-react';
 import { useAuth } from '@/hooks/auth';
 import { useProfile } from '@/hooks/useProfile';
 import { UserRole } from '@/types/user';
@@ -17,6 +17,7 @@ const WAKTIAIAssistant = () => {
   const { user } = useAuth();
   const { profile } = useProfile(user?.id);
   const [activeMode, setActiveMode] = useState<WAKTIAIMode>('general');
+  const [activeTab, setActiveTab] = useState('chat');
   const [canAccessAI, setCanAccessAI] = useState(false);
   const [showMeetingTool, setShowMeetingTool] = useState(false);
 
@@ -28,9 +29,8 @@ const WAKTIAIAssistant = () => {
     }
   }, [profile]);
   
-  // Control meeting tool visibility based on active mode
+  // Show meeting tool in Creative mode
   useEffect(() => {
-    // Show meeting tool only in creative mode
     setShowMeetingTool(activeMode === 'creative');
   }, [activeMode]);
 
@@ -75,37 +75,61 @@ const WAKTIAIAssistant = () => {
 
   return (
     <div className="flex flex-col space-y-4">
-      <Card className={`overflow-hidden transition-all duration-300 shadow-lg ${WAKTIAIModes[activeMode].glowEffect}`}>
-        <div className="border-b">
-          <AIModeSwitcher 
-            activeMode={activeMode} 
-            setActiveMode={setActiveMode} 
-          />
+      <Tabs 
+        defaultValue="chat" 
+        value={activeTab} 
+        onValueChange={setActiveTab}
+        className="w-full"
+      >
+        <div className="flex justify-between items-center mb-2">
+          <TabsList className="grid grid-cols-2 md:w-64">
+            <TabsTrigger value="chat" className="flex items-center gap-1.5">
+              <MessageSquare className="h-4 w-4" /> Chat
+            </TabsTrigger>
+            {showMeetingTool && (
+              <TabsTrigger value="tools" className="flex items-center gap-1.5">
+                <Wrench className="h-4 w-4" /> Tools
+              </TabsTrigger>
+            )}
+          </TabsList>
         </div>
-        
-        <AIAssistantChatWindow 
-          activeMode={activeMode} 
-        />
-        
-        <div className="border-t">
-          <AIAssistantToolbar 
-            activeMode={activeMode} 
-          />
-        </div>
-      </Card>
-      
-      {/* Meeting Tool - Only show in Creative Mode */}
-      {showMeetingTool && canAccessAI && (
-        <Card className="shadow-lg border border-purple-200 overflow-hidden transition-all duration-300">
-          <CardContent className="p-0">
-            <MeetingSummaryTool 
-              onUseSummary={(summary) => {
-                // Optionally handle summary usage here
-              }} 
+
+        <TabsContent value="chat" className="mt-0">
+          <Card className={`overflow-hidden transition-all duration-300 shadow-lg ${WAKTIAIModes[activeMode].glowEffect}`}>
+            <div className="border-b">
+              <AIModeSwitcher 
+                activeMode={activeMode} 
+                setActiveMode={setActiveMode} 
+              />
+            </div>
+            
+            <AIAssistantChatWindow 
+              activeMode={activeMode} 
             />
-          </CardContent>
-        </Card>
-      )}
+            
+            <div className="border-t">
+              <AIAssistantToolbar 
+                activeMode={activeMode} 
+              />
+            </div>
+          </Card>
+        </TabsContent>
+
+        {showMeetingTool && (
+          <TabsContent value="tools" className="mt-0">
+            <Card className="shadow-lg border border-purple-200 overflow-hidden transition-all duration-300">
+              <CardContent className="p-0">
+                <MeetingSummaryTool 
+                  onUseSummary={(summary) => {
+                    // Switch back to chat tab when summary is used
+                    setActiveTab('chat');
+                  }} 
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
+      </Tabs>
     </div>
   );
 };

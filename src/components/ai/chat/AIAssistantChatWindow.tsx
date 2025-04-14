@@ -16,7 +16,7 @@ interface AIAssistantChatWindowProps {
 }
 
 export const AIAssistantChatWindow = ({ activeMode }: AIAssistantChatWindowProps) => {
-  const { messages, isLoading } = useAIAssistant();
+  const { messages, isLoading, clearMessages } = useAIAssistant();
   const [showWelcomeMessage, setShowWelcomeMessage] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const previousMessagesLength = useRef(messages.length);
@@ -32,9 +32,9 @@ export const AIAssistantChatWindow = ({ activeMode }: AIAssistantChatWindowProps
   
   // Only show welcome message on first load or mode change
   useEffect(() => {
-    // Check if mode has changed
+    // Check if mode has changed but don't clear messages
     if (previousModeRef.current !== activeMode) {
-      setShowWelcomeMessage(true);
+      setShowWelcomeMessage(messages.length === 0);
       previousModeRef.current = activeMode;
     } else if (messages.length > 0) {
       setShowWelcomeMessage(false);

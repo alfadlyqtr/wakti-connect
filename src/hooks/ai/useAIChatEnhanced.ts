@@ -1,11 +1,35 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { nanoid } from '@/lib/utils';
-import { AIMessage, AITaskDetectionResult } from '@/types/ai-assistant.types';
-import { Task } from '@/types/task';
+import { v4 as uuidv4 } from 'uuid';
+import { AIMessage } from '@/types/ai-assistant.types';
+import { TaskPriority } from '@/types/task.types';
 import { toast } from '@/components/ui/use-toast';
 import { useProfile } from '../useProfile';
 import { useAuth } from '../auth';
+
+// Define the AITaskDetectionResult interface locally since it's missing
+interface AITaskDetectionResult {
+  title: string;
+  description?: string;
+  priority?: TaskPriority;
+  dueDate?: string | null;
+  category?: string;
+}
+
+// Define a local Task interface based on the properties we need
+interface Task {
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+  priority: string;
+  dueDate?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  category?: string;
+  userId: string;
+  completedAt: string | null;
+}
 
 interface UseChatOptions {
   sessionId?: string;
@@ -25,7 +49,7 @@ export const useAIChatEnhanced = (options: UseChatOptions = {}) => {
   const [isCreatingTask, setIsCreatingTask] = useState(false);
   
   // Generate a unique session ID if not provided
-  const sessionIdRef = useRef(options.sessionId || `session-${nanoid()}`);
+  const sessionIdRef = useRef(options.sessionId || `session-${uuidv4()}`);
   
   // Keep recent context in memory for faster back-references
   const contextWindowRef = useRef<AIMessage[]>([]);
@@ -67,10 +91,10 @@ export const useAIChatEnhanced = (options: UseChatOptions = {}) => {
         
         // Create user message
         const userMessage: AIMessage = {
-          id: nanoid(),
+          id: uuidv4(),
           content: messageContent,
           role: 'user',
-          createdAt: new Date().toISOString(),
+          timestamp: new Date(),
         };
         
         // Immediately update UI with user message
@@ -106,10 +130,10 @@ export const useAIChatEnhanced = (options: UseChatOptions = {}) => {
 
         // Create assistant message
         const assistantMessage: AIMessage = {
-          id: nanoid(),
+          id: uuidv4(),
           content: data.response || 'Sorry, I encountered an error processing your request.',
           role: 'assistant',
-          createdAt: new Date().toISOString(),
+          timestamp: new Date(),
         };
         
         // Update message list with assistant response
@@ -141,10 +165,10 @@ export const useAIChatEnhanced = (options: UseChatOptions = {}) => {
         
         // Add error message to the chat
         const errorMessage: AIMessage = {
-          id: nanoid(),
+          id: uuidv4(),
           content: 'Sorry, I encountered an error. Please try again.',
           role: 'assistant',
-          createdAt: new Date().toISOString(),
+          timestamp: new Date(),
         };
         
         setMessages((prev) => [...prev, errorMessage]);
@@ -173,7 +197,7 @@ export const useAIChatEnhanced = (options: UseChatOptions = {}) => {
       
       // For now, just simulate a successful creation
       const newTask: Task = {
-        id: nanoid(),
+        id: uuidv4(),
         title: detectedTask.title,
         description: detectedTask.description || '',
         status: 'pending',
@@ -188,10 +212,10 @@ export const useAIChatEnhanced = (options: UseChatOptions = {}) => {
       
       // Add confirmation message to chat
       const confirmationMessage: AIMessage = {
-        id: nanoid(),
+        id: uuidv4(),
         content: `I've created a new task: "${detectedTask.title}"`,
         role: 'assistant',
-        createdAt: new Date().toISOString(),
+        timestamp: new Date(),
       };
       
       setMessages((prev) => [...prev, confirmationMessage]);
@@ -217,10 +241,10 @@ export const useAIChatEnhanced = (options: UseChatOptions = {}) => {
   const cancelCreateTask = useCallback(() => {
     // Add cancellation message to chat
     const cancellationMessage: AIMessage = {
-      id: nanoid(),
+      id: uuidv4(),
       content: 'I won\'t create a task for this. How else can I help you?',
       role: 'assistant',
-      createdAt: new Date().toISOString(),
+      timestamp: new Date(),
     };
     
     setMessages((prev) => [...prev, cancellationMessage]);

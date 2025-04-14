@@ -23,6 +23,15 @@ export interface AIMessage {
   timestamp: Date;
 }
 
+// AITaskDetectionResult interface
+export interface AITaskDetectionResult {
+  title: string;
+  description?: string;
+  priority?: string;
+  dueDate?: string | null;
+  category?: string;
+}
+
 // AI knowledge upload interface
 export interface AIKnowledgeUpload {
   id: string;
