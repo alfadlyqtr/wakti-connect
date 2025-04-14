@@ -82,7 +82,31 @@ export const createPdfMetadataDiv = (
  * @returns HTML-formatted content
  */
 export const processSummaryContent = (summary: string): string => {
-  return summary
+  // Extract any tasks if present
+  let tasks = "";
+  const taskMatch = summary.match(/##\s*Action Items[^#]*(?=##|$)/i);
+  
+  if (taskMatch) {
+    tasks = `
+      <div style="margin-top: 30px; padding: 15px; background-color: #f0f9ff; border-left: 4px solid #0053c3; border-radius: 4px;">
+        <h3 style="color: #0053c3; margin-top: 0; margin-bottom: 10px;">Action Items:</h3>
+        <ul style="margin-top: 10px;">
+          ${taskMatch[0].replace(/^##\s*Action Items\s*/i, '')
+            .split('\n')
+            .filter(line => line.trim().startsWith('-') || line.trim().startsWith('*'))
+            .map(line => `<li style="margin-bottom: 8px;">${line.replace(/^[-*]\s*/, '')}</li>`)
+            .join('')
+          }
+        </ul>
+        <div style="margin-top: 15px;">
+          <a href="#" style="color: #0053c3; text-decoration: none; font-weight: bold;">Add to Tasks ➔</a>
+        </div>
+      </div>
+    `;
+  }
+  
+  // Process the main content with improved formatting
+  let processedContent = summary
     // Style headings
     .replace(/^## (.*)/gm, '<h2 style="color: #0053c3; font-size: 20px; margin-top: 30px; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 1px solid #e9ecef;">$1</h2>')
     .replace(/^### (.*)/gm, '<h3 style="color: #0053c3; font-size: 16px; margin-top: 20px; margin-bottom: 10px;">$1</h3>')
@@ -98,4 +122,19 @@ export const processSummaryContent = (summary: string): string => {
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
     // Convert newlines to breaks
     .replace(/\n\n/g, '<br /><br />');
+  
+  // Structure the content into sections
+  let structuredContent = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+      <section>
+        ${processedContent}
+      </section>
+      ${tasks}
+      <footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e9ecef; text-align: center; color: #6c757d; font-size: 12px;">
+        Powered by WAKTI AI Meeting Summary Tool • Generated on ${new Date().toLocaleDateString()}
+      </footer>
+    </div>
+  `;
+  
+  return structuredContent;
 };

@@ -34,6 +34,11 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
   const { t } = useTranslation();
   const mapRef = useRef<HTMLIFrameElement>(null);
   const [mapUrl, setMapUrl] = useState<string>('');
+  
+  // States for button feedback
+  const [copyFeedback, setCopyFeedback] = useState(false);
+  const [exportFeedback, setExportFeedback] = useState(false);
+  const [downloadFeedback, setDownloadFeedback] = useState(false);
 
   useEffect(() => {
     if (detectedLocation) {
@@ -45,6 +50,29 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
       }
     }
   }, [detectedLocation]);
+  
+  // Handle copy feedback
+  useEffect(() => {
+    if (copied) {
+      setCopyFeedback(true);
+      const timer = setTimeout(() => setCopyFeedback(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [copied]);
+  
+  // Custom wrapper for export with feedback
+  const handleExport = async () => {
+    await exportAsPDF();
+    setExportFeedback(true);
+    setTimeout(() => setExportFeedback(false), 2000);
+  };
+  
+  // Custom wrapper for download with feedback
+  const handleDownload = () => {
+    downloadAudio();
+    setDownloadFeedback(true);
+    setTimeout(() => setDownloadFeedback(false), 2000);
+  };
 
   if (!summary) {
     return null;
@@ -59,33 +87,34 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
             variant="outline"
             size="sm"
             onClick={copySummary}
-            className="flex items-center space-x-1"
+            disabled={copyFeedback}
+            className="flex items-center space-x-1 min-w-[120px]"
           >
-            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-            <span>{copied ? t('common.copied') : t('common.copy')}</span>
+            {copyFeedback ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+            <span>{copyFeedback ? t('common.copied') : t('summary.copySummary')}</span>
           </Button>
           
           <Button
             variant="outline"
             size="sm"
-            onClick={exportAsPDF}
-            disabled={isExporting}
-            className="flex items-center space-x-1"
+            onClick={handleExport}
+            disabled={isExporting || exportFeedback}
+            className="flex items-center space-x-1 min-w-[120px]"
           >
-            <Download className="h-4 w-4" />
-            <span>{t('summary.exportPDF')}</span>
+            <Download className={`h-4 w-4 ${exportFeedback ? 'text-green-500' : ''}`} />
+            <span>{exportFeedback ? t('summary.exported') : t('summary.exportPDF')}</span>
           </Button>
           
           {audioData && (
             <Button
               variant="outline"
               size="sm"
-              onClick={downloadAudio}
-              disabled={isDownloadingAudio}
-              className="flex items-center space-x-1"
+              onClick={handleDownload}
+              disabled={isDownloadingAudio || downloadFeedback}
+              className="flex items-center space-x-1 min-w-[140px]"
             >
-              <FileDown className="h-4 w-4" />
-              <span>{t('summary.downloadAudio')}</span>
+              <FileDown className={`h-4 w-4 ${downloadFeedback ? 'text-green-500' : ''}`} />
+              <span>{downloadFeedback ? t('summary.downloaded') : t('summary.downloadAudio')}</span>
             </Button>
           )}
         </div>
