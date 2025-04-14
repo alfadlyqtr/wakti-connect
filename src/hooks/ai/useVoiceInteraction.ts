@@ -1,5 +1,4 @@
-
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useVoiceSettings } from '@/store/voiceSettings';
 
@@ -36,15 +35,8 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
     supportsVoice: typeof navigator !== 'undefined' && 'mediaDevices' in navigator
   });
   
-  // Track the audio chunks being recorded
-  const audioChunksRef = useCallback(() => {
-    return [];
-  }, []);
-  
-  // Track the media recorder instance
-  const mediaRecorderRef = useCallback(() => {
-    return null;
-  }, []);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   
   useEffect(() => {
     checkElevenLabsApiValidity();
@@ -169,7 +161,6 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
     }
   }, [state.apiKeyStatus]);
   
-  // Function to start recording audio for ElevenLabs or Whisper
   const startVoiceRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -185,11 +176,11 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
       });
       
       // Reset audio chunks
-      const audioChunks = [];
+      audioChunksRef.current = [];
       
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
-          audioChunks.push(event.data);
+          audioChunksRef.current.push(event.data);
         }
       };
       
@@ -197,7 +188,6 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
       
       // Save references
       mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = audioChunks;
       
     } catch (error) {
       console.error('Error starting voice recording:', error);
@@ -212,7 +202,6 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
     }
   };
   
-  // Process recorded audio with ElevenLabs or Whisper
   const processRecordedAudio = async () => {
     try {
       if (!mediaRecorderRef.current || audioChunksRef.current.length === 0) {
@@ -347,7 +336,6 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
     });
   };
   
-  // Browser's speech recognition as final fallback
   const startBrowserSpeechRecognition = () => {
     if (!('SpeechRecognition' in window) && !('webkitSpeechRecognition' in window)) {
       setState(prev => ({
