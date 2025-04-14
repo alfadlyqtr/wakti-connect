@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Avatar } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -95,9 +96,11 @@ export const AIAssistantChatWindow = ({ activeMode }: AIAssistantChatWindowProps
             )}
           </Avatar>
           <div className="bg-background rounded-lg p-3 shadow-sm">
-            <ReactMarkdown className="text-sm whitespace-pre-wrap">
-              {msg.content}
-            </ReactMarkdown>
+            <div className="text-sm whitespace-pre-wrap">
+              <ReactMarkdown>
+                {msg.content}
+              </ReactMarkdown>
+            </div>
           </div>
         </motion.div>
       ))}
