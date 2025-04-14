@@ -30,6 +30,13 @@ export const AIAssistantChatWindow = ({ activeMode }: AIAssistantChatWindowProps
       setActiveMode(activeMode);
       // Update the previous mode reference
       previousModeRef.current = activeMode;
+      
+      // Force scroll to bottom on mode change
+      setTimeout(() => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
     }
   }, [activeMode, setActiveMode]);
   
@@ -93,7 +100,11 @@ export const AIAssistantChatWindow = ({ activeMode }: AIAssistantChatWindowProps
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2 }}
         >
-          <Avatar className="h-8 w-8 bg-muted">
+          <Avatar className={cn("h-8 w-8", 
+            msg.role === 'assistant' 
+              ? WAKTIAIModes[activeMode].color 
+              : "bg-muted"
+          )}>
             {msg.role === 'assistant' ? (
               <Bot className="h-4 w-4 text-white" />
             ) : (

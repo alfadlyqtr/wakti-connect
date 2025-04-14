@@ -11,9 +11,10 @@ export type { AIMessage, AISettings, AIKnowledgeUpload };
 
 export const useAIAssistant = () => {
   const [activeMode, setActiveMode] = useState<WAKTIAIMode>('general');
-  const { getMessages, setMessagesForMode, addMessageToMode } = useChatMemoryByMode();
+  const { getMessages, setMessagesForMode, addMessageToMode, syncWithContext } = useChatMemoryByMode();
   const [messages, setMessages] = useState<AIMessage[]>(getMessages(activeMode));
   const processingMessageRef = useRef(false);
+  const messageSendingRef = useRef<{text: string, inProgress: boolean}>({text: '', inProgress: false});
   
   const { 
     sendMessage: originalSendMessage, 
@@ -37,9 +38,13 @@ export const useAIAssistant = () => {
 
   // Wrap the sendMessage function to update our mode-specific message store
   const sendMessage = useCallback(async (message: string) => {
-    if (processingMessageRef.current) {
-      return { success: false };
+    // Prevent multiple concurrent sends and reuse of the same message
+    if (processingMessageRef.current || messageSendingRef.current.inProgress) {
+      return { success: false, error: "Message already being processed" };
     }
+    
+    // Capture the message we're about to send
+    messageSendingRef.current = { text: message, inProgress: true };
     
     try {
       processingMessageRef.current = true;
@@ -57,13 +62,8 @@ export const useAIAssistant = () => {
         
         // We only want to add new messages that aren't already in our mode-specific store
         if (updatedMessages.length > currentModeMessages.length) {
-          // Extract only the new messages
-          const newMessages = updatedMessages.slice(currentModeMessages.length);
-          
-          // Add each new message to our mode-specific store
-          newMessages.forEach(msg => {
-            addMessageToMode(activeMode, msg);
-          });
+          // First sync the entire context with our mode-specific store
+          syncWithContext(activeMode, updatedMessages);
           
           // Update the local state with all messages for this mode
           const finalMessages = getMessages(activeMode);
@@ -71,11 +71,19 @@ export const useAIAssistant = () => {
         }
       }
       
+      // Reset the sending ref only on successful completion
+      if (result.success) {
+        messageSendingRef.current = { text: '', inProgress: false };
+      }
+      
       return result;
+    } catch (error) {
+      console.error("Error in sendMessage:", error);
+      return { success: false, error };
     } finally {
       processingMessageRef.current = false;
     }
-  }, [activeMode, originalSendMessage, getMessages, addMessageToMode, getRecentContext]);
+  }, [activeMode, originalSendMessage, getMessages, syncWithContext, getRecentContext]);
 
   // Wrap the clearMessages function to clear only the current mode's messages
   const clearMessages = useCallback(() => {
@@ -83,6 +91,16 @@ export const useAIAssistant = () => {
     setMessagesForMode(activeMode, []);
     setMessages([]);
   }, [activeMode, originalClearMessages, setMessagesForMode]);
+
+  // Helper method to check if a message is currently being processed
+  const isMessageProcessing = useCallback(() => {
+    return processingMessageRef.current || messageSendingRef.current.inProgress;
+  }, []);
+
+  // Helper to get the current message being processed (useful for recovery/retry)
+  const getCurrentProcessingMessage = useCallback(() => {
+    return messageSendingRef.current.inProgress ? messageSendingRef.current.text : null;
+  }, []);
 
   return {
     // Chat features
@@ -93,6 +111,8 @@ export const useAIAssistant = () => {
     getRecentContext,
     activeMode,
     setActiveMode,
+    isMessageProcessing,
+    getCurrentProcessingMessage,
     
     // Task features
     detectedTask,

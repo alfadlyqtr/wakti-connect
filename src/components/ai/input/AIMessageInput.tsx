@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -16,49 +15,37 @@ interface AIMessageInputProps {
 export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
   const [inputMessage, setInputMessage] = useState('');
   const [showVoiceInput, setShowVoiceInput] = useState(false);
-  const { sendMessage, isLoading } = useAIAssistant();
-  const isSendingRef = useRef(false);
-  
-  // Reset the sending ref when loading state changes
+  const { sendMessage, isLoading, isMessageProcessing } = useAIAssistant();
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const prevMessageRef = useRef('');
+
   useEffect(() => {
-    if (!isLoading && isSendingRef.current) {
-      isSendingRef.current = false;
+    if (inputMessage && !isLoading) {
+      prevMessageRef.current = inputMessage;
     }
-  }, [isLoading]);
-  
+  }, [inputMessage, isLoading]);
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate message and prevent duplicate sends
-    if (!inputMessage.trim() || isLoading || isSendingRef.current) return;
+    if (!inputMessage.trim() || isLoading || isMessageProcessing()) return;
 
-    // Save message for potential restoration on failure
     const messageCopy = inputMessage.trim();
     
-    // Mark as sending to prevent duplicate sends
-    isSendingRef.current = true;
-    
     try {
-      // Only attempt to send if we're not already sending
       const { success } = await sendMessage(messageCopy);
 
       if (success) {
-        // Only clear after confirmed success
         setInputMessage('');
+        prevMessageRef.current = '';
       } else {
         console.warn('Message failed to send. Input preserved.');
-        // The message is preserved since we don't clear it on failure
       }
     } catch (error) {
       console.error('Error sending message:', error);
-      // Preserve message on error
-    } finally {
-      // Reset sending state after completion
-      isSendingRef.current = false;
     }
   };
-  
-  // Get mode-specific button styling
+
   const getModeButtonStyle = () => {
     switch (activeMode) {
       case 'general':
@@ -78,6 +65,7 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
     <form onSubmit={handleSendMessage} className="space-y-2">
       <div className="relative">
         <Textarea
+          ref={inputRef}
           placeholder={showVoiceInput ? "Listening..." : "Type a message..."}
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
@@ -105,7 +93,7 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
         
         <Button 
           type="submit" 
-          disabled={!inputMessage.trim() || isLoading} 
+          disabled={!inputMessage.trim() || isLoading || isMessageProcessing()} 
           className={cn("px-4", getModeButtonStyle())}
         >
           {isLoading ? (
