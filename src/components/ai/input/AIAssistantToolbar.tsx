@@ -56,16 +56,20 @@ export const AIAssistantToolbar = ({ activeMode }: AIAssistantToolbarProps) => {
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputMessage.trim() || isLoading) return;
-    
+
     try {
-      const messageCopy = inputMessage.trim(); // Save a copy of the message
-      await sendMessage(messageCopy);
-      
-      // Clear input ONLY after successful send
-      setInputMessage('');
+      const messageCopy = inputMessage.trim();
+
+      const success = await sendMessage(messageCopy);
+
+      if (success) {
+        setInputMessage(''); // Only clear if fully processed
+      } else {
+        console.warn('sendMessage did not confirm success.');
+      }
     } catch (error) {
       console.error('Failed to send message:', error);
-      // Keep the input text if send failed
+      // Leave input as-is for retry
     }
   };
   
