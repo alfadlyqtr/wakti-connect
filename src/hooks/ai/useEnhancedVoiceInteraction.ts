@@ -24,11 +24,12 @@ export const useEnhancedVoiceInteraction = ({
   } = useVoiceInteraction({
     onTranscriptComplete: (text) => {
       if (text) {
-        // Append to existing text rather than replacing
-        setInputMessage(prev => {
-          const separator = prev && !prev.endsWith(' ') && !text.startsWith(' ') ? ' ' : '';
-          return prev + separator + text;
-        });
+        // Create a new string rather than using a function
+        const currentInput = document.querySelector('textarea')?.value || '';
+        const separator = currentInput && !currentInput.endsWith(' ') && !text.startsWith(' ') ? ' ' : '';
+        const newValue = currentInput + separator + text;
+        
+        setInputMessage(newValue);
         setShowVoiceInput(false);
         onTranscriptComplete?.(text);
       }
@@ -38,10 +39,12 @@ export const useEnhancedVoiceInteraction = ({
   // Update input field with transcript in real-time
   useEffect(() => {
     if (transcript && isListening) {
-      setInputMessage(prev => {
-        const separator = prev && !prev.endsWith(' ') && !transcript.startsWith(' ') ? ' ' : '';
-        return prev + separator + transcript;
-      });
+      // Create a new string rather than using a function
+      const currentInput = document.querySelector('textarea')?.value || '';
+      const separator = currentInput && !currentInput.endsWith(' ') && !transcript.startsWith(' ') ? ' ' : '';
+      const newValue = currentInput + separator + transcript;
+      
+      setInputMessage(newValue);
       onTranscriptUpdate?.(transcript);
     }
   }, [transcript, isListening, setInputMessage, onTranscriptUpdate]);
