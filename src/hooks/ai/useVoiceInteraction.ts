@@ -78,7 +78,7 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
         }));
         return true;
       } else {
-        console.warn("Whisper API is not available, falling back to browser speech recognition");
+        console.warn("Whisper API is not available, falling back to browser");
       }
       
       // If both fail, we'll fall back to browser speech recognition
@@ -301,17 +301,10 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
   const transcribeWithWhisper = async (audioBlob: Blob): Promise<string | null> => {
     try {
       // Convert blob to base64
-      const reader = new FileReader();
-      const base64Audio = await new Promise<string>((resolve) => {
-        reader.onloadend = () => {
-          const base64data = reader.result?.toString().split(',')[1];
-          resolve(base64data || '');
-        };
-        reader.readAsDataURL(audioBlob);
-      });
+      const base64Audio = await blobToBase64(audioBlob);
       
       // Call our Edge Function with Whisper
-      const { data, error } = await supabase.functions.invoke('ai-voice-to-text', {
+      const { data, error } = await supabase.functions.invoke('voice-transcription', {
         body: { audio: base64Audio }
       });
       

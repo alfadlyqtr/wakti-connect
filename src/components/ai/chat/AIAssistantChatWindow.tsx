@@ -30,14 +30,19 @@ export const AIAssistantChatWindow = ({ activeMode }: AIAssistantChatWindowProps
     }
   }, [messages, isLoading]);
   
-  // Only show welcome message on first load or mode change
+  // Only show welcome message on first load or when messages are empty
   useEffect(() => {
-    // Check if mode has changed but don't clear messages
     if (previousModeRef.current !== activeMode) {
-      setShowWelcomeMessage(messages.length === 0);
+      // Just update the previous mode ref but don't change showWelcomeMessage
+      // This preserves chat content when switching modes
       previousModeRef.current = activeMode;
-    } else if (messages.length > 0) {
+    }
+    
+    // Only hide welcome message if we actually have messages
+    if (messages.length > 0) {
       setShowWelcomeMessage(false);
+    } else {
+      setShowWelcomeMessage(true);
     }
   }, [activeMode, messages.length]);
 
