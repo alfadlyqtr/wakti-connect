@@ -16,7 +16,7 @@ interface AIAssistantChatWindowProps {
 }
 
 export const AIAssistantChatWindow = ({ activeMode }: AIAssistantChatWindowProps) => {
-  const { messages, isLoading, clearMessages } = useAIAssistant();
+  const { messages, isLoading } = useAIAssistant();
   const [showWelcomeMessage, setShowWelcomeMessage] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const previousMessagesLength = useRef(messages.length);
@@ -78,7 +78,7 @@ export const AIAssistantChatWindow = ({ activeMode }: AIAssistantChatWindowProps
       <AnimatePresence>
         {messages.map((message, index) => (
           <motion.div
-            key={`${message.role}-${index}`} // Use a more reliable key
+            key={`${message.id}-${index}`} // Use a more reliable key
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}

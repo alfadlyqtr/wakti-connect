@@ -7,6 +7,7 @@ import { WAKTIAIMode, WAKTIAIModes } from '@/types/ai-assistant.types';
 import { AIModeSwitcher } from './mode/AIModeSwitcher';
 import { AIAssistantChatWindow } from './chat/AIAssistantChatWindow';
 import { AIAssistantToolbar } from './input/AIAssistantToolbar';
+import { MeetingSummaryTool } from './tools/MeetingSummaryTool';
 import { LockIcon } from 'lucide-react';
 import { useAuth } from '@/hooks/auth';
 import { useProfile } from '@/hooks/useProfile';
@@ -17,6 +18,7 @@ const WAKTIAIAssistant = () => {
   const { profile } = useProfile(user?.id);
   const [activeMode, setActiveMode] = useState<WAKTIAIMode>('general');
   const [canAccessAI, setCanAccessAI] = useState(false);
+  const [showMeetingTool, setShowMeetingTool] = useState(false);
 
   // Check if the user can access the AI Assistant based on their role
   useEffect(() => {
@@ -25,6 +27,12 @@ const WAKTIAIAssistant = () => {
       setCanAccessAI(accountType === 'individual' || accountType === 'business');
     }
   }, [profile]);
+  
+  // Control meeting tool visibility based on active mode
+  useEffect(() => {
+    // Show meeting tool only in creative mode
+    setShowMeetingTool(activeMode === 'creative');
+  }, [activeMode]);
 
   // Staff users can't access the AI assistant
   if (profile?.account_type === 'staff') {
@@ -85,6 +93,19 @@ const WAKTIAIAssistant = () => {
           />
         </div>
       </Card>
+      
+      {/* Meeting Tool - Only show in Creative Mode */}
+      {showMeetingTool && canAccessAI && (
+        <Card className="shadow-lg border border-purple-200 overflow-hidden transition-all duration-300">
+          <CardContent className="p-0">
+            <MeetingSummaryTool 
+              onUseSummary={(summary) => {
+                // Optionally handle summary usage here
+              }} 
+            />
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

@@ -51,6 +51,7 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
       const elevenLabsValid = await testElevenLabsConnection();
       
       if (elevenLabsValid) {
+        console.log("ElevenLabs API key is valid");
         setState(prev => ({
           ...prev,
           isLoading: false,
@@ -59,12 +60,15 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
           apiKeyErrorDetails: null
         }));
         return true;
+      } else {
+        console.warn("ElevenLabs API key is invalid or missing, falling back to Whisper");
       }
       
       // If ElevenLabs fails, check OpenAI Whisper
       const whisperValid = await testWhisperConnection();
       
       if (whisperValid) {
+        console.log("Whisper API is available for fallback");
         setState(prev => ({
           ...prev,
           isLoading: false,
@@ -73,9 +77,12 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
           apiKeyErrorDetails: null
         }));
         return true;
+      } else {
+        console.warn("Whisper API is not available, falling back to browser speech recognition");
       }
       
       // If both fail, we'll fall back to browser speech recognition
+      console.warn("Browser fallback activated: External speech services unavailable");
       setState(prev => ({
         ...prev,
         isLoading: false,
@@ -103,7 +110,10 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
       // Test the ElevenLabs connection via edge function
       const { data, error } = await supabase.functions.invoke('test-elevenlabs-connection');
       
-      if (error) throw error;
+      if (error) {
+        console.error("ElevenLabs connection error:", error);
+        throw error;
+      }
       return data?.valid || false;
     } catch (error) {
       console.error('ElevenLabs connection test failed:', error);
@@ -116,7 +126,10 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
       // Test the OpenAI Whisper via our Edge Function
       const { data, error } = await supabase.functions.invoke('test-openai-connection');
       
-      if (error) throw error;
+      if (error) {
+        console.error("Whisper connection error:", error);
+        throw error;
+      }
       return data?.valid || false;
     } catch (error) {
       console.error('Whisper connection test failed:', error);
@@ -135,7 +148,7 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
       // If we have a valid API key for ElevenLabs or Whisper, start recording
       startVoiceRecording();
     } else {
-      console.log('Using browser speech recognition as fallback');
+      console.warn('Browser fallback activated: Using browser speech recognition');
       // Fallback to browser's speech recognition
       startBrowserSpeechRecognition();
     }
@@ -191,6 +204,7 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
       }));
       
       // Fall back to browser speech recognition
+      console.warn('Browser fallback activated: Error starting recording');
       startBrowserSpeechRecognition();
     }
   };
@@ -211,10 +225,14 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
       
       // Try ElevenLabs first
       try {
+        console.log("Attempting transcription with ElevenLabs");
         const elevenLabsTranscript = await transcribeWithElevenLabs(audioBlob);
         if (elevenLabsTranscript) {
+          console.log("Successfully transcribed with ElevenLabs:", elevenLabsTranscript);
           handleTranscriptComplete(elevenLabsTranscript);
           return;
+        } else {
+          console.warn("ElevenLabs returned empty transcript, falling back to Whisper");
         }
       } catch (error) {
         console.error('ElevenLabs transcription failed, falling back to Whisper:', error);
@@ -222,16 +240,21 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
       
       // If ElevenLabs fails, try Whisper
       try {
+        console.log("Attempting transcription with Whisper");
         const whisperTranscript = await transcribeWithWhisper(audioBlob);
         if (whisperTranscript) {
+          console.log("Successfully transcribed with Whisper:", whisperTranscript);
           handleTranscriptComplete(whisperTranscript);
           return;
+        } else {
+          console.warn("Whisper returned empty transcript, falling back to browser");
         }
       } catch (error) {
         console.error('Whisper transcription failed, falling back to browser:', error);
       }
       
       // If both fail, notify the user
+      console.warn("Browser fallback activated: All transcription services failed");
       setState(prev => ({ 
         ...prev, 
         isProcessing: false,
@@ -264,7 +287,10 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
         body: { audio: base64Audio }
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("ElevenLabs Edge Function error:", error);
+        throw error;
+      }
       return data?.text || null;
     } catch (error) {
       console.error('ElevenLabs transcription error:', error);
@@ -289,7 +315,10 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
         body: { audio: base64Audio }
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Whisper Edge Function error:", error);
+        throw error;
+      }
       return data?.text || null;
     } catch (error) {
       console.error('Whisper transcription error:', error);
