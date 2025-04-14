@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Avatar } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -80,42 +79,31 @@ export const AIAssistantChatWindow = ({ activeMode }: AIAssistantChatWindowProps
         </motion.div>
       )}
       
-      <AnimatePresence>
-        {messages.map((message, index) => (
-          <motion.div
-            key={`${message.id}-${index}`} // Use a more reliable key
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className={cn(
-              "flex items-start gap-3 mb-4",
-              message.role === 'user' ? 'flex-row-reverse' : ''
-            )}
-          >
-            {message.role === 'assistant' ? (
-              <Avatar className={cn("h-8 w-8", WAKTIAIModes[activeMode].color)}>
-                <Bot className="h-4 w-4 text-white" />
-              </Avatar>
+      {messages.map((msg) => (
+        <motion.div
+          key={msg.id}
+          className="flex items-start gap-3 mb-4"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <Avatar className="h-8 w-8 bg-muted">
+            {msg.role === 'assistant' ? (
+              <Bot className="h-4 w-4 text-white" />
             ) : (
-              <Avatar className="h-8 w-8 bg-muted">
-                <User className="h-4 w-4" />
-              </Avatar>
+              <User className="h-4 w-4 text-white" />
             )}
-            
-            <div className={cn(
-              "rounded-lg p-3 max-w-[85%]",
-              message.role === 'assistant' 
-                ? 'bg-background shadow-sm' 
-                : 'bg-primary text-primary-foreground ml-auto'
-            )}>
-              <div className="prose prose-sm dark:prose-invert">
-                <ReactMarkdown>
-                  {message.content}
-                </ReactMarkdown>
-              </div>
-            </div>
-          </motion.div>
-        ))}
+          </Avatar>
+          <div className="bg-background rounded-lg p-3 shadow-sm">
+            <ReactMarkdown className="text-sm whitespace-pre-wrap">
+              {msg.content}
+            </ReactMarkdown>
+          </div>
+        </motion.div>
+      ))}
+      
+      <AnimatePresence>
+        
       </AnimatePresence>
       
       {isLoading && (
