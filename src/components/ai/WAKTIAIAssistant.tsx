@@ -44,7 +44,7 @@ const WAKTIAIAssistant = () => {
   }
 
   // Free users can access the assistant but with limited features
-  if (profile?.account_type === 'free') {
+  if (profile?.account_type === 'free' as any) {
     return (
       <Card className="shadow-lg border-2 border-wakti-blue/10">
         <CardContent className="flex flex-col items-center justify-center py-20 px-4 text-center">
