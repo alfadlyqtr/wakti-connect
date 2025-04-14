@@ -1,0 +1,92 @@
+
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { WAKTIAIMode, WAKTIAIModes } from '@/types/ai-assistant.types';
+import { AIModeSwitcher } from './mode/AIModeSwitcher';
+import { AIAssistantChatWindow } from './chat/AIAssistantChatWindow';
+import { AIAssistantToolbar } from './input/AIAssistantToolbar';
+import { LockIcon } from 'lucide-react';
+import { useAuth } from '@/hooks/auth';
+import { useProfile } from '@/hooks/useProfile';
+import { UserRole } from '@/types/user';
+
+const WAKTIAIAssistant = () => {
+  const { user } = useAuth();
+  const { profile } = useProfile(user?.id);
+  const [activeMode, setActiveMode] = useState<WAKTIAIMode>('general');
+  const [canAccessAI, setCanAccessAI] = useState(false);
+
+  // Check if the user can access the AI Assistant based on their role
+  useEffect(() => {
+    if (profile) {
+      const accountType = profile.account_type;
+      setCanAccessAI(accountType === 'individual' || accountType === 'business');
+    }
+  }, [profile]);
+
+  // Staff users can't access the AI assistant
+  if (profile?.account_type === 'staff') {
+    return (
+      <Card className="shadow-lg border-2 border-red-100">
+        <CardContent className="flex flex-col items-center justify-center py-20 px-4 text-center">
+          <div className="h-16 w-16 rounded-full bg-red-100 flex items-center justify-center mb-4">
+            <LockIcon className="h-8 w-8 text-red-500" />
+          </div>
+          <h2 className="text-xl font-semibold mb-2">Access Restricted</h2>
+          <p className="text-muted-foreground max-w-md">
+            The WAKTI AI Assistant is not available for staff accounts. Please contact your business administrator for assistance.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Free users can access the assistant but with limited features
+  if (profile?.account_type === 'free') {
+    return (
+      <Card className="shadow-lg border-2 border-wakti-blue/10">
+        <CardContent className="flex flex-col items-center justify-center py-20 px-4 text-center">
+          <div className="h-16 w-16 rounded-full bg-wakti-blue/10 flex items-center justify-center mb-4">
+            <img 
+              src="/lovable-uploads/9b7d0693-89eb-4cc5-b90b-7834bfabda0e.png" 
+              alt="WAKTI AI" 
+              className="h-8 w-8"
+            />
+          </div>
+          <h2 className="text-xl font-semibold mb-2">Upgrade to Access WAKTI AI</h2>
+          <p className="text-muted-foreground max-w-md mb-6">
+            The WAKTI AI Assistant is available for Individual and Business accounts. Upgrade your account to access this powerful tool.
+          </p>
+          <Button>Upgrade Now</Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="flex flex-col space-y-4">
+      <Card className={`overflow-hidden transition-all duration-300 shadow-lg ${WAKTIAIModes[activeMode].glowEffect}`}>
+        <div className="border-b">
+          <AIModeSwitcher 
+            activeMode={activeMode} 
+            setActiveMode={setActiveMode} 
+          />
+        </div>
+        
+        <AIAssistantChatWindow 
+          activeMode={activeMode} 
+        />
+        
+        <div className="border-t">
+          <AIAssistantToolbar 
+            activeMode={activeMode} 
+          />
+        </div>
+      </Card>
+    </div>
+  );
+};
+
+export default WAKTIAIAssistant;

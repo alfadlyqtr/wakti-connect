@@ -1956,6 +1956,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      can_use_feature: {
+        Args: { feature_name: string }
+        Returns: boolean
+      }
       check_contact_request: {
         Args: { user_id_param: string; contact_id_param: string }
         Returns: {
@@ -2013,6 +2017,10 @@ export type Database = {
           start_time: string
           end_time: string
         }[]
+      }
+      get_user_permissions: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       get_user_role: {
         Args: Record<PropertyKey, never>
@@ -2096,6 +2104,10 @@ export type Database = {
       }
       user_owns_staff: {
         Args: { staff_id: string }
+        Returns: boolean
+      }
+      validate_user_role: {
+        Args: { required_role: string }
         Returns: boolean
       }
     }

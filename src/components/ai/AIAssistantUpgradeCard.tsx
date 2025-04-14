@@ -1,9 +1,9 @@
 
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Zap } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Bot, Lock, Crown } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface AIAssistantUpgradeCardProps {
   compact?: boolean;
@@ -12,106 +12,98 @@ interface AIAssistantUpgradeCardProps {
 export const AIAssistantUpgradeCard: React.FC<AIAssistantUpgradeCardProps> = ({ 
   compact = false 
 }) => {
-  const navigate = useNavigate();
-  
-  // If we're in compact mode, show a simplified version
   if (compact) {
     return (
-      <Card className="border-dashed border-2 w-full mb-4">
+      <Card className="shadow-md border-wakti-blue/20">
         <CardContent className="p-4">
-          <div className="text-center">
-            <Zap className="h-5 w-5 mx-auto text-amber-500 mb-2" />
-            <p className="text-sm font-medium mb-2">Upgrade to unlock AI Assistant</p>
-            <Button 
-              size="sm" 
-              variant="default" 
-              className="bg-amber-500 hover:bg-amber-600 text-xs"
-              onClick={() => navigate('/dashboard/settings?tab=billing')}
-            >
-              Upgrade Now
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 bg-wakti-blue/10 rounded-full flex items-center justify-center">
+              <Lock className="h-4 w-4 text-wakti-blue" />
+            </div>
+            <div className="flex-1">
+              <h4 className="text-sm font-semibold">Upgrade to Access WAKTI AI</h4>
+              <p className="text-xs text-muted-foreground">
+                Available on Individual & Business plans
+              </p>
+            </div>
+            <Button size="sm" className="h-8 px-3 bg-wakti-blue hover:bg-wakti-blue/90">
+              Upgrade
             </Button>
           </div>
         </CardContent>
       </Card>
     );
   }
-  
-  // Full version
+
   return (
-    <Card className="border-dashed border-2 w-full max-w-3xl mx-auto">
-      <CardHeader className="pb-2 border-b">
-        <CardTitle className="flex items-center gap-2 text-xl">
-          <Zap className="h-5 w-5 text-amber-500" />
+    <Card className="shadow-md border-wakti-blue/20">
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center gap-2">
+          <Bot className="h-5 w-5 text-wakti-blue" />
           WAKTI AI Assistant
         </CardTitle>
+        <CardDescription>
+          Unlock the full power of your intelligent assistant
+        </CardDescription>
       </CardHeader>
-      <CardContent className="p-4 sm:p-6">
-        <div className="flex flex-col items-center text-center space-y-4">
-          <div className="bg-amber-50 rounded-full p-4 sm:p-6">
-            <Zap className="h-8 w-8 sm:h-12 sm:w-12 text-amber-500" />
+      
+      <CardContent>
+        <div className="space-y-4">
+          <div className="bg-wakti-blue/5 p-4 rounded-lg border border-wakti-blue/10">
+            <h3 className="text-sm font-medium flex items-center gap-2 mb-2">
+              <Crown className="h-4 w-4 text-amber-500" />
+              Available on Premium Plans
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              WAKTI AI Assistant is available on Individual (QAR 20/month) and Business (QAR 45/month) plans.
+            </p>
           </div>
           
-          <h3 className="text-lg sm:text-xl font-bold">Upgrade to access the AI Assistant</h3>
-          
-          <p className="text-muted-foreground max-w-lg text-sm sm:text-base">
-            WAKTI's AI Assistant helps boost your productivity with intelligent task management, appointment scheduling, and business insights. Available with Individual and Business plans.
-          </p>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-lg">
-            <div className="flex items-start gap-2">
-              <div className="rounded-full bg-green-100 p-1 mt-0.5">
-                <Zap className="h-4 w-4 text-green-600" />
-              </div>
-              <div className="text-left">
-                <p className="font-medium text-sm">Smart Task Management</p>
-                <p className="text-xs text-muted-foreground">Prioritizes and organizes your tasks</p>
-              </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="border rounded-lg p-3">
+              <h4 className="text-sm font-medium mb-1">Individual Plan</h4>
+              <ul className="text-xs space-y-1">
+                <li className="flex items-start gap-1.5">
+                  <span className="text-green-500">✓</span>
+                  <span>Access to all AI modes</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="text-green-500">✓</span>
+                  <span>Task & reminder creation</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="text-green-500">✓</span>
+                  <span>Voice, file & camera input</span>
+                </li>
+              </ul>
             </div>
             
-            <div className="flex items-start gap-2">
-              <div className="rounded-full bg-green-100 p-1 mt-0.5">
-                <Zap className="h-4 w-4 text-green-600" />
-              </div>
-              <div className="text-left">
-                <p className="font-medium text-sm">Business Analytics</p>
-                <p className="text-xs text-muted-foreground">Provides insights to grow your business</p>
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-2">
-              <div className="rounded-full bg-green-100 p-1 mt-0.5">
-                <Zap className="h-4 w-4 text-green-600" />
-              </div>
-              <div className="text-left">
-                <p className="font-medium text-sm">Draft Messages</p>
-                <p className="text-xs text-muted-foreground">Creates professional communications</p>
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-2">
-              <div className="rounded-full bg-green-100 p-1 mt-0.5">
-                <Zap className="h-4 w-4 text-green-600" />
-              </div>
-              <div className="text-left">
-                <p className="font-medium text-sm">Booking Assistance</p>
-                <p className="text-xs text-muted-foreground">Helps manage your calendar efficiently</p>
-              </div>
+            <div className="border rounded-lg p-3">
+              <h4 className="text-sm font-medium mb-1">Business Plan</h4>
+              <ul className="text-xs space-y-1">
+                <li className="flex items-start gap-1.5">
+                  <span className="text-green-500">✓</span>
+                  <span>All Individual features</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="text-green-500">✓</span>
+                  <span>Business analytics insights</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="text-green-500">✓</span>
+                  <span>Staff & service management</span>
+                </li>
+              </ul>
             </div>
           </div>
-          
-          <Button 
-            size="lg" 
-            className="bg-amber-500 hover:bg-amber-600 mt-2"
-            onClick={() => navigate('/dashboard/settings?tab=billing')}
-          >
-            Upgrade Now
-          </Button>
-          
-          <p className="text-xs text-muted-foreground">
-            Plans start at QAR 20/month
-          </p>
         </div>
       </CardContent>
+      
+      <CardFooter>
+        <Button className="w-full bg-wakti-blue hover:bg-wakti-blue/90">
+          Upgrade Now
+        </Button>
+      </CardFooter>
     </Card>
   );
 };

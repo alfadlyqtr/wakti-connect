@@ -9,10 +9,24 @@ import { ThemeProvider } from "@/hooks/use-theme";
 import { HelmetProvider } from "react-helmet-async";
 import { TaskProvider } from "@/contexts/TaskContext";
 import ErrorBoundary from "@/components/ui/ErrorBoundary";
+import { RouterProvider } from "react-router-dom";
+import { router } from "./router";
 
 function App() {
   return (
-    <div>App is no longer used for routing. Please check router.tsx.</div>
+    <HelmetProvider>
+      <ThemeProvider>
+        <TooltipProvider>
+          <TaskProvider>
+            <ErrorBoundary>
+              <RouterProvider router={router} />
+              <Toaster />
+              <Sonner />
+            </ErrorBoundary>
+          </TaskProvider>
+        </TooltipProvider>
+      </ThemeProvider>
+    </HelmetProvider>
   );
 }
 

@@ -2,7 +2,7 @@
 import React from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Search } from "lucide-react";
+import { Search, Brain } from "lucide-react";
 import { navItems } from "./sidebarNavConfig";
 
 interface SidebarNavItemsProps {
@@ -23,6 +23,11 @@ const SidebarNavItems = ({
   const filteredNavItems = navItems.filter(item => {
     // If the item should only be shown for certain roles
     if (item.showFor && !item.showFor.includes(userRole as any)) {
+      return false;
+    }
+    
+    // Special handling for AI Assistant - hide for staff users
+    if (item.path === "ai-assistant" && userRole === 'staff') {
       return false;
     }
     
@@ -68,6 +73,13 @@ const SidebarNavItems = ({
           {!isCollapsed && item.badge && (
             <span className="ml-auto bg-primary/10 text-primary px-1.5 py-0.5 rounded-full text-xs font-medium">
               {item.badge}
+            </span>
+          )}
+          
+          {/* Special badge for AI Assistant */}
+          {!isCollapsed && item.path === "ai-assistant" && (
+            <span className="ml-auto bg-wakti-blue/10 text-wakti-blue px-1.5 py-0.5 rounded-full text-xs font-medium">
+              New
             </span>
           )}
         </NavLink>

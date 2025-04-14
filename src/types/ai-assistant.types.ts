@@ -1,4 +1,3 @@
-
 // AI Assistant role types - must match what's in the database
 export type AIAssistantRole = "student" | "business_owner" | "general" | "employee" | "writer";
 
@@ -277,4 +276,114 @@ export interface AIVoiceSettings {
   voiceId: string;
   speed: number;
   autoPlay: boolean;
+}
+
+// WAKTI AI Mode types
+export type WAKTIAIMode = "general" | "productivity" | "student" | "creative";
+
+// Mode configuration interface
+export interface WAKTIAIModeConfig {
+  id: WAKTIAIMode;
+  title: string;
+  description: string;
+  icon: string;
+  color: string;
+  glowEffect: string;
+  defaultPrompt: string;
+}
+
+// WAKTI AI Configuration
+export const WAKTIAIModes: Record<WAKTIAIMode, WAKTIAIModeConfig> = {
+  "general": {
+    id: "general",
+    title: "General Chat",
+    description: "General help, questions, app walkthroughs, and guidance",
+    icon: "message-circle",
+    color: "bg-wakti-blue",
+    glowEffect: "shadow-blue-500/20 border-blue-200/50",
+    defaultPrompt: "How can I help you today?"
+  },
+  "productivity": {
+    id: "productivity",
+    title: "Productivity",
+    description: "Manage tasks, reminders, and performance",
+    icon: "list-check",
+    color: "bg-purple-600",
+    glowEffect: "shadow-purple-500/20 border-purple-200/50",
+    defaultPrompt: "Let me help you organize your tasks and schedule."
+  },
+  "student": {
+    id: "student",
+    title: "Student",
+    description: "Assist with homework and learning",
+    icon: "graduation-cap",
+    color: "bg-green-600",
+    glowEffect: "shadow-green-500/20 border-green-200/50",
+    defaultPrompt: "Ready to help with your studies and homework."
+  },
+  "creative": {
+    id: "creative",
+    title: "Creative",
+    description: "Brainstorming, content creation, and visual ideas",
+    icon: "sparkles",
+    color: "bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500",
+    glowEffect: "shadow-purple-500/20 border-purple-200/50",
+    defaultPrompt: "Let's create something amazing together."
+  }
+};
+
+// AI Tools configuration
+export interface AITool {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  component: string;
+  availableModes: WAKTIAIMode[];
+}
+
+export const WAKTIAITools: AITool[] = [
+  {
+    id: "image-generation",
+    name: "Image Generation",
+    description: "Generate images from text descriptions",
+    icon: "image",
+    component: "ImageGenerationTool",
+    availableModes: ["creative", "general"]
+  },
+  {
+    id: "meeting-tool",
+    name: "Meeting Tool",
+    description: "Record and transcribe meetings with summaries",
+    icon: "mic",
+    component: "MeetingTool",
+    availableModes: ["creative"]
+  },
+  {
+    id: "task-creator",
+    name: "Task Creator",
+    description: "Create tasks from natural language",
+    icon: "list-todo",
+    component: "TaskCreatorTool",
+    availableModes: ["productivity", "general"]
+  },
+  {
+    id: "document-analyzer",
+    name: "Document Analyzer",
+    description: "Analyze uploaded documents",
+    icon: "file-text",
+    component: "DocumentAnalyzerTool",
+    availableModes: ["student", "general", "productivity"]
+  }
+];
+
+// Input method types
+export type InputMethod = "text" | "voice" | "file" | "camera";
+
+// Preview card interface
+export interface AIPreviewCard {
+  type: string;
+  title: string;
+  content: string;
+  metadata?: Record<string, any>;
 }
