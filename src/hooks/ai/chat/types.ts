@@ -37,4 +37,5 @@ export interface SendMessageResult {
   isChannelError?: boolean;
   isConnectionError?: boolean;
   messageStatus: 'sent' | 'sending' | 'failed';
+  response?: string; // Added the response property to fix the TypeScript errors
 }

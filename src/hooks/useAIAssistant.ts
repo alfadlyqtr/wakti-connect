@@ -1,4 +1,3 @@
-
 import { useAIChatEnhanced } from "./ai/chat";
 import { useAISettings } from "./ai/settings";
 import { useAIKnowledge } from "./ai/useAIKnowledge";
@@ -84,7 +83,6 @@ export const useAIAssistant = () => {
         console.log("Message sent successfully, updating message store");
         
         // Create assistant message with the response content from the AI
-        // The content should come from the result object, not the original message
         const assistantMessage: AIMessage = {
           id: crypto.randomUUID(),
           content: result.messageStatus === 'sent' ? 

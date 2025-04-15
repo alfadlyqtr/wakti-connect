@@ -1,4 +1,3 @@
-
 import { useCallback, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { AIMessage } from '@/types/ai-assistant.types';
@@ -33,17 +32,14 @@ export const useSendMessage = (
           };
         }
 
-        // Store the message for potential retries
         lastAttemptedMessageRef.current = messageContent;
         
-        // Set sending state
         isSendingRef.current = true;
         setIsLoading(true);
         setSendingStatus('sending');
         
         console.log("Starting message send operation:", messageContent.substring(0, 20) + (messageContent.length > 20 ? "..." : ""));
         
-        // Create and add user message to UI immediately
         const userMessage: AIMessage = {
           id: uuidv4(),
           content: messageContent,
@@ -51,11 +47,8 @@ export const useSendMessage = (
           timestamp: new Date(),
         };
         
-        // Add user message to both UI state AND storage immediately
-        // This ensures the message stays visible even if there's an error
         setMessages((prev) => {
           const updatedMessages = [...prev, userMessage];
-          // Save to localStorage right away to prevent message loss
           try {
             localStorage.setItem('wakti-ai-chat', JSON.stringify(updatedMessages));
           } catch (storageError) {
@@ -64,10 +57,8 @@ export const useSendMessage = (
           return updatedMessages;
         });
         
-        // Use the current messages array plus the new user message
         const recentMessages = [...messages, userMessage];
         
-        // Build user context
         let userContext = '';
         if (profile) {
           userContext = `User: ${profile.full_name || 'Unknown'}`;
@@ -78,15 +69,11 @@ export const useSendMessage = (
         
         console.log("Sending message to AI assistant with context:", recentMessages.length, "messages");
         
-        // Call the AI assistant using the improved utility function
         const { response, error } = await callAIAssistant('', messageContent, userContext);
 
-        // Handle errors from the AI assistant call
         if (error) {
           console.error('AI assistant error:', error);
           
-          // We already saved the user message, so we don't need to remove it
-          // Just set the error state
           setSendingStatus('error');
           
           return { 
@@ -110,7 +97,6 @@ export const useSendMessage = (
           };
         }
 
-        // Create assistant message
         const assistantMessage: AIMessage = {
           id: uuidv4(),
           content: response,
@@ -118,10 +104,8 @@ export const useSendMessage = (
           timestamp: new Date(),
         };
         
-        // Update UI with the assistant message and save to storage
         setMessages((prev) => {
           const updatedMessages = [...prev, assistantMessage];
-          // Save both messages to localStorage
           try {
             localStorage.setItem('wakti-ai-chat', JSON.stringify(updatedMessages));
             console.log("Successfully saved", updatedMessages.length, "messages to localStorage");
@@ -131,9 +115,7 @@ export const useSendMessage = (
           return updatedMessages;
         });
         
-        // Check for detected task
         if (response.includes("[TASK_DETECTED]")) {
-          // Parse task from response - simplified logic
           const taskMatch = response.match(/\[TASK_DETECTED\](.*?)\[\/TASK_DETECTED\]/s);
           if (taskMatch && taskMatch[1]) {
             try {
@@ -146,7 +128,6 @@ export const useSendMessage = (
           }
         }
 
-        // Reset retry state
         retryAttemptsRef.current = 0;
         lastAttemptedMessageRef.current = null;
         setSendingStatus('success');
@@ -154,14 +135,13 @@ export const useSendMessage = (
         console.log("Message send operation completed successfully");
         return { 
           success: true,
-          response: response,  // Add the response to the result
+          response: response,
           messageStatus: 'sent'
         };
       } catch (err) {
         console.error('Unexpected error in sendMessage:', err);
         setSendingStatus('error');
         
-        // Check for channel closed error
         const isChannelClosedError = err.message && 
             err.message.includes("message channel closed before a response was received");
         
@@ -174,7 +154,6 @@ export const useSendMessage = (
             variant: "destructive",
           });
           
-          // We already saved the user message, so it remains visible
           return { 
             success: false, 
             error: err, 
