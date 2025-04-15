@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -41,12 +40,8 @@ const ChatbotSection: React.FC = () => {
   // Create unique container ID for this section
   const chatbotContainerId = `tmw-chatbot-container-section-${section.id}`;
   
-  // Initialize TMW Chatbot for preview
-  useTMWChatbot(
-    previewEnabled, 
-    contentData?.chatbot_code,
-    chatbotContainerId
-  );
+  // Initialize TMW Chatbot for preview with updated signature (no arguments)
+  useTMWChatbot();
   
   const handleToggleChange = (checked: boolean) => {
     setPreviewEnabled(checked);

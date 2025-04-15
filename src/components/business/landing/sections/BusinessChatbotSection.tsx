@@ -27,8 +27,8 @@ const BusinessChatbotSection: React.FC<BusinessChatbotSectionProps> = ({ content
   // Create a unique ID for this chatbot container
   const containerId = `tmw-chatbot-section-${Math.floor(Math.random() * 10000)}`;
   
-  // Use the TMW chatbot hook
-  const chatbotRef = useTMWChatbot(enabled, chatbot_code, containerId);
+  // Use the updated TMW chatbot hook with no arguments
+  const chatbotRef = useTMWChatbot();
   
   // Log the chatbot setup for debugging
   useEffect(() => {

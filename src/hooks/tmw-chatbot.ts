@@ -1,7 +1,7 @@
 
 import { useAIAssistant } from './useAIAssistant';
 
-// This is a wrapper hook for backward compatibility 
+// Updated to remove parameters that are no longer needed in our new architecture
 export const useTMWChatbot = () => {
   const assistantHook = useAIAssistant();
   

@@ -78,5 +78,3 @@ export const useAIChatEnhanced = (options = {}) => {
     getRecentContext,
   };
 };
-
-export { useAIChatEnhanced };
