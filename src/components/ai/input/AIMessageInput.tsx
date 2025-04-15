@@ -28,21 +28,20 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const prevMessageRef = useRef('');
   const [sendError, setSendError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const [isRetrying, setIsRetrying] = useState(false);
 
-  // Check for failed message that can be retried or restored
+  // Better message recovery system
   useEffect(() => {
     const currentProcessingMessage = getCurrentProcessingMessage();
     if (currentProcessingMessage && inputMessage === '') {
-      // Restore the failed message to the input field
+      console.log("Restoring failed message to input:", currentProcessingMessage.substring(0, 20) + "...");
       setInputMessage(currentProcessingMessage);
-      toast({
-        title: "Message not sent",
-        description: "Your previous message wasn't sent. You can edit it and try again.",
-        variant: "destructive",
-      });
+      setSendError("Your previous message wasn't sent. You can edit and try again.");
     }
   }, [getCurrentProcessingMessage, inputMessage]);
 
+  // Track input message for recovery purposes
   useEffect(() => {
     if (inputMessage && !isLoading) {
       prevMessageRef.current = inputMessage;
@@ -58,35 +57,55 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
     setSendError(null);
     
     try {
-      const { success, error } = await sendMessage(messageCopy);
+      console.log("Sending message:", messageCopy.substring(0, 20) + "...");
+      const { success, error, keepInputText } = await sendMessage(messageCopy);
 
       if (success) {
+        console.log("Message sent successfully, clearing input");
         setInputMessage('');
         prevMessageRef.current = '';
         setSendError(null);
+        setRetryCount(0);
       } else {
         // Don't clear the input on failure to allow for retry
         console.warn('Message failed to send. Input preserved.', error);
+        
+        if (!keepInputText) {
+          // Only clear if explicitly told to
+          setInputMessage('');
+        }
+        
         setSendError(error?.message || 'Failed to send message. Try again.');
+        setRetryCount(prev => prev + 1);
       }
     } catch (error) {
       console.error('Error sending message:', error);
       setSendError(error.message || 'An unexpected error occurred');
-      // Input is preserved so the user can try again
+      // Input is always preserved on exception
+      setRetryCount(prev => prev + 1);
     }
   };
 
   const handleRetry = async () => {
+    setIsRetrying(true);
     setSendError(null);
     try {
-      const { success } = await retryLastMessage();
+      console.log("Attempting to retry last message");
+      const { success, keepInputText } = await retryLastMessage();
       if (success) {
+        console.log("Retry successful, clearing input");
         setInputMessage('');
         prevMessageRef.current = '';
+        setRetryCount(0);
+      } else if (!keepInputText) {
+        // Only clear if explicitly told to
+        setInputMessage('');
       }
     } catch (error) {
       console.error('Error retrying message:', error);
-      setSendError('Failed to retry message');
+      setSendError('Failed to retry message: ' + (error.message || 'Unknown error'));
+    } finally {
+      setIsRetrying(false);
     }
   };
 
@@ -131,7 +150,8 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
           className={cn(
             "min-h-10 pr-24 resize-none",
             showVoiceInput && "bg-pink-50",
-            sendError && "border-red-300 focus-visible:ring-red-500"
+            sendError && "border-red-300 focus-visible:ring-red-500",
+            retryCount > 0 && "bg-amber-50/30"
           )}
           disabled={isLoading || showVoiceInput}
         />
@@ -152,21 +172,26 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
         />
         
         <div className="flex items-center gap-2">
-          {hasFailedMessage() && (
+          {(hasFailedMessage() || retryCount > 0) && (
             <Button 
               type="button" 
               onClick={handleRetry}
               variant="outline"
-              className="px-3"
+              className={cn("px-3", isRetrying && "bg-amber-50")}
+              disabled={isRetrying || isLoading}
             >
-              <RefreshCw className="h-4 w-4 mr-1" />
+              {isRetrying ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-1" />
+              ) : (
+                <RefreshCw className="h-4 w-4 mr-1" />
+              )}
               Retry
             </Button>
           )}
           
           <Button 
             type="submit" 
-            disabled={!inputMessage.trim() || isLoading || isMessageProcessing()} 
+            disabled={!inputMessage.trim() || isLoading || isMessageProcessing() || isRetrying} 
             className={cn("px-4", getModeButtonStyle())}
           >
             {isLoading ? (

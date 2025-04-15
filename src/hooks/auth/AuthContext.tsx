@@ -1,10 +1,23 @@
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import { User, AuthContextType } from "./types";
 import { useAuthOperations } from "./useAuthOperations";
 import { supabase } from "@/integrations/supabase/client";
 import AuthLoadingState from "@/components/auth/AuthLoadingState";
 import AuthErrorState from "@/components/auth/AuthErrorState";
+
+// Debounce function to limit rapid auth state changes
+const debounce = (func: Function, wait: number) => {
+  let timeout: number | null = null;
+  return (...args: any[]) => {
+    if (timeout) {
+      window.clearTimeout(timeout);
+    }
+    timeout = window.setTimeout(() => {
+      func(...args);
+    }, wait);
+  };
+};
 
 // Create context with default values
 const AuthContext = createContext<AuthContextType>({
@@ -21,6 +34,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
   
+  // Track the last auth state change
+  const lastAuthUpdateRef = useRef<number>(0);
+  // Use a flag to track initial setup
+  const isInitializedRef = useRef<boolean>(false);
+  
   // Set up authentication on mount
   useEffect(() => {
     let isMounted = true;
@@ -28,6 +46,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const initialize = async () => {
       try {
         console.log("Initializing auth context");
+        
+        // Create a debounced user update function to prevent rapid state changes
+        const debouncedSetUser = debounce((newUser: User | null, event: string) => {
+          if (!isMounted) return;
+          
+          console.log(`Debounced auth state update (${event}):`, {
+            hasUser: !!newUser,
+            userId: newUser?.id || 'none',
+            timeSinceLastUpdate: Date.now() - lastAuthUpdateRef.current
+          });
+          
+          // Update last change timestamp
+          lastAuthUpdateRef.current = Date.now();
+          
+          // Skip setting user to null if we're already loading
+          if (!newUser && isLoading && !isInitializedRef.current) {
+            console.log("Skipping null user update during initial loading");
+            return;
+          }
+          
+          setUser(newUser);
+        }, 300); // 300ms debounce to avoid rapid state changes
         
         // First set up the auth listener to catch any auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -40,17 +80,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             });
             
             if (session) {
-              setUser({
+              debouncedSetUser({
                 ...session.user,
                 name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || '',
                 displayName: session.user.user_metadata?.display_name || session.user.user_metadata?.full_name || '',
                 plan: session.user.user_metadata?.account_type || 'free'
-              });
+              }, event);
             } else if (event === 'SIGNED_OUT') {
-              setUser(null);
+              debouncedSetUser(null, event);
             }
             
-            setIsLoading(false);
+            // Don't set loading false on every auth change, only on SIGNED_OUT or INITIAL_SESSION
+            if (event === 'SIGNED_OUT' || event === 'INITIAL_SESSION') {
+              setIsLoading(false);
+            }
           }
         );
         
@@ -66,18 +109,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (data?.session) {
           console.log("Found existing session for user:", data.session.user.id);
-          setUser({
+          debouncedSetUser({
             ...data.session.user,
             name: data.session.user.user_metadata?.full_name || data.session.user.email?.split('@')[0] || '',
             displayName: data.session.user.user_metadata?.display_name || data.session.user.user_metadata?.full_name || '',
             plan: data.session.user.user_metadata?.account_type || 'free'
-          });
+          }, 'INITIAL_SESSION');
         } else {
           console.log("No session found");
         }
         
         // Always set loading to false to not block rendering
         setIsLoading(false);
+        isInitializedRef.current = true;
         
         return () => {
           isMounted = false;
@@ -97,13 +141,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [isLoading]);
   
   // Use the auth operations hook for login, logout, register functions
   const { login, logout, register } = useAuthOperations(setUser, setIsLoading);
 
   // Show loading state while initializing
-  if (isLoading) {
+  if (isLoading && !isInitializedRef.current) {
     return <AuthLoadingState authError={authError} />;
   }
   
@@ -128,7 +172,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       {children}
     </AuthContext.Provider>
   );
-}
+};
 
 // Custom hook to use the auth context
 export const useAuth = () => {
