@@ -12,8 +12,8 @@ export type { AIMessage, AISettings, AIKnowledgeUpload };
 
 export const useAIAssistant = () => {
   const [activeMode, setActiveMode] = useState<WAKTIAIMode>('general');
-  const { getMessages, setMessages: saveMessages } = useGlobalChatMemory();
-  const [messages, setMessages] = useState<AIMessage[]>(getMessages());
+  const { messages: globalMessages, setMessages: saveMessages } = useGlobalChatMemory(activeMode);
+  const [messages, setMessages] = useState<AIMessage[]>(globalMessages);
   const processingMessageRef = useRef(false);
   const messageSendingRef = useRef<{text: string, inProgress: boolean, retryCount: number}>({
     text: '', 
@@ -36,15 +36,12 @@ export const useAIAssistant = () => {
   const { aiSettings, isLoadingSettings, updateSettings, canUseAI } = useAISettings();
   const { addKnowledge, knowledgeUploads, isLoadingKnowledge, deleteKnowledge } = useAIKnowledge();
 
-  // Sync with local storage on mount
+  // Update messages when active mode changes
   useEffect(() => {
-    const storedMessages = getMessages();
-    if (storedMessages.length > 0) {
-      setMessages(storedMessages);
-    }
-  }, []);
+    setMessages(globalMessages);
+  }, [activeMode, globalMessages]);
 
-  // Wrap the sendMessage function to update our global message store
+  // Wrap the sendMessage function to update our mode-specific message store
   const sendMessage = useCallback(async (message: string) => {
     // Prevent multiple concurrent sends and reuse of the same message
     if (processingMessageRef.current || messageSendingRef.current.inProgress) {
@@ -67,18 +64,35 @@ export const useAIAssistant = () => {
       processingMessageRef.current = true;
       console.log(`Sending message in mode ${activeMode}: ${message.substring(0, 20)}...`);
       
+      // Create and add user message to UI immediately
+      const userMessage: AIMessage = {
+        id: crypto.randomUUID(),
+        content: message,
+        role: 'user',
+        timestamp: new Date(),
+      };
+      
+      // Update local state and persist to storage
+      setMessages(prev => [...prev, userMessage]);
+      saveMessages([...messages, userMessage]);
+      
       // Send the message using the enhanced chat hook
       const result = await originalSendMessage(message);
       
-      // After sending, get the updated messages
+      // After sending, handle the AI response
       if (result.success) {
         console.log("Message sent successfully, updating message store");
         
-        // Get the latest messages from the chat storage context
-        const updatedMessages = getRecentContext();
-        console.log(`Received updated context: ${updatedMessages.length} messages`);
+        // Create assistant message
+        const assistantMessage: AIMessage = {
+          id: crypto.randomUUID(),
+          content: result.response || "I'm not sure how to respond to that.",
+          role: 'assistant',
+          timestamp: new Date(),
+        };
         
         // Update local state and persist to storage
+        const updatedMessages = [...messages, userMessage, assistantMessage];
         setMessages(updatedMessages);
         saveMessages(updatedMessages);
         
@@ -143,7 +157,7 @@ export const useAIAssistant = () => {
     } finally {
       processingMessageRef.current = false;
     }
-  }, [activeMode, originalSendMessage, getRecentContext, saveMessages]);
+  }, [activeMode, originalSendMessage, messages, saveMessages]);
 
   // Function to retry the last failed message
   const retryLastMessage = useCallback(async () => {
@@ -166,13 +180,12 @@ export const useAIAssistant = () => {
     };
   }, [sendMessage]);
 
-  // Wrap the clearMessages function to clear global messages
+  // Wrap the clearMessages function to clear mode-specific messages
   const clearMessages = useCallback(() => {
-    console.log("Clearing all messages");
-    originalClearMessages();
+    console.log(`Clearing messages for mode: ${activeMode}`);
     setMessages([]);
-    localStorage.removeItem('wakti-ai-chat');
-  }, [originalClearMessages]);
+    saveMessages([]);
+  }, [activeMode, saveMessages]);
 
   // Helper method to check if a message is currently being processed
   const isMessageProcessing = useCallback(() => {

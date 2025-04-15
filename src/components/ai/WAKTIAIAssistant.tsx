@@ -21,7 +21,9 @@ const WAKTIAIAssistant = () => {
   const [activeTab, setActiveTab] = useState('chat');
   const [canAccessAI, setCanAccessAI] = useState(false);
   const [showMeetingTool, setShowMeetingTool] = useState(false);
-  const { getMessages } = useGlobalChatMemory();
+  
+  // Pass the active mode to the chat memory hook
+  const { getMessages, clearMessages } = useGlobalChatMemory(activeMode);
 
   // Check if the user can access the AI Assistant based on their role
   useEffect(() => {
@@ -75,6 +77,16 @@ const WAKTIAIAssistant = () => {
     );
   }
 
+  const handleModeChange = (newMode: WAKTIAIMode) => {
+    setActiveMode(newMode);
+  };
+  
+  const handleClearChat = () => {
+    if (window.confirm("Are you sure you want to clear this chat history?")) {
+      clearMessages();
+    }
+  };
+
   return (
     <div className="flex flex-col space-y-4">
       <Tabs 
@@ -101,12 +113,13 @@ const WAKTIAIAssistant = () => {
             <div className="border-b">
               <AIModeSwitcher 
                 activeMode={activeMode} 
-                setActiveMode={setActiveMode} 
+                setActiveMode={handleModeChange} 
               />
             </div>
             
             <AIAssistantChatWindow 
               activeMode={activeMode} 
+              onClearChat={handleClearChat}
             />
             
             <div className="border-t">

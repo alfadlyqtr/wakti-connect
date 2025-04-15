@@ -1,33 +1,54 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Avatar } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { WAKTIAIMode, WAKTIAIModes } from '@/types/ai-assistant.types';
 import { AIMessage } from '@/types/ai-assistant.types';
 import { useAIAssistant } from '@/hooks/useAIAssistant';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bot, User } from 'lucide-react';
+import { Bot, Trash2, User } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useGlobalChatMemory } from '@/hooks/ai/chat/useGlobalChatMemory';
+import { Avatar } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 
 interface AIAssistantChatWindowProps {
   activeMode: WAKTIAIMode;
+  onClearChat?: () => void;
 }
 
-export const AIAssistantChatWindow = ({ activeMode }: AIAssistantChatWindowProps) => {
-  const { messages, isLoading, clearMessages, setActiveMode } = useAIAssistant();
+export const AIAssistantChatWindow = ({ activeMode, onClearChat }: AIAssistantChatWindowProps) => {
+  // Use the mode-specific chat memory
+  const { messages, isLoading } = useAIAssistant();
+  const { messages: modeMessages } = useGlobalChatMemory(activeMode);
+  
   const [showWelcomeMessage, setShowWelcomeMessage] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const previousMessagesLength = useRef(messages.length);
+  const previousMessagesLength = useRef(modeMessages.length);
   const previousModeRef = useRef(activeMode);
   
-  // Update active mode in the useAIAssistant hook when it changes
+  // Determine if we should show the welcome message based on the current mode's messages
+  useEffect(() => {
+    if (modeMessages.length > 0) {
+      setShowWelcomeMessage(false);
+    } else {
+      setShowWelcomeMessage(true);
+    }
+  }, [modeMessages, activeMode]);
+  
+  // Scroll to bottom of messages when new messages arrive or loading state changes
+  useEffect(() => {
+    if (messagesEndRef.current && (modeMessages.length > previousMessagesLength.current || !isLoading)) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      previousMessagesLength.current = modeMessages.length;
+    }
+  }, [modeMessages, isLoading]);
+
+  // Reset previous messages length when mode changes
   useEffect(() => {
     if (previousModeRef.current !== activeMode) {
-      // Set the new active mode in the assistant hook
-      setActiveMode(activeMode);
-      // Update the previous mode reference
+      previousMessagesLength.current = modeMessages.length;
       previousModeRef.current = activeMode;
       
       // Force scroll to bottom on mode change
@@ -37,25 +58,7 @@ export const AIAssistantChatWindow = ({ activeMode }: AIAssistantChatWindowProps
         }
       }, 100);
     }
-  }, [activeMode, setActiveMode]);
-  
-  // Determine if we should show the welcome message
-  useEffect(() => {
-    // Only hide welcome message if we actually have messages
-    if (messages.length > 0) {
-      setShowWelcomeMessage(false);
-    } else {
-      setShowWelcomeMessage(true);
-    }
-  }, [messages, activeMode]);
-  
-  // Scroll to bottom of messages when new messages arrive or loading state changes
-  useEffect(() => {
-    if (messagesEndRef.current && (messages.length > previousMessagesLength.current || !isLoading)) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-      previousMessagesLength.current = messages.length;
-    }
-  }, [messages, isLoading]);
+  }, [activeMode, modeMessages.length]);
 
   // Get mode-specific styling
   const getModeStyles = () => {
@@ -74,7 +77,19 @@ export const AIAssistantChatWindow = ({ activeMode }: AIAssistantChatWindowProps
   };
 
   return (
-    <ScrollArea className={cn("h-[500px] p-4", getModeStyles())}>
+    <ScrollArea className={cn("h-[500px] p-4 relative", getModeStyles())}>
+      {modeMessages.length > 0 && onClearChat && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute top-2 right-2 h-7 w-7 opacity-70 hover:opacity-100 hover:bg-red-50 hover:text-red-500 transition-colors z-10"
+          onClick={onClearChat}
+          title="Clear chat history"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </Button>
+      )}
+    
       {showWelcomeMessage && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -91,7 +106,7 @@ export const AIAssistantChatWindow = ({ activeMode }: AIAssistantChatWindowProps
         </motion.div>
       )}
       
-      {messages.map((msg) => (
+      {modeMessages.map((msg) => (
         <motion.div
           key={msg.id}
           className="flex items-start gap-3 mb-4"
@@ -110,12 +125,17 @@ export const AIAssistantChatWindow = ({ activeMode }: AIAssistantChatWindowProps
               <User className="h-4 w-4 text-white" />
             )}
           </Avatar>
-          <div className="bg-background rounded-lg p-3 shadow-sm">
+          <div className="bg-background rounded-lg p-3 shadow-sm max-w-[85%]">
             <div className="text-sm whitespace-pre-wrap">
               <ReactMarkdown>
                 {msg.content}
               </ReactMarkdown>
             </div>
+            {msg.timestamp && (
+              <div className="text-[10px] mt-1 opacity-60 text-right text-muted-foreground">
+                {new Date(msg.timestamp).toLocaleTimeString([], {hour: 'numeric', minute:'2-digit'})}
+              </div>
+            )}
           </div>
         </motion.div>
       ))}
@@ -133,7 +153,7 @@ export const AIAssistantChatWindow = ({ activeMode }: AIAssistantChatWindowProps
           <Avatar className={cn("h-8 w-8", WAKTIAIModes[activeMode].color)}>
             <Bot className="h-4 w-4 text-white" />
           </Avatar>
-          <div className="bg-background rounded-lg p-3 shadow-sm w-64">
+          <div className="bg-background rounded-lg py-2.5 px-3.5 border w-64">
             <Skeleton className="h-4 w-full mb-2" />
             <Skeleton className="h-4 w-3/4" />
           </div>
