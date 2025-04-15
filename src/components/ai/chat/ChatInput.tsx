@@ -86,7 +86,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         placeholder="Type a message..."
         disabled={isLoading || isDisabled}
         className={cn(
-          "flex-1 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border transition-all duration-300 input-active text-foreground h-12 px-4",
+          "flex-1 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border transition-all duration-300 input-active text-foreground h-12 px-4",
           inputValue && "pr-10",
           isLoading && "opacity-70",
           getInputGlowClass(isFocused)

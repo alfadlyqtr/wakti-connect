@@ -52,18 +52,15 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
       ? "lg:pl-[70px] pt-4 pb-12 px-4 transition-all duration-300" 
       : "lg:pl-52 pt-4 pb-12 px-4 transition-all duration-300";
 
-  // Check if we're on the main dashboard page
-  const isMainDashboard = currentPath === '/dashboard' || currentPath === '/dashboard/';
-
   return (
     <main className={`flex-1 overflow-y-auto ${mainContentClass}`}>
-      <div className={`container mx-auto animate-in ${isMainDashboard ? 'p-0 max-w-none' : ''}`}>
+      <div className="container mx-auto animate-in">
         {isLoading ? (
           <DashboardLoading />
         ) : (
           <>
             {/* Only show staff header if user is staff AND not a business owner */}
-            {isStaff && userId && userRole === 'staff' && !isMainDashboard && (
+            {isStaff && userId && userRole === 'staff' && (
               <div className="mb-5">
                 <StaffDashboardHeader staffId={userId} />
               </div>

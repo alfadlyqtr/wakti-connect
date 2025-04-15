@@ -17,9 +17,7 @@ const WAKTIAIAssistant: React.FC<WAKTIAIAssistantProps> = ({
       backgroundAttachment: 'fixed',
       minHeight: '100vh'
     }}>
-      <div className="container mx-auto px-2 py-4 max-w-4xl">
-        <UnifiedChatInterfaceWithProvider />
-      </div>
+      <UnifiedChatInterfaceWithProvider />
     </div>
   );
 };
