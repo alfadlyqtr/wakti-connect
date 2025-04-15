@@ -39,3 +39,11 @@ export interface SendMessageResult {
   messageStatus: 'sent' | 'sending' | 'failed';
   response?: string;
 }
+
+export type MessageOperation = 'add' | 'update' | 'clear';
+
+export interface MessageTransaction {
+  type: MessageOperation;
+  messages?: AIMessage[];
+  messageId?: string;
+}

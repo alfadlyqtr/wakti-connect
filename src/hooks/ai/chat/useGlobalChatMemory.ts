@@ -1,14 +1,13 @@
-
 import { useState, useEffect } from 'react';
 import { AIMessage } from '@/types/ai-assistant.types';
+import { MessageTransaction } from './types';
 
-// Update storage key to support multiple modes
 const BASE_STORAGE_KEY = 'wakti-ai-chat';
 
-// Create a singleton for global chat memory with mode support
 class GlobalChatMemory {
   private messagesMap: Record<string, AIMessage[]> = {};
   private listenersMap: Record<string, ((messages: AIMessage[]) => void)[]> = {};
+  private transactions: Record<string, MessageTransaction[]> = {};
   
   constructor() {
     this.loadFromStorage();
@@ -16,7 +15,6 @@ class GlobalChatMemory {
   
   private loadFromStorage() {
     try {
-      // Load messages for all modes from localStorage
       const modes = ['general', 'productivity', 'student', 'creative'];
       
       modes.forEach(mode => {
@@ -39,6 +37,8 @@ class GlobalChatMemory {
         } else {
           this.messagesMap[mode] = [];
         }
+        
+        this.transactions[mode] = [];
       });
     } catch (e) {
       console.error('[GlobalChatMemory] Error loading from storage:', e);
@@ -48,6 +48,10 @@ class GlobalChatMemory {
         student: [],
         creative: []
       };
+      
+      Object.keys(this.messagesMap).forEach(mode => {
+        this.transactions[mode] = [];
+      });
     }
   }
   
@@ -63,7 +67,6 @@ class GlobalChatMemory {
   }
   
   getMessages(mode: string): AIMessage[] {
-    // Return a copy of the messages to prevent direct mutation
     return [...(this.messagesMap[mode] || [])];
   }
   
@@ -72,6 +75,11 @@ class GlobalChatMemory {
     this.messagesMap[mode] = [...messages];
     this.saveToStorage(mode);
     this.notifyListeners(mode);
+    
+    this.addTransaction(mode, {
+      type: 'update',
+      messages: [...messages]
+    });
   }
   
   addMessages(mode: string, newMessages: AIMessage[]) {
@@ -79,10 +87,30 @@ class GlobalChatMemory {
       this.messagesMap[mode] = [];
     }
     
+    if (newMessages.length === 0) return;
+    
     console.log(`[GlobalChatMemory] Adding ${newMessages.length} messages to ${this.messagesMap[mode].length} existing messages for mode: ${mode}`);
-    this.messagesMap[mode] = [...this.messagesMap[mode], ...newMessages];
+    
+    const existingIds = new Set(this.messagesMap[mode].map(msg => msg.id));
+    const uniqueNewMessages = newMessages.filter(msg => !existingIds.has(msg.id));
+    
+    if (uniqueNewMessages.length === 0) {
+      console.log(`[GlobalChatMemory] No unique messages to add for mode: ${mode}`);
+      return;
+    }
+    
+    this.messagesMap[mode] = [...this.messagesMap[mode], ...uniqueNewMessages];
     this.saveToStorage(mode);
     this.notifyListeners(mode);
+    
+    this.addTransaction(mode, {
+      type: 'add',
+      messages: uniqueNewMessages
+    });
+  }
+  
+  addMessage(mode: string, newMessage: AIMessage) {
+    this.addMessages(mode, [newMessage]);
   }
   
   clearMessages(mode: string) {
@@ -91,6 +119,10 @@ class GlobalChatMemory {
     const storageKey = `${BASE_STORAGE_KEY}-${mode}`;
     localStorage.removeItem(storageKey);
     this.notifyListeners(mode);
+    
+    this.addTransaction(mode, {
+      type: 'clear'
+    });
   }
   
   clearAllMessages() {
@@ -101,7 +133,27 @@ class GlobalChatMemory {
       const storageKey = `${BASE_STORAGE_KEY}-${mode}`;
       localStorage.removeItem(storageKey);
       this.notifyListeners(mode);
+      
+      this.addTransaction(mode, {
+        type: 'clear'
+      });
     });
+  }
+  
+  private addTransaction(mode: string, transaction: MessageTransaction) {
+    if (!this.transactions[mode]) {
+      this.transactions[mode] = [];
+    }
+    
+    this.transactions[mode].push(transaction);
+    
+    if (this.transactions[mode].length > 50) {
+      this.transactions[mode] = this.transactions[mode].slice(-50);
+    }
+  }
+  
+  getTransactions(mode: string): MessageTransaction[] {
+    return [...(this.transactions[mode] || [])];
   }
   
   subscribe(mode: string, callback: (messages: AIMessage[]) => void) {
@@ -112,10 +164,8 @@ class GlobalChatMemory {
     console.log(`[GlobalChatMemory] Adding listener for mode: ${mode}`);
     this.listenersMap[mode].push(callback);
     
-    // Immediately call with current state
     callback(this.getMessages(mode));
     
-    // Return unsubscribe function
     return () => {
       if (this.listenersMap[mode]) {
         this.listenersMap[mode] = this.listenersMap[mode].filter(listener => listener !== callback);
@@ -135,35 +185,45 @@ class GlobalChatMemory {
   }
 }
 
-// Create the singleton instance
 const globalMemory = new GlobalChatMemory();
 
-// Hook to access the global chat memory with mode support
 export const useGlobalChatMemory = (mode: string = 'general') => {
   const [messages, setMessages] = useState<AIMessage[]>(globalMemory.getMessages(mode));
   
   useEffect(() => {
-    // Subscribe to memory changes for this specific mode
     const unsubscribe = globalMemory.subscribe(mode, updatedMessages => {
       console.log(`[useGlobalChatMemory] Received ${updatedMessages.length} updated messages for mode: ${mode}`);
       setMessages(updatedMessages);
     });
     
-    // Cleanup subscription
     return unsubscribe;
   }, [mode]);
+  
+  const addMessage = (newMessage: AIMessage) => {
+    globalMemory.addMessage(mode, newMessage);
+  };
+  
+  const addMessages = (newMessages: AIMessage[]) => {
+    globalMemory.addMessages(mode, newMessages);
+  };
   
   const setMessagesWrapper = (newMessages: AIMessage[]) => {
     console.log(`[useGlobalChatMemory] Setting ${newMessages.length} messages for mode: ${mode}`);
     globalMemory.setMessages(mode, newMessages);
   };
   
+  const clearMessagesWrapper = () => {
+    globalMemory.clearMessages(mode);
+  };
+  
   return {
     messages,
     setMessages: setMessagesWrapper,
-    addMessages: (newMessages: AIMessage[]) => globalMemory.addMessages(mode, newMessages),
-    clearMessages: () => globalMemory.clearMessages(mode),
+    addMessage,
+    addMessages,
+    clearMessages: clearMessagesWrapper,
     clearAllMessages: () => globalMemory.clearAllMessages(),
-    getMessages: () => globalMemory.getMessages(mode)
+    getMessages: () => globalMemory.getMessages(mode),
+    getTransactions: () => globalMemory.getTransactions(mode)
   };
 };

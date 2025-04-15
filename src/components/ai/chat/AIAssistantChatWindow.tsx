@@ -3,17 +3,16 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { WAKTIAIMode, WAKTIAIModes } from '@/types/ai-assistant.types';
 import { AIMessage } from '@/types/ai-assistant.types';
-import { useAIAssistant } from '@/hooks/useAIAssistant';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bot, Trash2, User } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useGlobalChatMemory } from '@/hooks/ai/chat/useGlobalChatMemory';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { TypingIndicator } from '../animation';
+import { useGlobalChatMemory } from '@/hooks/ai/chat/useGlobalChatMemory';
+import { useAIAssistant } from '@/hooks/useAIAssistant';
 
 interface AIAssistantChatWindowProps {
   activeMode: WAKTIAIMode;
@@ -21,8 +20,9 @@ interface AIAssistantChatWindowProps {
 }
 
 export const AIAssistantChatWindow = ({ activeMode, onClearChat }: AIAssistantChatWindowProps) => {
-  // Use the AI assistant hook to get messages and loading state
-  const { messages, isLoading } = useAIAssistant();
+  // Use global chat memory for the current mode
+  const { messages } = useGlobalChatMemory(activeMode);
+  const { isLoading } = useAIAssistant();
   
   const [showWelcomeMessage, setShowWelcomeMessage] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);

@@ -1,6 +1,3 @@
-
-// Update only the props interface to include the missing clearMessages prop:
-
 import React, { useState, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -41,7 +38,7 @@ interface CleanChatInterfaceProps {
   onStartVoiceInput?: () => void;
   onStopVoiceInput?: () => void;
   onConfirmTranscript?: () => void;
-  clearMessages?: () => void; // This is the prop we're adding
+  clearMessages?: () => void;
 }
 
 export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
@@ -113,9 +110,31 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
     }
   };
 
+  const handleClearMessages = () => {
+    if (clearMessages) {
+      const confirmed = window.confirm("Are you sure you want to clear all messages?");
+      if (confirmed) {
+        clearMessages();
+        setShowWelcome(true);
+      }
+    }
+  };
+
   return (
     <Card className="w-full overflow-hidden flex flex-col h-[650px] md:h-[700px] bg-gradient-to-b from-background to-background/95">
       <div className="flex-1 overflow-auto p-2 md:p-4 space-y-2 md:space-y-4">
+        {messages.length > 0 && clearMessages && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-2 right-2 h-7 w-7 opacity-70 hover:opacity-100 hover:bg-red-50 hover:text-red-500 transition-colors z-10"
+            onClick={handleClearMessages}
+            title="Clear chat history"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        )}
+        
         {showWelcome && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -231,7 +250,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
                   priority: detectedTask.priority || 'normal',
                   subtasks: detectedTask.subtasks?.map(s => s.content) || [],
                   due_date: detectedTask.due_date,
-                  dueTime: detectedTask.due_time, // Changed from due_time to dueTime to match ParsedTaskInfo type
+                  dueTime: detectedTask.due_time,
                   location: detectedTask.location,
                 }}
                 onConfirm={() => onConfirmTask(detectedTask)}

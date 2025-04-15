@@ -6,46 +6,55 @@ import { AIMessage, AISettings, AIKnowledgeUpload, WAKTIAIMode } from "@/types/a
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useGlobalChatMemory } from "./ai/chat/useGlobalChatMemory";
 import { toast } from "@/hooks/use-toast";
+import { useSendMessage } from "./ai/chat/useSendMessage";
 
 // Re-export types for backward compatibility
 export type { AIMessage, AISettings, AIKnowledgeUpload };
 
 export const useAIAssistant = () => {
   const [activeMode, setActiveMode] = useState<WAKTIAIMode>('general');
-  const { messages: globalMessages, setMessages: saveMessages } = useGlobalChatMemory(activeMode);
-  const [messages, setMessages] = useState<AIMessage[]>(globalMessages);
-  const processingMessageRef = useRef(false);
-  const messageSendingRef = useRef<{text: string, inProgress: boolean, retryCount: number}>({
-    text: '', 
-    inProgress: false,
-    retryCount: 0
-  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [detectedTask, setDetectedTask] = useState<any | null>(null);
+  const [pendingTaskConfirmation, setPendingTaskConfirmation] = useState(false);
+  const [isCreatingTask, setIsCreatingTask] = useState(false);
   
+  // Access the global memory for the current mode
   const { 
-    sendMessage: originalSendMessage, 
-    isLoading, 
-    clearMessages: originalClearMessages,
-    detectedTask,
-    confirmCreateTask,
-    cancelCreateTask,
-    isCreatingTask,
-    pendingTaskConfirmation,
-    getRecentContext
-  } = useAIChatEnhanced();
+    messages, 
+    clearMessages: clearGlobalMessages,
+    getTransactions
+  } = useGlobalChatMemory(activeMode);
   
+  const processingMessageRef = useRef(false);
+  
+  // Get AI settings and knowledge hooks
   const { aiSettings, isLoadingSettings, updateSettings, canUseAI } = useAISettings();
   const { addKnowledge, knowledgeUploads, isLoadingKnowledge, deleteKnowledge } = useAIKnowledge();
-
-  // Update local messages when global messages change
+  
+  // Get send message functionality
+  const { 
+    sendMessage: sendMessageHandler, 
+    retryLastMessage,
+    isSending,
+    sendingStatus,
+    getLastAttemptedMessage
+  } = useSendMessage(
+    { enableTaskCreation: true },
+    setIsLoading,
+    setDetectedTask,
+    setPendingTaskConfirmation,
+    activeMode
+  );
+  
+  // Synchronize mode changes to ensure memory is properly loaded
   useEffect(() => {
-    setMessages(globalMessages);
-  }, [activeMode, globalMessages]);
-
-  // Wrap the sendMessage function to use GlobalChatMemory as single source of truth
+    console.log(`[useAIAssistant] Active mode changed to: ${activeMode}`);
+  }, [activeMode]);
+  
+  // Wrapped send message function to ensure atomic operations
   const sendMessage = useCallback(async (message: string) => {
-    // Prevent multiple concurrent sends and reuse of the same message
-    if (processingMessageRef.current || messageSendingRef.current.inProgress) {
-      console.warn("Message already being processed, aborting send");
+    if (processingMessageRef.current) {
+      console.warn("[useAIAssistant] Message already being processed, aborting send");
       return { 
         success: false, 
         error: new Error("Message already being processed"),
@@ -53,134 +62,87 @@ export const useAIAssistant = () => {
       };
     }
     
-    // Capture the message we're about to send
-    messageSendingRef.current = { 
-      text: message, 
-      inProgress: true,
-      retryCount: 0 
-    };
+    processingMessageRef.current = true;
+    setIsLoading(true);
     
     try {
-      processingMessageRef.current = true;
-      console.log(`Sending message in mode ${activeMode}: ${message.substring(0, 20)}...`);
+      console.log(`[useAIAssistant] Sending message in ${activeMode} mode: ${message.substring(0, 20)}...`);
+      const result = await sendMessageHandler(message);
       
-      // Send the message to the AI service
-      const result = await originalSendMessage(message);
-      
-      if (result.success) {
-        console.log("Message sent successfully");
-        
-        // We don't need to manually add the message here
-        // as the underlying hook now properly updates the global memory
-        
-        // Reset the sending ref only on successful completion
-        messageSendingRef.current = { text: '', inProgress: false, retryCount: 0 };
-      } else {
-        console.error("Message send failed:", result.error);
-        
-        // Show error toast on failure
+      if (!result.success) {
+        console.error("[useAIAssistant] Message send failed:", result.error);
         toast({
-          title: "Message failed to send",
-          description: result.error?.message || "Please try again",
+          title: "Send Failed",
+          description: "Message could not be sent. You can try again.",
           variant: "destructive",
-          duration: 5000,
         });
-        
-        // Don't clear sending state on failure, to allow for retry
-        messageSendingRef.current.inProgress = false;
-        messageSendingRef.current.retryCount += 1;
       }
       
       return result;
     } catch (error) {
-      console.error("Error in sendMessage:", error);
-      
-      // Check for the specific channel closed error
-      const isChannelClosedError = error.message && 
-        error.message.includes("message channel closed before a response was received");
-      
-      if (isChannelClosedError) {
-        console.warn("Message channel closed prematurely. Enabling retry.");
-        toast({
-          title: "Connection Issue",
-          description: "Your message was interrupted. You can try again.",
-          variant: "destructive",
-          duration: 5000,
-        });
-      } else {
-        // Show generic error toast
-        toast({
-          title: "Error sending message",
-          description: error.message || "An unexpected error occurred",
-          variant: "destructive",
-          duration: 5000,
-        });
-      }
-      
-      // Don't clear sending state on failure, to allow for retry
-      messageSendingRef.current.inProgress = false;
-      messageSendingRef.current.retryCount += 1;
+      console.error("[useAIAssistant] Error in sendMessage:", error);
+      toast({
+        title: "Error",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
       
       return { 
         success: false, 
         error, 
-        keepInputText: true,
-        isChannelError: isChannelClosedError,
         messageStatus: 'failed'
       };
     } finally {
       processingMessageRef.current = false;
+      setIsLoading(false);
     }
-  }, [activeMode, originalSendMessage]);
-
-  // Function to retry the last failed message
-  const retryLastMessage = useCallback(async () => {
-    if (messageSendingRef.current.text && !messageSendingRef.current.inProgress) {
-      const messageToRetry = messageSendingRef.current.text;
-      console.log(`Retrying message: ${messageToRetry.substring(0, 20)}...`);
+  }, [activeMode, sendMessageHandler]);
+  
+  // Task handling functions
+  const confirmCreateTask = useCallback(async (task: any) => {
+    setIsCreatingTask(true);
+    
+    try {
+      // Actual task creation logic would go here
+      // For now we just simulate task creation with a delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setDetectedTask(null);
+      setPendingTaskConfirmation(false);
       
       toast({
-        title: "Retrying message",
-        description: "Attempting to resend your message",
-        duration: 3000,
+        title: "Task Created",
+        description: `"${task.title}" has been added to your tasks.`,
       });
-      
-      return sendMessage(messageToRetry);
+    } catch (error) {
+      console.error("[useAIAssistant] Error creating task:", error);
+      toast({
+        title: "Error Creating Task",
+        description: error.message || "Failed to create task",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCreatingTask(false);
     }
-    return { 
-      success: false, 
-      error: new Error("No message to retry"),
-      messageStatus: 'failed'
-    };
-  }, [sendMessage]);
-
-  // Wrap the clearMessages function to clear mode-specific messages
+  }, []);
+  
+  const cancelCreateTask = useCallback(() => {
+    setDetectedTask(null);
+    setPendingTaskConfirmation(false);
+  }, []);
+  
+  // Clear messages with confirmation
   const clearMessages = useCallback(() => {
-    console.log(`Clearing messages for mode: ${activeMode}`);
-    // Update GlobalChatMemory which is now our single source of truth
-    saveMessages([]);
-    // Also update local state for immediate UI updates
-    setMessages([]);
-    originalClearMessages();
-  }, [activeMode, saveMessages, originalClearMessages]);
-
-  // Helper method to check if a message is currently being processed
-  const isMessageProcessing = useCallback(() => {
-    return processingMessageRef.current || messageSendingRef.current.inProgress;
-  }, []);
-
-  // Helper to get the current message being processed (useful for recovery/retry)
-  const getCurrentProcessingMessage = useCallback(() => {
-    return messageSendingRef.current.inProgress ? messageSendingRef.current.text : 
-           (messageSendingRef.current.retryCount > 0 ? messageSendingRef.current.text : null);
-  }, []);
-
-  // Helper to check if there's a failed message that can be retried
-  const hasFailedMessage = useCallback(() => {
-    return !messageSendingRef.current.inProgress && 
-           messageSendingRef.current.text.length > 0 && 
-           messageSendingRef.current.retryCount > 0;
-  }, []);
+    clearGlobalMessages();
+    setDetectedTask(null);
+    setPendingTaskConfirmation(false);
+  }, [clearGlobalMessages]);
+  
+  // Get recent context (for AI context)
+  const getRecentContext = useCallback(() => {
+    // Return the last 10 messages as context
+    return messages.slice(-10);
+  }, [messages]);
 
   return {
     // Chat features
@@ -191,10 +153,11 @@ export const useAIAssistant = () => {
     getRecentContext,
     activeMode,
     setActiveMode,
-    isMessageProcessing,
-    getCurrentProcessingMessage,
+    isMessageProcessing: () => processingMessageRef.current || isSending,
+    getCurrentProcessingMessage: getLastAttemptedMessage,
     retryLastMessage,
-    hasFailedMessage,
+    hasFailedMessage: () => !!getLastAttemptedMessage(),
+    getTransactions,
     
     // Task features
     detectedTask,

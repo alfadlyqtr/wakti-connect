@@ -5,14 +5,14 @@ import { AIMessage } from '@/types/ai-assistant.types';
 import { SendMessageResult, UseChatOptions } from './types';
 import { toast } from '@/hooks/use-toast';
 import { callAIAssistant } from '../utils/callAIAssistant';
+import { useGlobalChatMemory } from './useGlobalChatMemory';
 
 export const useSendMessage = (
   options: UseChatOptions = {},
-  setMessages: React.Dispatch<React.SetStateAction<AIMessage[]>>,
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
   setDetectedTask: (task: any | null) => void,
   setPendingTaskConfirmation: (pending: boolean) => void,
-  messages: AIMessage[],
+  activeMode: string,
   profile?: any
 ) => {
   const isSendingRef = useRef(false);
@@ -20,6 +20,9 @@ export const useSendMessage = (
   const retryAttemptsRef = useRef(0);
   const MAX_RETRY_ATTEMPTS = 3;
   const [sendingStatus, setSendingStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
+  
+  // Use the global chat memory
+  const { messages, addMessage } = useGlobalChatMemory(activeMode);
 
   const sendMessage = useCallback(
     async (messageContent: string): Promise<SendMessageResult> => {
@@ -39,8 +42,10 @@ export const useSendMessage = (
         setIsLoading(true);
         setSendingStatus('sending');
         
-        console.log("Starting message send operation:", messageContent.substring(0, 20) + (messageContent.length > 20 ? "..." : ""));
+        console.log(`[useSendMessage] Starting message send operation for mode (${activeMode}):`, 
+          messageContent.substring(0, 20) + (messageContent.length > 20 ? "..." : ""));
         
+        // Create the user message
         const userMessage: AIMessage = {
           id: uuidv4(),
           content: messageContent,
@@ -48,13 +53,10 @@ export const useSendMessage = (
           timestamp: new Date(),
         };
         
-        // Add the user message to the local state
-        const updatedMessages = [...messages, userMessage];
-        setMessages(updatedMessages);
+        // Add the user message to the global memory first
+        addMessage(userMessage);
         
-        // Create a copy of messages including the new user message for the API call
-        const recentMessages = [...messages, userMessage];
-        
+        // For API call, we use the current messages including the new user message
         let userContext = '';
         if (profile) {
           userContext = `User: ${profile.full_name || 'Unknown'}`;
@@ -63,15 +65,15 @@ export const useSendMessage = (
           }
         }
         
-        console.log("Sending message to AI assistant with context:", recentMessages.length, "messages");
+        console.log("[useSendMessage] Sending message to AI assistant");
         
         const { response, error } = await callAIAssistant('', messageContent, userContext);
 
         if (error) {
-          console.error('AI assistant error:', error);
+          console.error('[useSendMessage] AI assistant error:', error);
           setSendingStatus('error');
           
-          // Don't remove the user message on error, just mark the operation as failed
+          // Don't remove the user message on error, it's already in global memory
           return { 
             success: false, 
             error, 
@@ -82,7 +84,7 @@ export const useSendMessage = (
         }
 
         if (!response) {
-          console.error('Empty response from AI assistant');
+          console.error('[useSendMessage] Empty response from AI assistant');
           setSendingStatus('error');
           
           return { 
@@ -93,6 +95,7 @@ export const useSendMessage = (
           };
         }
 
+        // Create the assistant message
         const assistantMessage: AIMessage = {
           id: uuidv4(),
           content: response,
@@ -100,8 +103,8 @@ export const useSendMessage = (
           timestamp: new Date(),
         };
         
-        // Now add both messages to the state in a single update
-        setMessages([...updatedMessages, assistantMessage]);
+        // Add the assistant message to global memory
+        addMessage(assistantMessage);
         
         if (response.includes("[TASK_DETECTED]")) {
           const taskMatch = response.match(/\[TASK_DETECTED\](.*?)\[\/TASK_DETECTED\]/s);
@@ -111,7 +114,7 @@ export const useSendMessage = (
               setDetectedTask(detectedTask);
               setPendingTaskConfirmation(true);
             } catch (e) {
-              console.error("Error parsing detected task:", e);
+              console.error("[useSendMessage] Error parsing detected task:", e);
             }
           }
         }
@@ -120,21 +123,21 @@ export const useSendMessage = (
         lastAttemptedMessageRef.current = null;
         setSendingStatus('success');
         
-        console.log("Message send operation completed successfully");
+        console.log("[useSendMessage] Message send operation completed successfully");
         return { 
           success: true,
           response: response,
           messageStatus: 'sent'
         };
       } catch (err) {
-        console.error('Unexpected error in sendMessage:', err);
+        console.error('[useSendMessage] Unexpected error in sendMessage:', err);
         setSendingStatus('error');
         
         const isChannelClosedError = err.message && 
             err.message.includes("message channel closed before a response was received");
         
         if (isChannelClosedError) {
-          console.warn("Communication channel closed prematurely. Enabling retry.");
+          console.warn("[useSendMessage] Communication channel closed prematurely. Enabling retry.");
           
           toast({
             title: "Communication Error",
@@ -170,7 +173,7 @@ export const useSendMessage = (
         setIsLoading(false);
       }
     },
-    [options.enableTaskCreation, profile, setDetectedTask, setIsLoading, setMessages, setPendingTaskConfirmation, messages]
+    [activeMode, options.enableTaskCreation, profile, setDetectedTask, setIsLoading, setPendingTaskConfirmation, addMessage]
   );
 
   const retryLastMessage = useCallback(async (): Promise<SendMessageResult> => {
@@ -196,7 +199,7 @@ export const useSendMessage = (
     }
 
     retryAttemptsRef.current++;
-    console.log(`Retry attempt ${retryAttemptsRef.current}/${MAX_RETRY_ATTEMPTS}`);
+    console.log(`[useSendMessage] Retry attempt ${retryAttemptsRef.current}/${MAX_RETRY_ATTEMPTS}`);
     
     toast({
       title: "Retrying",
