@@ -7,7 +7,7 @@ export interface UserProfile {
   full_name?: string;
   display_name?: string;
   avatar_url?: string;
-  account_type: 'free' | 'individual' | 'business' | 'staff' | 'super-admin';
+  account_type: 'free' | 'individual' | 'business';
   created_at: string;
   updated_at: string;
 }
@@ -36,13 +36,19 @@ export const getUserProfile = async (): Promise<UserProfile | null> => {
     }
     
     // Map the data to match UserProfile interface
+    // Convert 'staff' and 'super-admin' to 'free' for compatibility
+    const accountType = 
+      data.account_type === 'business' ? 'business' :
+      data.account_type === 'individual' ? 'individual' :
+      'free';
+    
     const profile: UserProfile = {
       id: data.id,
       user_id: user.id, // Set user_id from the auth user
       full_name: data.full_name || null,
       display_name: data.display_name || null,
       avatar_url: data.avatar_url || null,
-      account_type: data.account_type || 'free',
+      account_type: accountType,
       created_at: data.created_at,
       updated_at: data.updated_at
     };
