@@ -1,3 +1,4 @@
+
 import { useAIChatEnhanced } from "./ai/chat";
 import { useAISettings } from "./ai/settings";
 import { useAIKnowledge } from "./ai/useAIKnowledge";
@@ -35,12 +36,12 @@ export const useAIAssistant = () => {
   const { aiSettings, isLoadingSettings, updateSettings, canUseAI } = useAISettings();
   const { addKnowledge, knowledgeUploads, isLoadingKnowledge, deleteKnowledge } = useAIKnowledge();
 
-  // Update messages when active mode changes
+  // Update local messages when global messages change
   useEffect(() => {
     setMessages(globalMessages);
   }, [activeMode, globalMessages]);
 
-  // Wrap the sendMessage function to update our mode-specific message store
+  // Wrap the sendMessage function to use GlobalChatMemory as single source of truth
   const sendMessage = useCallback(async (message: string) => {
     // Prevent multiple concurrent sends and reuse of the same message
     if (processingMessageRef.current || messageSendingRef.current.inProgress) {
@@ -63,39 +64,14 @@ export const useAIAssistant = () => {
       processingMessageRef.current = true;
       console.log(`Sending message in mode ${activeMode}: ${message.substring(0, 20)}...`);
       
-      // Create and add user message to UI immediately
-      const userMessage: AIMessage = {
-        id: crypto.randomUUID(),
-        content: message,
-        role: 'user',
-        timestamp: new Date(),
-      };
-      
-      // Update local state and persist to storage
-      setMessages(prev => [...prev, userMessage]);
-      saveMessages([...messages, userMessage]);
-      
-      // Send the message using the enhanced chat hook
+      // Send the message to the AI service
       const result = await originalSendMessage(message);
       
-      // After sending, handle the AI response
       if (result.success) {
-        console.log("Message sent successfully, updating message store");
+        console.log("Message sent successfully");
         
-        // Create assistant message with the response content from the AI
-        const assistantMessage: AIMessage = {
-          id: crypto.randomUUID(),
-          content: result.messageStatus === 'sent' ? 
-                    (result.response || "I processed your request.") : 
-                    "I'm not sure how to respond to that.",
-          role: 'assistant',
-          timestamp: new Date(),
-        };
-        
-        // Update local state and persist to storage
-        const updatedMessages = [...messages, userMessage, assistantMessage];
-        setMessages(updatedMessages);
-        saveMessages(updatedMessages);
+        // We don't need to manually add the message here
+        // as the underlying hook now properly updates the global memory
         
         // Reset the sending ref only on successful completion
         messageSendingRef.current = { text: '', inProgress: false, retryCount: 0 };
@@ -115,10 +91,7 @@ export const useAIAssistant = () => {
         messageSendingRef.current.retryCount += 1;
       }
       
-      return {
-        ...result,
-        keepInputText: result.success ? false : true,
-      };
+      return result;
     } catch (error) {
       console.error("Error in sendMessage:", error);
       
@@ -158,7 +131,7 @@ export const useAIAssistant = () => {
     } finally {
       processingMessageRef.current = false;
     }
-  }, [activeMode, originalSendMessage, messages, saveMessages]);
+  }, [activeMode, originalSendMessage]);
 
   // Function to retry the last failed message
   const retryLastMessage = useCallback(async () => {
@@ -184,8 +157,10 @@ export const useAIAssistant = () => {
   // Wrap the clearMessages function to clear mode-specific messages
   const clearMessages = useCallback(() => {
     console.log(`Clearing messages for mode: ${activeMode}`);
-    setMessages([]);
+    // Update GlobalChatMemory which is now our single source of truth
     saveMessages([]);
+    // Also update local state for immediate UI updates
+    setMessages([]);
     originalClearMessages();
   }, [activeMode, saveMessages, originalClearMessages]);
 

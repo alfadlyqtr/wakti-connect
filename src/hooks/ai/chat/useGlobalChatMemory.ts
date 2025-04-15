@@ -24,8 +24,18 @@ class GlobalChatMemory {
         const storedMessages = localStorage.getItem(storageKey);
         
         if (storedMessages) {
-          this.messagesMap[mode] = JSON.parse(storedMessages);
-          console.log(`[GlobalChatMemory] Loaded ${this.messagesMap[mode].length} messages for mode: ${mode}`);
+          try {
+            const parsedMessages = JSON.parse(storedMessages);
+            if (Array.isArray(parsedMessages) && parsedMessages.length > 0) {
+              this.messagesMap[mode] = parsedMessages;
+              console.log(`[GlobalChatMemory] Loaded ${this.messagesMap[mode].length} messages for mode: ${mode}`);
+            } else {
+              this.messagesMap[mode] = [];
+            }
+          } catch (e) {
+            console.error(`[GlobalChatMemory] Error parsing messages for mode ${mode}:`, e);
+            this.messagesMap[mode] = [];
+          }
         } else {
           this.messagesMap[mode] = [];
         }
@@ -44,17 +54,21 @@ class GlobalChatMemory {
   private saveToStorage(mode: string) {
     try {
       const storageKey = `${BASE_STORAGE_KEY}-${mode}`;
-      localStorage.setItem(storageKey, JSON.stringify(this.messagesMap[mode] || []));
+      const messages = this.messagesMap[mode] || [];
+      console.log(`[GlobalChatMemory] Saving ${messages.length} messages for mode: ${mode}`);
+      localStorage.setItem(storageKey, JSON.stringify(messages));
     } catch (e) {
       console.error(`[GlobalChatMemory] Error saving ${mode} messages to storage:`, e);
     }
   }
   
   getMessages(mode: string): AIMessage[] {
+    // Return a copy of the messages to prevent direct mutation
     return [...(this.messagesMap[mode] || [])];
   }
   
   setMessages(mode: string, messages: AIMessage[]) {
+    console.log(`[GlobalChatMemory] Setting ${messages.length} messages for mode: ${mode}`);
     this.messagesMap[mode] = [...messages];
     this.saveToStorage(mode);
     this.notifyListeners(mode);
@@ -64,12 +78,15 @@ class GlobalChatMemory {
     if (!this.messagesMap[mode]) {
       this.messagesMap[mode] = [];
     }
+    
+    console.log(`[GlobalChatMemory] Adding ${newMessages.length} messages to ${this.messagesMap[mode].length} existing messages for mode: ${mode}`);
     this.messagesMap[mode] = [...this.messagesMap[mode], ...newMessages];
     this.saveToStorage(mode);
     this.notifyListeners(mode);
   }
   
   clearMessages(mode: string) {
+    console.log(`[GlobalChatMemory] Clearing messages for mode: ${mode}`);
     this.messagesMap[mode] = [];
     const storageKey = `${BASE_STORAGE_KEY}-${mode}`;
     localStorage.removeItem(storageKey);
@@ -77,6 +94,7 @@ class GlobalChatMemory {
   }
   
   clearAllMessages() {
+    console.log(`[GlobalChatMemory] Clearing all messages for all modes`);
     const modes = Object.keys(this.messagesMap);
     modes.forEach(mode => {
       this.messagesMap[mode] = [];
@@ -91,7 +109,9 @@ class GlobalChatMemory {
       this.listenersMap[mode] = [];
     }
     
+    console.log(`[GlobalChatMemory] Adding listener for mode: ${mode}`);
     this.listenersMap[mode].push(callback);
+    
     // Immediately call with current state
     callback(this.getMessages(mode));
     
@@ -99,14 +119,17 @@ class GlobalChatMemory {
     return () => {
       if (this.listenersMap[mode]) {
         this.listenersMap[mode] = this.listenersMap[mode].filter(listener => listener !== callback);
+        console.log(`[GlobalChatMemory] Removed listener for mode: ${mode}`);
       }
     };
   }
   
   private notifyListeners(mode: string) {
-    if (this.listenersMap[mode]) {
+    if (this.listenersMap[mode] && this.listenersMap[mode].length > 0) {
+      console.log(`[GlobalChatMemory] Notifying ${this.listenersMap[mode].length} listeners for mode: ${mode}`);
+      const messages = this.getMessages(mode);
       this.listenersMap[mode].forEach(listener => {
-        listener(this.getMessages(mode));
+        listener(messages);
       });
     }
   }
@@ -122,6 +145,7 @@ export const useGlobalChatMemory = (mode: string = 'general') => {
   useEffect(() => {
     // Subscribe to memory changes for this specific mode
     const unsubscribe = globalMemory.subscribe(mode, updatedMessages => {
+      console.log(`[useGlobalChatMemory] Received ${updatedMessages.length} updated messages for mode: ${mode}`);
       setMessages(updatedMessages);
     });
     
@@ -129,9 +153,14 @@ export const useGlobalChatMemory = (mode: string = 'general') => {
     return unsubscribe;
   }, [mode]);
   
+  const setMessagesWrapper = (newMessages: AIMessage[]) => {
+    console.log(`[useGlobalChatMemory] Setting ${newMessages.length} messages for mode: ${mode}`);
+    globalMemory.setMessages(mode, newMessages);
+  };
+  
   return {
     messages,
-    setMessages: (newMessages: AIMessage[]) => globalMemory.setMessages(mode, newMessages),
+    setMessages: setMessagesWrapper,
     addMessages: (newMessages: AIMessage[]) => globalMemory.addMessages(mode, newMessages),
     clearMessages: () => globalMemory.clearMessages(mode),
     clearAllMessages: () => globalMemory.clearAllMessages(),

@@ -1,3 +1,4 @@
+
 import { useCallback, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { AIMessage } from '@/types/ai-assistant.types';
@@ -47,16 +48,11 @@ export const useSendMessage = (
           timestamp: new Date(),
         };
         
-        setMessages((prev) => {
-          const updatedMessages = [...prev, userMessage];
-          try {
-            localStorage.setItem('wakti-ai-chat', JSON.stringify(updatedMessages));
-          } catch (storageError) {
-            console.error("Failed to save user message to localStorage:", storageError);
-          }
-          return updatedMessages;
-        });
+        // Add the user message to the local state
+        const updatedMessages = [...messages, userMessage];
+        setMessages(updatedMessages);
         
+        // Create a copy of messages including the new user message for the API call
         const recentMessages = [...messages, userMessage];
         
         let userContext = '';
@@ -73,9 +69,9 @@ export const useSendMessage = (
 
         if (error) {
           console.error('AI assistant error:', error);
-          
           setSendingStatus('error');
           
+          // Don't remove the user message on error, just mark the operation as failed
           return { 
             success: false, 
             error, 
@@ -104,16 +100,8 @@ export const useSendMessage = (
           timestamp: new Date(),
         };
         
-        setMessages((prev) => {
-          const updatedMessages = [...prev, assistantMessage];
-          try {
-            localStorage.setItem('wakti-ai-chat', JSON.stringify(updatedMessages));
-            console.log("Successfully saved", updatedMessages.length, "messages to localStorage");
-          } catch (storageError) {
-            console.error("Failed to save chat to localStorage:", storageError);
-          }
-          return updatedMessages;
-        });
+        // Now add both messages to the state in a single update
+        setMessages([...updatedMessages, assistantMessage]);
         
         if (response.includes("[TASK_DETECTED]")) {
           const taskMatch = response.match(/\[TASK_DETECTED\](.*?)\[\/TASK_DETECTED\]/s);

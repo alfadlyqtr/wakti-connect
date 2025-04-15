@@ -21,7 +21,7 @@ interface AIAssistantChatWindowProps {
 }
 
 export const AIAssistantChatWindow = ({ activeMode, onClearChat }: AIAssistantChatWindowProps) => {
-  // Use the mode-specific chat memory and AI assistant hook
+  // Use the AI assistant hook to get messages and loading state
   const { messages, isLoading } = useAIAssistant();
   
   const [showWelcomeMessage, setShowWelcomeMessage] = useState(true);
