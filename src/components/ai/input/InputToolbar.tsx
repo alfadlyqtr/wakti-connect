@@ -35,7 +35,7 @@ export const InputToolbar = ({ isLoading, isListening, onVoiceToggle }: InputToo
   };
 
   return (
-    <div className="absolute right-2 bottom-2 flex items-center gap-1">
+    <div className="absolute right-2 bottom-2 flex items-center gap-2">
       {/* Camera button */}
       <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
         <Button
@@ -44,7 +44,7 @@ export const InputToolbar = ({ isLoading, isListening, onVoiceToggle }: InputToo
           variant="ghost"
           onClick={handleCameraCapture}
           disabled={isLoading || isListening}
-          className="h-8 w-8 rounded-full bg-white/20 border border-white/30 backdrop-blur-sm dark:bg-slate-800/20 dark:border-slate-700/30 shadow-sm hover:shadow-md hover:bg-white/30 dark:hover:bg-slate-700/30"
+          className="h-9 w-9 rounded-full bg-white/30 border border-white/30 backdrop-blur-sm dark:bg-slate-800/30 dark:border-slate-700/30 shadow-md hover:shadow-lg hover:bg-white/40 dark:hover:bg-slate-700/40 transition-all"
         >
           <Camera className="h-4 w-4" />
           <span className="sr-only">Take a photo</span>
@@ -59,7 +59,7 @@ export const InputToolbar = ({ isLoading, isListening, onVoiceToggle }: InputToo
           variant="ghost"
           onClick={() => fileInputRef.current?.click()}
           disabled={isLoading || isListening}
-          className="h-8 w-8 rounded-full bg-white/20 border border-white/30 backdrop-blur-sm dark:bg-slate-800/20 dark:border-slate-700/30 shadow-sm hover:shadow-md hover:bg-white/30 dark:hover:bg-slate-700/30"
+          className="h-9 w-9 rounded-full bg-white/30 border border-white/30 backdrop-blur-sm dark:bg-slate-800/30 dark:border-slate-700/30 shadow-md hover:shadow-lg hover:bg-white/40 dark:hover:bg-slate-700/40 transition-all"
         >
           <Paperclip className="h-4 w-4" />
           <span className="sr-only">Upload a file</span>
@@ -89,10 +89,10 @@ export const InputToolbar = ({ isLoading, isListening, onVoiceToggle }: InputToo
             variant={isListening ? "destructive" : "ghost"}
             onClick={onVoiceToggle}
             className={cn(
-              "h-8 w-8 rounded-full shadow-sm hover:shadow-md",
+              "h-9 w-9 rounded-full shadow-md hover:shadow-lg transition-all",
               isListening 
-                ? "bg-red-500/80 text-white border border-red-400 animate-pulse"
-                : "bg-white/20 border border-white/30 backdrop-blur-sm dark:bg-slate-800/20 dark:border-slate-700/30 hover:bg-white/30 dark:hover:bg-slate-700/30"
+                ? "bg-red-500/90 text-white border border-red-400/70 animate-pulse"
+                : "bg-white/30 border border-white/30 backdrop-blur-sm dark:bg-slate-800/30 dark:border-slate-700/30 hover:bg-white/40 dark:hover:bg-slate-700/40"
             )}
           >
             {isListening ? (

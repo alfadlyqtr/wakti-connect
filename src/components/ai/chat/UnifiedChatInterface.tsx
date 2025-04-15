@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -38,19 +37,19 @@ export const UnifiedChatInterface: React.FC = () => {
     setShowClearConfirmation(false);
   };
   
-  // Get background style based on current mode
-  const getBackgroundStyle = () => {
+  // Get mode-specific background class
+  const getModeBackgroundClass = () => {
     switch (currentMode) {
       case 'general':
-        return 'ai-bg-general';
+        return 'bg-gradient-to-br from-blue-50/30 to-indigo-50/30';
       case 'student':
-        return 'ai-bg-student';
+        return 'bg-gradient-to-br from-green-50/30 to-emerald-50/30';
       case 'productivity':
-        return 'ai-bg-productivity';
+        return 'bg-gradient-to-br from-amber-50/30 to-yellow-50/30';
       case 'creative':
-        return 'ai-bg-creative';
+        return 'bg-gradient-to-br from-fuchsia-50/30 to-pink-50/30';
       default:
-        return 'ai-bg-general';
+        return 'bg-gradient-to-br from-blue-50/30 to-indigo-50/30';
     }
   };
   
@@ -86,107 +85,74 @@ export const UnifiedChatInterface: React.FC = () => {
   };
   
   return (
-    <motion.div 
-      className={cn(
-        "min-h-[90vh] flex flex-col px-2 sm:px-4 lg:px-10 pb-6 pt-2 transition-colors duration-500 backdrop-blur-sm",
-        getBackgroundStyle()
-      )}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      layout
-    >
-      {!canUseAI && <FreeAccountBanner />}
-      
-      <div className="mb-4 flex justify-center px-2 overflow-x-auto no-scrollbar">
+    <div className="flex flex-col h-full">
+      <div className="p-3 sm:p-4 border-b border-white/10 backdrop-blur-md bg-white/5">
         <ModeSwitcher />
       </div>
       
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-        className="relative w-full mx-auto mb-8"
-        layout
-      >
-        <Card className="overflow-hidden glassmorphism border-white/20 dark:border-slate-700/20 shadow-xl rounded-xl p-3 sm:p-4 max-w-4xl sm:max-w-5xl mx-auto mt-4 sm:mt-10">
-          <ChatHeader 
-            onClearChat={handleClearChat} 
-            hasMessages={messages.length > 0} 
-          />
-          
-          {!canUseAI && (
-            <Alert variant="destructive" className="m-2 sm:m-4">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>Access Restricted</AlertTitle>
-              <AlertDescription>
-                AI Assistant is only available for Business and Individual accounts.
-              </AlertDescription>
-            </Alert>
-          )}
-          
-          <ScrollArea className="h-[400px] sm:h-[500px] glassmorphism-content">
-            <CardContent className="p-2 sm:p-4 space-y-3 sm:space-y-4">
-              {messages.length === 0 ? (
-                renderWelcomeView()
-              ) : (
-                <AnimatePresence initial={false}>
-                  {messages.map(message => (
-                    <motion.div
-                      key={message.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <ChatMessage message={message} />
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              )}
+      <ConfirmationModal
+        open={showClearConfirmation}
+        onOpenChange={setShowClearConfirmation}
+        title="Clear Conversation"
+        description="Are you sure you want to clear this conversation? This action cannot be undone."
+        confirmText="Clear"
+        cancelText="Cancel"
+        onConfirm={handleConfirmClear}
+        variant="destructive"
+      />
+      
+      {!canUseAI && <FreeAccountBanner />}
+      
+      <div className="flex-1 overflow-hidden">
+        <ScrollArea className={cn("h-[60vh] min-h-[500px] px-2 sm:px-4 py-4", getModeBackgroundClass())}>
+          {messages.length === 0 ? renderWelcomeView() : (
+            <div className="space-y-4">
+              <AnimatePresence>
+                {messages.map((message) => (
+                  <motion.div
+                    key={message.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4 }}
+                  >
+                    <ChatMessage message={message} />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
               
               {isLoading && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="flex items-start gap-3 opacity-70"
+                  className="flex items-start gap-3 mb-4"
                 >
-                  <div className="h-8 w-8 rounded-full flex items-center justify-center">
-                    <Bot className="h-4 w-4 text-white animate-pulse" />
+                  <div className="flex-shrink-0">
+                    <div className={`h-10 w-10 rounded-full ${currentPersonality.color} flex items-center justify-center`}>
+                      <Bot className="h-5 w-5 text-white" />
+                    </div>
                   </div>
-                  <div className="bg-white/30 backdrop-blur-sm border border-white/20 dark:bg-slate-800/30 dark:border-slate-700/30 rounded-lg p-3 max-w-[85%]">
-                    <div className="flex space-x-1">
-                      <div className="h-2 w-2 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                      <div className="h-2 w-2 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                      <div className="h-2 w-2 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                  <div className="bg-white/20 dark:bg-slate-800/20 border border-white/10 dark:border-slate-700/10 rounded-2xl p-4 backdrop-blur-md">
+                    <div className="flex space-x-2">
+                      <div className="h-2 w-2 rounded-full bg-muted-foreground/70 animate-bounce"></div>
+                      <div className="h-2 w-2 rounded-full bg-muted-foreground/70 animate-bounce [animation-delay:0.2s]"></div>
+                      <div className="h-2 w-2 rounded-full bg-muted-foreground/70 animate-bounce [animation-delay:0.4s]"></div>
                     </div>
                   </div>
                 </motion.div>
               )}
-              
-              <div ref={messagesEndRef} />
-            </CardContent>
-          </ScrollArea>
+            </div>
+          )}
           
-          <ChatInput 
-            onSendMessage={sendMessage} 
-            isLoading={isLoading} 
-            isDisabled={!canUseAI} 
-          />
-        </Card>
-      </motion.div>
+          <div ref={messagesEndRef} />
+        </ScrollArea>
+      </div>
       
-      <ConfirmationModal
-        open={showClearConfirmation}
-        onOpenChange={setShowClearConfirmation}
-        title="Clear Chat History"
-        description="Are you sure you want to clear all messages? This action cannot be undone."
-        onConfirm={handleConfirmClear}
-        confirmLabel="Clear"
-        cancelLabel="Cancel"
-        isDestructive={true}
+      <ChatInput 
+        onSendMessage={sendMessage} 
+        isLoading={isLoading} 
+        isDisabled={!canUseAI} 
       />
-    </motion.div>
+    </div>
   );
 };
 

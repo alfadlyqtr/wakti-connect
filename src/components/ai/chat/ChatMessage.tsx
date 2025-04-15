@@ -16,17 +16,17 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   
   return (
     <div className={cn(
-      "flex items-start gap-3 mb-4",
+      "flex items-start gap-4 py-4 px-2",
       isUser ? "flex-row-reverse" : ""
     )}>
       <Avatar className={cn(
-        "h-8 w-8 border-2",
-        isUser ? "bg-primary border-primary/20" : "bg-blue-500 border-blue-500/20"
+        "h-10 w-10 border-2 shadow-md",
+        isUser ? "bg-primary/90 border-primary/20" : "bg-blue-500/90 border-blue-500/20"
       )}>
         {isUser ? (
-          <User className="h-4 w-4 text-primary-foreground" />
+          <User className="h-5 w-5 text-primary-foreground" />
         ) : (
-          <Bot className="h-4 w-4 text-white" />
+          <Bot className="h-5 w-5 text-white" />
         )}
         <AvatarFallback>
           {isUser ? 'U' : 'AI'}
@@ -34,13 +34,13 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
       </Avatar>
       
       <div className={cn(
-        "rounded-lg py-2.5 px-3.5 max-w-[85%] transition-all message-bubble",
+        "rounded-2xl py-3 px-5 max-w-[80%] transition-all message-bubble",
         isUser 
-          ? "bg-primary/10 dark:bg-primary/20 border border-primary/20 backdrop-blur-md shadow-sm hover:shadow-primary/5" 
-          : "bg-white/30 dark:bg-slate-800/30 border border-white/20 dark:border-slate-700/30 backdrop-blur-md shadow-lg hover:shadow-blue-500/5"
+          ? "bg-primary/10 dark:bg-primary/20 border border-primary/10 backdrop-blur-md shadow-lg hover:shadow-primary/10" 
+          : "bg-white/20 dark:bg-slate-800/20 border border-white/10 dark:border-slate-700/20 backdrop-blur-md shadow-lg hover:shadow-blue-500/10"
       )}>
         <div className={cn(
-          "prose prose-sm dark:prose-invert prose-p:my-1 prose-headings:mb-2 prose-headings:mt-4",
+          "prose prose-sm dark:prose-invert prose-p:my-1.5 prose-headings:mb-2 prose-headings:mt-4",
           isUser ? "text-foreground" : "text-foreground"
         )}>
           <ReactMarkdown remarkPlugins={[remarkGfm]}>

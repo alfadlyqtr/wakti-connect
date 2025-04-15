@@ -34,7 +34,7 @@ export function AIAssistantMessage({
       y: 0,
       scale: 1,
       transition: {
-        duration: 0.3,
+        duration: 0.4,
         ease: "easeOut"
       }
     }
@@ -46,7 +46,7 @@ export function AIAssistantMessage({
       animate="visible"
       variants={messageVariants}
       className={cn(
-        "flex w-full items-start gap-1 sm:gap-3 mb-3",
+        "flex w-full items-start gap-3 sm:gap-4 mb-4",
         isUser ? "justify-end" : "justify-start"
       )}
     >

@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Send } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -24,7 +24,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const [inputValue, setInputValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const { currentMode, getInputGlowClass } = useAIPersonality();
   
   const { 
@@ -105,13 +105,13 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   return (
     <motion.form 
       onSubmit={handleSubmit} 
-      className="flex flex-col gap-2 p-3 border-t border-white/10 bg-transparent backdrop-blur-md"
+      className="relative flex flex-col gap-3 p-4 border-t border-white/10 bg-white/5 backdrop-blur-lg"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: 0.2 }}
     >
       <div className="relative w-full">
-        <Input
+        <Textarea
           ref={inputRef}
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
@@ -121,7 +121,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           placeholder="Type a message..."
           disabled={isLoading || isDisabled || isListening}
           className={cn(
-            "flex-1 bg-white/20 dark:bg-slate-800/20 backdrop-blur-sm border border-white/30 dark:border-slate-700/30 transition-all duration-300 input-active text-foreground h-12 px-4 pr-32",
+            "flex-1 bg-white/10 dark:bg-slate-800/10 backdrop-blur-md border border-white/20 dark:border-slate-700/20 transition-all duration-300 input-active text-foreground resize-none min-h-[60px] max-h-[120px] px-4 py-3 rounded-xl pr-36",
             inputValue && "pr-10",
             isLoading && "opacity-70",
             isListening && "bg-primary/5 border-primary/20",
@@ -142,10 +142,10 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           size="icon" 
           disabled={!inputValue.trim() || isLoading || isDisabled}
           className={cn(
-            "rounded-full transition-colors duration-300 shadow-sm h-10 w-10",
-            "bg-white/20 border border-white/30 backdrop-blur-md",
-            "dark:bg-slate-800/20 dark:border-slate-700/30",
-            "hover:shadow-lg hover:bg-white/30 dark:hover:bg-slate-700/30",
+            "rounded-full transition-colors duration-300 shadow-md h-11 w-11",
+            "bg-white/30 border border-white/20 backdrop-blur-md",
+            "dark:bg-slate-800/30 dark:border-slate-700/20",
+            "hover:shadow-lg hover:bg-white/40 dark:hover:bg-slate-700/40",
             getSendButtonStyle()
           )}
         >
