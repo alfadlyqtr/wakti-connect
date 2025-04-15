@@ -83,10 +83,10 @@ export const useAIAssistant = () => {
       if (result.success) {
         console.log("Message sent successfully, updating message store");
         
-        // Create assistant message
+        // Create assistant message - using the correct property from the result
         const assistantMessage: AIMessage = {
           id: crypto.randomUUID(),
-          content: result.text || "I'm not sure how to respond to that.",
+          content: result.error ? "I'm not sure how to respond to that." : message,
           role: 'assistant',
           timestamp: new Date(),
         };
