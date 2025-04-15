@@ -2,7 +2,7 @@
 import React, { createContext, useState, useEffect } from "react";
 import { BusinessPageSection } from "@/types/business.types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { fromTable } from "@/integrations/supabase/helper";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 
 interface DragDropContextProps {
@@ -39,7 +39,8 @@ export const DragDropProvider: React.FC<{
       try {
         // Create a batch of update promises
         const updatePromises = updatedSections.map((section, index) => {
-          return fromTable('business_page_sections')
+          return supabase
+            .from('business_page_sections')
             .update({ section_order: index })
             .eq('id', section.id);
         });

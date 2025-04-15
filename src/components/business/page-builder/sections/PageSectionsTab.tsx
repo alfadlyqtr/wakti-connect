@@ -1,3 +1,4 @@
+
 import React from "react";
 import { BusinessPageSection, SectionType } from "@/types/business.types";
 import { Button } from "@/components/ui/button";
@@ -5,7 +6,7 @@ import { Globe } from "lucide-react";
 import { AddSectionButtons } from "./";
 import { EmptySectionState } from "./";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { fromTable } from "@/integrations/supabase/helper";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { DragDropProvider } from "../drag-drop/DragDropContext";
 import DraggableSectionList from "../drag-drop/DraggableSectionList";
@@ -39,7 +40,8 @@ const PageSectionsTab: React.FC<PageSectionsTabProps> = ({
       
       const nextOrder = highestOrder + 1;
       
-      const { data, error } = await fromTable('business_page_sections')
+      const { data, error } = await supabase
+        .from('business_page_sections')
         .insert({
           page_id: businessPageId,
           section_type: sectionType,
@@ -80,7 +82,8 @@ const PageSectionsTab: React.FC<PageSectionsTabProps> = ({
   // Section handling mutations
   const toggleSectionVisibility = useMutation({
     mutationFn: async ({ sectionId, isVisible }: { sectionId: string, isVisible: boolean }) => {
-      const { data, error } = await fromTable('business_page_sections')
+      const { data, error } = await supabase
+        .from('business_page_sections')
         .update({ is_visible: !isVisible })
         .eq('id', sectionId)
         .select()
@@ -107,7 +110,8 @@ const PageSectionsTab: React.FC<PageSectionsTabProps> = ({
   
   const deleteSection = useMutation({
     mutationFn: async (sectionId: string) => {
-      const { error } = await fromTable('business_page_sections')
+      const { error } = await supabase
+        .from('business_page_sections')
         .delete()
         .eq('id', sectionId);
       

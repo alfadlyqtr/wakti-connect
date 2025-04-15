@@ -7,7 +7,7 @@ export interface UserProfile {
   full_name?: string;
   display_name?: string;
   avatar_url?: string;
-  account_type: 'free' | 'individual' | 'business';
+  account_type: 'free' | 'individual' | 'business' | 'staff' | 'super-admin';
   created_at: string;
   updated_at: string;
 }

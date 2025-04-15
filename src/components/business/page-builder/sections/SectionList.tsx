@@ -1,10 +1,11 @@
+
 import React from "react";
 import { BusinessPageSection } from "@/types/business.types";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import SectionCard from "./SectionCard";
 import SectionActions from "./SectionActions";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { fromTable } from "@/integrations/supabase/helper";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 
 interface SectionListProps {
@@ -22,7 +23,8 @@ const SectionList: React.FC<SectionListProps> = ({
   const updateSectionOrder = useMutation({
     mutationFn: async ({ sectionId, newOrder }: { sectionId: string, newOrder: number }) => {
       console.log(`Updating section order: section ${sectionId} to order ${newOrder}`);
-      const { data, error } = await fromTable('business_page_sections')
+      const { data, error } = await supabase
+        .from('business_page_sections')
         .update({ section_order: newOrder })
         .eq('id', sectionId)
         .select()
@@ -49,7 +51,8 @@ const SectionList: React.FC<SectionListProps> = ({
   
   const toggleSectionVisibility = useMutation({
     mutationFn: async ({ sectionId, isVisible }: { sectionId: string, isVisible: boolean }) => {
-      const { data, error } = await fromTable('business_page_sections')
+      const { data, error } = await supabase
+        .from('business_page_sections')
         .update({ is_visible: isVisible })
         .eq('id', sectionId)
         .select()
@@ -76,7 +79,8 @@ const SectionList: React.FC<SectionListProps> = ({
   
   const deleteSection = useMutation({
     mutationFn: async (sectionId: string) => {
-      const { error } = await fromTable('business_page_sections')
+      const { error } = await supabase
+        .from('business_page_sections')
         .delete()
         .eq('id', sectionId);
       

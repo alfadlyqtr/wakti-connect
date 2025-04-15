@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import SocialMediaLinks from "../SocialMediaLinks";
 import { BusinessSocialLink, SocialPlatform } from "@/types/business.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { fromTable } from "@/integrations/supabase/helper";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -34,7 +34,8 @@ const SocialMediaSettingsTab: React.FC<SocialMediaSettingsTabProps> = ({
       }
       
       try {
-        const { data, error } = await fromTable('business_social_links')
+        const { data, error } = await supabase
+          .from('business_social_links')
           .select()
           .eq('business_id', businessId);
         
@@ -57,7 +58,8 @@ const SocialMediaSettingsTab: React.FC<SocialMediaSettingsTabProps> = ({
   const addSocialLinkMutation = useMutation({
     mutationFn: async (linkData: Omit<BusinessSocialLink, 'id' | 'created_at'>) => {
       console.log("Adding social link with data:", linkData);
-      const { data, error } = await fromTable('business_social_links')
+      const { data, error } = await supabase
+        .from('business_social_links')
         .insert({ ...linkData, business_id: businessId })
         .select()
         .single();
@@ -87,7 +89,8 @@ const SocialMediaSettingsTab: React.FC<SocialMediaSettingsTabProps> = ({
     mutationFn: async (linkData: Partial<BusinessSocialLink> & { id: string }) => {
       console.log("Updating social link:", linkData);
       const { id, ...updates } = linkData;
-      const { data, error } = await fromTable('business_social_links')
+      const { data, error } = await supabase
+        .from('business_social_links')
         .update(updates)
         .eq('id', id)
         .select()
@@ -117,7 +120,8 @@ const SocialMediaSettingsTab: React.FC<SocialMediaSettingsTabProps> = ({
   const deleteSocialLinkMutation = useMutation({
     mutationFn: async (linkId: string) => {
       console.log("Deleting social link:", linkId);
-      const { error } = await fromTable('business_social_links')
+      const { error } = await supabase
+        .from('business_social_links')
         .delete()
         .eq('id', linkId);
       
