@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AIMessage, AIAssistantRole, RoleContexts } from "@/types/ai-assistant.types";
 import { AnimatePresence, motion } from "framer-motion";
-import { Loader2, Send, PaperclipIcon } from "lucide-react";
+import { Loader2, Send, PaperclipIcon, Trash2, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
