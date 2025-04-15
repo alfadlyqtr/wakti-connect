@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -34,7 +33,6 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
   const [isRetrying, setIsRetrying] = useState(false);
   const [isConnectionChecking, setIsConnectionChecking] = useState(false);
 
-  // Check connection status
   useEffect(() => {
     checkConnection();
   }, []);
@@ -44,7 +42,6 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
     setIsConnectionChecking(true);
     
     try {
-      // Use ping or a simple request to check connectivity
       const response = await fetch('/api/ping', { 
         method: 'HEAD',
         cache: 'no-cache'
@@ -66,7 +63,6 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
     }
   };
 
-  // Better message recovery system
   useEffect(() => {
     const currentProcessingMessage = getCurrentProcessingMessage();
     if (currentProcessingMessage && inputMessage === '') {
@@ -76,7 +72,6 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
     }
   }, [getCurrentProcessingMessage, inputMessage]);
 
-  // Track input message for recovery purposes
   useEffect(() => {
     if (inputMessage && !isLoading) {
       prevMessageRef.current = inputMessage;
@@ -88,7 +83,6 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
     
     if (!inputMessage.trim() || isLoading || isMessageProcessing()) return;
 
-    // Check connection before sending
     if (connectionStatus === 'disconnected') {
       await checkConnection();
       if (connectionStatus === 'disconnected') {
@@ -102,7 +96,9 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
     
     try {
       console.log("Sending message:", messageCopy.substring(0, 20) + "...");
-      const { success, error, keepInputText, isConnectionError } = await sendMessage(messageCopy);
+      const result = await sendMessage(messageCopy);
+      const { success, error, keepInputText } = result;
+      const isConnectionError = 'isConnectionError' in result ? result.isConnectionError : false;
 
       if (success) {
         console.log("Message sent successfully, clearing input");
@@ -112,7 +108,6 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
         setRetryCount(0);
         setConnectionStatus('connected');
       } else {
-        // Connection error detected
         if (isConnectionError) {
           setConnectionStatus('disconnected');
           setSendError("Connection to AI service failed. Please check your internet connection and try again.");
@@ -120,11 +115,9 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
           setSendError(error?.message || 'Failed to send message. Try again.');
         }
         
-        // Don't clear the input on failure to allow for retry
         console.warn('Message failed to send. Input preserved.', error);
         
         if (!keepInputText) {
-          // Only clear if explicitly told to
           setInputMessage('');
         }
         
@@ -134,7 +127,6 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
       console.error('Error sending message:', error);
       setSendError(error.message || 'An unexpected error occurred');
       setConnectionStatus('disconnected');
-      // Input is always preserved on exception
       setRetryCount(prev => prev + 1);
     }
   };
@@ -143,7 +135,6 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
     setIsRetrying(true);
     setSendError(null);
     
-    // Check connection first
     await checkConnection();
     
     if (connectionStatus === 'disconnected') {
@@ -154,7 +145,9 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
     
     try {
       console.log("Attempting to retry last message");
-      const { success, keepInputText, isConnectionError } = await retryLastMessage();
+      const result = await retryLastMessage();
+      const { success, keepInputText } = result;
+      const isConnectionError = 'isConnectionError' in result ? result.isConnectionError : false;
       
       if (success) {
         console.log("Retry successful, clearing input");
@@ -166,7 +159,6 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
         setConnectionStatus('disconnected');
         setSendError("Connection to AI service failed. Please try again later.");
       } else if (!keepInputText) {
-        // Only clear if explicitly told to
         setInputMessage('');
       }
     } catch (error) {
@@ -213,7 +205,7 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
       {connectionStatus === 'disconnected' && (
         <Button 
           variant="ghost" 
-          size="xs" 
+          size="sm" 
           onClick={checkConnection} 
           className="h-5 px-1 text-xs"
           disabled={isConnectionChecking}

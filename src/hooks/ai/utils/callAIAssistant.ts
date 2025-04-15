@@ -121,7 +121,8 @@ export const callAIAssistant = async (token: string, message: string, userName: 
         response: "", 
         error: {
           message: "Received an empty response from the AI assistant",
-          isEmptyResponse: true
+          isEmptyResponse: true,
+          isConnectionError: false
         }
       };
     }
@@ -143,7 +144,8 @@ export const callAIAssistant = async (token: string, message: string, userName: 
       response: "", 
       error: {
         message: error.message || "Unexpected error communicating with AI",
-        isUnexpectedError: true
+        isUnexpectedError: true,
+        isConnectionError: true
       }
     };
   }

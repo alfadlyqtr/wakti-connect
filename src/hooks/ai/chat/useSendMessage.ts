@@ -161,7 +161,8 @@ export const useSendMessage = (
             success: false, 
             error: err, 
             keepInputText: true,
-            isChannelError: true
+            isChannelError: true,
+            isConnectionError: true
           };
         }
         
@@ -174,7 +175,12 @@ export const useSendMessage = (
         // Remove the user message from the UI on error
         setMessages((prev) => prev.filter(msg => msg.id !== prev[prev.length - 1]?.id));
         
-        return { success: false, error: err, keepInputText: true };
+        return { 
+          success: false,
+          error: err,
+          keepInputText: true,
+          isConnectionError: true
+        };
       } finally {
         isSendingRef.current = false;
         setIsLoading(false);
