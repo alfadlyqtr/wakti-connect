@@ -33,4 +33,6 @@ export interface UseChatOptions {
 export interface SendMessageResult {
   success: boolean;
   error?: any;
+  keepInputText?: boolean;
+  isChannelError?: boolean;
 }
