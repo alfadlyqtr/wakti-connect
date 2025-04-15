@@ -1,15 +1,10 @@
 
 import React from 'react';
-import { useAuth } from '@/hooks/auth';
-import { useProfile } from '@/hooks/useProfile';
-import WAKTIAIAssistant from '@/components/ai/WAKTIAIAssistant';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Bot } from 'lucide-react';
+import { Bot, Sparkles, BookOpen, Zap } from 'lucide-react';
+import { UnifiedChatInterfaceWithProvider } from '@/components/ai/chat/UnifiedChatInterface';
 
 const DashboardAIAssistant = () => {
-  const { user } = useAuth();
-  const { profile } = useProfile(user?.id);
-  
   return (
     <div className="container max-w-5xl mx-auto p-4 space-y-8">
       <div className="flex flex-col gap-2">
@@ -19,7 +14,7 @@ const DashboardAIAssistant = () => {
         </p>
       </div>
       
-      <WAKTIAIAssistant />
+      <UnifiedChatInterfaceWithProvider />
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
