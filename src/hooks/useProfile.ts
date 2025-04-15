@@ -11,6 +11,7 @@ interface Profile {
   business_id?: string;
   role?: string;
   created_at?: string;
+  account_type?: 'free' | 'individual' | 'business' | 'staff' | 'super-admin'; // Added account_type
 }
 
 export const useProfile = (userId?: string) => {

@@ -4,7 +4,7 @@ import { globalChatMemory } from '@/services/GlobalChatMemory';
 import { ChatMemoryMessage } from '@/components/ai/personality-switcher/types';
 import { useAIPersonality } from '@/components/ai/personality-switcher/AIPersonalityContext';
 import { callAIAssistant } from '@/hooks/ai/utils/callAIAssistant';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/auth';
 import { useProfile } from '@/hooks/useProfile';
 import { toast } from '@/hooks/use-toast';
 

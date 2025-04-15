@@ -2,6 +2,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/components/ui/button'; // Added missing Button import
 import { useGlobalChat } from '@/hooks/useGlobalChat';
 import { ChatMessage } from './ChatMessage';
 import { ChatInput } from './ChatInput';
