@@ -2,7 +2,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Button } from '@/components/ui/button'; // Added missing Button import
+import { Button } from '@/components/ui/button';
 import { useGlobalChat } from '@/hooks/useGlobalChat';
 import { ChatMessage } from './ChatMessage';
 import { ChatInput } from './ChatInput';
@@ -19,7 +19,7 @@ export const UnifiedChatInterface: React.FC = () => {
   const { messages, sendMessage, isLoading, clearMessages, canUseAI } = useGlobalChat();
   const [showClearConfirmation, setShowClearConfirmation] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { currentPersonality } = useAIPersonality();
+  const { currentPersonality, currentMode } = useAIPersonality();
   
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -35,6 +35,22 @@ export const UnifiedChatInterface: React.FC = () => {
   const handleConfirmClear = () => {
     clearMessages();
     setShowClearConfirmation(false);
+  };
+  
+  // Get background style based on current mode
+  const getBackgroundStyle = () => {
+    switch (currentMode) {
+      case 'general':
+        return 'bg-gradient-to-br from-blue-50 to-slate-100 dark:from-slate-900/70 dark:to-blue-950/50';
+      case 'student':
+        return 'bg-gradient-to-br from-green-50 to-emerald-100 dark:from-emerald-950/50 dark:to-green-900/70';
+      case 'productivity':
+        return 'bg-gradient-to-br from-purple-50 to-indigo-100 dark:from-purple-950/50 dark:to-indigo-900/70';
+      case 'creative':
+        return 'bg-gradient-to-br from-pink-50 to-orange-100 dark:from-pink-950/50 dark:to-orange-900/70';
+      default:
+        return 'bg-gradient-to-br from-blue-50 to-slate-100 dark:from-slate-900/70 dark:to-blue-950/50';
+    }
   };
   
   // Welcome message if no messages
@@ -69,14 +85,12 @@ export const UnifiedChatInterface: React.FC = () => {
   };
   
   return (
-    <div className="max-w-3xl mx-auto px-4 pb-6">
+    <div className={`max-w-3xl mx-auto px-4 pb-6 pt-2 min-h-[90vh] flex flex-col ${getBackgroundStyle()}`}>
       <div className="mb-4 flex justify-center">
         <ModeSwitcher />
       </div>
       
-      <Card className={`overflow-hidden shadow-lg border border-muted rounded-xl backdrop-blur-md bg-white/80 dark:bg-slate-900/80 ${
-        currentPersonality.bgGradient
-      }`}>
+      <Card className="overflow-hidden shadow-lg border border-muted rounded-xl backdrop-blur-md bg-white/80 dark:bg-slate-900/80">
         <ChatHeader 
           onClearChat={handleClearChat} 
           hasMessages={messages.length > 0} 

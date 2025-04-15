@@ -13,8 +13,15 @@ const modeIcons = {
   creative: Sparkles,
 };
 
+const modeColors = {
+  general: 'bg-blue-500 hover:bg-blue-600',
+  student: 'bg-green-500 hover:bg-green-600',
+  productivity: 'bg-purple-500 hover:bg-purple-600',
+  creative: 'bg-pink-500 hover:bg-pink-600',
+};
+
 export const ModeSwitcher: React.FC = () => {
-  const { currentMode, setCurrentMode, currentPersonality } = useAIPersonality();
+  const { currentMode, setCurrentMode } = useAIPersonality();
   
   const handleModeChange = (mode: AIPersonalityMode) => {
     setCurrentMode(mode);
@@ -22,21 +29,24 @@ export const ModeSwitcher: React.FC = () => {
   
   return (
     <div className="flex items-center justify-center gap-1 p-2 bg-background/80 backdrop-blur-sm rounded-lg shadow-sm border">
-      {Object.entries(modeIcons).map(([mode, Icon]) => {
+      {(Object.keys(modeIcons) as AIPersonalityMode[]).map((mode) => {
+        const Icon = modeIcons[mode];
         const isActive = currentMode === mode;
+        const activeColor = modeColors[mode];
+        
         return (
           <Button
             key={mode}
             variant={isActive ? "default" : "ghost"}
             size="sm"
-            onClick={() => handleModeChange(mode as AIPersonalityMode)}
+            onClick={() => handleModeChange(mode)}
             className={cn(
               "rounded-md px-3 gap-1.5 transition-all",
-              isActive && `bg-${currentPersonality.color} hover:bg-${currentPersonality.color}/90`
+              isActive ? activeColor : "hover:bg-muted"
             )}
           >
             <Icon className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">{mode.charAt(0).toUpperCase() + mode.slice(1)}</span>
+            <span className="hidden sm:inline capitalize">{mode}</span>
           </Button>
         );
       })}

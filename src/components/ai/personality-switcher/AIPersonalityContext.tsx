@@ -28,7 +28,11 @@ export const AIPersonalityProvider: React.FC<{ children: React.ReactNode }> = ({
 
   return (
     <AIPersonalityContext.Provider
-      value={{ currentMode, setCurrentMode, currentPersonality }}
+      value={{ 
+        currentMode, 
+        setCurrentMode, 
+        currentPersonality 
+      }}
     >
       {children}
     </AIPersonalityContext.Provider>
