@@ -42,15 +42,15 @@ export const UnifiedChatInterface: React.FC = () => {
   const getModeBackgroundClass = () => {
     switch (currentMode) {
       case 'general':
-        return 'bg-gradient-to-br from-blue-50/60 to-indigo-50/60';
+        return 'bg-gradient-to-br from-blue-900/30 to-indigo-900/20 styled-scrollbar';
       case 'student':
-        return 'bg-gradient-to-br from-green-50/60 to-emerald-50/60';
+        return 'bg-gradient-to-br from-green-900/30 to-emerald-900/20 styled-scrollbar';
       case 'productivity':
-        return 'bg-gradient-to-br from-amber-50/60 to-yellow-50/60';
+        return 'bg-gradient-to-br from-purple-900/30 to-violet-900/20 styled-scrollbar';
       case 'creative':
-        return 'bg-gradient-to-br from-fuchsia-50/60 to-pink-50/60';
+        return 'bg-gradient-to-br from-fuchsia-900/30 to-pink-900/20 styled-scrollbar';
       default:
-        return 'bg-gradient-to-br from-blue-50/60 to-indigo-50/60';
+        return 'bg-gradient-to-br from-blue-900/30 to-indigo-900/20 styled-scrollbar';
     }
   };
   
@@ -63,7 +63,7 @@ export const UnifiedChatInterface: React.FC = () => {
         transition={{ duration: 0.5 }}
         className="flex flex-col items-center justify-center text-center px-2 sm:px-6 py-10 sm:py-14 space-y-4"
       >
-        <div className={`h-16 w-16 rounded-full ${currentPersonality.color} flex items-center justify-center shadow-xl`}>
+        <div className={`h-16 w-16 rounded-full ${currentPersonality.color} flex items-center justify-center shadow-[0_10px_30px_rgba(0,0,0,0.7),0_0_0_1px_rgba(255,255,255,0.1)_inset]`}>
           <Bot className="h-8 w-8 text-white" />
         </div>
         
@@ -74,8 +74,12 @@ export const UnifiedChatInterface: React.FC = () => {
             <Button
               key={index}
               variant="outline"
-              className="text-sm h-auto py-3 justify-start text-left hover:bg-background/80 glass-panel transform hover:scale-105 transition-transform duration-200"
+              className="text-sm h-auto py-3 justify-start text-left glass-panel transform hover:scale-105 transition-transform duration-200 shadow-[0_10px_30px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.08)_inset]"
               onClick={() => sendMessage(prompt)}
+              style={{
+                backdropFilter: 'blur(16px)',
+                backgroundColor: 'rgba(0, 0, 0, 0.2)',
+              }}
             >
               {prompt}
             </Button>
@@ -87,7 +91,7 @@ export const UnifiedChatInterface: React.FC = () => {
   
   return (
     <div className="flex flex-col h-full">
-      <div className="p-4 border-b border-white/20 backdrop-blur-lg bg-white/5">
+      <div className="p-4 border-b border-white/10 backdrop-blur-lg bg-black/20">
         <ModeSwitcher />
       </div>
       
@@ -128,15 +132,15 @@ export const UnifiedChatInterface: React.FC = () => {
                   className="flex items-start gap-3 mb-4"
                 >
                   <div className="flex-shrink-0">
-                    <div className={`h-10 w-10 rounded-full ${currentPersonality.color} flex items-center justify-center`}>
+                    <div className={`h-10 w-10 rounded-full ${currentPersonality.color} flex items-center justify-center shadow-[0_10px_30px_rgba(0,0,0,0.6)]`}>
                       <Bot className="h-5 w-5 text-white" />
                     </div>
                   </div>
-                  <div className="bg-white/20 dark:bg-slate-800/20 border border-white/10 dark:border-slate-700/10 rounded-2xl p-4 backdrop-blur-md">
+                  <div className="bg-black/20 dark:bg-slate-800/20 border border-white/10 dark:border-slate-700/10 rounded-2xl p-4 backdrop-blur-xl shadow-[0_15px_35px_rgba(0,0,0,0.5)]">
                     <div className="flex space-x-2">
-                      <div className="h-2 w-2 rounded-full bg-muted-foreground/70 animate-bounce"></div>
-                      <div className="h-2 w-2 rounded-full bg-muted-foreground/70 animate-bounce [animation-delay:0.2s]"></div>
-                      <div className="h-2 w-2 rounded-full bg-muted-foreground/70 animate-bounce [animation-delay:0.4s]"></div>
+                      <div className="h-2 w-2 rounded-full bg-blue-400/70 animate-bounce"></div>
+                      <div className="h-2 w-2 rounded-full bg-blue-400/70 animate-bounce [animation-delay:0.2s]"></div>
+                      <div className="h-2 w-2 rounded-full bg-blue-400/70 animate-bounce [animation-delay:0.4s]"></div>
                     </div>
                   </div>
                 </motion.div>

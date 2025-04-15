@@ -32,14 +32,14 @@ export const ModeSwitcher: React.FC = () => {
   
   return (
     <motion.div 
-      className="flex items-center justify-center gap-3 p-4 glassmorphism rounded-xl shadow-xl transform hover:translate-y-[-2px] transition-all duration-300 z-10"
+      className="flex items-center justify-center gap-3 p-4 glassmorphism rounded-xl transform hover:translate-y-[-5px] transition-all duration-300 z-10"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       style={{
-        backdropFilter: 'blur(12px)',
-        backgroundColor: 'rgba(255, 255, 255, 0.15)',
-        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.1) inset',
+        backdropFilter: 'blur(20px)',
+        backgroundColor: 'rgba(0, 0, 0, 0.2)',
+        boxShadow: '0 20px 50px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1) inset, 0 0 20px rgba(59, 130, 246, 0.3)',
         borderRadius: '16px',
       }}
     >
@@ -60,12 +60,12 @@ export const ModeSwitcher: React.FC = () => {
                   size="lg"
                   onClick={() => handleModeChange(mode)}
                   className={cn(
-                    "rounded-xl px-4 py-3 gap-2 transition-all duration-300 shadow-md",
-                    isActive ? activeColor : "hover:bg-muted",
+                    "rounded-xl px-4 py-3 gap-2 transition-all duration-300",
+                    isActive ? activeColor : "hover:bg-white/10",
                     "transform perspective-800 hover:perspective-800 hover:rotate-x-2 hover:rotate-y-1 transition-transform"
                   )}
                   style={{
-                    boxShadow: isActive ? '0 8px 16px rgba(0, 0, 0, 0.12)' : '0 4px 6px rgba(0, 0, 0, 0.05)',
+                    boxShadow: isActive ? '0 10px 25px rgba(0, 0, 0, 0.5), 0 0 15px rgba(59, 130, 246, 0.5)' : '0 5px 15px rgba(0, 0, 0, 0.3)',
                   }}
                 >
                   <Icon className={cn(

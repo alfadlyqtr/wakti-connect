@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
 const DashboardAIAssistant = () => {
   return (
     <div className="min-h-screen" style={{ 
-      background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(37, 99, 235, 0.2))',
+      background: 'linear-gradient(135deg, rgba(17, 24, 39, 0.95), rgba(15, 23, 42, 0.9))',
       minHeight: '100vh'
     }}>
       <motion.div 
@@ -18,8 +18,8 @@ const DashboardAIAssistant = () => {
         transition={{ duration: 0.5 }}
       >
         <div className="flex flex-col gap-2 max-w-6xl mx-auto px-2">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">WAKTI AI Assistant</h1>
-          <p className="text-muted-foreground text-sm sm:text-base">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">WAKTI AI Assistant</h1>
+          <p className="text-blue-300/80 text-sm sm:text-base">
             Your intelligent assistant for managing tasks, scheduling, and more
           </p>
         </div>
@@ -29,12 +29,14 @@ const DashboardAIAssistant = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="w-full rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(8,_112,_184,_0.7)] transform hover:translate-y-[-5px] transition-all duration-300"
+            className="w-full rounded-2xl overflow-hidden transform hover:translate-y-[-12px] transition-all duration-500"
             style={{
-              backdropFilter: 'blur(16px)',
-              backgroundColor: 'rgba(255, 255, 255, 0.08)',
-              boxShadow: '0 20px 50px 0 rgba(8, 112, 184, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.2) inset',
-              transform: 'perspective(1000px) rotateX(1deg)'
+              backdropFilter: 'blur(20px)',
+              backgroundColor: 'rgba(0, 0, 0, 0.05)',
+              boxShadow: '0 30px 70px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.1) inset, 0 0 30px rgba(59, 130, 246, 0.3)',
+              transform: 'perspective(1500px) rotateX(2deg)',
+              WebkitBackfaceVisibility: 'hidden',
+              backfaceVisibility: 'hidden'
             }}
           >
             <UnifiedChatInterfaceWithProvider />
@@ -46,22 +48,23 @@ const DashboardAIAssistant = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            whileHover={{ y: -10, scale: 1.02 }}
+            whileHover={{ y: -15, scale: 1.02 }}
           >
-            <Card className="h-full bg-white/20 backdrop-blur-xl border-white/30 hover:shadow-2xl transition-shadow duration-300 transform perspective-800"
+            <Card className="h-full bg-black/20 backdrop-blur-xl border-white/5 hover:shadow-2xl transition-shadow duration-300 transform perspective-1500"
               style={{
-                boxShadow: '0 15px 35px rgba(8, 112, 184, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.2) inset',
-                transformStyle: 'preserve-3d'
+                boxShadow: '0 25px 50px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05) inset, 0 0 20px rgba(59, 130, 246, 0.2)',
+                transformStyle: 'preserve-3d',
+                transform: 'perspective(1500px) rotateX(2deg)',
               }}
             >
               <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Bot className="h-5 w-5" />
+                <CardTitle className="text-base flex items-center gap-2 text-white">
+                  <Bot className="h-5 w-5 text-blue-400" />
                   About WAKTI AI
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-blue-100/70">
                   WAKTI AI is an intelligent assistant designed to help you manage tasks, 
                   create reminders, assist with learning, generate creative content, and more.
                   Choose from different modes tailored to your specific needs.
@@ -74,41 +77,42 @@ const DashboardAIAssistant = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            whileHover={{ y: -10, scale: 1.02 }}
+            whileHover={{ y: -15, scale: 1.02 }}
           >
-            <Card className="h-full bg-white/20 backdrop-blur-xl border-white/30 hover:shadow-2xl transition-shadow duration-300 transform perspective-800"
+            <Card className="h-full bg-black/20 backdrop-blur-xl border-white/5 hover:shadow-2xl transition-shadow duration-300 transform perspective-1500"
               style={{
-                boxShadow: '0 15px 35px rgba(8, 112, 184, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.2) inset',
-                transformStyle: 'preserve-3d'
+                boxShadow: '0 25px 50px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05) inset, 0 0 20px rgba(59, 130, 246, 0.2)',
+                transformStyle: 'preserve-3d',
+                transform: 'perspective(1500px) rotateX(2deg)',
               }}
             >
               <CardHeader className="pb-2">
-                <CardTitle className="text-base">AI Assistant Modes</CardTitle>
+                <CardTitle className="text-base text-white">AI Assistant Modes</CardTitle>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3 text-sm">
                   <li className="flex items-start gap-2">
-                    <div className="rounded-full bg-blue-500 h-5 w-5 mt-0.5 flex-shrink-0 shadow-md"></div>
-                    <div>
-                      <span className="font-medium">General Chat:</span> General help, questions, app walkthroughs
+                    <div className="rounded-full bg-blue-500 h-5 w-5 mt-0.5 flex-shrink-0 shadow-[0_0_15px_rgba(59,130,246,0.6)]"></div>
+                    <div className="text-blue-100/80">
+                      <span className="font-medium text-white">General Chat:</span> General help, questions, app walkthroughs
                     </div>
                   </li>
                   <li className="flex items-start gap-2">
-                    <div className="rounded-full bg-green-500 h-5 w-5 mt-0.5 flex-shrink-0 shadow-md"></div>
-                    <div>
-                      <span className="font-medium">Student:</span> Assist with homework and learning
+                    <div className="rounded-full bg-green-500 h-5 w-5 mt-0.5 flex-shrink-0 shadow-[0_0_15px_rgba(16,185,129,0.6)]"></div>
+                    <div className="text-blue-100/80">
+                      <span className="font-medium text-white">Student:</span> Assist with homework and learning
                     </div>
                   </li>
                   <li className="flex items-start gap-2">
-                    <div className="rounded-full bg-purple-500 h-5 w-5 mt-0.5 flex-shrink-0 shadow-md"></div>
-                    <div>
-                      <span className="font-medium">Productivity:</span> Manage tasks, reminders, and performance
+                    <div className="rounded-full bg-purple-500 h-5 w-5 mt-0.5 flex-shrink-0 shadow-[0_0_15px_rgba(139,92,246,0.6)]"></div>
+                    <div className="text-blue-100/80">
+                      <span className="font-medium text-white">Productivity:</span> Manage tasks, reminders, and performance
                     </div>
                   </li>
                   <li className="flex items-start gap-2">
-                    <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-full h-5 w-5 mt-0.5 flex-shrink-0 shadow-md"></div>
-                    <div>
-                      <span className="font-medium">Creative:</span> Brainstorming, content creation, and visual ideas
+                    <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-full h-5 w-5 mt-0.5 flex-shrink-0 shadow-[0_0_15px_rgba(236,72,153,0.6)]"></div>
+                    <div className="text-blue-100/80">
+                      <span className="font-medium text-white">Creative:</span> Brainstorming, content creation, and visual ideas
                     </div>
                   </li>
                 </ul>
