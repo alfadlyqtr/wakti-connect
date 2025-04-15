@@ -1,11 +1,11 @@
 
-const DEEPSEEK_API_KEY = Deno.env.get("DEEPSEEK_API_KEY");
+const DEEPSEEP_API_KEY = Deno.env.get("DEEPSEEP_API_KEY");
 const API_URL = "https://api.deepseek.com/v1/chat/completions";
 
 import { corsHeaders } from "../utils/cors.ts";
 
 export async function callDeepSeekAPI(messages: any[]) {
-  if (!DEEPSEEK_API_KEY) {
+  if (!DEEPSEEP_API_KEY) {
     console.error("DeepSeek API key not found in environment variables");
     return {
       error: {
@@ -45,7 +45,7 @@ Be concise, helpful, and positive. Avoid lengthy explanations unless specificall
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${DEEPSEEK_API_KEY}`
+        "Authorization": `Bearer ${DEEPSEEP_API_KEY}`
       },
       body: JSON.stringify({
         model: "deepseek-chat",
