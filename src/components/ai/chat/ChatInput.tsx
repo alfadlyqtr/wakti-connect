@@ -22,7 +22,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const [inputValue, setInputValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const { currentPersonality, currentMode } = useAIPersonality();
+  const { currentPersonality, currentMode, getInputGlowClass } = useAIPersonality();
   
   // Auto-focus the input when component mounts
   useEffect(() => {
@@ -43,24 +43,6 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       handleSubmit(e);
-    }
-  };
-  
-  // Get input glow color based on current mode
-  const getInputGlowColor = () => {
-    if (!isFocused || !inputValue) return '';
-    
-    switch (currentMode) {
-      case 'general':
-        return 'ring-2 ring-blue-300 shadow-[0_0_10px_rgba(59,130,246,0.3)]';
-      case 'student':
-        return 'ring-2 ring-green-300 shadow-[0_0_10px_rgba(34,197,94,0.3)]';
-      case 'productivity':
-        return 'ring-2 ring-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.3)]';
-      case 'creative':
-        return 'ring-2 ring-pink-300 shadow-[0_0_10px_rgba(236,72,153,0.3)]';
-      default:
-        return 'ring-2 ring-blue-300';
     }
   };
   
@@ -85,7 +67,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   return (
     <motion.form 
       onSubmit={handleSubmit} 
-      className="flex items-center gap-2 p-3 border-t bg-background/30 backdrop-blur-md"
+      className="flex items-center gap-2 p-4 border-t bg-background/30 backdrop-blur-md"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: 0.2 }}
@@ -102,7 +84,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         className={cn(
           "flex-1 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border transition-all duration-300",
           inputValue && "pr-10",
-          getInputGlowColor(),
+          getInputGlowClass(isFocused && !!inputValue),
           isLoading && "opacity-70"
         )}
       />
@@ -112,7 +94,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         size="icon" 
         disabled={!inputValue.trim() || isLoading || isDisabled}
         className={cn(
-          "rounded-full transition-colors duration-300",
+          "rounded-full transition-colors duration-300 shadow-sm",
           getSendButtonStyle()
         )}
       >

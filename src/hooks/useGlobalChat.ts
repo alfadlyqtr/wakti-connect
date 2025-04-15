@@ -32,7 +32,7 @@ export const useGlobalChat = () => {
     
     try {
       // Add user message to memory
-      const userMessage = globalChatMemory.addMessage({
+      globalChatMemory.addMessage({
         role: 'user',
         content,
         mode: currentMode
@@ -88,10 +88,9 @@ export const useGlobalChat = () => {
   
   // Check if user can use AI based on their account type
   // Fixed: Business and individual accounts should have access, free accounts are restricted
-  const canUseAI = !!user && (
-    profile?.account_type === 'business' || 
-    profile?.account_type === 'individual'
-  );
+  const canUseAI = !!user && profile ? 
+    (profile.account_type === 'business' || profile.account_type === 'individual') 
+    : false;
   
   return {
     messages,

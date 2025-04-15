@@ -36,19 +36,19 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   return (
     <motion.div 
       className={cn(
-        "bg-gradient-to-r py-3 px-4 flex items-center justify-between border-b",
+        "bg-gradient-to-r py-4 px-5 flex items-center justify-between border-b rounded-t-xl",
         getHeaderStyle()
       )}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
-      <div className="flex items-center gap-2">
-        <div className="h-8 w-8 rounded-full bg-white/20 flex items-center justify-center">
-          <Bot className="h-4 w-4 text-white" />
+      <div className="flex items-center gap-3">
+        <div className="h-9 w-9 rounded-full bg-white/20 flex items-center justify-center shadow-inner">
+          <Bot className="h-5 w-5 text-white" />
         </div>
         <div>
-          <h3 className="text-sm font-medium text-white">{currentPersonality.title}</h3>
+          <h3 className="text-base font-semibold text-white">{currentPersonality.title}</h3>
           <p className="text-xs text-white/80">{currentPersonality.description}</p>
         </div>
       </div>
@@ -58,7 +58,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
           variant="ghost" 
           size="icon"
           onClick={onClearChat}
-          className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white"
+          className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
         >
           <X className="h-4 w-4" />
         </Button>

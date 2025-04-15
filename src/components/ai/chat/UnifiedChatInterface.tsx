@@ -19,7 +19,7 @@ export const UnifiedChatInterface: React.FC = () => {
   const { messages, sendMessage, isLoading, clearMessages, canUseAI } = useGlobalChat();
   const [showClearConfirmation, setShowClearConfirmation] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { currentPersonality, currentMode, previousMode } = useAIPersonality();
+  const { currentPersonality, currentMode, previousMode, getBackgroundStyle } = useAIPersonality();
   
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -35,22 +35,6 @@ export const UnifiedChatInterface: React.FC = () => {
   const handleConfirmClear = () => {
     clearMessages();
     setShowClearConfirmation(false);
-  };
-  
-  // Get background style based on current mode
-  const getBackgroundStyle = () => {
-    switch (currentMode) {
-      case 'general':
-        return 'bg-gradient-to-br from-blue-50 to-slate-100 dark:from-slate-900/70 dark:to-blue-950/50';
-      case 'student':
-        return 'bg-gradient-to-br from-green-50 to-emerald-100 dark:from-emerald-950/50 dark:to-green-900/70';
-      case 'productivity':
-        return 'bg-gradient-to-br from-purple-50 to-indigo-100 dark:from-purple-950/50 dark:to-indigo-900/70';
-      case 'creative':
-        return 'bg-gradient-to-br from-pink-50 to-orange-100 dark:from-pink-950/50 dark:to-orange-900/70';
-      default:
-        return 'bg-gradient-to-br from-blue-50 to-slate-100 dark:from-slate-900/70 dark:to-blue-950/50';
-    }
   };
   
   // Welcome message if no messages
@@ -86,10 +70,14 @@ export const UnifiedChatInterface: React.FC = () => {
   
   return (
     <motion.div 
-      className={`max-w-3xl mx-auto px-4 pb-6 pt-2 min-h-[90vh] flex flex-col ${getBackgroundStyle()} transition-colors duration-500`}
+      className={cn(
+        "min-h-[90vh] flex flex-col px-4 pb-6 pt-2 transition-colors duration-500",
+        getBackgroundStyle()
+      )}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
+      layout
     >
       <div className="mb-4 flex justify-center">
         <ModeSwitcher />
@@ -99,9 +87,10 @@ export const UnifiedChatInterface: React.FC = () => {
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.1 }}
-        className="relative mb-8"
+        className="relative max-w-3xl w-full mx-auto mb-8"
+        layout
       >
-        <Card className="overflow-hidden shadow-xl border border-white/20 rounded-xl bg-white/70 dark:bg-slate-900/70 backdrop-blur-md hover:shadow-2xl transition-shadow duration-300">
+        <Card className="overflow-hidden rounded-xl shadow-xl border border-white/20 glassmorphism hover:shadow-2xl transition-all duration-300">
           <ChatHeader 
             onClearChat={handleClearChat} 
             hasMessages={messages.length > 0} 

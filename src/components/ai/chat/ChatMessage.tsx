@@ -35,7 +35,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
           : "bg-white/90 dark:bg-slate-800/80 border border-white/30 dark:border-slate-700/50 text-foreground"
       )}>
         <div className="prose prose-sm dark:prose-invert max-w-none">
-          <ReactMarkdown className="break-words">
+          <ReactMarkdown>
             {message.content}
           </ReactMarkdown>
         </div>
