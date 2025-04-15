@@ -9,12 +9,14 @@ interface MessageContentProps {
   content: string;
   timestamp?: Date | string;
   isUser?: boolean;
+  className?: string; // Add className prop to the interface
 }
 
 export function MessageContent({ 
   content, 
   timestamp,
-  isUser = false 
+  isUser = false,
+  className
 }: MessageContentProps) {
   // Format timestamp if it exists
   const formattedTime = timestamp ? 
@@ -28,7 +30,8 @@ export function MessageContent({
       "p-3 rounded-lg relative group",
       isUser 
         ? "bg-primary text-primary-foreground" 
-        : "bg-card border shadow-sm"
+        : "bg-card border shadow-sm",
+      className // Add className to the className list
     )}>
       <div className={cn(
         "prose prose-sm max-w-none break-words",
