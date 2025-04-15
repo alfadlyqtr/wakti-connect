@@ -9,15 +9,15 @@ const corsHeaders = {
 
 serve(async (req) => {
   // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
     // Get API keys
-    const DEEPSEEP_API_KEY = Deno.env.get("DEEPSEEP_API_KEY");
+    const DEEPSEEK_API_KEY = Deno.env.get("DEEPSEEK_API_KEY");
     
-    if (!DEEPSEEP_API_KEY) {
+    if (!DEEPSEEK_API_KEY) {
       throw new Error("DeepSeek API key not configured");
     }
 
@@ -115,7 +115,7 @@ Text to parse: ${text}
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${DEEPSEEP_API_KEY}`,
+        "Authorization": `Bearer ${DEEPSEEK_API_KEY}`,
       },
       body: JSON.stringify({
         model: "deepseek-chat",
