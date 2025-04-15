@@ -37,12 +37,11 @@ export function MessageContent({
         {isUser ? (
           <div>{content}</div>
         ) : (
-          <ReactMarkdown 
-            remarkPlugins={[remarkGfm]}
-            className="prose-headings:mt-2 prose-headings:mb-1 prose-p:my-1 prose-li:my-0.5"
-          >
-            {content}
-          </ReactMarkdown>
+          <div className="prose-headings:mt-2 prose-headings:mb-1 prose-p:my-1 prose-li:my-0.5">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {content}
+            </ReactMarkdown>
+          </div>
         )}
       </div>
       

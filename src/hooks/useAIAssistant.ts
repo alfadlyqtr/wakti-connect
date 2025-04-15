@@ -86,7 +86,7 @@ export const useAIAssistant = () => {
         // Create assistant message
         const assistantMessage: AIMessage = {
           id: crypto.randomUUID(),
-          content: result.response || "I'm not sure how to respond to that.",
+          content: result.text || "I'm not sure how to respond to that.",
           role: 'assistant',
           timestamp: new Date(),
         };
