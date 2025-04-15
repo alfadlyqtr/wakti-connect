@@ -1,4 +1,5 @@
-import { useCallback, useRef } from 'react';
+
+import { useCallback, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { AIMessage } from '@/types/ai-assistant.types';
 import { SendMessageResult, UseChatOptions } from './types';
@@ -18,6 +19,7 @@ export const useSendMessage = (
   const lastAttemptedMessageRef = useRef<string | null>(null);
   const retryAttemptsRef = useRef(0);
   const MAX_RETRY_ATTEMPTS = 3;
+  const [sendingStatus, setSendingStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
 
   const sendMessage = useCallback(
     async (messageContent: string): Promise<SendMessageResult> => {
@@ -37,10 +39,11 @@ export const useSendMessage = (
         // Set sending state
         isSendingRef.current = true;
         setIsLoading(true);
+        setSendingStatus('sending');
         
         console.log("Starting message send operation:", messageContent.substring(0, 20) + (messageContent.length > 20 ? "..." : ""));
         
-        // Create and add user message to UI immediately but don't save to storage yet
+        // Create and add user message to UI immediately
         const userMessage: AIMessage = {
           id: uuidv4(),
           content: messageContent,
@@ -48,10 +51,20 @@ export const useSendMessage = (
           timestamp: new Date(),
         };
         
-        // Add user message to UI state IMMEDIATELY
-        setMessages((prev) => [...prev, userMessage]);
+        // Add user message to both UI state AND storage immediately
+        // This ensures the message stays visible even if there's an error
+        setMessages((prev) => {
+          const updatedMessages = [...prev, userMessage];
+          // Save to localStorage right away to prevent message loss
+          try {
+            localStorage.setItem('wakti-ai-chat', JSON.stringify(updatedMessages));
+          } catch (storageError) {
+            console.error("Failed to save user message to localStorage:", storageError);
+          }
+          return updatedMessages;
+        });
         
-        // Use the current messages array directly
+        // Use the current messages array plus the new user message
         const recentMessages = [...messages, userMessage];
         
         // Build user context
@@ -72,8 +85,9 @@ export const useSendMessage = (
         if (error) {
           console.error('AI assistant error:', error);
           
-          // IMPORTANT: We don't remove the user message anymore - we keep it in the UI
-          // Instead, we'll add an error indicator to it or a system message about the error
+          // We already saved the user message, so we don't need to remove it
+          // Just set the error state
+          setSendingStatus('error');
           
           return { 
             success: false, 
@@ -86,8 +100,8 @@ export const useSendMessage = (
 
         if (!response) {
           console.error('Empty response from AI assistant');
+          setSendingStatus('error');
           
-          // Keep the message in the UI but mark as failed
           return { 
             success: false, 
             error: new Error('Empty response'), 
@@ -104,18 +118,18 @@ export const useSendMessage = (
           timestamp: new Date(),
         };
         
-        const updatedMessages = [...recentMessages, assistantMessage];
-        
-        // Update UI with the assistant message
-        setMessages(updatedMessages);
-        
-        // Now that we have both messages, save them to localStorage
-        try {
-          localStorage.setItem('wakti-ai-chat', JSON.stringify(updatedMessages));
-          console.log("Successfully saved", updatedMessages.length, "messages to localStorage");
-        } catch (storageError) {
-          console.error("Failed to save chat to localStorage:", storageError);
-        }
+        // Update UI with the assistant message and save to storage
+        setMessages((prev) => {
+          const updatedMessages = [...prev, assistantMessage];
+          // Save both messages to localStorage
+          try {
+            localStorage.setItem('wakti-ai-chat', JSON.stringify(updatedMessages));
+            console.log("Successfully saved", updatedMessages.length, "messages to localStorage");
+          } catch (storageError) {
+            console.error("Failed to save chat to localStorage:", storageError);
+          }
+          return updatedMessages;
+        });
         
         // Check for detected task
         if (response.includes("[TASK_DETECTED]")) {
@@ -135,6 +149,7 @@ export const useSendMessage = (
         // Reset retry state
         retryAttemptsRef.current = 0;
         lastAttemptedMessageRef.current = null;
+        setSendingStatus('success');
         
         console.log("Message send operation completed successfully");
         return { 
@@ -143,6 +158,7 @@ export const useSendMessage = (
         };
       } catch (err) {
         console.error('Unexpected error in sendMessage:', err);
+        setSendingStatus('error');
         
         // Check for channel closed error
         const isChannelClosedError = err.message && 
@@ -157,7 +173,7 @@ export const useSendMessage = (
             variant: "destructive",
           });
           
-          // We now keep the user message visible
+          // We already saved the user message, so it remains visible
           return { 
             success: false, 
             error: err, 
@@ -174,7 +190,6 @@ export const useSendMessage = (
           variant: "destructive",
         });
         
-        // Keep user message but mark as failed
         return { 
           success: false,
           error: err,
@@ -228,6 +243,7 @@ export const useSendMessage = (
     sendMessage,
     retryLastMessage,
     isSending: isSendingRef.current,
+    sendingStatus,
     getLastAttemptedMessage: () => lastAttemptedMessageRef.current
   };
 };

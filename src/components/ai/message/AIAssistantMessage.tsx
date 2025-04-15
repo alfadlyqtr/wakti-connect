@@ -60,7 +60,10 @@ export function AIAssistantMessage({
         </div>
       )}
       
-      <div className="flex flex-col gap-1 max-w-[85%] xs:max-w-[80%] sm:max-w-[75%]">
+      <div className={cn(
+        "flex flex-col gap-1 max-w-[85%] xs:max-w-[80%] sm:max-w-[75%]",
+        isUser ? "items-end" : "items-start"
+      )}>
         <MessageContent 
           content={message.content}
           timestamp={message.timestamp}

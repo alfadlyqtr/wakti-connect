@@ -7,43 +7,48 @@ import { format } from "date-fns";
 
 interface MessageContentProps {
   content: string;
-  timestamp?: Date;
-  isUser: boolean;
+  timestamp?: Date | string;
+  isUser?: boolean;
 }
 
-export function MessageContent({ content, timestamp, isUser }: MessageContentProps) {
+export function MessageContent({ 
+  content, 
+  timestamp,
+  isUser = false 
+}: MessageContentProps) {
+  // Format timestamp if it exists
+  const formattedTime = timestamp ? 
+    (typeof timestamp === 'string' ? 
+      format(new Date(timestamp), 'h:mm a') : 
+      format(timestamp, 'h:mm a')
+    ) : '';
+
   return (
-    <div className="flex flex-col gap-1">
-      <div
-        className={cn(
-          "rounded-xl py-2 px-3",
-          isUser
-            ? "bg-primary text-primary-foreground ml-auto"
-            : "bg-muted/50 border mr-auto"
-        )}
-      >
-        <div className="prose dark:prose-invert prose-sm max-w-none">
-          <ReactMarkdown 
-            remarkPlugins={[remarkGfm]}
-            components={{
-              // Make headings more responsive
-              h1: ({ node, ...props }) => <h1 className="text-lg sm:text-xl md:text-2xl font-bold" {...props} />,
-              h2: ({ node, ...props }) => <h2 className="text-base sm:text-lg md:text-xl font-bold" {...props} />,
-              h3: ({ node, ...props }) => <h3 className="text-sm sm:text-base md:text-lg font-semibold" {...props} />,
-            }}
-          >
+    <div className={cn(
+      "p-3 rounded-lg relative group",
+      isUser 
+        ? "bg-primary text-primary-foreground" 
+        : "bg-card border shadow-sm"
+    )}>
+      <div className={cn(
+        "prose prose-sm max-w-none break-words",
+        isUser ? "prose-invert" : "prose-neutral dark:prose-invert"
+      )}>
+        {isUser ? (
+          <div>{content}</div>
+        ) : (
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
             {content}
           </ReactMarkdown>
-        </div>
+        )}
       </div>
+      
       {timestamp && (
-        <div
-          className={cn(
-            "text-xs text-muted-foreground",
-            isUser ? "text-right" : "text-left"
-          )}
-        >
-          {format(new Date(timestamp), "h:mm a")}
+        <div className={cn(
+          "text-[10px] mt-1 opacity-60 text-right",
+          isUser ? "text-primary-foreground" : "text-muted-foreground"
+        )}>
+          {formattedTime}
         </div>
       )}
     </div>

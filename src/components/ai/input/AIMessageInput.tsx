@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -26,7 +25,8 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
     isMessageProcessing, 
     getCurrentProcessingMessage,
     retryLastMessage,
-    hasFailedMessage
+    hasFailedMessage,
+    clearMessages
   } = useAIAssistant();
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const prevMessageRef = useRef('');
@@ -112,16 +112,14 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
     const messageCopy = inputMessage.trim();
     setSendError(null);
     setMessageStatus('sending');
+    setInputMessage(''); // Clear input immediately for better UX
     
     try {
       console.log("Sending message:", messageCopy.substring(0, 20) + "...");
       const result = await sendMessage(messageCopy);
-      const { success, error, keepInputText, messageStatus: resultStatus } = result;
-      const isConnectionError = 'isConnectionError' in result ? result.isConnectionError : false;
-
-      if (success) {
-        console.log("Message sent successfully, clearing input");
-        setInputMessage('');
+      
+      if (result.success) {
+        console.log("Message sent successfully");
         prevMessageRef.current = '';
         setSendError(null);
         setRetryCount(0);
@@ -130,19 +128,19 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
       } else {
         setMessageStatus('failed');
         
-        if (isConnectionError) {
+        // If message failed but we want to keep input text, restore it
+        if (result.keepInputText) {
+          setInputMessage(messageCopy);
+        }
+        
+        if ('isConnectionError' in result && result.isConnectionError) {
           setConnectionStatus('disconnected');
           setSendError("Connection to AI service failed. Please check your internet connection and try again.");
         } else {
-          setSendError(error?.message || 'Failed to send message. Try again.');
+          setSendError(result.error?.message || 'Failed to send message. Try again.');
         }
         
-        console.warn('Message failed to send. Input preserved.', error);
-        
-        if (!keepInputText) {
-          setInputMessage('');
-        }
-        
+        console.warn('Message failed to send.', result.error);
         setRetryCount(prev => prev + 1);
       }
     } catch (error) {
@@ -151,6 +149,8 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
       setConnectionStatus('disconnected');
       setRetryCount(prev => prev + 1);
       setMessageStatus('failed');
+      // Restore input message on error
+      setInputMessage(messageCopy);
     }
   };
 
@@ -171,21 +171,22 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
     try {
       console.log("Attempting to retry last message");
       const result = await retryLastMessage();
-      const { success, keepInputText, messageStatus: resultStatus } = result;
-      const isConnectionError = 'isConnectionError' in result ? result.isConnectionError : false;
       
-      if (success) {
+      if (result.success) {
         console.log("Retry successful, clearing input");
         setInputMessage('');
         prevMessageRef.current = '';
         setRetryCount(0);
         setConnectionStatus('connected');
         setMessageStatus('sent');
-      } else if (isConnectionError) {
+      } else if ('isConnectionError' in result && result.isConnectionError) {
         setConnectionStatus('disconnected');
         setSendError("Connection to AI service failed. Please try again later.");
         setMessageStatus('failed');
-      } else if (!keepInputText) {
+      } else if (result.keepInputText) {
+        // Keep input message if indicated
+        setMessageStatus('failed');
+      } else {
         setInputMessage('');
         setMessageStatus('failed');
       }
@@ -196,6 +197,20 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
       setMessageStatus('failed');
     } finally {
       setIsRetrying(false);
+    }
+  };
+
+  const handleClearChat = () => {
+    if (window.confirm("Are you sure you want to clear all messages?")) {
+      clearMessages();
+      setMessageStatus('idle');
+      setInputMessage('');
+      setSendError(null);
+      setRetryCount(0);
+      toast({
+        title: "Chat cleared",
+        description: "All messages have been cleared.",
+      });
     }
   };
 
@@ -300,7 +315,18 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
       </div>
       
       <div className="flex items-center justify-between">
-        <ConnectionIndicator />
+        <div className="flex items-center gap-2">
+          <ConnectionIndicator />
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={handleClearChat}
+            className="text-xs text-muted-foreground hover:text-destructive ml-2"
+          >
+            Clear Chat
+          </Button>
+        </div>
         
         <div className="flex items-center gap-2">
           {(hasFailedMessage() || retryCount > 0) && (
