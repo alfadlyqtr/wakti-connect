@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAIPersonality } from '@/components/ai/personality-switcher/AIPersonalityContext';
 import { AIPersonalityMode } from '@/components/ai/personality-switcher/types';
+import { personalityPresets } from '@/components/ai/personality-switcher/personalityPresets'; // Added this import
 import { Bot, Book, Zap, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
