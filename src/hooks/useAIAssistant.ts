@@ -58,6 +58,7 @@ export const useAIAssistant = () => {
       return { 
         success: false, 
         error: new Error("Message already being processed"),
+        keepInputText: false,
         messageStatus: 'failed'
       };
     }
@@ -90,6 +91,7 @@ export const useAIAssistant = () => {
       return { 
         success: false, 
         error, 
+        keepInputText: true,
         messageStatus: 'failed'
       };
     } finally {

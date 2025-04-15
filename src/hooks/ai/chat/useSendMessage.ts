@@ -1,4 +1,3 @@
-
 import { useCallback, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { AIMessage } from '@/types/ai-assistant.types';
@@ -21,7 +20,6 @@ export const useSendMessage = (
   const MAX_RETRY_ATTEMPTS = 3;
   const [sendingStatus, setSendingStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
   
-  // Use the global chat memory
   const { messages, addMessage } = useGlobalChatMemory(activeMode);
 
   const sendMessage = useCallback(
@@ -46,7 +44,6 @@ export const useSendMessage = (
         console.log(`[useSendMessage] Starting message send operation for mode (${activeMode}):`, 
           messageContent.substring(0, 20) + (messageContent.length > 20 ? "..." : ""));
         
-        // Create the user message
         const userMessage: AIMessage = {
           id: uuidv4(),
           content: messageContent,
@@ -54,10 +51,8 @@ export const useSendMessage = (
           timestamp: new Date(),
         };
         
-        // Add the user message to the global memory first
         addMessage(userMessage);
         
-        // For API call, we use the current messages including the new user message
         let userContext = '';
         if (profile) {
           userContext = `User: ${profile.full_name || 'Unknown'}`;
@@ -74,7 +69,6 @@ export const useSendMessage = (
           console.error('[useSendMessage] AI assistant error:', error);
           setSendingStatus('error');
           
-          // Don't remove the user message on error, it's already in global memory
           return { 
             success: false, 
             error, 
@@ -96,7 +90,6 @@ export const useSendMessage = (
           };
         }
 
-        // Create the assistant message
         const assistantMessage: AIMessage = {
           id: uuidv4(),
           content: response,
@@ -104,7 +97,6 @@ export const useSendMessage = (
           timestamp: new Date(),
         };
         
-        // Add the assistant message to global memory
         addMessage(assistantMessage);
         
         if (response.includes("[TASK_DETECTED]")) {
