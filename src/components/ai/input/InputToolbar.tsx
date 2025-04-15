@@ -3,6 +3,8 @@ import React, { useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Camera, Paperclip, Mic, MicOff } from 'lucide-react';
 import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
+import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 interface InputToolbarProps {
   isLoading: boolean;
@@ -35,30 +37,34 @@ export const InputToolbar = ({ isLoading, isListening, onVoiceToggle }: InputToo
   return (
     <div className="absolute right-2 bottom-2 flex items-center gap-1">
       {/* Camera button */}
-      <Button
-        type="button"
-        size="icon"
-        variant="ghost"
-        onClick={handleCameraCapture}
-        disabled={isLoading || isListening}
-        className="h-8 w-8 rounded-full"
-      >
-        <Camera className="h-4 w-4" />
-        <span className="sr-only">Take a photo</span>
-      </Button>
+      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+        <Button
+          type="button"
+          size="icon"
+          variant="ghost"
+          onClick={handleCameraCapture}
+          disabled={isLoading || isListening}
+          className="h-8 w-8 rounded-full bg-white/20 border border-white/30 backdrop-blur-sm dark:bg-slate-800/20 dark:border-slate-700/30 shadow-sm hover:shadow-md hover:bg-white/30 dark:hover:bg-slate-700/30"
+        >
+          <Camera className="h-4 w-4" />
+          <span className="sr-only">Take a photo</span>
+        </Button>
+      </motion.div>
       
       {/* File upload button */}
-      <Button
-        type="button"
-        size="icon"
-        variant="ghost"
-        onClick={() => fileInputRef.current?.click()}
-        disabled={isLoading || isListening}
-        className="h-8 w-8 rounded-full"
-      >
-        <Paperclip className="h-4 w-4" />
-        <span className="sr-only">Upload a file</span>
-      </Button>
+      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+        <Button
+          type="button"
+          size="icon"
+          variant="ghost"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isLoading || isListening}
+          className="h-8 w-8 rounded-full bg-white/20 border border-white/30 backdrop-blur-sm dark:bg-slate-800/20 dark:border-slate-700/30 shadow-sm hover:shadow-md hover:bg-white/30 dark:hover:bg-slate-700/30"
+        >
+          <Paperclip className="h-4 w-4" />
+          <span className="sr-only">Upload a file</span>
+        </Button>
+      </motion.div>
       <input
         type="file"
         ref={fileInputRef}
@@ -69,22 +75,36 @@ export const InputToolbar = ({ isLoading, isListening, onVoiceToggle }: InputToo
       
       {/* Voice input button */}
       {supportsVoice && (
-        <Button
-          type="button"
-          size="icon"
-          variant={isListening ? "destructive" : "ghost"}
-          onClick={onVoiceToggle}
-          className="h-8 w-8 rounded-full"
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          animate={isListening ? { 
+            scale: [1, 1.1, 1],
+            transition: { repeat: Infinity, duration: 1.5 }
+          } : {}}
         >
-          {isListening ? (
-            <MicOff className="h-4 w-4" />
-          ) : (
-            <Mic className="h-4 w-4" />
-          )}
-          <span className="sr-only">
-            {isListening ? "Stop recording" : "Start recording"}
-          </span>
-        </Button>
+          <Button
+            type="button"
+            size="icon"
+            variant={isListening ? "destructive" : "ghost"}
+            onClick={onVoiceToggle}
+            className={cn(
+              "h-8 w-8 rounded-full shadow-sm hover:shadow-md",
+              isListening 
+                ? "bg-red-500/80 text-white border border-red-400 animate-pulse"
+                : "bg-white/20 border border-white/30 backdrop-blur-sm dark:bg-slate-800/20 dark:border-slate-700/30 hover:bg-white/30 dark:hover:bg-slate-700/30"
+            )}
+          >
+            {isListening ? (
+              <MicOff className="h-4 w-4" />
+            ) : (
+              <Mic className="h-4 w-4" />
+            )}
+            <span className="sr-only">
+              {isListening ? "Stop recording" : "Start recording"}
+            </span>
+          </Button>
+        </motion.div>
       )}
     </div>
   );

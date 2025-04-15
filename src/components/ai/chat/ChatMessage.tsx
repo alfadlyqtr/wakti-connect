@@ -34,10 +34,10 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
       </Avatar>
       
       <div className={cn(
-        "rounded-lg shadow-sm py-2.5 px-3.5 max-w-[85%]",
+        "rounded-lg py-2.5 px-3.5 max-w-[85%] transition-all message-bubble",
         isUser 
-          ? "bg-primary/10 border border-primary/20 dark:bg-primary/20" 
-          : "bg-white/70 dark:bg-slate-800/70 border border-blue-100 dark:border-slate-700 backdrop-blur-sm"
+          ? "bg-primary/10 dark:bg-primary/20 border border-primary/20 backdrop-blur-md shadow-sm hover:shadow-primary/5" 
+          : "bg-white/30 dark:bg-slate-800/30 border border-white/20 dark:border-slate-700/30 backdrop-blur-md shadow-lg hover:shadow-blue-500/5"
       )}>
         <div className={cn(
           "prose prose-sm dark:prose-invert prose-p:my-1 prose-headings:mb-2 prose-headings:mt-4",

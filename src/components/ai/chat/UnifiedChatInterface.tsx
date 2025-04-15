@@ -42,15 +42,15 @@ export const UnifiedChatInterface: React.FC = () => {
   const getBackgroundStyle = () => {
     switch (currentMode) {
       case 'general':
-        return 'bg-gradient-to-b from-blue-50/40 via-blue-100/40 to-blue-200/40';
+        return 'ai-bg-general';
       case 'student':
-        return 'bg-gradient-to-b from-green-50/40 via-green-100/40 to-green-200/40';
+        return 'ai-bg-student';
       case 'productivity':
-        return 'bg-gradient-to-b from-yellow-50/40 via-orange-100/40 to-yellow-200/40';
+        return 'ai-bg-productivity';
       case 'creative':
-        return 'bg-gradient-to-b from-purple-50/40 via-pink-100/40 to-purple-200/40';
+        return 'ai-bg-creative';
       default:
-        return 'bg-gradient-to-b from-orange-50/40 via-amber-100/40 to-yellow-200/40';
+        return 'ai-bg-general';
     }
   };
   
@@ -74,7 +74,7 @@ export const UnifiedChatInterface: React.FC = () => {
             <Button
               key={index}
               variant="outline"
-              className="text-sm h-auto py-2 justify-start text-left hover:bg-background/80"
+              className="text-sm h-auto py-2 justify-start text-left hover:bg-background/80 glassmorphism"
               onClick={() => sendMessage(prompt)}
             >
               {prompt}
@@ -88,17 +88,13 @@ export const UnifiedChatInterface: React.FC = () => {
   return (
     <motion.div 
       className={cn(
-        "min-h-[90vh] flex flex-col px-2 sm:px-4 pb-6 pt-2 transition-colors duration-500 backdrop-blur-sm",
+        "min-h-[90vh] flex flex-col px-2 sm:px-4 lg:px-10 pb-6 pt-2 transition-colors duration-500 backdrop-blur-sm",
         getBackgroundStyle()
       )}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
       layout
-      style={{
-        background: 'linear-gradient(to right, rgba(253, 242, 248, 0.6), rgba(255, 241, 242, 0.6))',
-        backdropFilter: 'blur(8px)'
-      }}
     >
       {!canUseAI && <FreeAccountBanner />}
       
@@ -113,7 +109,7 @@ export const UnifiedChatInterface: React.FC = () => {
         className="relative w-full mx-auto mb-8"
         layout
       >
-        <Card className="overflow-hidden backdrop-blur-lg bg-transparent border border-white/30 dark:border-slate-700/30 shadow-xl rounded-xl p-3 sm:p-4 max-w-5xl mx-auto mt-4 sm:mt-10">
+        <Card className="overflow-hidden glassmorphism border-white/20 dark:border-slate-700/20 shadow-xl rounded-xl p-3 sm:p-4 max-w-4xl sm:max-w-5xl mx-auto mt-4 sm:mt-10">
           <ChatHeader 
             onClearChat={handleClearChat} 
             hasMessages={messages.length > 0} 
@@ -158,7 +154,7 @@ export const UnifiedChatInterface: React.FC = () => {
                   <div className="h-8 w-8 rounded-full flex items-center justify-center">
                     <Bot className="h-4 w-4 text-white animate-pulse" />
                   </div>
-                  <div className="bg-background/70 backdrop-blur-sm border rounded-lg p-3 max-w-[85%]">
+                  <div className="bg-white/30 backdrop-blur-sm border border-white/20 dark:bg-slate-800/30 dark:border-slate-700/30 rounded-lg p-3 max-w-[85%]">
                     <div className="flex space-x-1">
                       <div className="h-2 w-2 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
                       <div className="h-2 w-2 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>

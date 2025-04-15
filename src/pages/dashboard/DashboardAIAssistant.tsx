@@ -8,8 +8,9 @@ import { motion } from 'framer-motion';
 const DashboardAIAssistant = () => {
   return (
     <div className="min-h-screen" style={{ 
-      background: 'linear-gradient(to right, #fdfcfb 0%, #e2d1c3 100%)',
-      backgroundAttachment: 'fixed'
+      background: 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
+      backdropFilter: 'blur(10px)',
+      minHeight: '100vh'
     }}>
       <motion.div 
         className="mx-auto p-2 sm:p-4 space-y-4"

@@ -68,6 +68,7 @@ export function AIAssistantMessage({
           content={message.content}
           timestamp={message.timestamp}
           isUser={isUser}
+          className="glassmorphism"
         />
       </div>
       
