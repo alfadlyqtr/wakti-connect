@@ -4,7 +4,7 @@ import { corsHeaders } from "./utils/cors.ts";
 import { authenticateUser } from "./auth/authenticateUser.ts";
 import { checkUserAccess } from "./auth/checkUserAccess.ts";
 import { prepareAIRequest } from "./ai/prepareAIRequest.ts";
-import { callDeepSeepAPI } from "./ai/callDeepSeepAPI.ts";
+import { callDeepSeekAPI } from "./ai/callDeepSeekAPI.ts";
 import { saveConversation } from "./db/saveConversation.ts";
 
 serve(async (req) => {
@@ -22,7 +22,10 @@ serve(async (req) => {
     const { user, supabaseClient, error: authError } = await authenticateUser(req);
     if (authError) {
       console.error("Authentication error:", authError.status);
-      return authError;
+      return new Response(
+        JSON.stringify({ error: authError.message || "Authentication failed" }),
+        { status: authError.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
     
     console.log("User authenticated:", user.id);
@@ -32,7 +35,10 @@ serve(async (req) => {
     const { canUseAI, error: accessError } = await checkUserAccess(user, supabaseClient);
     if (accessError) {
       console.error("Access check error:", accessError.status);
-      return accessError;
+      return new Response(
+        JSON.stringify({ error: accessError.message || "Access check failed" }),
+        { status: accessError.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
     
     if (!canUseAI) {
@@ -77,17 +83,20 @@ serve(async (req) => {
     } catch (error) {
       console.error("Error preparing AI request:", error);
       return new Response(
-        JSON.stringify({ error: "Error preparing AI request" }),
+        JSON.stringify({ error: "Error preparing AI request: " + (error.message || "Unknown error") }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
     
     // Call DeepSeek API
     console.log("Calling DeepSeek API...");
-    const { aiResponse, error: apiError } = await callDeepSeepAPI(conversation);
+    const { aiResponse, error: apiError } = await callDeepSeekAPI(conversation);
     if (apiError) {
-      console.error("DeepSeek API error:", apiError.status);
-      return apiError;
+      console.error("DeepSeek API error:", apiError.status, apiError.message);
+      return new Response(
+        JSON.stringify({ error: apiError.message || "Error calling AI model" }),
+        { status: apiError.status || 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
     
     console.log("DeepSeek API response received, length:", aiResponse?.length || 0);

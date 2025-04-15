@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -6,7 +7,8 @@ import { useAIAssistant } from '@/hooks/useAIAssistant';
 import { cn } from '@/lib/utils';
 import { InputToolbar } from './InputToolbar';
 import { VoiceInputSection } from './VoiceInputSection';
-import { Send, Loader2 } from 'lucide-react';
+import { Send, Loader2, RefreshCw } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 interface AIMessageInputProps {
   activeMode: WAKTIAIMode;
@@ -15,9 +17,31 @@ interface AIMessageInputProps {
 export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
   const [inputMessage, setInputMessage] = useState('');
   const [showVoiceInput, setShowVoiceInput] = useState(false);
-  const { sendMessage, isLoading, isMessageProcessing } = useAIAssistant();
+  const { 
+    sendMessage, 
+    isLoading, 
+    isMessageProcessing, 
+    getCurrentProcessingMessage,
+    retryLastMessage,
+    hasFailedMessage
+  } = useAIAssistant();
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const prevMessageRef = useRef('');
+  const [sendError, setSendError] = useState<string | null>(null);
+
+  // Check for failed message that can be retried or restored
+  useEffect(() => {
+    const currentProcessingMessage = getCurrentProcessingMessage();
+    if (currentProcessingMessage && inputMessage === '') {
+      // Restore the failed message to the input field
+      setInputMessage(currentProcessingMessage);
+      toast({
+        title: "Message not sent",
+        description: "Your previous message wasn't sent. You can edit it and try again.",
+        variant: "destructive",
+      });
+    }
+  }, [getCurrentProcessingMessage, inputMessage]);
 
   useEffect(() => {
     if (inputMessage && !isLoading) {
@@ -31,18 +55,38 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
     if (!inputMessage.trim() || isLoading || isMessageProcessing()) return;
 
     const messageCopy = inputMessage.trim();
+    setSendError(null);
     
     try {
-      const { success } = await sendMessage(messageCopy);
+      const { success, error } = await sendMessage(messageCopy);
 
       if (success) {
         setInputMessage('');
         prevMessageRef.current = '';
+        setSendError(null);
       } else {
-        console.warn('Message failed to send. Input preserved.');
+        // Don't clear the input on failure to allow for retry
+        console.warn('Message failed to send. Input preserved.', error);
+        setSendError(error?.message || 'Failed to send message. Try again.');
       }
     } catch (error) {
       console.error('Error sending message:', error);
+      setSendError(error.message || 'An unexpected error occurred');
+      // Input is preserved so the user can try again
+    }
+  };
+
+  const handleRetry = async () => {
+    setSendError(null);
+    try {
+      const { success } = await retryLastMessage();
+      if (success) {
+        setInputMessage('');
+        prevMessageRef.current = '';
+      }
+    } catch (error) {
+      console.error('Error retrying message:', error);
+      setSendError('Failed to retry message');
     }
   };
 
@@ -63,6 +107,21 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
 
   return (
     <form onSubmit={handleSendMessage} className="space-y-2">
+      {sendError && (
+        <div className="text-sm text-red-500 bg-red-50 p-2 rounded-md flex items-center justify-between">
+          <span>{sendError}</span>
+          <Button 
+            type="button" 
+            size="sm" 
+            variant="ghost" 
+            className="text-red-600 hover:text-red-700 hover:bg-red-100 p-1 h-auto"
+            onClick={() => setSendError(null)}
+          >
+            Dismiss
+          </Button>
+        </div>
+      )}
+      
       <div className="relative">
         <Textarea
           ref={inputRef}
@@ -71,7 +130,8 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
           onChange={(e) => setInputMessage(e.target.value)}
           className={cn(
             "min-h-10 pr-24 resize-none",
-            showVoiceInput && "bg-pink-50"
+            showVoiceInput && "bg-pink-50",
+            sendError && "border-red-300 focus-visible:ring-red-500"
           )}
           disabled={isLoading || showVoiceInput}
         />
@@ -91,18 +151,32 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
           setInputMessage={setInputMessage}
         />
         
-        <Button 
-          type="submit" 
-          disabled={!inputMessage.trim() || isLoading || isMessageProcessing()} 
-          className={cn("px-4", getModeButtonStyle())}
-        >
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin mr-1" />
-          ) : (
-            <Send className="h-4 w-4 mr-1" />
+        <div className="flex items-center gap-2">
+          {hasFailedMessage() && (
+            <Button 
+              type="button" 
+              onClick={handleRetry}
+              variant="outline"
+              className="px-3"
+            >
+              <RefreshCw className="h-4 w-4 mr-1" />
+              Retry
+            </Button>
           )}
-          Send
-        </Button>
+          
+          <Button 
+            type="submit" 
+            disabled={!inputMessage.trim() || isLoading || isMessageProcessing()} 
+            className={cn("px-4", getModeButtonStyle())}
+          >
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin mr-1" />
+            ) : (
+              <Send className="h-4 w-4 mr-1" />
+            )}
+            Send
+          </Button>
+        </div>
       </div>
     </form>
   );
