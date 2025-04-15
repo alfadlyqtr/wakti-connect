@@ -1,8 +1,6 @@
-
 import { useCallback, useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { fromTable } from "@/integrations/supabase/helper";
 import { toast } from "@/components/ui/use-toast";
 import {
   BookingTemplateFormData,
@@ -57,7 +55,9 @@ export const useBookingTemplates = (businessId?: string | null) => {
       
       console.log("Fetching templates for business ID:", currentBusinessId);
       
-      const { data, error } = await fromTable('booking_templates')
+      // Direct Supabase query to avoid type issues
+      const { data, error } = await supabase
+        .from('booking_templates')
         .select(`
           *,
           service:service_id (
@@ -130,7 +130,6 @@ export const useBookingTemplates = (businessId?: string | null) => {
     },
   });
 
-  // Update template mutation
   const updateTemplateMutation = useMutation({
     mutationFn: async ({ templateId, data }: { templateId: string; data: Partial<BookingTemplateFormData> }) => {
       return await updateBookingTemplate(templateId, data);
@@ -203,28 +202,24 @@ export const useBookingTemplates = (businessId?: string | null) => {
   });
 
   // Template availability query hook
-  const useTemplateAvailability = (templateId: string) => {
-    return useQuery({
-      queryKey: ['templateAvailability', templateId],
-      queryFn: async () => {
-        if (!templateId) return [];
-        return await fetchTemplateAvailability(templateId);
-      },
-      enabled: !!templateId,
-    });
-  };
+  const useTemplateAvailability = (templateId: string) => useQuery({
+    queryKey: ['templateAvailability', templateId],
+    queryFn: async () => {
+      if (!templateId) return [];
+      return await fetchTemplateAvailability(templateId);
+    },
+    enabled: !!templateId,
+  });
 
   // Template exceptions query hook
-  const useTemplateExceptions = (templateId: string) => {
-    return useQuery({
-      queryKey: ['templateExceptions', templateId],
-      queryFn: async () => {
-        if (!templateId) return [];
-        return await fetchTemplateExceptions(templateId);
-      },
-      enabled: !!templateId,
-    });
-  };
+  const useTemplateExceptions = (templateId: string) => useQuery({
+    queryKey: ['templateExceptions', templateId],
+    queryFn: async () => {
+      if (!templateId) return [];
+      return await fetchTemplateExceptions(templateId);
+    },
+    enabled: !!templateId,
+  });
 
   // Add availability mutation
   const addAvailabilityMutation = useMutation({

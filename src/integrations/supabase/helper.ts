@@ -25,6 +25,6 @@ export const testEdgeFunction = async (functionName: string): Promise<boolean> =
  * @param tableName The name of the table to operate on
  * @returns Supabase query builder for the specified table
  */
-export const fromTable = (tableName: string) => {
+export const fromTable = <T extends keyof typeof supabase.from>(tableName: T) => {
   return supabase.from(tableName);
 };

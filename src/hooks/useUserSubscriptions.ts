@@ -18,7 +18,9 @@ export const useUserSubscriptions = () => {
         return [];
       }
       
-      const { data, error } = await fromTable('business_subscribers')
+      // Use direct supabase query instead of helper to avoid type issues
+      const { data, error } = await supabase
+        .from('business_subscribers')
         .select(`
           *,
           business_profile:business_id(
@@ -53,7 +55,8 @@ export const useUserSubscriptions = () => {
   // Unsubscribe from a business
   const unsubscribe = useMutation({
     mutationFn: async (subscriptionId: string) => {
-      const { error } = await fromTable('business_subscribers')
+      const { error } = await supabase
+        .from('business_subscribers')
         .delete()
         .eq('id', subscriptionId);
       

@@ -27,7 +27,7 @@ export const getUserProfile = async (): Promise<UserProfile | null> => {
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('id', user.id)
       .single();
     
     if (error) {
@@ -35,7 +35,19 @@ export const getUserProfile = async (): Promise<UserProfile | null> => {
       throw error;
     }
     
-    return data as UserProfile;
+    // Map the data to match UserProfile interface
+    const profile: UserProfile = {
+      id: data.id,
+      user_id: user.id, // Set user_id from the auth user
+      full_name: data.full_name || null,
+      display_name: data.display_name || null,
+      avatar_url: data.avatar_url || null,
+      account_type: data.account_type || 'free',
+      created_at: data.created_at,
+      updated_at: data.updated_at
+    };
+    
+    return profile;
   } catch (error) {
     console.error("Error in getUserProfile:", error);
     return null;
