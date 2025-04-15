@@ -38,6 +38,10 @@
     --wakti-blue: 217 91% 60%;
     --wakti-orange: 32 100% 50%;
     --wakti-green: 142 71% 45%;
+    
+    --sand-light: 39 70% 95%;
+    --sand: 41 65% 90%;
+    --sand-dark: 35 60% 85%;
   }
  
   .dark {
@@ -155,15 +159,15 @@ html[dir="rtl"] .mr-4 {
 
 /* Glassmorphism styles */
 .glassmorphism {
-  @apply backdrop-blur-xl bg-white/80 dark:bg-slate-800/80 border border-white/30 dark:border-slate-700/30 shadow-lg;
+  @apply backdrop-blur-xl bg-white/70 dark:bg-slate-800/70 border border-white/30 dark:border-slate-700/30 shadow-lg;
 }
 
 .glassmorphism-content {
-  @apply backdrop-blur-sm bg-white/50 dark:bg-slate-800/50;
+  @apply backdrop-blur-sm bg-white/30 dark:bg-slate-800/30;
 }
 
 .input-active {
-  @apply focus:ring-1 focus:shadow-md;
+  @apply focus:ring-2 focus:shadow-lg;
 }
 
 /* Fix message readability */
@@ -176,11 +180,66 @@ html[dir="rtl"] .mr-4 {
 }
 
 /* Fix mobile overflow */
-.overflow-x-auto::-webkit-scrollbar {
+.overflow-x-auto::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar {
   display: none;
 }
 
-.overflow-x-auto {
+.overflow-x-auto,
+.no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Chat interface customization */
+.chat-container {
+  max-width: 100%;
+  width: 100%;
+  margin: 0 auto;
+}
+
+@media (min-width: 640px) {
+  .chat-container {
+    max-width: 90%;
+  }
+}
+
+@media (min-width: 768px) {
+  .chat-container {
+    max-width: 85%;
+  }
+}
+
+@media (min-width: 1024px) {
+  .chat-container {
+    max-width: 80%;
+  }
+}
+
+/* Button styles */
+.chat-button {
+  @apply rounded-full transition-all duration-300;
+  padding: 0.75rem;
+  height: auto;
+  min-height: 2.75rem;
+}
+
+/* Sand-themed backgrounds */
+.bg-sand-gradient {
+  background: linear-gradient(to right, rgba(253, 242, 248, 0.7), rgba(255, 241, 242, 0.7));
+  backdrop-filter: blur(8px);
+}
+
+/* Enhanced mode styles */
+.mode-tab {
+  @apply rounded-full px-4 py-2 transition-all;
+  min-width: 120px;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .mode-tab {
+    min-width: auto;
+    padding: 0.5rem 0.75rem;
+  }
 }

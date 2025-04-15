@@ -37,7 +37,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         "rounded-lg shadow-sm py-2.5 px-3.5 max-w-[85%]",
         isUser 
           ? "bg-primary/10 border border-primary/20 dark:bg-primary/20" 
-          : "bg-white/90 dark:bg-slate-800/90 border border-blue-100 dark:border-slate-700 backdrop-blur-sm"
+          : "bg-white/70 dark:bg-slate-800/70 border border-blue-100 dark:border-slate-700 backdrop-blur-sm"
       )}>
         <div className={cn(
           "prose prose-sm dark:prose-invert prose-p:my-1 prose-headings:mb-2 prose-headings:mt-4",

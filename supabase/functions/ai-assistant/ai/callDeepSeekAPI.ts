@@ -34,12 +34,17 @@ If a message contains [WAKTI FOCUS LEVEL: HIGH], prioritize WAKTI topics and gen
 If a message contains [WAKTI FOCUS LEVEL: MEDIUM], balance between general assistance and WAKTI topics.
 If a message contains [WAKTI FOCUS LEVEL: LOW], you can freely discuss general topics.
 
-If the user mentions a [RECENT WAKTI TOPIC], try to relate your response to this topic when appropriate.
 Be concise, helpful, and positive. Avoid lengthy explanations unless specifically requested.`
     };
 
     // Add the system message to the conversation
     const conversationWithSystem = [systemMessage, ...messages];
+    
+    // Add detailed logging
+    console.log("Making API request to DeepSeek with the following data:");
+    console.log("URL:", API_URL);
+    console.log("Number of messages:", conversationWithSystem.length);
+    console.log("First message role:", conversationWithSystem[0].role);
     
     const response = await fetch(API_URL, {
       method: "POST",
@@ -57,11 +62,11 @@ Be concise, helpful, and positive. Avoid lengthy explanations unless specificall
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error("DeepSeek API error:", response.status, errorData);
+      const errorText = await response.text();
+      console.error("DeepSeek API error:", response.status, errorText);
       return {
         error: {
-          message: errorData.error?.message || `API error: ${response.status} ${response.statusText}`,
+          message: `API error: ${response.status} ${response.statusText}. Details: ${errorText}`,
           status: response.status
         }
       };

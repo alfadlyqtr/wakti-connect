@@ -12,7 +12,11 @@ const WAKTIAIAssistant: React.FC<WAKTIAIAssistantProps> = ({
   className = '' 
 }) => {
   return (
-    <div className={`w-full h-full ${className}`}>
+    <div className={`w-full h-full ${className}`} style={{ 
+      background: 'linear-gradient(to right, #fdfcfb 0%, #e2d1c3 100%)',
+      backgroundAttachment: 'fixed',
+      minHeight: '100vh'
+    }}>
       <UnifiedChatInterfaceWithProvider />
     </div>
   );

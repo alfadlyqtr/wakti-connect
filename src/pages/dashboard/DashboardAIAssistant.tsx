@@ -7,14 +7,17 @@ import { motion } from 'framer-motion';
 
 const DashboardAIAssistant = () => {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen" style={{ 
+      background: 'linear-gradient(to right, #fdfcfb 0%, #e2d1c3 100%)',
+      backgroundAttachment: 'fixed'
+    }}>
       <motion.div 
         className="mx-auto p-2 sm:p-4 space-y-4"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="flex flex-col gap-2 max-w-3xl mx-auto px-2">
+        <div className="flex flex-col gap-2 max-w-5xl mx-auto px-2">
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">WAKTI AI Assistant</h1>
           <p className="text-muted-foreground text-sm sm:text-base">
             Your intelligent assistant for managing tasks, scheduling, and more
@@ -23,13 +26,13 @@ const DashboardAIAssistant = () => {
         
         <UnifiedChatInterfaceWithProvider />
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto px-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-5xl mx-auto px-2">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            <Card className="h-full glassmorphism hover:shadow-md transition-shadow border-white/20 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm">
+            <Card className="h-full glassmorphism hover:shadow-md transition-shadow border-white/20 bg-transparent backdrop-blur-sm">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
                   <Bot className="h-4 w-4" />
@@ -51,7 +54,7 @@ const DashboardAIAssistant = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
           >
-            <Card className="h-full glassmorphism hover:shadow-md transition-shadow border-white/20 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm">
+            <Card className="h-full glassmorphism hover:shadow-md transition-shadow border-white/20 bg-transparent backdrop-blur-sm">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">AI Assistant Modes</CardTitle>
               </CardHeader>

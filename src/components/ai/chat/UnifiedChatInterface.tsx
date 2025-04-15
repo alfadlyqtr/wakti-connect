@@ -42,15 +42,15 @@ export const UnifiedChatInterface: React.FC = () => {
   const getBackgroundStyle = () => {
     switch (currentMode) {
       case 'general':
-        return 'bg-gradient-to-b from-blue-50/80 via-blue-100/80 to-blue-200/80';
+        return 'bg-gradient-to-b from-blue-50/40 via-blue-100/40 to-blue-200/40';
       case 'student':
-        return 'bg-gradient-to-b from-green-50/80 via-green-100/80 to-green-200/80';
+        return 'bg-gradient-to-b from-green-50/40 via-green-100/40 to-green-200/40';
       case 'productivity':
-        return 'bg-gradient-to-b from-yellow-50/80 via-orange-100/80 to-yellow-200/80';
+        return 'bg-gradient-to-b from-yellow-50/40 via-orange-100/40 to-yellow-200/40';
       case 'creative':
-        return 'bg-gradient-to-b from-purple-50/80 via-pink-100/80 to-purple-200/80';
+        return 'bg-gradient-to-b from-purple-50/40 via-pink-100/40 to-purple-200/40';
       default:
-        return 'bg-gradient-to-b from-blue-50/80 via-blue-100/80 to-blue-200/80';
+        return 'bg-gradient-to-b from-orange-50/40 via-amber-100/40 to-yellow-200/40';
     }
   };
   
@@ -95,10 +95,14 @@ export const UnifiedChatInterface: React.FC = () => {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
       layout
+      style={{
+        background: 'linear-gradient(to right, rgba(253, 242, 248, 0.6), rgba(255, 241, 242, 0.6))',
+        backdropFilter: 'blur(8px)'
+      }}
     >
       {!canUseAI && <FreeAccountBanner />}
       
-      <div className="mb-4 flex justify-center">
+      <div className="mb-4 flex justify-center px-2 overflow-x-auto no-scrollbar">
         <ModeSwitcher />
       </div>
       
@@ -109,7 +113,7 @@ export const UnifiedChatInterface: React.FC = () => {
         className="relative w-full mx-auto mb-8"
         layout
       >
-        <Card className="overflow-hidden backdrop-blur-lg bg-white/60 dark:bg-slate-800/60 border border-white/30 dark:border-slate-700/30 shadow-xl rounded-xl p-3 sm:p-6 max-w-3xl mx-auto mt-4 sm:mt-10">
+        <Card className="overflow-hidden backdrop-blur-lg bg-transparent border border-white/30 dark:border-slate-700/30 shadow-xl rounded-xl p-3 sm:p-4 max-w-5xl mx-auto mt-4 sm:mt-10">
           <ChatHeader 
             onClearChat={handleClearChat} 
             hasMessages={messages.length > 0} 

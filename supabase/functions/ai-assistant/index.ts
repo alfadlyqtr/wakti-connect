@@ -22,8 +22,6 @@ serve(async (req) => {
   // Add a server timeout to avoid hanging requests
   const timeoutId = setTimeout(() => {
     console.error("Server timeout reached (60s). Request aborted.");
-    // This will end the request, but we can't send a proper response
-    // as the controller is defined within the try block
   }, SERVER_TIMEOUT);
 
   try {
@@ -35,7 +33,7 @@ serve(async (req) => {
     console.log("Authenticating user...");
     const { user, supabaseClient, error: authError } = await authenticateUser(req);
     if (authError) {
-      console.error("Authentication error:", authError.status);
+      console.error("Authentication error:", authError.status, authError.message);
       clearTimeout(timeoutId);
       return new Response(
         JSON.stringify({ error: authError.message || "Authentication failed" }),
@@ -49,7 +47,7 @@ serve(async (req) => {
     console.log("Checking user access...");
     const { canUseAI, error: accessError } = await checkUserAccess(user, supabaseClient);
     if (accessError) {
-      console.error("Access check error:", accessError.status);
+      console.error("Access check error:", accessError.status, accessError.message);
       clearTimeout(timeoutId);
       return new Response(
         JSON.stringify({ error: accessError.message || "Access check failed" }),
@@ -72,7 +70,7 @@ serve(async (req) => {
     let requestData;
     try {
       requestData = await req.json();
-      console.log("Request data received:", JSON.stringify(requestData).substring(0, 500) + "...");
+      console.log("Request data received:", Object.keys(requestData));
     } catch (error) {
       console.error("Error parsing request JSON:", error);
       clearTimeout(timeoutId);
@@ -82,7 +80,11 @@ serve(async (req) => {
       );
     }
     
-    const { message, context } = requestData;
+    // Extract data from request - supporting different formats
+    const message = requestData.message || requestData.user_prompt;
+    const context = requestData.context || '';
+    const userContext = requestData.userContext || '';
+    const systemPrompt = requestData.system_prompt || '';
     
     if (!message) {
       console.error("Missing message in request");

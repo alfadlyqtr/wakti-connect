@@ -71,7 +71,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   return (
     <motion.form 
       onSubmit={handleSubmit} 
-      className="flex items-center gap-2 p-3 border-t bg-background/30 backdrop-blur-md"
+      className="flex items-center gap-2 p-3 border-t bg-transparent backdrop-blur-md"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: 0.2 }}
@@ -86,7 +86,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         placeholder="Type a message..."
         disabled={isLoading || isDisabled}
         className={cn(
-          "flex-1 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border transition-all duration-300 input-active text-foreground",
+          "flex-1 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border transition-all duration-300 input-active text-foreground h-12 px-4",
           inputValue && "pr-10",
           isLoading && "opacity-70",
           getInputGlowClass(isFocused)
@@ -98,14 +98,14 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         size="icon" 
         disabled={!inputValue.trim() || isLoading || isDisabled}
         className={cn(
-          "rounded-full transition-colors duration-300 shadow-sm",
+          "rounded-full transition-colors duration-300 shadow-sm h-12 w-12",
           getSendButtonStyle()
         )}
       >
         {isLoading ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
+          <Loader2 className="h-5 w-5 animate-spin" />
         ) : (
-          <Send className="h-4 w-4" />
+          <Send className="h-5 w-5" />
         )}
       </Button>
     </motion.form>

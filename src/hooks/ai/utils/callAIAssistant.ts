@@ -33,9 +33,14 @@ export const callAIAssistant = async (
         body: {
           system_prompt: systemPrompt,
           user_prompt: userPrompt,
+          message: userPrompt, // Adding alternate field format for compatibility
           context: context,
           userContext: userContext,
           includeTimestamp: true
+        },
+        // Add request timeout
+        options: {
+          timeout: 30000 // 30 seconds timeout
         }
       });
       
