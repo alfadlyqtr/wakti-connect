@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { User, AuthContextType } from '@/hooks/auth/types';
 
 export const useAuth = (): AuthContextType => {

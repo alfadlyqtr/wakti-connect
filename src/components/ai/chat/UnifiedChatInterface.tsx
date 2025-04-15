@@ -14,7 +14,7 @@ import { AlertTriangle, Bot } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 import { cn } from '@/lib/utils';
-import { FreeAccountBanner } from '@/components/dashboard/FreeAccountBanner';
+import FreeAccountBanner from '@/components/dashboard/FreeAccountBanner';
 
 export const UnifiedChatInterface: React.FC = () => {
   const { messages, sendMessage, isLoading, clearMessages, canUseAI } = useGlobalChat();

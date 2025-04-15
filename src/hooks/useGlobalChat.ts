@@ -7,6 +7,7 @@ import { callAIAssistant } from '@/hooks/ai/utils/callAIAssistant';
 import { useAuth } from '@/hooks/auth';
 import { useProfile } from '@/hooks/useProfile';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';  // Updated import
 
 export const useGlobalChat = () => {
   const [messages, setMessages] = useState<ChatMemoryMessage[]>([]);
