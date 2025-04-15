@@ -51,7 +51,8 @@ export const useAIAssistant = () => {
       console.warn("Message already being processed, aborting send");
       return { 
         success: false, 
-        error: new Error("Message already being processed") 
+        error: new Error("Message already being processed"),
+        messageStatus: 'failed'
       };
     }
     
@@ -136,7 +137,8 @@ export const useAIAssistant = () => {
         success: false, 
         error, 
         keepInputText: true,
-        isChannelError: isChannelClosedError 
+        isChannelError: isChannelClosedError,
+        messageStatus: 'failed'
       };
     } finally {
       processingMessageRef.current = false;
@@ -157,7 +159,11 @@ export const useAIAssistant = () => {
       
       return sendMessage(messageToRetry);
     }
-    return { success: false, error: new Error("No message to retry") };
+    return { 
+      success: false, 
+      error: new Error("No message to retry"),
+      messageStatus: 'failed'
+    };
   }, [sendMessage]);
 
   // Wrap the clearMessages function to clear global messages
