@@ -1,9 +1,9 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { User } from '@/hooks/auth/types';
+import { User, AuthContextType } from '@/hooks/auth/types';
 
-export const useAuth = () => {
+export const useAuth = (): AuthContextType => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);

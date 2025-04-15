@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AIAssistantRole, AIMessage, RoleContexts, WAKTIAIMode } from "@/types/ai-assistant.types";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
 import { AnimatePresence } from 'framer-motion';
-import { Settings } from 'lucide-react';
+import { Settings, Bot } from 'lucide-react';
 import { AIAssistantSettings } from './settings/AIAssistantSettings';
 import { AIAssistantKnowledge } from './knowledge/AIAssistantKnowledge';
 import { CleanChatInterface } from './assistant/CleanChatInterface';

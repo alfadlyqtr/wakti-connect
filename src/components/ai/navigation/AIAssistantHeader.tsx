@@ -1,4 +1,3 @@
-
 import React from "react";
 import { 
   Bot, 
@@ -46,7 +45,6 @@ export const AIAssistantHeader: React.FC<AIAssistantHeaderProps> = ({
   onStartListening,
   onStopListening
 }) => {
-  // Get role-specific information for styling
   const getRoleIcon = (role: AIAssistantRole) => {
     switch (role) {
       case "student": return <BookOpen className="h-4 w-4" />;
@@ -80,17 +78,12 @@ export const AIAssistantHeader: React.FC<AIAssistantHeaderProps> = ({
   return (
     <header className="p-4 bg-white border-b shadow-sm">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        {/* Assistant title and info */}
         <div className="flex items-center">
           <div className={cn(
-            "h-10 w-10 rounded-full overflow-hidden flex items-center justify-center mr-3 shadow-sm",
+            "h-10 w-10 rounded-full overflow-hidden flex items-center justify-center mr-3 shadow-sm bg-gradient-to-b",
             getRoleColor(selectedRole)
           )}>
-            <img 
-              src="/lovable-uploads/9b7d0693-89eb-4cc5-b90b-7834bfabda0e.png" 
-              alt="WAKTI Logo"
-              className="h-full w-full object-cover"
-            />
+            <Bot className="h-5 w-5 text-white" />
           </div>
           
           <div>
@@ -111,7 +104,6 @@ export const AIAssistantHeader: React.FC<AIAssistantHeaderProps> = ({
           </div>
         </div>
         
-        {/* Controls and voice options */}
         <div className="flex items-center space-x-2">
           <TooltipProvider>
             <Tooltip>
@@ -185,7 +177,6 @@ export const AIAssistantHeader: React.FC<AIAssistantHeaderProps> = ({
         </div>
       </div>
       
-      {/* Role selector tabs */}
       <div className="mt-4">
         <Tabs 
           value={selectedRole} 

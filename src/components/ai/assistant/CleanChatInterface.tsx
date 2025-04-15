@@ -1,11 +1,10 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { AIMessage, AIAssistantRole, RoleContexts } from "@/types/ai-assistant.types";
 import { AnimatePresence, motion } from "framer-motion";
-import { Loader2, Trash2 } from "lucide-react";
+import { Loader2, Trash2, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -139,12 +138,8 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
             animate={{ opacity: 1, y: 0 }}
             className="text-center py-4 md:py-8 px-2"
           >
-            <div className={`h-14 w-14 rounded-full ${getRoleColor()} mx-auto mb-3 flex items-center justify-center overflow-hidden`}>
-              <img 
-                src="/lovable-uploads/9b7d0693-89eb-4cc5-b90b-7834bfabda0e.png" 
-                alt="WAKTI AI" 
-                className="h-full w-full object-cover"
-              />
+            <div className={`h-14 w-14 rounded-full ${getRoleColor()} mx-auto mb-3 flex items-center justify-center`}>
+              <Bot className="h-7 w-7 text-white" />
             </div>
             <h2 className="text-lg md:text-xl font-bold mb-2">
               Hello{userName ? ` ${userName}` : ''}, I'm your WAKTI AI Assistant
@@ -185,11 +180,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
             >
               {msg.role === "assistant" ? (
                 <Avatar className={`h-7 w-7 md:h-8 md:w-8 ${getRoleColor()} overflow-hidden shrink-0`}>
-                  <img 
-                    src="/lovable-uploads/9b7d0693-89eb-4cc5-b90b-7834bfabda0e.png" 
-                    alt="WAKTI AI" 
-                    className="h-full w-full object-cover"
-                  />
+                  <Bot className="h-4 w-4 text-white" />
                 </Avatar>
               ) : msg.role === "user" ? (
                 <MessageAvatar isUser={true} className="h-7 w-7 md:h-8 md:w-8 shrink-0" />
@@ -223,11 +214,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
               className="flex items-start gap-2 mb-3 mx-0.5"
             >
               <Avatar className={`h-7 w-7 md:h-8 md:w-8 ${getRoleColor()} overflow-hidden shrink-0`}>
-                <img 
-                  src="/lovable-uploads/9b7d0693-89eb-4cc5-b90b-7834bfabda0e.png" 
-                  alt="WAKTI AI" 
-                  className="h-full w-full object-cover"
-                />
+                <Bot className="h-4 w-4 text-white" />
               </Avatar>
               <div className="bg-background rounded-lg py-2.5 px-3.5 border">
                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -285,7 +272,6 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
         />
       </div>
 
-      {/* Clear Messages Confirmation Dialog */}
       {setShowClearConfirmation && handleConfirmClear && (
         <ConfirmationModal
           open={showClearConfirmation}
