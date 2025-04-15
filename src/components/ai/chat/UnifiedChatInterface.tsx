@@ -14,6 +14,7 @@ import { AlertTriangle, Bot } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 import { cn } from '@/lib/utils';
+import { FreeAccountBanner } from '@/components/dashboard/FreeAccountBanner';
 
 export const UnifiedChatInterface: React.FC = () => {
   const { messages, sendMessage, isLoading, clearMessages, canUseAI } = useGlobalChat();
@@ -95,6 +96,8 @@ export const UnifiedChatInterface: React.FC = () => {
       transition={{ duration: 0.5 }}
       layout
     >
+      {!canUseAI && <FreeAccountBanner />}
+      
       <div className="mb-4 flex justify-center">
         <ModeSwitcher />
       </div>
@@ -103,10 +106,10 @@ export const UnifiedChatInterface: React.FC = () => {
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.1 }}
-        className="relative max-w-3xl w-full mx-auto mb-8"
+        className="relative w-full mx-auto mb-8"
         layout
       >
-        <Card className="overflow-hidden rounded-2xl shadow-xl backdrop-blur-lg bg-white/60 border border-white/30 p-6 max-w-3xl mx-auto">
+        <Card className="overflow-hidden backdrop-blur-lg bg-white/60 border border-white/30 shadow-xl rounded-2xl p-6 max-w-3xl mx-auto mt-10">
           <ChatHeader 
             onClearChat={handleClearChat} 
             hasMessages={messages.length > 0} 

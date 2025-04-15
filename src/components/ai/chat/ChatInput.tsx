@@ -22,7 +22,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const [inputValue, setInputValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const { currentMode } = useAIPersonality();
+  const { currentMode, getInputGlowClass } = useAIPersonality();
   
   // Auto-focus the input when component mounts
   useEffect(() => {
@@ -84,7 +84,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         className={cn(
           "flex-1 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border transition-all duration-300 input-active",
           inputValue && "pr-10",
-          isLoading && "opacity-70"
+          isLoading && "opacity-70",
+          getInputGlowClass(isFocused)
         )}
       />
       

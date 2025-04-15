@@ -87,8 +87,8 @@ export const useGlobalChat = () => {
   }, []);
   
   // Check if user can use AI based on their account type
-  // Wait for profile to load before determining access, only restrict if account_type is 'free'
-  const canUseAI = !!user && !isProfileLoading && profile ? profile.account_type !== 'free' : false;
+  // FIX: Only restrict if profile is loaded and account_type is 'free'
+  const canUseAI = !user ? false : isProfileLoading ? true : profile?.account_type !== 'free';
   
   return {
     messages,
