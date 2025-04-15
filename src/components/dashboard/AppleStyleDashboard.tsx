@@ -5,6 +5,7 @@ import AppleStyleCard from './AppleStyleCard';
 import ThemeCustomizer from './ThemeCustomizer';
 import { UserRole } from '@/types/user';
 import CommandSearch from '@/components/search/CommandSearch';
+import { Button } from '@/components/ui/button';
 import { 
   LayoutGrid, 
   MessageSquare, 
