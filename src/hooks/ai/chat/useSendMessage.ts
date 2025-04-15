@@ -1,10 +1,10 @@
 
 import { useCallback, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { supabase } from '@/lib/supabase';
 import { AIMessage } from '@/types/ai-assistant.types';
 import { SendMessageResult, UseChatOptions } from './types';
 import { toast } from '@/hooks/use-toast';
+import { callAIAssistant } from '../utils/callAIAssistant';
 
 export const useSendMessage = (
   options: UseChatOptions = {},
@@ -31,13 +31,16 @@ export const useSendMessage = (
           };
         }
 
+        // Store the message for potential retries
         lastAttemptedMessageRef.current = messageContent;
         
+        // Set sending state
         isSendingRef.current = true;
         setIsLoading(true);
         
         console.log("Starting message send operation:", messageContent.substring(0, 20) + (messageContent.length > 20 ? "..." : ""));
         
+        // Create and add user message to UI immediately but don't save to storage yet
         const userMessage: AIMessage = {
           id: uuidv4(),
           content: messageContent,
@@ -45,11 +48,13 @@ export const useSendMessage = (
           timestamp: new Date(),
         };
         
+        // Add user message to UI state
         setMessages((prev) => [...prev, userMessage]);
         
         // Use the current messages array directly
         const recentMessages = [...messages, userMessage];
         
+        // Build user context
         let userContext = '';
         if (profile) {
           userContext = `User: ${profile.full_name || 'Unknown'}`;
@@ -60,76 +65,74 @@ export const useSendMessage = (
         
         console.log("Sending message to AI assistant with context:", recentMessages.length, "messages");
         
-        let functionCallTimedOut = false;
-        const timeoutPromise = new Promise<{ data: null, error: Error }>((_, reject) => {
-          setTimeout(() => {
-            functionCallTimedOut = true;
-            reject(new Error("Request timed out after 15 seconds"));
-          }, 15000);
-        });
-        
-        const functionCallPromise = supabase.functions.invoke('ai-assistant', {
-          body: {
-            message: messageContent,
-            context: {
-              messages: recentMessages,
-              user: userContext,
-              enableTaskCreation: options.enableTaskCreation !== false,
-            },
-          },
-        });
-        
-        const { data, error } = await Promise.race([
-          functionCallPromise,
-          timeoutPromise
-        ]);
+        // Call the AI assistant using the improved utility function
+        const { response, error } = await callAIAssistant('', messageContent, userContext);
 
-        if (error || functionCallTimedOut) {
+        // Handle errors from the AI assistant call
+        if (error) {
           console.error('AI assistant error:', error);
           
-          toast({
-            title: "Error",
-            description: `Failed to get AI response: ${error.message || "Request timed out"}`,
-            variant: "destructive",
-          });
+          // Remove the user message from the UI since we couldn't get a response
+          setMessages((prev) => prev.filter(msg => msg.id !== userMessage.id));
           
-          return { success: false, error, keepInputText: true };
+          return { 
+            success: false, 
+            error, 
+            keepInputText: true,
+            isConnectionError: error.isConnectionError
+          };
         }
 
-        if (!data || !data.response) {
-          console.error('Empty or invalid response from AI assistant');
+        if (!response) {
+          console.error('Empty response from AI assistant');
           
-          toast({
-            title: "Error",
-            description: "Received an empty response from the assistant",
-            variant: "destructive",
-          });
+          // Remove the user message from the UI since we couldn't get a response
+          setMessages((prev) => prev.filter(msg => msg.id !== userMessage.id));
           
-          return { success: false, error: new Error('Empty response'), keepInputText: true };
+          return { 
+            success: false, 
+            error: new Error('Empty response'), 
+            keepInputText: true 
+          };
         }
 
+        // Create assistant message
         const assistantMessage: AIMessage = {
           id: uuidv4(),
-          content: data.response,
+          content: response,
           role: 'assistant',
           timestamp: new Date(),
         };
         
-        setMessages((prev) => [...prev, assistantMessage]);
+        const updatedMessages = [...recentMessages, assistantMessage];
         
-        // Save all messages to localStorage
+        // Update UI with the assistant message
+        setMessages(updatedMessages);
+        
+        // Now that we have both messages, save them to localStorage
         try {
-          localStorage.setItem('wakti-ai-chat', JSON.stringify([...recentMessages, assistantMessage]));
-          console.log("Successfully saved", recentMessages.length + 1, "messages to localStorage");
+          localStorage.setItem('wakti-ai-chat', JSON.stringify(updatedMessages));
+          console.log("Successfully saved", updatedMessages.length, "messages to localStorage");
         } catch (storageError) {
           console.error("Failed to save chat to localStorage:", storageError);
         }
         
-        if (data.detectedTask) {
-          setDetectedTask(data.detectedTask);
-          setPendingTaskConfirmation(true);
+        // Check for detected task
+        if (response.includes("[TASK_DETECTED]")) {
+          // Parse task from response - simplified logic
+          const taskMatch = response.match(/\[TASK_DETECTED\](.*?)\[\/TASK_DETECTED\]/s);
+          if (taskMatch && taskMatch[1]) {
+            try {
+              const detectedTask = JSON.parse(taskMatch[1]);
+              setDetectedTask(detectedTask);
+              setPendingTaskConfirmation(true);
+            } catch (e) {
+              console.error("Error parsing detected task:", e);
+            }
+          }
         }
 
+        // Reset retry state
         retryAttemptsRef.current = 0;
         lastAttemptedMessageRef.current = null;
         
@@ -138,6 +141,7 @@ export const useSendMessage = (
       } catch (err) {
         console.error('Unexpected error in sendMessage:', err);
         
+        // Check for channel closed error
         const isChannelClosedError = err.message && 
             err.message.includes("message channel closed before a response was received");
         
@@ -149,6 +153,9 @@ export const useSendMessage = (
             description: "Connection interrupted. You can try sending your message again.",
             variant: "destructive",
           });
+          
+          // Remove the user message from the UI since the connection failed
+          setMessages((prev) => prev.filter(msg => msg.id !== prev[prev.length - 1]?.id));
           
           return { 
             success: false, 
@@ -163,6 +170,9 @@ export const useSendMessage = (
           description: `Something went wrong: ${err.message || 'Unknown error'}`,
           variant: "destructive",
         });
+        
+        // Remove the user message from the UI on error
+        setMessages((prev) => prev.filter(msg => msg.id !== prev[prev.length - 1]?.id));
         
         return { success: false, error: err, keepInputText: true };
       } finally {

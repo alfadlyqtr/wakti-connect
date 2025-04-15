@@ -1,10 +1,13 @@
 
 import { supabase } from "@/lib/supabase";
 import { AIMessage } from "@/types/ai-assistant.types";
+import { toast } from "@/hooks/use-toast";
 
-// Function to call the AI assistant edge function with improved context fetching
-export const callAIAssistant = async (token: string, message: string, userName: string = ""): Promise<{ response: string }> => {
+// Function to call the AI assistant edge function with improved error handling
+export const callAIAssistant = async (token: string, message: string, userName: string = ""): Promise<{ response: string; error?: any }> => {
   try {
+    console.log("Calling AI assistant with message:", message.substring(0, 30) + "...");
+    
     // Prepare context - this will be added to the message
     let context = "";
     
@@ -56,68 +59,6 @@ export const callAIAssistant = async (token: string, message: string, userName: 
       context += "Unable to retrieve task information. ";
     }
     
-    // Get events/appointments - Improved to handle empty data properly
-    try {
-      const { data: eventData, error: eventError } = await supabase
-        .from('events')
-        .select('id, title, start_time, end_time')
-        .gte('start_time', new Date().toISOString())
-        .order('start_time', { ascending: true })
-        .limit(5);
-        
-      if (!eventError) {
-        if (eventData && eventData.length > 0) {
-          context += `User has ${eventData.length} upcoming events. `;
-          
-          // Add first event for more context
-          if (eventData[0]) {
-            const nextEvent = eventData[0];
-            const eventDate = new Date(nextEvent.start_time);
-            context += `Next event: "${nextEvent.title}" on ${eventDate.toLocaleDateString()} at ${eventDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}. `;
-          }
-          
-          // List upcoming events
-          if (eventData.length > 1) {
-            context += `Other upcoming events: ${eventData.slice(1).map(e => e.title).join(', ')}. `;
-          }
-        } else {
-          context += "User has no upcoming events in the system. ";
-        }
-      }
-    } catch (error) {
-      console.warn("Error getting events data:", error);
-      context += "Unable to retrieve event information. ";
-    }
-    
-    // Try to add current UI state as context
-    try {
-      // Get current path from window location
-      const currentPath = window.location.pathname;
-      let currentPage = "dashboard";
-      
-      // Map path to page name
-      if (currentPath.includes("/tasks")) {
-        currentPage = "tasks";
-      } else if (currentPath.includes("/calendar") || currentPath.includes("/events")) {
-        currentPage = "calendar";
-      } else if (currentPath.includes("/staff")) {
-        currentPage = "staff";
-      } else if (currentPath.includes("/ai-assistant")) {
-        currentPage = "ai-assistant";
-      } else if (currentPath.includes("/analytics")) {
-        currentPage = "analytics";
-      } else if (currentPath.includes("/job-cards")) {
-        currentPage = "job-cards";
-      }
-      
-      // Store the current page info in context without saving to database
-      context += `Current page: ${currentPage}. `;
-      
-    } catch (error) {
-      console.warn("Error setting interface context:", error);
-      // Continue without this context
-    }
-    
     // Add user context if we have a name
     if (userName) {
       context += `User name: ${userName}. `;
@@ -125,48 +66,85 @@ export const callAIAssistant = async (token: string, message: string, userName: 
     
     console.log("Sending AI request with context:", context);
     
-    // Call the Supabase Edge Function
-    const { data, error } = await supabase.functions.invoke('ai-assistant', {
+    // Create a timeout promise
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new Error("AI assistant request timed out after 30 seconds"));
+      }, 30000); // 30 seconds timeout
+    });
+    
+    // Create the edge function call promise
+    const functionCallPromise = supabase.functions.invoke('ai-assistant', {
       body: {
         message,
         context
       }
     });
     
+    // Use Promise.race to implement timeout
+    const { data, error } = await Promise.race([
+      functionCallPromise,
+      timeoutPromise.then(() => ({ data: null, error: new Error("Request timed out") }))
+    ]) as { data: any, error: any };
+    
+    // Handle errors from the function call
     if (error) {
-      throw new Error(error.message || "Failed to call AI assistant");
+      console.error("Error calling AI assistant:", error);
+      
+      // Show toast notification for the error
+      toast({
+        title: "Connection Error",
+        description: error.message || "Failed to reach AI assistant",
+        variant: "destructive",
+      });
+      
+      return { 
+        response: "", 
+        error: {
+          message: error.message || "Failed to reach AI assistant",
+          isConnectionError: true
+        }
+      };
     }
     
-    return data;
-  } catch (error) {
-    console.error("Error calling AI assistant:", error);
-    throw error;
-  }
-};
-
-// Function to check if the user has actual data
-export const hasUserData = async (userId: string): Promise<boolean> => {
-  try {
-    // Check for tasks
-    const { count: taskCount, error: taskError } = await supabase
-      .from('tasks')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId);
+    // Handle empty or invalid responses
+    if (!data || !data.response) {
+      console.error("Empty or invalid response from AI assistant");
       
-    // Check for events
-    const { count: eventCount, error: eventError } = await supabase
-      .from('events')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId);
+      toast({
+        title: "Empty Response",
+        description: "Received an empty response from the AI assistant",
+        variant: "destructive",
+      });
       
-    if (taskError || eventError) {
-      console.error("Error checking user data:", taskError || eventError);
-      return false;
+      return { 
+        response: "", 
+        error: {
+          message: "Received an empty response from the AI assistant",
+          isEmptyResponse: true
+        }
+      };
     }
     
-    return (taskCount || 0) > 0 || (eventCount || 0) > 0;
+    console.log("AI assistant response received successfully");
+    return { response: data.response };
+    
   } catch (error) {
-    console.error("Error checking user data:", error);
-    return false;
+    console.error("Unexpected error calling AI assistant:", error);
+    
+    // Show toast for unexpected errors
+    toast({
+      title: "AI Connection Failed",
+      description: error.message || "Unexpected error communicating with AI",
+      variant: "destructive",
+    });
+    
+    return { 
+      response: "", 
+      error: {
+        message: error.message || "Unexpected error communicating with AI",
+        isUnexpectedError: true
+      }
+    };
   }
 };

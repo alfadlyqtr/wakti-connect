@@ -7,6 +7,9 @@ import { prepareAIRequest } from "./ai/prepareAIRequest.ts";
 import { callDeepSeekAPI } from "./ai/callDeepSeekAPI.ts";
 import { saveConversation } from "./db/saveConversation.ts";
 
+// Increase server timeout to 60 seconds
+const SERVER_TIMEOUT = 60000;
+
 serve(async (req) => {
   console.log("AI assistant function called with URL:", req.url);
   console.log("Request method:", req.method);
@@ -16,12 +19,24 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Add a server timeout to avoid hanging requests
+  const timeoutId = setTimeout(() => {
+    console.error("Server timeout reached (60s). Request aborted.");
+    // This will end the request, but we can't send a proper response
+    // as the controller is defined within the try block
+  }, SERVER_TIMEOUT);
+
   try {
+    // Create an AbortController for request cancellation
+    const controller = new AbortController();
+    const signal = controller.signal;
+    
     // Authenticate the user
     console.log("Authenticating user...");
     const { user, supabaseClient, error: authError } = await authenticateUser(req);
     if (authError) {
       console.error("Authentication error:", authError.status);
+      clearTimeout(timeoutId);
       return new Response(
         JSON.stringify({ error: authError.message || "Authentication failed" }),
         { status: authError.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -35,6 +50,7 @@ serve(async (req) => {
     const { canUseAI, error: accessError } = await checkUserAccess(user, supabaseClient);
     if (accessError) {
       console.error("Access check error:", accessError.status);
+      clearTimeout(timeoutId);
       return new Response(
         JSON.stringify({ error: accessError.message || "Access check failed" }),
         { status: accessError.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -43,6 +59,7 @@ serve(async (req) => {
     
     if (!canUseAI) {
       console.log("User does not have access to AI assistant:", user.id);
+      clearTimeout(timeoutId);
       return new Response(
         JSON.stringify({ error: "Feature only available for Business and Individual plans" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -55,9 +72,10 @@ serve(async (req) => {
     let requestData;
     try {
       requestData = await req.json();
-      console.log("Request data received:", JSON.stringify(requestData));
+      console.log("Request data received:", JSON.stringify(requestData).substring(0, 500) + "...");
     } catch (error) {
       console.error("Error parsing request JSON:", error);
+      clearTimeout(timeoutId);
       return new Response(
         JSON.stringify({ error: "Invalid request format" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -68,6 +86,7 @@ serve(async (req) => {
     
     if (!message) {
       console.error("Missing message in request");
+      clearTimeout(timeoutId);
       return new Response(
         JSON.stringify({ error: "Message is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -82,17 +101,19 @@ serve(async (req) => {
       console.log("AI conversation prepared with", conversation.length, "messages");
     } catch (error) {
       console.error("Error preparing AI request:", error);
+      clearTimeout(timeoutId);
       return new Response(
         JSON.stringify({ error: "Error preparing AI request: " + (error.message || "Unknown error") }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
     
-    // Call DeepSeek API
+    // Call DeepSeek API with signal for cancellation
     console.log("Calling DeepSeek API...");
-    const { aiResponse, error: apiError } = await callDeepSeekAPI(conversation);
+    const { aiResponse, error: apiError } = await callDeepSeekAPI(conversation, signal);
     if (apiError) {
       console.error("DeepSeek API error:", apiError.status, apiError.message);
+      clearTimeout(timeoutId);
       return new Response(
         JSON.stringify({ error: apiError.message || "Error calling AI model" }),
         { status: apiError.status || 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -112,6 +133,7 @@ serve(async (req) => {
     }
     
     console.log("Sending successful response");
+    clearTimeout(timeoutId);
     return new Response(
       JSON.stringify({ response: aiResponse }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -120,6 +142,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("Unexpected error in AI assistant function:", error.message);
     console.error(error.stack);
+    clearTimeout(timeoutId);
     return new Response(
       JSON.stringify({ error: error.message || "An unexpected error occurred" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

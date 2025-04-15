@@ -4,7 +4,7 @@ const API_URL = "https://api.deepseek.com/v1/chat/completions";
 
 import { corsHeaders } from "../utils/cors.ts";
 
-export async function callDeepSeekAPI(messages: any[]) {
+export async function callDeepSeekAPI(messages: any[], signal?: AbortSignal) {
   if (!DEEPSEEK_API_KEY) {
     console.error("DeepSeek API key not found in environment variables");
     return {
@@ -52,7 +52,8 @@ Be concise, helpful, and positive. Avoid lengthy explanations unless specificall
         messages: conversationWithSystem,
         temperature: 0.7,
         max_tokens: 2000
-      })
+      }),
+      signal // Add AbortController signal for cancellation
     });
 
     if (!response.ok) {
@@ -73,6 +74,17 @@ Be concise, helpful, and positive. Avoid lengthy explanations unless specificall
       aiResponse: data.choices[0].message.content
     };
   } catch (error) {
+    // Handle AbortError specifically
+    if (error.name === 'AbortError') {
+      console.log("DeepSeek API request was aborted");
+      return {
+        error: {
+          message: "Request was cancelled",
+          status: 499 // Client Closed Request
+        }
+      };
+    }
+    
     console.error("Error calling DeepSeek API:", error);
     return {
       error: {
