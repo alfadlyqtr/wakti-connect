@@ -34,7 +34,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
       </Avatar>
       
       <div className={cn(
-        "rounded-lg shadow-sm py-2.5 px-3.5 max-w-[85%]",
+        "rounded-lg shadow-sm py-2.5 px-3.5 max-w-[85%] sm:max-w-[75%]",
         isUser 
           ? "bg-primary/10 border border-primary/20 dark:bg-primary/20" 
           : "bg-white/70 dark:bg-slate-800/70 border border-blue-100 dark:border-slate-700 backdrop-blur-sm"
