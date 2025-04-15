@@ -6,6 +6,7 @@ import { MessageAvatar } from "./MessageAvatar";
 import { MessageContent } from "./MessageContent";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { AIAssistantMouthAnimation } from "../animation/AIAssistantMouthAnimation";
+import { motion } from "framer-motion";
 
 interface AIAssistantMessageProps {
   message: AIMessage;
@@ -21,10 +22,31 @@ export function AIAssistantMessage({
   const isUser = message.role === "user";
   const isMobile = useIsMobile();
 
+  // Animation variants
+  const messageVariants = {
+    hidden: {
+      opacity: 0,
+      y: 10,
+      scale: 0.95,
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: {
+        duration: 0.3,
+        ease: "easeOut"
+      }
+    }
+  };
+
   return (
-    <div
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={messageVariants}
       className={cn(
-        "flex w-full items-start gap-1 sm:gap-3",
+        "flex w-full items-start gap-1 sm:gap-3 mb-3",
         isUser ? "justify-end" : "justify-start"
       )}
     >
@@ -51,6 +73,6 @@ export function AIAssistantMessage({
           <MessageAvatar isUser={isUser} />
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }

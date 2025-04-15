@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -6,7 +7,7 @@ import { useAIAssistant } from '@/hooks/useAIAssistant';
 import { cn } from '@/lib/utils';
 import { InputToolbar } from './InputToolbar';
 import { VoiceInputSection } from './VoiceInputSection';
-import { Send, Loader2, RefreshCw, AlertTriangle, Wifi, WifiOff } from 'lucide-react';
+import { Send, Loader2, RefreshCw, AlertTriangle, Wifi, WifiOff, CheckCircle2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
@@ -18,6 +19,7 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
   const [inputMessage, setInputMessage] = useState('');
   const [showVoiceInput, setShowVoiceInput] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'checking'>('checking');
+  const [messageStatus, setMessageStatus] = useState<'idle' | 'sending' | 'sent' | 'failed'>('idle');
   const { 
     sendMessage, 
     isLoading, 
@@ -32,6 +34,7 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
   const [retryCount, setRetryCount] = useState(0);
   const [isRetrying, setIsRetrying] = useState(false);
   const [isConnectionChecking, setIsConnectionChecking] = useState(false);
+  const messageSentTimerRef = useRef<any>(null);
 
   useEffect(() => {
     checkConnection();
@@ -78,6 +81,21 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
     }
   }, [inputMessage, isLoading]);
 
+  // Reset message status after delay
+  useEffect(() => {
+    if (messageStatus === 'sent') {
+      messageSentTimerRef.current = setTimeout(() => {
+        setMessageStatus('idle');
+      }, 2000);
+    }
+    
+    return () => {
+      if (messageSentTimerRef.current) {
+        clearTimeout(messageSentTimerRef.current);
+      }
+    };
+  }, [messageStatus]);
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -93,11 +111,12 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
 
     const messageCopy = inputMessage.trim();
     setSendError(null);
+    setMessageStatus('sending');
     
     try {
       console.log("Sending message:", messageCopy.substring(0, 20) + "...");
       const result = await sendMessage(messageCopy);
-      const { success, error, keepInputText } = result;
+      const { success, error, keepInputText, messageStatus: resultStatus } = result;
       const isConnectionError = 'isConnectionError' in result ? result.isConnectionError : false;
 
       if (success) {
@@ -107,7 +126,10 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
         setSendError(null);
         setRetryCount(0);
         setConnectionStatus('connected');
+        setMessageStatus('sent');
       } else {
+        setMessageStatus('failed');
+        
         if (isConnectionError) {
           setConnectionStatus('disconnected');
           setSendError("Connection to AI service failed. Please check your internet connection and try again.");
@@ -128,25 +150,28 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
       setSendError(error.message || 'An unexpected error occurred');
       setConnectionStatus('disconnected');
       setRetryCount(prev => prev + 1);
+      setMessageStatus('failed');
     }
   };
 
   const handleRetry = async () => {
     setIsRetrying(true);
     setSendError(null);
+    setMessageStatus('sending');
     
     await checkConnection();
     
     if (connectionStatus === 'disconnected') {
       setSendError("Still offline. Please check your connection before retrying.");
       setIsRetrying(false);
+      setMessageStatus('failed');
       return;
     }
     
     try {
       console.log("Attempting to retry last message");
       const result = await retryLastMessage();
-      const { success, keepInputText } = result;
+      const { success, keepInputText, messageStatus: resultStatus } = result;
       const isConnectionError = 'isConnectionError' in result ? result.isConnectionError : false;
       
       if (success) {
@@ -155,16 +180,20 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
         prevMessageRef.current = '';
         setRetryCount(0);
         setConnectionStatus('connected');
+        setMessageStatus('sent');
       } else if (isConnectionError) {
         setConnectionStatus('disconnected');
         setSendError("Connection to AI service failed. Please try again later.");
+        setMessageStatus('failed');
       } else if (!keepInputText) {
         setInputMessage('');
+        setMessageStatus('failed');
       }
     } catch (error) {
       console.error('Error retrying message:', error);
       setSendError('Failed to retry message: ' + (error.message || 'Unknown error'));
       setConnectionStatus('disconnected');
+      setMessageStatus('failed');
     } finally {
       setIsRetrying(false);
     }
@@ -183,6 +212,13 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
       default:
         return 'bg-primary hover:bg-primary/90';
     }
+  };
+
+  const getButtonStyle = () => {
+    if (messageStatus === 'sent') {
+      return 'bg-green-600 hover:bg-green-700 text-white';
+    }
+    return getModeButtonStyle();
   };
 
   const ConnectionIndicator = () => (
@@ -250,6 +286,7 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
             showVoiceInput && "bg-pink-50",
             sendError && "border-red-300 focus-visible:ring-red-500",
             retryCount > 0 && "bg-amber-50/30",
+            messageStatus === 'sent' && "border-green-300",
             connectionStatus === 'disconnected' && "border-red-200 bg-red-50/20"
           )}
           disabled={isLoading || showVoiceInput || connectionStatus === 'disconnected'}
@@ -292,14 +329,16 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
               isRetrying || 
               connectionStatus === 'disconnected'
             } 
-            className={cn("px-4", getModeButtonStyle())}
+            className={cn("px-4", getButtonStyle())}
           >
             {isLoading ? (
               <Loader2 className="h-4 w-4 animate-spin mr-1" />
+            ) : messageStatus === 'sent' ? (
+              <CheckCircle2 className="h-4 w-4 mr-1" />
             ) : (
               <Send className="h-4 w-4 mr-1" />
             )}
-            Send
+            {messageStatus === 'sent' ? 'Sent' : 'Send'}
           </Button>
         </div>
       </div>

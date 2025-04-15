@@ -35,5 +35,6 @@ export interface SendMessageResult {
   error?: any;
   keepInputText?: boolean;
   isChannelError?: boolean;
-  isConnectionError?: boolean;  // Added this property to fix type errors
+  isConnectionError?: boolean;
+  messageStatus?: 'sent' | 'sending' | 'failed';
 }

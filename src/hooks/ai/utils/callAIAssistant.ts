@@ -91,13 +91,6 @@ export const callAIAssistant = async (token: string, message: string, userName: 
     if (error) {
       console.error("Error calling AI assistant:", error);
       
-      // Show toast notification for the error
-      toast({
-        title: "Connection Error",
-        description: error.message || "Failed to reach AI assistant",
-        variant: "destructive",
-      });
-      
       return { 
         response: "", 
         error: {
@@ -110,13 +103,7 @@ export const callAIAssistant = async (token: string, message: string, userName: 
     // Handle empty or invalid responses
     if (!data || !data.response) {
       console.error("Empty or invalid response from AI assistant");
-      
-      toast({
-        title: "Empty Response",
-        description: "Received an empty response from the AI assistant",
-        variant: "destructive",
-      });
-      
+            
       return { 
         response: "", 
         error: {
@@ -132,14 +119,7 @@ export const callAIAssistant = async (token: string, message: string, userName: 
     
   } catch (error) {
     console.error("Unexpected error calling AI assistant:", error);
-    
-    // Show toast for unexpected errors
-    toast({
-      title: "AI Connection Failed",
-      description: error.message || "Unexpected error communicating with AI",
-      variant: "destructive",
-    });
-    
+        
     return { 
       response: "", 
       error: {

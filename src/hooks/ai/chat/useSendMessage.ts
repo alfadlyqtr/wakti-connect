@@ -1,4 +1,3 @@
-
 import { useCallback, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { AIMessage } from '@/types/ai-assistant.types';
@@ -27,7 +26,8 @@ export const useSendMessage = (
           console.log("A message send operation is already in progress, aborting");
           return { 
             success: false, 
-            error: new Error("Message sending already in progress") 
+            error: new Error("Message sending already in progress"),
+            messageStatus: 'failed'
           };
         }
 
@@ -48,7 +48,7 @@ export const useSendMessage = (
           timestamp: new Date(),
         };
         
-        // Add user message to UI state
+        // Add user message to UI state IMMEDIATELY
         setMessages((prev) => [...prev, userMessage]);
         
         // Use the current messages array directly
@@ -72,27 +72,27 @@ export const useSendMessage = (
         if (error) {
           console.error('AI assistant error:', error);
           
-          // Remove the user message from the UI since we couldn't get a response
-          setMessages((prev) => prev.filter(msg => msg.id !== userMessage.id));
+          // IMPORTANT: We don't remove the user message anymore - we keep it in the UI
+          // Instead, we'll add an error indicator to it or a system message about the error
           
           return { 
             success: false, 
             error, 
             keepInputText: true,
-            isConnectionError: error.isConnectionError
+            isConnectionError: error.isConnectionError,
+            messageStatus: 'failed'
           };
         }
 
         if (!response) {
           console.error('Empty response from AI assistant');
           
-          // Remove the user message from the UI since we couldn't get a response
-          setMessages((prev) => prev.filter(msg => msg.id !== userMessage.id));
-          
+          // Keep the message in the UI but mark as failed
           return { 
             success: false, 
             error: new Error('Empty response'), 
-            keepInputText: true 
+            keepInputText: true,
+            messageStatus: 'failed'
           };
         }
 
@@ -137,7 +137,10 @@ export const useSendMessage = (
         lastAttemptedMessageRef.current = null;
         
         console.log("Message send operation completed successfully");
-        return { success: true };
+        return { 
+          success: true,
+          messageStatus: 'sent'
+        };
       } catch (err) {
         console.error('Unexpected error in sendMessage:', err);
         
@@ -146,23 +149,22 @@ export const useSendMessage = (
             err.message.includes("message channel closed before a response was received");
         
         if (isChannelClosedError) {
-          console.warn("Communication channel closed prematurely. Saving partial state.");
+          console.warn("Communication channel closed prematurely. Enabling retry.");
           
           toast({
             title: "Communication Error",
-            description: "Connection interrupted. You can try sending your message again.",
+            description: "Connection interrupted. You can try again.",
             variant: "destructive",
           });
           
-          // Remove the user message from the UI since the connection failed
-          setMessages((prev) => prev.filter(msg => msg.id !== prev[prev.length - 1]?.id));
-          
+          // We now keep the user message visible
           return { 
             success: false, 
             error: err, 
             keepInputText: true,
             isChannelError: true,
-            isConnectionError: true
+            isConnectionError: true,
+            messageStatus: 'failed'
           };
         }
         
@@ -172,14 +174,13 @@ export const useSendMessage = (
           variant: "destructive",
         });
         
-        // Remove the user message from the UI on error
-        setMessages((prev) => prev.filter(msg => msg.id !== prev[prev.length - 1]?.id));
-        
+        // Keep user message but mark as failed
         return { 
           success: false,
           error: err,
           keepInputText: true,
-          isConnectionError: true
+          isConnectionError: true,
+          messageStatus: 'failed'
         };
       } finally {
         isSendingRef.current = false;
@@ -193,7 +194,8 @@ export const useSendMessage = (
     if (!lastAttemptedMessageRef.current || isSendingRef.current) {
       return { 
         success: false, 
-        error: new Error("No message to retry or send already in progress") 
+        error: new Error("No message to retry or send already in progress"),
+        messageStatus: 'failed'
       };
     }
 
@@ -205,7 +207,8 @@ export const useSendMessage = (
       });
       return { 
         success: false, 
-        error: new Error("Maximum retry attempts reached") 
+        error: new Error("Maximum retry attempts reached"),
+        messageStatus: 'failed'
       };
     }
 
