@@ -1,16 +1,30 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { User } from '@supabase/supabase-js';
+import { User } from '@/hooks/auth/types';
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     // Set up auth state listener
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user || null);
+      // If we have a session, create a User object with the additional fields
+      if (session?.user) {
+        const userData: User = {
+          ...session.user,
+          name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || '',
+          displayName: session.user.user_metadata?.display_name || session.user.user_metadata?.full_name || '',
+          plan: session.user.user_metadata?.account_type || 'free'
+        };
+        setUser(userData);
+        setIsAuthenticated(true);
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
+      }
       setIsLoading(false);
     });
 
@@ -18,7 +32,17 @@ export const useAuth = () => {
     const initializeAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        setUser(session?.user || null);
+        
+        if (session?.user) {
+          const userData: User = {
+            ...session.user,
+            name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || '',
+            displayName: session.user.user_metadata?.display_name || session.user.user_metadata?.full_name || '',
+            plan: session.user.user_metadata?.account_type || 'free'
+          };
+          setUser(userData);
+          setIsAuthenticated(true);
+        }
       } catch (error) {
         console.error('Error getting auth session:', error);
       } finally {
@@ -34,5 +58,85 @@ export const useAuth = () => {
     };
   }, []);
 
-  return { user, isLoading };
+  // Add login, logout, and register methods
+  const login = async (email: string, password: string) => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+      
+      return { error: null, data };
+    } catch (error: any) {
+      console.error('Login error:', error);
+      return { error };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const logout = async () => {
+    try {
+      setIsLoading(true);
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+    } catch (error) {
+      console.error('Logout error:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const register = async (
+    email: string, 
+    password: string, 
+    name?: string, 
+    accountType: string = 'free', 
+    businessName?: string
+  ) => {
+    try {
+      setIsLoading(true);
+      
+      // Prepare metadata
+      const metadata: Record<string, any> = {
+        full_name: name || '',
+        account_type: accountType
+      };
+      
+      if (businessName && accountType === 'business') {
+        metadata.business_name = businessName;
+      }
+
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: metadata,
+          emailRedirectTo: window.location.origin + '/auth/login'
+        }
+      });
+
+      if (error) throw error;
+      
+      return { error: null, data };
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      return { error };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return {
+    user,
+    isLoading,
+    isAuthenticated,
+    login,
+    logout,
+    register
+  };
 };
