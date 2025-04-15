@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { AIMessage, AIAssistantRole, RoleContexts } from "@/types/ai-assistant.types";
 import { AnimatePresence, motion } from "framer-motion";
-import { Loader2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -41,7 +41,7 @@ interface CleanChatInterfaceProps {
   onStartVoiceInput?: () => void;
   onStopVoiceInput?: () => void;
   onConfirmTranscript?: () => void;
-  clearMessages?: () => void; // Add missing prop
+  clearMessages?: () => void; // This is the prop we're adding
 }
 
 export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
@@ -67,7 +67,8 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
   temporaryTranscript,
   onStartVoiceInput,
   onStopVoiceInput,
-  onConfirmTranscript
+  onConfirmTranscript,
+  clearMessages
 }) => {
   const [showWelcome, setShowWelcome] = useState(messages.length === 0);
   const messagesEndRef = useRef<HTMLDivElement>(null);

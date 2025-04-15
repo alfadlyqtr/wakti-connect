@@ -8,10 +8,12 @@ import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bot, Trash2, User } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useGlobalChatMemory } from '@/hooks/ai/chat/useGlobalChatMemory';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { TypingIndicator } from '../animation';
 
 interface AIAssistantChatWindowProps {
   activeMode: WAKTIAIMode;
@@ -19,36 +21,31 @@ interface AIAssistantChatWindowProps {
 }
 
 export const AIAssistantChatWindow = ({ activeMode, onClearChat }: AIAssistantChatWindowProps) => {
-  // Use the mode-specific chat memory
+  // Use the mode-specific chat memory and AI assistant hook
   const { messages, isLoading } = useAIAssistant();
-  const { messages: modeMessages } = useGlobalChatMemory(activeMode);
   
   const [showWelcomeMessage, setShowWelcomeMessage] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const previousMessagesLength = useRef(modeMessages.length);
+  const previousMessagesLength = useRef(messages.length);
   const previousModeRef = useRef(activeMode);
   
   // Determine if we should show the welcome message based on the current mode's messages
   useEffect(() => {
-    if (modeMessages.length > 0) {
-      setShowWelcomeMessage(false);
-    } else {
-      setShowWelcomeMessage(true);
-    }
-  }, [modeMessages, activeMode]);
+    setShowWelcomeMessage(messages.length === 0);
+  }, [messages, activeMode]);
   
   // Scroll to bottom of messages when new messages arrive or loading state changes
   useEffect(() => {
-    if (messagesEndRef.current && (modeMessages.length > previousMessagesLength.current || !isLoading)) {
+    if (messagesEndRef.current && (messages.length > previousMessagesLength.current || isLoading)) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-      previousMessagesLength.current = modeMessages.length;
+      previousMessagesLength.current = messages.length;
     }
-  }, [modeMessages, isLoading]);
+  }, [messages, isLoading]);
 
   // Reset previous messages length when mode changes
   useEffect(() => {
     if (previousModeRef.current !== activeMode) {
-      previousMessagesLength.current = modeMessages.length;
+      previousMessagesLength.current = messages.length;
       previousModeRef.current = activeMode;
       
       // Force scroll to bottom on mode change
@@ -58,7 +55,7 @@ export const AIAssistantChatWindow = ({ activeMode, onClearChat }: AIAssistantCh
         }
       }, 100);
     }
-  }, [activeMode, modeMessages.length]);
+  }, [activeMode, messages.length]);
 
   // Get mode-specific styling
   const getModeStyles = () => {
@@ -78,7 +75,7 @@ export const AIAssistantChatWindow = ({ activeMode, onClearChat }: AIAssistantCh
 
   return (
     <ScrollArea className={cn("h-[500px] p-4 relative", getModeStyles())}>
-      {modeMessages.length > 0 && onClearChat && (
+      {messages.length > 0 && onClearChat && (
         <Button
           variant="ghost"
           size="icon"
@@ -106,7 +103,7 @@ export const AIAssistantChatWindow = ({ activeMode, onClearChat }: AIAssistantCh
         </motion.div>
       )}
       
-      {modeMessages.map((msg) => (
+      {messages.map((msg) => (
         <motion.div
           key={msg.id}
           className="flex items-start gap-3 mb-4"
@@ -126,8 +123,8 @@ export const AIAssistantChatWindow = ({ activeMode, onClearChat }: AIAssistantCh
             )}
           </Avatar>
           <div className="bg-background rounded-lg p-3 shadow-sm max-w-[85%]">
-            <div className="text-sm whitespace-pre-wrap">
-              <ReactMarkdown>
+            <div className="text-sm whitespace-pre-wrap prose prose-sm max-w-none prose-p:my-1 prose-headings:mb-1">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {msg.content}
               </ReactMarkdown>
             </div>
@@ -140,10 +137,6 @@ export const AIAssistantChatWindow = ({ activeMode, onClearChat }: AIAssistantCh
         </motion.div>
       ))}
       
-      <AnimatePresence>
-        {/* AnimatePresence for animations */}
-      </AnimatePresence>
-      
       {isLoading && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -153,9 +146,8 @@ export const AIAssistantChatWindow = ({ activeMode, onClearChat }: AIAssistantCh
           <Avatar className={cn("h-8 w-8", WAKTIAIModes[activeMode].color)}>
             <Bot className="h-4 w-4 text-white" />
           </Avatar>
-          <div className="bg-background rounded-lg py-2.5 px-3.5 border w-64">
-            <Skeleton className="h-4 w-full mb-2" />
-            <Skeleton className="h-4 w-3/4" />
+          <div className="bg-background rounded-lg py-2.5 px-3.5 border">
+            <TypingIndicator className="text-muted-foreground" />
           </div>
         </motion.div>
       )}

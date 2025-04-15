@@ -8,23 +8,20 @@ import { AIModeSwitcher } from './mode/AIModeSwitcher';
 import { AIAssistantChatWindow } from './chat/AIAssistantChatWindow';
 import { AIAssistantToolbar } from './input/AIAssistantToolbar';
 import { MeetingSummaryTool } from './tools/MeetingSummaryTool';
-import { LockIcon, MessageSquare, Mic, Wrench } from 'lucide-react';
+import { LockIcon, MessageSquare, Wrench } from 'lucide-react';
 import { useAuth } from '@/hooks/auth';
 import { useProfile } from '@/hooks/useProfile';
-import { UserRole } from '@/types/user';
+import { useAIAssistant } from '@/hooks/useAIAssistant';
 import { useGlobalChatMemory } from '@/hooks/ai/chat/useGlobalChatMemory';
 
 const WAKTIAIAssistant = () => {
   const { user } = useAuth();
   const { profile } = useProfile(user?.id);
-  const [activeMode, setActiveMode] = useState<WAKTIAIMode>('general');
+  const { activeMode, setActiveMode, clearMessages } = useAIAssistant();
   const [activeTab, setActiveTab] = useState('chat');
   const [canAccessAI, setCanAccessAI] = useState(false);
   const [showMeetingTool, setShowMeetingTool] = useState(false);
   
-  // Pass the active mode to the chat memory hook
-  const { getMessages, clearMessages } = useGlobalChatMemory(activeMode);
-
   // Check if the user can access the AI Assistant based on their role
   useEffect(() => {
     if (profile) {

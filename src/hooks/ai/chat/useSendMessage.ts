@@ -154,6 +154,7 @@ export const useSendMessage = (
         console.log("Message send operation completed successfully");
         return { 
           success: true,
+          response: response,  // Add the response to the result
           messageStatus: 'sent'
         };
       } catch (err) {

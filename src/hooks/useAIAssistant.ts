@@ -83,10 +83,13 @@ export const useAIAssistant = () => {
       if (result.success) {
         console.log("Message sent successfully, updating message store");
         
-        // Create assistant message - using the correct property from the result
+        // Create assistant message with the response content from the AI
+        // The content should come from the result object, not the original message
         const assistantMessage: AIMessage = {
           id: crypto.randomUUID(),
-          content: result.error ? "I'm not sure how to respond to that." : message,
+          content: result.messageStatus === 'sent' ? 
+                    (result.response || "I processed your request.") : 
+                    "I'm not sure how to respond to that.",
           role: 'assistant',
           timestamp: new Date(),
         };
@@ -185,7 +188,8 @@ export const useAIAssistant = () => {
     console.log(`Clearing messages for mode: ${activeMode}`);
     setMessages([]);
     saveMessages([]);
-  }, [activeMode, saveMessages]);
+    originalClearMessages();
+  }, [activeMode, saveMessages, originalClearMessages]);
 
   // Helper method to check if a message is currently being processed
   const isMessageProcessing = useCallback(() => {
