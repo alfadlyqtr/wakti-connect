@@ -12,7 +12,7 @@ export const useSendMessage = (
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
   setDetectedTask: (task: any | null) => void,
   setPendingTaskConfirmation: (pending: boolean) => void,
-  contextWindowRef: React.MutableRefObject<AIMessage[]>,
+  messages: AIMessage[],
   profile?: any
 ) => {
   const isSendingRef = useRef(false);
@@ -47,7 +47,8 @@ export const useSendMessage = (
         
         setMessages((prev) => [...prev, userMessage]);
         
-        const recentMessages = [...contextWindowRef.current];
+        // Use the current messages array directly
+        const recentMessages = [...messages, userMessage];
         
         let userContext = '';
         if (profile) {
@@ -92,8 +93,6 @@ export const useSendMessage = (
             variant: "destructive",
           });
           
-          contextWindowRef.current = [...contextWindowRef.current, userMessage];
-          
           return { success: false, error, keepInputText: true };
         }
 
@@ -105,8 +104,6 @@ export const useSendMessage = (
             description: "Received an empty response from the assistant",
             variant: "destructive",
           });
-          
-          contextWindowRef.current = [...contextWindowRef.current, userMessage];
           
           return { success: false, error: new Error('Empty response'), keepInputText: true };
         }
@@ -120,14 +117,10 @@ export const useSendMessage = (
         
         setMessages((prev) => [...prev, assistantMessage]);
         
-        contextWindowRef.current = [...contextWindowRef.current, userMessage, assistantMessage];
-        
+        // Save all messages to localStorage
         try {
-          localStorage.setItem(
-            `ai-chat-${options.sessionId || 'default'}`, 
-            JSON.stringify([...contextWindowRef.current])
-          );
-          console.log("Successfully saved", contextWindowRef.current.length, "messages to localStorage");
+          localStorage.setItem('wakti-ai-chat', JSON.stringify([...recentMessages, assistantMessage]));
+          console.log("Successfully saved", recentMessages.length + 1, "messages to localStorage");
         } catch (storageError) {
           console.error("Failed to save chat to localStorage:", storageError);
         }
@@ -177,7 +170,7 @@ export const useSendMessage = (
         setIsLoading(false);
       }
     },
-    [options.enableTaskCreation, options.sessionId, profile, setDetectedTask, setIsLoading, setMessages, setPendingTaskConfirmation, contextWindowRef]
+    [options.enableTaskCreation, profile, setDetectedTask, setIsLoading, setMessages, setPendingTaskConfirmation, messages]
   );
 
   const retryLastMessage = useCallback(async (): Promise<SendMessageResult> => {

@@ -4,7 +4,7 @@ import { useAISettings } from "./ai/settings";
 import { useAIKnowledge } from "./ai/useAIKnowledge";
 import { AIMessage, AISettings, AIKnowledgeUpload, WAKTIAIMode } from "@/types/ai-assistant.types";
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useChatMemoryByMode } from "./ai/chat/useChatMemoryByMode";
+import { useGlobalChatMemory } from "./ai/chat/useGlobalChatMemory";
 import { toast } from "@/hooks/use-toast";
 
 // Re-export types for backward compatibility
@@ -12,17 +12,14 @@ export type { AIMessage, AISettings, AIKnowledgeUpload };
 
 export const useAIAssistant = () => {
   const [activeMode, setActiveMode] = useState<WAKTIAIMode>('general');
-  const { getMessages, setMessagesForMode, addMessageToMode, syncWithContext } = useChatMemoryByMode();
-  const [messages, setMessages] = useState<AIMessage[]>(getMessages(activeMode));
+  const { getMessages, setMessages: saveMessages } = useGlobalChatMemory();
+  const [messages, setMessages] = useState<AIMessage[]>(getMessages());
   const processingMessageRef = useRef(false);
   const messageSendingRef = useRef<{text: string, inProgress: boolean, retryCount: number}>({
     text: '', 
     inProgress: false,
     retryCount: 0
   });
-  
-  // Add a ref to track mode changes and debounce them
-  const modeChangeTimeoutRef = useRef<number | null>(null);
   
   const { 
     sendMessage: originalSendMessage, 
@@ -39,38 +36,15 @@ export const useAIAssistant = () => {
   const { aiSettings, isLoadingSettings, updateSettings, canUseAI } = useAISettings();
   const { addKnowledge, knowledgeUploads, isLoadingKnowledge, deleteKnowledge } = useAIKnowledge();
 
-  // Update the active mode when it changes - with debounce
+  // Sync with local storage on mount
   useEffect(() => {
-    // Clear any existing timeout
-    if (modeChangeTimeoutRef.current !== null) {
-      window.clearTimeout(modeChangeTimeoutRef.current);
+    const storedMessages = getMessages();
+    if (storedMessages.length > 0) {
+      setMessages(storedMessages);
     }
-    
-    // Set a new timeout to debounce rapid mode changes
-    modeChangeTimeoutRef.current = window.setTimeout(() => {
-      console.log(`Mode change: ${activeMode} - updating messages`);
-      setMessages(getMessages(activeMode));
-    }, 50);
-    
-    // Cleanup function
-    return () => {
-      if (modeChangeTimeoutRef.current !== null) {
-        window.clearTimeout(modeChangeTimeoutRef.current);
-      }
-    };
-  }, [activeMode, getMessages]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      // Clean up any pending timeouts
-      if (modeChangeTimeoutRef.current !== null) {
-        window.clearTimeout(modeChangeTimeoutRef.current);
-      }
-    };
   }, []);
 
-  // Wrap the sendMessage function to update our mode-specific message store
+  // Wrap the sendMessage function to update our global message store
   const sendMessage = useCallback(async (message: string) => {
     // Prevent multiple concurrent sends and reuse of the same message
     if (processingMessageRef.current || messageSendingRef.current.inProgress) {
@@ -92,36 +66,20 @@ export const useAIAssistant = () => {
       processingMessageRef.current = true;
       console.log(`Sending message in mode ${activeMode}: ${message.substring(0, 20)}...`);
       
-      // First get the current messages for this mode
-      const currentModeMessages = getMessages(activeMode);
-      console.log(`Current messages in mode ${activeMode}: ${currentModeMessages.length}`);
-      
       // Send the message using the enhanced chat hook
       const result = await originalSendMessage(message);
       
-      // After sending, get the updated messages and update our mode-specific store
+      // After sending, get the updated messages
       if (result.success) {
-        console.log("Message sent successfully, updating message stores");
+        console.log("Message sent successfully, updating message store");
         
         // Get the latest messages from the chat storage context
         const updatedMessages = getRecentContext();
         console.log(`Received updated context: ${updatedMessages.length} messages`);
         
-        // We only want to add new messages that aren't already in our mode-specific store
-        if (updatedMessages.length > currentModeMessages.length) {
-          // First sync the entire context with our mode-specific store
-          syncWithContext(activeMode, updatedMessages);
-          
-          // Update the local state with all messages for this mode
-          const finalMessages = getMessages(activeMode);
-          console.log(`Final messages after sync: ${finalMessages.length}`);
-          setMessages(finalMessages);
-        } else {
-          console.warn(`Context didn't grow as expected: ${updatedMessages.length} <= ${currentModeMessages.length}`);
-          // Force sync to prevent state inconsistency
-          syncWithContext(activeMode, updatedMessages);
-          setMessages(getMessages(activeMode));
-        }
+        // Update local state and persist to storage
+        setMessages(updatedMessages);
+        saveMessages(updatedMessages);
         
         // Reset the sending ref only on successful completion
         messageSendingRef.current = { text: '', inProgress: false, retryCount: 0 };
@@ -183,7 +141,7 @@ export const useAIAssistant = () => {
     } finally {
       processingMessageRef.current = false;
     }
-  }, [activeMode, originalSendMessage, getMessages, syncWithContext, getRecentContext]);
+  }, [activeMode, originalSendMessage, getRecentContext, saveMessages]);
 
   // Function to retry the last failed message
   const retryLastMessage = useCallback(async () => {
@@ -202,13 +160,13 @@ export const useAIAssistant = () => {
     return { success: false, error: new Error("No message to retry") };
   }, [sendMessage]);
 
-  // Wrap the clearMessages function to clear only the current mode's messages
+  // Wrap the clearMessages function to clear global messages
   const clearMessages = useCallback(() => {
-    console.log(`Clearing messages for mode: ${activeMode}`);
+    console.log("Clearing all messages");
     originalClearMessages();
-    setMessagesForMode(activeMode, []);
     setMessages([]);
-  }, [activeMode, originalClearMessages, setMessagesForMode]);
+    localStorage.removeItem('wakti-ai-chat');
+  }, [originalClearMessages]);
 
   // Helper method to check if a message is currently being processed
   const isMessageProcessing = useCallback(() => {

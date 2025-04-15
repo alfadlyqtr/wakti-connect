@@ -10,7 +10,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Bot, User } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useChatMemoryByMode } from '@/hooks/ai/chat/useChatMemoryByMode';
 
 interface AIAssistantChatWindowProps {
   activeMode: WAKTIAIMode;
