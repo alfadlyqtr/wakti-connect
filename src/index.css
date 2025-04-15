@@ -152,3 +152,35 @@ html[dir="rtl"] .mr-4 {
   display: inline-block;
   vertical-align: middle;
 }
+
+/* Glassmorphism styles */
+.glassmorphism {
+  @apply backdrop-blur-xl bg-white/80 dark:bg-slate-800/80 border border-white/30 dark:border-slate-700/30 shadow-lg;
+}
+
+.glassmorphism-content {
+  @apply backdrop-blur-sm bg-white/50 dark:bg-slate-800/50;
+}
+
+.input-active {
+  @apply focus:ring-1 focus:shadow-md;
+}
+
+/* Fix message readability */
+.prose-sm pre {
+  @apply bg-muted/70 backdrop-blur-sm !important;
+}
+
+.prose-sm code {
+  @apply bg-muted/70 text-primary dark:text-blue-300 px-1 py-0.5 rounded text-sm !important;
+}
+
+/* Fix mobile overflow */
+.overflow-x-auto::-webkit-scrollbar {
+  display: none;
+}
+
+.overflow-x-auto {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

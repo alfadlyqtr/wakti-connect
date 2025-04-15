@@ -36,8 +36,12 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     
     if (!inputValue.trim() || isLoading || isDisabled) return;
     
-    await onSendMessage(inputValue);
-    setInputValue('');
+    try {
+      await onSendMessage(inputValue);
+      setInputValue('');
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
   };
   
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -67,7 +71,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   return (
     <motion.form 
       onSubmit={handleSubmit} 
-      className="flex items-center gap-2 p-4 border-t bg-background/30 backdrop-blur-md"
+      className="flex items-center gap-2 p-3 border-t bg-background/30 backdrop-blur-md"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: 0.2 }}
@@ -82,7 +86,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         placeholder="Type a message..."
         disabled={isLoading || isDisabled}
         className={cn(
-          "flex-1 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border transition-all duration-300 input-active",
+          "flex-1 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border transition-all duration-300 input-active text-foreground",
           inputValue && "pr-10",
           isLoading && "opacity-70",
           getInputGlowClass(isFocused)

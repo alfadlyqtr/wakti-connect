@@ -1,41 +1,49 @@
 
 import React from 'react';
+import { cn } from '@/lib/utils';
+import { AIMessage } from '@/types/ai-assistant.types';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Bot, User } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-import { cn } from '@/lib/utils';
-import { Avatar } from '@/components/ui/avatar';
-import { ChatMemoryMessage } from '@/components/ai/personality-switcher/types';
-import { useAIPersonality } from '@/components/ai/personality-switcher/AIPersonalityContext';
+import remarkGfm from 'remark-gfm';
 
 interface ChatMessageProps {
-  message: ChatMemoryMessage;
+  message: AIMessage;
 }
 
 export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
-  const { currentPersonality } = useAIPersonality();
   const isUser = message.role === 'user';
   
   return (
-    <div className="flex items-start gap-3 mb-4">
+    <div className={cn(
+      "flex items-start gap-3 mb-4",
+      isUser ? "flex-row-reverse" : ""
+    )}>
       <Avatar className={cn(
-        "h-8 w-8 rounded-full flex items-center justify-center",
-        isUser ? "bg-muted" : currentPersonality.color
+        "h-8 w-8 border-2",
+        isUser ? "bg-primary border-primary/20" : "bg-blue-500 border-blue-500/20"
       )}>
         {isUser ? (
-          <User className="h-4 w-4 text-muted-foreground" />
+          <User className="h-4 w-4 text-primary-foreground" />
         ) : (
           <Bot className="h-4 w-4 text-white" />
         )}
+        <AvatarFallback>
+          {isUser ? 'U' : 'AI'}
+        </AvatarFallback>
       </Avatar>
       
       <div className={cn(
-        "p-3 rounded-2xl max-w-[85%] shadow-sm backdrop-blur-sm",
+        "rounded-lg shadow-sm py-2.5 px-3.5 max-w-[85%]",
         isUser 
-          ? "bg-muted text-foreground" 
-          : "bg-white/90 dark:bg-slate-800/80 border border-white/30 dark:border-slate-700/50 text-foreground"
+          ? "bg-primary/10 border border-primary/20 dark:bg-primary/20" 
+          : "bg-white/90 dark:bg-slate-800/90 border border-blue-100 dark:border-slate-700 backdrop-blur-sm"
       )}>
-        <div className="prose prose-sm dark:prose-invert max-w-none">
-          <ReactMarkdown>
+        <div className={cn(
+          "prose prose-sm dark:prose-invert prose-p:my-1 prose-headings:mb-2 prose-headings:mt-4",
+          isUser ? "text-foreground" : "text-foreground"
+        )}>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
             {message.content}
           </ReactMarkdown>
         </div>

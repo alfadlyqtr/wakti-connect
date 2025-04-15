@@ -42,15 +42,15 @@ export const UnifiedChatInterface: React.FC = () => {
   const getBackgroundStyle = () => {
     switch (currentMode) {
       case 'general':
-        return 'bg-gradient-to-b from-blue-50 via-blue-100 to-blue-200';
+        return 'bg-gradient-to-b from-blue-50/80 via-blue-100/80 to-blue-200/80';
       case 'student':
-        return 'bg-gradient-to-b from-green-50 via-green-100 to-green-200';
+        return 'bg-gradient-to-b from-green-50/80 via-green-100/80 to-green-200/80';
       case 'productivity':
-        return 'bg-gradient-to-b from-yellow-50 via-orange-100 to-yellow-200';
+        return 'bg-gradient-to-b from-yellow-50/80 via-orange-100/80 to-yellow-200/80';
       case 'creative':
-        return 'bg-gradient-to-b from-purple-50 via-pink-100 to-purple-200';
+        return 'bg-gradient-to-b from-purple-50/80 via-pink-100/80 to-purple-200/80';
       default:
-        return 'bg-gradient-to-b from-blue-50 via-blue-100 to-blue-200';
+        return 'bg-gradient-to-b from-blue-50/80 via-blue-100/80 to-blue-200/80';
     }
   };
   
@@ -61,15 +61,15 @@ export const UnifiedChatInterface: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="flex flex-col items-center justify-center text-center px-4 py-10 space-y-4"
+        className="flex flex-col items-center justify-center text-center px-2 sm:px-4 py-6 sm:py-10 space-y-4"
       >
-        <div className={`h-16 w-16 rounded-full ${currentPersonality.color} flex items-center justify-center shadow-lg`}>
-          <Bot className="h-8 w-8 text-white" />
+        <div className={`h-14 w-14 rounded-full ${currentPersonality.color} flex items-center justify-center shadow-lg`}>
+          <Bot className="h-7 w-7 text-white" />
         </div>
         
-        <h2 className="text-xl font-bold">{currentPersonality.welcomeMessage}</h2>
+        <h2 className="text-lg sm:text-xl font-bold">{currentPersonality.welcomeMessage}</h2>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-md w-full pt-4">
+        <div className="grid grid-cols-1 gap-2 max-w-md w-full pt-4 px-2">
           {currentPersonality.suggestedPrompts.map((prompt, index) => (
             <Button
               key={index}
@@ -88,7 +88,7 @@ export const UnifiedChatInterface: React.FC = () => {
   return (
     <motion.div 
       className={cn(
-        "min-h-[90vh] flex flex-col px-4 pb-6 pt-2 transition-colors duration-500",
+        "min-h-[90vh] flex flex-col px-2 sm:px-4 pb-6 pt-2 transition-colors duration-500 backdrop-blur-sm",
         getBackgroundStyle()
       )}
       initial={{ opacity: 0 }}
@@ -109,14 +109,14 @@ export const UnifiedChatInterface: React.FC = () => {
         className="relative w-full mx-auto mb-8"
         layout
       >
-        <Card className="overflow-hidden backdrop-blur-lg bg-white/60 border border-white/30 shadow-xl rounded-2xl p-6 max-w-3xl mx-auto mt-10">
+        <Card className="overflow-hidden backdrop-blur-lg bg-white/60 dark:bg-slate-800/60 border border-white/30 dark:border-slate-700/30 shadow-xl rounded-xl p-3 sm:p-6 max-w-3xl mx-auto mt-4 sm:mt-10">
           <ChatHeader 
             onClearChat={handleClearChat} 
             hasMessages={messages.length > 0} 
           />
           
           {!canUseAI && (
-            <Alert variant="destructive" className="m-4">
+            <Alert variant="destructive" className="m-2 sm:m-4">
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>Access Restricted</AlertTitle>
               <AlertDescription>
@@ -125,8 +125,8 @@ export const UnifiedChatInterface: React.FC = () => {
             </Alert>
           )}
           
-          <ScrollArea className="h-[500px] glassmorphism-content">
-            <CardContent className="p-4 space-y-4">
+          <ScrollArea className="h-[400px] sm:h-[500px] glassmorphism-content">
+            <CardContent className="p-2 sm:p-4 space-y-3 sm:space-y-4">
               {messages.length === 0 ? (
                 renderWelcomeView()
               ) : (

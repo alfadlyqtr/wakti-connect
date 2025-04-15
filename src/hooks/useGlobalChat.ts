@@ -7,7 +7,7 @@ import { callAIAssistant } from '@/hooks/ai/utils/callAIAssistant';
 import { useAuth } from '@/hooks/auth';
 import { useProfile } from '@/hooks/useProfile';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';  // Updated import
+import { supabase } from '@/integrations/supabase/client';
 
 export const useGlobalChat = () => {
   const [messages, setMessages] = useState<ChatMemoryMessage[]>([]);
@@ -25,13 +25,15 @@ export const useGlobalChat = () => {
     return unsubscribe;
   }, []);
   
-  // Send message function
+  // Send message function with improved error handling
   const sendMessage = useCallback(async (content: string) => {
     if (!content.trim() || isLoading) return;
     
     setIsLoading(true);
     
     try {
+      console.log('[useGlobalChat] Sending message:', content.substring(0, 30) + (content.length > 30 ? '...' : ''));
+      
       // Add user message to memory
       globalChatMemory.addMessage({
         role: 'user',
@@ -45,33 +47,62 @@ export const useGlobalChat = () => {
       // Get up to 10 recent messages for context
       const recentMessages = messages.slice(-10);
       
-      // Call AI assistant
-      const { response, error } = await callAIAssistant(
-        systemMessage,
-        content,
-        JSON.stringify(recentMessages)
-      );
-      
-      if (error) {
-        console.error('[useGlobalChat] AI assistant error:', error);
-        toast({
-          title: "Error",
-          description: error.message || "Failed to get AI response",
-          variant: "destructive",
-        });
-        return;
+      // Get user context for better personalization
+      let userContext = '';
+      if (profile) {
+        userContext = `User: ${profile.full_name || 'Unknown'}, Account Type: ${profile.account_type || 'free'}`;
+      } else {
+        userContext = 'Unknown User';
       }
       
-      if (response) {
-        // Add AI response to memory
-        globalChatMemory.addMessage({
-          role: 'assistant',
-          content: response,
-          mode: currentMode
+      console.log('[useGlobalChat] Calling AI assistant with personality:', currentMode);
+      
+      // Call AI assistant with additional debugging
+      try {
+        const { response, error } = await callAIAssistant(
+          systemMessage,
+          content,
+          JSON.stringify(recentMessages),
+          userContext
+        );
+        
+        if (error) {
+          console.error('[useGlobalChat] AI assistant error:', error);
+          toast({
+            title: "Error",
+            description: error.message || "Failed to get AI response",
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        if (response) {
+          console.log('[useGlobalChat] Received AI response successfully');
+          
+          // Add AI response to memory
+          globalChatMemory.addMessage({
+            role: 'assistant',
+            content: response,
+            mode: currentMode
+          });
+        } else {
+          console.error('[useGlobalChat] Empty response from AI assistant');
+          toast({
+            title: "Error",
+            description: "Received empty response from AI",
+            variant: "destructive",
+          });
+        }
+      } catch (callError) {
+        console.error('[useGlobalChat] Exception during AI assistant call:', callError);
+        toast({
+          title: "Communication Error",
+          description: "Failed to communicate with AI service. Please try again.",
+          variant: "destructive",
         });
       }
     } catch (error) {
-      console.error('[useGlobalChat] Error sending message:', error);
+      console.error('[useGlobalChat] Unexpected error sending message:', error);
       toast({
         title: "Error",
         description: "Something went wrong. Please try again.",
@@ -80,7 +111,7 @@ export const useGlobalChat = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, messages, currentMode, currentPersonality]);
+  }, [isLoading, messages, currentMode, currentPersonality, profile]);
   
   // Clear all messages
   const clearMessages = useCallback(() => {
@@ -88,8 +119,8 @@ export const useGlobalChat = () => {
   }, []);
   
   // Check if user can use AI based on their account type
-  // FIX: Only restrict if profile is loaded and account_type is 'free'
-  const canUseAI = !user ? false : isProfileLoading ? true : profile?.account_type !== 'free';
+  // Only restrict if profile is loaded and account_type is 'free'
+  const canUseAI = !isProfileLoading && profile?.account_type !== 'free';
   
   return {
     messages,
