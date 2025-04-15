@@ -32,6 +32,7 @@ export const useSendMessage = (
           return { 
             success: false, 
             error: new Error("Message sending already in progress"),
+            keepInputText: false,
             messageStatus: 'failed'
           };
         }
@@ -127,6 +128,7 @@ export const useSendMessage = (
         return { 
           success: true,
           response: response,
+          keepInputText: false,
           messageStatus: 'sent'
         };
       } catch (err) {
@@ -181,6 +183,7 @@ export const useSendMessage = (
       return { 
         success: false, 
         error: new Error("No message to retry or send already in progress"),
+        keepInputText: false,
         messageStatus: 'failed'
       };
     }
@@ -194,6 +197,7 @@ export const useSendMessage = (
       return { 
         success: false, 
         error: new Error("Maximum retry attempts reached"),
+        keepInputText: true,
         messageStatus: 'failed'
       };
     }

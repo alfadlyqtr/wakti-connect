@@ -9,6 +9,7 @@ import { VoiceInputSection } from './VoiceInputSection';
 import { Send, Loader2, RefreshCw, AlertTriangle, Wifi, WifiOff, CheckCircle2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { SendMessageResult } from '@/hooks/ai/chat/types';
 
 interface AIMessageInputProps {
   activeMode: WAKTIAIMode;
@@ -81,7 +82,6 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
     }
   }, [inputMessage, isLoading]);
 
-  // Reset message status after delay
   useEffect(() => {
     if (messageStatus === 'sent') {
       messageSentTimerRef.current = setTimeout(() => {
