@@ -30,12 +30,10 @@ export const useAIChatEnhanced = (options = {}) => {
     isSending
   } = useSendMessage(
     options,
-    setMessages,
     setIsLoading,
     setDetectedTask,
     setPendingTaskConfirmation,
-    messages,
-    profile
+    'general' // Default active mode
   );
 
   // Task confirmation functions
