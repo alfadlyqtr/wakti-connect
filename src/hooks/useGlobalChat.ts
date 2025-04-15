@@ -13,7 +13,7 @@ export const useGlobalChat = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { currentMode, currentPersonality } = useAIPersonality();
   const { user } = useAuth();
-  const { profile } = useProfile(user?.id);
+  const { profile, isLoading: isProfileLoading } = useProfile(user?.id);
   
   // Subscribe to global chat memory
   useEffect(() => {
@@ -87,10 +87,8 @@ export const useGlobalChat = () => {
   }, []);
   
   // Check if user can use AI based on their account type
-  // Fixed: Business and individual accounts should have access, free accounts are restricted
-  const canUseAI = !!user && profile ? 
-    (profile.account_type === 'business' || profile.account_type === 'individual') 
-    : false;
+  // Wait for profile to load before determining access, only restrict if account_type is 'free'
+  const canUseAI = !!user && !isProfileLoading && profile ? profile.account_type !== 'free' : false;
   
   return {
     messages,

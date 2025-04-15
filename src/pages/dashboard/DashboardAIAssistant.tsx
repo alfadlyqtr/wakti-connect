@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 
 const DashboardAIAssistant = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-background/80">
+    <div className="min-h-screen">
       <motion.div 
         className="mx-auto p-4 space-y-4"
         initial={{ opacity: 0 }}
@@ -58,25 +58,25 @@ const DashboardAIAssistant = () => {
               <CardContent>
                 <ul className="space-y-2 text-sm">
                   <li className="flex items-start gap-2">
-                    <div className="rounded-full bg-wakti-blue h-5 w-5 mt-0.5 flex-shrink-0"></div>
+                    <div className="rounded-full bg-blue-500 h-5 w-5 mt-0.5 flex-shrink-0"></div>
                     <div>
                       <span className="font-medium">General Chat:</span> General help, questions, app walkthroughs
                     </div>
                   </li>
                   <li className="flex items-start gap-2">
-                    <div className="rounded-full bg-purple-600 h-5 w-5 mt-0.5 flex-shrink-0"></div>
-                    <div>
-                      <span className="font-medium">Productivity:</span> Manage tasks, reminders, and performance
-                    </div>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <div className="rounded-full bg-green-600 h-5 w-5 mt-0.5 flex-shrink-0"></div>
+                    <div className="rounded-full bg-green-500 h-5 w-5 mt-0.5 flex-shrink-0"></div>
                     <div>
                       <span className="font-medium">Student:</span> Assist with homework and learning
                     </div>
                   </li>
                   <li className="flex items-start gap-2">
-                    <div className="bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 rounded-full h-5 w-5 mt-0.5 flex-shrink-0"></div>
+                    <div className="rounded-full bg-yellow-500 h-5 w-5 mt-0.5 flex-shrink-0"></div>
+                    <div>
+                      <span className="font-medium">Productivity:</span> Manage tasks, reminders, and performance
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-full h-5 w-5 mt-0.5 flex-shrink-0"></div>
                     <div>
                       <span className="font-medium">Creative:</span> Brainstorming, content creation, and visual ideas
                     </div>

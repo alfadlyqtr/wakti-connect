@@ -22,7 +22,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const [inputValue, setInputValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const { currentPersonality, currentMode, getInputGlowClass } = useAIPersonality();
+  const { currentMode } = useAIPersonality();
   
   // Auto-focus the input when component mounts
   useEffect(() => {
@@ -56,9 +56,9 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       case 'student':
         return 'hover:bg-green-500 hover:text-white';
       case 'productivity':
-        return 'hover:bg-purple-500 hover:text-white';
+        return 'hover:bg-yellow-500 hover:text-white';
       case 'creative':
-        return 'hover:bg-gradient-to-r hover:from-pink-500 hover:via-purple-500 hover:to-indigo-500 hover:text-white';
+        return 'hover:bg-purple-500 hover:text-white';
       default:
         return 'hover:bg-blue-500 hover:text-white';
     }
@@ -82,9 +82,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         placeholder="Type a message..."
         disabled={isLoading || isDisabled}
         className={cn(
-          "flex-1 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border transition-all duration-300",
+          "flex-1 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border transition-all duration-300 input-active",
           inputValue && "pr-10",
-          getInputGlowClass(isFocused && !!inputValue),
           isLoading && "opacity-70"
         )}
       />

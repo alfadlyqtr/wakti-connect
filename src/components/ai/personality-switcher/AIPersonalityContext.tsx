@@ -54,15 +54,15 @@ export const AIPersonalityProvider: React.FC<{ children: React.ReactNode }> = ({
   const getBackgroundStyle = () => {
     switch (currentMode) {
       case 'general':
-        return 'bg-gradient-to-br from-blue-50 to-slate-100 dark:from-slate-900/70 dark:to-blue-950/50';
+        return 'bg-gradient-to-b from-blue-50 via-blue-100 to-blue-200';
       case 'student':
-        return 'bg-gradient-to-br from-green-50 to-emerald-100 dark:from-emerald-950/50 dark:to-green-900/70';
+        return 'bg-gradient-to-b from-green-50 via-green-100 to-green-200';
       case 'productivity':
-        return 'bg-gradient-to-br from-purple-50 to-indigo-100 dark:from-purple-950/50 dark:to-indigo-900/70';
+        return 'bg-gradient-to-b from-yellow-50 via-orange-100 to-yellow-200';
       case 'creative':
-        return 'bg-gradient-to-br from-pink-50 to-orange-100 dark:from-pink-950/50 dark:to-orange-900/70';
+        return 'bg-gradient-to-b from-purple-50 via-pink-100 to-purple-200';
       default:
-        return 'bg-gradient-to-br from-blue-50 to-slate-100 dark:from-slate-900/70 dark:to-blue-950/50';
+        return 'bg-gradient-to-b from-blue-50 via-blue-100 to-blue-200';
     }
   };
   

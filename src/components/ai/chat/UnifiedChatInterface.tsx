@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -19,7 +18,7 @@ export const UnifiedChatInterface: React.FC = () => {
   const { messages, sendMessage, isLoading, clearMessages, canUseAI } = useGlobalChat();
   const [showClearConfirmation, setShowClearConfirmation] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { currentPersonality, currentMode, previousMode, getBackgroundStyle } = useAIPersonality();
+  const { currentMode } = useAIPersonality();
   
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -35,6 +34,22 @@ export const UnifiedChatInterface: React.FC = () => {
   const handleConfirmClear = () => {
     clearMessages();
     setShowClearConfirmation(false);
+  };
+  
+  // Get background style based on current mode
+  const getBackgroundStyle = () => {
+    switch (currentMode) {
+      case 'general':
+        return 'bg-gradient-to-b from-blue-50 via-blue-100 to-blue-200';
+      case 'student':
+        return 'bg-gradient-to-b from-green-50 via-green-100 to-green-200';
+      case 'productivity':
+        return 'bg-gradient-to-b from-yellow-50 via-orange-100 to-yellow-200';
+      case 'creative':
+        return 'bg-gradient-to-b from-purple-50 via-pink-100 to-purple-200';
+      default:
+        return 'bg-gradient-to-b from-blue-50 via-blue-100 to-blue-200';
+    }
   };
   
   // Welcome message if no messages
@@ -90,7 +105,7 @@ export const UnifiedChatInterface: React.FC = () => {
         className="relative max-w-3xl w-full mx-auto mb-8"
         layout
       >
-        <Card className="overflow-hidden rounded-xl shadow-xl border border-white/20 glassmorphism hover:shadow-2xl transition-all duration-300">
+        <Card className="overflow-hidden rounded-2xl shadow-xl backdrop-blur-lg bg-white/60 border border-white/30 p-6 max-w-3xl mx-auto">
           <ChatHeader 
             onClearChat={handleClearChat} 
             hasMessages={messages.length > 0} 
@@ -132,7 +147,7 @@ export const UnifiedChatInterface: React.FC = () => {
                   animate={{ opacity: 1, y: 0 }}
                   className="flex items-start gap-3 opacity-70"
                 >
-                  <div className={`h-8 w-8 rounded-full ${currentPersonality.color} flex items-center justify-center`}>
+                  <div className="h-8 w-8 rounded-full flex items-center justify-center">
                     <Bot className="h-4 w-4 text-white animate-pulse" />
                   </div>
                   <div className="bg-background/70 backdrop-blur-sm border rounded-lg p-3 max-w-[85%]">
