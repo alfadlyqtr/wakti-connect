@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -95,10 +96,10 @@ export const UnifiedChatInterface: React.FC = () => {
         onOpenChange={setShowClearConfirmation}
         title="Clear Conversation"
         description="Are you sure you want to clear this conversation? This action cannot be undone."
-        confirmText="Clear"
-        cancelText="Cancel"
+        confirmLabel="Clear"
+        cancelLabel="Cancel"
         onConfirm={handleConfirmClear}
-        variant="destructive"
+        isDestructive={true}
       />
       
       {!canUseAI && <FreeAccountBanner />}
