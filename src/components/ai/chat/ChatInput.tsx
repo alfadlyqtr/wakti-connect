@@ -94,9 +94,9 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       case 'student':
         return 'hover:bg-green-500 hover:text-white';
       case 'productivity':
-        return 'hover:bg-yellow-500 hover:text-white';
-      case 'creative':
         return 'hover:bg-purple-500 hover:text-white';
+      case 'creative':
+        return 'hover:bg-gradient-to-r hover:from-pink-500 hover:via-purple-500 hover:to-indigo-500 hover:text-white';
       default:
         return 'hover:bg-blue-500 hover:text-white';
     }
@@ -105,10 +105,13 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   return (
     <motion.form 
       onSubmit={handleSubmit} 
-      className="relative flex flex-col gap-3 p-4 border-t border-white/10 bg-white/5 backdrop-blur-lg"
+      className="relative flex flex-col gap-3 p-5 border-t border-white/20 bg-white/10 backdrop-blur-xl"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: 0.2 }}
+      style={{
+        boxShadow: '0 -10px 30px rgba(0, 0, 0, 0.05)',
+      }}
     >
       <div className="relative w-full">
         <Textarea
@@ -121,12 +124,16 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           placeholder="Type a message..."
           disabled={isLoading || isDisabled || isListening}
           className={cn(
-            "flex-1 bg-white/10 dark:bg-slate-800/10 backdrop-blur-md border border-white/20 dark:border-slate-700/20 transition-all duration-300 input-active text-foreground resize-none min-h-[60px] max-h-[120px] px-4 py-3 rounded-xl pr-36",
-            inputValue && "pr-10",
+            "flex-1 bg-white/20 dark:bg-slate-800/20 backdrop-blur-xl border-2 border-white/30 dark:border-slate-700/30 transition-all duration-300 input-active text-foreground resize-none min-h-[60px] max-h-[120px] px-5 py-4 rounded-xl pr-36",
+            inputValue && "pr-12",
             isLoading && "opacity-70",
             isListening && "bg-primary/5 border-primary/20",
-            getInputGlowClass(isFocused)
+            getInputGlowClass(isFocused),
+            "shadow-lg hover:shadow-xl transform hover:translate-y-[-2px] focus:translate-y-[-2px]"
           )}
+          style={{
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(255, 255, 255, 0.3) inset',
+          }}
         />
         
         <InputToolbar 
@@ -142,17 +149,20 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           size="icon" 
           disabled={!inputValue.trim() || isLoading || isDisabled}
           className={cn(
-            "rounded-full transition-colors duration-300 shadow-md h-11 w-11",
-            "bg-white/30 border border-white/20 backdrop-blur-md",
-            "dark:bg-slate-800/30 dark:border-slate-700/20",
-            "hover:shadow-lg hover:bg-white/40 dark:hover:bg-slate-700/40",
+            "rounded-full transition-colors duration-300 shadow-lg h-14 w-14",
+            "bg-white/40 border border-white/30 backdrop-blur-xl",
+            "dark:bg-slate-800/40 dark:border-slate-700/30",
+            "hover:shadow-xl transform hover:translate-y-[-2px] transition-transform duration-300",
             getSendButtonStyle()
           )}
+          style={{
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.2) inset',
+          }}
         >
           {isLoading ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
+            <Loader2 className="h-6 w-6 animate-spin" />
           ) : (
-            <Send className="h-5 w-5" />
+            <Send className="h-6 w-6" />
           )}
         </Button>
       </div>

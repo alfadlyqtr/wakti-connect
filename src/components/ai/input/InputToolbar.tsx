@@ -35,33 +35,47 @@ export const InputToolbar = ({ isLoading, isListening, onVoiceToggle }: InputToo
   };
 
   return (
-    <div className="absolute right-2 bottom-2 flex items-center gap-2">
+    <div className="absolute right-3 bottom-3 flex items-center gap-2">
       {/* Camera button */}
-      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+      <motion.div 
+        whileHover={{ scale: 1.1, y: -5 }} 
+        whileTap={{ scale: 0.95 }}
+        className="filter drop-shadow-xl"
+      >
         <Button
           type="button"
           size="icon"
           variant="ghost"
           onClick={handleCameraCapture}
           disabled={isLoading || isListening}
-          className="h-9 w-9 rounded-full bg-white/30 border border-white/30 backdrop-blur-sm dark:bg-slate-800/30 dark:border-slate-700/30 shadow-md hover:shadow-lg hover:bg-white/40 dark:hover:bg-slate-700/40 transition-all"
+          className="h-10 w-10 rounded-full bg-white/40 border-2 border-white/40 backdrop-blur-xl dark:bg-slate-800/40 dark:border-slate-700/40 shadow-xl hover:shadow-2xl hover:bg-white/60 dark:hover:bg-slate-700/60 transition-all transform hover:translate-y-[-2px]"
+          style={{
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.2) inset',
+          }}
         >
-          <Camera className="h-4 w-4" />
+          <Camera className="h-5 w-5" />
           <span className="sr-only">Take a photo</span>
         </Button>
       </motion.div>
       
       {/* File upload button */}
-      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+      <motion.div 
+        whileHover={{ scale: 1.1, y: -5 }} 
+        whileTap={{ scale: 0.95 }}
+        className="filter drop-shadow-xl"
+      >
         <Button
           type="button"
           size="icon"
           variant="ghost"
           onClick={() => fileInputRef.current?.click()}
           disabled={isLoading || isListening}
-          className="h-9 w-9 rounded-full bg-white/30 border border-white/30 backdrop-blur-sm dark:bg-slate-800/30 dark:border-slate-700/30 shadow-md hover:shadow-lg hover:bg-white/40 dark:hover:bg-slate-700/40 transition-all"
+          className="h-10 w-10 rounded-full bg-white/40 border-2 border-white/40 backdrop-blur-xl dark:bg-slate-800/40 dark:border-slate-700/40 shadow-xl hover:shadow-2xl hover:bg-white/60 dark:hover:bg-slate-700/60 transition-all transform hover:translate-y-[-2px]"
+          style={{
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.2) inset',
+          }}
         >
-          <Paperclip className="h-4 w-4" />
+          <Paperclip className="h-5 w-5" />
           <span className="sr-only">Upload a file</span>
         </Button>
       </motion.div>
@@ -76,8 +90,9 @@ export const InputToolbar = ({ isLoading, isListening, onVoiceToggle }: InputToo
       {/* Voice input button */}
       {supportsVoice && (
         <motion.div
-          whileHover={{ scale: 1.05 }}
+          whileHover={{ scale: 1.1, y: -5 }}
           whileTap={{ scale: 0.95 }}
+          className="filter drop-shadow-xl"
           animate={isListening ? { 
             scale: [1, 1.1, 1],
             transition: { repeat: Infinity, duration: 1.5 }
@@ -89,16 +104,21 @@ export const InputToolbar = ({ isLoading, isListening, onVoiceToggle }: InputToo
             variant={isListening ? "destructive" : "ghost"}
             onClick={onVoiceToggle}
             className={cn(
-              "h-9 w-9 rounded-full shadow-md hover:shadow-lg transition-all",
+              "h-10 w-10 rounded-full shadow-xl hover:shadow-2xl transition-all transform hover:translate-y-[-2px]",
               isListening 
-                ? "bg-red-500/90 text-white border border-red-400/70 animate-pulse"
-                : "bg-white/30 border border-white/30 backdrop-blur-sm dark:bg-slate-800/30 dark:border-slate-700/30 hover:bg-white/40 dark:hover:bg-slate-700/40"
+                ? "bg-red-500/90 text-white border-2 border-red-400/70 animate-pulse"
+                : "bg-white/40 border-2 border-white/40 backdrop-blur-xl dark:bg-slate-800/40 dark:border-slate-700/40 hover:bg-white/60 dark:hover:bg-slate-700/60"
             )}
+            style={{
+              boxShadow: isListening 
+                ? '0 10px 30px rgba(239, 68, 68, 0.3), 0 0 0 1px rgba(239, 68, 68, 0.2) inset'
+                : '0 10px 30px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.2) inset',
+            }}
           >
             {isListening ? (
-              <MicOff className="h-4 w-4" />
+              <MicOff className="h-5 w-5" />
             ) : (
-              <Mic className="h-4 w-4" />
+              <Mic className="h-5 w-5" />
             )}
             <span className="sr-only">
               {isListening ? "Stop recording" : "Start recording"}

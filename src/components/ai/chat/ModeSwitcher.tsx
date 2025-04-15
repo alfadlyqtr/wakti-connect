@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAIPersonality } from '@/components/ai/personality-switcher/AIPersonalityContext';
 import { AIPersonalityMode } from '@/components/ai/personality-switcher/types';
-import { personalityPresets } from '@/components/ai/personality-switcher/personalityPresets'; // Added this import
+import { personalityPresets } from '@/components/ai/personality-switcher/personalityPresets';
 import { Bot, Book, Zap, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
@@ -32,10 +32,16 @@ export const ModeSwitcher: React.FC = () => {
   
   return (
     <motion.div 
-      className="flex items-center justify-center gap-2 p-3 glassmorphism rounded-xl shadow-lg floating-card z-10"
+      className="flex items-center justify-center gap-3 p-4 glassmorphism rounded-xl shadow-xl transform hover:translate-y-[-2px] transition-all duration-300 z-10"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
+      style={{
+        backdropFilter: 'blur(12px)',
+        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.1) inset',
+        borderRadius: '16px',
+      }}
     >
       {(Object.keys(modeIcons) as AIPersonalityMode[]).map((mode) => {
         const Icon = modeIcons[mode];
@@ -51,18 +57,22 @@ export const ModeSwitcher: React.FC = () => {
               >
                 <Button
                   variant={isActive ? "default" : "ghost"}
-                  size="sm"
+                  size="lg"
                   onClick={() => handleModeChange(mode)}
                   className={cn(
-                    "rounded-md px-3 py-2 gap-1.5 transition-all duration-300",
-                    isActive ? activeColor : "hover:bg-muted"
+                    "rounded-xl px-4 py-3 gap-2 transition-all duration-300 shadow-md",
+                    isActive ? activeColor : "hover:bg-muted",
+                    "transform perspective-800 hover:perspective-800 hover:rotate-x-2 hover:rotate-y-1 transition-transform"
                   )}
+                  style={{
+                    boxShadow: isActive ? '0 8px 16px rgba(0, 0, 0, 0.12)' : '0 4px 6px rgba(0, 0, 0, 0.05)',
+                  }}
                 >
                   <Icon className={cn(
-                    "h-4 w-4", 
+                    "h-5 w-5", 
                     isActive && "text-white animate-pulse duration-1000"
                   )} />
-                  <span className="capitalize text-sm">{mode}</span>
+                  <span className="capitalize text-sm font-semibold">{mode}</span>
                 </Button>
               </motion.div>
             </HoverCardTrigger>

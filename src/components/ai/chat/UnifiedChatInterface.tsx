@@ -42,15 +42,15 @@ export const UnifiedChatInterface: React.FC = () => {
   const getModeBackgroundClass = () => {
     switch (currentMode) {
       case 'general':
-        return 'bg-gradient-to-br from-blue-50/30 to-indigo-50/30';
+        return 'bg-gradient-to-br from-blue-50/60 to-indigo-50/60';
       case 'student':
-        return 'bg-gradient-to-br from-green-50/30 to-emerald-50/30';
+        return 'bg-gradient-to-br from-green-50/60 to-emerald-50/60';
       case 'productivity':
-        return 'bg-gradient-to-br from-amber-50/30 to-yellow-50/30';
+        return 'bg-gradient-to-br from-amber-50/60 to-yellow-50/60';
       case 'creative':
-        return 'bg-gradient-to-br from-fuchsia-50/30 to-pink-50/30';
+        return 'bg-gradient-to-br from-fuchsia-50/60 to-pink-50/60';
       default:
-        return 'bg-gradient-to-br from-blue-50/30 to-indigo-50/30';
+        return 'bg-gradient-to-br from-blue-50/60 to-indigo-50/60';
     }
   };
   
@@ -61,20 +61,20 @@ export const UnifiedChatInterface: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="flex flex-col items-center justify-center text-center px-2 sm:px-4 py-6 sm:py-10 space-y-4"
+        className="flex flex-col items-center justify-center text-center px-2 sm:px-6 py-10 sm:py-14 space-y-4"
       >
-        <div className={`h-14 w-14 rounded-full ${currentPersonality.color} flex items-center justify-center shadow-lg`}>
-          <Bot className="h-7 w-7 text-white" />
+        <div className={`h-16 w-16 rounded-full ${currentPersonality.color} flex items-center justify-center shadow-xl`}>
+          <Bot className="h-8 w-8 text-white" />
         </div>
         
-        <h2 className="text-lg sm:text-xl font-bold">{currentPersonality.welcomeMessage}</h2>
+        <h2 className="text-xl sm:text-2xl font-bold">{currentPersonality.welcomeMessage}</h2>
         
-        <div className="grid grid-cols-1 gap-2 max-w-md w-full pt-4 px-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg w-full pt-6 px-4">
           {currentPersonality.suggestedPrompts.map((prompt, index) => (
             <Button
               key={index}
               variant="outline"
-              className="text-sm h-auto py-2 justify-start text-left hover:bg-background/80 glassmorphism"
+              className="text-sm h-auto py-3 justify-start text-left hover:bg-background/80 glass-panel transform hover:scale-105 transition-transform duration-200"
               onClick={() => sendMessage(prompt)}
             >
               {prompt}
@@ -87,7 +87,7 @@ export const UnifiedChatInterface: React.FC = () => {
   
   return (
     <div className="flex flex-col h-full">
-      <div className="p-3 sm:p-4 border-b border-white/10 backdrop-blur-md bg-white/5">
+      <div className="p-4 border-b border-white/20 backdrop-blur-lg bg-white/5">
         <ModeSwitcher />
       </div>
       
@@ -105,7 +105,7 @@ export const UnifiedChatInterface: React.FC = () => {
       {!canUseAI && <FreeAccountBanner />}
       
       <div className="flex-1 overflow-hidden">
-        <ScrollArea className={cn("h-[60vh] min-h-[500px] px-2 sm:px-4 py-4", getModeBackgroundClass())}>
+        <ScrollArea className={cn("h-[65vh] min-h-[550px] px-3 sm:px-6 py-4", getModeBackgroundClass())}>
           {messages.length === 0 ? renderWelcomeView() : (
             <div className="space-y-4">
               <AnimatePresence>
