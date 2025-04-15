@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,8 @@ import { AIAssistantSettings } from './settings/AIAssistantSettings';
 import { AIAssistantKnowledge } from './knowledge/AIAssistantKnowledge';
 import { CleanChatInterface } from './assistant/CleanChatInterface';
 import { cn } from '@/lib/utils';
+import { useProfile } from '@/hooks/useProfile';
+import { useAuth } from '@/hooks/useAuth';
 
 interface WAKTIAIAssistantProps {
   isFullscreen?: boolean;
@@ -22,6 +25,9 @@ const WAKTIAIAssistant: React.FC<WAKTIAIAssistantProps> = ({ isFullscreen = fals
   const [selectedRole, setSelectedRole] = useState<AIAssistantRole>('general');
   const [activeView, setActiveView] = useState<'chat' | 'settings' | 'knowledge'>('chat');
   const [showSuggestions, setShowSuggestions] = useState(true);
+  
+  const { user } = useAuth();
+  const { profile } = useProfile(user?.id);
   
   const {
     messages,
@@ -52,8 +58,6 @@ const WAKTIAIAssistant: React.FC<WAKTIAIAssistantProps> = ({ isFullscreen = fals
     showClearConfirmation,
     setShowClearConfirmation
   } = useAIAssistant();
-  
-  const { profile } = useAIAssistant();
   
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,7 +93,6 @@ const WAKTIAIAssistant: React.FC<WAKTIAIAssistantProps> = ({ isFullscreen = fals
       />
       
       {activeView === 'chat' && (
-        // Replace with CleanChatInterface with new props
         <CleanChatInterface
           messages={messages}
           isLoading={isLoading}

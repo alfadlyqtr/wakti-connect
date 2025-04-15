@@ -1,51 +1,50 @@
 
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 
-export type Profile = {
+interface Profile {
   id: string;
-  full_name?: string;
+  full_name: string;
   avatar_url?: string;
-  account_type?: 'individual' | 'business' | 'staff';
   email?: string;
-  phone?: string;
-  country?: string;
-  timezone?: string;
+  username?: string;
+  business_id?: string;
+  role?: string;
   created_at?: string;
-  updated_at?: string;
-};
-
-export function useProfile(userId: string | undefined) {
-  const {
-    data: profile,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ['profile', userId],
-    queryFn: async () => {
-      if (!userId) return null;
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-        
-      if (error) {
-        console.error('Error fetching profile:', error);
-        throw error;
-      }
-      
-      return data as Profile;
-    },
-    enabled: !!userId,
-  });
-
-  return {
-    profile,
-    isLoading,
-    error,
-    refetch,
-  };
 }
+
+export const useProfile = (userId?: string) => {
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!userId) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single();
+
+        if (error) throw error;
+        setProfile(data);
+      } catch (err) {
+        console.error('Error fetching profile:', err);
+        setError(err instanceof Error ? err : new Error('Unknown error'));
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [userId]);
+
+  return { profile, isLoading, error };
+};
