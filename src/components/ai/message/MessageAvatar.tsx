@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface MessageAvatarProps {
   isUser: boolean;
-  className?: string; // Add optional className prop
+  className?: string;
 }
 
 export function MessageAvatar({ isUser, className }: MessageAvatarProps) {
@@ -23,7 +23,7 @@ export function MessageAvatar({ isUser, className }: MessageAvatarProps) {
       isUser 
         ? "bg-gray-200" 
         : "bg-wakti-blue"
-    } ${className || ''}`}> {/* Apply the className if provided */}
+    } ${className || ''}`}>
       {isUser ? (
         <>
           <AvatarImage src={userAvatarUrl || ''} alt="User" />
@@ -32,7 +32,7 @@ export function MessageAvatar({ isUser, className }: MessageAvatarProps) {
           </AvatarFallback>
         </>
       ) : (
-        <AvatarFallback>
+        <AvatarFallback className="bg-wakti-blue">
           <Bot className="h-4 w-4 text-white" />
         </AvatarFallback>
       )}

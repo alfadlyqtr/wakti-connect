@@ -1,10 +1,10 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Avatar } from "@/components/ui/avatar";
 import { AIMessage, AIAssistantRole, RoleContexts } from "@/types/ai-assistant.types";
 import { AnimatePresence, motion } from "framer-motion";
-import { Loader2, Trash2, Bot } from "lucide-react";
+import { Loader2, Send, PaperclipIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -107,25 +107,15 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
     }
   }, [pendingTaskConfirmation]);
 
-  const getRoleColor = () => {
-    switch (selectedRole) {
-      case "student": return "bg-blue-500";
-      case "employee": 
-      case "writer": return "bg-purple-500";
-      case "business_owner": return "bg-amber-500";
-      default: return "bg-wakti-blue";
-    }
-  };
-
   return (
-    <Card className="w-full overflow-hidden flex flex-col h-[650px] md:h-[700px] bg-gradient-to-b from-background to-background/95">
+    <Card className="w-full overflow-hidden flex flex-col h-[650px] md:h-[700px] bg-gradient-to-b from-background to-background/95 shadow-none border-x-0">
       <div className="flex-1 overflow-auto p-2 md:p-4 space-y-2 md:space-y-4">
         {messages.length > 0 && clearMessages && (
           <Button
             variant="ghost"
             size="icon"
             className="absolute top-2 right-2 h-7 w-7 opacity-70 hover:opacity-100 hover:bg-red-50 hover:text-red-500 transition-colors z-10"
-            onClick={clearMessages}
+            onClick={() => setShowClearConfirmation?.(true)}
             title="Clear chat history"
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -138,7 +128,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
             animate={{ opacity: 1, y: 0 }}
             className="text-center py-4 md:py-8 px-2"
           >
-            <div className={`h-14 w-14 rounded-full ${getRoleColor()} mx-auto mb-3 flex items-center justify-center`}>
+            <div className="h-14 w-14 rounded-full bg-wakti-blue mx-auto mb-3 flex items-center justify-center">
               <Bot className="h-7 w-7 text-white" />
             </div>
             <h2 className="text-lg md:text-xl font-bold mb-2">
@@ -179,22 +169,15 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
               )}
             >
               {msg.role === "assistant" ? (
-                <Avatar className={`h-7 w-7 md:h-8 md:w-8 ${getRoleColor()} overflow-hidden shrink-0`}>
-                  <Bot className="h-4 w-4 text-white" />
-                </Avatar>
-              ) : msg.role === "user" ? (
-                <MessageAvatar isUser={true} className="h-7 w-7 md:h-8 md:w-8 shrink-0" />
+                <MessageAvatar isUser={false} className="h-7 w-7 md:h-8 md:w-8 shrink-0" />
               ) : (
-                <Avatar className="h-7 w-7 md:h-8 md:w-8 bg-yellow-100 shrink-0">
-                  <span className="text-xs font-medium">System</span>
-                </Avatar>
+                <MessageAvatar isUser={true} className="h-7 w-7 md:h-8 md:w-8 shrink-0" />
               )}
 
               <div className={cn(
                 "rounded-lg py-2 px-3 max-w-[90%] md:max-w-[80%]",
                 msg.role === "assistant" ? "bg-background border" : 
-                msg.role === "user" ? "bg-primary text-primary-foreground" : 
-                "bg-orange-50 text-orange-800 border border-orange-100"
+                "bg-primary text-primary-foreground"
               )}>
                 <div className="prose dark:prose-invert max-w-none text-sm prose-p:my-1 prose-headings:mb-2 prose-headings:mt-4">
                   <ReactMarkdown 
@@ -213,9 +196,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
               animate={{ opacity: 1, y: 0 }}
               className="flex items-start gap-2 mb-3 mx-0.5"
             >
-              <Avatar className={`h-7 w-7 md:h-8 md:w-8 ${getRoleColor()} overflow-hidden shrink-0`}>
-                <Bot className="h-4 w-4 text-white" />
-              </Avatar>
+              <MessageAvatar isUser={false} className="h-7 w-7 md:h-8 md:w-8 shrink-0" />
               <div className="bg-background rounded-lg py-2.5 px-3.5 border">
                 <Loader2 className="h-5 w-5 animate-spin" />
               </div>
