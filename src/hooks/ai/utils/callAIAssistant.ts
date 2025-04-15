@@ -29,6 +29,10 @@ export const callAIAssistant = async (
     
     // Call the AI assistant edge function with comprehensive error handling
     try {
+      // Use AbortController for timeout handling instead of options
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 seconds timeout
+      
       const { data, error } = await supabase.functions.invoke('ai-assistant', {
         body: {
           system_prompt: systemPrompt,
@@ -38,11 +42,11 @@ export const callAIAssistant = async (
           userContext: userContext,
           includeTimestamp: true
         },
-        // Add request timeout
-        options: {
-          timeout: 30000 // 30 seconds timeout
-        }
+        signal: controller.signal // Use AbortController signal for timeout
       });
+      
+      // Clear the timeout
+      clearTimeout(timeoutId);
       
       // Log for debugging
       console.log('[callAIAssistant] Response received:', {
