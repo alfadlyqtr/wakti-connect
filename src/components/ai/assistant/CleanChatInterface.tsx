@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import { TaskConfirmationCard } from "@/components/ai/task/TaskConfirmationCard"
 import { TaskFormData } from "@/types/task.types";
 import { parseTaskFromMessage } from "@/hooks/ai/utils/taskParser";
 import { ChatMessageInput } from "./ChatMessageInput";
+import { ConfirmationModal } from "@/components/ui/confirmation-modal";
 
 interface CleanChatInterfaceProps {
   messages: AIMessage[];
@@ -39,6 +41,9 @@ interface CleanChatInterfaceProps {
   onStopVoiceInput?: () => void;
   onConfirmTranscript?: () => void;
   clearMessages?: () => void;
+  handleConfirmClear?: () => void;
+  showClearConfirmation?: boolean;
+  setShowClearConfirmation?: (show: boolean) => void;
 }
 
 export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
@@ -65,7 +70,10 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
   onStartVoiceInput,
   onStopVoiceInput,
   onConfirmTranscript,
-  clearMessages
+  clearMessages,
+  handleConfirmClear,
+  showClearConfirmation = false,
+  setShowClearConfirmation
 }) => {
   const [showWelcome, setShowWelcome] = useState(messages.length === 0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -110,16 +118,6 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
     }
   };
 
-  const handleClearMessages = () => {
-    if (clearMessages) {
-      const confirmed = window.confirm("Are you sure you want to clear all messages?");
-      if (confirmed) {
-        clearMessages();
-        setShowWelcome(true);
-      }
-    }
-  };
-
   return (
     <Card className="w-full overflow-hidden flex flex-col h-[650px] md:h-[700px] bg-gradient-to-b from-background to-background/95">
       <div className="flex-1 overflow-auto p-2 md:p-4 space-y-2 md:space-y-4">
@@ -128,7 +126,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
             variant="ghost"
             size="icon"
             className="absolute top-2 right-2 h-7 w-7 opacity-70 hover:opacity-100 hover:bg-red-50 hover:text-red-500 transition-colors z-10"
-            onClick={handleClearMessages}
+            onClick={clearMessages}
             title="Clear chat history"
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -286,6 +284,20 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
           confirmationHint="Confirm task creation"
         />
       </div>
+
+      {/* Clear Messages Confirmation Dialog */}
+      {setShowClearConfirmation && handleConfirmClear && (
+        <ConfirmationModal
+          open={showClearConfirmation}
+          onOpenChange={setShowClearConfirmation}
+          title="Clear Messages"
+          description="Are you sure you want to clear all messages in this conversation? This action cannot be undone."
+          onConfirm={handleConfirmClear}
+          confirmLabel="Clear"
+          cancelLabel="Cancel"
+          isDestructive={true}
+        />
+      )}
     </Card>
   );
 };

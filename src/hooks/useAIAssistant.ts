@@ -17,6 +17,7 @@ export const useAIAssistant = () => {
   const [detectedTask, setDetectedTask] = useState<any | null>(null);
   const [pendingTaskConfirmation, setPendingTaskConfirmation] = useState(false);
   const [isCreatingTask, setIsCreatingTask] = useState(false);
+  const [showClearConfirmation, setShowClearConfirmation] = useState(false);
   
   // Access the global memory for the current mode
   const { 
@@ -133,11 +134,21 @@ export const useAIAssistant = () => {
     setPendingTaskConfirmation(false);
   }, []);
   
-  // Clear messages with confirmation
-  const clearMessages = useCallback(() => {
+  // Clear messages with confirmation dialog
+  const promptClearMessages = useCallback(() => {
+    setShowClearConfirmation(true);
+  }, []);
+  
+  const handleConfirmClear = useCallback(() => {
     clearGlobalMessages();
     setDetectedTask(null);
     setPendingTaskConfirmation(false);
+    setShowClearConfirmation(false);
+    
+    toast({
+      title: "Chat Cleared",
+      description: "All messages have been cleared.",
+    });
   }, [clearGlobalMessages]);
   
   // Get recent context (for AI context)
@@ -151,7 +162,10 @@ export const useAIAssistant = () => {
     messages,
     sendMessage,
     isLoading,
-    clearMessages,
+    clearMessages: promptClearMessages,
+    handleConfirmClear,
+    showClearConfirmation,
+    setShowClearConfirmation,
     getRecentContext,
     activeMode,
     setActiveMode,
