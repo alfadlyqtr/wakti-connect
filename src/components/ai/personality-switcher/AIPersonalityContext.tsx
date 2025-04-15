@@ -7,6 +7,7 @@ interface AIPersonalityContextType {
   currentMode: AIPersonalityMode;
   setCurrentMode: (mode: AIPersonalityMode) => void;
   currentPersonality: AIPersonality;
+  previousMode: AIPersonalityMode | null;
 }
 
 const AIPersonalityContext = createContext<AIPersonalityContextType | undefined>(undefined);
@@ -17,9 +18,18 @@ export const AIPersonalityProvider: React.FC<{ children: React.ReactNode }> = ({
     const savedMode = localStorage.getItem('wakti-ai-mode');
     return (savedMode as AIPersonalityMode) || 'general';
   });
+  
+  // Track previous mode for transition effects
+  const [previousMode, setPreviousMode] = useState<AIPersonalityMode | null>(null);
 
   // Get the current personality based on the mode
   const currentPersonality = personalityPresets[currentMode];
+
+  // Update previous mode when current mode changes
+  const handleModeChange = (newMode: AIPersonalityMode) => {
+    setPreviousMode(currentMode);
+    setCurrentMode(newMode);
+  };
 
   // Save the current mode to localStorage whenever it changes
   useEffect(() => {
@@ -30,8 +40,9 @@ export const AIPersonalityProvider: React.FC<{ children: React.ReactNode }> = ({
     <AIPersonalityContext.Provider
       value={{ 
         currentMode, 
-        setCurrentMode, 
-        currentPersonality 
+        setCurrentMode: handleModeChange, 
+        currentPersonality,
+        previousMode
       }}
     >
       {children}

@@ -87,7 +87,7 @@ export const useGlobalChat = () => {
   }, []);
   
   // Check if user can use AI based on their account type
-  // Fix: Only free accounts should be restricted, business and individual accounts should have access
+  // Fixed: Business and individual accounts should have access, free accounts are restricted
   const canUseAI = !!user && (
     profile?.account_type === 'business' || 
     profile?.account_type === 'individual'

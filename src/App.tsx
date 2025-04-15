@@ -1,4 +1,3 @@
-
 // This file is now just a wrapper with no routing logic
 // All routing has been moved to router.tsx
 
@@ -11,6 +10,9 @@ import { TaskProvider } from "@/contexts/TaskContext";
 import ErrorBoundary from "@/components/ui/ErrorBoundary";
 import { RouterProvider } from "react-router-dom";
 import { router } from "./router";
+
+// Import the new AI Assistant styles
+import './styles/ai-assistant.css';
 
 function App() {
   return (

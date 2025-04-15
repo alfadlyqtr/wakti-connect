@@ -8,18 +8,18 @@ import { ChatMessage } from './ChatMessage';
 import { ChatInput } from './ChatInput';
 import { ChatHeader } from './ChatHeader';
 import { ModeSwitcher } from './ModeSwitcher';
-import { AIPersonalityProvider } from '@/components/ai/personality-switcher/AIPersonalityContext';
+import { AIPersonalityProvider, useAIPersonality } from '@/components/ai/personality-switcher/AIPersonalityContext';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle, Bot } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ConfirmationModal } from '@/components/ui/confirmation-modal';
-import { useAIPersonality } from '@/components/ai/personality-switcher/AIPersonalityContext';
+import { cn } from '@/lib/utils';
 
 export const UnifiedChatInterface: React.FC = () => {
   const { messages, sendMessage, isLoading, clearMessages, canUseAI } = useGlobalChat();
   const [showClearConfirmation, setShowClearConfirmation] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { currentPersonality, currentMode } = useAIPersonality();
+  const { currentPersonality, currentMode, previousMode } = useAIPersonality();
   
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -73,7 +73,7 @@ export const UnifiedChatInterface: React.FC = () => {
             <Button
               key={index}
               variant="outline"
-              className="text-sm h-auto py-2 justify-start text-left"
+              className="text-sm h-auto py-2 justify-start text-left hover:bg-background/80"
               onClick={() => sendMessage(prompt)}
             >
               {prompt}
@@ -85,62 +85,88 @@ export const UnifiedChatInterface: React.FC = () => {
   };
   
   return (
-    <div className={`max-w-3xl mx-auto px-4 pb-6 pt-2 min-h-[90vh] flex flex-col ${getBackgroundStyle()}`}>
+    <motion.div 
+      className={`max-w-3xl mx-auto px-4 pb-6 pt-2 min-h-[90vh] flex flex-col ${getBackgroundStyle()} transition-colors duration-500`}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       <div className="mb-4 flex justify-center">
         <ModeSwitcher />
       </div>
       
-      <Card className="overflow-hidden shadow-lg border border-muted rounded-xl backdrop-blur-md bg-white/80 dark:bg-slate-900/80">
-        <ChatHeader 
-          onClearChat={handleClearChat} 
-          hasMessages={messages.length > 0} 
-        />
-        
-        {!canUseAI && (
-          <Alert variant="destructive" className="m-4">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Access Restricted</AlertTitle>
-            <AlertDescription>
-              AI Assistant is only available for Business and Individual accounts.
-            </AlertDescription>
-          </Alert>
-        )}
-        
-        <ScrollArea className="h-[500px]">
-          <CardContent className="p-4 space-y-4">
-            {messages.length === 0 ? (
-              renderWelcomeView()
-            ) : (
-              messages.map(message => (
-                <ChatMessage key={message.id} message={message} />
-              ))
-            )}
-            
-            {isLoading && (
-              <div className="flex items-start gap-3 opacity-70">
-                <div className={`h-8 w-8 rounded-full ${currentPersonality.color} flex items-center justify-center`}>
-                  <Bot className="h-4 w-4 text-white animate-pulse" />
-                </div>
-                <div className="bg-card border rounded-lg p-3 max-w-[85%]">
-                  <div className="flex space-x-1">
-                    <div className="h-2 w-2 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                    <div className="h-2 w-2 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                    <div className="h-2 w-2 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+        className="relative mb-8"
+      >
+        <Card className="overflow-hidden shadow-xl border border-white/20 rounded-xl bg-white/70 dark:bg-slate-900/70 backdrop-blur-md hover:shadow-2xl transition-shadow duration-300">
+          <ChatHeader 
+            onClearChat={handleClearChat} 
+            hasMessages={messages.length > 0} 
+          />
+          
+          {!canUseAI && (
+            <Alert variant="destructive" className="m-4">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Access Restricted</AlertTitle>
+              <AlertDescription>
+                AI Assistant is only available for Business and Individual accounts.
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          <ScrollArea className="h-[500px] glassmorphism-content">
+            <CardContent className="p-4 space-y-4">
+              {messages.length === 0 ? (
+                renderWelcomeView()
+              ) : (
+                <AnimatePresence initial={false}>
+                  {messages.map(message => (
+                    <motion.div
+                      key={message.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <ChatMessage message={message} />
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              )}
+              
+              {isLoading && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-start gap-3 opacity-70"
+                >
+                  <div className={`h-8 w-8 rounded-full ${currentPersonality.color} flex items-center justify-center`}>
+                    <Bot className="h-4 w-4 text-white animate-pulse" />
                   </div>
-                </div>
-              </div>
-            )}
-            
-            <div ref={messagesEndRef} />
-          </CardContent>
-        </ScrollArea>
-        
-        <ChatInput 
-          onSendMessage={sendMessage} 
-          isLoading={isLoading} 
-          isDisabled={!canUseAI} 
-        />
-      </Card>
+                  <div className="bg-background/70 backdrop-blur-sm border rounded-lg p-3 max-w-[85%]">
+                    <div className="flex space-x-1">
+                      <div className="h-2 w-2 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                      <div className="h-2 w-2 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                      <div className="h-2 w-2 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+              
+              <div ref={messagesEndRef} />
+            </CardContent>
+          </ScrollArea>
+          
+          <ChatInput 
+            onSendMessage={sendMessage} 
+            isLoading={isLoading} 
+            isDisabled={!canUseAI} 
+          />
+        </Card>
+      </motion.div>
       
       <ConfirmationModal
         open={showClearConfirmation}
@@ -152,7 +178,7 @@ export const UnifiedChatInterface: React.FC = () => {
         cancelLabel="Cancel"
         isDestructive={true}
       />
-    </div>
+    </motion.div>
   );
 };
 
