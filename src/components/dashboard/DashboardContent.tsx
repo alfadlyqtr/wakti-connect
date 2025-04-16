@@ -53,7 +53,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
       : "lg:pl-52 pt-4 pb-12 px-4 transition-all duration-300";
 
   return (
-    <main className={`flex-1 overflow-y-auto ${mainContentClass}`}>
+    <main className={`flex-1 overflow-y-auto bg-gradient-to-br from-gray-900 to-gray-950 ${mainContentClass}`}>
       <div className="container mx-auto animate-in">
         {isLoading ? (
           <DashboardLoading />

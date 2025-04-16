@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
 const DashboardAIAssistant = () => {
   return (
     <div className="min-h-screen" style={{ 
-      background: 'transparent',
+      background: 'linear-gradient(to bottom right, rgba(0, 0, 0, 0.8), rgba(15, 23, 42, 0.9))',
       minHeight: '100vh'
     }}>
       <motion.div 
@@ -32,8 +32,8 @@ const DashboardAIAssistant = () => {
             className="w-full rounded-2xl overflow-hidden transform hover:translate-y-[-12px] transition-all duration-500"
             style={{
               backdropFilter: 'blur(20px)',
-              backgroundColor: 'rgba(0, 0, 0, 0.05)',
-              boxShadow: '0 30px 70px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.1) inset, 0 0 30px rgba(59, 130, 246, 0.3)',
+              backgroundColor: 'rgba(0, 0, 0, 0.2)',
+              boxShadow: '0 30px 70px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.1) inset, 0 0 30px rgba(59, 130, 246, 0.3)',
               transform: 'perspective(1500px) rotateX(2deg)',
               WebkitBackfaceVisibility: 'hidden',
               backfaceVisibility: 'hidden'

@@ -11,8 +11,8 @@ const DashboardAnalyticsHub = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Analytics Hub</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-3xl font-bold tracking-tight text-white">Analytics Hub</h1>
+        <p className="text-blue-300/80 text-sm sm:text-base">
           Track your business performance and team productivity
         </p>
       </div>
@@ -20,26 +20,34 @@ const DashboardAnalyticsHub = () => {
       <MetricCards />
 
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="tasks">Tasks</TabsTrigger>
-          <TabsTrigger value="team">Team</TabsTrigger>
+        <TabsList className="bg-black/20 border border-white/10">
+          <TabsTrigger value="overview" className="data-[state=active]:bg-blue-900/30">Overview</TabsTrigger>
+          <TabsTrigger value="tasks" className="data-[state=active]:bg-blue-900/30">Tasks</TabsTrigger>
+          <TabsTrigger value="team" className="data-[state=active]:bg-blue-900/30">Team</TabsTrigger>
         </TabsList>
         
         <TabsContent value="overview" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <Card className="col-span-2">
+            <Card className="col-span-2 bg-black/20 backdrop-blur-xl border-white/5 overflow-hidden transform hover:translate-y-[-5px] transition-all duration-300" 
+              style={{
+                boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset',
+                transform: 'perspective(1000px) rotateX(2deg)'
+              }}>
               <CardHeader>
-                <CardTitle>Performance Overview</CardTitle>
+                <CardTitle className="text-white">Performance Overview</CardTitle>
               </CardHeader>
               <CardContent className="h-[300px]">
                 <TasksOverviewChart />
               </CardContent>
             </Card>
             
-            <Card>
+            <Card className="bg-black/20 backdrop-blur-xl border-white/5 overflow-hidden transform hover:translate-y-[-5px] transition-all duration-300" 
+              style={{
+                boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset',
+                transform: 'perspective(1000px) rotateX(2deg)'
+              }}>
               <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
+                <CardTitle className="text-white">Recent Activity</CardTitle>
               </CardHeader>
               <CardContent>
                 <UserActivityTable />
@@ -49,9 +57,13 @@ const DashboardAnalyticsHub = () => {
         </TabsContent>
         
         <TabsContent value="tasks" className="space-y-4">
-          <Card>
+          <Card className="bg-black/20 backdrop-blur-xl border-white/5 overflow-hidden transform hover:translate-y-[-5px] transition-all duration-300" 
+            style={{
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset',
+              transform: 'perspective(1000px) rotateX(2deg)'
+            }}>
             <CardHeader>
-              <CardTitle>Tasks Completion Rate</CardTitle>
+              <CardTitle className="text-white">Tasks Completion Rate</CardTitle>
             </CardHeader>
             <CardContent className="h-[400px]">
               <TasksOverviewChart />
@@ -60,9 +72,13 @@ const DashboardAnalyticsHub = () => {
         </TabsContent>
         
         <TabsContent value="team" className="space-y-4">
-          <Card>
+          <Card className="bg-black/20 backdrop-blur-xl border-white/5 overflow-hidden transform hover:translate-y-[-5px] transition-all duration-300" 
+            style={{
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset',
+              transform: 'perspective(1000px) rotateX(2deg)'
+            }}>
             <CardHeader>
-              <CardTitle>Team Activity</CardTitle>
+              <CardTitle className="text-white">Team Activity</CardTitle>
             </CardHeader>
             <CardContent className="h-[400px]">
               <TeamActivityChart />

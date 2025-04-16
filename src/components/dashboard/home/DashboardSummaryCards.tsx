@@ -55,14 +55,18 @@ export const DashboardSummaryCards = ({
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      <Card>
+      <Card className="bg-black/20 backdrop-blur-xl border-white/10 overflow-hidden transform hover:translate-y-[-5px] transition-all duration-300" 
+        style={{
+          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05) inset',
+          transform: 'perspective(1000px) rotateX(2deg)'
+        }}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Today's Tasks</CardTitle>
+          <CardTitle className="text-sm font-medium text-white">Today's Tasks</CardTitle>
           <CheckCircle className="h-4 w-4 text-amber-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{tasks.length || 0}</div>
-          <p className="text-xs text-muted-foreground">
+          <div className="text-2xl font-bold text-white">{tasks.length || 0}</div>
+          <p className="text-xs text-blue-200/60">
             {tasks.length > 0
               ? `${completedTasksCount} completed`
               : "No tasks scheduled for today"}
@@ -70,27 +74,35 @@ export const DashboardSummaryCards = ({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="bg-black/20 backdrop-blur-xl border-white/10 overflow-hidden transform hover:translate-y-[-5px] transition-all duration-300" 
+        style={{
+          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05) inset',
+          transform: 'perspective(1000px) rotateX(2deg)'
+        }}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Notifications</CardTitle>
+          <CardTitle className="text-sm font-medium text-white">Notifications</CardTitle>
           <BellRing className="h-4 w-4 text-indigo-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{notifications.length || 0}</div>
-          <p className="text-xs text-muted-foreground">
+          <div className="text-2xl font-bold text-white">{notifications.length || 0}</div>
+          <p className="text-xs text-blue-200/60">
             {notifications.length > 0 ? "Unread notifications" : "No new notifications"}
           </p>
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="bg-black/20 backdrop-blur-xl border-white/10 overflow-hidden transform hover:translate-y-[-5px] transition-all duration-300" 
+        style={{
+          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05) inset',
+          transform: 'perspective(1000px) rotateX(2deg)'
+        }}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Account Activity</CardTitle>
+          <CardTitle className="text-sm font-medium text-white">Account Activity</CardTitle>
           <Clock className="h-4 w-4 text-green-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold capitalize">{profileData?.account_type || "—"}</div>
-          <p className="text-xs text-muted-foreground">
+          <div className="text-2xl font-bold text-white capitalize">{profileData?.account_type || "—"}</div>
+          <p className="text-xs text-blue-200/60">
             {profileData?.account_type === "business"
               ? "Business Account"
               : profileData?.account_type === "individual"

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import TasksOverview from "@/components/dashboard/home/TasksOverview";
@@ -33,7 +32,6 @@ const DashboardHome = () => {
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const isMobile = useMediaQuery("(max-width: 768px)");
   
-  // Business users get access to analytics data
   const { data: analyticsData, isLoading: analyticsLoading } = useBusinessAnalytics(
     profileData?.account_type === 'business' ? 'month' : undefined
   );
@@ -51,7 +49,6 @@ const DashboardHome = () => {
     fetchUpcomingTasks();
   }, []);
 
-  // Transform tasks into calendar events
   useEffect(() => {
     if (tasks && tasks.length > 0) {
       const taskEvents = tasks.map((task) => ({
@@ -76,7 +73,6 @@ const DashboardHome = () => {
     return <LoadingSpinner />;
   }
 
-  // Determine if the user has a business account
   const isBusiness = profileData?.account_type === 'business';
   const isIndividual = profileData?.account_type === 'individual';
   const isFree = profileData?.account_type === 'free';
@@ -87,7 +83,6 @@ const DashboardHome = () => {
         <ProfileData profileData={profileData} />
       )}
       
-      {/* Summary Cards Section */}
       {profileData && todayTasks && unreadNotifications && (
         <DashboardSummaryCards 
           profileData={profileData}
@@ -97,9 +92,13 @@ const DashboardHome = () => {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="col-span-1">
+        <Card className="col-span-1 bg-black/20 backdrop-blur-xl border-white/5 overflow-hidden transform hover:translate-y-[-5px] transition-all duration-300" 
+          style={{
+            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset',
+            transform: 'perspective(1000px) rotateX(2deg)'
+          }}>
           <CardHeader>
-            <CardTitle>Tasks Overview</CardTitle>
+            <CardTitle className="text-white">Tasks Overview</CardTitle>
           </CardHeader>
           <CardContent>
             {tasks && tasks.length > 0 ? (
@@ -113,9 +112,13 @@ const DashboardHome = () => {
           </CardContent>
         </Card>
 
-        <Card className="col-span-1">
+        <Card className="col-span-1 bg-black/20 backdrop-blur-xl border-white/5 overflow-hidden transform hover:translate-y-[-5px] transition-all duration-300" 
+          style={{
+            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset',
+            transform: 'perspective(1000px) rotateX(2deg)'
+          }}>
           <CardHeader>
-            <CardTitle>Calendar</CardTitle>
+            <CardTitle className="text-white">Calendar</CardTitle>
           </CardHeader>
           <CardContent>
             <DashboardCalendar 
@@ -126,51 +129,62 @@ const DashboardHome = () => {
         </Card>
       </div>
       
-      {/* Business Analytics (only for business accounts with data) */}
       {isBusiness && analyticsData && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-          <Card>
+          <Card className="bg-black/20 backdrop-blur-xl border-white/5 overflow-hidden transform hover:translate-y-[-5px] transition-all duration-300" 
+            style={{
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset',
+              transform: 'perspective(1000px) rotateX(2deg)'
+            }}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">
+              <CardTitle className="text-sm font-medium text-white">
                 Subscribers
               </CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <Users className="h-4 w-4 text-blue-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{analyticsData.subscriberCount || "-"}</div>
-              <p className="text-xs text-muted-foreground">
+              <div className="text-2xl font-bold text-white">{analyticsData.subscriberCount || "-"}</div>
+              <p className="text-xs text-blue-200/60">
                 Total Subscribers
               </p>
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="bg-black/20 backdrop-blur-xl border-white/5 overflow-hidden transform hover:translate-y-[-5px] transition-all duration-300" 
+            style={{
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset',
+              transform: 'perspective(1000px) rotateX(2deg)'
+            }}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">
+              <CardTitle className="text-sm font-medium text-white">
                 Staff
               </CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <Users className="h-4 w-4 text-blue-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{analyticsData.staffCount || "-"}</div>
-              <p className="text-xs text-muted-foreground">
+              <div className="text-2xl font-bold text-white">{analyticsData.staffCount || "-"}</div>
+              <p className="text-xs text-blue-200/60">
                 Active Staff Members
               </p>
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="bg-black/20 backdrop-blur-xl border-white/5 overflow-hidden transform hover:translate-y-[-5px] transition-all duration-300" 
+            style={{
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset',
+              transform: 'perspective(1000px) rotateX(2deg)'
+            }}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">
+              <CardTitle className="text-sm font-medium text-white">
                 Completion Rate
               </CardTitle>
-              <Activity className="h-4 w-4 text-muted-foreground" />
+              <Activity className="h-4 w-4 text-blue-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
+              <div className="text-2xl font-bold text-white">
                 {analyticsData.taskCompletionRate ? `${analyticsData.taskCompletionRate}%` : "-"}
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-blue-200/60">
                 Task completion rate this {analyticsData.timeRange}
               </p>
             </CardContent>
@@ -178,7 +192,6 @@ const DashboardHome = () => {
         </div>
       )}
       
-      {/* Individual Account Features */}
       {isIndividual && (
         <Card className="mt-6">
           <CardHeader>
@@ -206,7 +219,6 @@ const DashboardHome = () => {
         </Card>
       )}
       
-      {/* Free Account Upgrade Prompt */}
       {isFree && (
         <Card className="mt-6 border-2 border-dashed border-primary/40">
           <CardHeader>
