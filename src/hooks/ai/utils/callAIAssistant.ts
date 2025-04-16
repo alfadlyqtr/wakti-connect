@@ -35,7 +35,11 @@ export const callAIAssistant = async (
     }
     
     // Handle image generation if the intent is image-generation with high confidence
-    if (intentClassification.intentType === 'image-generation' && intentClassification.confidence > 0.4) {
+    // Only generate images directly in creative mode or if explicitly requesting image generation
+    const isImageGenerationIntent = intentClassification.intentType === 'image-generation' && intentClassification.confidence > 0.3;
+    const isCreativeMode = currentMode === 'creative';
+    
+    if (isImageGenerationIntent || (isCreativeMode && userPrompt.toLowerCase().includes('image'))) {
       console.log('[callAIAssistant] Detected image generation intent, processing request');
       
       try {
@@ -63,15 +67,26 @@ You can ask me to generate another image or help with something else!`;
           // If image generation failed, inform the user and proceed with text response
           console.error('[callAIAssistant] Image generation failed:', imageResult.error);
           
-          // Continue with text-based response below, don't return here
+          // Return error message about image generation failure
+          return {
+            response: `I tried to generate an image based on your request, but encountered a problem: ${imageResult.error || 'The image generation service is currently unavailable.'}
+            
+Would you like to try again with a different prompt? Or I can help you with something else.`
+          };
         }
       } catch (imageError) {
         console.error('[callAIAssistant] Error in image generation:', imageError);
-        // Continue with text-based response below, don't return here
+        
+        // Return error message about image generation failure
+        return {
+          response: `I tried to generate an image based on your request, but encountered a technical problem.
+          
+Would you like to try again with a different prompt? Or I can help you with something else.`
+        };
       }
     }
     
-    // Call the AI assistant edge function directly - no auth check needed
+    // Call the AI assistant edge function for non-image requests
     try {
       // Create a promise that rejects after 30 seconds for timeout handling
       const timeoutPromise = new Promise((_, reject) => 

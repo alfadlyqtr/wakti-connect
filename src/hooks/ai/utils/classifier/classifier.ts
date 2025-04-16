@@ -78,10 +78,11 @@ export function classifyIntent(message: string): IntentClassification {
     }
   }
   
-  // Check for image generation intent
+  // Enhanced check for image generation intent
+  // First, check for direct image-related keywords
   for (const keyword of imageGenerationKeywords.keywords) {
     if (lowerMessage.includes(keyword)) {
-      scores['image-generation'] += 0.25;
+      scores['image-generation'] += 0.25; // Higher weight for explicit mentions
       matchedKeywords['image-generation'].push(keyword);
     }
   }
@@ -92,6 +93,29 @@ export function classifyIntent(message: string): IntentClassification {
       scores['image-generation'] += 0.15;
       matchedKeywords['image-generation'].push(phrase);
     }
+  }
+  
+  // Special check for creative descriptions that might be for images
+  if (
+    lowerMessage.length > 40 && // Longer description
+    (lowerMessage.includes("style") || 
+     lowerMessage.includes("color") || 
+     lowerMessage.includes("scene") || 
+     lowerMessage.includes("background") ||
+     lowerMessage.includes("picture") ||
+     lowerMessage.includes("photo") ||
+     lowerMessage.includes("art") ||
+     lowerMessage.includes("illustration")) &&
+    !lowerMessage.includes("?") // Not a question
+  ) {
+    scores['image-generation'] += 0.15;
+    matchedKeywords['image-generation'].push("detailed description");
+  }
+  
+  // Check for standalone "image of X" or "picture of X" patterns
+  if (/^(image|picture|photo|drawing|illustration)(\s+of\s+|\s+showing\s+)/i.test(lowerMessage)) {
+    scores['image-generation'] += 0.3;
+    matchedKeywords['image-generation'].push("direct image request");
   }
   
   // Check for confirmation intent
