@@ -45,12 +45,10 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     }
   });
 
-  // Update local listening state based on voice interaction hook
   useEffect(() => {
     setIsListening(voiceIsListening);
   }, [voiceIsListening]);
   
-  // Auto-focus the input when component mounts
   useEffect(() => {
     if (inputRef.current && !isDisabled && !isListening) {
       inputRef.current.focus();
@@ -84,7 +82,6 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     }
   };
   
-  // Get the background gradient or color for the input based on mode
   const getInputBackgroundStyle = () => {
     switch (currentMode) {
       case 'general':
@@ -97,24 +94,6 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         return 'bg-pink-900/15';
       default:
         return 'bg-blue-900/15';
-    }
-  };
-  
-  // Get the background gradient or color for the send button
-  const getSendButtonStyle = () => {
-    if (isLoading) return '';
-    
-    switch (currentMode) {
-      case 'general':
-        return 'hover:bg-blue-500 hover:text-white';
-      case 'student':
-        return 'hover:bg-green-500 hover:text-white';
-      case 'productivity':
-        return 'hover:bg-purple-500 hover:text-white';
-      case 'creative':
-        return 'hover:bg-gradient-to-r hover:from-pink-500 hover:via-purple-500 hover:to-indigo-500 hover:text-white';
-      default:
-        return 'hover:bg-blue-500 hover:text-white';
     }
   };
   
@@ -167,11 +146,10 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           size="icon" 
           disabled={!inputValue.trim() || isLoading || isDisabled}
           className={cn(
-            "rounded-full transition-colors duration-300 shadow-lg h-14 w-14 transform hover:translate-y-[-8px] transition-transform duration-300",
+            "rounded-full transition-colors duration-300 shadow-lg h-12 w-12 sm:h-14 sm:w-14 transform hover:translate-y-[-8px] transition-transform duration-300",
             "bg-black/30 border border-white/10 backdrop-blur-xl",
             "dark:bg-slate-800/30 dark:border-slate-700/20",
-            "hover:shadow-[0_15px_35px_rgba(0,0,0,0.7),0_0_20px_rgba(59,130,246,0.5)]",
-            getSendButtonStyle()
+            "hover:shadow-[0_15px_35px_rgba(0,0,0,0.7),0_0_20px_rgba(59,130,246,0.5)]"
           )}
           style={{
             boxShadow: '0 15px 35px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset, 0 0 15px rgba(59, 130, 246, 0.3)',

@@ -7,10 +7,13 @@ import { motion } from 'framer-motion';
 
 const DashboardAIAssistant = () => {
   return (
-    <div className="min-h-screen" style={{ 
-      background: 'transparent',
-      minHeight: 'calc(100vh - 60px)'
-    }}>
+    <div 
+      className="min-h-screen bg-black/20 dark:bg-black/40" 
+      style={{ 
+        background: 'transparent',
+        minHeight: 'calc(100vh - 60px)'
+      }}
+    >
       <motion.div 
         className="mx-auto p-3 sm:p-6 md:p-8 space-y-6 sm:space-y-8"
         initial={{ opacity: 0 }}
@@ -18,8 +21,10 @@ const DashboardAIAssistant = () => {
         transition={{ duration: 0.5 }}
       >
         <div className="flex flex-col gap-2 max-w-6xl mx-auto px-2">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">WAKTI AI Assistant</h1>
-          <p className="text-blue-300/80 text-sm sm:text-base">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white dark:text-white/90 bg-black/20 px-3 py-2 rounded-lg">
+            WAKTI AI Assistant
+          </h1>
+          <p className="text-blue-300/80 text-sm sm:text-base bg-black/20 px-3 py-1 rounded-lg">
             Your intelligent assistant for managing tasks, scheduling, and more
           </p>
         </div>

@@ -22,15 +22,11 @@ export const InputToolbar = ({ isLoading, isListening, onVoiceToggle }: InputToo
     const files = e.target.files;
     if (!files || files.length === 0) return;
     
-    // In a real implementation, you'd process the file and send it to the AI
     console.log('File to process:', files[0]);
-    
-    // Reset the input
     e.target.value = '';
   };
   
   const handleCameraCapture = () => {
-    // This would open the camera in a real implementation
     console.log('Opening camera');
   };
 
@@ -45,7 +41,7 @@ export const InputToolbar = ({ isLoading, isListening, onVoiceToggle }: InputToo
   };
 
   return (
-    <div className="absolute right-3 bottom-3 flex items-center gap-2">
+    <div className="absolute right-3 bottom-3 flex items-center gap-2 sm:gap-3">
       {/* Camera button */}
       <motion.div 
         whileHover={{ scale: 1.1, y: -8 }} 
@@ -58,10 +54,10 @@ export const InputToolbar = ({ isLoading, isListening, onVoiceToggle }: InputToo
           variant="ghost"
           onClick={handleCameraCapture}
           disabled={isLoading || isListening}
-          className="h-10 w-10 rounded-full bg-white dark:bg-white/90 text-blue-600 border border-blue-100 backdrop-blur-xl shadow-xl hover:shadow-2xl hover:bg-blue-50 dark:hover:bg-white transition-all transform hover:translate-y-[-8px]"
+          className="h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-white/90 dark:bg-black/50 text-blue-600 border border-blue-100 dark:border-blue-900/50 backdrop-blur-xl shadow-xl hover:shadow-2xl hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all transform hover:translate-y-[-8px]"
           style={buttonStyle}
         >
-          <Camera className="h-5 w-5 text-blue-500" />
+          <Camera className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500 dark:text-blue-400" />
           <span className="sr-only">Take a photo</span>
         </Button>
       </motion.div>
@@ -78,10 +74,10 @@ export const InputToolbar = ({ isLoading, isListening, onVoiceToggle }: InputToo
           variant="ghost"
           onClick={() => fileInputRef.current?.click()}
           disabled={isLoading || isListening}
-          className="h-10 w-10 rounded-full bg-white dark:bg-white/90 text-blue-600 border border-blue-100 backdrop-blur-xl shadow-xl hover:shadow-2xl hover:bg-blue-50 dark:hover:bg-white transition-all transform hover:translate-y-[-8px]"
+          className="h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-white/90 dark:bg-black/50 text-blue-600 border border-blue-100 dark:border-blue-900/50 backdrop-blur-xl shadow-xl hover:shadow-2xl hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all transform hover:translate-y-[-8px]"
           style={buttonStyle}
         >
-          <Paperclip className="h-5 w-5 text-blue-500" />
+          <Paperclip className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500 dark:text-blue-400" />
           <span className="sr-only">Upload a file</span>
         </Button>
       </motion.div>
@@ -110,17 +106,17 @@ export const InputToolbar = ({ isLoading, isListening, onVoiceToggle }: InputToo
             variant={isListening ? "destructive" : "ghost"}
             onClick={onVoiceToggle}
             className={cn(
-              "h-10 w-10 rounded-full shadow-xl hover:shadow-2xl transition-all transform hover:translate-y-[-8px]",
+              "h-10 w-10 sm:h-11 sm:w-11 rounded-full shadow-xl hover:shadow-2xl transition-all transform hover:translate-y-[-8px]",
               isListening 
-                ? "bg-red-500/90 text-white border border-red-400/70 animate-pulse"
-                : "bg-white dark:bg-white/90 text-blue-600 border border-blue-100 hover:bg-blue-50 dark:hover:bg-white"
+                ? "bg-red-500/90 text-white border border-red-400/70 animate-pulse dark:bg-red-700/80"
+                : "bg-white/90 dark:bg-black/50 text-blue-600 border border-blue-100 dark:border-blue-900/50 hover:bg-blue-50 dark:hover:bg-blue-900/30"
             )}
             style={isListening ? activeButtonStyle : buttonStyle}
           >
             {isListening ? (
-              <MicOff className="h-5 w-5" />
+              <MicOff className="h-5 w-5 sm:h-6 sm:w-6" />
             ) : (
-              <Mic className="h-5 w-5 text-blue-500" />
+              <Mic className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500 dark:text-blue-400" />
             )}
             <span className="sr-only">
               {isListening ? "Stop recording" : "Start recording"}
