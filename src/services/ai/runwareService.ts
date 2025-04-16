@@ -19,8 +19,9 @@ export interface GenerateImageParams {
 export interface GeneratedImage {
   imageURL: string;
   positivePrompt: string;
-  seed: number;
-  NSFWContent: boolean;
+  seed?: number;
+  NSFWContent?: boolean;
+  provider?: string;
 }
 
 export class RunwareService {
@@ -28,9 +29,12 @@ export class RunwareService {
     try {
       console.log("Requesting image generation through ai-image-generation edge function");
       
-      // Call the ai-image-generation edge function directly
+      // Call the consolidated ai-image-generation edge function
       const { data, error } = await supabase.functions.invoke('ai-image-generation', {
-        body: { prompt: params.positivePrompt, imageUrl: params.inputImage }
+        body: { 
+          prompt: params.positivePrompt, 
+          imageUrl: params.inputImage 
+        }
       });
       
       if (error) {
@@ -46,7 +50,8 @@ export class RunwareService {
         imageURL: data.imageUrl,
         positivePrompt: params.positivePrompt,
         seed: data.seed || 0,
-        NSFWContent: data.NSFWContent || false
+        NSFWContent: data.NSFWContent || false,
+        provider: data.provider || 'unknown'
       };
     } catch (error) {
       console.error('Error generating image:', error);

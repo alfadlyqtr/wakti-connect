@@ -79,6 +79,26 @@ export function classifyIntent(message: string): IntentClassification {
   }
   
   // Enhanced check for image generation intent
+  // Check for direct image generation requests or commands
+  if (
+    lowerMessage.startsWith("generate") || 
+    lowerMessage.startsWith("create") || 
+    lowerMessage.startsWith("make") ||
+    lowerMessage.startsWith("draw") ||
+    lowerMessage.startsWith("show me")
+  ) {
+    if (
+      lowerMessage.includes("image") || 
+      lowerMessage.includes("picture") || 
+      lowerMessage.includes("photo") ||
+      lowerMessage.includes("illustration") ||
+      lowerMessage.includes("drawing")
+    ) {
+      scores['image-generation'] += 0.4; // Strong signal for image generation
+      matchedKeywords['image-generation'].push("direct image generation request");
+    }
+  }
+  
   // First, check for direct image-related keywords
   for (const keyword of imageGenerationKeywords.keywords) {
     if (lowerMessage.includes(keyword)) {

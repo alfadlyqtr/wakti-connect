@@ -36,10 +36,13 @@ export const callAIAssistant = async (
     
     // Handle image generation if the intent is image-generation with high confidence
     // Only generate images directly in creative mode or if explicitly requesting image generation
-    const isImageGenerationIntent = intentClassification.intentType === 'image-generation' && intentClassification.confidence > 0.3;
+    const isImageGenerationIntent = intentClassification.intentType === 'image-generation' && intentClassification.confidence > 0.35;
     const isCreativeMode = currentMode === 'creative';
+    const containsImageKeywords = userPrompt.toLowerCase().includes('image') || 
+                                  userPrompt.toLowerCase().includes('picture') || 
+                                  userPrompt.toLowerCase().includes('photo');
     
-    if (isImageGenerationIntent || (isCreativeMode && userPrompt.toLowerCase().includes('image'))) {
+    if (isImageGenerationIntent || (isCreativeMode && containsImageKeywords)) {
       console.log('[callAIAssistant] Detected image generation intent, processing request');
       
       try {
@@ -53,7 +56,8 @@ export const callAIAssistant = async (
         
         if (imageResult.success) {
           // Return both the image URL and a confirmation message
-          const response = `I've generated an image based on your request: "${userPrompt}".
+          const providerInfo = imageResult.provider ? ` using ${imageResult.provider}` : '';
+          const response = `I've generated an image based on your request: "${userPrompt}"${providerInfo}.
 
 [IMAGE_GENERATED]${imageResult.imageUrl}[/IMAGE_GENERATED]
 

@@ -32,9 +32,9 @@ serve(async (req) => {
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     const RUNWARE_API_KEY = Deno.env.get("RUNWARE_API_KEY");
 
-    if (!OPENAI_API_KEY) {
+    if (!OPENAI_API_KEY && !RUNWARE_API_KEY) {
       return new Response(
-        JSON.stringify({ error: "OpenAI API key not configured" }),
+        JSON.stringify({ error: "No image generation API keys configured" }),
         { 
           status: 500, 
           headers: { ...corsHeaders, "Content-Type": "application/json" } 
@@ -44,15 +44,14 @@ serve(async (req) => {
 
     console.log("Processing image generation request");
     
-    if (imageUrl && RUNWARE_API_KEY) {
-      // Use Runware AI for image-to-image transformation
-      console.log("Using Runware AI for image-to-image transformation");
-      
+    // Try Runware first if API key is available
+    if (RUNWARE_API_KEY) {
       try {
-        // Check if the imageUrl is a data URL and extract the base64 content
-        let base64Image = imageUrl;
-        if (imageUrl.startsWith('data:image')) {
-          // Extract the base64 part (remove data:image/...;base64, prefix)
+        console.log("Attempting to use Runware API for image generation");
+        
+        // Check if the imageUrl is a data URL and extract the base64 content for image-to-image
+        let base64Image = undefined;
+        if (imageUrl && imageUrl.startsWith('data:image')) {
           base64Image = imageUrl.split(',')[1];
         }
         
@@ -63,7 +62,7 @@ serve(async (req) => {
             "apiKey": RUNWARE_API_KEY
           },
           {
-            "taskType": "imageToImage",
+            "taskType": base64Image ? "imageToImage" : "imageInference",
             "taskUUID": crypto.randomUUID(),
             "positivePrompt": prompt,
             "model": "runware:100@1",
@@ -73,10 +72,14 @@ serve(async (req) => {
             "outputFormat": "WEBP",
             "CFGScale": 7.5,
             "scheduler": "DPMSolverMultistepScheduler",
-            "strength": 0.75,
-            "inputImage": base64Image
+            "strength": 0.75
           }
         ];
+        
+        // Add inputImage for image-to-image transformation
+        if (base64Image) {
+          runwarePayload[1].inputImage = base64Image;
+        }
         
         // Call Runware API
         console.log("Making Runware API request");
@@ -95,21 +98,27 @@ serve(async (req) => {
         }
         
         const runwareData = await runwareResponse.json();
-        console.log("Runware API response:", JSON.stringify(runwareData));
+        console.log("Runware API response received");
         
-        const imageResult = runwareData.data.find(item => item.taskType === "imageToImage");
+        const imageResult = runwareData.data.find(item => 
+          item.taskType === "imageInference" || item.taskType === "imageToImage"
+        );
+        
         if (!imageResult || !imageResult.imageURL) {
           throw new Error("No image URL in Runware response");
         }
         
-        // Return the transformed image URL
+        // Return the image URL and metadata
         return new Response(
           JSON.stringify({ 
             id: crypto.randomUUID(),
             imageUrl: imageResult.imageURL,
-            originalImageUrl: imageUrl,
+            originalImageUrl: imageUrl || null,
             prompt,
-            isTransformation: true
+            seed: imageResult.seed || 0,
+            NSFWContent: imageResult.NSFWContent || false,
+            provider: "runware",
+            isTransformation: !!imageUrl
           }),
           { 
             status: 200, 
@@ -118,49 +127,18 @@ serve(async (req) => {
         );
       } catch (runwareError) {
         console.error("Runware API processing error:", runwareError);
-        
-        // Fall back to OpenAI if Runware fails
         console.log("Falling back to OpenAI for image generation");
+        // Fall through to OpenAI fallback
       }
     }
     
-    // Use OpenAI as default or fallback
-    console.log("Using OpenAI for image generation");
-    
-    // Set up OpenAI API options
-    const apiUrl = 'https://api.openai.com/v1/images/generations';
-    let openaiRequestBody;
-
-    if (imageUrl) {
-      console.log("Image-based transformation with prompt:", prompt);
+    // Use OpenAI as default or fallback if Runware fails
+    if (OPENAI_API_KEY) {
+      console.log("Using OpenAI for image generation");
       
-      // For true image-to-image transformation with DALL-E 3
-      // Since we're limited by the DALL-E 3 API capabilities, we need to create a highly
-      // descriptive prompt that incorporates elements from both the original image and desired style
-      
-      // Create a specialized prompt for anime/Gimi style transformation
-      const enhancedPrompt = `Transform the following scene into anime/Gimi style: ${prompt}. 
-      The anime style should have vibrant colors, clean sharp lines, dramatic lighting, 
-      expressive eyes, and stylized features typical of high-quality anime art.
-      Maintain the exact same composition, subjects, and scene as the original image, 
-      but rendered in perfect anime style artwork.`;
-      
-      openaiRequestBody = {
-        model: "dall-e-3", 
-        prompt: enhancedPrompt,
-        n: 1,
-        size: "1024x1024",
-        quality: "hd",        // Using higher quality for better results
-        response_format: "url",
-        style: "vivid"        // Using vivid style for more artistic results
-      };
-      
-      console.log("Enhanced transformation prompt:", enhancedPrompt);
-    } else {
-      console.log("Text-based generation with prompt:", prompt);
-      
-      // Standard image generation with DALL-E 3
-      openaiRequestBody = {
+      // Set up OpenAI API options
+      const apiUrl = 'https://api.openai.com/v1/images/generations';
+      const openaiRequestBody = {
         model: "dall-e-3",
         prompt: prompt,
         n: 1,
@@ -168,49 +146,69 @@ serve(async (req) => {
         quality: "standard",
         response_format: "url"
       };
-    }
-    
-    console.log("Making OpenAI API request with model:", openaiRequestBody.model);
-    
-    // Call OpenAI API to generate image
-    const openaiResponse = await fetch(apiUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${OPENAI_API_KEY}`
-      },
-      body: JSON.stringify(openaiRequestBody)
-    });
-
-    if (!openaiResponse.ok) {
-      const errorText = await openaiResponse.text();
-      console.error("OpenAI API error:", errorText);
       
+      if (imageUrl) {
+        // If this was an image transformation request, enhance the prompt
+        openaiRequestBody.prompt = `Transform the following scene into a new style: ${prompt}. 
+        Maintain the exact same composition, subjects, and scene but render it in a 
+        different artistic style.`;
+        
+        openaiRequestBody.quality = "hd";
+        openaiRequestBody.style = "vivid";
+      }
+      
+      console.log("Making OpenAI API request with model:", openaiRequestBody.model);
+      
+      // Call OpenAI API to generate image
+      const openaiResponse = await fetch(apiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${OPENAI_API_KEY}`
+        },
+        body: JSON.stringify(openaiRequestBody)
+      });
+
+      if (!openaiResponse.ok) {
+        const errorText = await openaiResponse.text();
+        console.error("OpenAI API error:", errorText);
+        
+        return new Response(
+          JSON.stringify({ error: `OpenAI API error: ${errorText}` }),
+          { 
+            status: openaiResponse.status, 
+            headers: { ...corsHeaders, "Content-Type": "application/json" } 
+          }
+        );
+      }
+
+      const data = await openaiResponse.json();
+      const generatedImageUrl = data.data[0].url;
+      
+      console.log("Image generated successfully with OpenAI");
+
+      // Return the image URL and related info
       return new Response(
-        JSON.stringify({ error: `OpenAI API error: ${errorText}` }),
+        JSON.stringify({ 
+          id: crypto.randomUUID(),
+          imageUrl: generatedImageUrl,
+          originalImageUrl: imageUrl || null,
+          prompt,
+          provider: "openai",
+          isTransformation: !!imageUrl
+        }),
         { 
-          status: openaiResponse.status, 
+          status: 200, 
           headers: { ...corsHeaders, "Content-Type": "application/json" } 
         }
       );
     }
-
-    const data = await openaiResponse.json();
-    const generatedImageUrl = data.data[0].url;
     
-    console.log("Image generated successfully");
-
-    // Return the image URL and related info
+    // If we get here, both Runware and OpenAI have failed
     return new Response(
-      JSON.stringify({ 
-        id: crypto.randomUUID(),
-        imageUrl: generatedImageUrl,
-        originalImageUrl: imageUrl || null,
-        prompt,
-        isTransformation: !!imageUrl
-      }),
+      JSON.stringify({ error: "All image generation services failed" }),
       { 
-        status: 200, 
+        status: 500, 
         headers: { ...corsHeaders, "Content-Type": "application/json" } 
       }
     );
@@ -218,7 +216,7 @@ serve(async (req) => {
     console.error("Error in image generation:", error);
     
     return new Response(
-      JSON.stringify({ error: `Internal server error: ${error.message}` }),
+      JSON.stringify({ error: `Image generation failed: ${error.message}` }),
       { 
         status: 500, 
         headers: { ...corsHeaders, "Content-Type": "application/json" } 
