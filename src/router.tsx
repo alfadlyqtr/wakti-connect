@@ -26,17 +26,13 @@ import RoleGuard from './components/auth/RoleGuard';
 import { UnifiedChatInterfaceWithProvider } from "./components/ai/chat/UnifiedChatInterface";
 import { MobileUXDemo } from "./components/mobile-demos/MobileUXDemo";
 import { Outlet } from "react-router-dom";
+import App from "./App";
 import PublicLayout from "./components/layout/PublicLayout";
-
-// Create a Root Layout component to replace direct App import
-const RootLayout = () => {
-  return <Outlet />;
-};
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <RootLayout />,
+    element: <App />,
     children: [
       { index: true, element: <LandingPage /> },
       { path: "signin", element: <LoginPage /> },
