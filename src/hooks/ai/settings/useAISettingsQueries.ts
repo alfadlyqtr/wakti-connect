@@ -69,46 +69,23 @@ export function useAIKnowledgeUploadsQuery(user: User | null) {
   });
 }
 
+// SIMPLIFIED: Trust account type from user metadata - no additional RPC call
 export const useCanUseAIQuery = (user: User | null) => {
   return useQuery({
     queryKey: ["canUseAI", user?.id],
     queryFn: async () => {
       if (!user) return false;
 
-      try {
-        // Simplified approach: Trust the account type from metadata as the source of truth
-        const accountType = user.user_metadata?.account_type;
-        
-        // Business and individual accounts can use AI
-        if (accountType === 'business' || accountType === 'individual') {
-          console.log("User can access AI based on account type from metadata:", accountType);
-          return true;
-        }
-        
-        // Only if metadata doesn't contain account_type, check profile as fallback
-        if (!accountType) {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("account_type")
-            .eq("id", user.id)
-            .maybeSingle();
-            
-          if (profile && (profile.account_type === 'business' || profile.account_type === 'individual')) {
-            console.log("User can access AI based on profile account type:", profile.account_type);
-            return true;
-          }
-        }
-        
-        // Default to denying access
-        return false;
-      } catch (error) {
-        console.error("Error checking AI access:", error);
-        return false;
-      }
+      // SIMPLIFIED: Only trust the account type from metadata
+      const accountType = user.user_metadata?.account_type;
+      const canUseAI = accountType === 'business' || accountType === 'individual';
+      
+      console.log("AI access check from metadata:", canUseAI, "Account type:", accountType);
+      return canUseAI;
     },
     enabled: !!user,
-    // Prevent excessive refetching - only check again after 5 minutes
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    // Cache result for longer to minimize state changes
+    staleTime: 10 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
   });
 };

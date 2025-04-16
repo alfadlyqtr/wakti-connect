@@ -17,6 +17,7 @@ export const useAISettings = () => {
     error: settingsError 
   } = useAISettingsQuery(user);
   
+  // SIMPLIFIED: We still call this, but it's been simplified to only check metadata
   const { 
     data: canUseAI,
     isLoading: isLoadingPermission
@@ -24,7 +25,7 @@ export const useAISettings = () => {
   
   const updateSettings = useUpdateAISettings(user);
 
-  // Determine account type directly from metadata (source of truth)
+  // SIMPLIFIED: Trust the account type directly from metadata - only source of truth
   const accountType = user?.user_metadata?.account_type;
   const isBusinessOrIndividual = accountType === 'business' || accountType === 'individual';
   
@@ -37,11 +38,11 @@ export const useAISettings = () => {
 
   return {
     aiSettings,
-    isLoadingSettings,
+    isLoading: isLoadingSettings,
     settingsError,
     updateSettings,
-    // User can use AI if either it's confirmed by metadata or by our query
-    canUseAI: hasCheckedPermissions && (canUseAI === true || isBusinessOrIndividual),
+    // SIMPLIFIED: Only trust metadata - the canUseAI check is also simplified
+    canUseAI: isBusinessOrIndividual,
     isLoadingPermission,
     hasCheckedPermissions
   };

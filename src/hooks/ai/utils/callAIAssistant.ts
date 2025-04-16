@@ -72,6 +72,7 @@ You can ask me to generate another image or help with something else!`;
     }
     
     // Get fresh session and ensure we have a valid token for the request
+    // IMPORTANT: This is the only authentication check we need
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
     if (sessionError) {
       console.error('[callAIAssistant] Error getting session:', sessionError);
@@ -97,19 +98,8 @@ You can ask me to generate another image or help with something else!`;
     const token = sessionData.session.access_token;
     console.log('[callAIAssistant] Got session token:', token.substring(0, 10) + '...');
     
-    console.log('[callAIAssistant] Authenticated session confirmed, calling AI service');
-    
-    // Enhanced system prompt with intent information
-    let enhancedSystemPrompt = systemPrompt;
-    if (intentClassification.confidence > 0.7) {
-      // Add intent information to system prompt for better context
-      enhancedSystemPrompt += `\n\nThe user's message has been classified as: ${intentClassification.intentType} with confidence ${intentClassification.confidence.toFixed(2)}. Relevant keywords: ${intentClassification.relevantKeywords.join(', ')}.`;
-      
-      // Mode-specific instructions
-      if (intentClassification.suggestedMode && intentClassification.suggestedMode !== currentMode) {
-        enhancedSystemPrompt += `\nNote: The user's request might be better suited for ${intentClassification.suggestedMode} mode, but they are currently in ${currentMode} mode. Adapt your response accordingly.`;
-      }
-    }
+    // ADDED: Additional session verification log
+    console.log('[callAIAssistant] User authenticated:', sessionData.session.user.id);
     
     // Create a promise that rejects after 30 seconds for timeout handling
     const timeoutPromise = new Promise((_, reject) => 
@@ -122,7 +112,7 @@ You can ask me to generate another image or help with something else!`;
       const { data, error } = await Promise.race([
         supabase.functions.invoke('ai-assistant', {
           body: {
-            system_prompt: enhancedSystemPrompt,
+            system_prompt: systemPrompt,
             user_prompt: userPrompt,
             message: userPrompt, // Adding alternate field format for compatibility
             context: context,

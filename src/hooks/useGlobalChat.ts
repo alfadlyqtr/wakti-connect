@@ -42,35 +42,28 @@ export const useGlobalChat = () => {
     return { content, imageUrl: null };
   };
   
-  // Simplified check if user has necessary account type for AI - trust metadata first
+  // SIMPLIFIED: Trust the account type from metadata
   const userCanUseAI = useCallback(() => {
     // If not authenticated, can't use AI
     if (!isAuthenticated || !user) {
       return false;
     }
     
-    // Trust the account type from metadata as source of truth
+    // SIMPLIFIED: Trust the account type from metadata ONLY
     const accountType = user.user_metadata?.account_type;
-    if (accountType === 'business' || accountType === 'individual') {
-      return true;
-    }
+    const canUseAI = accountType === 'business' || accountType === 'individual';
     
-    // Only if metadata doesn't have account_type, check profile as fallback
-    if (!accountType && !isProfileLoading && profile) {
-      return profile.account_type === 'business' || profile.account_type === 'individual';
-    }
-    
-    return false;
-  }, [isAuthenticated, user, isProfileLoading, profile]);
+    return canUseAI;
+  }, [isAuthenticated, user]);
   
   // Send message function with improved error handling
   const sendMessage = useCallback(async (content: string) => {
     if (!content.trim() || isLoading) return;
     
-    // Check if user can use AI - simplified check
+    // SIMPLIFIED: Use the single source of truth check
     const canUseAI = userCanUseAI();
     
-    if (canUseAI === false) {
+    if (!canUseAI) {
       toast({
         title: "Feature not available",
         description: "AI Assistant is only available for Business and Individual accounts.",
@@ -103,6 +96,9 @@ export const useGlobalChat = () => {
       let userContext = '';
       if (profile) {
         userContext = `User: ${profile.full_name || 'Unknown'}, Account Type: ${profile.account_type || 'free'}`;
+      } else if (user) {
+        // ADDED: Use metadata as fallback if profile not loaded
+        userContext = `User: ${user.user_metadata?.full_name || 'Unknown'}, Account Type: ${user.user_metadata?.account_type || 'free'}`;
       } else {
         userContext = 'Unknown User';
       }
@@ -185,7 +181,7 @@ export const useGlobalChat = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, messages, currentMode, currentPersonality, profile, userCanUseAI]);
+  }, [isLoading, messages, currentMode, currentPersonality, profile, user, userCanUseAI]);
   
   // Clear all messages
   const clearMessages = useCallback(() => {

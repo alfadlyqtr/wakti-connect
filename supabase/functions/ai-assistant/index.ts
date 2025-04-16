@@ -2,7 +2,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "./utils/cors.ts";
 import { authenticateUser } from "./auth/authenticateUser.ts";
-import { checkUserAccess } from "./auth/checkUserAccess.ts";
 import { prepareAIRequest } from "./ai/prepareAIRequest.ts";
 import { callDeepSeekAPI } from "./ai/callDeepSeekAPI.ts";
 import { saveConversation } from "./db/saveConversation.ts";
@@ -38,7 +37,7 @@ serve(async (req) => {
       console.log("Masked auth header:", masked);
     }
     
-    // Authenticate the user
+    // Authenticate the user - this is the ONLY authentication check we need
     console.log("Authenticating user...");
     const { user, supabaseClient, error: authError } = await authenticateUser(req);
     if (authError) {
@@ -49,18 +48,14 @@ serve(async (req) => {
     
     console.log("User authenticated:", user.id);
     
-    // Check if user can use AI assistant - simplified check
-    console.log("Checking user access...");
-    const { canUseAI, error: accessError } = await checkUserAccess(user, supabaseClient);
-    if (accessError) {
-      console.error("Access check error:", accessError.status, accessError.statusText);
-      clearTimeout(timeoutId);
-      return accessError;
-    }
+    // SIMPLIFIED: Trust the account type from metadata - no additional permission checks
+    // If user is authenticated and has a business or individual account, allow AI access
+    const accountType = user.user_metadata?.account_type;
+    const canUseAI = accountType === 'business' || accountType === 'individual';
     
     // If user doesn't have access, return a clear error
     if (!canUseAI) {
-      console.log("User does not have access to AI assistant:", user.id);
+      console.log("User does not have access to AI assistant:", user.id, "Account type:", accountType);
       clearTimeout(timeoutId);
       return new Response(
         JSON.stringify({ error: "Feature only available for Business and Individual plans" }),
@@ -68,7 +63,7 @@ serve(async (req) => {
       );
     }
     
-    console.log("User has access to AI assistant");
+    console.log("User has access to AI assistant. Account type:", accountType);
     
     // Get request data
     let requestData;
