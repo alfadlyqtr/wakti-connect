@@ -32,7 +32,7 @@ export class RunwareService {
     try {
       console.log("Requesting image generation through secure edge function");
       
-      // Call the secure edge function instead of directly accessing the Runware API
+      // Call the secure edge function with the correct name
       const { data, error } = await supabase.functions.invoke('get-runware-api-key', {
         body: params
       });

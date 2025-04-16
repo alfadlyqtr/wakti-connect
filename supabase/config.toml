@@ -36,6 +36,12 @@ backend = "postgres"
 [storage]
 file_size_limit = "50MiB"
 
-# Enable our new edge function
+# Enable our edge functions
 [functions.ai-task-parser]
+verify_jwt = true
+
+[functions.get-runware-api-key]
+verify_jwt = true
+
+[functions.ai-image-generation]
 verify_jwt = true

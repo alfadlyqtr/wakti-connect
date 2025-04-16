@@ -43,25 +43,32 @@ export async function handleImageGeneration(prompt: string): Promise<GeneratedIm
       // Fall back to OpenAI/DALL-E through supabase edge function
       console.log('[imageHandling] Falling back to OpenAI/DALL-E');
       
-      const { data, error } = await supabase.functions.invoke('ai-image-generation', {
-        body: { prompt, fallbackMode: true }
-      });
-      
-      if (error) {
-        throw new Error(`Edge function error: ${error.message}`);
+      try {
+        const { data, error } = await supabase.functions.invoke('ai-image-generation', {
+          body: { prompt, fallbackMode: true }
+        });
+        
+        if (error) {
+          console.error('[imageHandling] Fallback service error:', error);
+          throw new Error(`Edge function error: ${error.message}`);
+        }
+        
+        if (!data || !data.imageUrl) {
+          console.error('[imageHandling] No image URL in fallback response');
+          throw new Error('No image URL returned from fallback service');
+        }
+        
+        console.log('[imageHandling] Fallback generation successful');
+        
+        return {
+          imageUrl: data.imageUrl,
+          prompt: prompt,
+          success: true
+        };
+      } catch (fallbackError) {
+        console.error('[imageHandling] Fallback service failed:', fallbackError);
+        throw fallbackError;
       }
-      
-      if (!data || !data.imageUrl) {
-        throw new Error('No image URL returned from fallback service');
-      }
-      
-      console.log('[imageHandling] Fallback generation successful');
-      
-      return {
-        imageUrl: data.imageUrl,
-        prompt: prompt,
-        success: true
-      };
     }
   } catch (error) {
     console.error('[imageHandling] Image generation failed:', error);
