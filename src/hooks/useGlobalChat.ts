@@ -12,7 +12,7 @@ export const useGlobalChat = () => {
   const [messages, setMessages] = useState<ChatMemoryMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { currentMode, currentPersonality } = useAIPersonality();
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
   const { profile, isLoading: isProfileLoading } = useProfile(user?.id);
   
   // Subscribe to global chat memory
@@ -41,24 +41,21 @@ export const useGlobalChat = () => {
     return { content, imageUrl: null };
   };
   
-  // All we need is authentication and the account type from user metadata
-  const userCanUseAI = useCallback(() => {
-    // If not authenticated, can't use AI
-    if (!isAuthenticated || !user) {
-      return false;
-    }
+  // Check if user can use AI based solely on account type from metadata
+  const canUseAI = useCallback(() => {
+    if (!user) return false;
     
     // Trust the account type from metadata ONLY
     const accountType = user.user_metadata?.account_type;
     return accountType === 'business' || accountType === 'individual';
-  }, [isAuthenticated, user]);
+  }, [user]);
   
   // Send message function with improved error handling
   const sendMessage = useCallback(async (content: string) => {
     if (!content.trim() || isLoading) return;
     
-    // Simple check: just check authentication and account type from metadata
-    if (!userCanUseAI()) {
+    // Check if user can use AI based on metadata
+    if (!canUseAI()) {
       toast({
         title: "Feature not available",
         description: "AI Assistant is only available for Business and Individual accounts.",
@@ -170,7 +167,7 @@ export const useGlobalChat = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, messages, currentMode, currentPersonality, profile, user, userCanUseAI]);
+  }, [isLoading, messages, currentMode, currentPersonality, profile, user, canUseAI]);
   
   // Clear all messages
   const clearMessages = useCallback(() => {
@@ -182,7 +179,8 @@ export const useGlobalChat = () => {
     sendMessage,
     isLoading,
     clearMessages,
-    canUseAI: userCanUseAI(),
+    canUseAI: canUseAI(),
     sessionId: globalChatMemory.getSessionId()
   };
 };
+

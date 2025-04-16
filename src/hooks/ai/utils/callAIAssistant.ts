@@ -1,5 +1,5 @@
 
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { classifyIntent, getInappropriateContentResponse } from './classifier';
 import { WAKTIAIMode } from '@/types/ai-assistant.types';
 import { handleImageGeneration } from './imageHandling';
@@ -73,20 +73,6 @@ You can ask me to generate another image or help with something else!`;
     
     // Call the AI assistant edge function directly - no auth check needed
     try {
-      // Get current auth token - we trust the JWT verification in the edge function
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData.session?.access_token;
-      
-      if (!token) {
-        console.log('[callAIAssistant] No active session token found');
-        return {
-          error: {
-            message: 'Authentication required. Please sign in to use the AI assistant.',
-            isConnectionError: false
-          }
-        };
-      }
-      
       // Create a promise that rejects after 30 seconds for timeout handling
       const timeoutPromise = new Promise((_, reject) => 
         setTimeout(() => reject(new Error('Request timed out')), 30000)
@@ -103,9 +89,6 @@ You can ask me to generate another image or help with something else!`;
             userContext: userContext,
             includeTimestamp: true,
             intentClassification: JSON.stringify(intentClassification)
-          },
-          headers: {
-            Authorization: `Bearer ${token}`,
           }
         }),
         timeoutPromise
@@ -177,3 +160,4 @@ You can ask me to generate another image or help with something else!`;
     };
   }
 };
+

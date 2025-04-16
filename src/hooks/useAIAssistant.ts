@@ -1,3 +1,4 @@
+
 import { useAIChatEnhanced } from "./ai/chat";
 import { useAISettings } from "./ai/settings";
 import { useAIKnowledge } from "./ai/useAIKnowledge";
@@ -27,8 +28,8 @@ export const useAIAssistant = () => {
   
   const processingMessageRef = useRef(false);
   
-  // Get AI settings and knowledge hooks - fix the variable name
-  const { aiSettings, isLoading: isLoadingSettings, updateSettings, canUseAI } = useAISettings();
+  // Get AI settings and knowledge hooks
+  const { aiSettings, updateSettings, canUseAI } = useAISettings();
   const { addKnowledge, knowledgeUploads, isLoading: isLoadingKnowledge, deleteKnowledge } = useAIKnowledge();
   
   // Get send message functionality
@@ -183,7 +184,6 @@ export const useAIAssistant = () => {
     
     // Settings features
     aiSettings,
-    isLoadingSettings,
     updateSettings,
     canUseAI,
     
@@ -194,3 +194,4 @@ export const useAIAssistant = () => {
     deleteKnowledge,
   };
 };
+
