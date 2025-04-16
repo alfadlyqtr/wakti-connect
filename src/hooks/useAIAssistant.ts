@@ -31,7 +31,14 @@ export const useAIAssistant = () => {
   // Get AI settings and knowledge hooks with correct destructuring
   // No longer access isLoading from useAISettings as it doesn't exist
   const { aiSettings, updateSettings, canUseAI } = useAISettings();
-  const { addKnowledge, knowledgeUploads, isLoading: isLoadingKnowledge, deleteKnowledge } = useAIKnowledge();
+  
+  // Get knowledge related functions, using correct property names
+  const { 
+    addKnowledge, 
+    knowledgeUploads, 
+    isLoadingKnowledge, 
+    deleteKnowledge 
+  } = useAIKnowledge();
   
   // Get send message functionality
   const { 
