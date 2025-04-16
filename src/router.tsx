@@ -1,6 +1,5 @@
 
 import { createBrowserRouter, Navigate } from "react-router-dom";
-import App from "./App";
 import LoginPage from "./pages/auth/LoginPage";
 import SignUp from "./pages/auth/RegisterPage";
 import ForgotPassword from './pages/auth/ForgotPasswordPage';
@@ -26,11 +25,18 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import RoleGuard from './components/auth/RoleGuard';
 import { UnifiedChatInterfaceWithProvider } from "./components/ai/chat/UnifiedChatInterface";
 import { MobileUXDemo } from "./components/mobile-demos/MobileUXDemo";
+import { Outlet } from "react-router-dom";
+import PublicLayout from "./components/layout/PublicLayout";
+
+// Create a Root Layout component to replace direct App import
+const RootLayout = () => {
+  return <Outlet />;
+};
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <App />,
+    element: <RootLayout />,
     children: [
       { index: true, element: <LandingPage /> },
       { path: "signin", element: <LoginPage /> },
@@ -79,4 +85,3 @@ export const router = createBrowserRouter([
     ],
   },
 ]);
-

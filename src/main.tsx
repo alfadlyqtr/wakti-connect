@@ -88,7 +88,7 @@ if (isIOS) {
   document.body.classList.add('has-ios-padding');
 }
 
-// Render the app directly
+// Render the app directly using RouterProvider instead of App component
 root.render(
   <AuthProvider>
     <QueryClientProvider client={queryClient}>
