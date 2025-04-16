@@ -1,0 +1,62 @@
+
+/* Mobile-specific styles */
+
+/* Bottom navigation bar */
+.mobile-nav-bar {
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease-in-out;
+}
+
+/* Mobile drawer animation */
+.mobile-drawer-enter {
+  transform: translateX(-100%);
+}
+
+.mobile-drawer-enter-active {
+  transform: translateX(0);
+  transition: transform 300ms;
+}
+
+.mobile-drawer-exit {
+  transform: translateX(0);
+}
+
+.mobile-drawer-exit-active {
+  transform: translateX(-100%);
+  transition: transform 300ms;
+}
+
+/* Improve touch targets for mobile */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Mobile-specific padding to account for bottom navigation */
+.has-bottom-nav {
+  padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+}
+
+/* iOS safe area support */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-area-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+/* Floating action button */
+.fab {
+  position: fixed;
+  bottom: 5rem; /* Above bottom navigation */
+  right: 1rem;
+  height: 56px;
+  width: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 40;
+}

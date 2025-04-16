@@ -5,6 +5,7 @@ import { RouterProvider } from 'react-router-dom';
 import { router } from './router';
 import './index.css';
 import './App.css';
+import './styles/mobile.css'; // Import our mobile styles
 import { AuthProvider } from './hooks/auth';
 import { CurrencyProvider } from './contexts/CurrencyContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
