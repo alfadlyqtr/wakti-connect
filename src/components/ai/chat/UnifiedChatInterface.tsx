@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -22,7 +21,6 @@ export const UnifiedChatInterface: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { currentMode, currentPersonality } = useAIPersonality();
   
-  // Scroll to bottom when messages change
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -38,23 +36,21 @@ export const UnifiedChatInterface: React.FC = () => {
     setShowClearConfirmation(false);
   };
   
-  // Get mode-specific background class
   const getModeBackgroundClass = () => {
     switch (currentMode) {
       case 'general':
-        return 'bg-gradient-to-br from-blue-900/10 to-indigo-900/5 styled-scrollbar';
+        return 'bg-gradient-to-br from-blue-900/5 to-indigo-900/5 styled-scrollbar bg-opacity-10 backdrop-blur-xl';
       case 'student':
-        return 'bg-gradient-to-br from-green-900/10 to-emerald-900/5 styled-scrollbar';
+        return 'bg-gradient-to-br from-green-900/5 to-emerald-900/5 styled-scrollbar bg-opacity-10 backdrop-blur-xl';
       case 'productivity':
-        return 'bg-gradient-to-br from-purple-900/10 to-violet-900/5 styled-scrollbar';
+        return 'bg-gradient-to-br from-purple-900/5 to-violet-900/5 styled-scrollbar bg-opacity-10 backdrop-blur-xl';
       case 'creative':
-        return 'bg-gradient-to-br from-fuchsia-900/10 to-pink-900/5 styled-scrollbar';
+        return 'bg-gradient-to-br from-fuchsia-900/5 to-pink-900/5 styled-scrollbar bg-opacity-10 backdrop-blur-xl';
       default:
-        return 'bg-gradient-to-br from-blue-900/10 to-indigo-900/5 styled-scrollbar';
+        return 'bg-gradient-to-br from-blue-900/5 to-indigo-900/5 styled-scrollbar bg-opacity-10 backdrop-blur-xl';
     }
   };
   
-  // Welcome message if no messages
   const renderWelcomeView = () => {
     return (
       <motion.div
@@ -91,7 +87,14 @@ export const UnifiedChatInterface: React.FC = () => {
   };
   
   return (
-    <div className="flex flex-col h-full bg-transparent">
+    <div 
+      className="flex flex-col h-full bg-transparent" 
+      style={{ 
+        background: 'transparent',
+        backdropFilter: 'blur(10px)',
+        backgroundColor: 'rgba(0,0,0,0.05)'
+      }}
+    >
       <div className="p-4 border-b border-white/10 backdrop-blur-lg bg-black/20">
         <ModeSwitcher />
       </div>
@@ -110,7 +113,17 @@ export const UnifiedChatInterface: React.FC = () => {
       {!canUseAI && <FreeAccountBanner />}
       
       <div className="flex-1 overflow-hidden">
-        <ScrollArea className={cn("h-[65vh] min-h-[550px] px-3 sm:px-6 py-4", getModeBackgroundClass())}>
+        <ScrollArea 
+          className={cn(
+            "h-[65vh] min-h-[550px] px-3 sm:px-6 py-4", 
+            getModeBackgroundClass(),
+            "bg-transparent"
+          )}
+          style={{
+            background: 'rgba(255,255,255,0.05)',
+            backdropFilter: 'blur(12px)'
+          }}
+        >
           {messages.length === 0 ? renderWelcomeView() : (
             <div className="space-y-4">
               <AnimatePresence>
