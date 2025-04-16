@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
@@ -118,12 +119,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
   const displayRole = mapRoleForCompatibility(userRoleValue);
 
   return (
-    <div className={`min-h-screen flex flex-col overflow-hidden bg-gradient-to-br from-gray-900 to-black ${isSidebarOpen && isMobile ? 'sidebar-open-body' : ''}`}
-      style={{
-        backgroundImage: "radial-gradient(circle at 80% 60%, rgba(59, 130, 246, 0.15) 0%, transparent 60%), radial-gradient(circle at 20% 30%, rgba(147, 51, 234, 0.15) 0%, transparent 40%)",
-        backgroundAttachment: "fixed"
-      }}
-    >
+    <div className={`min-h-screen flex flex-col overflow-hidden ${isSidebarOpen && isMobile ? 'sidebar-open-body' : ''}`}>
       <Navbar toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
       
       {/* Free Account Banner - Only shown for free individual accounts */}

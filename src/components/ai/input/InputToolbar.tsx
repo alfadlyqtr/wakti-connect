@@ -58,10 +58,10 @@ export const InputToolbar = ({ isLoading, isListening, onVoiceToggle }: InputToo
           variant="ghost"
           onClick={handleCameraCapture}
           disabled={isLoading || isListening}
-          className="h-10 w-10 rounded-full bg-black/30 border border-white/10 backdrop-blur-xl dark:bg-slate-800/30 dark:border-slate-700/20 shadow-xl hover:shadow-2xl hover:bg-black/50 dark:hover:bg-slate-700/50 transition-all transform hover:translate-y-[-8px]"
+          className="h-10 w-10 rounded-full bg-white dark:bg-white/90 text-blue-600 border border-blue-100 backdrop-blur-xl shadow-xl hover:shadow-2xl hover:bg-blue-50 dark:hover:bg-white transition-all transform hover:translate-y-[-8px]"
           style={buttonStyle}
         >
-          <Camera className="h-5 w-5 text-blue-400" />
+          <Camera className="h-5 w-5 text-blue-500" />
           <span className="sr-only">Take a photo</span>
         </Button>
       </motion.div>
@@ -78,10 +78,10 @@ export const InputToolbar = ({ isLoading, isListening, onVoiceToggle }: InputToo
           variant="ghost"
           onClick={() => fileInputRef.current?.click()}
           disabled={isLoading || isListening}
-          className="h-10 w-10 rounded-full bg-black/30 border border-white/10 backdrop-blur-xl dark:bg-slate-800/30 dark:border-slate-700/20 shadow-xl hover:shadow-2xl hover:bg-black/50 dark:hover:bg-slate-700/50 transition-all transform hover:translate-y-[-8px]"
+          className="h-10 w-10 rounded-full bg-white dark:bg-white/90 text-blue-600 border border-blue-100 backdrop-blur-xl shadow-xl hover:shadow-2xl hover:bg-blue-50 dark:hover:bg-white transition-all transform hover:translate-y-[-8px]"
           style={buttonStyle}
         >
-          <Paperclip className="h-5 w-5 text-blue-400" />
+          <Paperclip className="h-5 w-5 text-blue-500" />
           <span className="sr-only">Upload a file</span>
         </Button>
       </motion.div>
@@ -113,14 +113,14 @@ export const InputToolbar = ({ isLoading, isListening, onVoiceToggle }: InputToo
               "h-10 w-10 rounded-full shadow-xl hover:shadow-2xl transition-all transform hover:translate-y-[-8px]",
               isListening 
                 ? "bg-red-500/90 text-white border border-red-400/70 animate-pulse"
-                : "bg-black/30 border border-white/10 backdrop-blur-xl dark:bg-slate-800/30 dark:border-slate-700/20 hover:bg-black/50 dark:hover:bg-slate-700/50"
+                : "bg-white dark:bg-white/90 text-blue-600 border border-blue-100 hover:bg-blue-50 dark:hover:bg-white"
             )}
             style={isListening ? activeButtonStyle : buttonStyle}
           >
             {isListening ? (
               <MicOff className="h-5 w-5" />
             ) : (
-              <Mic className="h-5 w-5 text-blue-400" />
+              <Mic className="h-5 w-5 text-blue-500" />
             )}
             <span className="sr-only">
               {isListening ? "Stop recording" : "Start recording"}

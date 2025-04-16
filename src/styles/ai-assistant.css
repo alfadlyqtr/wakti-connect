@@ -1,29 +1,30 @@
+
 /* AI Assistant Styles */
 
-/* Dark mode backgrounds with deeper contrast */
+/* Dark mode backgrounds */
 .ai-bg-dark {
-  background-color: rgba(10, 10, 15, 0.9);
-  color: rgba(255, 255, 255, 0.95);
+  background-color: #1A1F2C;
+  color: rgba(255, 255, 255, 0.9);
 }
 
-/* Mode-specific backgrounds with subtle gradients */
+/* Mode-specific backgrounds with lower opacity */
 .ai-bg-general {
-  background-image: linear-gradient(to bottom right, rgba(10, 15, 30, 0.8), rgba(5, 10, 20, 0.8));
+  background-image: linear-gradient(to bottom right, rgba(17, 24, 39, 0.8), rgba(15, 23, 42, 0.8));
 }
 
 .ai-bg-student {
-  background-image: linear-gradient(to bottom right, rgba(5, 15, 25, 0.8), rgba(10, 50, 30, 0.8));
+  background-image: linear-gradient(to bottom right, rgba(15, 23, 42, 0.8), rgba(20, 83, 45, 0.8));
 }
 
 .ai-bg-productivity {
-  background-image: linear-gradient(to bottom right, rgba(15, 10, 30, 0.8), rgba(40, 15, 80, 0.8));
+  background-image: linear-gradient(to bottom right, rgba(15, 23, 42, 0.8), rgba(76, 29, 149, 0.8));
 }
 
 .ai-bg-creative {
-  background-image: linear-gradient(to bottom right, rgba(20, 10, 30, 0.8), rgba(60, 15, 60, 0.8));
+  background-image: linear-gradient(to bottom right, rgba(15, 23, 42, 0.8), rgba(112, 26, 117, 0.8));
 }
 
-/* Enhanced glassmorphism styles with richer blur and transparency */
+/* Glassmorphism styles with increased transparency and blur */
 .glassmorphism {
   background: rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(20px);
@@ -34,7 +35,7 @@
 }
 
 .glassmorphism:hover {
-  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.8), 0 0 20px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8), 0 0 20px rgba(59, 130, 246, 0.3);
   transform: translateY(-8px);
 }
 
@@ -51,13 +52,13 @@
   -webkit-backdrop-filter: blur(12px);
 }
 
-/* Glass panel for 3D look with deeper shadows and sharper edges */
+/* Glass panel for 3D look with deeper shadows */
 .glass-panel {
   background: rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
+  border-radius: 12px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 15px rgba(59, 130, 246, 0.3);
   transition: all 0.4s ease;
   transform: perspective(1000px) rotateX(1deg);
@@ -142,7 +143,7 @@
   background: rgba(255, 255, 255, 0.2);
 }
 
-/* Enhanced shadow & neon glow effects with stronger color interactions */
+/* Enhanced shadow & neon glow effects */
 .neon-glow-blue {
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 20px rgba(59, 130, 246, 0.4);
 }
@@ -202,43 +203,4 @@
 .button-3d:active {
   transform: translateY(-2px) translateZ(0);
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
-}
-
-/* Additional modern iCloud-inspired styling */
-.icloud-card {
-  background: rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
-  transition: all 0.4s ease;
-  transform: perspective(1500px) rotateX(1deg);
-}
-
-.icloud-card:hover {
-  transform: perspective(1500px) rotateX(2deg) translateY(-8px);
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 30px rgba(59, 130, 246, 0.3);
-}
-
-.icloud-input {
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  transition: all 0.3s ease;
-}
-
-.icloud-input:focus {
-  border-color: rgba(59, 130, 246, 0.4);
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(59, 130, 246, 0.3);
-  transform: translateY(-5px);
-}
-
-.gradient-bg {
-  background-image: radial-gradient(circle at 80% 60%, rgba(59, 130, 246, 0.15) 0%, transparent 60%), 
-                  radial-gradient(circle at 20% 30%, rgba(147, 51, 234, 0.15) 0%, transparent 40%);
-  background-attachment: fixed;
 }

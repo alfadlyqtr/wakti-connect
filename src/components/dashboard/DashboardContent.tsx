@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import StaffDashboardHeader from './StaffDashboardHeader';
 import DashboardLoading from './DashboardLoading';
@@ -52,21 +53,8 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
       : "lg:pl-52 pt-4 pb-12 px-4 transition-all duration-300";
 
   return (
-    <main 
-      className={`flex-1 overflow-y-auto ${mainContentClass}`}
-      style={{
-        background: "radial-gradient(circle at 10% 20%, rgba(0, 10, 30, 0.8) 0%, rgba(0, 10, 40, 0.95) 90%)",
-        boxShadow: "inset 0 0 100px rgba(20, 50, 100, 0.15)",
-        backgroundAttachment: "fixed"
-      }}
-    >
-      <div 
-        className="container mx-auto animate-in"
-        style={{
-          backgroundImage: "radial-gradient(circle at 80% 10%, rgba(59, 130, 246, 0.08) 0%, transparent 50%), radial-gradient(circle at 20% 80%, rgba(147, 51, 234, 0.08) 0%, transparent 50%)",
-          backgroundAttachment: "fixed"
-        }}
-      >
+    <main className={`flex-1 overflow-y-auto ${mainContentClass}`}>
+      <div className="container mx-auto animate-in">
         {isLoading ? (
           <DashboardLoading />
         ) : (
