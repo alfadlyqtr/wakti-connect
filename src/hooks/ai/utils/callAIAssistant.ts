@@ -71,10 +71,20 @@ You can ask me to generate another image or help with something else!`;
       }
     }
     
-    // Get current session and ensure we have a valid token for the request
+    // Get fresh session and ensure we have a valid token for the request
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError || !sessionData.session) {
-      console.error('[callAIAssistant] Session error or no session found:', sessionError);
+    if (sessionError) {
+      console.error('[callAIAssistant] Error getting session:', sessionError);
+      return {
+        error: {
+          message: 'Authentication required. Please refresh and sign in again.',
+          isConnectionError: false
+        }
+      };
+    }
+    
+    if (!sessionData.session) {
+      console.error('[callAIAssistant] No session found');
       return {
         error: {
           message: 'Authentication required. Please sign in to use the AI assistant.',
@@ -101,13 +111,13 @@ You can ask me to generate another image or help with something else!`;
       }
     }
     
+    // Create a promise that rejects after 30 seconds for timeout handling
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Request timed out')), 30000)
+    );
+    
     // Call the AI assistant edge function with comprehensive error handling
     try {
-      // Create a promise that rejects after 30 seconds
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Request timed out')), 30000)
-      );
-
       // Race the actual request with the timeout
       const { data, error } = await Promise.race([
         supabase.functions.invoke('ai-assistant', {
@@ -136,6 +146,31 @@ You can ask me to generate another image or help with something else!`;
       
       if (error) {
         console.error('[callAIAssistant] Supabase function error:', error);
+        
+        // Special handling for authentication errors
+        if (error.message?.includes('JWT') || error.message?.includes('auth') || error.message?.includes('token')) {
+          console.error('[callAIAssistant] Authentication error detected, attempting session refresh');
+          
+          // Try to refresh the session
+          const { error: refreshError } = await supabase.auth.refreshSession();
+          if (refreshError) {
+            console.error('[callAIAssistant] Session refresh failed:', refreshError);
+            return {
+              error: {
+                message: 'Your session has expired. Please sign in again.',
+                isConnectionError: false
+              }
+            };
+          } else {
+            return {
+              error: {
+                message: 'Session refreshed. Please try your request again.',
+                isConnectionError: false
+              }
+            };
+          }
+        }
+        
         return {
           error: {
             message: `AI service error: ${error.message || 'Unknown error'}`,
@@ -167,6 +202,30 @@ You can ask me to generate another image or help with something else!`;
       return { response: data.response };
     } catch (functionError) {
       console.error('[callAIAssistant] Exception during function call:', functionError);
+      
+      // Check if this is an auth error
+      if (functionError.message?.includes('JWT') || 
+          functionError.message?.includes('auth') || 
+          functionError.message?.includes('token')) {
+        console.error('[callAIAssistant] Auth error detected, attempting session refresh');
+        try {
+          // Try to refresh the session
+          const { error: refreshError } = await supabase.auth.refreshSession();
+          if (refreshError) {
+            console.error('[callAIAssistant] Session refresh failed:', refreshError);
+          } else {
+            console.log('[callAIAssistant] Session refreshed successfully');
+            return {
+              error: {
+                message: 'Session refreshed. Please try your request again.',
+                isConnectionError: false
+              }
+            };
+          }
+        } catch (refreshError) {
+          console.error('[callAIAssistant] Error refreshing session:', refreshError);
+        }
+      }
       
       const errorMessage = functionError.message || 'Unknown error calling AI service';
       const isConnectionRelated = 

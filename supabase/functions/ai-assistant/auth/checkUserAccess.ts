@@ -28,96 +28,51 @@ export async function checkUserAccess(user, supabaseClient) {
       return { canUseAI: false };
     }
     
-    // First try with RPC function (more reliable)
-    console.log("Attempting RPC function can_use_ai_assistant...");
-    try {
-      const { data: canUseAI, error: canUseAIError } = await supabaseClient.rpc(
-        "can_use_ai_assistant"
-      );
-
-      // Log for troubleshooting
-      console.log("RPC check result:", { canUseAI, error: canUseAIError ? canUseAIError.message : null });
-      
-      if (!canUseAIError && canUseAI !== null) {
-        console.log("RPC check successful, result:", canUseAI);
-        return { canUseAI };
-      }
-    } catch (rpcError) {
-      console.error("Error calling RPC function:", rpcError);
-      // Continue to fallback method
+    // Get the account type directly from user metadata first
+    const accountType = user.user_metadata?.account_type;
+    if (accountType === 'business' || accountType === 'individual') {
+      console.log("User can access AI based on metadata account type:", accountType);
+      return { canUseAI: true };
     }
     
-    console.log("RPC check failed, falling back to direct profile check");
-    
-    // Fallback to direct profile check if RPC fails
+    // Check profile data next - more reliable than RPC
+    console.log("Checking profile data for account type");
     const { data: profile, error: profileError } = await supabaseClient
       .from("profiles")
       .select("account_type")
       .eq("id", user.id)
       .maybeSingle();
       
-    if (profileError) {
-      console.error("Error checking profile access:", profileError.message);
-      // If no profile is found, create one with free account type
-      if (profileError.code === "PGRST116") {
-        console.log("Profile not found, attempting to create default profile");
-        
-        try {
-          const { data: newProfile, error: createError } = await supabaseClient
-            .from("profiles")
-            .insert({
-              id: user.id,
-              account_type: "free",
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            })
-            .select()
-            .maybeSingle();
-            
-          if (createError) {
-            console.error("Error creating default profile:", createError.message);
-            return {
-              error: new Response(
-                JSON.stringify({ error: "Error creating default profile", details: createError.message }),
-                { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-              ),
-              canUseAI: false
-            };
-          }
-          
-          console.log("Created default profile with account type:", newProfile.account_type);
-          // Free accounts cannot use AI assistant
-          return { canUseAI: false };
-        } catch (createError) {
-          console.error("Exception creating default profile:", createError);
-          return {
-            error: new Response(
-              JSON.stringify({ error: "Exception creating default profile", details: createError.message }),
-              { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-            ),
-            canUseAI: false
-          };
-        }
-      }
+    if (!profileError && profile) {
+      const profileAccountType = profile.account_type;
+      console.log("Profile check successful, account type:", profileAccountType);
       
-      return {
-        error: new Response(
-          JSON.stringify({ error: "Error fetching user profile", details: profileError.message }),
-          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        ),
-        canUseAI: false
-      };
+      // Check if the account type is valid for AI access
+      const canAccess = profileAccountType === "business" || profileAccountType === "individual";
+      console.log("Can access AI based on profile:", canAccess);
+      
+      return { canUseAI: canAccess };
     }
     
-    // For debugging - log profile information
-    console.log("Profile data:", profile);
-    console.log("Profile check successful, account type:", profile?.account_type);
+    // Only if all direct checks fail, try the RPC function
+    try {
+      console.log("Attempting RPC function can_use_ai_assistant...");
+      const { data: canUseAI, error: canUseAIError } = await supabaseClient.rpc(
+        "can_use_ai_assistant"
+      );
+
+      console.log("RPC check result:", { canUseAI, error: canUseAIError ? canUseAIError.message : null });
+      
+      if (!canUseAIError && canUseAI !== null) {
+        return { canUseAI };
+      }
+    } catch (rpcError) {
+      console.error("Error calling RPC function:", rpcError);
+    }
     
-    // Check if the account type is valid for AI access
-    const canAccess = profile?.account_type === "business" || profile?.account_type === "individual";
-    console.log("Can access AI:", canAccess);
-    
-    return { canUseAI: canAccess };
+    // Default to denying access if all checks fail
+    console.log("All access checks failed, denying access");
+    return { canUseAI: false };
   } catch (error) {
     console.error("Error checking user access:", error.message);
     console.error(error.stack);

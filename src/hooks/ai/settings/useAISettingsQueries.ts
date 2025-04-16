@@ -76,10 +76,24 @@ export const useCanUseAIQuery = (user: User | null) => {
       if (!user) return false;
 
       try {
-        console.log("Checking if user can use AI:", user.id);
+        // Get current session to ensure we have a fresh token
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (!sessionData.session) {
+          console.warn("No active session found when checking AI access");
+          return false;
+        }
         
-        // First check if the user has a business or individual account directly
-        // This is a workaround for potential RPC issues
+        // First check account type directly from user metadata or profile
+        // This provides a faster response and reduces RPC calls
+        const userAccountType = user.user_metadata?.account_type || null;
+        
+        // Business and individual accounts directly from metadata can use AI
+        if (userAccountType === 'business' || userAccountType === 'individual') {
+          console.log("User can access AI based on metadata account type:", userAccountType);
+          return true;
+        }
+        
+        // If metadata doesn't confirm access, check profile
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select("account_type")
@@ -87,32 +101,38 @@ export const useCanUseAIQuery = (user: User | null) => {
           .single();
           
         if (!profileError && profile) {
-          console.log("Direct profile check result:", profile.account_type);
-          // Business and individual accounts can use AI
+          // Business and individual accounts from profile can use AI
           if (profile.account_type === 'business' || profile.account_type === 'individual') {
+            console.log("User can access AI based on profile account type:", profile.account_type);
             return true;
           }
         }
         
-        // If direct check doesn't confirm access, try the RPC function
-        const { data: canUse, error: rpcError } = await supabase.rpc("can_use_ai_assistant");
-        
-        if (rpcError) {
-          console.error("RPC error when checking AI access:", rpcError);
-          // If RPC fails, we rely on the profile check we already did above
+        // As a last resort, use the RPC function
+        try {
+          const { data: canUse, error: rpcError } = await supabase.rpc("can_use_ai_assistant");
+          
+          if (rpcError) {
+            console.error("RPC error when checking AI access:", rpcError);
+            // We already checked profile and metadata, so if RPC fails, return false
+            return false;
+          }
+          
+          console.log("RPC access check result:", canUse);
+          return canUse === true;
+        } catch (rpcError) {
+          console.error("Exception in RPC access check:", rpcError);
           return false;
         }
-        
-        console.log("RPC check result:", canUse);
-        return canUse === true;
       } catch (error) {
         console.error("Error checking AI access:", error);
-        // In case of error, default to false for safety
         return false;
       }
     },
     enabled: !!user,
-    retry: 2,
+    retry: 1,
+    retryDelay: 2000,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    cacheTime: 10 * 60 * 1000, // 10 minutes
   });
 };

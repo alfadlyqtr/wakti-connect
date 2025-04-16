@@ -49,7 +49,7 @@ serve(async (req) => {
     
     console.log("User authenticated:", user.id);
     
-    // Check if user can use AI assistant
+    // Check if user can use AI assistant - optimized with new checkUserAccess
     console.log("Checking user access...");
     const { canUseAI, error: accessError } = await checkUserAccess(user, supabaseClient);
     if (accessError) {
@@ -58,27 +58,8 @@ serve(async (req) => {
       return accessError;
     }
     
-    // Special case for business account users - temporarily override canUseAI due to RLS issues
-    const { data: profileData } = await supabaseClient
-      .from("profiles")
-      .select("account_type")
-      .eq("id", user.id)
-      .maybeSingle();
-      
-    const isBusinessAccount = profileData?.account_type === "business";
-    const isIndividualAccount = profileData?.account_type === "individual";
-    
-    // Log details for debugging
-    console.log("Profile data:", profileData);
-    console.log("Is business account:", isBusinessAccount);
-    console.log("Is individual account:", isIndividualAccount);
-    console.log("RPC can use AI result:", canUseAI);
-    
-    // Override access check for business and individual accounts (temporary fix)
-    const effectiveCanUseAI = isBusinessAccount || isIndividualAccount || canUseAI === true;
-    console.log("Effective can use AI:", effectiveCanUseAI);
-    
-    if (!effectiveCanUseAI) {
+    // If user doesn't have access, return a clear error
+    if (!canUseAI) {
       console.log("User does not have access to AI assistant:", user.id);
       clearTimeout(timeoutId);
       return new Response(
