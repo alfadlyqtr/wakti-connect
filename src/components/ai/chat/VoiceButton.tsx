@@ -36,7 +36,7 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({
         onClick={onToggle}
         disabled={isLoading || isDisabled}
         className={cn(
-          isMobile ? "h-11 w-11" : "h-12 w-12",
+          isMobile ? "h-10 w-10" : "h-12 w-12",
           "rounded-full transition-all duration-300 shadow-2xl transform hover:translate-y-[-8px]",
           isListening 
             ? "bg-red-500/20 border-red-500/30" 

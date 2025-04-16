@@ -8,6 +8,7 @@ import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 import { ChatInputField } from './ChatInputField';
 import { ClearChatButton } from './ClearChatButton';
 import { SendButton } from './SendButton';
+import { VoiceButton } from './VoiceButton';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface ChatInputProps {
@@ -93,7 +94,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     <>
       <motion.form 
         onSubmit={handleSubmit} 
-        className="relative flex flex-col gap-3 p-3 sm:p-4 md:p-5 border-t border-white/10 bg-transparent backdrop-blur-xl w-full max-w-[95%] mx-auto"
+        className="relative flex flex-col gap-3 p-3 sm:p-4 md:p-5 border-t border-white/10 bg-transparent backdrop-blur-xl w-full max-w-[98%] mx-auto"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.2 }}
@@ -122,7 +123,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               />
             </div>
             
-            <div className="flex items-center gap-3 sm:gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               {onClearChat && (
                 <ClearChatButton
                   isDisabled={isDisabled}

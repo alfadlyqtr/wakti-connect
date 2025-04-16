@@ -29,7 +29,7 @@ export const SendButton: React.FC<SendButtonProps> = ({
         size="icon" 
         disabled={!isActive || isLoading || isDisabled}
         className={cn(
-          isMobile ? "h-11 w-11" : "h-12 w-12",
+          isMobile ? "h-10 w-10" : "h-12 w-12",
           "rounded-full transition-all duration-300 shadow-xl transform hover:translate-y-[-8px]",
           "bg-white/10 dark:bg-black/50 border border-blue-100/30 dark:border-blue-900/50 backdrop-blur-xl",
           "hover:shadow-[0_25px_50px_rgba(0,0,0,0.7),0_0_30px_rgba(59,130,246,0.5)]",

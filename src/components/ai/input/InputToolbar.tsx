@@ -47,11 +47,11 @@ export const InputToolbar = ({ isLoading, isListening, onVoiceToggle }: InputToo
     transform: 'perspective(1000px) rotateX(2deg)',
   };
 
-  const buttonSize = isMobile ? "h-11 w-11" : "h-12 w-12";
+  const buttonSize = isMobile ? "h-10 w-10" : "h-12 w-12";
 
   return (
     <div className="toolbar-container flex items-center justify-start w-full pt-2 pb-2 overflow-x-auto no-scrollbar">
-      <div className="flex flex-row gap-2 sm:gap-3 items-center">
+      <div className="flex flex-row gap-3 sm:gap-4 items-center">
         {/* Camera button */}
         <motion.div 
           whileHover={{ scale: 1.05, y: -4 }} 
