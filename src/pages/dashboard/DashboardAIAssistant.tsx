@@ -15,7 +15,7 @@ const DashboardAIAssistant = () => {
       }}
     >
       <motion.div 
-        className="mx-auto p-3 sm:p-6 md:p-8 space-y-6 sm:space-y-8"
+        className="mx-auto p-2 sm:p-6 md:p-8 space-y-6 sm:space-y-8"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
@@ -29,7 +29,7 @@ const DashboardAIAssistant = () => {
           </p>
         </div>
         
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-6xl w-full mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

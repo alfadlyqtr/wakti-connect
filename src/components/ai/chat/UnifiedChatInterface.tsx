@@ -88,7 +88,7 @@ export const UnifiedChatInterface: React.FC = () => {
         backgroundColor: 'rgba(0,0,0,0.05)'
       }}
     >
-      <div className="p-3 sm:p-4 border-b border-white/10 backdrop-blur-lg bg-black/20">
+      <div className="p-2 sm:p-4 border-b border-white/10 backdrop-blur-lg bg-black/20">
         <ModeSwitcher />
       </div>
       
@@ -115,6 +115,7 @@ export const UnifiedChatInterface: React.FC = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4 }}
+                    className="w-full"
                   >
                     <ChatMessage message={message} />
                   </motion.div>
@@ -125,7 +126,7 @@ export const UnifiedChatInterface: React.FC = () => {
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="flex items-start gap-3 mb-4"
+                  className="flex items-start gap-3 mb-4 w-full"
                 >
                   <div className="flex-shrink-0">
                     <div className={`h-10 w-10 rounded-full ${currentPersonality.color} flex items-center justify-center shadow-[0_10px_30px_rgba(0,0,0,0.6)]`}>

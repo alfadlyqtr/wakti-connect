@@ -94,7 +94,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     <>
       <motion.form 
         onSubmit={handleSubmit} 
-        className="relative flex flex-col gap-3 p-3 sm:p-4 md:p-5 border-t border-white/10 bg-transparent backdrop-blur-xl w-full max-w-[98%] mx-auto"
+        className="relative flex flex-col gap-3 p-2 sm:p-4 md:p-5 border-t border-white/10 bg-transparent backdrop-blur-xl w-full mx-auto"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.2 }}
@@ -115,7 +115,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           </div>
           
           <div className="flex justify-between items-center w-full mt-1">
-            <div className="flex-1 max-w-[65%]">
+            <div className="flex-1 max-w-[70%]">
               <InputToolbar 
                 isLoading={isLoading} 
                 isListening={isListening}
