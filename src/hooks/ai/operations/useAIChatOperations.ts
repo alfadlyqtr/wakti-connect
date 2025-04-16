@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { AIMessage } from "@/types/ai-assistant.types";
@@ -10,6 +11,7 @@ import { createAITask, getEstimatedTaskTime } from "@/services/ai/aiTaskService"
 import { parseTaskWithAI, NestedSubtask } from "@/services/ai/aiTaskParserService";
 import { TaskFormData, SubTask } from "@/types/task.types";
 import { toast } from "@/components/ui/use-toast";
+import { classifyIntent, IntentType, IntentClassification } from "../utils/intentClassifier";
 
 const WAKTI_TOPICS = [
   "task management", "to-do lists", "appointments", "bookings", 
@@ -113,42 +115,28 @@ export const useAIChatOperations = () => {
     clearDetectedTask();
   }, [clearDetectedTask]);
   
-  const isTaskConfirmation = useCallback((messageText: string): boolean => {
-    const normalizedText = messageText.trim().toLowerCase();
-    
-    return CONFIRMATION_PHRASES.some(phrase => 
-      normalizedText === phrase || 
-      normalizedText.startsWith(phrase + " ") || 
-      normalizedText.endsWith(" " + phrase) ||
-      normalizedText.includes(" " + phrase + " ")
-    );
-  }, []);
+  // Intent classification and processing functions
   
-  const isTaskRejection = useCallback((messageText: string): boolean => {
-    const normalizedText = messageText.trim().toLowerCase();
-    
-    return REJECTION_PHRASES.some(phrase => 
-      normalizedText === phrase || 
-      normalizedText.startsWith(phrase + " ") || 
-      normalizedText.endsWith(" " + phrase) ||
-      normalizedText.includes(" " + phrase + " ")
-    );
-  }, []);
-  
-  const processMessageForTaskIntent = useCallback(async (messageText: string) => {
+  const processMessageForTaskIntent = useCallback(async (messageText: string, intentClassification: IntentClassification) => {
+    // If we already have a pending task confirmation
     if (pendingTaskConfirmation && detectedTask) {
-      if (isTaskConfirmation(messageText)) {
+      // Check if this is a confirmation message
+      if (intentClassification.intentType === 'confirmation') {
         console.log("Detected task confirmation, proceeding with task creation");
         confirmCreateTask(detectedTask);
         return true;
-      } else if (isTaskRejection(messageText)) {
+      } 
+      // Check if this is a rejection message
+      else if (intentClassification.intentType === 'rejection') {
         console.log("Detected task rejection, cancelling task creation");
         cancelCreateTask();
         return true;
       }
+      // If it's neither confirmation nor rejection, continue with normal processing
     }
     
-    if (!pendingTaskConfirmation) {
+    // Only try to parse a task if the intent is task-creation
+    if (intentClassification.intentType === 'task-creation' && !pendingTaskConfirmation) {
       try {
         console.log("Attempting to parse task with AI:", messageText);
         const parsedTask = await parseTaskWithAI(messageText);
@@ -260,6 +248,7 @@ export const useAIChatOperations = () => {
         console.error("Error parsing task with enhanced AI parser:", err);
       }
       
+      // Fallback to basic parser if AI parser fails
       const basicParsedTask = parseTaskFromMessage(messageText);
       
       if (basicParsedTask && basicParsedTask.title) {
@@ -288,13 +277,45 @@ export const useAIChatOperations = () => {
     }
     
     return false;
-  }, [pendingTaskConfirmation, detectedTask, isTaskConfirmation, isTaskRejection, confirmCreateTask, cancelCreateTask]);
+  }, [pendingTaskConfirmation, detectedTask, confirmCreateTask, cancelCreateTask]);
+  
+  // Process messages for image generation intent
+  const processMessageForImageIntent = useCallback((messageText: string, intentClassification: IntentClassification) => {
+    if (intentClassification.intentType === 'image-generation' && intentClassification.confidence > 0.65) {
+      console.log("Detected image generation intent:", messageText);
+      
+      // For now, just communicate that we detected this intent
+      const responseMessageId = uuidv4();
+      const responseMessage: AIMessage = {
+        id: responseMessageId,
+        role: "assistant",
+        content: "I understand you want to generate an image. In the future, I'll be able to generate images based on your description. For now, I can help with other requests.",
+        timestamp: new Date()
+      };
+      
+      setMessages(prevMessages => [...prevMessages, responseMessage]);
+      return true;
+    }
+    
+    return false;
+  }, []);
+  
+  // Process messages for other special intents
+  const processMessageForSpecialIntent = useCallback((messageText: string, intentClassification: IntentClassification) => {
+    // Handle other special intents here as needed
+    return false;
+  }, []);
   
   const sendMessage = useMutation({
     mutationFn: async (messageText: string) => {
       const userMessageId = uuidv4();
       const aiMessageId = uuidv4();
       
+      // Classify the intent of the message
+      const intentClassification = classifyIntent(messageText);
+      console.log(`[Intent Classification] Message: "${messageText.substring(0, 30)}..." → Intent: ${intentClassification.intentType} (${intentClassification.confidence.toFixed(2)})`);
+      
+      // Check if this is related to WAKTI topics to adjust focus
       const isWaktiRelated = WAKTI_TOPICS.some(topic => 
         messageText.toLowerCase().includes(topic)
       );
@@ -319,45 +340,65 @@ export const useAIChatOperations = () => {
       
       setMessages(prevMessages => [...prevMessages, userMessage]);
       
-      const isTaskIntent = await processMessageForTaskIntent(messageText);
+      // Process the message based on its intent
+      // Order matters here - we check for special intents first
+      let isHandled = false;
       
-      if (isTaskIntent) {
-        return null;
+      // First check if this is a task-related intent
+      if (intentClassification.intentType === 'task-creation' || 
+          intentClassification.intentType === 'confirmation' || 
+          intentClassification.intentType === 'rejection') {
+        isHandled = await processMessageForTaskIntent(messageText, intentClassification);
       }
       
-      try {
-        const token = "placeholder-token";
-        const userName = user?.user_metadata?.full_name || user?.user_metadata?.name;
-        
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        const response = await callAIAssistant(token, contextualMessage, userName);
-        
-        const aiMessage: AIMessage = {
-          id: aiMessageId,
-          role: "assistant",
-          content: response.response,
-          timestamp: new Date()
-        };
-        
-        setMessages(prevMessages => [...prevMessages, aiMessage]);
-        
-        return aiMessage;
-      } catch (error) {
-        console.error("Error sending message to AI:", error);
-        
-        const errorMessage: AIMessage = {
-          id: aiMessageId,
-          role: "error",
-          content: error instanceof Error 
-            ? `Sorry, I encountered an error: ${error.message}` 
-            : "Sorry, I encountered an unexpected error. Please try again.",
-          timestamp: new Date()
-        };
-        
-        setMessages(prevMessages => [...prevMessages, errorMessage]);
-        throw error;
+      // If not handled as a task, check if it's an image generation request
+      if (!isHandled && intentClassification.intentType === 'image-generation') {
+        isHandled = processMessageForImageIntent(messageText, intentClassification);
       }
+      
+      // Check for other special intents
+      if (!isHandled) {
+        isHandled = processMessageForSpecialIntent(messageText, intentClassification);
+      }
+      
+      // If no special handling, process as a general message
+      if (!isHandled) {
+        try {
+          const token = "placeholder-token";
+          const userName = user?.user_metadata?.full_name || user?.user_metadata?.name;
+          
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          const response = await callAIAssistant(token, contextualMessage, userName);
+          
+          const aiMessage: AIMessage = {
+            id: aiMessageId,
+            role: "assistant",
+            content: response.response,
+            timestamp: new Date()
+          };
+          
+          setMessages(prevMessages => [...prevMessages, aiMessage]);
+          
+          return aiMessage;
+        } catch (error) {
+          console.error("Error sending message to AI:", error);
+          
+          const errorMessage: AIMessage = {
+            id: aiMessageId,
+            role: "error",
+            content: error instanceof Error 
+              ? `Sorry, I encountered an error: ${error.message}` 
+              : "Sorry, I encountered an unexpected error. Please try again.",
+            timestamp: new Date()
+          };
+          
+          setMessages(prevMessages => [...prevMessages, errorMessage]);
+          throw error;
+        }
+      }
+      
+      return null;
     }
   });
   
