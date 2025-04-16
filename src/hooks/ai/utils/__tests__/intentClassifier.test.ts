@@ -1,5 +1,5 @@
 
-import { classifyIntent, getInappropriateContentResponse } from '../intentClassifier';
+import { classifyIntent, getInappropriateContentResponse } from '../classifier';
 
 describe('Intent Classifier', () => {
   it('should correctly identify task creation intents', () => {

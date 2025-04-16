@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { classifyIntent, getInappropriateContentResponse } from './intentClassifier';
+import { classifyIntent, getInappropriateContentResponse } from './classifier';
 import { WAKTIAIMode } from '@/types/ai-assistant.types';
 
 /**
