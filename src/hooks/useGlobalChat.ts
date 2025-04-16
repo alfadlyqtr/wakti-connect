@@ -41,29 +41,14 @@ export const useGlobalChat = () => {
     return { content, imageUrl: null };
   };
   
-  // Check if user can use AI based solely on account type from metadata
+  // Always allow AI access - no auth checks
   const canUseAI = useCallback(() => {
-    if (!user) return false;
-    
-    // Trust the account type from metadata ONLY
-    const accountType = user.user_metadata?.account_type;
-    return accountType === 'business' || accountType === 'individual';
-  }, [user]);
+    return true; // Always return true - no auth checking
+  }, []);
   
   // Send message function with improved error handling
   const sendMessage = useCallback(async (content: string) => {
     if (!content.trim() || isLoading) return;
-    
-    // Check if user can use AI based on metadata
-    if (!canUseAI()) {
-      toast({
-        title: "Feature not available",
-        description: "AI Assistant is only available for Business and Individual accounts.",
-        variant: "destructive",
-        duration: 5000,
-      });
-      return;
-    }
     
     setIsLoading(true);
     
@@ -167,7 +152,7 @@ export const useGlobalChat = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, messages, currentMode, currentPersonality, profile, user, canUseAI]);
+  }, [isLoading, messages, currentMode, currentPersonality, profile, user]);
   
   // Clear all messages
   const clearMessages = useCallback(() => {
@@ -179,8 +164,7 @@ export const useGlobalChat = () => {
     sendMessage,
     isLoading,
     clearMessages,
-    canUseAI: canUseAI(),
+    canUseAI: true, // Always allow AI access
     sessionId: globalChatMemory.getSessionId()
   };
 };
-

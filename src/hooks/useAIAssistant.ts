@@ -28,7 +28,7 @@ export const useAIAssistant = () => {
   
   const processingMessageRef = useRef(false);
   
-  // Get AI settings and knowledge hooks - make sure we're using the correct destructuring pattern
+  // Get AI settings and knowledge hooks with correct destructuring
   const { aiSettings, updateSettings, canUseAI } = useAISettings();
   const { addKnowledge, knowledgeUploads, isLoading: isLoadingKnowledge, deleteKnowledge } = useAIKnowledge();
   

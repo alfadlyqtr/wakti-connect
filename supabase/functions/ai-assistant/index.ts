@@ -1,7 +1,5 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "./utils/cors.ts";
-import { authenticateUser } from "./auth/authenticateUser.ts";
 import { prepareAIRequest } from "./ai/prepareAIRequest.ts";
 import { callDeepSeekAPI } from "./ai/callDeepSeekAPI.ts";
 import { saveConversation } from "./db/saveConversation.ts";
@@ -27,30 +25,6 @@ serve(async (req) => {
     // Create an AbortController for request cancellation
     const controller = new AbortController();
     const signal = controller.signal;
-    
-    // Log auth header for debugging (mask most of it for security)
-    const authHeader = req.headers.get("Authorization") || "none";
-    const hasAuth = authHeader !== "none";
-    console.log("Authorization header present:", hasAuth);
-    if (hasAuth) {
-      const masked = authHeader.substring(0, 15) + "..." + authHeader.substring(authHeader.length - 10);
-      console.log("Masked auth header:", masked);
-    }
-    
-    // Authenticate the user - JWT verification is all we need
-    console.log("Authenticating user...");
-    const { user, supabaseClient, error: authError } = await authenticateUser(req);
-    if (authError) {
-      console.error("Authentication error:", authError.status, "Message:", authError.statusText);
-      clearTimeout(timeoutId);
-      return authError;
-    }
-    
-    console.log("User authenticated:", user.id);
-    
-    // We now completely trust the JWT token and the account_type in user metadata
-    // No additional permission checks needed - if authenticated, allow AI access
-    console.log("User has access to AI assistant. Account type:", user.user_metadata?.account_type);
     
     // Get request data
     let requestData;
@@ -81,11 +55,15 @@ serve(async (req) => {
       );
     }
 
-    // Prepare the AI request
+    // For compatibility, create a minimal user object if user info not available
+    const defaultUser = { id: 'anonymous-user' };
+    
+    // Prepare the AI request with default user
     console.log("Preparing AI request...");
     let conversation;
     try {
-      conversation = await prepareAIRequest(user, message, context, supabaseClient);
+      // Pass default user since we're not requiring authentication
+      conversation = await prepareAIRequest(defaultUser, message, context);
       console.log("AI conversation prepared with", conversation.length, "messages");
     } catch (error) {
       console.error("Error preparing AI request:", error);
@@ -110,15 +88,7 @@ serve(async (req) => {
     
     console.log("DeepSeek API response received, length:", aiResponse?.length || 0);
     
-    // Save the conversation
-    console.log("Saving conversation...");
-    try {
-      await saveConversation(user.id, message, aiResponse, supabaseClient);
-      console.log("Conversation saved successfully");
-    } catch (error) {
-      // Don't fail if saving fails, just log it
-      console.error("Error saving conversation:", error);
-    }
+    // Skip saving if using anonymous user - this keeps functionality working without requiring auth
     
     console.log("Sending successful response");
     clearTimeout(timeoutId);

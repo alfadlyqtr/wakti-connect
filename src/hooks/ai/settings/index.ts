@@ -19,11 +19,10 @@ export const useAISettings = () => {
   
   const updateSettings = useUpdateAISettings(user);
 
-  // Trust the account type directly from metadata - only source of truth
-  const accountType = user?.user_metadata?.account_type;
-  const canUseAI = accountType === 'business' || accountType === 'individual';
+  // Always allow AI access - no auth checks
+  const canUseAI = true;
   
-  // Mark that we've checked permissions immediately based on user metadata
+  // Mark that we've checked permissions immediately
   useEffect(() => {
     if (user) {
       setHasCheckedPermissions(true);
@@ -35,7 +34,7 @@ export const useAISettings = () => {
     isLoading,
     settingsError,
     updateSettings,
-    // Directly trust metadata
+    // Always allow AI access
     canUseAI,
     isLoadingPermission: false,
     hasCheckedPermissions
