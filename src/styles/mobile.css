@@ -59,6 +59,11 @@
   justify-content: center;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 40;
+  transition: transform 0.2s ease;
+}
+
+.fab:active {
+  transform: scale(0.95);
 }
 
 /* Add a global class for mobile-specific content hiding */
@@ -74,4 +79,47 @@
   .desktop-only {
     display: none;
   }
+}
+
+/* Swipe gesture area */
+.swipe-area {
+  touch-action: pan-y;
+  user-select: none;
+}
+
+/* Pull to refresh indicator */
+.pull-indicator {
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+}
+
+/* Mobile form enhancements */
+.mobile-input {
+  font-size: 16px; /* Prevents zoom on iOS */
+  padding: 12px;
+  border-radius: 8px;
+}
+
+/* Native-looking alerts */
+.native-alert {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+}
+
+/* Bottom sheet styles */
+.bottom-sheet {
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+  transform-origin: bottom center;
+}
+
+/* iOS-style inertia scrolling */
+.momentum-scroll {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
 }

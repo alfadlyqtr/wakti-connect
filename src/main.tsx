@@ -29,6 +29,25 @@ const root = createRoot(rootElement!);
 window.WAKTI_DEBUG = true;
 console.log("Application initializing...");
 
+// Add mobile detection
+const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+  navigator.userAgent
+);
+console.log("Mobile device detected:", isMobileDevice);
+
+// Register service worker for PWA support
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js')
+      .then(registration => {
+        console.log('SW registered:', registration);
+      })
+      .catch(error => {
+        console.log('SW registration failed:', error);
+      });
+  });
+}
+
 // Render the app directly
 root.render(
   <AuthProvider>

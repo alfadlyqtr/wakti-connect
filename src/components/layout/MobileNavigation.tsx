@@ -1,7 +1,7 @@
 
 import React from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { Home, User, MessageSquare, Settings, Menu, Search, Brain } from "lucide-react";
+import { Home, User, MessageSquare, Settings, Menu, Search, Brain, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -64,38 +64,56 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
     return item.showFor.includes(userRole || 'free');
   });
 
+  // Determine if we're on a page that should show the floating action button
+  const shouldShowFAB = !location.pathname.includes('/messages') && 
+                        !location.pathname.includes('/settings');
+
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50 sm:block lg:hidden safe-area-bottom">
-      <div className="grid grid-cols-5 h-16">
-        {filteredItems.map((item, index) => (
-          <React.Fragment key={index}>
-            {item.action ? (
-              <Button
-                variant="ghost"
-                className="flex flex-col items-center justify-center h-full rounded-none hover:bg-muted touch-target"
-                onClick={item.action}
-              >
-                <item.icon className="h-5 w-5" />
-                <span className="text-xs mt-1">{item.label}</span>
-              </Button>
-            ) : (
-              <NavLink
-                to={item.path}
-                className={({ isActive }) =>
-                  cn(
-                    "flex flex-col items-center justify-center h-full rounded-none hover:bg-muted touch-target",
-                    isActive && "text-primary bg-primary/10"
-                  )
-                }
-              >
-                <item.icon className="h-5 w-5" />
-                <span className="text-xs mt-1">{item.label}</span>
-              </NavLink>
-            )}
-          </React.Fragment>
-        ))}
+    <>
+      {/* Bottom Navigation Bar */}
+      <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50 sm:block lg:hidden safe-area-bottom">
+        <div className="grid grid-cols-5 h-16">
+          {filteredItems.map((item, index) => (
+            <React.Fragment key={index}>
+              {item.action ? (
+                <Button
+                  variant="ghost"
+                  className="flex flex-col items-center justify-center h-full rounded-none hover:bg-muted touch-target"
+                  onClick={item.action}
+                >
+                  <item.icon className="h-5 w-5" />
+                  <span className="text-xs mt-1">{item.label}</span>
+                </Button>
+              ) : (
+                <NavLink
+                  to={item.path}
+                  className={({ isActive }) =>
+                    cn(
+                      "flex flex-col items-center justify-center h-full rounded-none hover:bg-muted touch-target",
+                      isActive && "text-primary bg-primary/10"
+                    )
+                  }
+                >
+                  <item.icon className="h-5 w-5" />
+                  <span className="text-xs mt-1">{item.label}</span>
+                </NavLink>
+              )}
+            </React.Fragment>
+          ))}
+        </div>
       </div>
-    </div>
+
+      {/* Floating Action Button - only shown on certain pages */}
+      {shouldShowFAB && !isStaff && (
+        <Button 
+          size="icon" 
+          className="fab bg-primary hover:bg-primary/90 h-14 w-14 shadow-lg"
+          aria-label="Add new item"
+        >
+          <Plus className="h-6 w-6" />
+        </Button>
+      )}
+    </>
   );
 };
 
