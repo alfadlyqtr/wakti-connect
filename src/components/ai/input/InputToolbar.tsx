@@ -1,35 +1,66 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Camera, Paperclip, Mic, MicOff } from 'lucide-react';
+import { Camera, Paperclip, Mic, MicOff, X } from 'lucide-react';
 import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { toast } from '@/components/ui/use-toast';
 
 interface InputToolbarProps {
   isLoading: boolean;
   isListening: boolean;
   onVoiceToggle: () => void;
+  onFileSelected?: (file: File) => void;
+  onImageCapture?: () => void;
 }
 
-export const InputToolbar = ({ isLoading, isListening, onVoiceToggle }: InputToolbarProps) => {
+export const InputToolbar = ({ 
+  isLoading, 
+  isListening, 
+  onVoiceToggle,
+  onFileSelected,
+  onImageCapture
+}: InputToolbarProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
   const { supportsVoice } = useVoiceInteraction({
     onTranscriptComplete: () => {}
   });
   
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
     
-    console.log('File to process:', files[0]);
+    const file = files[0];
+    console.log('File to process:', file);
+    
+    setSelectedFile(file);
+    
+    if (onFileSelected) {
+      onFileSelected(file);
+      toast({
+        title: "File Selected",
+        description: `Selected ${file.name}`,
+      });
+    }
+    
     e.target.value = '';
   };
   
   const handleCameraCapture = () => {
     console.log('Opening camera');
+    if (onImageCapture) {
+      onImageCapture();
+    } else {
+      toast({
+        title: "Camera",
+        description: "Camera functionality is coming soon!",
+      });
+    }
   };
 
   // Enhanced 3D button style with deeper shadows and brighter highlights
@@ -132,6 +163,20 @@ export const InputToolbar = ({ isLoading, isListening, onVoiceToggle }: InputToo
         className="hidden"
         accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
       />
+      
+      {selectedFile && (
+        <div className="ml-2 flex items-center bg-primary/10 px-2 py-1 rounded-full">
+          <span className="text-xs truncate max-w-[150px]">{selectedFile.name}</span>
+          <Button 
+            size="icon" 
+            variant="ghost" 
+            className="h-5 w-5 ml-1"
+            onClick={() => setSelectedFile(null)}
+          >
+            <X className="h-3 w-3" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

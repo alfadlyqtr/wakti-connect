@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -76,12 +75,10 @@ export const ImageGenerationToolCard: React.FC<ImageGenerationToolCardProps> = (
         // Also send the prompt to the parent component for the chat
         onSubmitPrompt(prompt.trim());
         
-        // Show success message with provider info
+        // Show success message
         toast({
           title: "Image Generated Successfully",
-          description: result.provider 
-            ? `Created using ${result.provider} image generation` 
-            : "Your image has been created successfully",
+          description: "Your image has been created successfully",
           variant: "default"
         });
       } else {

@@ -1,373 +1,268 @@
+
 import React, { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import { WAKTIAIMode } from '@/types/ai-assistant.types';
-import { useAIAssistant } from '@/hooks/useAIAssistant';
 import { cn } from '@/lib/utils';
 import { InputToolbar } from './InputToolbar';
-import { VoiceInputSection } from './VoiceInputSection';
-import { Send, Loader2, RefreshCw, AlertTriangle, Wifi, WifiOff, CheckCircle2 } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { SendMessageResult } from '@/hooks/ai/chat/types';
+import { useAIPersonality } from '@/components/ai/personality-switcher/AIPersonalityContext';
+import { useGlobalChat } from '@/hooks/useGlobalChat';
+import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
+import { toast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { CameraIcon, Loader2, Send, X } from 'lucide-react';
+import { generateUUID } from '@/lib/utils/uuid';
 
 interface AIMessageInputProps {
-  activeMode: WAKTIAIMode;
+  activeMode: any; // Use the proper type from your types file
 }
 
 export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
-  const [inputMessage, setInputMessage] = useState('');
-  const [showVoiceInput, setShowVoiceInput] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'checking'>('checking');
-  const [messageStatus, setMessageStatus] = useState<'idle' | 'sending' | 'sent' | 'failed'>('idle');
-  const { 
-    sendMessage, 
-    isLoading, 
-    isMessageProcessing, 
-    getCurrentProcessingMessage,
-    retryLastMessage,
-    hasFailedMessage,
-    clearMessages
-  } = useAIAssistant();
-  const inputRef = useRef<HTMLTextAreaElement>(null);
-  const prevMessageRef = useRef('');
-  const [sendError, setSendError] = useState<string | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
-  const [isRetrying, setIsRetrying] = useState(false);
-  const [isConnectionChecking, setIsConnectionChecking] = useState(false);
-  const messageSentTimerRef = useRef<any>(null);
-
+  const [message, setMessage] = useState("");
+  const [rows, setRows] = useState(1);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { sendMessage, isLoading } = useGlobalChat();
+  const { currentPersonality } = useAIPersonality();
+  const { toast: toastMessage } = useToast();
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  
+  const {
+    isListening,
+    transcript,
+    startListening,
+    stopListening,
+    clearTranscript,
+    isProcessing,
+    error
+  } = useVoiceInteraction({
+    onTranscriptComplete: (text) => {
+      if (text) {
+        setMessage(prev => prev + " " + text);
+      }
+    }
+  });
+  
+  // Camera ref for handling camera capture
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  
+  // Update rows based on content
   useEffect(() => {
-    checkConnection();
-  }, []);
-
-  const checkConnection = async () => {
-    setConnectionStatus('checking');
-    setIsConnectionChecking(true);
+    if (!textareaRef.current) return;
     
-    try {
-      const response = await fetch('/api/ping', { 
-        method: 'HEAD',
-        cache: 'no-cache'
+    // Reset height to get the correct scrollHeight
+    textareaRef.current.style.height = 'auto';
+    
+    // Calculate new height
+    const newRows = Math.min(
+      Math.max(
+        Math.ceil(textareaRef.current.scrollHeight / 24), // Assuming line height ~= 24px
+        1
+      ),
+      5 // Max 5 rows
+    );
+    
+    setRows(newRows);
+    
+    // Set the height
+    textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+  }, [message]);
+  
+  // Update message when transcript changes
+  useEffect(() => {
+    if (transcript) {
+      setMessage(prev => {
+        const newMessage = prev ? prev + " " + transcript : transcript;
+        return newMessage;
       });
-      
-      if (response.ok) {
-        setConnectionStatus('connected');
-        setSendError(null);
-      } else {
-        setConnectionStatus('disconnected');
-        setSendError("Connection to server unavailable. Check your internet connection.");
-      }
-    } catch (error) {
-      console.warn("Connection check failed:", error);
-      setConnectionStatus('disconnected');
-      setSendError("Connection to server unavailable. Check your internet connection.");
-    } finally {
-      setIsConnectionChecking(false);
+      clearTranscript();
     }
-  };
-
-  useEffect(() => {
-    const currentProcessingMessage = getCurrentProcessingMessage();
-    if (currentProcessingMessage && inputMessage === '') {
-      console.log("Restoring failed message to input:", currentProcessingMessage.substring(0, 20) + "...");
-      setInputMessage(currentProcessingMessage);
-      setSendError("Your previous message wasn't sent. You can edit and try again.");
-    }
-  }, [getCurrentProcessingMessage, inputMessage]);
-
-  useEffect(() => {
-    if (inputMessage && !isLoading) {
-      prevMessageRef.current = inputMessage;
-    }
-  }, [inputMessage, isLoading]);
-
-  useEffect(() => {
-    if (messageStatus === 'sent') {
-      messageSentTimerRef.current = setTimeout(() => {
-        setMessageStatus('idle');
-      }, 2000);
-    }
-    
-    return () => {
-      if (messageSentTimerRef.current) {
-        clearTimeout(messageSentTimerRef.current);
-      }
-    };
-  }, [messageStatus]);
-
-  const handleSendMessage = async (e: React.FormEvent) => {
+  }, [transcript, clearTranscript]);
+  
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!inputMessage.trim() || isLoading || isMessageProcessing()) return;
-
-    if (connectionStatus === 'disconnected') {
-      await checkConnection();
-      if (connectionStatus === 'disconnected') {
-        setSendError("Cannot send message while offline. Please check your connection.");
+    if (!message.trim() && !imageFile) return;
+    
+    try {
+      // If there's an image, process it
+      if (imageFile) {
+        // Handle image upload logic here
+        const reader = new FileReader();
+        
+        reader.onload = async (event) => {
+          if (event.target?.result) {
+            const imageDataUrl = event.target.result.toString();
+            // Send the message with image prompt
+            const imagePrompt = message.trim() 
+              ? `Generate an image based on: ${message.trim()}`
+              : `Analyze this image and respond with insights`;
+              
+            await sendMessage(imagePrompt);
+            
+            // Reset state
+            setImageFile(null);
+            setImagePreview(null);
+            setMessage("");
+          }
+        };
+        
+        reader.readAsDataURL(imageFile);
         return;
       }
-    }
-
-    const messageCopy = inputMessage.trim();
-    setSendError(null);
-    setMessageStatus('sending');
-    setInputMessage(''); // Clear input immediately for better UX
-    
-    try {
-      console.log("Sending message:", messageCopy.substring(0, 20) + "...");
-      const result = await sendMessage(messageCopy);
       
-      if (result.success) {
-        console.log("Message sent successfully");
-        prevMessageRef.current = '';
-        setSendError(null);
-        setRetryCount(0);
-        setConnectionStatus('connected');
-        setMessageStatus('sent');
-      } else {
-        setMessageStatus('failed');
-        
-        // If message failed but we want to keep input text, restore it
-        if (result.keepInputText) {
-          setInputMessage(messageCopy);
-        }
-        
-        if ('isConnectionError' in result && result.isConnectionError) {
-          setConnectionStatus('disconnected');
-          setSendError("Connection to AI service failed. Please check your internet connection and try again.");
-        } else {
-          setSendError(result.error?.message || 'Failed to send message. Try again.');
-        }
-        
-        console.warn('Message failed to send.', result.error);
-        setRetryCount(prev => prev + 1);
-      }
+      // Regular text message
+      await sendMessage(message.trim());
+      setMessage("");
     } catch (error) {
-      console.error('Error sending message:', error);
-      setSendError(error.message || 'An unexpected error occurred');
-      setConnectionStatus('disconnected');
-      setRetryCount(prev => prev + 1);
-      setMessageStatus('failed');
-      // Restore input message on error
-      setInputMessage(messageCopy);
-    }
-  };
-
-  const handleRetry = async () => {
-    setIsRetrying(true);
-    setSendError(null);
-    setMessageStatus('sending');
-    
-    await checkConnection();
-    
-    if (connectionStatus === 'disconnected') {
-      setSendError("Still offline. Please check your connection before retrying.");
-      setIsRetrying(false);
-      setMessageStatus('failed');
-      return;
-    }
-    
-    try {
-      console.log("Attempting to retry last message");
-      const result = await retryLastMessage();
-      
-      if (result.success) {
-        console.log("Retry successful, clearing input");
-        setInputMessage('');
-        prevMessageRef.current = '';
-        setRetryCount(0);
-        setConnectionStatus('connected');
-        setMessageStatus('sent');
-      } else if ('isConnectionError' in result && result.isConnectionError) {
-        setConnectionStatus('disconnected');
-        setSendError("Connection to AI service failed. Please try again later.");
-        setMessageStatus('failed');
-      } else if (result.keepInputText) {
-        // Keep input message if indicated
-        setMessageStatus('failed');
-      } else {
-        setInputMessage('');
-        setMessageStatus('failed');
-      }
-    } catch (error) {
-      console.error('Error retrying message:', error);
-      setSendError('Failed to retry message: ' + (error.message || 'Unknown error'));
-      setConnectionStatus('disconnected');
-      setMessageStatus('failed');
-    } finally {
-      setIsRetrying(false);
-    }
-  };
-
-  const handleClearChat = () => {
-    if (window.confirm("Are you sure you want to clear all messages?")) {
-      clearMessages();
-      setMessageStatus('idle');
-      setInputMessage('');
-      setSendError(null);
-      setRetryCount(0);
-      toast({
-        title: "Chat cleared",
-        description: "All messages have been cleared.",
+      console.error("Error sending message:", error);
+      toastMessage({
+        title: "Error",
+        description: "Failed to send message. Please try again.",
+        variant: "destructive",
       });
     }
   };
-
-  const getModeButtonStyle = () => {
-    switch (activeMode) {
-      case 'general':
-        return 'bg-wakti-blue hover:bg-wakti-blue/90';
-      case 'productivity':
-        return 'bg-purple-600 hover:bg-purple-700';
-      case 'student':
-        return 'bg-green-600 hover:bg-green-700';
-      case 'creative':
-        return 'bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 hover:from-pink-600 hover:via-purple-600 hover:to-indigo-600';
-      default:
-        return 'bg-primary hover:bg-primary/90';
+  
+  const toggleVoiceRecording = () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
     }
   };
-
-  const getButtonStyle = () => {
-    if (messageStatus === 'sent') {
-      return 'bg-green-600 hover:bg-green-700 text-white';
+  
+  const handleFileSelected = (file: File) => {
+    // Check if file is an image
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          setImagePreview(e.target.result.toString());
+        }
+      };
+      reader.readAsDataURL(file);
+      setImageFile(file);
+    } else {
+      // Handle other file types if needed
+      toast({
+        title: "File Type Not Supported",
+        description: "Only image files are currently supported.",
+        variant: "destructive"
+      });
     }
-    return getModeButtonStyle();
   };
-
-  const ConnectionIndicator = () => (
-    <div className="flex items-center gap-2 text-xs">
-      {connectionStatus === 'checking' || isConnectionChecking ? (
-        <Loader2 className="h-3 w-3 animate-spin text-amber-500" />
-      ) : connectionStatus === 'connected' ? (
-        <Wifi className="h-3 w-3 text-green-500" />
-      ) : (
-        <WifiOff className="h-3 w-3 text-red-500" />
-      )}
-      <span className={cn(
-        connectionStatus === 'connected' ? 'text-green-500' : 
-        connectionStatus === 'disconnected' ? 'text-red-500' : 
-        'text-amber-500'
-      )}>
-        {connectionStatus === 'checking' || isConnectionChecking ? 'Checking connection...' : 
-         connectionStatus === 'connected' ? 'Connected' : 'Disconnected'}
-      </span>
-      {connectionStatus === 'disconnected' && (
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={checkConnection} 
-          className="h-5 px-1 text-xs"
-          disabled={isConnectionChecking}
-        >
-          {isConnectionChecking ? 
-            <Loader2 className="h-3 w-3 animate-spin mr-1" /> : 
-            <RefreshCw className="h-3 w-3 mr-1" />}
-          Retry
-        </Button>
-      )}
-    </div>
-  );
+  
+  const handleImageCapture = () => {
+    // Trigger the file input for camera
+    if (cameraInputRef.current) {
+      cameraInputRef.current.click();
+    }
+  };
+  
+  const handleCameraCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    const file = files[0];
+    handleFileSelected(file);
+    
+    // Reset the input
+    e.target.value = '';
+  };
 
   return (
-    <form onSubmit={handleSendMessage} className="space-y-2">
-      {sendError && (
-        <Alert variant="destructive" className="py-2">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription className="flex items-center justify-between">
-            <span>{sendError}</span>
-            <Button 
-              type="button" 
-              size="sm" 
-              variant="ghost" 
-              className="text-red-600 hover:text-red-700 hover:bg-red-100 p-1 h-auto"
-              onClick={() => setSendError(null)}
+    <div className="message-input-container relative">
+      <form onSubmit={handleSubmit} className="flex flex-col">
+        {/* Image preview */}
+        <AnimatePresence>
+          {imagePreview && (
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              className="relative mb-2 rounded-lg overflow-hidden border border-border"
             >
-              Dismiss
-            </Button>
-          </AlertDescription>
-        </Alert>
-      )}
-      
-      <div className="relative">
-        <Textarea
-          ref={inputRef}
-          placeholder={showVoiceInput ? "Listening..." : "Type a message..."}
-          value={inputMessage}
-          onChange={(e) => setInputMessage(e.target.value)}
-          className={cn(
-            "min-h-10 pr-24 resize-none",
-            showVoiceInput && "bg-pink-50",
-            sendError && "border-red-300 focus-visible:ring-red-500",
-            retryCount > 0 && "bg-amber-50/30",
-            messageStatus === 'sent' && "border-green-300",
-            connectionStatus === 'disconnected' && "border-red-200 bg-red-50/20"
+              <img 
+                src={imagePreview} 
+                alt="Selected image" 
+                className="w-full max-h-60 object-contain" 
+              />
+              <Button
+                type="button"
+                variant="destructive"
+                size="icon"
+                className="absolute top-2 right-2 h-6 w-6 rounded-full"
+                onClick={() => {
+                  setImagePreview(null);
+                  setImageFile(null);
+                }}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </motion.div>
           )}
-          disabled={isLoading || showVoiceInput || connectionStatus === 'disconnected'}
-        />
+        </AnimatePresence>
+        
+        <div className="input-row relative">
+          <Textarea
+            ref={textareaRef}
+            placeholder={`Ask ${currentPersonality.name || "WAKTI"} anything...`}
+            className={cn(
+              "w-full min-h-[50px] resize-none py-3 px-4 pr-16 bg-background/80 backdrop-blur-sm transition-all",
+              isListening && "bg-red-50/30 border-red-200 dark:bg-red-900/20 dark:border-red-900/50"
+            )}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (message.trim() || imageFile) {
+                  handleSubmit(e);
+                }
+              }
+            }}
+            rows={rows}
+            disabled={isLoading || isListening}
+          />
+          
+          <div className="absolute right-3 bottom-3">
+            <Button 
+              type="submit" 
+              size="icon" 
+              disabled={(!message.trim() && !imageFile) || isLoading}
+              className={cn(
+                "h-9 w-9 rounded-full transition-all shadow-md",
+                isLoading ? "bg-muted" : ""
+              )}
+            >
+              {isLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+        </div>
         
         <InputToolbar 
           isLoading={isLoading} 
-          isListening={showVoiceInput}
-          onVoiceToggle={() => setShowVoiceInput(!showVoiceInput)}
+          isListening={isListening} 
+          onVoiceToggle={toggleVoiceRecording}
+          onFileSelected={handleFileSelected}
+          onImageCapture={handleImageCapture}
         />
-      </div>
-      
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <ConnectionIndicator />
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={handleClearChat}
-            className="text-xs text-muted-foreground hover:text-destructive ml-2"
-          >
-            Clear Chat
-          </Button>
-        </div>
         
-        <div className="flex items-center gap-2">
-          {(hasFailedMessage() || retryCount > 0) && (
-            <Button 
-              type="button" 
-              onClick={handleRetry}
-              variant="outline"
-              className={cn("px-3", isRetrying && "bg-amber-50")}
-              disabled={isRetrying || isLoading || connectionStatus === 'disconnected'}
-            >
-              {isRetrying ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-1" />
-              ) : (
-                <RefreshCw className="h-4 w-4 mr-1" />
-              )}
-              Retry
-            </Button>
-          )}
-          
-          <Button 
-            type="submit" 
-            disabled={
-              !inputMessage.trim() || 
-              isLoading || 
-              isMessageProcessing() || 
-              isRetrying || 
-              connectionStatus === 'disconnected'
-            } 
-            className={cn("px-4", getButtonStyle())}
-          >
-            {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-1" />
-            ) : messageStatus === 'sent' ? (
-              <CheckCircle2 className="h-4 w-4 mr-1" />
-            ) : (
-              <Send className="h-4 w-4 mr-1" />
-            )}
-            {messageStatus === 'sent' ? 'Sent' : 'Send'}
-          </Button>
-        </div>
-      </div>
-    </form>
+        {/* Hidden camera input */}
+        <input
+          type="file"
+          ref={cameraInputRef}
+          accept="image/*"
+          capture="user"
+          className="hidden"
+          onChange={handleCameraCapture}
+        />
+      </form>
+    </div>
   );
 };
