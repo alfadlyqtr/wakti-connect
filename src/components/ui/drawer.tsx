@@ -1,57 +1,24 @@
-
 import * as React from "react"
 import { Drawer as DrawerPrimitive } from "vaul"
 
 import { cn } from "@/lib/utils"
-import { platformHapticFeedback } from "@/utils/hapticFeedback"
 
 const Drawer = ({
   shouldScaleBackground = true,
-  onOpenChange,
   ...props
-}: React.ComponentProps<typeof DrawerPrimitive.Root> & {
-  onOpenChange?: (open: boolean) => void;
-}) => {
-  // Add haptic feedback on drawer open/close
-  const handleOpenChange = (open: boolean) => {
-    if (open) {
-      platformHapticFeedback('impact');
-    } else {
-      platformHapticFeedback('selection');
-    }
-    
-    // Call the original handler if provided
-    if (onOpenChange) {
-      onOpenChange(open);
-    }
-  };
-  
-  return (
-    <DrawerPrimitive.Root
-      shouldScaleBackground={shouldScaleBackground}
-      onOpenChange={handleOpenChange}
-      {...props}
-    />
-  );
-};
-
+}: React.ComponentProps<typeof DrawerPrimitive.Root>) => (
+  <DrawerPrimitive.Root
+    shouldScaleBackground={shouldScaleBackground}
+    {...props}
+  />
+)
 Drawer.displayName = "Drawer"
 
 const DrawerTrigger = DrawerPrimitive.Trigger
 
 const DrawerPortal = DrawerPrimitive.Portal
 
-const DrawerClose = React.forwardRef<
-  React.ElementRef<typeof DrawerPrimitive.Close>,
-  React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Close>
->(({ className, ...props }, ref) => (
-  <DrawerPrimitive.Close
-    ref={ref}
-    className={cn("fixed inset-0 z-50 bg-black/80", className)}
-    {...props}
-  />
-))
-DrawerClose.displayName = DrawerPrimitive.Close.displayName
+const DrawerClose = DrawerPrimitive.Close
 
 const DrawerOverlay = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Overlay>,
@@ -74,7 +41,7 @@ const DrawerContent = React.forwardRef<
     <DrawerPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[10px] border bg-background platform-drawer",
+        "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[10px] border bg-background",
         className
       )}
       {...props}
@@ -102,7 +69,7 @@ const DrawerFooter = ({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
-    className={cn("mt-auto flex flex-col gap-2 p-4 safe-area-bottom", className)}
+    className={cn("mt-auto flex flex-col gap-2 p-4", className)}
     {...props}
   />
 )

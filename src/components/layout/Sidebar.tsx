@@ -97,40 +97,38 @@ const Sidebar = ({
   };
 
   return (
-    <div className="hidden lg:block"> {/* Hide on mobile, show on lg screens and up */}
-      <SidebarContainer 
-        isOpen={isOpen} 
-        collapsed={collapsed} 
-        onCollapseChange={onCollapseChange}
-      >
-        {/* Toggle collapse button - Only visible on desktop */}
-        <CollapseToggle collapsed={collapsed} toggleCollapse={toggleCollapse} />
+    <SidebarContainer 
+      isOpen={isOpen} 
+      collapsed={collapsed} 
+      onCollapseChange={onCollapseChange}
+    >
+      {/* Toggle collapse button - Only visible on desktop */}
+      <CollapseToggle collapsed={collapsed} toggleCollapse={toggleCollapse} />
+      
+      {/* User Profile Section */}
+      <SidebarProfile profileData={profileData} collapsed={collapsed} />
+      
+      {/* Navigation Items - Wrap in ScrollArea for proper scrolling */}
+      <ScrollArea className="flex-grow">
+        <SidebarNavItems 
+          onNavClick={handleNavClick} 
+          isCollapsed={collapsed} 
+          openCommandSearch={openCommandSearch}
+        />
         
-        {/* User Profile Section */}
-        <SidebarProfile profileData={profileData} collapsed={collapsed} />
-        
-        {/* Navigation Items - Wrap in ScrollArea for proper scrolling */}
-        <ScrollArea className="flex-grow">
-          <SidebarNavItems 
-            onNavClick={handleNavClick} 
-            isCollapsed={collapsed} 
-            openCommandSearch={openCommandSearch}
-          />
-          
-          {/* Upgrade Button - Only shown for free accounts that need to upgrade */}
-          {showUpgradeButton && (
-            <SidebarUpgradeButton collapsed={collapsed} />
-          )}
-        </ScrollArea>
-        
-        {/* Upgrade Banner - Only show for free users and when not collapsed */}
-        {userRole === "free" && !collapsed && (
-          <div className="mt-auto px-3 pb-5">
-            <SidebarUpgradeBanner />
-          </div>
+        {/* Upgrade Button - Only shown for free accounts that need to upgrade */}
+        {showUpgradeButton && (
+          <SidebarUpgradeButton collapsed={collapsed} />
         )}
-      </SidebarContainer>
-    </div>
+      </ScrollArea>
+      
+      {/* Upgrade Banner - Only show for free users and when not collapsed */}
+      {userRole === "free" && !collapsed && (
+        <div className="mt-auto px-3 pb-5">
+          <SidebarUpgradeBanner />
+        </div>
+      )}
+    </SidebarContainer>
   );
 };
 

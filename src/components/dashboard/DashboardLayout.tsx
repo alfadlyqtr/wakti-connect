@@ -10,7 +10,6 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { UserRole, getEffectiveRole } from "@/types/user";
 import CommandSearch from "@/components/search/CommandSearch";
 import FreeAccountBanner from "./FreeAccountBanner";
-import MobileNavigation from "@/components/layout/MobileNavigation";
 
 interface DashboardLayoutProps {
   children?: React.ReactNode;
@@ -119,11 +118,8 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
   // Get display role that's compatible with components expecting the old type
   const displayRole = mapRoleForCompatibility(userRoleValue);
 
-  // Add bottom padding for mobile devices to account for bottom navigation
-  const contentClass = isMobile ? "pb-16" : "";
-
   return (
-    <div className={`min-h-screen flex flex-col overflow-hidden ${isSidebarOpen && isMobile ? 'sidebar-open-body' : ''} ${contentClass}`}>
+    <div className={`min-h-screen flex flex-col overflow-hidden ${isSidebarOpen && isMobile ? 'sidebar-open-body' : ''}`}>
       <Navbar toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
       
       {/* Free Account Banner - Only shown for free individual accounts */}
@@ -139,7 +135,6 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
           />
         )}
         
-        {/* Sidebar - Only visible on desktop */}
         <Sidebar 
           isOpen={isSidebarOpen} 
           userRole={displayRole}
@@ -162,13 +157,6 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
           <Outlet />
         </DashboardContent>
       </div>
-
-      {/* Mobile Navigation - Only visible on mobile */}
-      <MobileNavigation 
-        toggleSidebar={toggleSidebar}
-        openCommandSearch={openCommandSearch}
-        userRole={displayRole}
-      />
 
       {/* Global command search dialog */}
       <CommandSearch 
