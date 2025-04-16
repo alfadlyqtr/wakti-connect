@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -85,19 +84,18 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const getInputBackgroundStyle = () => {
     switch (currentMode) {
       case 'general':
-        return 'bg-blue-900/15';
+        return 'bg-blue-500/10 border-blue-500/30';
       case 'student':
-        return 'bg-green-900/15';
+        return 'bg-green-500/10 border-green-500/30';
       case 'productivity':
-        return 'bg-purple-900/15';
+        return 'bg-purple-500/10 border-purple-500/30';
       case 'creative':
-        return 'bg-pink-900/15';
+        return 'bg-pink-500/10 border-pink-500/30';
       default:
-        return 'bg-blue-900/15';
+        return 'bg-blue-500/10 border-blue-500/30';
     }
   };
 
-  // Enhanced 3D send button style
   const sendButtonStyle = {
     background: 'rgba(255, 255, 255, 0.12)',
     boxShadow: '0 15px 35px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.15) inset, 0 0 15px rgba(59, 130, 246, 0.3)',
@@ -109,7 +107,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   return (
     <motion.form 
       onSubmit={handleSubmit} 
-      className="relative flex flex-col gap-3 p-4 sm:p-5 border-t border-white/10 bg-black/20 backdrop-blur-xl"
+      className="relative flex flex-col gap-3 p-4 sm:p-5 border-t border-white/10 bg-transparent backdrop-blur-xl"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: 0.2 }}
@@ -129,7 +127,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             placeholder="Type a message..."
             disabled={isLoading || isDisabled || isListening}
             className={cn(
-              "flex-1 dark:bg-slate-800/25 backdrop-blur-xl border-2 border-white/20 dark:border-slate-700/20 transition-all duration-300 input-active text-foreground resize-none min-h-[60px] max-h-[120px] px-5 py-4 rounded-xl",
+              "flex-1 backdrop-blur-xl transition-all duration-300 input-active text-foreground resize-none min-h-[60px] max-h-[120px] px-5 py-4 rounded-xl",
               inputValue && "pr-12",
               isLoading && "opacity-70",
               isListening && "bg-primary/10 border-primary/20",
@@ -138,13 +136,14 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               "shadow-[0_15px_35px_rgba(0,0,0,0.7)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.8),0_0_20px_rgba(59,130,246,0.3)] focus:shadow-[0_20px_40px_rgba(0,0,0,0.8),0_0_30px_rgba(59,130,246,0.5)] transform hover:translate-y-[-5px] focus:translate-y-[-5px] neon-glow-blue"
             )}
             style={{
+              background: 'rgba(255, 255, 255, 0.08)',
               boxShadow: '0 15px 35px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1) inset, 0 0 15px rgba(59, 130, 246, 0.3)',
-              transform: 'perspective(1000px) rotateX(2deg)'
+              transform: 'perspective(1000px) rotateX(2deg)',
+              color: 'white'
             }}
           />
         </div>
         
-        {/* Toolbar and send button row */}
         <div className="flex justify-between items-center w-full mt-1">
           <InputToolbar 
             isLoading={isLoading} 
