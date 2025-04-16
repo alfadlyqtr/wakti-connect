@@ -30,16 +30,21 @@ export async function checkUserAccess(user, supabaseClient) {
     
     // First try with RPC function (more reliable)
     console.log("Attempting RPC function can_use_ai_assistant...");
-    const { data: canUseAI, error: canUseAIError } = await supabaseClient.rpc(
-      "can_use_ai_assistant"
-    );
+    try {
+      const { data: canUseAI, error: canUseAIError } = await supabaseClient.rpc(
+        "can_use_ai_assistant"
+      );
 
-    // Log for troubleshooting
-    console.log("RPC check result:", { canUseAI, error: canUseAIError ? canUseAIError.message : null });
-    
-    if (!canUseAIError && canUseAI !== null) {
-      console.log("RPC check successful, result:", canUseAI);
-      return { canUseAI };
+      // Log for troubleshooting
+      console.log("RPC check result:", { canUseAI, error: canUseAIError ? canUseAIError.message : null });
+      
+      if (!canUseAIError && canUseAI !== null) {
+        console.log("RPC check successful, result:", canUseAI);
+        return { canUseAI };
+      }
+    } catch (rpcError) {
+      console.error("Error calling RPC function:", rpcError);
+      // Continue to fallback method
     }
     
     console.log("RPC check failed, falling back to direct profile check");
@@ -104,7 +109,8 @@ export async function checkUserAccess(user, supabaseClient) {
       };
     }
     
-    // Log profile data for troubleshooting
+    // For debugging - log profile information
+    console.log("Profile data:", profile);
     console.log("Profile check successful, account type:", profile?.account_type);
     
     // Check if the account type is valid for AI access

@@ -71,10 +71,10 @@ You can ask me to generate another image or help with something else!`;
       }
     }
     
-    // Get current session
-    const { data: sessionData } = await supabase.auth.getSession();
-    if (!sessionData.session) {
-      console.error('[callAIAssistant] No authenticated session found');
+    // Get current session and ensure we have a valid token for the request
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !sessionData.session) {
+      console.error('[callAIAssistant] Session error or no session found:', sessionError);
       return {
         error: {
           message: 'Authentication required. Please sign in to use the AI assistant.',
@@ -82,6 +82,10 @@ You can ask me to generate another image or help with something else!`;
         }
       };
     }
+    
+    // Log the session token (first 10 chars) for debugging
+    const token = sessionData.session.access_token;
+    console.log('[callAIAssistant] Got session token:', token.substring(0, 10) + '...');
     
     console.log('[callAIAssistant] Authenticated session confirmed, calling AI service');
     
@@ -115,6 +119,9 @@ You can ask me to generate another image or help with something else!`;
             userContext: userContext,
             includeTimestamp: true,
             intentClassification: JSON.stringify(intentClassification)
+          },
+          headers: {
+            Authorization: `Bearer ${token}`,
           }
         }),
         timeoutPromise

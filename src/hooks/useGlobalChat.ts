@@ -13,7 +13,7 @@ export const useGlobalChat = () => {
   const [messages, setMessages] = useState<ChatMemoryMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { currentMode, currentPersonality } = useAIPersonality();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { profile, isLoading: isProfileLoading } = useProfile(user?.id);
   
   // Subscribe to global chat memory
@@ -42,9 +42,59 @@ export const useGlobalChat = () => {
     return { content, imageUrl: null };
   };
   
+  // Check if user has necessary account type for AI
+  const userCanUseAI = useCallback(() => {
+    // If not authenticated, can't use AI
+    if (!isAuthenticated) {
+      return false;
+    }
+    
+    // If profile is still loading, we don't know yet
+    if (isProfileLoading) {
+      return undefined; // undefined means "still checking"
+    }
+    
+    // Business and individual accounts can use AI
+    if (profile?.account_type === 'business' || profile?.account_type === 'individual') {
+      return true;
+    }
+    
+    // Fallback to user metadata if profile doesn't have the info
+    const accountTypeFromMetadata = user?.user_metadata?.account_type;
+    if (accountTypeFromMetadata === 'business' || accountTypeFromMetadata === 'individual') {
+      return true;
+    }
+    
+    // Default to false if we can't confirm access
+    return false;
+  }, [isAuthenticated, isProfileLoading, profile, user]);
+  
   // Send message function with improved error handling
   const sendMessage = useCallback(async (content: string) => {
     if (!content.trim() || isLoading) return;
+    
+    // Check if user can use AI
+    const canUseAI = userCanUseAI();
+    
+    if (canUseAI === undefined) {
+      // Still checking, try again shortly
+      toast({
+        title: "Checking access...",
+        description: "Please try again in a moment.",
+        duration: 3000,
+      });
+      return;
+    }
+    
+    if (canUseAI === false) {
+      toast({
+        title: "Feature not available",
+        description: "AI Assistant is only available for Business and Individual accounts.",
+        variant: "destructive",
+        duration: 5000,
+      });
+      return;
+    }
     
     setIsLoading(true);
     
@@ -55,7 +105,8 @@ export const useGlobalChat = () => {
       globalChatMemory.addMessage({
         role: 'user',
         content,
-        mode: currentMode
+        mode: currentMode,
+        timestamp: new Date()
       });
       
       // Prepare system message with current personality
@@ -86,11 +137,27 @@ export const useGlobalChat = () => {
         
         if (error) {
           console.error('[useGlobalChat] AI assistant error:', error);
-          toast({
-            title: "Error",
-            description: error.message || "Failed to get AI response",
-            variant: "destructive",
-          });
+          
+          // Handle different types of errors differently
+          if (error.isConnectionError) {
+            toast({
+              title: "Connection Error",
+              description: "Could not connect to AI service. Please check your internet connection and try again.",
+              variant: "destructive",
+            });
+          } else if (error.message.includes("only available for Business")) {
+            toast({
+              title: "Access Restricted",
+              description: "AI Assistant is only available for Business and Individual accounts.",
+              variant: "destructive",
+            });
+          } else {
+            toast({
+              title: "Error",
+              description: error.message || "Failed to get AI response",
+              variant: "destructive",
+            });
+          }
           return;
         }
         
@@ -105,7 +172,8 @@ export const useGlobalChat = () => {
             role: 'assistant',
             content: processedContent,
             mode: currentMode,
-            imageUrl: imageUrl || generatedImage // Use either embedded image or separately returned image
+            imageUrl: imageUrl || generatedImage, // Use either embedded image or separately returned image
+            timestamp: new Date()
           });
         } else {
           console.error('[useGlobalChat] Empty response from AI assistant');
@@ -133,23 +201,19 @@ export const useGlobalChat = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, messages, currentMode, currentPersonality, profile]);
+  }, [isLoading, messages, currentMode, currentPersonality, profile, userCanUseAI]);
   
   // Clear all messages
   const clearMessages = useCallback(() => {
     globalChatMemory.clearMessages();
   }, []);
   
-  // Check if user can use AI based on their account type
-  // Only restrict if profile is loaded and account_type is 'free'
-  const canUseAI = !isProfileLoading && profile?.account_type !== 'free';
-  
   return {
     messages,
     sendMessage,
     isLoading,
     clearMessages,
-    canUseAI,
+    canUseAI: userCanUseAI(),
     sessionId: globalChatMemory.getSessionId()
   };
 };

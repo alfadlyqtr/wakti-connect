@@ -21,11 +21,16 @@ export const useAISettings = () => {
   
   const updateSettings = useUpdateAISettings(user);
 
+  // Determine if business or individual account from user metadata
+  const isBusinessOrIndividual = user?.user_metadata?.account_type === 'business' || 
+                                user?.user_metadata?.account_type === 'individual';
+
   return {
     aiSettings,
     isLoadingSettings,
     settingsError,
     updateSettings,
-    canUseAI: canUseAI === true,
+    // User can use AI if either the RPC function returns true OR they have a business/individual account
+    canUseAI: canUseAI === true || isBusinessOrIndividual,
   };
 };

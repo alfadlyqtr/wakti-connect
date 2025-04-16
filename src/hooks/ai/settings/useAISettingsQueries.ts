@@ -77,34 +77,38 @@ export const useCanUseAIQuery = (user: User | null) => {
 
       try {
         console.log("Checking if user can use AI:", user.id);
-        // First try the RPC function
-        const { data: canUse, error: rpcError } = await supabase.rpc("can_use_ai_assistant");
         
-        if (!rpcError && canUse !== null) {
-          console.log("RPC check result:", canUse);
-          return canUse;
-        }
-        
-        console.log("RPC check failed, falling back to profile check");
-        // Fallback to checking the profile directly
+        // First check if the user has a business or individual account directly
+        // This is a workaround for potential RPC issues
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select("account_type")
           .eq("id", user.id)
           .single();
-
-        if (profileError) {
-          console.error("Error checking access:", profileError);
-          throw new Error(`Error checking access: ${profileError.message}`);
+          
+        if (!profileError && profile) {
+          console.log("Direct profile check result:", profile.account_type);
+          // Business and individual accounts can use AI
+          if (profile.account_type === 'business' || profile.account_type === 'individual') {
+            return true;
+          }
         }
-
-        // Log the account type for debugging
-        console.log("Account type for AI access check:", profile?.account_type);
         
-        return profile?.account_type === "business" || profile?.account_type === "individual";
+        // If direct check doesn't confirm access, try the RPC function
+        const { data: canUse, error: rpcError } = await supabase.rpc("can_use_ai_assistant");
+        
+        if (rpcError) {
+          console.error("RPC error when checking AI access:", rpcError);
+          // If RPC fails, we rely on the profile check we already did above
+          return false;
+        }
+        
+        console.log("RPC check result:", canUse);
+        return canUse === true;
       } catch (error) {
         console.error("Error checking AI access:", error);
-        throw error;
+        // In case of error, default to false for safety
+        return false;
       }
     },
     enabled: !!user,
