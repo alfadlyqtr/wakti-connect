@@ -60,3 +60,18 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 40;
 }
+
+/* Add a global class for mobile-specific content hiding */
+.mobile-only {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .mobile-only {
+    display: block;
+  }
+  
+  .desktop-only {
+    display: none;
+  }
+}

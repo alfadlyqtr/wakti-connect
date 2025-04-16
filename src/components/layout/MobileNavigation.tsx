@@ -65,14 +65,14 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
   });
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50 sm:block lg:hidden">
+    <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50 sm:block lg:hidden safe-area-bottom">
       <div className="grid grid-cols-5 h-16">
         {filteredItems.map((item, index) => (
           <React.Fragment key={index}>
             {item.action ? (
               <Button
                 variant="ghost"
-                className="flex flex-col items-center justify-center h-full rounded-none hover:bg-muted"
+                className="flex flex-col items-center justify-center h-full rounded-none hover:bg-muted touch-target"
                 onClick={item.action}
               >
                 <item.icon className="h-5 w-5" />
@@ -83,7 +83,7 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
                 to={item.path}
                 className={({ isActive }) =>
                   cn(
-                    "flex flex-col items-center justify-center h-full rounded-none hover:bg-muted",
+                    "flex flex-col items-center justify-center h-full rounded-none hover:bg-muted touch-target",
                     isActive && "text-primary bg-primary/10"
                   )
                 }
