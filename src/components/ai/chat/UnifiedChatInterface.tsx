@@ -42,15 +42,15 @@ export const UnifiedChatInterface: React.FC = () => {
   const getModeBackgroundClass = () => {
     switch (currentMode) {
       case 'general':
-        return 'bg-gradient-to-br from-blue-900/30 to-indigo-900/20 styled-scrollbar';
+        return 'bg-gradient-to-br from-blue-900/10 to-indigo-900/5 styled-scrollbar';
       case 'student':
-        return 'bg-gradient-to-br from-green-900/30 to-emerald-900/20 styled-scrollbar';
+        return 'bg-gradient-to-br from-green-900/10 to-emerald-900/5 styled-scrollbar';
       case 'productivity':
-        return 'bg-gradient-to-br from-purple-900/30 to-violet-900/20 styled-scrollbar';
+        return 'bg-gradient-to-br from-purple-900/10 to-violet-900/5 styled-scrollbar';
       case 'creative':
-        return 'bg-gradient-to-br from-fuchsia-900/30 to-pink-900/20 styled-scrollbar';
+        return 'bg-gradient-to-br from-fuchsia-900/10 to-pink-900/5 styled-scrollbar';
       default:
-        return 'bg-gradient-to-br from-blue-900/30 to-indigo-900/20 styled-scrollbar';
+        return 'bg-gradient-to-br from-blue-900/10 to-indigo-900/5 styled-scrollbar';
     }
   };
   
@@ -90,7 +90,7 @@ export const UnifiedChatInterface: React.FC = () => {
   };
   
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-transparent">
       <div className="p-4 border-b border-white/10 backdrop-blur-lg bg-black/20">
         <ModeSwitcher />
       </div>

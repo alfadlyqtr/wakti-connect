@@ -15,7 +15,7 @@ const WAKTIAIAssistant: React.FC<WAKTIAIAssistantProps> = ({
     <div 
       className={`w-full h-full flex items-center justify-center py-6 ${className}`}
       style={{
-        background: 'linear-gradient(135deg, rgba(31, 41, 55, 0.95), rgba(17, 24, 39, 0.9))',
+        background: 'transparent',
         minHeight: '100vh'
       }}
     >

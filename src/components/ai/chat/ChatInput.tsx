@@ -84,6 +84,22 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     }
   };
   
+  // Get the background gradient or color for the input based on mode
+  const getInputBackgroundStyle = () => {
+    switch (currentMode) {
+      case 'general':
+        return 'bg-blue-900/15';
+      case 'student':
+        return 'bg-green-900/15';
+      case 'productivity':
+        return 'bg-purple-900/15';
+      case 'creative':
+        return 'bg-pink-900/15';
+      default:
+        return 'bg-blue-900/15';
+    }
+  };
+  
   // Get the background gradient or color for the send button
   const getSendButtonStyle = () => {
     if (isLoading) return '';
@@ -124,11 +140,12 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           placeholder="Type a message..."
           disabled={isLoading || isDisabled || isListening}
           className={cn(
-            "flex-1 bg-black/25 dark:bg-slate-800/25 backdrop-blur-xl border-2 border-white/20 dark:border-slate-700/20 transition-all duration-300 input-active text-foreground resize-none min-h-[60px] max-h-[120px] px-5 py-4 rounded-xl pr-36",
+            "flex-1 dark:bg-slate-800/25 backdrop-blur-xl border-2 border-white/20 dark:border-slate-700/20 transition-all duration-300 input-active text-foreground resize-none min-h-[60px] max-h-[120px] px-5 py-4 rounded-xl pr-36",
             inputValue && "pr-12",
             isLoading && "opacity-70",
             isListening && "bg-primary/10 border-primary/20",
             getInputGlowClass(isFocused),
+            getInputBackgroundStyle(),
             "shadow-[0_15px_35px_rgba(0,0,0,0.7)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.8),0_0_20px_rgba(59,130,246,0.3)] focus:shadow-[0_20px_40px_rgba(0,0,0,0.8),0_0_30px_rgba(59,130,246,0.5)] transform hover:translate-y-[-5px] focus:translate-y-[-5px] neon-glow-blue"
           )}
           style={{
