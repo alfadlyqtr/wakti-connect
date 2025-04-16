@@ -71,21 +71,13 @@ You can ask me to generate another image or help with something else!`;
       }
     }
     
-    // Get fresh session and ensure we have a valid token for the request
-    // IMPORTANT: This is the only authentication check we need
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError) {
-      console.error('[callAIAssistant] Error getting session:', sessionError);
-      return {
-        error: {
-          message: 'Authentication required. Please refresh and sign in again.',
-          isConnectionError: false
-        }
-      };
-    }
+    // SIMPLIFIED: No session check - we trust the JWT verification in the edge function
+    // Get auth token from current session for authorization header
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token;
     
-    if (!sessionData.session) {
-      console.error('[callAIAssistant] No session found');
+    if (!token) {
+      console.log('[callAIAssistant] No active session token found');
       return {
         error: {
           message: 'Authentication required. Please sign in to use the AI assistant.',
@@ -93,13 +85,6 @@ You can ask me to generate another image or help with something else!`;
         }
       };
     }
-    
-    // Log the session token (first 10 chars) for debugging
-    const token = sessionData.session.access_token;
-    console.log('[callAIAssistant] Got session token:', token.substring(0, 10) + '...');
-    
-    // ADDED: Additional session verification log
-    console.log('[callAIAssistant] User authenticated:', sessionData.session.user.id);
     
     // Create a promise that rejects after 30 seconds for timeout handling
     const timeoutPromise = new Promise((_, reject) => 
@@ -136,31 +121,6 @@ You can ask me to generate another image or help with something else!`;
       
       if (error) {
         console.error('[callAIAssistant] Supabase function error:', error);
-        
-        // Special handling for authentication errors
-        if (error.message?.includes('JWT') || error.message?.includes('auth') || error.message?.includes('token')) {
-          console.error('[callAIAssistant] Authentication error detected, attempting session refresh');
-          
-          // Try to refresh the session
-          const { error: refreshError } = await supabase.auth.refreshSession();
-          if (refreshError) {
-            console.error('[callAIAssistant] Session refresh failed:', refreshError);
-            return {
-              error: {
-                message: 'Your session has expired. Please sign in again.',
-                isConnectionError: false
-              }
-            };
-          } else {
-            return {
-              error: {
-                message: 'Session refreshed. Please try your request again.',
-                isConnectionError: false
-              }
-            };
-          }
-        }
-        
         return {
           error: {
             message: `AI service error: ${error.message || 'Unknown error'}`,
@@ -192,30 +152,6 @@ You can ask me to generate another image or help with something else!`;
       return { response: data.response };
     } catch (functionError) {
       console.error('[callAIAssistant] Exception during function call:', functionError);
-      
-      // Check if this is an auth error
-      if (functionError.message?.includes('JWT') || 
-          functionError.message?.includes('auth') || 
-          functionError.message?.includes('token')) {
-        console.error('[callAIAssistant] Auth error detected, attempting session refresh');
-        try {
-          // Try to refresh the session
-          const { error: refreshError } = await supabase.auth.refreshSession();
-          if (refreshError) {
-            console.error('[callAIAssistant] Session refresh failed:', refreshError);
-          } else {
-            console.log('[callAIAssistant] Session refreshed successfully');
-            return {
-              error: {
-                message: 'Session refreshed. Please try your request again.',
-                isConnectionError: false
-              }
-            };
-          }
-        } catch (refreshError) {
-          console.error('[callAIAssistant] Error refreshing session:', refreshError);
-        }
-      }
       
       const errorMessage = functionError.message || 'Unknown error calling AI service';
       const isConnectionRelated = 

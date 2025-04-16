@@ -1,7 +1,7 @@
 
 import { corsHeaders } from "../utils/cors.ts";
 
-// SIMPLIFIED: Trust the account type from user metadata
+// SIMPLIFIED: Trust the account type from user metadata only
 export async function checkUserAccess(user, supabaseClient) {
   try {
     if (!user || !user.id) {
@@ -17,7 +17,7 @@ export async function checkUserAccess(user, supabaseClient) {
     
     console.log("Checking user access for user ID:", user.id);
     
-    // SIMPLIFIED: Only trust the account type from metadata
+    // SIMPLIFIED: Only trust the account type from metadata - this is the single source of truth
     const accountType = user.user_metadata?.account_type;
     const canUseAI = accountType === 'business' || accountType === 'individual';
     

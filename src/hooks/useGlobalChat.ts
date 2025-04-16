@@ -42,7 +42,7 @@ export const useGlobalChat = () => {
     return { content, imageUrl: null };
   };
   
-  // SIMPLIFIED: Trust the account type from metadata
+  // SIMPLIFIED: Trust the account type from metadata - this is the single source of truth
   const userCanUseAI = useCallback(() => {
     // If not authenticated, can't use AI
     if (!isAuthenticated || !user) {
