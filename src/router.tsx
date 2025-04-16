@@ -63,15 +63,15 @@ export const router = createBrowserRouter([
           { path: "settings", element: <DashboardSettings /> },
           {
             path: "business",
-            element: <RoleGuard allowedRoles={['admin']}><div>Business Settings</div></RoleGuard>
+            element: <RoleGuard allowedRoles={['super-admin']}><div>Business Settings</div></RoleGuard>
           },
           {
             path: "job-types",
-            element: <RoleGuard allowedRoles={['admin']}><div>Job Types</div></RoleGuard>
+            element: <RoleGuard allowedRoles={['super-admin']}><div>Job Types</div></RoleGuard>
           },
           {
             path: "staff",
-            element: <RoleGuard allowedRoles={['admin']}><div>Staff Management</div></RoleGuard>
+            element: <RoleGuard allowedRoles={['super-admin']}><div>Staff Management</div></RoleGuard>
           },
         ],
       },
