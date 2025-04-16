@@ -17,7 +17,8 @@ export function getInappropriateContentResponse(
     'violence': "I cannot produce violent or harmful content as requested.",
     'hate': "I cannot generate content that contains hate speech or discriminatory language.",
     'harassment': "I cannot create content that could be offensive or hurtful to others.",
-    'self-harm': "I cannot provide content related to self-harm. If you're in crisis, please contact a mental health professional."
+    'self-harm': "I cannot provide content related to self-harm. If you're in crisis, please contact a mental health professional.",
+    'sexual': "I cannot generate sexual or explicit adult content as it violates our content policy."
   };
   
   // Create a more personalized response based on the user's intent and current AI mode

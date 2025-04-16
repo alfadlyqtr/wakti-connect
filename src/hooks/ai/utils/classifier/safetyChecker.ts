@@ -1,5 +1,5 @@
 
-import { IntentClassification } from './types';
+import { IntentClassification, ContentCategory } from './types';
 import { inappropriateContentKeywords } from './keywords';
 
 /**
@@ -9,13 +9,13 @@ export function checkForInappropriateContent(message: string): {
   isInappropriate: boolean;
   confidence: number;
   matchedTerms: string[];
-  category?: string;
+  category?: ContentCategory;
 } {
   const lowerMessage = message.toLowerCase();
   let isInappropriate = false;
   let confidence = 0;
   const matchedTerms: string[] = [];
-  let category: string | undefined;
+  let category: ContentCategory | undefined;
   
   // Check for explicit inappropriate keywords
   for (const keyword of inappropriateContentKeywords.keywords) {
@@ -24,7 +24,7 @@ export function checkForInappropriateContent(message: string): {
       confidence += 0.3;
       matchedTerms.push(keyword);
       
-      // Categorize the content
+      // Categorize the content with proper ContentCategory values
       if (keyword.match(/porn|nude|naked|sex|erotic|xxx/)) {
         category = 'sexual';
       } else if (keyword.match(/violence|violent|gore|blood|kill|murder|suicide|torture/)) {
@@ -44,7 +44,7 @@ export function checkForInappropriateContent(message: string): {
       confidence += 0.4; // Higher confidence for contextual phrases
       matchedTerms.push(phrase);
       
-      // Determine category based on the context
+      // Determine category based on the context with proper ContentCategory values
       if (phrase.match(/sexual|nude|naked|porn|adult|explicit/)) {
         category = 'sexual';
       } else if (phrase.match(/violent/)) {
@@ -71,7 +71,7 @@ export function checkForInappropriateContent(message: string): {
  */
 export function getInappropriateContentResponse(
   context: 'image-generation' | 'text-generation',
-  category: string,
+  category: ContentCategory,
   mode: string
 ): string {
   if (context === 'image-generation') {
