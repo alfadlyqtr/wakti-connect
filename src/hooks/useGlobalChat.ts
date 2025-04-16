@@ -7,7 +7,6 @@ import { callAIAssistant } from '@/hooks/ai/utils/callAIAssistant';
 import { useAuth } from '@/hooks/auth';
 import { useProfile } from '@/hooks/useProfile';
 import { toast } from '@/components/ui/use-toast';
-import { supabase } from '@/lib/supabase';
 
 export const useGlobalChat = () => {
   const [messages, setMessages] = useState<ChatMemoryMessage[]>([]);
@@ -42,28 +41,24 @@ export const useGlobalChat = () => {
     return { content, imageUrl: null };
   };
   
-  // SIMPLIFIED: Trust the account type from metadata - this is the single source of truth
+  // All we need is authentication and the account type from user metadata
   const userCanUseAI = useCallback(() => {
     // If not authenticated, can't use AI
     if (!isAuthenticated || !user) {
       return false;
     }
     
-    // SIMPLIFIED: Trust the account type from metadata ONLY
+    // Trust the account type from metadata ONLY
     const accountType = user.user_metadata?.account_type;
-    const canUseAI = accountType === 'business' || accountType === 'individual';
-    
-    return canUseAI;
+    return accountType === 'business' || accountType === 'individual';
   }, [isAuthenticated, user]);
   
   // Send message function with improved error handling
   const sendMessage = useCallback(async (content: string) => {
     if (!content.trim() || isLoading) return;
     
-    // SIMPLIFIED: Use the single source of truth check
-    const canUseAI = userCanUseAI();
-    
-    if (!canUseAI) {
+    // Simple check: just check authentication and account type from metadata
+    if (!userCanUseAI()) {
       toast({
         title: "Feature not available",
         description: "AI Assistant is only available for Business and Individual accounts.",
@@ -97,7 +92,7 @@ export const useGlobalChat = () => {
       if (profile) {
         userContext = `User: ${profile.full_name || 'Unknown'}, Account Type: ${profile.account_type || 'free'}`;
       } else if (user) {
-        // ADDED: Use metadata as fallback if profile not loaded
+        // Use metadata as fallback if profile not loaded
         userContext = `User: ${user.user_metadata?.full_name || 'Unknown'}, Account Type: ${user.user_metadata?.account_type || 'free'}`;
       } else {
         userContext = 'Unknown User';
@@ -123,12 +118,6 @@ export const useGlobalChat = () => {
             toast({
               title: "Connection Error",
               description: "Could not connect to AI service. Please check your internet connection and try again.",
-              variant: "destructive",
-            });
-          } else if (error.message.includes("only available for Business")) {
-            toast({
-              title: "Access Restricted",
-              description: "AI Assistant is only available for Business and Individual accounts.",
               variant: "destructive",
             });
           } else {

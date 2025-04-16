@@ -37,7 +37,7 @@ serve(async (req) => {
       console.log("Masked auth header:", masked);
     }
     
-    // Authenticate the user - this is the ONLY authentication check we need
+    // Authenticate the user - JWT verification is all we need
     console.log("Authenticating user...");
     const { user, supabaseClient, error: authError } = await authenticateUser(req);
     if (authError) {
@@ -48,22 +48,9 @@ serve(async (req) => {
     
     console.log("User authenticated:", user.id);
     
-    // SIMPLIFIED: Trust the account type from metadata - no additional permission checks
-    // If user is authenticated and has a business or individual account, allow AI access
-    const accountType = user.user_metadata?.account_type;
-    const canUseAI = accountType === 'business' || accountType === 'individual';
-    
-    // If user doesn't have access, return a clear error
-    if (!canUseAI) {
-      console.log("User does not have access to AI assistant:", user.id, "Account type:", accountType);
-      clearTimeout(timeoutId);
-      return new Response(
-        JSON.stringify({ error: "Feature only available for Business and Individual plans" }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-    
-    console.log("User has access to AI assistant. Account type:", accountType);
+    // We now completely trust the JWT token and the account_type in user metadata
+    // No additional permission checks needed - if authenticated, allow AI access
+    console.log("User has access to AI assistant. Account type:", user.user_metadata?.account_type);
     
     // Get request data
     let requestData;

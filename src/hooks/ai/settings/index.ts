@@ -1,6 +1,6 @@
 
 import { useAuth } from "@/hooks/auth";
-import { useAISettingsQuery, useCanUseAIQuery } from "./useAISettingsQueries";
+import { useAISettingsQuery } from "./useAISettingsQueries";
 import { useUpdateAISettings } from "./useAISettingsMutations";
 import { useState, useEffect } from "react";
 
@@ -13,37 +13,31 @@ export const useAISettings = () => {
   
   const { 
     data: aiSettings, 
-    isLoading: isLoadingSettings, 
+    isLoading, 
     error: settingsError 
   } = useAISettingsQuery(user);
   
-  // SIMPLIFIED: We still call this, but it's been simplified to only check metadata
-  const { 
-    data: canUseAI,
-    isLoading: isLoadingPermission
-  } = useCanUseAIQuery(user);
-  
   const updateSettings = useUpdateAISettings(user);
 
-  // SIMPLIFIED: Trust the account type directly from metadata - only source of truth
+  // Trust the account type directly from metadata - only source of truth
   const accountType = user?.user_metadata?.account_type;
-  const isBusinessOrIndividual = accountType === 'business' || accountType === 'individual';
+  const canUseAI = accountType === 'business' || accountType === 'individual';
   
-  // Mark that we've checked permissions once the query completes
+  // Mark that we've checked permissions immediately based on user metadata
   useEffect(() => {
-    if (!isLoadingPermission && canUseAI !== undefined) {
+    if (user) {
       setHasCheckedPermissions(true);
     }
-  }, [isLoadingPermission, canUseAI]);
+  }, [user]);
 
   return {
     aiSettings,
-    isLoading: isLoadingSettings,
+    isLoading,
     settingsError,
     updateSettings,
-    // SIMPLIFIED: Only trust metadata - the canUseAI check is also simplified
-    canUseAI: isBusinessOrIndividual,
-    isLoadingPermission,
+    // Directly trust metadata
+    canUseAI,
+    isLoadingPermission: false,
     hasCheckedPermissions
   };
 };

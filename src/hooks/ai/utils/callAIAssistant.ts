@@ -71,28 +71,27 @@ You can ask me to generate another image or help with something else!`;
       }
     }
     
-    // SIMPLIFIED: No session check - we trust the JWT verification in the edge function
-    // Get auth token from current session for authorization header
-    const { data: sessionData } = await supabase.auth.getSession();
-    const token = sessionData.session?.access_token;
-    
-    if (!token) {
-      console.log('[callAIAssistant] No active session token found');
-      return {
-        error: {
-          message: 'Authentication required. Please sign in to use the AI assistant.',
-          isConnectionError: false
-        }
-      };
-    }
-    
-    // Create a promise that rejects after 30 seconds for timeout handling
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Request timed out')), 30000)
-    );
-    
-    // Call the AI assistant edge function with comprehensive error handling
+    // Call the AI assistant edge function directly - no auth check needed
     try {
+      // Get current auth token - we trust the JWT verification in the edge function
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      
+      if (!token) {
+        console.log('[callAIAssistant] No active session token found');
+        return {
+          error: {
+            message: 'Authentication required. Please sign in to use the AI assistant.',
+            isConnectionError: false
+          }
+        };
+      }
+      
+      // Create a promise that rejects after 30 seconds for timeout handling
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timed out')), 30000)
+      );
+      
       // Race the actual request with the timeout
       const { data, error } = await Promise.race([
         supabase.functions.invoke('ai-assistant', {

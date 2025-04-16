@@ -1,4 +1,3 @@
-
 import { useAIChatEnhanced } from "./ai/chat";
 import { useAISettings } from "./ai/settings";
 import { useAIKnowledge } from "./ai/useAIKnowledge";
@@ -28,10 +27,9 @@ export const useAIAssistant = () => {
   
   const processingMessageRef = useRef(false);
   
-  // Get AI settings and knowledge hooks
-  // Fix: use `isLoading` instead of `isLoadingSettings`
+  // Get AI settings and knowledge hooks - fix the variable name
   const { aiSettings, isLoading: isLoadingSettings, updateSettings, canUseAI } = useAISettings();
-  const { addKnowledge, knowledgeUploads, isLoadingKnowledge, deleteKnowledge } = useAIKnowledge();
+  const { addKnowledge, knowledgeUploads, isLoading: isLoadingKnowledge, deleteKnowledge } = useAIKnowledge();
   
   // Get send message functionality
   const { 
