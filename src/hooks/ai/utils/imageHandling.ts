@@ -7,7 +7,6 @@ export interface GeneratedImageResult {
   prompt: string;
   success: boolean;
   error?: string;
-  provider?: string;
 }
 
 /**
@@ -27,7 +26,7 @@ export async function handleImageGeneration(prompt: string): Promise<GeneratedIm
       positivePrompt: prompt
     });
     
-    console.log('[imageHandling] Image generation successful via provider:', result.provider);
+    console.log('[imageHandling] Image generation successful');
     
     if (!result.imageURL) {
       throw new Error('No image URL returned from service');
@@ -36,8 +35,7 @@ export async function handleImageGeneration(prompt: string): Promise<GeneratedIm
     return {
       imageUrl: result.imageURL,
       prompt: prompt,
-      success: true,
-      provider: result.provider
+      success: true
     };
   } catch (error) {
     console.error('[imageHandling] Image generation failed:', error);

@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { classifyIntent, getInappropriateContentResponse } from './classifier';
 import { WAKTIAIMode } from '@/types/ai-assistant.types';
@@ -49,7 +48,7 @@ export const callAIAssistant = async (
       try {
         toast({
           title: "Generating Image",
-          description: "Starting image generation based on your request...",
+          description: "Creating your image...",
           duration: 3000,
         });
         
@@ -57,8 +56,7 @@ export const callAIAssistant = async (
         
         if (imageResult.success) {
           // Return both the image URL and a confirmation message
-          const providerInfo = imageResult.provider ? ` using ${imageResult.provider}` : '';
-          const response = `I've generated an image based on your request: "${userPrompt}"${providerInfo}.
+          const response = `I've generated an image based on your request: "${userPrompt}".
 
 [IMAGE_GENERATED]${imageResult.imageUrl}[/IMAGE_GENERATED]
 
@@ -72,7 +70,6 @@ You can ask me to generate another image or help with something else!`;
           // If image generation failed, inform the user and proceed with text response
           console.error('[callAIAssistant] Image generation failed:', imageResult.error);
           
-          // Return error message about image generation failure
           return {
             response: `I tried to generate an image based on your request, but encountered a problem: ${imageResult.error || 'The image generation service is currently unavailable.'}
             
@@ -82,7 +79,6 @@ Would you like to try again with a different prompt? Or I can help you with some
       } catch (imageError) {
         console.error('[callAIAssistant] Error in image generation:', imageError);
         
-        // Return error message about image generation failure
         return {
           response: `I tried to generate an image based on your request, but encountered a technical problem.
           
