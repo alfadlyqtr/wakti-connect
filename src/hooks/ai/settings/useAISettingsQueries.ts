@@ -133,6 +133,6 @@ export const useCanUseAIQuery = (user: User | null) => {
     retry: 1,
     retryDelay: 2000,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes - Changed from cacheTime to gcTime
   });
 };
