@@ -5,6 +5,7 @@ import { Camera, Paperclip, Mic, MicOff } from 'lucide-react';
 import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface InputToolbarProps {
   isLoading: boolean;
@@ -14,6 +15,7 @@ interface InputToolbarProps {
 
 export const InputToolbar = ({ isLoading, isListening, onVoiceToggle }: InputToolbarProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isMobile = useIsMobile();
   const { supportsVoice } = useVoiceInteraction({
     onTranscriptComplete: () => {}
   });
@@ -45,9 +47,11 @@ export const InputToolbar = ({ isLoading, isListening, onVoiceToggle }: InputToo
     transform: 'perspective(1000px) rotateX(2deg)',
   };
 
+  const buttonSize = isMobile ? "h-11 w-11" : "h-12 w-12";
+
   return (
-    <div className="toolbar-container flex items-center justify-between w-full pt-2 pb-2">
-      <div className="flex flex-row gap-3 items-center">
+    <div className="toolbar-container flex items-center justify-start w-full pt-2 pb-2 overflow-x-auto no-scrollbar">
+      <div className="flex flex-row gap-2 sm:gap-3 items-center">
         {/* Camera button */}
         <motion.div 
           whileHover={{ scale: 1.05, y: -4 }} 
@@ -59,7 +63,7 @@ export const InputToolbar = ({ isLoading, isListening, onVoiceToggle }: InputToo
             variant="ghost"
             onClick={handleCameraCapture}
             disabled={isLoading || isListening}
-            className="h-12 w-12 rounded-full bg-white/10 dark:bg-black/50 text-blue-600 border border-blue-100/30 dark:border-blue-900/50 backdrop-blur-xl shadow-xl hover:shadow-2xl hover:bg-blue-50/20 dark:hover:bg-blue-900/30 transition-all"
+            className={`${buttonSize} rounded-full bg-white/10 dark:bg-black/50 text-blue-600 border border-blue-100/30 dark:border-blue-900/50 backdrop-blur-xl shadow-xl hover:shadow-2xl hover:bg-blue-50/20 dark:hover:bg-blue-900/30 transition-all`}
             style={buttonStyle}
           >
             <Camera className="h-5 w-5 text-blue-500 dark:text-blue-400" />
@@ -78,7 +82,7 @@ export const InputToolbar = ({ isLoading, isListening, onVoiceToggle }: InputToo
             variant="ghost"
             onClick={() => fileInputRef.current?.click()}
             disabled={isLoading || isListening}
-            className="h-12 w-12 rounded-full bg-white/10 dark:bg-black/50 text-blue-600 border border-blue-100/30 dark:border-blue-900/50 backdrop-blur-xl shadow-xl hover:shadow-2xl hover:bg-blue-50/20 dark:hover:bg-blue-900/30 transition-all"
+            className={`${buttonSize} rounded-full bg-white/10 dark:bg-black/50 text-blue-600 border border-blue-100/30 dark:border-blue-900/50 backdrop-blur-xl shadow-xl hover:shadow-2xl hover:bg-blue-50/20 dark:hover:bg-blue-900/30 transition-all`}
             style={buttonStyle}
           >
             <Paperclip className="h-5 w-5 text-blue-500 dark:text-blue-400" />
@@ -102,7 +106,7 @@ export const InputToolbar = ({ isLoading, isListening, onVoiceToggle }: InputToo
               variant={isListening ? "destructive" : "ghost"}
               onClick={onVoiceToggle}
               className={cn(
-                "h-12 w-12 rounded-full shadow-xl hover:shadow-2xl transition-all",
+                `${buttonSize} rounded-full shadow-xl hover:shadow-2xl transition-all`,
                 isListening 
                   ? "bg-red-500/90 text-white border border-red-400/70 animate-pulse dark:bg-red-700/80"
                   : "bg-white/10 dark:bg-black/50 text-blue-600 border border-blue-100/30 dark:border-blue-900/50 hover:bg-blue-50/20 dark:hover:bg-blue-900/30"

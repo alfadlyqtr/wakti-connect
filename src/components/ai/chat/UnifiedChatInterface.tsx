@@ -15,11 +15,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 import { cn } from '@/lib/utils';
 import FreeAccountBanner from '@/components/dashboard/FreeAccountBanner';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 export const UnifiedChatInterface: React.FC = () => {
   const { messages, sendMessage, isLoading, clearMessages, canUseAI } = useGlobalChat();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { currentMode, currentPersonality } = useAIPersonality();
+  const isMobile = useIsMobile();
   
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -48,7 +50,7 @@ export const UnifiedChatInterface: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="flex flex-col items-center justify-center text-center px-2 sm:px-6 py-10 sm:py-14 space-y-4"
+        className="flex flex-col items-center justify-center text-center px-2 sm:px-6 py-8 sm:py-12 space-y-4 w-full"
       >
         <div className={`h-16 w-16 rounded-full ${currentPersonality.color} flex items-center justify-center shadow-[0_10px_30px_rgba(0,0,0,0.7),0_0_0_1px_rgba(255,255,255,0.1)_inset]`}>
           <Bot className="h-8 w-8 text-white" />
@@ -56,7 +58,7 @@ export const UnifiedChatInterface: React.FC = () => {
         
         <h2 className="text-xl sm:text-2xl font-bold">{currentPersonality.welcomeMessage}</h2>
         
-        <div className="flex flex-col gap-3 max-w-lg w-full pt-6 px-2 sm:px-4">
+        <div className="flex flex-col gap-3 w-full max-w-md sm:max-w-lg px-2 sm:px-4 pt-4 sm:pt-6">
           {currentPersonality.suggestedPrompts.map((prompt, index) => (
             <Button
               key={index}
@@ -79,23 +81,23 @@ export const UnifiedChatInterface: React.FC = () => {
   
   return (
     <div 
-      className="flex flex-col h-full bg-transparent" 
+      className="flex flex-col h-full bg-transparent w-full" 
       style={{ 
         background: 'transparent',
         backdropFilter: 'blur(10px)',
         backgroundColor: 'rgba(0,0,0,0.05)'
       }}
     >
-      <div className="p-4 border-b border-white/10 backdrop-blur-lg bg-black/20">
+      <div className="p-3 sm:p-4 border-b border-white/10 backdrop-blur-lg bg-black/20">
         <ModeSwitcher />
       </div>
       
       {!canUseAI && <FreeAccountBanner />}
       
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden w-full">
         <ScrollArea 
           className={cn(
-            "h-[65vh] min-h-[550px] px-3 sm:px-6 py-4", 
+            "h-[60vh] sm:h-[65vh] min-h-[450px] sm:min-h-[550px] px-2 sm:px-4 md:px-6 py-4", 
             getModeBackgroundClass(),
             "bg-transparent"
           )}
@@ -105,7 +107,7 @@ export const UnifiedChatInterface: React.FC = () => {
           }}
         >
           {messages.length === 0 ? renderWelcomeView() : (
-            <div className="space-y-4">
+            <div className="space-y-4 w-full">
               <AnimatePresence>
                 {messages.map((message) => (
                   <motion.div

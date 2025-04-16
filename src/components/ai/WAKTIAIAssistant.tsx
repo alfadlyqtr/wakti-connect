@@ -19,7 +19,7 @@ const WAKTIAIAssistant: React.FC<WAKTIAIAssistantProps> = ({
         minHeight: 'calc(100vh - 60px)'
       }}
     >
-      <div className="container px-2 sm:px-4 mx-auto max-w-5xl">
+      <div className="container px-1 sm:px-4 mx-auto w-[95%] sm:max-w-5xl lg:max-w-6xl">
         <div 
           className="w-full rounded-xl sm:rounded-2xl overflow-hidden transform hover:translate-y-[-8px] transition-all duration-500"
           style={{

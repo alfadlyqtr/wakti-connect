@@ -8,6 +8,7 @@ import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 import { ChatInputField } from './ChatInputField';
 import { ClearChatButton } from './ClearChatButton';
 import { SendButton } from './SendButton';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface ChatInputProps {
   onSendMessage: (message: string) => Promise<void>;
@@ -26,6 +27,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const [isListening, setIsListening] = useState(false);
   const [showClearConfirmation, setShowClearConfirmation] = useState(false);
   const { currentMode } = useAIPersonality();
+  const isMobile = useIsMobile();
   
   const { 
     isListening: voiceIsListening,
@@ -91,7 +93,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     <>
       <motion.form 
         onSubmit={handleSubmit} 
-        className="relative flex flex-col gap-3 p-4 sm:p-5 border-t border-white/10 bg-transparent backdrop-blur-xl"
+        className="relative flex flex-col gap-3 p-3 sm:p-4 md:p-5 border-t border-white/10 bg-transparent backdrop-blur-xl w-full max-w-[95%] mx-auto"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.2 }}
@@ -112,13 +114,15 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           </div>
           
           <div className="flex justify-between items-center w-full mt-1">
-            <InputToolbar 
-              isLoading={isLoading} 
-              isListening={isListening}
-              onVoiceToggle={handleVoiceToggle}
-            />
+            <div className="flex-1 max-w-[65%]">
+              <InputToolbar 
+                isLoading={isLoading} 
+                isListening={isListening}
+                onVoiceToggle={handleVoiceToggle}
+              />
+            </div>
             
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3 sm:gap-4">
               {onClearChat && (
                 <ClearChatButton
                   isDisabled={isDisabled}

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Send, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface SendButtonProps {
   isLoading: boolean;
@@ -16,6 +17,8 @@ export const SendButton: React.FC<SendButtonProps> = ({
   isDisabled,
   isActive
 }) => {
+  const isMobile = useIsMobile();
+  
   return (
     <motion.div
       whileHover={{ scale: 1.05, y: -4 }}
@@ -26,7 +29,8 @@ export const SendButton: React.FC<SendButtonProps> = ({
         size="icon" 
         disabled={!isActive || isLoading || isDisabled}
         className={cn(
-          "h-12 w-12 rounded-full transition-all duration-300 shadow-xl transform hover:translate-y-[-8px]",
+          isMobile ? "h-11 w-11" : "h-12 w-12",
+          "rounded-full transition-all duration-300 shadow-xl transform hover:translate-y-[-8px]",
           "bg-white/10 dark:bg-black/50 border border-blue-100/30 dark:border-blue-900/50 backdrop-blur-xl",
           "hover:shadow-[0_25px_50px_rgba(0,0,0,0.7),0_0_30px_rgba(59,130,246,0.5)]",
           "active:translate-y-[-2px]",

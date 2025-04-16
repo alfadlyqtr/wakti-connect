@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Mic, MicOff, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface VoiceButtonProps {
   isListening: boolean;
@@ -18,6 +19,8 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({
   isDisabled,
   onToggle
 }) => {
+  const isMobile = useIsMobile();
+  
   return (
     <motion.div
       whileHover={{ scale: 1.05, y: -4 }}
@@ -33,7 +36,8 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({
         onClick={onToggle}
         disabled={isLoading || isDisabled}
         className={cn(
-          "h-9 w-9 sm:h-10 sm:w-10 rounded-full transition-all duration-300 shadow-2xl transform hover:translate-y-[-8px]",
+          isMobile ? "h-11 w-11" : "h-12 w-12",
+          "rounded-full transition-all duration-300 shadow-2xl transform hover:translate-y-[-8px]",
           isListening 
             ? "bg-red-500/20 border-red-500/30" 
             : "bg-white/10 dark:bg-black/50 border border-blue-100/30 dark:border-blue-900/50 backdrop-blur-xl",

@@ -44,12 +44,12 @@ export const ChatInputField: React.FC<ChatInputFieldProps> = ({
       placeholder="Type a message..."
       disabled={isLoading || isDisabled || isListening}
       className={cn(
-        "flex-1 backdrop-blur-xl transition-all duration-300 input-active text-foreground resize-none min-h-[60px] max-h-[120px] px-5 py-4 rounded-xl",
-        value && "pr-12",
+        "flex-1 backdrop-blur-xl transition-all duration-300 input-active text-foreground resize-none min-h-[60px] max-h-[120px] px-4 sm:px-5 py-3 sm:py-4 rounded-xl w-full",
+        value && "pr-10 sm:pr-12",
         isLoading && "opacity-70",
         isListening && "bg-primary/10 border-primary/20",
         getInputGlowClass(isFocused),
-        "shadow-[0_15px_35px_rgba(0,0,0,0.7)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.8),0_0_20px_rgba(59,130,246,0.3)] focus:shadow-[0_20px_40px_rgba(0,0,0,0.8),0_0_30px_rgba(59,130,246,0.5)] transform hover:translate-y-[-5px] focus:translate-y-[-5px] neon-glow-blue"
+        "shadow-[0_15px_35px_rgba(0,0,0,0.7)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.8),0_0_20px_rgba(59,130,246,0.3)] focus:shadow-[0_20px_40px_rgba(0,0,0,0.8),0_0_30px_rgba(59,130,246,0.5)] transform hover:translate-y-[-3px] sm:hover:translate-y-[-5px] focus:translate-y-[-3px] sm:focus:translate-y-[-5px] neon-glow-blue"
       )}
       style={{
         background: 'rgba(255, 255, 255, 0.08)',
