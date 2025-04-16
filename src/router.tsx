@@ -1,7 +1,7 @@
 
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import App from "./App";
-import { SignIn } from "./pages/auth/LoginPage";
+import LoginPage from "./pages/auth/LoginPage";
 import SignUp from "./pages/auth/RegisterPage";
 import ForgotPassword from './pages/auth/ForgotPasswordPage';
 import ResetPassword from './pages/auth/ResetPasswordPage';
@@ -14,10 +14,7 @@ import DashboardMessages from './pages/dashboard/DashboardMessages';
 import DashboardTasks from './pages/dashboard/DashboardTasks';
 import DashboardAIAssistant from './pages/dashboard/DashboardAIAssistant';
 import DashboardProfile from './pages/dashboard/DashboardProfile';
-import DashboardBusinessSettings from './pages/dashboard/DashboardBusinessSettings';
 import DashboardSettings from './pages/dashboard/DashboardSettings';
-import DashboardJobTypes from './pages/dashboard/DashboardJobTypes';
-import DashboardStaff from './pages/dashboard/DashboardStaff';
 import PrivacyPolicy from './pages/public/PrivacyPage';
 import TermsOfService from './pages/public/TermsPage';
 import AboutPage from './pages/public/AboutPage';
@@ -25,8 +22,8 @@ import PricingPage from './pages/public/PricingPage';
 import FeaturesPage from './pages/public/FeaturesPage';
 import SupportPage from './pages/public/ContactPage';
 import NotFound from './pages/NotFound';
-import { ProtectedRoute as RequireAuth } from './components/auth/ProtectedRoute';
-import { RoleGuard as SuperAdminOnly } from './components/auth/RoleGuard';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+import RoleGuard from './components/auth/RoleGuard';
 import { UnifiedChatInterfaceWithProvider } from "./components/ai/chat/UnifiedChatInterface";
 import { MobileUXDemo } from "./components/mobile-demos/MobileUXDemo";
 
@@ -36,7 +33,7 @@ export const router = createBrowserRouter([
     element: <App />,
     children: [
       { index: true, element: <LandingPage /> },
-      { path: "signin", element: <SignIn /> },
+      { path: "signin", element: <LoginPage /> },
       { path: "signup", element: <SignUp /> },
       { path: "forgot-password", element: <ForgotPassword /> },
       { path: "reset-password", element: <ResetPassword /> },
@@ -53,9 +50,9 @@ export const router = createBrowserRouter([
       {
         path: "dashboard",
         element: (
-          <RequireAuth>
+          <ProtectedRoute>
             <DashboardLayout />
-          </RequireAuth>
+          </ProtectedRoute>
         ),
         children: [
           { index: true, element: <DashboardHome /> },
@@ -66,15 +63,15 @@ export const router = createBrowserRouter([
           { path: "settings", element: <DashboardSettings /> },
           {
             path: "business",
-            element: <SuperAdminOnly><DashboardBusinessSettings /></SuperAdminOnly>
+            element: <RoleGuard allowedRoles={['admin']}><div>Business Settings</div></RoleGuard>
           },
           {
             path: "job-types",
-            element: <SuperAdminOnly><DashboardJobTypes /></SuperAdminOnly>
+            element: <RoleGuard allowedRoles={['admin']}><div>Job Types</div></RoleGuard>
           },
           {
             path: "staff",
-            element: <SuperAdminOnly><DashboardStaff /></SuperAdminOnly>
+            element: <RoleGuard allowedRoles={['admin']}><div>Staff Management</div></RoleGuard>
           },
         ],
       },
@@ -82,3 +79,4 @@ export const router = createBrowserRouter([
     ],
   },
 ]);
+
