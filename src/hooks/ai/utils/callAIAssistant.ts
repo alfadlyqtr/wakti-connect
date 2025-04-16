@@ -160,4 +160,3 @@ You can ask me to generate another image or help with something else!`;
     };
   }
 };
-
