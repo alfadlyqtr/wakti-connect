@@ -99,8 +99,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
   // Enhanced 3D send button style
   const sendButtonStyle = {
-    background: 'rgba(255, 255, 255, 0.1)',
-    boxShadow: '0 15px 35px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.12) inset, 0 0 15px rgba(59, 130, 246, 0.3)',
+    background: 'rgba(255, 255, 255, 0.12)',
+    boxShadow: '0 15px 35px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.15) inset, 0 0 15px rgba(59, 130, 246, 0.3)',
     backdropFilter: 'blur(12px)',
     transform: 'perspective(1000px) rotateX(2deg)',
     transition: 'all 0.3s ease',
@@ -135,7 +135,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               isListening && "bg-primary/10 border-primary/20",
               getInputGlowClass(isFocused),
               getInputBackgroundStyle(),
-              "shadow-[0_15px_35px_rgba(0,0,0,0.7)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.8),0_0_20px_rgba(59,130,246,0.3)] focus:shadow-[0_20px_40px_rgba(0,0,0,0.8),0_0_30px_rgba(59,130,246,0.5)] transform hover:translate-y-[-5px] focus:translate-y-[-5px] neon-glow-blue mb-3"
+              "shadow-[0_15px_35px_rgba(0,0,0,0.7)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.8),0_0_20px_rgba(59,130,246,0.3)] focus:shadow-[0_20px_40px_rgba(0,0,0,0.8),0_0_30px_rgba(59,130,246,0.5)] transform hover:translate-y-[-5px] focus:translate-y-[-5px] neon-glow-blue"
             )}
             style={{
               boxShadow: '0 15px 35px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1) inset, 0 0 15px rgba(59, 130, 246, 0.3)',
@@ -144,8 +144,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           />
         </div>
         
-        {/* Toolbar moved below the input */}
-        <div className="flex justify-between items-center w-full">
+        {/* Toolbar and send button row */}
+        <div className="flex justify-between items-center w-full mt-1">
           <InputToolbar 
             isLoading={isLoading} 
             isListening={isListening}

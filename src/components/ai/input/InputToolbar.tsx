@@ -32,8 +32,8 @@ export const InputToolbar = ({ isLoading, isListening, onVoiceToggle }: InputToo
 
   // Enhanced 3D button style with deeper shadows and brighter highlights
   const buttonStyle = {
-    background: 'rgba(255, 255, 255, 0.1)',
-    boxShadow: '0 15px 35px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.12) inset, 0 0 15px rgba(59, 130, 246, 0.3)',
+    background: 'rgba(255, 255, 255, 0.12)',
+    boxShadow: '0 15px 35px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.15) inset, 0 0 15px rgba(59, 130, 246, 0.3)',
     backdropFilter: 'blur(12px)',
     transform: 'perspective(1000px) rotateX(2deg)',
     transition: 'all 0.3s ease',
@@ -46,7 +46,7 @@ export const InputToolbar = ({ isLoading, isListening, onVoiceToggle }: InputToo
   };
 
   return (
-    <div className="toolbar-container flex items-center justify-center gap-3 w-full pt-2 pb-2">
+    <div className="toolbar-container flex items-center justify-between w-full pt-2 pb-2">
       <div className="flex flex-row gap-3 items-center">
         {/* Camera button */}
         <motion.div 
