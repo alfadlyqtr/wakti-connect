@@ -20,19 +20,31 @@ const DashboardAnalyticsHub = () => {
       <MetricCards />
 
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="bg-black/20 border border-white/10">
-          <TabsTrigger value="overview" className="data-[state=active]:bg-blue-900/30">Overview</TabsTrigger>
-          <TabsTrigger value="tasks" className="data-[state=active]:bg-blue-900/30">Tasks</TabsTrigger>
-          <TabsTrigger value="team" className="data-[state=active]:bg-blue-900/30">Team</TabsTrigger>
+        <TabsList className="bg-black/20 border border-white/10 backdrop-blur-xl">
+          <TabsTrigger 
+            value="overview" 
+            className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-blue-900/40 data-[state=active]:to-blue-800/30 data-[state=active]:border-blue-500/30 data-[state=active]:border data-[state=active]:backdrop-blur-xl"
+          >
+            Overview
+          </TabsTrigger>
+          <TabsTrigger 
+            value="tasks" 
+            className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-blue-900/40 data-[state=active]:to-blue-800/30 data-[state=active]:border-blue-500/30 data-[state=active]:border data-[state=active]:backdrop-blur-xl"
+          >
+            Tasks
+          </TabsTrigger>
+          <TabsTrigger 
+            value="team" 
+            className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-blue-900/40 data-[state=active]:to-blue-800/30 data-[state=active]:border-blue-500/30 data-[state=active]:border data-[state=active]:backdrop-blur-xl"
+          >
+            Team
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="overview" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <Card className="col-span-2 bg-black/20 backdrop-blur-xl border-white/5 overflow-hidden transform hover:translate-y-[-5px] transition-all duration-300" 
-              style={{
-                boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset',
-                transform: 'perspective(1000px) rotateX(2deg)'
-              }}>
+            <Card className="col-span-2 overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-xl"></div>
               <CardHeader>
                 <CardTitle className="text-white">Performance Overview</CardTitle>
               </CardHeader>
@@ -41,11 +53,8 @@ const DashboardAnalyticsHub = () => {
               </CardContent>
             </Card>
             
-            <Card className="bg-black/20 backdrop-blur-xl border-white/5 overflow-hidden transform hover:translate-y-[-5px] transition-all duration-300" 
-              style={{
-                boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset',
-                transform: 'perspective(1000px) rotateX(2deg)'
-              }}>
+            <Card className="overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-indigo-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-xl"></div>
               <CardHeader>
                 <CardTitle className="text-white">Recent Activity</CardTitle>
               </CardHeader>
@@ -57,11 +66,8 @@ const DashboardAnalyticsHub = () => {
         </TabsContent>
         
         <TabsContent value="tasks" className="space-y-4">
-          <Card className="bg-black/20 backdrop-blur-xl border-white/5 overflow-hidden transform hover:translate-y-[-5px] transition-all duration-300" 
-            style={{
-              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset',
-              transform: 'perspective(1000px) rotateX(2deg)'
-            }}>
+          <Card className="overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-blue-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-xl"></div>
             <CardHeader>
               <CardTitle className="text-white">Tasks Completion Rate</CardTitle>
             </CardHeader>
@@ -72,11 +78,8 @@ const DashboardAnalyticsHub = () => {
         </TabsContent>
         
         <TabsContent value="team" className="space-y-4">
-          <Card className="bg-black/20 backdrop-blur-xl border-white/5 overflow-hidden transform hover:translate-y-[-5px] transition-all duration-300" 
-            style={{
-              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset',
-              transform: 'perspective(1000px) rotateX(2deg)'
-            }}>
+          <Card className="overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-violet-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-xl"></div>
             <CardHeader>
               <CardTitle className="text-white">Team Activity</CardTitle>
             </CardHeader>
