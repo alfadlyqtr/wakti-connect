@@ -96,11 +96,16 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         return 'bg-blue-900/15';
     }
   };
+
+  const sendButtonStyle = {
+    boxShadow: '0 15px 35px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset, 0 0 15px rgba(59, 130, 246, 0.3)',
+    transform: 'perspective(1000px) rotateX(2deg)'
+  };
   
   return (
     <motion.form 
       onSubmit={handleSubmit} 
-      className="relative flex flex-col gap-3 p-5 border-t border-white/10 bg-black/20 backdrop-blur-xl"
+      className="relative flex flex-col gap-3 p-4 sm:p-5 border-t border-white/10 bg-black/20 backdrop-blur-xl"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: 0.2 }}
@@ -108,59 +113,65 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         boxShadow: '0 -10px 40px rgba(0, 0, 0, 0.4)',
       }}
     >
-      <div className="relative w-full">
-        <Textarea
-          ref={inputRef}
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-          placeholder="Type a message..."
-          disabled={isLoading || isDisabled || isListening}
-          className={cn(
-            "flex-1 dark:bg-slate-800/25 backdrop-blur-xl border-2 border-white/20 dark:border-slate-700/20 transition-all duration-300 input-active text-foreground resize-none min-h-[60px] max-h-[120px] px-5 py-4 rounded-xl pr-36",
-            inputValue && "pr-12",
-            isLoading && "opacity-70",
-            isListening && "bg-primary/10 border-primary/20",
-            getInputGlowClass(isFocused),
-            getInputBackgroundStyle(),
-            "shadow-[0_15px_35px_rgba(0,0,0,0.7)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.8),0_0_20px_rgba(59,130,246,0.3)] focus:shadow-[0_20px_40px_rgba(0,0,0,0.8),0_0_30px_rgba(59,130,246,0.5)] transform hover:translate-y-[-5px] focus:translate-y-[-5px] neon-glow-blue"
-          )}
-          style={{
-            boxShadow: '0 15px 35px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1) inset, 0 0 15px rgba(59, 130, 246, 0.3)',
-            transform: 'perspective(1000px) rotateX(1deg)'
-          }}
-        />
+      <div className="flex flex-col gap-2 w-full">
+        <div className="relative w-full">
+          <Textarea
+            ref={inputRef}
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            placeholder="Type a message..."
+            disabled={isLoading || isDisabled || isListening}
+            className={cn(
+              "flex-1 dark:bg-slate-800/25 backdrop-blur-xl border-2 border-white/20 dark:border-slate-700/20 transition-all duration-300 input-active text-foreground resize-none min-h-[60px] max-h-[120px] px-5 py-4 rounded-xl",
+              inputValue && "pr-12",
+              isLoading && "opacity-70",
+              isListening && "bg-primary/10 border-primary/20",
+              getInputGlowClass(isFocused),
+              getInputBackgroundStyle(),
+              "shadow-[0_15px_35px_rgba(0,0,0,0.7)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.8),0_0_20px_rgba(59,130,246,0.3)] focus:shadow-[0_20px_40px_rgba(0,0,0,0.8),0_0_30px_rgba(59,130,246,0.5)] transform hover:translate-y-[-5px] focus:translate-y-[-5px] neon-glow-blue"
+            )}
+            style={{
+              boxShadow: '0 15px 35px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1) inset, 0 0 15px rgba(59, 130, 246, 0.3)',
+              transform: 'perspective(1000px) rotateX(2deg)'
+            }}
+          />
+        </div>
         
-        <InputToolbar 
-          isLoading={isLoading} 
-          isListening={isListening}
-          onVoiceToggle={handleVoiceToggle}
-        />
-      </div>
-      
-      <div className="flex justify-end">
-        <Button 
-          type="submit" 
-          size="icon" 
-          disabled={!inputValue.trim() || isLoading || isDisabled}
-          className={cn(
-            "rounded-full transition-colors duration-300 shadow-lg h-12 w-12 sm:h-14 sm:w-14 transform hover:translate-y-[-8px] transition-transform duration-300",
-            "bg-black/30 border border-white/10 backdrop-blur-xl",
-            "dark:bg-slate-800/30 dark:border-slate-700/20",
-            "hover:shadow-[0_15px_35px_rgba(0,0,0,0.7),0_0_20px_rgba(59,130,246,0.5)]"
-          )}
-          style={{
-            boxShadow: '0 15px 35px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset, 0 0 15px rgba(59, 130, 246, 0.3)',
-          }}
-        >
-          {isLoading ? (
-            <Loader2 className="h-6 w-6 animate-spin" />
-          ) : (
-            <Send className="h-6 w-6" />
-          )}
-        </Button>
+        {/* Toolbar below the input */}
+        <div className="flex justify-between items-start w-full">
+          <InputToolbar 
+            isLoading={isLoading} 
+            isListening={isListening}
+            onVoiceToggle={handleVoiceToggle}
+          />
+          
+          <motion.div
+            whileHover={{ scale: 1.05, y: -4 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Button 
+              type="submit" 
+              size="icon" 
+              disabled={!inputValue.trim() || isLoading || isDisabled}
+              className={cn(
+                "rounded-full transition-colors duration-300 shadow-lg h-12 w-12 transform hover:translate-y-[-8px] transition-transform duration-300",
+                "bg-black/30 border border-white/10 backdrop-blur-xl",
+                "dark:bg-slate-800/30 dark:border-slate-700/20",
+                "hover:shadow-[0_15px_35px_rgba(0,0,0,0.7),0_0_20px_rgba(59,130,246,0.5)]"
+              )}
+              style={sendButtonStyle}
+            >
+              {isLoading ? (
+                <Loader2 className="h-6 w-6 animate-spin" />
+              ) : (
+                <Send className="h-6 w-6" />
+              )}
+            </Button>
+          </motion.div>
+        </div>
       </div>
     </motion.form>
   );

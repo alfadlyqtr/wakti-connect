@@ -30,21 +30,21 @@ export const InputToolbar = ({ isLoading, isListening, onVoiceToggle }: InputToo
     console.log('Opening camera');
   };
 
-  const buttonStyle = {
+  const commonButtonStyle = {
     boxShadow: '0 15px 35px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1) inset, 0 0 15px rgba(59, 130, 246, 0.3)',
-    transform: 'perspective(1000px) rotateX(1deg)'
+    transform: 'perspective(1000px) rotateX(2deg)'
   };
 
   const activeButtonStyle = {
     boxShadow: '0 15px 35px rgba(239, 68, 68, 0.4), 0 0 0 1px rgba(239, 68, 68, 0.3) inset, 0 0 20px rgba(239, 68, 68, 0.5)',
-    transform: 'perspective(1000px) rotateX(1deg)'
+    transform: 'perspective(1000px) rotateX(2deg)'
   };
 
   return (
-    <div className="absolute right-3 bottom-3 flex items-center gap-2 sm:gap-3">
+    <div className="toolbar-container flex flex-wrap items-center justify-end gap-2 sm:gap-3 w-full pt-2">
       {/* Camera button */}
       <motion.div 
-        whileHover={{ scale: 1.1, y: -8 }} 
+        whileHover={{ scale: 1.05, y: -4 }} 
         whileTap={{ scale: 0.95 }}
         className="filter drop-shadow-xl"
       >
@@ -54,17 +54,17 @@ export const InputToolbar = ({ isLoading, isListening, onVoiceToggle }: InputToo
           variant="ghost"
           onClick={handleCameraCapture}
           disabled={isLoading || isListening}
-          className="h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-white/90 dark:bg-black/50 text-blue-600 border border-blue-100 dark:border-blue-900/50 backdrop-blur-xl shadow-xl hover:shadow-2xl hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all transform hover:translate-y-[-8px]"
-          style={buttonStyle}
+          className="h-10 w-10 rounded-full bg-white/90 dark:bg-black/50 text-blue-600 border border-blue-100 dark:border-blue-900/50 backdrop-blur-xl shadow-xl hover:shadow-2xl hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all"
+          style={commonButtonStyle}
         >
-          <Camera className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500 dark:text-blue-400" />
+          <Camera className="h-5 w-5 text-blue-500 dark:text-blue-400" />
           <span className="sr-only">Take a photo</span>
         </Button>
       </motion.div>
       
       {/* File upload button */}
       <motion.div 
-        whileHover={{ scale: 1.1, y: -8 }} 
+        whileHover={{ scale: 1.05, y: -4 }} 
         whileTap={{ scale: 0.95 }}
         className="filter drop-shadow-xl"
       >
@@ -74,10 +74,10 @@ export const InputToolbar = ({ isLoading, isListening, onVoiceToggle }: InputToo
           variant="ghost"
           onClick={() => fileInputRef.current?.click()}
           disabled={isLoading || isListening}
-          className="h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-white/90 dark:bg-black/50 text-blue-600 border border-blue-100 dark:border-blue-900/50 backdrop-blur-xl shadow-xl hover:shadow-2xl hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all transform hover:translate-y-[-8px]"
-          style={buttonStyle}
+          className="h-10 w-10 rounded-full bg-white/90 dark:bg-black/50 text-blue-600 border border-blue-100 dark:border-blue-900/50 backdrop-blur-xl shadow-xl hover:shadow-2xl hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all"
+          style={commonButtonStyle}
         >
-          <Paperclip className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500 dark:text-blue-400" />
+          <Paperclip className="h-5 w-5 text-blue-500 dark:text-blue-400" />
           <span className="sr-only">Upload a file</span>
         </Button>
       </motion.div>
@@ -92,7 +92,7 @@ export const InputToolbar = ({ isLoading, isListening, onVoiceToggle }: InputToo
       {/* Voice input button */}
       {supportsVoice && (
         <motion.div
-          whileHover={{ scale: 1.1, y: -8 }}
+          whileHover={{ scale: 1.05, y: -4 }}
           whileTap={{ scale: 0.95 }}
           className="filter drop-shadow-xl"
           animate={isListening ? { 
@@ -106,17 +106,17 @@ export const InputToolbar = ({ isLoading, isListening, onVoiceToggle }: InputToo
             variant={isListening ? "destructive" : "ghost"}
             onClick={onVoiceToggle}
             className={cn(
-              "h-10 w-10 sm:h-11 sm:w-11 rounded-full shadow-xl hover:shadow-2xl transition-all transform hover:translate-y-[-8px]",
+              "h-10 w-10 rounded-full shadow-xl hover:shadow-2xl transition-all",
               isListening 
                 ? "bg-red-500/90 text-white border border-red-400/70 animate-pulse dark:bg-red-700/80"
                 : "bg-white/90 dark:bg-black/50 text-blue-600 border border-blue-100 dark:border-blue-900/50 hover:bg-blue-50 dark:hover:bg-blue-900/30"
             )}
-            style={isListening ? activeButtonStyle : buttonStyle}
+            style={isListening ? activeButtonStyle : commonButtonStyle}
           >
             {isListening ? (
-              <MicOff className="h-5 w-5 sm:h-6 sm:w-6" />
+              <MicOff className="h-5 w-5" />
             ) : (
-              <Mic className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500 dark:text-blue-400" />
+              <Mic className="h-5 w-5 text-blue-500 dark:text-blue-400" />
             )}
             <span className="sr-only">
               {isListening ? "Stop recording" : "Start recording"}
