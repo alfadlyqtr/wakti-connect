@@ -225,3 +225,52 @@
 .message-glow-creative {
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 20px rgba(236, 72, 153, 0.4);
 }
+
+/* Clear button styles with mode-specific effects */
+.clear-button-general {
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 15px rgba(239, 68, 68, 0.3);
+}
+
+.clear-button-general:hover {
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.8), 0 0 25px rgba(239, 68, 68, 0.5);
+}
+
+.clear-button-student {
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 15px rgba(239, 68, 68, 0.3);
+}
+
+.clear-button-student:hover {
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.8), 0 0 25px rgba(239, 68, 68, 0.5);
+}
+
+.clear-button-productivity {
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 15px rgba(239, 68, 68, 0.3);
+}
+
+.clear-button-productivity:hover {
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.8), 0 0 25px rgba(239, 68, 68, 0.5);
+}
+
+.clear-button-creative {
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 15px rgba(239, 68, 68, 0.3);
+}
+
+.clear-button-creative:hover {
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.8), 0 0 25px rgba(239, 68, 68, 0.5);
+}
+
+/* Confirmation dialog animation */
+.confirm-animation-enter {
+  animation: confirm-animation-enter 0.4s ease forwards;
+}
+
+@keyframes confirm-animation-enter {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
