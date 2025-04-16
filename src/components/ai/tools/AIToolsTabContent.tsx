@@ -31,16 +31,21 @@ export const AIToolsTabContent: React.FC<AIToolsTabContentProps> = ({
     }
   };
   
+  // Always show image tab in general or creative mode
+  const showImageTab = activeMode === 'general' || activeMode === 'creative';
+  
   // Always show meeting tool in creative mode
   const showMeetingTab = activeMode === 'creative';
   
   return (
-    <Tabs defaultValue="image" className="w-full">
+    <Tabs defaultValue={showImageTab ? "image" : "voice"} className="w-full">
       <TabsList className={`grid ${showMeetingTab ? 'grid-cols-6' : 'grid-cols-5'} h-auto`}>
-        <TabsTrigger value="image" className="text-xs flex flex-col gap-1 py-2 h-auto">
-          <Image className="h-4 w-4" />
-          <span>Image</span>
-        </TabsTrigger>
+        {showImageTab && (
+          <TabsTrigger value="image" className="text-xs flex flex-col gap-1 py-2 h-auto">
+            <Image className="h-4 w-4" />
+            <span>Image</span>
+          </TabsTrigger>
+        )}
         <TabsTrigger value="voice" className="text-xs flex flex-col gap-1 py-2 h-auto">
           <Mic className="h-4 w-4" />
           <span>Voice</span>
@@ -65,9 +70,11 @@ export const AIToolsTabContent: React.FC<AIToolsTabContentProps> = ({
         </TabsTrigger>
       </TabsList>
 
-      <TabsContent value="image" className="mt-4">
-        <ImageGenerationToolCard onSubmitPrompt={handleSubmitPrompt} />
-      </TabsContent>
+      {showImageTab && (
+        <TabsContent value="image" className="mt-4">
+          <ImageGenerationToolCard onSubmitPrompt={handleSubmitPrompt} />
+        </TabsContent>
+      )}
       
       <TabsContent value="voice" className="mt-4">
         <VoiceInteractionToolCard onSpeechRecognized={handleSubmitPrompt} />
