@@ -1,14 +1,14 @@
 
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import App from "./App";
-import { SignIn } from "./components/SignIn";
-import SignUp from "./components/SignUp";
-import ForgotPassword from './components/ForgotPassword';
-import ResetPassword from './components/ResetPassword';
-import VerifyEmail from './components/VerifyEmail';
-import { ContactForm } from './components/ContactForm';
-import LandingPage from './pages/LandingPage';
-import DashboardLayout from './layouts/DashboardLayout';
+import { SignIn } from "./pages/auth/LoginPage";
+import SignUp from "./pages/auth/RegisterPage";
+import ForgotPassword from './pages/auth/ForgotPasswordPage';
+import ResetPassword from './pages/auth/ResetPasswordPage';
+import VerifyEmail from './pages/auth/VerificationPage';
+import ContactForm from './components/contact/ContactForm';
+import LandingPage from './pages/public/LandingPage';
+import DashboardLayout from './components/dashboard/DashboardLayout';
 import DashboardHome from './pages/dashboard/DashboardHome';
 import DashboardMessages from './pages/dashboard/DashboardMessages';
 import DashboardTasks from './pages/dashboard/DashboardTasks';
@@ -18,15 +18,15 @@ import DashboardBusinessSettings from './pages/dashboard/DashboardBusinessSettin
 import DashboardSettings from './pages/dashboard/DashboardSettings';
 import DashboardJobTypes from './pages/dashboard/DashboardJobTypes';
 import DashboardStaff from './pages/dashboard/DashboardStaff';
-import PrivacyPolicy from './pages/legal/PrivacyPolicy';
-import TermsOfService from './pages/legal/TermsOfService';
-import AboutPage from './pages/AboutPage';
-import PricingPage from './pages/PricingPage';
-import { FeaturesPage } from './pages/FeaturesPage';
-import SupportPage from './pages/SupportPage';
-import { NotFound } from './pages/NotFound';
-import { RequireAuth } from './components/RequireAuth';
-import { SuperAdminOnly } from './components/SuperAdminOnly';
+import PrivacyPolicy from './pages/public/PrivacyPage';
+import TermsOfService from './pages/public/TermsPage';
+import AboutPage from './pages/public/AboutPage';
+import PricingPage from './pages/public/PricingPage';
+import FeaturesPage from './pages/public/FeaturesPage';
+import SupportPage from './pages/public/ContactPage';
+import NotFound from './pages/NotFound';
+import { ProtectedRoute as RequireAuth } from './components/auth/ProtectedRoute';
+import { RoleGuard as SuperAdminOnly } from './components/auth/RoleGuard';
 import { UnifiedChatInterfaceWithProvider } from "./components/ai/chat/UnifiedChatInterface";
 import { MobileUXDemo } from "./components/mobile-demos/MobileUXDemo";
 

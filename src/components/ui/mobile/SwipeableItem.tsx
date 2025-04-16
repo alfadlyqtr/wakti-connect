@@ -56,15 +56,15 @@ export const SwipeableItem: React.FC<SwipeableItemProps> = ({
   const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     if (disabled) return;
     
-    const threshold = containerWidth.current * threshold;
+    const thresholdDistance = containerWidth.current * threshold;
     
     // Swipe left (positive velocity means right to left)
-    if (info.offset.x < -threshold && onSwipeLeft) {
+    if (info.offset.x < -thresholdDistance && onSwipeLeft) {
       onSwipeLeft();
       if (hapticFeedback) platformHapticFeedback('impact');
     } 
     // Swipe right (negative velocity means left to right)
-    else if (info.offset.x > threshold && onSwipeRight) {
+    else if (info.offset.x > thresholdDistance && onSwipeRight) {
       onSwipeRight();
       if (hapticFeedback) platformHapticFeedback('impact');
     }
