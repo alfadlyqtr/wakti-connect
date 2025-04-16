@@ -24,9 +24,9 @@ export const useAISettings = () => {
   
   const updateSettings = useUpdateAISettings(user);
 
-  // Determine account type from metadata or profile data when available
-  const userAccountType = user?.user_metadata?.account_type;
-  const isBusinessOrIndividual = userAccountType === 'business' || userAccountType === 'individual';
+  // Determine account type directly from metadata (source of truth)
+  const accountType = user?.user_metadata?.account_type;
+  const isBusinessOrIndividual = accountType === 'business' || accountType === 'individual';
   
   // Mark that we've checked permissions once the query completes
   useEffect(() => {
@@ -40,10 +40,7 @@ export const useAISettings = () => {
     isLoadingSettings,
     settingsError,
     updateSettings,
-    // User can use AI if either:
-    // 1. The RPC function returns true OR
-    // 2. They have a business/individual account confirmed in metadata
-    // 3. We've completed the permission check
+    // User can use AI if either it's confirmed by metadata or by our query
     canUseAI: hasCheckedPermissions && (canUseAI === true || isBusinessOrIndividual),
     isLoadingPermission,
     hasCheckedPermissions

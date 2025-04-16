@@ -16,15 +16,16 @@ export async function checkUserAccess(user, supabaseClient) {
     
     console.log("Checking user access for user ID:", user.id);
     
-    // Get the account type directly from user metadata first (most reliable)
+    // Simplified check: Trust the account type directly from user metadata
+    // This eliminates redundant checks and makes auth faster
     const accountType = user.user_metadata?.account_type;
     if (accountType === 'business' || accountType === 'individual') {
       console.log("User can access AI based on metadata account type:", accountType);
       return { canUseAI: true };
     }
     
-    // Check profile data as fallback
-    console.log("Checking profile data for account type");
+    // Fallback to profile data only if metadata doesn't have account type
+    console.log("Account type not found in metadata, checking profile data");
     const { data: profile, error: profileError } = await supabaseClient
       .from("profiles")
       .select("account_type")

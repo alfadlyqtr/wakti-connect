@@ -76,32 +76,30 @@ export const useCanUseAIQuery = (user: User | null) => {
       if (!user) return false;
 
       try {
-        // Simplified check based solely on account type
-        // First check account type directly from user metadata
-        const userAccountType = user.user_metadata?.account_type || null;
+        // Simplified approach: Trust the account type from metadata as the source of truth
+        const accountType = user.user_metadata?.account_type;
         
-        // Business and individual accounts directly from metadata can use AI
-        if (userAccountType === 'business' || userAccountType === 'individual') {
-          console.log("User can access AI based on metadata account type:", userAccountType);
+        // Business and individual accounts can use AI
+        if (accountType === 'business' || accountType === 'individual') {
+          console.log("User can access AI based on account type from metadata:", accountType);
           return true;
         }
         
-        // If metadata doesn't have it, check profile as fallback
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("account_type")
-          .eq("id", user.id)
-          .single();
-          
-        if (!profileError && profile) {
-          // Business and individual accounts from profile can use AI
-          if (profile.account_type === 'business' || profile.account_type === 'individual') {
+        // Only if metadata doesn't contain account_type, check profile as fallback
+        if (!accountType) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("account_type")
+            .eq("id", user.id)
+            .maybeSingle();
+            
+          if (profile && (profile.account_type === 'business' || profile.account_type === 'individual')) {
             console.log("User can access AI based on profile account type:", profile.account_type);
             return true;
           }
         }
         
-        // Default to denying access if we cannot confirm it
+        // Default to denying access
         return false;
       } catch (error) {
         console.error("Error checking AI access:", error);
@@ -109,9 +107,8 @@ export const useCanUseAIQuery = (user: User | null) => {
       }
     },
     enabled: !!user,
-    retry: 1,
-    retryDelay: 2000,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes - Changed from cacheTime to gcTime
+    // Prevent excessive refetching - only check again after 5 minutes
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 };

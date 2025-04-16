@@ -42,29 +42,26 @@ export const useGlobalChat = () => {
     return { content, imageUrl: null };
   };
   
-  // Simplified check if user has necessary account type for AI
+  // Simplified check if user has necessary account type for AI - trust metadata first
   const userCanUseAI = useCallback(() => {
     // If not authenticated, can't use AI
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !user) {
       return false;
     }
     
-    // First check user metadata - single source of truth
-    const accountTypeFromMetadata = user?.user_metadata?.account_type;
-    if (accountTypeFromMetadata === 'business' || accountTypeFromMetadata === 'individual') {
+    // Trust the account type from metadata as source of truth
+    const accountType = user.user_metadata?.account_type;
+    if (accountType === 'business' || accountType === 'individual') {
       return true;
     }
     
-    // If metadata doesn't have the info, check profile as fallback
-    if (!isProfileLoading && profile) {
-      if (profile.account_type === 'business' || profile.account_type === 'individual') {
-        return true;
-      }
+    // Only if metadata doesn't have account_type, check profile as fallback
+    if (!accountType && !isProfileLoading && profile) {
+      return profile.account_type === 'business' || profile.account_type === 'individual';
     }
     
-    // Default to false if we can't confirm access
     return false;
-  }, [isAuthenticated, isProfileLoading, profile, user]);
+  }, [isAuthenticated, user, isProfileLoading, profile]);
   
   // Send message function with improved error handling
   const sendMessage = useCallback(async (content: string) => {
