@@ -21,7 +21,7 @@ export type ContentCategory =
   | 'hate'
   | 'harassment'
   | 'self-harm'
-  | 'sexual';  // Adding 'sexual' as a valid category type
+  | 'sexual';  // Explicitly added 'sexual' category
 
 // Define the structure for intent classification results
 export interface IntentClassification {
