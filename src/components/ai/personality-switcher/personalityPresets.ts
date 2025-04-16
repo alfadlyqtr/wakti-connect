@@ -3,6 +3,8 @@ import { AIPersonality, AIPersonalityMode } from './types';
 
 export const personalityPresets: Record<AIPersonalityMode, AIPersonality> = {
   general: {
+    id: 'general',
+    name: 'General Assistant',
     title: 'General Chat',
     description: 'Ask me anything - I can help with a variety of questions',
     systemPrompt: 'You are a helpful, friendly AI assistant. Provide clear, concise responses to user questions across a wide range of topics.',
@@ -17,6 +19,7 @@ export const personalityPresets: Record<AIPersonalityMode, AIPersonality> = {
     gradient: 'from-blue-500 to-wakti-blue',
     bgGradient: 'bg-gradient-to-r from-blue-50 to-blue-100/50',
     iconColor: 'text-wakti-blue',
+    mode: 'general',
     lightTheme: {
       backgroundColor: '#f0f7ff',
       chatBgColor: 'rgba(255, 255, 255, 0.7)',
@@ -31,6 +34,8 @@ export const personalityPresets: Record<AIPersonalityMode, AIPersonality> = {
     }
   },
   student: {
+    id: 'student',
+    name: 'Student Assistant',
     title: 'Student Mode',
     description: 'Your study partner, tutor and research assistant',
     systemPrompt: 'You are a helpful, encouraging educational assistant. Help with homework, explain concepts clearly, provide study tips, and break down complex topics into digestible information.',
@@ -45,6 +50,7 @@ export const personalityPresets: Record<AIPersonalityMode, AIPersonality> = {
     gradient: 'from-green-500 to-green-600',
     bgGradient: 'bg-gradient-to-r from-green-50 to-green-100/50',
     iconColor: 'text-green-600',
+    mode: 'student',
     lightTheme: {
       backgroundColor: '#f0fdf4',
       chatBgColor: 'rgba(255, 255, 255, 0.7)',
@@ -59,6 +65,8 @@ export const personalityPresets: Record<AIPersonalityMode, AIPersonality> = {
     }
   },
   productivity: {
+    id: 'productivity',
+    name: 'Productivity Assistant',
     title: 'Productivity Mode',
     description: 'Your personal assistant for tasks, scheduling and organization',
     systemPrompt: 'You are a productivity-focused AI assistant. Help users manage their tasks, create schedules, set reminders, and optimize their workflows. Be efficient, clear, and focused on actionable advice.',
@@ -73,6 +81,7 @@ export const personalityPresets: Record<AIPersonalityMode, AIPersonality> = {
     gradient: 'from-purple-500 to-purple-600',
     bgGradient: 'bg-gradient-to-r from-purple-50 to-purple-100/50',
     iconColor: 'text-purple-600',
+    mode: 'productivity',
     lightTheme: {
       backgroundColor: '#f5f3ff',
       chatBgColor: 'rgba(255, 255, 255, 0.7)',
@@ -87,6 +96,8 @@ export const personalityPresets: Record<AIPersonalityMode, AIPersonality> = {
     }
   },
   creative: {
+    id: 'creative',
+    name: 'Creative Assistant',
     title: 'Creative Mode',
     description: 'Your creative partner for ideas, content and design',
     systemPrompt: 'You are a creative AI assistant. Help users generate ideas, draft content, design visuals, and explore artistic concepts. Be imaginative, innovative, and inspiring in your responses.',
@@ -101,6 +112,7 @@ export const personalityPresets: Record<AIPersonalityMode, AIPersonality> = {
     gradient: 'from-pink-500 via-purple-500 to-indigo-500',
     bgGradient: 'bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-50',
     iconColor: 'text-purple-500',
+    mode: 'creative',
     lightTheme: {
       backgroundColor: '#fdf2f8',
       chatBgColor: 'rgba(255, 255, 255, 0.7)',

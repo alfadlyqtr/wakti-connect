@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { AIMessage } from '@/types/ai-assistant.types';
 import { ChatMemoryMessage } from '@/components/ai/personality-switcher/types';
 import { Avatar } from '@/components/ui/avatar';
-import { Person, Bot, Download, ExternalLink, Maximize2, ZoomIn } from 'lucide-react';
+import { User, Bot, Download, ExternalLink, Maximize2, ZoomIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatRelativeTime } from '@/lib/utils';
 import Markdown from 'react-markdown';
@@ -68,7 +67,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, isLoading = f
             isUser ? "bg-gradient-to-tr from-slate-700 to-slate-800" : getPersonalityColor()
           )}>
             {isUser ? (
-              <Person className="h-5 w-5 text-white" />
+              <User className="h-5 w-5 text-white" />
             ) : (
               <Bot className="h-5 w-5 text-white" />
             )}
@@ -80,7 +79,6 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, isLoading = f
           isUser ? "rounded-tr-sm" : "rounded-tl-sm",
           isLoading ? "animate-pulse" : ""
         )}>
-          {/* Message content */}
           <div className="prose prose-invert overflow-hidden break-words max-w-full">
             <Markdown
               components={{
@@ -108,7 +106,6 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, isLoading = f
             </Markdown>
           </div>
           
-          {/* Image display if present */}
           {message.imageUrl && (
             <div className="mt-4 space-y-2">
               <div className={cn(
@@ -157,7 +154,6 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, isLoading = f
             </div>
           )}
           
-          {/* Timestamp */}
           {message.timestamp && (
             <div className="text-xs text-slate-500 mt-1">
               {formatRelativeTime(message.timestamp)}

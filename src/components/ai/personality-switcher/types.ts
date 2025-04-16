@@ -1,6 +1,8 @@
 
 import { WAKTIAIMode } from '@/types/ai-assistant.types';
 
+export type AIPersonalityMode = WAKTIAIMode;
+
 export interface AIPersonality {
   id: string;
   name: string;
@@ -10,6 +12,22 @@ export interface AIPersonality {
   suggestedPrompts: string[];
   color: string;
   mode: WAKTIAIMode;
+  title: string;
+  gradient?: string;
+  bgGradient?: string;
+  iconColor?: string;
+  lightTheme?: {
+    backgroundColor: string;
+    chatBgColor: string;
+    messageColor: string;
+    accentColor: string;
+  };
+  darkTheme?: {
+    backgroundColor: string;
+    chatBgColor: string;
+    messageColor: string;
+    accentColor: string;
+  };
 }
 
 export interface ChatMemoryMessage {
