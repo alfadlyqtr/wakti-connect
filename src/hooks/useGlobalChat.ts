@@ -6,8 +6,8 @@ import { useAIPersonality } from '@/components/ai/personality-switcher/AIPersona
 import { callAIAssistant } from '@/hooks/ai/utils/callAIAssistant';
 import { useAuth } from '@/hooks/auth';
 import { useProfile } from '@/hooks/useProfile';
-import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/components/ui/use-toast';
+import { supabase } from '@/lib/supabase';
 
 export const useGlobalChat = () => {
   const [messages, setMessages] = useState<ChatMemoryMessage[]>([]);
@@ -24,6 +24,23 @@ export const useGlobalChat = () => {
     
     return unsubscribe;
   }, []);
+  
+  // Process for embedded images in AI responses
+  const processMessageWithImages = (content: string): { content: string, imageUrl: string | null } => {
+    const imagePattern = /\[IMAGE_GENERATED\](.*?)\[\/IMAGE_GENERATED\]/;
+    const match = content.match(imagePattern);
+    
+    if (match && match[1]) {
+      // Remove the image tag from the content
+      const processedContent = content.replace(imagePattern, '');
+      return {
+        content: processedContent.trim(),
+        imageUrl: match[1].trim() 
+      };
+    }
+    
+    return { content, imageUrl: null };
+  };
   
   // Send message function with improved error handling
   const sendMessage = useCallback(async (content: string) => {
@@ -59,7 +76,7 @@ export const useGlobalChat = () => {
       
       // Call AI assistant with additional debugging
       try {
-        const { response, error } = await callAIAssistant(
+        const { response, generatedImage, error } = await callAIAssistant(
           systemMessage,
           content,
           JSON.stringify(recentMessages),
@@ -80,11 +97,15 @@ export const useGlobalChat = () => {
         if (response) {
           console.log('[useGlobalChat] Received AI response successfully');
           
+          // Process response for embedded images
+          const { content: processedContent, imageUrl } = processMessageWithImages(response);
+          
           // Add AI response to memory
           globalChatMemory.addMessage({
             role: 'assistant',
-            content: response,
-            mode: currentMode
+            content: processedContent,
+            mode: currentMode,
+            imageUrl: imageUrl || generatedImage // Use either embedded image or separately returned image
           });
         } else {
           console.error('[useGlobalChat] Empty response from AI assistant');

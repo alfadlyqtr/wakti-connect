@@ -1,105 +1,170 @@
 
-import React from 'react';
-import { cn } from '@/lib/utils';
+import React, { useState } from 'react';
 import { AIMessage } from '@/types/ai-assistant.types';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Bot, User } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import { ChatMemoryMessage } from '@/components/ai/personality-switcher/types';
+import { Avatar } from '@/components/ui/avatar';
+import { Person, Bot, Download, ExternalLink, Maximize2, ZoomIn } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { formatRelativeTime } from '@/lib/utils';
+import Markdown from 'react-markdown';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 import { useAIPersonality } from '@/components/ai/personality-switcher/AIPersonalityContext';
 
 interface ChatMessageProps {
-  message: AIMessage;
+  message: ChatMemoryMessage;
+  isLoading?: boolean;
 }
 
-export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
+export const ChatMessage: React.FC<ChatMessageProps> = ({ message, isLoading = false }) => {
+  const [enlarged, setEnlarged] = useState(false);
+  const { currentPersonality } = useAIPersonality();
   const isUser = message.role === 'user';
-  const { currentMode } = useAIPersonality();
   
-  const getModeSpecificStyles = () => {
-    if (isUser) {
-      // User message styles based on mode
-      switch (currentMode) {
-        case 'general':
-          return "bg-blue-500/30 border-blue-400/40 text-white";
-        case 'student':
-          return "bg-green-500/30 border-green-400/40 text-white";
-        case 'productivity':
-          return "bg-purple-500/30 border-purple-400/40 text-white";
-        case 'creative':
-          return "bg-pink-500/30 border-pink-400/40 text-white";
-        default:
-          return "bg-blue-500/30 border-blue-400/40 text-white";
-      }
-    } else {
-      // AI message styles based on mode
-      switch (currentMode) {
-        case 'general':
-          return "bg-blue-950/40 border-blue-800/30 text-white";
-        case 'student':
-          return "bg-green-950/40 border-green-800/30 text-white";
-        case 'productivity':
-          return "bg-purple-950/40 border-purple-800/30 text-white";
-        case 'creative':
-          return "bg-pink-950/40 border-pink-800/30 text-white";
-        default:
-          return "bg-blue-950/40 border-blue-800/30 text-white";
-      }
-    }
+  const getPersonalityColor = () => {
+    return currentPersonality.color || 'bg-blue-600';
   };
   
-  const getAvatarStyles = () => {
-    if (isUser) {
-      return "bg-primary/90 border-primary/30";
-    } else {
-      switch (currentMode) {
-        case 'general':
-          return "bg-blue-500/90 border-blue-500/30";
-        case 'student':
-          return "bg-green-500/90 border-green-500/30";
-        case 'productivity':
-          return "bg-purple-500/90 border-purple-500/30";
-        case 'creative':
-          return "bg-pink-500/90 border-pink-500/30";
-        default:
-          return "bg-blue-500/90 border-blue-500/30";
-      }
-    }
+  const handleDownloadImage = () => {
+    if (!message.imageUrl) return;
+    
+    // Create an anchor element
+    const link = document.createElement('a');
+    link.href = message.imageUrl;
+    link.download = `ai-generated-image-${Date.now()}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+  
+  const handleOpenImage = () => {
+    if (!message.imageUrl) return;
+    window.open(message.imageUrl, '_blank');
+  };
+  
+  const handleToggleEnlarge = () => {
+    setEnlarged(prev => !prev);
   };
   
   return (
-    <div className={cn(
-      "flex items-start gap-4 py-4 px-2",
-      isUser ? "flex-row-reverse" : ""
-    )}>
-      <Avatar className={cn(
-        "h-12 w-12 border-2 shadow-xl transform hover:scale-110 transition-transform duration-300",
-        getAvatarStyles()
-      )}>
-        {isUser ? (
-          <User className="h-5 w-5 text-primary-foreground" />
-        ) : (
-          <Bot className="h-5 w-5 text-white" />
-        )}
-        <AvatarFallback>
-          {isUser ? 'U' : 'AI'}
-        </AvatarFallback>
-      </Avatar>
-      
+    <motion.div
+      className={cn(
+        "flex w-full my-4",
+        isUser ? "justify-end" : "justify-start"
+      )}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
       <div className={cn(
-        "rounded-2xl py-3 px-5 max-w-[80%] transition-all message-bubble transform hover:translate-y-[-5px] duration-300",
-        "border backdrop-blur-xl shadow-[0_15px_35px_rgba(0,0,0,0.6)]",
-        getModeSpecificStyles()
+        "flex gap-3 items-start max-w-[90%]",
+        isUser ? "flex-row-reverse" : "flex-row"
       )}>
+        <div className="flex-shrink-0">
+          <div className={cn(
+            "h-10 w-10 rounded-full flex items-center justify-center shadow-[0_10px_30px_rgba(0,0,0,0.6)]",
+            isUser ? "bg-gradient-to-tr from-slate-700 to-slate-800" : getPersonalityColor()
+          )}>
+            {isUser ? (
+              <Person className="h-5 w-5 text-white" />
+            ) : (
+              <Bot className="h-5 w-5 text-white" />
+            )}
+          </div>
+        </div>
+        
         <div className={cn(
-          "prose prose-sm prose-p:my-1.5 prose-headings:mb-2 prose-headings:mt-4",
-          "text-foreground prose-headings:text-white/90 prose-strong:text-white/90"
+          "bg-black/20 dark:bg-slate-800/20 border border-white/10 dark:border-slate-700/10 rounded-2xl p-4 space-y-2 backdrop-blur-xl shadow-[0_15px_35px_rgba(0,0,0,0.5)]",
+          isUser ? "rounded-tr-sm" : "rounded-tl-sm",
+          isLoading ? "animate-pulse" : ""
         )}>
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {message.content}
-          </ReactMarkdown>
+          {/* Message content */}
+          <div className="prose prose-invert overflow-hidden break-words max-w-full">
+            <Markdown
+              components={{
+                code(props) {
+                  const { children, className, ...rest } = props;
+                  const match = /language-(\w+)/.exec(className || '');
+                  return match ? (
+                    <SyntaxHighlighter
+                      style={atomDark}
+                      language={match[1]}
+                      PreTag="div"
+                      {...rest}
+                    >
+                      {String(children).replace(/\n$/, '')}
+                    </SyntaxHighlighter>
+                  ) : (
+                    <code className={className} {...rest}>
+                      {children}
+                    </code>
+                  );
+                }
+              }}
+            >
+              {message.content}
+            </Markdown>
+          </div>
+          
+          {/* Image display if present */}
+          {message.imageUrl && (
+            <div className="mt-4 space-y-2">
+              <div className={cn(
+                "relative overflow-hidden rounded-md border border-white/10 shadow-md transition-all duration-300",
+                enlarged ? "max-w-full w-full" : "max-w-[300px]"
+              )}>
+                <img 
+                  src={message.imageUrl} 
+                  alt="AI Generated" 
+                  className="w-full h-auto object-cover"
+                />
+                <div className="absolute top-2 right-2 flex gap-1">
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="h-8 w-8 bg-black/50 border-white/10 hover:bg-black/70"
+                    onClick={handleToggleEnlarge}
+                  >
+                    {enlarged ? (
+                      <ZoomIn className="h-4 w-4 text-white" />
+                    ) : (
+                      <Maximize2 className="h-4 w-4 text-white" />
+                    )}
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="h-8 w-8 bg-black/50 border-white/10 hover:bg-black/70"
+                    onClick={handleDownloadImage}
+                  >
+                    <Download className="h-4 w-4 text-white" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="h-8 w-8 bg-black/50 border-white/10 hover:bg-black/70"
+                    onClick={handleOpenImage}
+                  >
+                    <ExternalLink className="h-4 w-4 text-white" />
+                  </Button>
+                </div>
+              </div>
+              <p className="text-xs text-slate-400 italic">
+                Generated image based on your request
+              </p>
+            </div>
+          )}
+          
+          {/* Timestamp */}
+          {message.timestamp && (
+            <div className="text-xs text-slate-500 mt-1">
+              {formatRelativeTime(message.timestamp)}
+            </div>
+          )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };

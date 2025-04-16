@@ -1,92 +1,77 @@
 
-import { ChatMemoryMessage } from '@/components/ai/personality-switcher/types';
 import { v4 as uuidv4 } from 'uuid';
+import { ChatMemoryMessage } from '@/components/ai/personality-switcher/types';
+import { WAKTIAIMode } from '@/types/ai-assistant.types';
 
-// Key for storing chat memory in localStorage
-const STORAGE_KEY = 'wakti-ai-chat';
-// Fixed session ID to maintain persistence
-const FIXED_SESSION_ID = 'global-chat-session';
+type SubscriptionCallback = (messages: ChatMemoryMessage[]) => void;
 
 class GlobalChatMemory {
-  private messages: ChatMemoryMessage[] = [];
-  private listeners: ((messages: ChatMemoryMessage[]) => void)[] = [];
-  
+  private messages: Record<WAKTIAIMode, ChatMemoryMessage[]> = {
+    'general': [],
+    'student': [],
+    'productivity': [],
+    'creative': []
+  };
+  private subscribers: SubscriptionCallback[] = [];
+  private sessionId: string;
+
   constructor() {
-    this.loadFromStorage();
+    this.sessionId = uuidv4();
   }
-  
-  private loadFromStorage() {
-    try {
-      const storedMessages = localStorage.getItem(STORAGE_KEY);
-      if (storedMessages) {
-        const parsedMessages = JSON.parse(storedMessages);
-        if (Array.isArray(parsedMessages) && parsedMessages.length > 0) {
-          // Convert string timestamps back to Date objects
-          this.messages = parsedMessages.map(msg => ({
-            ...msg,
-            timestamp: new Date(msg.timestamp)
-          }));
-          console.log(`[GlobalChatMemory] Loaded ${this.messages.length} messages`);
-        }
-      }
-    } catch (e) {
-      console.error('[GlobalChatMemory] Error loading from storage:', e);
-      this.messages = [];
+
+  getMessages(mode: WAKTIAIMode = 'general'): ChatMemoryMessage[] {
+    return this.messages[mode] || [];
+  }
+
+  addMessage(message: ChatMemoryMessage) {
+    const mode = message.mode || 'general';
+    
+    if (!this.messages[mode]) {
+      this.messages[mode] = [];
     }
-  }
-  
-  private saveToStorage() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.messages));
-      console.log(`[GlobalChatMemory] Saved ${this.messages.length} messages`);
-    } catch (e) {
-      console.error('[GlobalChatMemory] Error saving to storage:', e);
-    }
-  }
-  
-  getMessages(): ChatMemoryMessage[] {
-    return [...this.messages];
-  }
-  
-  addMessage(message: Omit<ChatMemoryMessage, 'id' | 'timestamp'>) {
-    const newMessage: ChatMemoryMessage = {
+    
+    // Ensure message has an ID
+    const messageWithId = {
       ...message,
-      id: uuidv4(),
-      timestamp: new Date()
+      id: message.id || uuidv4(),
+      timestamp: message.timestamp || new Date()
     };
     
-    this.messages.push(newMessage);
-    this.saveToStorage();
-    this.notifyListeners();
-    return newMessage;
+    this.messages[mode].push(messageWithId);
+    this.notifySubscribers(mode);
   }
-  
-  clearMessages() {
-    this.messages = [];
-    localStorage.removeItem(STORAGE_KEY);
-    this.notifyListeners();
+
+  clearMessages(mode?: WAKTIAIMode) {
+    if (mode) {
+      this.messages[mode] = [];
+      this.notifySubscribers(mode);
+    } else {
+      // Clear all modes
+      Object.keys(this.messages).forEach(modeKey => {
+        this.messages[modeKey as WAKTIAIMode] = [];
+      });
+      // Notify subscribers of all modes
+      Object.keys(this.messages).forEach(modeKey => {
+        this.notifySubscribers(modeKey as WAKTIAIMode);
+      });
+    }
   }
-  
-  getSessionId() {
-    return FIXED_SESSION_ID;
-  }
-  
-  subscribe(callback: (messages: ChatMemoryMessage[]) => void) {
-    this.listeners.push(callback);
-    // Immediately call with current state
-    callback(this.getMessages());
-    
-    // Return unsubscribe function
+
+  subscribe(callback: SubscriptionCallback) {
+    this.subscribers.push(callback);
     return () => {
-      this.listeners = this.listeners.filter(listener => listener !== callback);
+      this.subscribers = this.subscribers.filter(cb => cb !== callback);
     };
   }
-  
-  private notifyListeners() {
-    const messages = this.getMessages();
-    this.listeners.forEach(listener => {
-      listener(messages);
+
+  notifySubscribers(mode: WAKTIAIMode) {
+    this.subscribers.forEach(callback => {
+      callback(this.messages[mode]);
     });
+  }
+
+  getSessionId() {
+    return this.sessionId;
   }
 }
 

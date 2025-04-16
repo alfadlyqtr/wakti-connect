@@ -1,7 +1,9 @@
 
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 import { classifyIntent, getInappropriateContentResponse } from './classifier';
 import { WAKTIAIMode } from '@/types/ai-assistant.types';
+import { handleImageGeneration } from './imageHandling';
+import { toast } from '@/components/ui/use-toast';
 
 /**
  * Call the AI assistant with a prompt and return the response
@@ -12,7 +14,7 @@ export const callAIAssistant = async (
   context: string = '',
   userContext: string = '',
   currentMode: WAKTIAIMode = 'general'
-): Promise<{ response?: string; error?: { message: string; isConnectionError?: boolean } }> => {
+): Promise<{ response?: string; generatedImage?: string; error?: { message: string; isConnectionError?: boolean } }> => {
   try {
     console.log('[callAIAssistant] Starting request to AI assistant');
     
@@ -30,6 +32,43 @@ export const callAIAssistant = async (
       );
       
       return { response: responseForInappropriateContent };
+    }
+    
+    // Handle image generation if the intent is image-generation with high confidence
+    if (intentClassification.intentType === 'image-generation' && intentClassification.confidence > 0.4) {
+      console.log('[callAIAssistant] Detected image generation intent, processing request');
+      
+      try {
+        toast({
+          title: "Generating Image",
+          description: "Starting image generation based on your request...",
+          duration: 3000,
+        });
+        
+        const imageResult = await handleImageGeneration(userPrompt);
+        
+        if (imageResult.success) {
+          // Return both the image URL and a confirmation message
+          const response = `I've generated an image based on your request: "${userPrompt}".
+
+[IMAGE_GENERATED]${imageResult.imageUrl}[/IMAGE_GENERATED]
+
+You can ask me to generate another image or help with something else!`;
+          
+          return { 
+            response: response,
+            generatedImage: imageResult.imageUrl
+          };
+        } else {
+          // If image generation failed, inform the user and proceed with text response
+          console.error('[callAIAssistant] Image generation failed:', imageResult.error);
+          
+          // Continue with text-based response below, don't return here
+        }
+      } catch (imageError) {
+        console.error('[callAIAssistant] Error in image generation:', imageError);
+        // Continue with text-based response below, don't return here
+      }
     }
     
     // Get current session
