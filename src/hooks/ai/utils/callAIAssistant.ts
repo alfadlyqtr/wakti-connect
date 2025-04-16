@@ -40,7 +40,8 @@ export const callAIAssistant = async (
     const isCreativeMode = currentMode === 'creative';
     const containsImageKeywords = userPrompt.toLowerCase().includes('image') || 
                                   userPrompt.toLowerCase().includes('picture') || 
-                                  userPrompt.toLowerCase().includes('photo');
+                                  userPrompt.toLowerCase().includes('photo') ||
+                                  userPrompt.toLowerCase().includes('generate');
     
     if (isImageGenerationIntent || (isCreativeMode && containsImageKeywords)) {
       console.log('[callAIAssistant] Detected image generation intent, processing request');

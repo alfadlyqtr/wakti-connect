@@ -18,12 +18,20 @@ export async function handleImageGeneration(prompt: string): Promise<GeneratedIm
   try {
     console.log('[imageHandling] Starting image generation with prompt:', prompt);
     
+    if (!prompt || prompt.trim() === '') {
+      throw new Error('Prompt cannot be empty');
+    }
+    
     // Generate image using the consolidated ai-image-generation edge function
     const result = await runwareService.generateImage({
       positivePrompt: prompt
     });
     
     console.log('[imageHandling] Image generation successful via provider:', result.provider);
+    
+    if (!result.imageURL) {
+      throw new Error('No image URL returned from service');
+    }
     
     return {
       imageUrl: result.imageURL,

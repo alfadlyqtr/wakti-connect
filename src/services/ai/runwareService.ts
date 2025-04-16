@@ -1,6 +1,6 @@
 
 import { toast } from '@/components/ui/use-toast';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface GenerateImageParams {
   positivePrompt: string;
