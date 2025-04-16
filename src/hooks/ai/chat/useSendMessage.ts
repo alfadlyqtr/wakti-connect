@@ -1,3 +1,4 @@
+
 import { useCallback, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { AIMessage } from '@/types/ai-assistant.types';
@@ -63,7 +64,13 @@ export const useSendMessage = (
         
         console.log("[useSendMessage] Sending message to AI assistant");
         
-        const { response, error } = await callAIAssistant('', messageContent, userContext);
+        const { response, error } = await callAIAssistant(
+          '', 
+          messageContent, 
+          userContext,
+          '',
+          activeMode as any // Pass the active mode for better content handling
+        );
 
         if (error) {
           console.error('[useSendMessage] AI assistant error:', error);

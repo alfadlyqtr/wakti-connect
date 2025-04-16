@@ -63,7 +63,8 @@ export const useGlobalChat = () => {
           systemMessage,
           content,
           JSON.stringify(recentMessages),
-          userContext
+          userContext,
+          currentMode // Pass the current mode to help with content moderation
         );
         
         if (error) {

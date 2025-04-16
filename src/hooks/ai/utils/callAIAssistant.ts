@@ -1,5 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { classifyIntent, getInappropriateContentResponse } from './intentClassifier';
+import { WAKTIAIMode } from '@/types/ai-assistant.types';
 
 /**
  * Call the AI assistant with a prompt and return the response
@@ -8,10 +10,27 @@ export const callAIAssistant = async (
   systemPrompt: string,
   userPrompt: string,
   context: string = '',
-  userContext: string = ''
+  userContext: string = '',
+  currentMode: WAKTIAIMode = 'general'
 ): Promise<{ response?: string; error?: { message: string; isConnectionError?: boolean } }> => {
   try {
     console.log('[callAIAssistant] Starting request to AI assistant');
+    
+    // First, classify the intent of the user message
+    const intentClassification = classifyIntent(userPrompt);
+    console.log(`[callAIAssistant] Intent classified as: ${intentClassification.intentType} (confidence: ${intentClassification.confidence.toFixed(2)})`);
+    
+    // Check for inappropriate content first
+    if (intentClassification.intentType === 'inappropriate-content') {
+      console.log('[callAIAssistant] Detected inappropriate content, blocking request to AI service');
+      const responseForInappropriateContent = getInappropriateContentResponse(
+        'image-generation', // Assume the worst case - that this was for image generation
+        intentClassification.contentCategory || 'inappropriate',
+        currentMode
+      );
+      
+      return { response: responseForInappropriateContent };
+    }
     
     // Get current session
     const { data: sessionData } = await supabase.auth.getSession();
@@ -27,6 +46,18 @@ export const callAIAssistant = async (
     
     console.log('[callAIAssistant] Authenticated session confirmed, calling AI service');
     
+    // Enhanced system prompt with intent information
+    let enhancedSystemPrompt = systemPrompt;
+    if (intentClassification.confidence > 0.7) {
+      // Add intent information to system prompt for better context
+      enhancedSystemPrompt += `\n\nThe user's message has been classified as: ${intentClassification.intentType} with confidence ${intentClassification.confidence.toFixed(2)}. Relevant keywords: ${intentClassification.relevantKeywords.join(', ')}.`;
+      
+      // Mode-specific instructions
+      if (intentClassification.suggestedMode && intentClassification.suggestedMode !== currentMode) {
+        enhancedSystemPrompt += `\nNote: The user's request might be better suited for ${intentClassification.suggestedMode} mode, but they are currently in ${currentMode} mode. Adapt your response accordingly.`;
+      }
+    }
+    
     // Call the AI assistant edge function with comprehensive error handling
     try {
       // Create a promise that rejects after 30 seconds
@@ -38,12 +69,13 @@ export const callAIAssistant = async (
       const { data, error } = await Promise.race([
         supabase.functions.invoke('ai-assistant', {
           body: {
-            system_prompt: systemPrompt,
+            system_prompt: enhancedSystemPrompt,
             user_prompt: userPrompt,
             message: userPrompt, // Adding alternate field format for compatibility
             context: context,
             userContext: userContext,
-            includeTimestamp: true
+            includeTimestamp: true,
+            intentClassification: JSON.stringify(intentClassification)
           }
         }),
         timeoutPromise
@@ -115,4 +147,3 @@ export const callAIAssistant = async (
     };
   }
 };
-

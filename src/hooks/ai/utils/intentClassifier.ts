@@ -13,6 +13,7 @@ export type IntentType =
   | 'confirmation'
   | 'rejection'
   | 'clarification'
+  | 'inappropriate-content'  // New intent type for inappropriate content
   | 'unknown';
 
 export interface IntentClassification {
@@ -21,6 +22,8 @@ export interface IntentClassification {
   relevantKeywords: string[];
   suggestedMode?: WAKTIAIMode;
   metadata?: Record<string, any>;
+  isSafeContent?: boolean; // New flag to indicate if content is safe
+  contentCategory?: string; // New field for content categorization
 }
 
 // Intent classification patterns mapped by intent type
@@ -101,6 +104,13 @@ const intentPatterns: Record<IntentType, {
     confidence: 0.7,
     suggestedMode: 'general'
   },
+  'inappropriate-content': {
+    keywords: ['nude', 'naked', 'sexual', 'porn', 'explicit', 'adult', 'nsfw', 'x-rated', 'sex', 'erotic'],
+    phrases: ['show me nude', 'generate sexual content', 'create adult images', 'nsfw content', 'explicit material'],
+    prefixes: ['generate nude', 'create sexual', 'show explicit'],
+    confidence: 0.9,
+    suggestedMode: 'general'
+  },
   'unknown': {
     keywords: [],
     phrases: [],
@@ -110,12 +120,142 @@ const intentPatterns: Record<IntentType, {
   }
 };
 
+// Content safety patterns to detect inappropriate content
+const contentSafetyPatterns = {
+  inappropriate: {
+    keywords: [
+      'nude', 'naked', 'sexual', 'porn', 'pornographic', 'explicit', 'adult', 'nsfw', 
+      'x-rated', 'sex', 'erotic', 'arousing', 'seductive', 'provocative', 
+      'intimate parts', 'private parts', 'genital', 'genitalia', 'obscene'
+    ],
+    contextualPhrases: [
+      'with no clothes', 'without clothes', 'wearing nothing', 'not wearing anything',
+      'in the bedroom', 'in an intimate position', 'showing everything',
+      'uncensored', 'explicit content', 'adult content', 'sexually suggestive'
+    ]
+  },
+  violence: {
+    keywords: [
+      'gore', 'blood', 'violent', 'murder', 'kill', 'death', 'torture', 'weapon',
+      'suicide', 'self-harm', 'gruesome', 'brutal', 'attack'
+    ]
+  },
+  harassment: {
+    keywords: [
+      'hate', 'racist', 'discrimination', 'offensive', 'slur', 'insult', 'derogatory',
+      'bigotry', 'sexist', 'homophobic', 'transphobic'
+    ]
+  }
+};
+
+/**
+ * Analyzes a user message to determine if it contains inappropriate content
+ */
+function detectContentSafety(message: string): {
+  isSafe: boolean;
+  category?: string;
+  confidence: number;
+  detectedTerms: string[];
+} {
+  const normalizedMessage = message.toLowerCase().trim();
+  const detectedTerms: string[] = [];
+  let highestConfidence = 0;
+  let detectedCategory: string | undefined;
+  
+  // Check each category of unsafe content
+  for (const [category, patterns] of Object.entries(contentSafetyPatterns)) {
+    // Check for direct keywords
+    for (const keyword of patterns.keywords) {
+      // Match whole words only
+      const regex = new RegExp(`\\b${keyword}\\b`, 'i');
+      if (regex.test(normalizedMessage)) {
+        detectedTerms.push(keyword);
+        // Higher confidence for direct keyword matches
+        const termConfidence = 0.85;
+        if (termConfidence > highestConfidence) {
+          highestConfidence = termConfidence;
+          detectedCategory = category;
+        }
+      }
+    }
+    
+    // Check for contextual phrases if they exist for this category
+    if (patterns.contextualPhrases) {
+      for (const phrase of patterns.contextualPhrases) {
+        if (normalizedMessage.includes(phrase.toLowerCase())) {
+          detectedTerms.push(phrase);
+          // Contextual phrases have slightly lower confidence than direct keywords
+          const phraseConfidence = 0.75;
+          if (phraseConfidence > highestConfidence) {
+            highestConfidence = phraseConfidence;
+            detectedCategory = category;
+          }
+        }
+      }
+    }
+  }
+  
+  // Special case for image generation requests with inappropriate content
+  if (normalizedMessage.includes('image') || normalizedMessage.includes('picture') || 
+      normalizedMessage.includes('draw') || normalizedMessage.includes('generate')) {
+    // Image generation requests with detected inappropriate terms get higher confidence
+    if (detectedTerms.length > 0) {
+      highestConfidence = Math.min(highestConfidence + 0.1, 0.95);
+    }
+    
+    // Check for contextual image generation phrases that may indicate inappropriate content
+    const suspiciousImagePhrases = [
+      'without clothes', 'not wearing', 'with no', 'undressed', 'sexy', 
+      'attractive woman', 'attractive man', 'hot girl', 'hot guy'
+    ];
+    
+    for (const phrase of suspiciousImagePhrases) {
+      if (normalizedMessage.includes(phrase)) {
+        detectedTerms.push(phrase);
+        // If suspicious phrase found in image generation context, increase confidence
+        highestConfidence = Math.max(highestConfidence, 0.7);
+        if (!detectedCategory) {
+          detectedCategory = 'inappropriate';
+        }
+      }
+    }
+  }
+
+  // Message is considered unsafe if we have detected terms and confidence is above threshold
+  const isSafe = detectedTerms.length === 0 || highestConfidence < 0.6;
+  
+  return {
+    isSafe,
+    category: detectedCategory,
+    confidence: highestConfidence,
+    detectedTerms
+  };
+}
+
 /**
  * Analyzes a user message to determine its likely intent
  */
 export function classifyIntent(message: string): IntentClassification {
   // Normalize message for better matching
   const normalizedMessage = message.toLowerCase().trim();
+  
+  // First check for content safety
+  const safetyCheck = detectContentSafety(normalizedMessage);
+  
+  // If content is unsafe, immediately classify as inappropriate content
+  if (!safetyCheck.isSafe) {
+    console.log(`[Intent Classifier] Unsafe content detected in message. Category: ${safetyCheck.category}, Confidence: ${safetyCheck.confidence.toFixed(2)}`);
+    console.log(`[Intent Classifier] Detected terms: ${safetyCheck.detectedTerms.join(', ')}`);
+    
+    return {
+      intentType: 'inappropriate-content',
+      confidence: safetyCheck.confidence,
+      relevantKeywords: safetyCheck.detectedTerms,
+      suggestedMode: 'general', // Default to general mode for inappropriate content
+      isSafeContent: false,
+      contentCategory: safetyCheck.category
+    };
+  }
   
   // Track the matched keywords for debugging/explanation
   let relevantKeywords: string[] = [];
@@ -144,7 +284,7 @@ export function classifyIntent(message: string): IntentClassification {
   
   // Check each intent pattern for matches
   Object.entries(intentPatterns).forEach(([intentType, pattern]) => {
-    if (intentType === 'unknown') return; // Skip the unknown intent
+    if (intentType === 'unknown' || intentType === 'inappropriate-content') return; // Skip the unknown and inappropriate-content intents
     
     let score = 0;
     const matchedKeywords: string[] = [];
@@ -227,6 +367,27 @@ export function classifyIntent(message: string): IntentClassification {
     }
   }
   
+  // Double-check image generation intent for inappropriate content
+  if (bestMatch === 'image-generation') {
+    // Perform a stricter content check for image generation
+    const imageGenSafetyCheck = detectContentSafety(normalizedMessage);
+    
+    // For image generation, lower the threshold for inappropriate content detection
+    if (imageGenSafetyCheck.confidence > 0.4 || imageGenSafetyCheck.detectedTerms.length > 0) {
+      console.log(`[Intent Classifier] Potentially inappropriate image generation request detected. Confidence: ${imageGenSafetyCheck.confidence.toFixed(2)}`);
+      console.log(`[Intent Classifier] Detected terms: ${imageGenSafetyCheck.detectedTerms.join(', ')}`);
+      
+      return {
+        intentType: 'inappropriate-content',
+        confidence: Math.max(imageGenSafetyCheck.confidence, 0.7), // Higher confidence for image-related inappropriate content
+        relevantKeywords: [...relevantKeywords, ...imageGenSafetyCheck.detectedTerms],
+        suggestedMode: 'general', // Default to general mode for inappropriate content
+        isSafeContent: false,
+        contentCategory: imageGenSafetyCheck.category || 'inappropriate'
+      };
+    }
+  }
+  
   // Log the classification for debugging
   console.log(`[Intent Classifier] Message classified as '${bestMatch}' (${highestScore.toFixed(2)}) with keywords: ${relevantKeywords.join(', ')}`);
   
@@ -234,6 +395,47 @@ export function classifyIntent(message: string): IntentClassification {
     intentType: bestMatch,
     confidence: highestScore,
     relevantKeywords,
-    suggestedMode
+    suggestedMode,
+    isSafeContent: true // Message passed safety check
   };
+}
+
+/**
+ * Get a recommended response for inappropriate content requests
+ */
+export function getInappropriateContentResponse(
+  originalIntent: IntentType, 
+  category: string = 'inappropriate',
+  currentMode: WAKTIAIMode = 'general'
+): string {
+  let response = '';
+  
+  // Base response
+  const baseResponse = "I'm unable to assist with that request as it appears to contain inappropriate content. ";
+  
+  // Customize based on original intent
+  if (originalIntent === 'image-generation') {
+    response = baseResponse + "I can't generate images with adult, explicit, or inappropriate content. " +
+      "Instead, I'd be happy to create appropriate images, help with other creative tasks, or assist with any other questions you have.";
+  } else if (category === 'violence') {
+    response = baseResponse + "I can't assist with violent or harmful content. " +
+      "If you're interested in discussing conflict resolution or related topics in an academic context, I'm happy to help with that instead.";
+  } else if (category === 'harassment') {
+    response = baseResponse + "I can't assist with creating content that could be offensive or hurtful to others. " +
+      "I'm here to help with positive and constructive requests.";
+  } else {
+    response = baseResponse + "I'm programmed to maintain appropriate content standards. " +
+      "I'd be happy to help you with other tasks or answer other questions.";
+  }
+  
+  // Add mode-specific suggestions
+  if (currentMode === 'creative') {
+    response += " I can help with creative writing, story ideas, artistic concepts, or brainstorming for projects - just make sure the content stays appropriate.";
+  } else if (currentMode === 'productivity') {
+    response += " If you're looking to boost your productivity, I can help with task management, scheduling, or workflow optimization instead.";
+  } else if (currentMode === 'student') {
+    response += " If you need help with studying or learning, I can assist with educational content, explanations, or study strategies.";
+  }
+  
+  return response;
 }
