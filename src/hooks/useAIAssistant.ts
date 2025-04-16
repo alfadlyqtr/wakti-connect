@@ -29,7 +29,8 @@ export const useAIAssistant = () => {
   const processingMessageRef = useRef(false);
   
   // Get AI settings and knowledge hooks
-  const { aiSettings, isLoadingSettings, updateSettings, canUseAI } = useAISettings();
+  // Fix: use `isLoading` instead of `isLoadingSettings`
+  const { aiSettings, isLoading: isLoadingSettings, updateSettings, canUseAI } = useAISettings();
   const { addKnowledge, knowledgeUploads, isLoadingKnowledge, deleteKnowledge } = useAIKnowledge();
   
   // Get send message functionality
