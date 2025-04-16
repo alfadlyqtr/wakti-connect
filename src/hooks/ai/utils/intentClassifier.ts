@@ -2,7 +2,7 @@
 import { WAKTIAIMode } from '@/types/ai-assistant.types';
 
 // Define the intent types for the classifier
-type IntentType = 
+export type IntentType = 
   | 'general-question'
   | 'task-creation'
   | 'image-generation' 
