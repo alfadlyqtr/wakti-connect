@@ -1,3 +1,4 @@
+
 /* AI Assistant Styles */
 
 /* Dark mode backgrounds */
@@ -206,4 +207,21 @@
 .button-3d:active {
   transform: translateY(-2px) translateZ(0);
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+}
+
+/* Mode-specific message bubble glow effects */
+.message-glow-general {
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 20px rgba(59, 130, 246, 0.4);
+}
+
+.message-glow-student {
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 20px rgba(16, 185, 129, 0.4);
+}
+
+.message-glow-productivity {
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 20px rgba(139, 92, 246, 0.4);
+}
+
+.message-glow-creative {
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 20px rgba(236, 72, 153, 0.4);
 }

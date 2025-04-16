@@ -7,6 +7,7 @@ import { MessageContent } from "./MessageContent";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { AIAssistantMouthAnimation } from "../animation/AIAssistantMouthAnimation";
 import { motion } from "framer-motion";
+import { useAIPersonality } from "@/components/ai/personality-switcher/AIPersonalityContext";
 
 interface AIAssistantMessageProps {
   message: AIMessage;
@@ -21,6 +22,7 @@ export function AIAssistantMessage({
 }: AIAssistantMessageProps) {
   const isUser = message.role === "user";
   const isMobile = useIsMobile();
+  const { currentMode } = useAIPersonality();
 
   // Animation variants
   const messageVariants = {
@@ -37,6 +39,21 @@ export function AIAssistantMessage({
         duration: 0.4,
         ease: "easeOut"
       }
+    }
+  };
+  
+  const getMessageGlowClass = () => {
+    switch (currentMode) {
+      case 'general':
+        return 'message-glow-general';
+      case 'student':
+        return 'message-glow-student';
+      case 'productivity':
+        return 'message-glow-productivity';
+      case 'creative':
+        return 'message-glow-creative';
+      default:
+        return 'message-glow-general';
     }
   };
 
@@ -68,7 +85,7 @@ export function AIAssistantMessage({
           content={message.content}
           timestamp={message.timestamp}
           isUser={isUser}
-          className="glassmorphism"
+          className={cn("glassmorphism", getMessageGlowClass())}
         />
       </div>
       
