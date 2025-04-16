@@ -1,4 +1,3 @@
-
 // Import React and ReactDOM
 import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
@@ -9,6 +8,7 @@ import './styles/mobile.css'; // Import our mobile styles
 import { AuthProvider } from './hooks/auth';
 import { CurrencyProvider } from './contexts/CurrencyContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import App from './App';
 
 // Create a client for React Query
 const queryClient = new QueryClient({
@@ -88,11 +88,12 @@ if (isIOS) {
   document.body.classList.add('has-ios-padding');
 }
 
-// Render the app directly using RouterProvider instead of App component
+// Wrap App in all our providers and render with RouterProvider
 root.render(
   <AuthProvider>
     <QueryClientProvider client={queryClient}>
       <CurrencyProvider>
+        <App />
         <RouterProvider router={router} />
       </CurrencyProvider>
     </QueryClientProvider>

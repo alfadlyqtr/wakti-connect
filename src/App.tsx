@@ -1,5 +1,5 @@
 
-// This file is now just a wrapper with no routing logic
+// This file provides global providers and configurations
 // All routing has been moved to router.tsx
 
 import { Toaster } from "@/components/ui/toaster";
@@ -9,9 +9,8 @@ import { ThemeProvider } from "@/hooks/use-theme";
 import { HelmetProvider } from "react-helmet-async";
 import { TaskProvider } from "@/contexts/TaskContext";
 import ErrorBoundary from "@/components/ui/ErrorBoundary";
-import { Outlet } from "react-router-dom";
 
-// Import the new AI Assistant styles
+// Import the AI Assistant styles
 import './styles/ai-assistant.css';
 
 function App() {
@@ -21,7 +20,6 @@ function App() {
         <TooltipProvider>
           <TaskProvider>
             <ErrorBoundary>
-              <Outlet />
               <Toaster />
               <Sonner />
             </ErrorBoundary>

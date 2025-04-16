@@ -26,27 +26,41 @@ import RoleGuard from './components/auth/RoleGuard';
 import { UnifiedChatInterfaceWithProvider } from "./components/ai/chat/UnifiedChatInterface";
 import { MobileUXDemo } from "./components/mobile-demos/MobileUXDemo";
 import { Outlet } from "react-router-dom";
-import App from "./App";
 import PublicLayout from "./components/layout/PublicLayout";
+
+// Create a standalone Root Layout component
+const RootLayout = () => {
+  return (
+    <>
+      <Outlet />
+    </>
+  );
+};
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <App />,
+    element: <RootLayout />,
     children: [
-      { index: true, element: <LandingPage /> },
+      { 
+        path: "",
+        element: <PublicLayout />,
+        children: [
+          { index: true, element: <LandingPage /> },
+          { path: "about", element: <AboutPage /> },
+          { path: "pricing", element: <PricingPage /> },
+          { path: "features", element: <FeaturesPage /> },
+          { path: "support", element: <SupportPage /> },
+          { path: "contact", element: <ContactForm /> },
+          { path: "privacy-policy", element: <PrivacyPolicy /> },
+          { path: "terms-of-service", element: <TermsOfService /> },
+        ]
+      },
       { path: "signin", element: <LoginPage /> },
       { path: "signup", element: <SignUp /> },
       { path: "forgot-password", element: <ForgotPassword /> },
       { path: "reset-password", element: <ResetPassword /> },
       { path: "verify-email", element: <VerifyEmail /> },
-      { path: "contact", element: <ContactForm /> },
-      { path: "about", element: <AboutPage /> },
-      { path: "pricing", element: <PricingPage /> },
-      { path: "features", element: <FeaturesPage /> },
-      { path: "support", element: <SupportPage /> },
-      { path: "privacy-policy", element: <PrivacyPolicy /> },
-      { path: "terms-of-service", element: <TermsOfService /> },
       { path: "ai-chat", element: <UnifiedChatInterfaceWithProvider /> },
       { path: "mobile-demos", element: <MobileUXDemo /> },
       {
