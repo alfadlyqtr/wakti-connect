@@ -1,5 +1,5 @@
 
-import { createBrowserRouter, Navigate } from "react-router-dom";
+import { createBrowserRouter, Navigate, Outlet } from "react-router-dom";
 import LoginPage from "./pages/auth/LoginPage";
 import SignUp from "./pages/auth/RegisterPage";
 import ForgotPassword from './pages/auth/ForgotPasswordPage';
@@ -25,18 +25,14 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import RoleGuard from './components/auth/RoleGuard';
 import { UnifiedChatInterfaceWithProvider } from "./components/ai/chat/UnifiedChatInterface";
 import { MobileUXDemo } from "./components/mobile-demos/MobileUXDemo";
-import { Outlet } from "react-router-dom";
 import PublicLayout from "./components/layout/PublicLayout";
 
-// Create a standalone Root Layout component
+// Create a standalone Root Layout component that will wrap the entire app
 const RootLayout = () => {
-  return (
-    <>
-      <Outlet />
-    </>
-  );
+  return <Outlet />;
 };
 
+// Export the router configuration
 export const router = createBrowserRouter([
   {
     path: "/",

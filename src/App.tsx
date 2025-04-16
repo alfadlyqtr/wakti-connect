@@ -9,6 +9,7 @@ import { ThemeProvider } from "@/hooks/use-theme";
 import { HelmetProvider } from "react-helmet-async";
 import { TaskProvider } from "@/contexts/TaskContext";
 import ErrorBoundary from "@/components/ui/ErrorBoundary";
+import { Outlet } from "react-router-dom";
 
 // Import the AI Assistant styles
 import './styles/ai-assistant.css';
@@ -20,6 +21,7 @@ function App() {
         <TooltipProvider>
           <TaskProvider>
             <ErrorBoundary>
+              <Outlet />
               <Toaster />
               <Sonner />
             </ErrorBoundary>

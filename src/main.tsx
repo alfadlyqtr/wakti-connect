@@ -9,7 +9,6 @@ import './styles/mobile.css'; // Import our mobile styles
 import { AuthProvider } from './hooks/auth';
 import { CurrencyProvider } from './contexts/CurrencyContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import App from './App';
 
 // Create a client for React Query
 const queryClient = new QueryClient({
@@ -89,12 +88,11 @@ if (isIOS) {
   document.body.classList.add('has-ios-padding');
 }
 
-// Wrap App in all our providers and render with RouterProvider
+// Wrap in all our providers and render the router
 root.render(
   <AuthProvider>
     <QueryClientProvider client={queryClient}>
       <CurrencyProvider>
-        <App />
         <RouterProvider router={router} />
       </CurrencyProvider>
     </QueryClientProvider>
