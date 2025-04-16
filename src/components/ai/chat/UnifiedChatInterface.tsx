@@ -1,94 +1,182 @@
-
-import React, { useState, useEffect } from 'react';
-import { ChatInput } from './ChatInput';
-import { AIMessage } from '@/types/ai-assistant.types';
-import { ChatMessages } from './ChatMessages';
-import { useAIChatEnhanced } from '@/hooks/ai/chat';
-import { useAIPersonality } from '../personality-switcher/AIPersonalityContext'; 
-import { AIPersonalitySwitcher } from '../personality-switcher/AIPersonalitySwitcher';
-import { cn } from '@/lib/utils';
-import { AnimatePresence, motion } from 'framer-motion';
-import { Separator } from '@/components/ui/separator';
-import { InfoCircle } from '@/components/ui/icons';
+import React, { useRef, useEffect, useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
+import { useGlobalChat } from '@/hooks/useGlobalChat';
+import { ChatMessage } from './ChatMessage';
+import { ChatInput } from './ChatInput';
+import { ChatHeader } from './ChatHeader';
+import { ModeSwitcher } from './ModeSwitcher';
+import { AIPersonalityProvider, useAIPersonality } from '@/components/ai/personality-switcher/AIPersonalityContext';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { EnhancedAlertDialog } from '@/components/ui/enhanced-alert-dialog';
+import { AlertTriangle, Bot } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ConfirmationModal } from '@/components/ui/confirmation-modal';
+import { cn } from '@/lib/utils';
+import FreeAccountBanner from '@/components/dashboard/FreeAccountBanner';
 
-export const UnifiedChatInterface = () => {
-  const { 
-    messages, 
-    sendMessage, 
-    isLoading, 
-    clearMessages,
-    handleConfirmClear,
-    showClearConfirmation,
-    setShowClearConfirmation,
-  } = useAIChatEnhanced();
-  const [inputMessage, setInputMessage] = useState('');
-  const [showSubscribeAlert, setShowSubscribeAlert] = useState(false);
+export const UnifiedChatInterface: React.FC = () => {
+  const { messages, sendMessage, isLoading, clearMessages, canUseAI } = useGlobalChat();
+  const [showClearConfirmation, setShowClearConfirmation] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const { currentMode, currentPersonality } = useAIPersonality();
   
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim() || isLoading) return;
-    
-    try {
-      await sendMessage(inputMessage);
-      setInputMessage('');
-    } catch (error) {
-      console.error('Error sending message:', error);
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
+  }, [messages, isLoading]);
+  
+  const handleClearChat = () => {
+    setShowClearConfirmation(true);
+  };
+  
+  const handleConfirmClear = () => {
+    clearMessages();
+    setShowClearConfirmation(false);
+  };
+  
+  const getModeBackgroundClass = () => {
+    switch (currentMode) {
+      case 'general':
+        return 'bg-gradient-to-br from-blue-900/5 to-indigo-900/5 styled-scrollbar bg-opacity-10 backdrop-blur-xl';
+      case 'student':
+        return 'bg-gradient-to-br from-green-900/5 to-emerald-900/5 styled-scrollbar bg-opacity-10 backdrop-blur-xl';
+      case 'productivity':
+        return 'bg-gradient-to-br from-purple-900/5 to-violet-900/5 styled-scrollbar bg-opacity-10 backdrop-blur-xl';
+      case 'creative':
+        return 'bg-gradient-to-br from-fuchsia-900/5 to-pink-900/5 styled-scrollbar bg-opacity-10 backdrop-blur-xl';
+      default:
+        return 'bg-gradient-to-br from-blue-900/5 to-indigo-900/5 styled-scrollbar bg-opacity-10 backdrop-blur-xl';
+    }
+  };
+  
+  const renderWelcomeView = () => {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex flex-col items-center justify-center text-center px-2 sm:px-6 py-10 sm:py-14 space-y-4"
+      >
+        <div className={`h-16 w-16 rounded-full ${currentPersonality.color} flex items-center justify-center shadow-[0_10px_30px_rgba(0,0,0,0.7),0_0_0_1px_rgba(255,255,255,0.1)_inset]`}>
+          <Bot className="h-8 w-8 text-white" />
+        </div>
+        
+        <h2 className="text-xl sm:text-2xl font-bold">{currentPersonality.welcomeMessage}</h2>
+        
+        <div className="flex flex-col gap-3 max-w-lg w-full pt-6 px-2 sm:px-4">
+          {currentPersonality.suggestedPrompts.map((prompt, index) => (
+            <Button
+              key={index}
+              variant="outline"
+              className="text-sm h-auto py-3 px-4 justify-start text-left glass-panel transform hover:scale-105 transition-transform duration-200 shadow-[0_10px_30px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.08)_inset] w-full break-words whitespace-normal text-ellipsis overflow-hidden"
+              onClick={() => sendMessage(prompt)}
+              style={{
+                backdropFilter: 'blur(16px)',
+                backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                minHeight: '60px'
+              }}
+            >
+              {prompt}
+            </Button>
+          ))}
+        </div>
+      </motion.div>
+    );
   };
   
   return (
     <div 
-      className={cn(
-        "flex flex-col h-[650px] md:h-[700px] glassmorphism overflow-hidden rounded-xl",
-        "border border-white/5 transition-all duration-500"
-      )}
+      className="flex flex-col h-full bg-transparent" 
+      style={{ 
+        background: 'transparent',
+        backdropFilter: 'blur(10px)',
+        backgroundColor: 'rgba(0,0,0,0.05)'
+      }}
     >
-      <div className="flex-1 overflow-hidden flex flex-col">
-        <div className="p-4 pb-0 md:p-6 md:pb-0">
-          <div className="flex justify-between items-center">
-            <div className="space-y-1">
-              <h2 className="text-xl font-semibold text-white/90">{currentPersonality.label}</h2>
-              <p className="text-sm text-gray-300/80">{currentPersonality.description}</p>
-            </div>
-            <AIPersonalitySwitcher />
-          </div>
-          <Separator className="my-4 bg-white/5" />
-        </div>
-        
-        <div className="flex-1 overflow-y-auto styled-scrollbar px-4 md:px-6 pb-4">
-          <ChatMessages 
-            messages={messages} 
-            isLoading={isLoading}
-          />
-        </div>
-        
-        <ChatInput 
-          onSendMessage={sendMessage} 
-          isLoading={isLoading}
-          onClearChat={clearMessages}
-        />
-        
-        <EnhancedAlertDialog
-          open={showClearConfirmation}
-          onOpenChange={setShowClearConfirmation}
-          title="Clear Chat History"
-          description="Are you sure you want to clear all chat messages? This action cannot be undone."
-          onConfirm={handleConfirmClear}
-          confirmLabel="Clear Chat"
-          cancelLabel="Cancel"
-          variant="destructive"
-          showCancel={true}
-        />
+      <div className="p-4 border-b border-white/10 backdrop-blur-lg bg-black/20">
+        <ModeSwitcher />
       </div>
+      
+      <ConfirmationModal
+        open={showClearConfirmation}
+        onOpenChange={setShowClearConfirmation}
+        title="Clear Conversation"
+        description="Are you sure you want to clear this conversation? This action cannot be undone."
+        confirmLabel="Clear"
+        cancelLabel="Cancel"
+        onConfirm={handleConfirmClear}
+        isDestructive={true}
+      />
+      
+      {!canUseAI && <FreeAccountBanner />}
+      
+      <div className="flex-1 overflow-hidden">
+        <ScrollArea 
+          className={cn(
+            "h-[65vh] min-h-[550px] px-3 sm:px-6 py-4", 
+            getModeBackgroundClass(),
+            "bg-transparent"
+          )}
+          style={{
+            background: 'rgba(255,255,255,0.05)',
+            backdropFilter: 'blur(12px)'
+          }}
+        >
+          {messages.length === 0 ? renderWelcomeView() : (
+            <div className="space-y-4">
+              <AnimatePresence>
+                {messages.map((message) => (
+                  <motion.div
+                    key={message.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4 }}
+                  >
+                    <ChatMessage message={message} />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+              
+              {isLoading && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-start gap-3 mb-4"
+                >
+                  <div className="flex-shrink-0">
+                    <div className={`h-10 w-10 rounded-full ${currentPersonality.color} flex items-center justify-center shadow-[0_10px_30px_rgba(0,0,0,0.6)]`}>
+                      <Bot className="h-5 w-5 text-white" />
+                    </div>
+                  </div>
+                  <div className="bg-black/20 dark:bg-slate-800/20 border border-white/10 dark:border-slate-700/10 rounded-2xl p-4 backdrop-blur-xl shadow-[0_15px_35px_rgba(0,0,0,0.5)]">
+                    <div className="flex space-x-2">
+                      <div className="h-2 w-2 rounded-full bg-blue-400/70 animate-bounce"></div>
+                      <div className="h-2 w-2 rounded-full bg-blue-400/70 animate-bounce [animation-delay:0.2s]"></div>
+                      <div className="h-2 w-2 rounded-full bg-blue-400/70 animate-bounce [animation-delay:0.4s]"></div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </div>
+          )}
+          
+          <div ref={messagesEndRef} />
+        </ScrollArea>
+      </div>
+      
+      <ChatInput 
+        onSendMessage={sendMessage} 
+        isLoading={isLoading} 
+        isDisabled={!canUseAI} 
+      />
     </div>
   );
 };
 
-export const UnifiedChatInterfaceWithProvider = () => {
-  return (
+export const UnifiedChatInterfaceWithProvider: React.FC = () => (
+  <AIPersonalityProvider>
     <UnifiedChatInterface />
-  );
-};
+  </AIPersonalityProvider>
+);

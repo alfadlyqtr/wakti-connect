@@ -1,93 +1,78 @@
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useChatStorage } from './useChatStorage';
+import { useState, useRef, useCallback } from 'react';
+import { useSendMessage } from './useSendMessage';
 import { AIMessage } from '@/types/ai-assistant.types';
-import { v4 as uuidv4 } from 'uuid';
-import { useAIPersonality } from '@/components/ai/personality-switcher/AIPersonalityContext';
-import { useGlobalChatMemory } from './useGlobalChatMemory';
-import { toast } from '@/hooks/use-toast';
+import { AITaskDetectionResult } from './types';
+import { useProfile } from '@/hooks/useProfile';
+import { useAuth } from '@/hooks/auth';
 
-export const useAIChatEnhanced = () => {
-  const { currentMode } = useAIPersonality();
+export const useAIChatEnhanced = (options = {}) => {
+  const { user } = useAuth();
+  const { profile } = useProfile(user?.id);
   const [isLoading, setIsLoading] = useState(false);
-  const [showClearConfirmation, setShowClearConfirmation] = useState(false);
+  const [detectedTask, setDetectedTask] = useState<AITaskDetectionResult | null>(null);
+  const [pendingTaskConfirmation, setPendingTaskConfirmation] = useState(false);
+  const [isCreatingTask, setIsCreatingTask] = useState(false);
   
-  // Access the global chat memory for the current mode
-  const { messages, addMessage, clearMessages } = useGlobalChatMemory(currentMode);
+  // Use the new global storage hook
+  const { 
+    messages, 
+    setMessages, 
+    clearMessages: clearStoredMessages,
+    getRecentContext 
+  } = useChatStorage(options);
   
-  // Track when the mode changes to prevent concurrent operations
-  const processingRef = useRef(false);
-  
-  const sendMessage = useCallback(async (content: string) => {
-    if (processingRef.current || !content.trim()) {
-      return;
-    }
+  // Send message using the updated hook that works with global memory
+  const { 
+    sendMessage, 
+    retryLastMessage,
+    isSending
+  } = useSendMessage(
+    options,
+    setIsLoading,
+    setDetectedTask,
+    setPendingTaskConfirmation,
+    'general' // Default active mode
+  );
+
+  // Task confirmation functions
+  const confirmCreateTask = useCallback(async () => {
+    if (!detectedTask) return;
     
+    setIsCreatingTask(true);
     try {
-      processingRef.current = true;
-      setIsLoading(true);
+      // Task creation logic would go here
+      console.log("Creating task:", detectedTask);
       
-      // Add user message to the chat
-      const userMessage: AIMessage = {
-        id: uuidv4(),
-        role: 'user',
-        content,
-        timestamp: new Date(),
-        mode: currentMode,
-      };
+      // For now, just clear the task after a small delay
+      await new Promise(resolve => setTimeout(resolve, 500));
       
-      addMessage(userMessage);
-      
-      // Simulate AI response
-      // In a real application, you would call your AI service here
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const aiMessage: AIMessage = {
-        id: uuidv4(),
-        role: 'assistant',
-        content: `You're in ${currentMode} mode. This is a placeholder response to: "${content}"`,
-        timestamp: new Date(),
-        mode: currentMode,
-      };
-      
-      addMessage(aiMessage);
-      
-      return { success: true };
+      setPendingTaskConfirmation(false);
+      setDetectedTask(null);
     } catch (error) {
-      console.error('Error sending message:', error);
-      toast({
-        title: "Error",
-        description: "Failed to send message. Please try again.",
-        variant: "destructive",
-      });
-      return { success: false, error };
+      console.error("Error creating task:", error);
     } finally {
-      setIsLoading(false);
-      processingRef.current = false;
+      setIsCreatingTask(false);
     }
-  }, [currentMode, addMessage]);
-  
-  // Function to prompt for clear confirmation
-  const promptClearMessages = useCallback(() => {
-    setShowClearConfirmation(true);
+  }, [detectedTask]);
+
+  const cancelCreateTask = useCallback(() => {
+    setPendingTaskConfirmation(false);
+    setDetectedTask(null);
   }, []);
-  
-  // Function to actually clear messages after confirmation
-  const handleConfirmClear = useCallback(() => {
-    clearMessages();
-    setShowClearConfirmation(false);
-    toast({
-      title: "Chat Cleared",
-      description: "All messages have been cleared.",
-    });
-  }, [clearMessages]);
-  
+
   return {
     messages,
     sendMessage,
-    isLoading,
-    clearMessages: promptClearMessages,
-    handleConfirmClear,
-    showClearConfirmation,
-    setShowClearConfirmation,
+    isLoading: isLoading || isSending,
+    clearMessages: clearStoredMessages,
+    detectedTask,
+    pendingTaskConfirmation,
+    confirmCreateTask,
+    cancelCreateTask,
+    isCreatingTask,
+    retryLastMessage,
+    getRecentContext,
   };
 };
