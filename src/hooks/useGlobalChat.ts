@@ -42,27 +42,24 @@ export const useGlobalChat = () => {
     return { content, imageUrl: null };
   };
   
-  // Check if user has necessary account type for AI
+  // Simplified check if user has necessary account type for AI
   const userCanUseAI = useCallback(() => {
     // If not authenticated, can't use AI
     if (!isAuthenticated) {
       return false;
     }
     
-    // If profile is still loading, we don't know yet
-    if (isProfileLoading) {
-      return undefined; // undefined means "still checking"
-    }
-    
-    // Business and individual accounts can use AI
-    if (profile?.account_type === 'business' || profile?.account_type === 'individual') {
-      return true;
-    }
-    
-    // Fallback to user metadata if profile doesn't have the info
+    // First check user metadata - single source of truth
     const accountTypeFromMetadata = user?.user_metadata?.account_type;
     if (accountTypeFromMetadata === 'business' || accountTypeFromMetadata === 'individual') {
       return true;
+    }
+    
+    // If metadata doesn't have the info, check profile as fallback
+    if (!isProfileLoading && profile) {
+      if (profile.account_type === 'business' || profile.account_type === 'individual') {
+        return true;
+      }
     }
     
     // Default to false if we can't confirm access
@@ -73,18 +70,8 @@ export const useGlobalChat = () => {
   const sendMessage = useCallback(async (content: string) => {
     if (!content.trim() || isLoading) return;
     
-    // Check if user can use AI
+    // Check if user can use AI - simplified check
     const canUseAI = userCanUseAI();
-    
-    if (canUseAI === undefined) {
-      // Still checking, try again shortly
-      toast({
-        title: "Checking access...",
-        description: "Please try again in a moment.",
-        duration: 3000,
-      });
-      return;
-    }
     
     if (canUseAI === false) {
       toast({

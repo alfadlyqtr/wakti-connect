@@ -76,15 +76,8 @@ export const useCanUseAIQuery = (user: User | null) => {
       if (!user) return false;
 
       try {
-        // Get current session to ensure we have a fresh token
-        const { data: sessionData } = await supabase.auth.getSession();
-        if (!sessionData.session) {
-          console.warn("No active session found when checking AI access");
-          return false;
-        }
-        
-        // First check account type directly from user metadata or profile
-        // This provides a faster response and reduces RPC calls
+        // Simplified check based solely on account type
+        // First check account type directly from user metadata
         const userAccountType = user.user_metadata?.account_type || null;
         
         // Business and individual accounts directly from metadata can use AI
@@ -93,7 +86,7 @@ export const useCanUseAIQuery = (user: User | null) => {
           return true;
         }
         
-        // If metadata doesn't confirm access, check profile
+        // If metadata doesn't have it, check profile as fallback
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select("account_type")
@@ -108,22 +101,8 @@ export const useCanUseAIQuery = (user: User | null) => {
           }
         }
         
-        // As a last resort, use the RPC function
-        try {
-          const { data: canUse, error: rpcError } = await supabase.rpc("can_use_ai_assistant");
-          
-          if (rpcError) {
-            console.error("RPC error when checking AI access:", rpcError);
-            // We already checked profile and metadata, so if RPC fails, return false
-            return false;
-          }
-          
-          console.log("RPC access check result:", canUse);
-          return canUse === true;
-        } catch (rpcError) {
-          console.error("Exception in RPC access check:", rpcError);
-          return false;
-        }
+        // Default to denying access if we cannot confirm it
+        return false;
       } catch (error) {
         console.error("Error checking AI access:", error);
         return false;

@@ -49,7 +49,7 @@ serve(async (req) => {
     
     console.log("User authenticated:", user.id);
     
-    // Check if user can use AI assistant - optimized with new checkUserAccess
+    // Check if user can use AI assistant - simplified check
     console.log("Checking user access...");
     const { canUseAI, error: accessError } = await checkUserAccess(user, supabaseClient);
     if (accessError) {
