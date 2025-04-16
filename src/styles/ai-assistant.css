@@ -164,6 +164,10 @@
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 20px rgba(236, 72, 153, 0.4);
 }
 
+.neon-glow-red {
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 20px rgba(239, 68, 68, 0.4);
+}
+
 /* Message styling with enhanced shadows and glow */
 .message-bubble {
   position: relative;
@@ -224,4 +228,21 @@
 
 .message-glow-creative {
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 20px rgba(236, 72, 153, 0.4);
+}
+
+/* Clear chat button specific effects */
+.clear-chat-button {
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+}
+
+.clear-chat-button:hover {
+  background-color: rgba(239, 68, 68, 0.2) !important;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 20px rgba(239, 68, 68, 0.4) !important;
+  transform: translateY(-8px) !important;
+}
+
+.clear-chat-button:active {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset !important;
 }

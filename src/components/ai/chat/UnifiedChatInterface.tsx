@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -17,7 +18,6 @@ import FreeAccountBanner from '@/components/dashboard/FreeAccountBanner';
 
 export const UnifiedChatInterface: React.FC = () => {
   const { messages, sendMessage, isLoading, clearMessages, canUseAI } = useGlobalChat();
-  const [showClearConfirmation, setShowClearConfirmation] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { currentMode, currentPersonality } = useAIPersonality();
   
@@ -26,15 +26,6 @@ export const UnifiedChatInterface: React.FC = () => {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, isLoading]);
-  
-  const handleClearChat = () => {
-    setShowClearConfirmation(true);
-  };
-  
-  const handleConfirmClear = () => {
-    clearMessages();
-    setShowClearConfirmation(false);
-  };
   
   const getModeBackgroundClass = () => {
     switch (currentMode) {
@@ -99,17 +90,6 @@ export const UnifiedChatInterface: React.FC = () => {
         <ModeSwitcher />
       </div>
       
-      <ConfirmationModal
-        open={showClearConfirmation}
-        onOpenChange={setShowClearConfirmation}
-        title="Clear Conversation"
-        description="Are you sure you want to clear this conversation? This action cannot be undone."
-        confirmLabel="Clear"
-        cancelLabel="Cancel"
-        onConfirm={handleConfirmClear}
-        isDestructive={true}
-      />
-      
       {!canUseAI && <FreeAccountBanner />}
       
       <div className="flex-1 overflow-hidden">
@@ -169,7 +149,8 @@ export const UnifiedChatInterface: React.FC = () => {
       <ChatInput 
         onSendMessage={sendMessage} 
         isLoading={isLoading} 
-        isDisabled={!canUseAI} 
+        isDisabled={!canUseAI}
+        onClearChat={clearMessages}
       />
     </div>
   );
