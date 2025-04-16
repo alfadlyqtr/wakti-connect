@@ -77,3 +77,18 @@ export const rejectionKeywords = {
     "i decline", "i oppose"
   ]
 };
+
+// Inappropriate Content Keywords
+export const inappropriateContentKeywords = {
+  keywords: [
+    "nude", "naked", "porn", "pornography", "sex", "sexual", "erotic", "xxx",
+    "violence", "violent", "gore", "blood", "kill", "murder", "suicide", "self-harm",
+    "hate", "racist", "sexist", "terrorism", "offensive", "explicit", "obscene",
+    "abuse", "harassment", "torture", "illegal", "drug", "trafficking", "weapon"
+  ],
+  contextualPhrases: [
+    "show me inappropriate", "make adult content", "create explicit", 
+    "generate sexual", "draw nude", "draw naked", "make pornographic",
+    "create violent", "generate violent", "explicit image", "inappropriate picture"
+  ]
+};
