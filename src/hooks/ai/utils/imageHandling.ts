@@ -1,7 +1,6 @@
 
 import { runwareService } from '@/services/ai/runwareService';
 import { toast } from '@/components/ui/use-toast';
-import { supabase } from '@/lib/supabase';
 
 export interface GeneratedImageResult {
   imageUrl: string;
@@ -12,64 +11,24 @@ export interface GeneratedImageResult {
 
 /**
  * Handles image generation requests based on the user's prompt
- * Uses Runware as primary service with OpenAI/DALL-E as fallback
+ * Uses the main ai-image-generation edge function
  */
 export async function handleImageGeneration(prompt: string): Promise<GeneratedImageResult> {
   try {
     console.log('[imageHandling] Starting image generation with prompt:', prompt);
     
-    // First try with Runware service
-    try {
-      console.log('[imageHandling] Attempting with Runware service');
-      
-      const runwareResult = await runwareService.generateImage({
-        positivePrompt: prompt,
-        model: "runware:100@1",
-        numberResults: 1,
-        outputFormat: "WEBP",
-        CFGScale: 7.5
-      });
-      
-      console.log('[imageHandling] Runware generation successful');
-      
-      return {
-        imageUrl: runwareResult.imageURL,
-        prompt: prompt,
-        success: true
-      };
-    } catch (runwareError) {
-      console.error('[imageHandling] Runware service failed:', runwareError);
-      
-      // Fall back to OpenAI/DALL-E through supabase edge function
-      console.log('[imageHandling] Falling back to OpenAI/DALL-E');
-      
-      try {
-        const { data, error } = await supabase.functions.invoke('ai-image-generation', {
-          body: { prompt, fallbackMode: true }
-        });
-        
-        if (error) {
-          console.error('[imageHandling] Fallback service error:', error);
-          throw new Error(`Edge function error: ${error.message}`);
-        }
-        
-        if (!data || !data.imageUrl) {
-          console.error('[imageHandling] No image URL in fallback response');
-          throw new Error('No image URL returned from fallback service');
-        }
-        
-        console.log('[imageHandling] Fallback generation successful');
-        
-        return {
-          imageUrl: data.imageUrl,
-          prompt: prompt,
-          success: true
-        };
-      } catch (fallbackError) {
-        console.error('[imageHandling] Fallback service failed:', fallbackError);
-        throw fallbackError;
-      }
-    }
+    // Generate image using the main ai-image-generation edge function through runwareService
+    const result = await runwareService.generateImage({
+      positivePrompt: prompt
+    });
+    
+    console.log('[imageHandling] Image generation successful');
+    
+    return {
+      imageUrl: result.imageURL,
+      prompt: prompt,
+      success: true
+    };
   } catch (error) {
     console.error('[imageHandling] Image generation failed:', error);
     

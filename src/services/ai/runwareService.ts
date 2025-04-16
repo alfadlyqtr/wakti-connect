@@ -24,17 +24,13 @@ export interface GeneratedImage {
 }
 
 export class RunwareService {
-  constructor() {
-    // No need to store API key anymore as it's handled securely by the edge function
-  }
-
   async generateImage(params: GenerateImageParams): Promise<GeneratedImage> {
     try {
-      console.log("Requesting image generation through secure edge function");
+      console.log("Requesting image generation through ai-image-generation edge function");
       
-      // Call the secure edge function with the correct name
-      const { data, error } = await supabase.functions.invoke('get-runware-api-key', {
-        body: params
+      // Call the ai-image-generation edge function directly
+      const { data, error } = await supabase.functions.invoke('ai-image-generation', {
+        body: { prompt: params.positivePrompt, imageUrl: params.inputImage }
       });
       
       if (error) {
@@ -42,18 +38,18 @@ export class RunwareService {
         throw error;
       }
       
-      if (!data || !data.imageURL) {
+      if (!data || !data.imageUrl) {
         throw new Error('No image was generated');
       }
 
       return {
-        imageURL: data.imageURL,
-        positivePrompt: data.positivePrompt,
-        seed: data.seed,
+        imageURL: data.imageUrl,
+        positivePrompt: params.positivePrompt,
+        seed: data.seed || 0,
         NSFWContent: data.NSFWContent || false
       };
     } catch (error) {
-      console.error('Error generating image with Runware:', error);
+      console.error('Error generating image:', error);
       throw error;
     }
   }

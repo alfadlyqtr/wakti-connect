@@ -3,9 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Mic, Square, RefreshCcw, Image, MicOff } from 'lucide-react';
+import { Mic, MicOff, RefreshCcw, Image } from 'lucide-react';
 import { useSpeechRecognition } from '@/hooks/ai/useSpeechRecognition';
-import { motion } from 'framer-motion';
+import { toast } from '@/components/ui/use-toast';
+import { supabase } from '@/lib/supabase';
 
 interface ImageGenerationToolCardProps {
   onSubmitPrompt: (prompt: string) => void;
@@ -18,6 +19,8 @@ export const ImageGenerationToolCard: React.FC<ImageGenerationToolCardProps> = (
 }) => {
   const [prompt, setPrompt] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   
   // Get speech recognition utilities
   const {
@@ -52,13 +55,30 @@ export const ImageGenerationToolCard: React.FC<ImageGenerationToolCardProps> = (
     }
   }, [recognitionError]);
   
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!prompt.trim()) {
       setError('Please enter an image description');
       return;
     }
     
-    onSubmitPrompt(prompt.trim());
+    try {
+      setIsGenerating(true);
+      
+      // Send the prompt to the parent component handler
+      onSubmitPrompt(prompt.trim());
+      
+      // Clear the prompt
+      setPrompt('');
+    } catch (e) {
+      console.error("Error generating image:", e);
+      toast({
+        title: "Error",
+        description: "Failed to generate image. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGenerating(false);
+    }
   };
   
   return (
@@ -75,16 +95,16 @@ export const ImageGenerationToolCard: React.FC<ImageGenerationToolCardProps> = (
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           className="min-h-[80px]"
-          disabled={isLoading}
+          disabled={isLoading || isGenerating}
         />
         
         <div className="flex gap-2 flex-wrap">
           <Button 
             onClick={handleSubmit}
-            disabled={!prompt.trim() || isLoading}
+            disabled={!prompt.trim() || isLoading || isGenerating}
             className="flex-1"
           >
-            {isLoading ? (
+            {isLoading || isGenerating ? (
               <>
                 <RefreshCcw className="mr-2 h-4 w-4 animate-spin" />
                 Generating...
