@@ -29,11 +29,45 @@ const root = createRoot(rootElement!);
 window.WAKTI_DEBUG = true;
 console.log("Application initializing...");
 
-// Add mobile detection
-const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-  navigator.userAgent
-);
-console.log("Mobile device detected:", isMobileDevice);
+// Add platform detection to HTML element
+const detectPlatform = () => {
+  const html = document.documentElement;
+  
+  // Detect iOS
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+               (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  
+  // Detect Android
+  const isAndroid = /Android/.test(navigator.userAgent);
+  
+  // Add platform classes to HTML element
+  if (isIOS) {
+    html.classList.add('ios');
+    console.log('iOS platform detected');
+  } else if (isAndroid) {
+    html.classList.add('android');
+    console.log('Android platform detected');
+  }
+  
+  // Add mobile class regardless of specific platform
+  const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent
+  );
+  
+  if (isMobileDevice) {
+    html.classList.add('mobile');
+    console.log('Mobile device detected');
+  } else {
+    html.classList.add('desktop');
+    console.log('Desktop device detected');
+  }
+  
+  return { isIOS, isAndroid, isMobileDevice };
+};
+
+// Run platform detection
+const { isIOS, isAndroid, isMobileDevice } = detectPlatform();
+console.log("Platform detection:", { isIOS, isAndroid, isMobileDevice });
 
 // Register service worker for PWA support
 if ('serviceWorker' in navigator) {
@@ -46,6 +80,12 @@ if ('serviceWorker' in navigator) {
         console.log('SW registration failed:', error);
       });
   });
+}
+
+// Add support for bottom safe area padding on iOS
+if (isIOS) {
+  // Apply safe area bottom padding to elements with .safe-area-bottom class
+  document.body.classList.add('has-ios-padding');
 }
 
 // Render the app directly

@@ -20,6 +20,21 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png"
     }
   ],
   "shortcuts": [
@@ -32,10 +47,43 @@
       "name": "Messages",
       "url": "/dashboard/messages",
       "icons": [{ "src": "/icons/messages.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "AI Assistant",
+      "url": "/dashboard/ai-assistant",
+      "icons": [{ "src": "/icons/ai.png", "sizes": "96x96" }]
     }
   ],
   "categories": ["productivity", "business", "utilities"],
+  "screenshots": [
+    {
+      "src": "/screenshots/dashboard.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "Dashboard view of WAKTI Connect"
+    },
+    {
+      "src": "/screenshots/mobile.png",
+      "sizes": "720x1280",
+      "type": "image/png",
+      "platform": "narrow",
+      "label": "Mobile view of WAKTI Connect"
+    }
+  ],
   "launch_handler": {
     "route_to": "existing-client"
-  }
+  },
+  "related_applications": [
+    {
+      "platform": "play",
+      "url": "https://play.google.com/store/apps/details?id=app.lovable.4c81db950ca9462093efa38758325074",
+      "id": "app.lovable.4c81db950ca9462093efa38758325074"
+    },
+    {
+      "platform": "itunes",
+      "url": "https://apps.apple.com/app/wakti-connect/id123456789"
+    }
+  ],
+  "prefer_related_applications": false
 }

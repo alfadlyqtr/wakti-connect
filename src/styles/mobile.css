@@ -123,3 +123,80 @@
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
 }
+
+/* Platform-specific styles */
+.ios-only {
+  display: none;
+}
+
+.android-only {
+  display: none;
+}
+
+html.ios .ios-only {
+  display: block;
+}
+
+html.android .android-only {
+  display: block;
+}
+
+/* Add platform detection in JavaScript */
+/* This part adds classes to the html element based on platform detection */
+
+/* Enhanced tap highlight color (Android) */
+html.android * {
+  -webkit-tap-highlight-color: rgba(0, 102, 255, 0.2);
+}
+
+/* iOS momentum scrolling for all scrollable elements */
+html.ios .scrollable {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* iOS-style list items */
+html.ios .ios-list-item {
+  padding: 12px 16px;
+  margin-bottom: 1px;
+  background-color: white;
+}
+
+/* Android-style list items */
+html.android .android-list-item {
+  padding: 16px;
+  margin-bottom: 1px;
+  border-radius: 4px;
+}
+
+/* iOS-style buttons */
+html.ios .platform-button {
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+/* Android-style buttons */
+html.android .platform-button {
+  border-radius: 4px;
+  text-transform: uppercase;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+/* Status bar styles */
+.status-bar-padding {
+  padding-top: env(safe-area-inset-top);
+}
+
+/* Drawer platform-specific styles */
+html.ios .platform-drawer {
+  border-radius: 10px 10px 0 0;
+}
+
+html.android .platform-drawer {
+  border-radius: 16px 16px 0 0;
+}
+
+/* Native-feeling fast-tap */
+.fast-tap {
+  touch-action: manipulation;
+}

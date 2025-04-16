@@ -19,6 +19,20 @@ const config: CapacitorConfig = {
       splashFullScreen: true,
       splashImmersive: true
     }
+  },
+  android: {
+    backgroundColor: "#FFFFFF",
+    allowMixedContent: true,
+    captureInput: true,
+    webContentsDebuggingEnabled: true
+  },
+  ios: {
+    backgroundColor: "#FFFFFF",
+    contentInset: "always",
+    cordovaSwiftVersion: "5.0",
+    preferredContentMode: "mobile",
+    scheme: "app",
+    limitsNavigationsToAppBoundDomains: true
   }
 };
 
