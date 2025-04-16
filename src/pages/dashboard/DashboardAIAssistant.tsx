@@ -21,10 +21,10 @@ const DashboardAIAssistant = () => {
         transition={{ duration: 0.5 }}
       >
         <div className="flex flex-col gap-2 max-w-6xl mx-auto px-2">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white dark:text-white/90 bg-black/40 px-3 py-2 rounded-lg shadow-lg">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white dark:text-white/90 bg-black/50 px-3 py-2 rounded-lg shadow-lg">
             WAKTI AI Assistant
           </h1>
-          <p className="text-blue-300/80 text-sm sm:text-base bg-black/30 px-3 py-1 rounded-lg">
+          <p className="text-blue-300/80 text-sm sm:text-base bg-black/40 px-3 py-1 rounded-lg">
             Your intelligent assistant for managing tasks, scheduling, and more
           </p>
         </div>

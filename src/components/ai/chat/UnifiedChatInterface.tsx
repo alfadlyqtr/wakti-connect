@@ -69,12 +69,12 @@ export const UnifiedChatInterface: React.FC = () => {
         
         <h2 className="text-xl sm:text-2xl font-bold">{currentPersonality.welcomeMessage}</h2>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg w-full pt-6 px-4">
+        <div className="grid grid-cols-1 gap-3 max-w-lg w-full pt-6 px-2 sm:px-4">
           {currentPersonality.suggestedPrompts.map((prompt, index) => (
             <Button
               key={index}
               variant="outline"
-              className="text-sm h-auto py-3 justify-start text-left glass-panel transform hover:scale-105 transition-transform duration-200 shadow-[0_10px_30px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.08)_inset]"
+              className="text-sm h-auto py-3 px-4 justify-start text-left glass-panel transform hover:scale-105 transition-transform duration-200 shadow-[0_10px_30px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.08)_inset] w-full"
               onClick={() => sendMessage(prompt)}
               style={{
                 backdropFilter: 'blur(16px)',
