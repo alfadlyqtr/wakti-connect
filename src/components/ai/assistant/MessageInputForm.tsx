@@ -129,7 +129,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
             )}
             disabled={isLoading || activeListening}
           />
-          <div className="absolute bottom-3 right-3 flex gap-1">
+          <div className="absolute bottom-3 right-3 flex gap-1.5">
             {supportsVoice && (
               <Button
                 type="button"
@@ -149,7 +149,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
           </div>
         </div>
         
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             {/* File Upload */}
             {onFileUpload && (
@@ -195,7 +195,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
             type="submit" 
             size="default" 
             disabled={!inputMessage.trim() || isLoading}
-            className="h-9 px-4 sm:h-10 sm:px-5 rounded-full"
+            className="h-9 px-4 sm:h-10 sm:px-5 rounded-full w-full sm:w-auto"
           >
             {isLoading ? (
               <div className="animate-spin h-4 w-4 sm:h-5 sm:w-5 border-2 border-primary border-opacity-50 border-t-primary rounded-full mr-1" />

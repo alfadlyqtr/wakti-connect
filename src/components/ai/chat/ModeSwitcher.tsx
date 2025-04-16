@@ -8,6 +8,7 @@ import { personalityPresets } from '@/components/ai/personality-switcher/persona
 import { Bot, Book, Zap, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
+import { useBreakpointValue } from '@/hooks/useBreakpoint';
 
 const modeIcons = {
   general: Bot,
@@ -24,7 +25,8 @@ const modeColors = {
 };
 
 export const ModeSwitcher: React.FC = () => {
-  const { currentMode, setCurrentMode, currentPersonality } = useAIPersonality();
+  const { currentMode, setCurrentMode } = useAIPersonality();
+  const isMobile = !useBreakpointValue('sm');
   
   const handleModeChange = (mode: AIPersonalityMode) => {
     setCurrentMode(mode);
@@ -32,7 +34,7 @@ export const ModeSwitcher: React.FC = () => {
   
   return (
     <motion.div 
-      className="flex items-center justify-center gap-3 p-4 glassmorphism rounded-xl transform hover:translate-y-[-5px] transition-all duration-300 z-10"
+      className="flex flex-wrap sm:flex-nowrap items-center justify-center gap-2 sm:gap-3 p-3 sm:p-4 glassmorphism rounded-xl transform hover:translate-y-[-5px] transition-all duration-300 z-10"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
@@ -54,25 +56,27 @@ export const ModeSwitcher: React.FC = () => {
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.98 }}
+                className="w-[calc(50%-4px)] sm:w-auto"
               >
                 <Button
                   variant={isActive ? "default" : "ghost"}
-                  size="lg"
+                  size={isMobile ? "sm" : "lg"}
                   onClick={() => handleModeChange(mode)}
                   className={cn(
-                    "rounded-xl px-4 py-3 gap-2 transition-all duration-300",
+                    "rounded-xl py-2 sm:py-3 gap-1.5 transition-all duration-300 w-full",
                     isActive ? activeColor : "hover:bg-white/10",
-                    "transform perspective-800 hover:perspective-800 hover:rotate-x-2 hover:rotate-y-1 transition-transform"
+                    "transform perspective-800 hover:perspective-800 hover:rotate-x-2 hover:rotate-y-1 transition-transform",
+                    isMobile ? "px-2.5 text-xs h-10" : "px-4 text-sm"
                   )}
                   style={{
                     boxShadow: isActive ? '0 10px 25px rgba(0, 0, 0, 0.5), 0 0 15px rgba(59, 130, 246, 0.5)' : '0 5px 15px rgba(0, 0, 0, 0.3)',
                   }}
                 >
                   <Icon className={cn(
-                    "h-5 w-5", 
+                    "h-4 w-4 sm:h-5 sm:w-5", 
                     isActive && "text-white animate-pulse duration-1000"
                   )} />
-                  <span className="capitalize text-sm font-semibold">{mode}</span>
+                  <span className="capitalize font-semibold whitespace-nowrap">{mode}</span>
                 </Button>
               </motion.div>
             </HoverCardTrigger>

@@ -100,7 +100,7 @@ export const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
         }
       }} 
       className={cn(
-        "border-t bg-background p-2 pt-3 md:p-4 rounded-b-lg flex flex-col gap-2",
+        "border-t bg-background p-3 pt-3 md:p-4 rounded-b-lg flex flex-col gap-2",
         supportsPendingConfirmation && pendingConfirmation && "bg-green-50/50 border-green-100"
       )}
     >
@@ -111,7 +111,7 @@ export const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
           compact
         />
       ) : (
-        <div className="flex items-end gap-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-2">
           <div className="relative flex-1">
             <Textarea
               ref={textareaRef}
@@ -133,7 +133,7 @@ export const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
                 type="submit"
                 variant={pendingConfirmation ? "success" : "default"}
                 className={cn(
-                  "h-7 w-7 sm:h-8 sm:w-8 rounded-full",
+                  "h-8 w-8 sm:h-9 sm:w-9 rounded-full",
                   pendingConfirmation && "bg-green-600 hover:bg-green-700 text-white"
                 )}
                 disabled={
@@ -153,7 +153,7 @@ export const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
             </div>
           </div>
           
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center justify-end gap-2">
             {pendingConfirmation && (
               <Button
                 type="button"

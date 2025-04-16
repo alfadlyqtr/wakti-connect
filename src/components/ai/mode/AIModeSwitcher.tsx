@@ -16,6 +16,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { useBreakpoint } from '@/hooks/useBreakpoint';
 
 interface AIModeSwitcherProps {
   activeMode: WAKTIAIMode;
@@ -31,14 +32,17 @@ const modeIcons = {
 };
 
 export const AIModeSwitcher = ({ activeMode, setActiveMode }: AIModeSwitcherProps) => {
+  const breakpoints = useBreakpoint();
+  const isMobile = !breakpoints.includes('sm');
+  
   return (
-    <div className="flex justify-between items-center p-3 bg-background">
-      <div className="flex-1">
-        <h1 className="text-sm font-medium hidden sm:block">{WAKTIAIModes[activeMode].title} Mode</h1>
+    <div className="flex flex-col sm:flex-row justify-between items-center p-3 bg-background gap-2">
+      <div className="w-full sm:w-auto text-center sm:text-left sm:flex-1">
+        <h1 className="text-sm font-medium">{WAKTIAIModes[activeMode].title} Mode</h1>
       </div>
       
-      <Tabs value={activeMode} onValueChange={(value) => setActiveMode(value as WAKTIAIMode)} className="flex-1 flex justify-center">
-        <TabsList className="grid grid-cols-4 w-full max-w-xs">
+      <Tabs value={activeMode} onValueChange={(value) => setActiveMode(value as WAKTIAIMode)} className="w-full sm:w-auto sm:flex-1 flex justify-center">
+        <TabsList className="grid grid-cols-4 w-full max-w-sm gap-x-1">
           {Object.values(WAKTIAIModes).map((mode) => {
             const Icon = modeIcons[mode.id as keyof typeof modeIcons];
             return (
@@ -48,12 +52,12 @@ export const AIModeSwitcher = ({ activeMode, setActiveMode }: AIModeSwitcherProp
                     <TabsTrigger 
                       value={mode.id} 
                       className={cn(
-                        "flex items-center justify-center",
+                        "flex items-center justify-center px-3 py-1.5",
                         activeMode === mode.id && "data-[state=active]:text-foreground"
                       )}
                     >
-                      <Icon className="h-4 w-4" />
-                      <span className="sr-only">{mode.title}</span>
+                      <Icon className="h-4 w-4 mr-1.5" />
+                      <span className={isMobile ? "text-xs" : "text-xs sm:text-sm"}>{mode.title}</span>
                     </TabsTrigger>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -67,7 +71,7 @@ export const AIModeSwitcher = ({ activeMode, setActiveMode }: AIModeSwitcherProp
         </TabsList>
       </Tabs>
       
-      <div className="flex-1 flex justify-end">
+      <div className="w-full sm:w-auto flex justify-end sm:flex-1">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
