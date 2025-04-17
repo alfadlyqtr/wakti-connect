@@ -14,7 +14,7 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
   const { 
     onTranscriptComplete, 
     continuousListening = false,
-    autoStopAfterSilence = false, // Changed default to false
+    autoStopAfterSilence = false, // Changed default to false for more reliable user control
     maxDuration = 60 // 60 seconds max by default
   } = options;
   
@@ -239,7 +239,7 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
       // Show visual feedback
       toast({
         title: "Voice Recording Active",
-        description: "Recording for 60 seconds. Press the button again to stop.",
+        description: "Press the button again when you're done speaking.",
         duration: 3000,
       });
     } catch (err) {
@@ -281,6 +281,13 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
             // Create a blob from all chunks
             const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
             
+            // Show immediate processing feedback
+            toast({
+              title: "Processing your speech",
+              description: "Converting your voice to text...",
+              duration: 5000,
+            });
+            
             // Convert to base64 for the edge function
             const reader = new FileReader();
             reader.readAsDataURL(audioBlob);
@@ -293,12 +300,6 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
                 if (!base64data) {
                   throw new Error('Failed to convert audio to base64');
                 }
-                
-                toast({
-                  title: "Processing your speech",
-                  description: "Converting your voice to text...",
-                  duration: 5000,
-                });
                 
                 // Process with fallbacks
                 let finalTranscript = "";

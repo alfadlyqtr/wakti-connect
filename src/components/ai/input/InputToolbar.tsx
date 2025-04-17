@@ -26,9 +26,10 @@ export const InputToolbar: React.FC<InputToolbarProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isCompleted, setIsCompleted] = useState(false);
   
-  // Use the hook for audio monitoring
+  // Use the hook for audio monitoring with increased sensitivity
   const { audioLevel } = useAudioLevelMonitor({
-    isActive: isListening
+    isActive: isListening,
+    sensitivity: 2.0 // Increase sensitivity for better visual feedback
   });
   
   // Reset completed state when recording starts
@@ -46,7 +47,7 @@ export const InputToolbar: React.FC<InputToolbarProps> = ({
       // Reset after animation completes
       const timer = setTimeout(() => {
         setIsCompleted(false);
-      }, 2000);
+      }, 3000); // Increased time to show completion state
       
       return () => clearTimeout(timer);
     }
@@ -119,15 +120,23 @@ export const InputToolbar: React.FC<InputToolbarProps> = ({
         </Button>
       )}
       
-      {/* Recording status */}
+      {/* Recording status with improved visibility */}
       {isListening && (
-        <span className="text-xs text-red-500 ml-1 flex items-center">
+        <div className="text-xs text-red-500 ml-1 flex items-center bg-red-50 px-2 py-0.5 rounded-full border border-red-100">
           <span className="relative flex h-2 w-2 mr-1">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
           </span>
-          Recording...
-        </span>
+          Recording... (Click mic to stop)
+        </div>
+      )}
+      
+      {/* Completion status */}
+      {isCompleted && !isListening && (
+        <div className="text-xs text-green-600 ml-1 flex items-center bg-green-50 px-2 py-0.5 rounded-full border border-green-100">
+          <CheckCheck className="h-3 w-3 mr-1" />
+          Processing complete
+        </div>
       )}
     </div>
   );

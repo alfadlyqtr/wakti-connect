@@ -20,7 +20,7 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({
   isListening,
   isLoading = false,
   isDisabled = false,
-  audioLevel = 0.2,
+  audioLevel = 0.5, // Increased default level for better visibility
   onPress,
   className,
   recordingDuration = 0,
@@ -61,11 +61,11 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({
     <div className="relative inline-flex items-center">
       <Button
         type="button"
-        variant={isListening ? "destructive" : isCompleted ? "success" : "ghost"}
+        variant={isListening ? "destructive" : isCompleted ? "outline" : "ghost"}
         size="icon"
         className={cn("h-9 w-9 rounded-full relative transition-colors duration-300", 
           isListening ? "bg-red-500 hover:bg-red-600" : 
-          isCompleted ? "bg-green-500 hover:bg-green-600" : "",
+          isCompleted ? "bg-green-100 text-green-700 border-green-300 hover:bg-green-200" : "",
           className
         )}
         onClick={onPress}
@@ -75,9 +75,9 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({
         {isLoading ? (
           <Loader2 className="h-4 w-4 animate-spin" />
         ) : isCompleted ? (
-          <CheckCheck className="h-4 w-4 text-white" />
+          <CheckCheck className="h-4 w-4" />
         ) : isListening ? (
-          <MicOff className="h-4 w-4" />
+          <MicOff className="h-4 w-4 text-white" />
         ) : (
           <Mic className="h-4 w-4" />
         )}
@@ -92,7 +92,7 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({
       
       {isListening && (
         <>
-          <div className="absolute top-10 left-0 z-10">
+          <div className="absolute top-10 left-1/2 transform -translate-x-1/2 z-10">
             <VoiceRecordingVisualizer 
               isActive={isListening}
               audioLevel={audioLevel}
@@ -101,10 +101,16 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({
           </div>
           
           {/* Countdown timer */}
-          <div className="absolute top-1.5 -right-8 text-xs font-medium bg-red-100 text-red-800 rounded-full px-1.5 py-0.5 min-w-[36px] text-center">
+          <div className="absolute top-1 -right-8 text-xs font-medium bg-red-100 text-red-800 rounded-full px-1.5 py-0.5 min-w-[36px] text-center">
             {timeLeft}s
           </div>
         </>
+      )}
+      
+      {isCompleted && (
+        <div className="absolute top-10 left-0 z-10 bg-green-100 text-green-800 rounded-md px-2 py-1 text-xs whitespace-nowrap">
+          Speech processed
+        </div>
       )}
     </div>
   );
