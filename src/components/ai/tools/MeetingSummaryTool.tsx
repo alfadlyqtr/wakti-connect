@@ -116,6 +116,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
             isDownloadingAudio={isDownloadingAudio}
             audioData={state.audioData}
             summaryRef={summaryRef}
+            recordingTime={state.recordingTime}
           />
         )}
         

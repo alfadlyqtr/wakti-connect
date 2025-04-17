@@ -24,6 +24,8 @@ export interface SavedMeeting {
   date: string;
   summary: string;
   duration: number;
+  audioData: string | null;
+  location: string | null;
 }
 
 export const useMeetingSummary = () => {
@@ -277,7 +279,7 @@ export const useMeetingSummary = () => {
       }));
       
       // Save to history
-      saveToHistory(data.summary);
+      saveToHistory(data.summary, state.audioData, data.location || state.detectedLocation);
       
       toast({
         title: "Summary Generated",
@@ -293,7 +295,7 @@ export const useMeetingSummary = () => {
     } finally {
       setState(prev => ({ ...prev, isSummarizing: false }));
     }
-  }, [state.transcribedText, state.recordingTime, selectedLanguage]);
+  }, [state.transcribedText, state.recordingTime, state.audioData, state.detectedLocation, selectedLanguage]);
   
   // Copy summary to clipboard
   const copySummary = useCallback(() => {
@@ -358,13 +360,15 @@ export const useMeetingSummary = () => {
   }, [state.audioData]);
   
   // Save meeting to history
-  const saveToHistory = useCallback((summary: string) => {
+  const saveToHistory = useCallback((summary: string, audioData: string | null, location: string | null) => {
     const newMeeting: SavedMeeting = {
       id: crypto.randomUUID(),
       title: `Meeting on ${new Date().toLocaleDateString()}`,
       date: new Date().toISOString(),
       summary,
-      duration: state.recordingTime
+      duration: state.recordingTime,
+      audioData: audioData,
+      location: location
     };
     
     // Add to state

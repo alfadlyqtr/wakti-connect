@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download, FileDown, Copy, Check, MapPin } from 'lucide-react';
+import { Download, FileDown, Copy, Check, MapPin, Clock } from 'lucide-react';
 import { formatDuration } from '@/utils/text/transcriptionUtils';
 
 interface SummaryDisplayProps {
@@ -16,6 +16,7 @@ interface SummaryDisplayProps {
   isDownloadingAudio: boolean;
   audioData: string | null;
   summaryRef: React.RefObject<HTMLDivElement>;
+  recordingTime: number;
 }
 
 const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
@@ -28,7 +29,8 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
   isExporting,
   isDownloadingAudio,
   audioData,
-  summaryRef
+  summaryRef,
+  recordingTime
 }) => {
   return (
     <Card className="p-4">
@@ -71,12 +73,19 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
         </div>
       </div>
       
-      {detectedLocation && (
-        <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
-          <MapPin className="h-3 w-3" />
-          <span>Location: {detectedLocation}</span>
+      <div className="flex flex-wrap gap-2 mb-3">
+        {detectedLocation && (
+          <div className="flex items-center gap-1 text-xs bg-slate-100 dark:bg-slate-800 rounded-full px-2 py-1">
+            <MapPin className="h-3 w-3" />
+            <span>{detectedLocation}</span>
+          </div>
+        )}
+        
+        <div className="flex items-center gap-1 text-xs bg-slate-100 dark:bg-slate-800 rounded-full px-2 py-1">
+          <Clock className="h-3 w-3" />
+          <span>Duration: {formatDuration(recordingTime)}</span>
         </div>
-      )}
+      </div>
       
       <div 
         ref={summaryRef}

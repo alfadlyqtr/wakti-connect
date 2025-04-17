@@ -12,14 +12,22 @@ export const exportMeetingSummaryAsPDF = async (
   try {
     // Format time function
     const formatTime = (seconds: number): string => {
-      const minutes = Math.floor(seconds / 60);
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
       const remainingSeconds = seconds % 60;
-      return `${minutes}m ${remainingSeconds}s`;
+      
+      if (hours > 0) {
+        return `${hours}h ${minutes}m ${remainingSeconds}s`;
+      } else if (minutes > 0) {
+        return `${minutes}m ${remainingSeconds}s`;
+      } else {
+        return `${remainingSeconds}s`;
+      }
     };
     
     // Detect if content is Arabic
     const isArabicContent = /[\u0600-\u06FF]/.test(summary) && 
-                         summary.match(/[\u0600-\u06FF]/g)!.length > summary.length * 0.5;
+                         summary.match(/[\u0600-\u06FF]/g)!.length > summary.length * 0.3;
     
     // Create a temporary div with the summary content
     const tempDiv = document.createElement('div');
@@ -29,6 +37,8 @@ export const exportMeetingSummaryAsPDF = async (
     tempDiv.style.position = 'absolute';
     tempDiv.style.left = '-9999px';
     tempDiv.style.direction = isArabicContent ? 'rtl' : 'ltr';
+    tempDiv.style.backgroundColor = '#ffffff';
+    tempDiv.style.color = '#333333';
     
     // Create header div
     const headerDiv = createPdfHeaderDiv(isArabicContent);
