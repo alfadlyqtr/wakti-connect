@@ -12,13 +12,7 @@ const VoiceTools = () => {
   const [activeTab, setActiveTab] = useState('meeting-summary');
 
   return (
-    <div 
-      className="min-h-screen" 
-      style={{ 
-        background: 'transparent',
-        minHeight: 'calc(100vh - 60px)'
-      }}
-    >
+    <div className="min-h-screen">
       <motion.div 
         className="mx-auto p-2 sm:p-6 md:p-8 space-y-6 sm:space-y-8"
         initial={{ opacity: 0 }}

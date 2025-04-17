@@ -69,7 +69,7 @@ export const LectureNotesTool: React.FC<LectureNotesToolProps> = ({ onUseNotes }
 
   // Enhanced summary generation with context
   const handleGenerateSummary = async () => {
-    // Generate summary
+    // Generate summary with the lecture context if available
     await generateSummary();
   };
 
@@ -149,10 +149,7 @@ export const LectureNotesTool: React.FC<LectureNotesToolProps> = ({ onUseNotes }
         
         {/* Lecture History */}
         <SavedLecturesList
-          savedLectures={savedLectures.map(meeting => ({
-            ...meeting,
-            summary: meeting.summary // Using the summary property for lecture notes
-          }))}
+          savedLectures={savedLectures}
           isLoadingHistory={isLoadingHistory}
           onDeleteLecture={deleteLecture}
           onEditLectureTitle={updateLectureTitle}
@@ -161,3 +158,5 @@ export const LectureNotesTool: React.FC<LectureNotesToolProps> = ({ onUseNotes }
     </Card>
   );
 };
+
+export default LectureNotesTool;
