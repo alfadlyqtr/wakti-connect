@@ -7,6 +7,7 @@ import { SavedMeeting } from '@/hooks/ai/useMeetingSummary';
 import { toast } from '@/components/ui/use-toast';
 import { formatDuration } from '@/utils/text/transcriptionUtils';
 import { exportMeetingSummaryAsPDF } from './MeetingSummaryExporter';
+import { MeetingContext } from '@/utils/text/transcriptionUtils';
 
 interface SavedMeetingsListProps {
   savedMeetings: SavedMeeting[];
@@ -26,10 +27,15 @@ const SavedMeetingsList: React.FC<SavedMeetingsListProps> = ({
     try {
       setActionInProgress({ id: meeting.id, type: 'pdf' });
       
+      // Create a proper MeetingContext object if location exists
+      const meetingContext: MeetingContext | null = meeting.location 
+        ? { location: meeting.location } 
+        : null;
+        
       await exportMeetingSummaryAsPDF(
         meeting.summary,
         meeting.duration,
-        meeting.location || null
+        meetingContext
       );
       
       toast({

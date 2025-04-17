@@ -70,14 +70,14 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
   };
 
   // Enhanced summary generation with context
-  const handleGenerateSummary = () => {
+  const handleGenerateSummary = async () => {
     // Extract context from transcript and combine with user-provided context
     const extractedContext = meetingContext 
       ? extractMeetingContext(state.transcribedText, meetingContext)
       : extractMeetingContext(state.transcribedText);
     
     // Pass the context to summary generation
-    generateSummary(extractedContext);
+    await generateSummary(extractedContext);
   };
 
   // Handler for exporting summary as PDF
@@ -88,7 +88,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
       const exportContext = meetingContext 
         ? extractMeetingContext(state.transcribedText, meetingContext)
         : state.detectedLocation 
-          ? { location: state.detectedLocation }
+          ? { location: state.detectedLocation } as MeetingContext
           : null;
           
       await exportMeetingSummaryAsPDF(
