@@ -1,3 +1,4 @@
+
 /**
  * Utilities for PDF document generation and export
  */
@@ -7,9 +8,9 @@ import jsPDF from 'jspdf';
 /**
  * Process summary content for PDF export
  * @param summary The markdown summary content
- * @returns HTML-formatted content
+ * @returns Object containing HTML-formatted content and tasks
  */
-export const processSummaryContent = (summary: string): string => {
+export const processSummaryContent = (summary: string): { summary: string; tasks: string } => {
   // Extract any tasks if present
   let tasks = "";
   const taskMatch = summary.match(/##\s*Action Items[^#]*(?=##|$)/i);
