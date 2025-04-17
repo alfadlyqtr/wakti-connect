@@ -37,10 +37,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
   } = useMeetingSummary();
 
   const { 
-    supportsVoice,
-    apiKeyStatus,
-    apiKeyErrorDetails,
-    retryApiKeyValidation
+    supportsVoice
   } = useVoiceInteraction({
     continuousListening: false,
   });
@@ -55,7 +52,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
 
   // Handler for starting recording with voice interaction settings
   const handleStartRecording = () => {
-    startRecordingHook(supportsVoice, apiKeyStatus, apiKeyErrorDetails);
+    startRecordingHook(supportsVoice);
   };
 
   // Handler for exporting summary as PDF
