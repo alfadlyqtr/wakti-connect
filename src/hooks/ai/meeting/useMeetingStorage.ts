@@ -18,8 +18,7 @@ export const useMeetingStorage = (storageType: 'meeting-recordings' | 'lecture-n
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
   const folder = storageType === 'lecture-notes' ? 'lecture-recordings' : 'meeting-recordings';
-  const tableName = storageType === 'lecture-notes' ? 'meetings' : 'meetings';
-  const locationField = storageType === 'lecture-notes' ? 'course' : 'location';
+  const tableName = 'meetings'; // Using the same table for both types with a different identifier
 
   const loadSavedMeetings = useCallback(async () => {
     setIsLoadingHistory(true);
@@ -57,11 +56,11 @@ export const useMeetingStorage = (storageType: 'meeting-recordings' | 'lecture-n
         if (data && data.length > 0) {
           const formattedMeetings = data.map(item => ({
             id: item.id,
-            date: item.created_at,
+            date: item.date || item.created_at,
             summary: item.summary,
             duration: item.duration,
             title: item.title || (storageType === 'lecture-notes' ? 'Untitled Lecture' : 'Untitled Meeting'),
-            location: item[locationField]
+            location: item.location
           }));
 
           setSavedMeetings(formattedMeetings);
@@ -88,7 +87,7 @@ export const useMeetingStorage = (storageType: 'meeting-recordings' | 'lecture-n
     } finally {
       setIsLoadingHistory(false);
     }
-  }, [folder, savedMeetings, tableName, locationField, storageType]);
+  }, [folder, savedMeetings, storageType]);
 
   const saveMeetingToSupabase = useCallback(async (
     summary: string,
@@ -116,12 +115,14 @@ export const useMeetingStorage = (storageType: 'meeting-recordings' | 'lecture-n
         try {
           const insertData = {
             id: meetingId,
+            user_id: 'anonymous', // Using a placeholder for now
             title: finalTitle,
             summary: summary,
             transcript: transcript,
             duration: duration,
             language: language,
-            [type === 'lecture' ? 'location' : 'location']: location
+            location: location,
+            date: new Date().toISOString()
           };
           
           const { error } = await supabase
@@ -236,7 +237,7 @@ export const useMeetingStorage = (storageType: 'meeting-recordings' | 'lecture-n
         variant: "destructive"
       });
     }
-  }, [savedMeetings, folder, supabase, tableName, storageType]);
+  }, [savedMeetings, folder, supabase, storageType]);
 
   const updateMeetingTitle = useCallback(async (meetingId: string, newTitle: string) => {
     try {
@@ -282,7 +283,7 @@ export const useMeetingStorage = (storageType: 'meeting-recordings' | 'lecture-n
         variant: "destructive"
       });
     }
-  }, [savedMeetings, folder, supabase, tableName]);
+  }, [savedMeetings, folder, supabase]);
 
   return {
     savedMeetings,

@@ -1,4 +1,3 @@
-
 import { useRef, useCallback, useEffect, useState } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { extractLectureContext } from '@/utils/text/transcriptionUtils';
@@ -84,7 +83,7 @@ export const useLectureNotes = () => {
   // Wrapped functions with enhanced functionality
   const generateSummary = useCallback(async () => {
     // Pass educational parameters to identify it as a lecture
-    const result = await generateSummaryBase(recordingState.transcribedText, selectedLanguage, 'lecture');
+    const result = await generateSummaryBase(recordingState.transcribedText, selectedLanguage);
     
     // If no title is set, generate one
     if (result?.summary) {
