@@ -73,6 +73,16 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     await generateSummary();
   };
 
+  // Handle using the summary in the parent component if needed
+  const handleCopySummary = (summary: string) => {
+    copySummary(summary);
+    
+    // If onUseSummary is provided, call it with the summary
+    if (onUseSummary) {
+      onUseSummary(summary);
+    }
+  };
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -125,7 +135,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
             summary={state.summary}
             detectedLocation={state.detectedLocation}
             copied={copied}
-            copySummary={copySummary}
+            copySummary={handleCopySummary}
             exportAsPDF={exportAsPDF}
             downloadAudio={downloadAudio}
             isExporting={isExporting}

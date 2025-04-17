@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,7 +16,7 @@ interface SummaryDisplayProps {
   isDownloadingAudio: boolean;
   audioData: Blob | null;
   summaryRef: React.RefObject<HTMLDivElement>;
-  copySummary: () => void;
+  copySummary: (summary: string) => void;
   exportAsPDF: () => void;
   downloadAudio: () => void;
   meetingContext?: MeetingContext | null;
@@ -110,7 +109,7 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
             variant="outline" 
             size="sm" 
             className="text-xs sm:text-sm flex items-center gap-1" 
-            onClick={copySummary}
+            onClick={() => copySummary(summary)}
           >
             <Copy className="h-3.5 w-3.5" />
             {copied ? 'Copied!' : 'Copy'}
