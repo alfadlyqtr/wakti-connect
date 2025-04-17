@@ -1,6 +1,5 @@
-
 import React, { useState, useRef, useEffect } from 'react';
-import { Paperclip, Camera, Mic, MicOff, Loader2 } from 'lucide-react';
+import { Paperclip, Camera, Mic, MicOff, Loader2, CheckCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAudioLevelMonitor } from '@/hooks/ai/useAudioLevelMonitor';
@@ -26,28 +25,24 @@ export const InputToolbar: React.FC<InputToolbarProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isCompleted, setIsCompleted] = useState(false);
   
-  // Use the hook for audio monitoring with increased sensitivity
   const { audioLevel } = useAudioLevelMonitor({
     isActive: isListening,
-    sensitivity: 2.0 // Increase sensitivity for better visual feedback
+    sensitivity: 2.0
   });
   
-  // Reset completed state when recording starts
   useEffect(() => {
     if (isListening) {
       setIsCompleted(false);
     }
   }, [isListening]);
   
-  // Set completed state briefly when recording stops
   useEffect(() => {
     if (!isListening && recordingDuration > 0) {
       setIsCompleted(true);
       
-      // Reset after animation completes
       const timer = setTimeout(() => {
         setIsCompleted(false);
-      }, 3000); // Increased time to show completion state
+      }, 3000);
       
       return () => clearTimeout(timer);
     }
@@ -62,14 +57,12 @@ export const InputToolbar: React.FC<InputToolbarProps> = ({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0] && onFileSelected) {
       onFileSelected(e.target.files[0]);
-      // Clear value to allow selecting the same file again
       e.target.value = '';
     }
   };
   
   return (
     <div className="flex items-center gap-1 py-1">
-      {/* Voice recorder button */}
       {onVoiceToggle && (
         <VoiceButton
           isListening={isListening}
@@ -82,7 +75,6 @@ export const InputToolbar: React.FC<InputToolbarProps> = ({
         />
       )}
       
-      {/* File upload button */}
       {onFileSelected && (
         <>
           <Button
@@ -106,7 +98,6 @@ export const InputToolbar: React.FC<InputToolbarProps> = ({
         </>
       )}
       
-      {/* Camera button */}
       {onImageCapture && (
         <Button
           type="button"
@@ -120,7 +111,6 @@ export const InputToolbar: React.FC<InputToolbarProps> = ({
         </Button>
       )}
       
-      {/* Recording status with improved visibility */}
       {isListening && (
         <div className="text-xs text-red-500 ml-1 flex items-center bg-red-50 px-2 py-0.5 rounded-full border border-red-100">
           <span className="relative flex h-2 w-2 mr-1">
@@ -131,7 +121,6 @@ export const InputToolbar: React.FC<InputToolbarProps> = ({
         </div>
       )}
       
-      {/* Completion status */}
       {isCompleted && !isListening && (
         <div className="text-xs text-green-600 ml-1 flex items-center bg-green-50 px-2 py-0.5 rounded-full border border-green-100">
           <CheckCheck className="h-3 w-3 mr-1" />
