@@ -5,17 +5,9 @@ import { router } from './router';
 import { ThemeProvider } from './components/theme-provider';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-// Create a client for React Query
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: 1,
-    },
-  },
-});
+const queryClient = new QueryClient();
 
-export function App() {
+function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="system" storageKey="vite-react-theme">

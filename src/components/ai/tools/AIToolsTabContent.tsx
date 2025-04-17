@@ -4,10 +4,9 @@ import { ImageGenerationToolCard } from './ImageGenerationToolCard';
 import { VoiceInteractionToolCard } from './VoiceInteractionToolCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Mic, Image, FileText, Code, GitBranch, Calendar, Book } from 'lucide-react';
+import { Mic, Image, FileText, Code, GitBranch, Calendar } from 'lucide-react';
 import { AIAssistantRole } from '@/types/ai-assistant.types';
 import { MeetingSummaryTool } from './MeetingSummaryTool';
-import { LectureNotesTool } from './lecture-notes/LectureNotesTool';
 
 interface AIToolsTabContentProps {
   onPromptSubmit?: (prompt: string) => void;
@@ -38,12 +37,9 @@ export const AIToolsTabContent: React.FC<AIToolsTabContentProps> = ({
   // Always show meeting tool in creative mode
   const showMeetingTab = activeMode === 'creative';
   
-  // Show lecture tab in student mode
-  const showLectureTab = activeMode === 'student' || activeMode === 'general';
-  
   return (
     <Tabs defaultValue={showImageTab ? "image" : "voice"} className="w-full">
-      <TabsList className={`grid ${showMeetingTab && showLectureTab ? 'grid-cols-7' : showMeetingTab || showLectureTab ? 'grid-cols-6' : 'grid-cols-5'} h-auto`}>
+      <TabsList className={`grid ${showMeetingTab ? 'grid-cols-6' : 'grid-cols-5'} h-auto`}>
         {showImageTab && (
           <TabsTrigger value="image" className="text-xs flex flex-col gap-1 py-2 h-auto">
             <Image className="h-4 w-4" />
@@ -58,12 +54,6 @@ export const AIToolsTabContent: React.FC<AIToolsTabContentProps> = ({
           <TabsTrigger value="meeting" className="text-xs flex flex-col gap-1 py-2 h-auto">
             <Calendar className="h-4 w-4" />
             <span>Meeting</span>
-          </TabsTrigger>
-        )}
-        {showLectureTab && (
-          <TabsTrigger value="lecture" className="text-xs flex flex-col gap-1 py-2 h-auto">
-            <Book className="h-4 w-4" />
-            <span>Lecture</span>
           </TabsTrigger>
         )}
         <TabsTrigger value="document" className="text-xs flex flex-col gap-1 py-2 h-auto">
@@ -93,12 +83,6 @@ export const AIToolsTabContent: React.FC<AIToolsTabContentProps> = ({
       {showMeetingTab && (
         <TabsContent value="meeting" className="mt-4">
           <MeetingSummaryTool onUseSummary={handleSubmitPrompt} />
-        </TabsContent>
-      )}
-      
-      {showLectureTab && (
-        <TabsContent value="lecture" className="mt-4">
-          <LectureNotesTool onUseNotes={handleSubmitPrompt} />
         </TabsContent>
       )}
       
@@ -143,4 +127,3 @@ export const AIToolsTabContent: React.FC<AIToolsTabContentProps> = ({
     </Tabs>
   );
 };
-

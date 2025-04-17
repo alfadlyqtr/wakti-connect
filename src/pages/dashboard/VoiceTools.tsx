@@ -4,15 +4,20 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { MeetingSummaryTool } from '@/components/ai/tools/MeetingSummaryTool';
 import { VoiceToTextTool } from '@/components/ai/tools/VoiceToTextTool';
-import { LectureNotesTool } from '@/components/ai/tools/lecture-notes/LectureNotesTool';
-import { Mic, FileText, Book } from 'lucide-react';
+import { Mic, FileText } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const VoiceTools = () => {
   const [activeTab, setActiveTab] = useState('meeting-summary');
 
   return (
-    <div className="min-h-screen">
+    <div 
+      className="min-h-screen bg-black/20 dark:bg-black/40" 
+      style={{ 
+        background: 'transparent',
+        minHeight: 'calc(100vh - 60px)'
+      }}
+    >
       <motion.div 
         className="mx-auto p-2 sm:p-6 md:p-8 space-y-6 sm:space-y-8"
         initial={{ opacity: 0 }}
@@ -45,24 +50,16 @@ const VoiceTools = () => {
                 <TabsList className="w-full mb-6">
                   <TabsTrigger value="meeting-summary" className="flex items-center gap-2 w-full">
                     <FileText className="h-4 w-4" />
-                    <span>Meeting Summary</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="lecture-notes" className="flex items-center gap-2 w-full">
-                    <Book className="h-4 w-4" />
-                    <span>Lecture Notes</span>
+                    <span>Meeting Summary Tool</span>
                   </TabsTrigger>
                   <TabsTrigger value="voice-to-text" className="flex items-center gap-2 w-full">
                     <Mic className="h-4 w-4" />
-                    <span>Voice to Text</span>
+                    <span>Voice to Text Tool</span>
                   </TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="meeting-summary" className="mt-0">
                   <MeetingSummaryTool />
-                </TabsContent>
-                
-                <TabsContent value="lecture-notes" className="mt-0">
-                  <LectureNotesTool />
                 </TabsContent>
                 
                 <TabsContent value="voice-to-text" className="mt-0">
