@@ -182,43 +182,14 @@ export const useMeetingSummary = () => {
         isSummarizing: false
       }));
       
-      // Save meeting to history
-      const meetingId = uuidv4();
-      
-      // Convert audioBlob to base64 string for storage
-      let audioBase64 = null;
-      if (state.audioData) {
-        const reader = new FileReader();
-        await new Promise<void>((resolve) => {
-          reader.onloadend = () => {
-            audioBase64 = reader.result?.toString().split(',')[1] || null;
-            resolve();
-          };
-          reader.readAsDataURL(state.audioData);
-        });
-      }
-      
       // Auto-detect title from context
       const titleMatch = data.summary.match(/^# (.+?)$/m) || 
                         data.summary.match(/^## (.+?)$/m) ||
                         data.summary.match(/\*\*(.+?)\*\*/);
       const autoDetectedTitle = titleMatch ? titleMatch[1].trim() : "Meeting Summary";
       
-      // Save to local storage
-      const newMeeting: SavedMeeting = {
-        id: meetingId,
-        title: autoDetectedTitle,
-        date: new Date().toISOString(),
-        summary: data.summary,
-        duration: state.recordingTime || recordingDuration,
-        location: data.location,
-        audioData: audioBase64
-      };
-      
-      const existingMeetings = JSON.parse(localStorage.getItem('savedMeetings') || '[]');
-      const updatedMeetings = [newMeeting, ...existingMeetings].slice(0, 20); // Keep only 20 most recent
-      localStorage.setItem('savedMeetings', JSON.stringify(updatedMeetings));
-      setSavedMeetings(updatedMeetings);
+      // Save to Supabase
+      await saveMeetingToSupabase(data.summary, state.recordingTime || recordingDuration, autoDetectedTitle, data.location, state.audioData);
       
       toast({
         title: "Summary Generated",
@@ -236,14 +207,143 @@ export const useMeetingSummary = () => {
     }
   }, [state.transcribedText, state.recordingTime, state.audioData, recordingDuration, selectedLanguage]);
 
-  // Load saved meetings from local storage
-  const loadSavedMeetings = useCallback(() => {
+  // Save meeting to Supabase
+  const saveMeetingToSupabase = async (
+    summary: string, 
+    duration: number, 
+    title: string,
+    location: string | null,
+    audioData: Blob | null
+  ) => {
+    try {
+      // Check if user is authenticated
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        // Fall back to localStorage if no authenticated user
+        const meetingId = uuidv4();
+        
+        // Convert audioBlob to base64 string for storage
+        let audioBase64 = null;
+        if (audioData) {
+          const reader = new FileReader();
+          await new Promise<void>((resolve) => {
+            reader.onloadend = () => {
+              audioBase64 = reader.result?.toString().split(',')[1] || null;
+              resolve();
+            };
+            reader.readAsDataURL(audioData);
+          });
+        }
+        
+        const newMeeting: SavedMeeting = {
+          id: meetingId,
+          title,
+          date: new Date().toISOString(),
+          summary,
+          duration,
+          location,
+          audioData: audioBase64
+        };
+        
+        const existingMeetings = JSON.parse(localStorage.getItem('savedMeetings') || '[]');
+        const updatedMeetings = [newMeeting, ...existingMeetings].slice(0, 20); 
+        localStorage.setItem('savedMeetings', JSON.stringify(updatedMeetings));
+        setSavedMeetings(updatedMeetings);
+        return;
+      }
+      
+      // Upload audio to storage bucket if available
+      let audioUrl = null;
+      if (audioData) {
+        const fileName = `${user.id}/${new Date().toISOString()}-recording.webm`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('meeting_recordings')
+          .upload(fileName, audioData);
+          
+        if (uploadError) {
+          console.error('Error uploading audio:', uploadError);
+        } else if (uploadData) {
+          audioUrl = uploadData.path;
+        }
+      }
+      
+      // Insert meeting record into database
+      const { data, error } = await supabase
+        .from('meetings')
+        .insert({
+          user_id: user.id,
+          summary,
+          duration,
+          date: new Date().toISOString(),
+          location,
+        })
+        .select()
+        .single();
+        
+      if (error) {
+        throw error;
+      }
+      
+      // Reload meetings after adding new one
+      loadSavedMeetings();
+      
+    } catch (err) {
+      console.error('Error saving meeting to Supabase:', err);
+      toast({
+        title: "Error Saving Meeting",
+        description: "Your meeting was generated but could not be saved to the database.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Load saved meetings from Supabase or localStorage
+  const loadSavedMeetings = useCallback(async () => {
     setIsLoadingHistory(true);
     try {
-      const meetings = JSON.parse(localStorage.getItem('savedMeetings') || '[]');
+      // Check if user is authenticated
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        // Fall back to localStorage if no authenticated user
+        const localMeetings = JSON.parse(localStorage.getItem('savedMeetings') || '[]');
+        setSavedMeetings(localMeetings);
+        return;
+      }
+      
+      // Fetch meetings from Supabase
+      const { data, error } = await supabase
+        .from('meetings')
+        .select('*')
+        .order('created_at', { ascending: false });
+        
+      if (error) {
+        throw error;
+      }
+      
+      // Transform data to match SavedMeeting interface
+      const meetings: SavedMeeting[] = data.map((meeting) => ({
+        id: meeting.id,
+        title: meeting.title || "Meeting Summary",
+        date: meeting.date,
+        summary: meeting.summary,
+        duration: meeting.duration,
+        location: meeting.location,
+        audioData: null // We'll load audio separately when needed
+      }));
+      
       setSavedMeetings(meetings);
+      
     } catch (err) {
       console.error('Error loading saved meetings:', err);
+      // Fall back to localStorage
+      try {
+        const localMeetings = JSON.parse(localStorage.getItem('savedMeetings') || '[]');
+        setSavedMeetings(localMeetings);
+      } catch (e) {
+        setSavedMeetings([]);
+      }
     } finally {
       setIsLoadingHistory(false);
     }
@@ -252,10 +352,33 @@ export const useMeetingSummary = () => {
   // Delete a saved meeting
   const deleteMeeting = useCallback(async (meetingId: string) => {
     try {
-      const meetings = JSON.parse(localStorage.getItem('savedMeetings') || '[]');
-      const updatedMeetings = meetings.filter((m: SavedMeeting) => m.id !== meetingId);
-      localStorage.setItem('savedMeetings', JSON.stringify(updatedMeetings));
-      setSavedMeetings(updatedMeetings);
+      // Check if user is authenticated
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        // Handle localStorage deletion
+        const meetings = JSON.parse(localStorage.getItem('savedMeetings') || '[]');
+        const updatedMeetings = meetings.filter((m: SavedMeeting) => m.id !== meetingId);
+        localStorage.setItem('savedMeetings', JSON.stringify(updatedMeetings));
+        setSavedMeetings(updatedMeetings);
+        return;
+      }
+      
+      // Delete from Supabase
+      const { error } = await supabase
+        .from('meetings')
+        .delete()
+        .eq('id', meetingId);
+        
+      if (error) {
+        throw error;
+      }
+      
+      // Update local state
+      setSavedMeetings(prevMeetings => 
+        prevMeetings.filter(meeting => meeting.id !== meetingId)
+      );
+      
     } catch (err) {
       console.error('Error deleting meeting:', err);
       throw err;
@@ -265,12 +388,39 @@ export const useMeetingSummary = () => {
   // Update meeting title
   const updateMeetingTitle = useCallback(async (meetingId: string, title: string) => {
     try {
-      const meetings = JSON.parse(localStorage.getItem('savedMeetings') || '[]');
-      const updatedMeetings = meetings.map((m: SavedMeeting) => 
-        m.id === meetingId ? { ...m, title: title || "Untitled Meeting" } : m
+      // Check if user is authenticated
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        // Handle localStorage update
+        const meetings = JSON.parse(localStorage.getItem('savedMeetings') || '[]');
+        const updatedMeetings = meetings.map((m: SavedMeeting) => 
+          m.id === meetingId ? { ...m, title: title || "Untitled Meeting" } : m
+        );
+        localStorage.setItem('savedMeetings', JSON.stringify(updatedMeetings));
+        setSavedMeetings(updatedMeetings);
+        return;
+      }
+      
+      // Update in Supabase
+      const { error } = await supabase
+        .from('meetings')
+        .update({ title: title || "Untitled Meeting" })
+        .eq('id', meetingId);
+        
+      if (error) {
+        throw error;
+      }
+      
+      // Update local state
+      setSavedMeetings(prevMeetings => 
+        prevMeetings.map(meeting => 
+          meeting.id === meetingId 
+            ? { ...meeting, title: title || "Untitled Meeting" } 
+            : meeting
+        )
       );
-      localStorage.setItem('savedMeetings', JSON.stringify(updatedMeetings));
-      setSavedMeetings(updatedMeetings);
+      
     } catch (err) {
       console.error('Error updating meeting title:', err);
       throw err;
@@ -298,23 +448,68 @@ export const useMeetingSummary = () => {
   }, []);
   
   // Download audio recording
-  const downloadAudio = useCallback(() => {
-    if (!state.audioData) {
-      toast({
-        title: "No Audio Available",
-        description: "There is no audio recording to download.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
+  const downloadAudio = useCallback(async (meetingId?: string) => {
     setIsDownloadingAudio(true);
     
     try {
-      const url = URL.createObjectURL(state.audioData);
+      let audioToDownload = state.audioData;
+      let fileName = `meeting-recording-${new Date().toISOString().slice(0, 10)}.webm`;
+      
+      // If meetingId is provided, fetch from Supabase
+      if (meetingId) {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          // Try to get from localStorage
+          const meetings = JSON.parse(localStorage.getItem('savedMeetings') || '[]');
+          const meeting = meetings.find((m: SavedMeeting) => m.id === meetingId);
+          
+          if (meeting && meeting.audioData) {
+            // Convert base64 to blob
+            const binaryAudio = atob(meeting.audioData);
+            const bytes = new Uint8Array(binaryAudio.length);
+            for (let i = 0; i < binaryAudio.length; i++) {
+              bytes[i] = binaryAudio.charCodeAt(i);
+            }
+            audioToDownload = new Blob([bytes], { type: 'audio/webm' });
+            fileName = `meeting-recording-${new Date(meeting.date).toISOString().slice(0, 10)}.webm`;
+          } else {
+            throw new Error('No audio available for this meeting');
+          }
+        } else {
+          // Get meeting from Supabase to find the recording path
+          const { data: meetingData, error: meetingError } = await supabase
+            .from('meetings')
+            .select('*')
+            .eq('id', meetingId)
+            .single();
+            
+          if (meetingError || !meetingData) {
+            throw new Error('Could not find meeting data');
+          }
+          
+          // Get the audio file from storage
+          const storagePath = `${user.id}/${new Date(meetingData.date).toISOString()}-recording.webm`;
+          const { data: audioData, error: audioError } = await supabase.storage
+            .from('meeting_recordings')
+            .download(storagePath);
+            
+          if (audioError || !audioData) {
+            throw new Error('Could not download audio recording');
+          }
+          
+          audioToDownload = audioData;
+          fileName = `meeting-recording-${new Date(meetingData.date).toISOString().slice(0, 10)}.webm`;
+        }
+      } else if (!audioToDownload) {
+        throw new Error('No audio recording available');
+      }
+      
+      // Create and trigger download
+      const url = URL.createObjectURL(audioToDownload);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `meeting-recording-${new Date().toISOString().slice(0, 10)}.webm`;
+      a.download = fileName;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -328,7 +523,7 @@ export const useMeetingSummary = () => {
       console.error('Error downloading audio:', err);
       toast({
         title: "Download Error",
-        description: "Failed to download audio recording.",
+        description: err instanceof Error ? err.message : "Failed to download audio recording",
         variant: "destructive"
       });
     } finally {
@@ -361,6 +556,11 @@ export const useMeetingSummary = () => {
       }));
     }
   }, [isListening, recordingDuration, transcript, voiceError]);
+  
+  // Load saved meetings when component mounts
+  useEffect(() => {
+    loadSavedMeetings();
+  }, [loadSavedMeetings]);
   
   return {
     state,

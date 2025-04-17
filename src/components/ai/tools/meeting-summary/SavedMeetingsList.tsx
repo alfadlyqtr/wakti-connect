@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, FileDown, Download, Clock, Trash, Pencil } from 'lucide-react';
+import { Loader2, FileDown, Download, Clock, Trash2, Pencil } from 'lucide-react';
 import { SavedMeeting } from '@/hooks/ai/useMeetingSummary';
 import { toast } from '@/components/ui/use-toast';
 import { formatDuration } from '@/utils/text/transcriptionUtils';
@@ -15,13 +15,15 @@ interface SavedMeetingsListProps {
   isLoadingHistory: boolean;
   onDeleteMeeting: (id: string) => Promise<void>;
   onEditMeetingTitle: (id: string, title: string) => Promise<void>;
+  onDownloadAudio?: (id: string) => Promise<void>;
 }
 
 const SavedMeetingsList: React.FC<SavedMeetingsListProps> = ({
   savedMeetings,
   isLoadingHistory,
   onDeleteMeeting,
-  onEditMeetingTitle
+  onEditMeetingTitle,
+  onDownloadAudio
 }) => {
   const [actionInProgress, setActionInProgress] = useState<{
     id: string;
@@ -74,29 +76,11 @@ const SavedMeetingsList: React.FC<SavedMeetingsListProps> = ({
     try {
       setActionInProgress({ id: meeting.id, type: 'audio' });
       
-      if (!meeting.audioData) {
-        throw new Error("Audio data not available");
+      if (onDownloadAudio) {
+        await onDownloadAudio(meeting.id);
+      } else {
+        throw new Error("Audio download not implemented");
       }
-      
-      // Create a link to download the audio - converting string to Blob
-      const binaryAudio = atob(meeting.audioData);
-      const bytes = new Uint8Array(binaryAudio.length);
-      for (let i = 0; i < binaryAudio.length; i++) {
-        bytes[i] = binaryAudio.charCodeAt(i);
-      }
-      const audioBlob = new Blob([bytes], { type: 'audio/webm' });
-      
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(audioBlob);
-      link.download = `meeting-recording-${meeting.title || new Date(meeting.date).toISOString().slice(0, 10)}.webm`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      toast({
-        title: "Download Started",
-        description: "Your audio recording is being downloaded.",
-      });
     } catch (err) {
       console.error("Error downloading audio:", err);
       toast({
@@ -245,22 +229,20 @@ const SavedMeetingsList: React.FC<SavedMeetingsListProps> = ({
                   <span className="ml-1 text-xs">PDF</span>
                 </Button>
                 
-                {meeting.audioData && (
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="h-7 px-2"
-                    onClick={() => handleDownloadAudio(meeting)}
-                    disabled={actionInProgress !== null}
-                  >
-                    {actionInProgress?.id === meeting.id && actionInProgress?.type === 'audio' ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <Download className="h-3 w-3" />
-                    )}
-                    <span className="ml-1 text-xs">Audio</span>
-                  </Button>
-                )}
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="h-7 px-2"
+                  onClick={() => handleDownloadAudio(meeting)}
+                  disabled={actionInProgress !== null}
+                >
+                  {actionInProgress?.id === meeting.id && actionInProgress?.type === 'audio' ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Download className="h-3 w-3" />
+                  )}
+                  <span className="ml-1 text-xs">Audio</span>
+                </Button>
                 
                 <Button 
                   variant="outline" 
@@ -272,7 +254,7 @@ const SavedMeetingsList: React.FC<SavedMeetingsListProps> = ({
                   {actionInProgress?.id === meeting.id && actionInProgress?.type === 'delete' ? (
                     <Loader2 className="h-3 w-3 animate-spin" />
                   ) : (
-                    <Trash className="h-3 w-3" />
+                    <Trash2 className="h-3 w-3" />
                   )}
                 </Button>
               </div>

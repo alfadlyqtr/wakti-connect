@@ -59,6 +59,10 @@ export const MeetingContextDialog: React.FC<MeetingContextDialogProps> = ({
           <DialogTitle>Meeting Context</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-200 p-3 rounded-md text-sm">
+            Don't feel like filling this up? No problem! I'm a smart AI, I can detect the context myself from your recording!
+          </div>
+          
           <div className="space-y-2">
             <Label htmlFor="title">Meeting Title</Label>
             <Input
@@ -101,7 +105,7 @@ export const MeetingContextDialog: React.FC<MeetingContextDialogProps> = ({
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onClose()}>
-              Cancel
+              Skip
             </Button>
             <Button type="submit">Continue</Button>
           </DialogFooter>
