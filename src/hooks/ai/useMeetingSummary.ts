@@ -3,6 +3,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { detectLocationFromText } from '@/utils/text/transcriptionUtils';
+import { useAuth } from '@/hooks/auth';
 
 // Type for meeting state
 interface MeetingState {
@@ -49,6 +50,9 @@ export const useMeetingSummary = () => {
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState('en');
   const [copied, setCopied] = useState(false);
+  
+  // Auth hook to get current user
+  const { user } = useAuth();
   
   // Ref for summary display
   const summaryRef = useRef<HTMLDivElement>(null);
@@ -278,8 +282,8 @@ export const useMeetingSummary = () => {
         detectedLocation: data.location || prev.detectedLocation
       }));
       
-      // Save to history
-      saveToHistory(data.summary, state.audioData, data.location || state.detectedLocation);
+      // Save to database
+      saveToDatabase(data.summary, state.audioData, data.location || state.detectedLocation, selectedLanguage);
       
       toast({
         title: "Summary Generated",
@@ -359,8 +363,42 @@ export const useMeetingSummary = () => {
     }
   }, [state.audioData]);
   
-  // Save meeting to history
-  const saveToHistory = useCallback((summary: string, audioData: string | null, location: string | null) => {
+  // Save meeting to database
+  const saveToDatabase = useCallback(async (summary: string, audioData: string | null, location: string | null, language: string) => {
+    if (!user) {
+      console.log("User not authenticated, saving to local storage instead");
+      saveToLocalStorage(summary, audioData, location);
+      return;
+    }
+    
+    try {
+      const { error } = await supabase.from('meetings').insert({
+        user_id: user.id,
+        duration: state.recordingTime,
+        date: new Date().toISOString(),
+        location: location,
+        summary: summary,
+        language: language
+      });
+      
+      if (error) {
+        console.error("Error saving to database:", error);
+        // Fallback to localStorage if database save fails
+        saveToLocalStorage(summary, audioData, location);
+        return;
+      }
+      
+      // Refresh the meetings list
+      loadSavedMeetings();
+    } catch (err) {
+      console.error("Exception saving to database:", err);
+      // Fallback to localStorage
+      saveToLocalStorage(summary, audioData, location);
+    }
+  }, [user, state.recordingTime]);
+  
+  // Fallback: Save to localStorage when offline or not authenticated
+  const saveToLocalStorage = useCallback((summary: string, audioData: string | null, location: string | null) => {
     const newMeeting: SavedMeeting = {
       id: crypto.randomUUID(),
       title: `Meeting on ${new Date().toLocaleDateString()}`,
@@ -377,25 +415,85 @@ export const useMeetingSummary = () => {
     // Save to localStorage
     const existingMeetings = JSON.parse(localStorage.getItem('savedMeetings') || '[]');
     localStorage.setItem('savedMeetings', JSON.stringify([newMeeting, ...existingMeetings]));
+    
+    toast({
+      title: "Meeting Saved Locally",
+      description: "You're not signed in or offline. Meeting saved to this device only.",
+    });
   }, [state.recordingTime]);
   
-  // Load saved meetings from localStorage
-  const loadSavedMeetings = useCallback(() => {
+  // Load saved meetings from database and localStorage
+  const loadSavedMeetings = useCallback(async () => {
     setIsLoadingHistory(true);
     
     try {
-      const savedMeetingsData = localStorage.getItem('savedMeetings');
+      let meetingsList: SavedMeeting[] = [];
       
-      if (savedMeetingsData) {
-        const meetings = JSON.parse(savedMeetingsData);
-        setSavedMeetings(meetings);
+      // If user is logged in, try to load from DB first
+      if (user) {
+        const { data: dbMeetings, error } = await supabase
+          .from('meetings')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(10);
+        
+        if (error) {
+          console.error("Error loading meetings from database:", error);
+        } else if (dbMeetings && dbMeetings.length > 0) {
+          // Transform DB meetings to SavedMeeting format
+          meetingsList = dbMeetings.map(meeting => ({
+            id: meeting.id,
+            title: `Meeting on ${new Date(meeting.date).toLocaleDateString()}`,
+            date: meeting.date,
+            summary: meeting.summary,
+            duration: meeting.duration,
+            audioData: null, // Audio data not stored in DB
+            location: meeting.location
+          }));
+        }
       }
+      
+      // If we don't have meetings from DB or not enough, add from localStorage
+      if (meetingsList.length < 10) {
+        try {
+          const savedMeetingsData = localStorage.getItem('savedMeetings');
+          
+          if (savedMeetingsData) {
+            const localMeetings = JSON.parse(savedMeetingsData) as SavedMeeting[];
+            
+            // Combine DB and local meetings, avoiding duplicates by ID
+            const existingIds = new Set(meetingsList.map(m => m.id));
+            const uniqueLocalMeetings = localMeetings.filter(m => !existingIds.has(m.id));
+            
+            // Add only enough local meetings to reach 10 total
+            const remainingSlots = 10 - meetingsList.length;
+            const localMeetingsToAdd = uniqueLocalMeetings.slice(0, remainingSlots);
+            
+            meetingsList = [...meetingsList, ...localMeetingsToAdd];
+          }
+        } catch (localError) {
+          console.error("Error parsing local meetings:", localError);
+        }
+      }
+      
+      setSavedMeetings(meetingsList);
     } catch (err) {
       console.error("Error loading saved meetings:", err);
+      // Fallback to localStorage only
+      try {
+        const savedMeetingsData = localStorage.getItem('savedMeetings');
+        
+        if (savedMeetingsData) {
+          const meetings = JSON.parse(savedMeetingsData);
+          setSavedMeetings(meetings.slice(0, 10)); // Limit to 10
+        }
+      } catch (localError) {
+        console.error("Error loading local meetings:", localError);
+      }
     } finally {
       setIsLoadingHistory(false);
     }
-  }, []);
+  }, [user]);
   
   // Clean up on unmount
   useEffect(() => {
@@ -409,6 +507,11 @@ export const useMeetingSummary = () => {
       }
     };
   }, []);
+  
+  // Load saved meetings on mount and when user changes
+  useEffect(() => {
+    loadSavedMeetings();
+  }, [loadSavedMeetings, user]);
   
   return {
     state,
