@@ -78,7 +78,7 @@ export const useMeetingStorage = () => {
             { type: 'audio/webm' }
           );
 
-          const { data: audioData, error: uploadError } = await supabase.storage
+          const { data: uploadData, error: uploadError } = await supabase.storage
             .from('meeting-recordings')
             .upload(`${data[0].id}.webm`, audioFile);
 
@@ -90,7 +90,7 @@ export const useMeetingStorage = () => {
               variant: "destructive"
             });
           } else {
-            console.log('Audio recording saved successfully:', audioData?.path);
+            console.log('Audio recording saved successfully:', uploadData?.path);
           }
         }
       }
