@@ -1,5 +1,5 @@
 
-import { exportMeetingSummary } from '@/utils/pdf/pdfExportUtils';
+import { generatePdf } from '@/utils/pdf';
 
 // Function to export the meeting summary as PDF
 export const exportMeetingSummaryAsPDF = async (
@@ -8,7 +8,7 @@ export const exportMeetingSummaryAsPDF = async (
   detectedLocation: string | null
 ) => {
   try {
-    await exportMeetingSummary(summary, recordingTime, detectedLocation);
+    await generatePdf(summary, recordingTime, detectedLocation);
   } catch (error) {
     console.error('Error generating PDF:', error);
     throw error;
