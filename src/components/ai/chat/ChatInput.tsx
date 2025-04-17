@@ -4,11 +4,13 @@ import { motion } from 'framer-motion';
 import { useAIPersonality } from '@/components/ai/personality-switcher/AIPersonalityContext';
 import { InputToolbar } from '../input/InputToolbar';
 import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
+import { useAudioLevelMonitor } from '@/hooks/ai/useAudioLevelMonitor';
 import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 import { ChatInputField } from './ChatInputField';
 import { ClearChatButton } from './ClearChatButton';
 import { SendButton } from './SendButton';
 import { VoiceButton } from './VoiceButton';
+import { VoiceRecordingVisualizer } from '../voice/VoiceRecordingVisualizer';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface ChatInputProps {
