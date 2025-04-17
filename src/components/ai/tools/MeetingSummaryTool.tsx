@@ -159,7 +159,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
             downloadAudio={downloadAudio}
             isExporting={isExporting}
             isDownloadingAudio={isDownloadingAudio}
-            audioData={state.audioData instanceof Blob ? state.audioData : null}
+            audioData={typeof state.audioData === 'object' && state.audioData !== null ? state.audioData : null}
             summaryRef={summaryRef}
             recordingTime={state.recordingTime}
             meetingContext={meetingContext ? extractMeetingContext(state.transcribedText, meetingContext) : null}
