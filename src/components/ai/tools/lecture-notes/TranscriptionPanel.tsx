@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { FileSparkles, Loader2 } from 'lucide-react';
+import { Sparkles, Loader2 } from 'lucide-react';
 
 interface TranscriptionPanelProps {
   transcribedText: string;
@@ -36,7 +36,7 @@ const TranscriptionPanel: React.FC<TranscriptionPanelProps> = ({
                 </>
               ) : (
                 <>
-                  <FileSparkles className="h-4 w-4" />
+                  <Sparkles className="h-4 w-4" />
                   <span>Generate Notes</span>
                 </>
               )}

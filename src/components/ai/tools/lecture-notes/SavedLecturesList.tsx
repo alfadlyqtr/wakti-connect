@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 export interface SavedLecture {
   id: string;
   date: string;
-  notes: string;
+  summary: string;
   duration: number;
   title: string;
   course?: string;

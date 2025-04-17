@@ -149,7 +149,10 @@ export const LectureNotesTool: React.FC<LectureNotesToolProps> = ({ onUseNotes }
         
         {/* Lecture History */}
         <SavedLecturesList
-          savedLectures={savedLectures}
+          savedLectures={savedLectures.map(meeting => ({
+            ...meeting,
+            summary: meeting.summary // Using the summary property for lecture notes
+          }))}
           isLoadingHistory={isLoadingHistory}
           onDeleteLecture={deleteLecture}
           onEditLectureTitle={updateLectureTitle}
@@ -158,4 +161,3 @@ export const LectureNotesTool: React.FC<LectureNotesToolProps> = ({ onUseNotes }
     </Card>
   );
 };
-

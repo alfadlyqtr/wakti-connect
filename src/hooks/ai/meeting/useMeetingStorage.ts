@@ -18,7 +18,7 @@ export const useMeetingStorage = (storageType: 'meeting-recordings' | 'lecture-n
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
   const folder = storageType === 'lecture-notes' ? 'lecture-recordings' : 'meeting-recordings';
-  const tableName = storageType === 'lecture-notes' ? 'lecture_notes' : 'meeting_summaries';
+  const tableName = storageType === 'lecture-notes' ? 'meetings' : 'meetings';
   const locationField = storageType === 'lecture-notes' ? 'course' : 'location';
 
   const loadSavedMeetings = useCallback(async () => {
@@ -46,7 +46,7 @@ export const useMeetingStorage = (storageType: 'meeting-recordings' | 'lecture-n
       // Try to load from Supabase
       try {
         const { data, error } = await supabase
-          .from(tableName)
+          .from('meetings')
           .select('*')
           .order('created_at', { ascending: false });
 
@@ -121,11 +121,11 @@ export const useMeetingStorage = (storageType: 'meeting-recordings' | 'lecture-n
             transcript: transcript,
             duration: duration,
             language: language,
-            [type === 'lecture' ? 'course' : 'location']: location
+            [type === 'lecture' ? 'location' : 'location']: location
           };
           
           const { error } = await supabase
-            .from(type === 'lecture' ? 'lecture_notes' : 'meeting_summaries')
+            .from('meetings')
             .insert(insertData);
           
           if (error) throw error;
@@ -196,7 +196,7 @@ export const useMeetingStorage = (storageType: 'meeting-recordings' | 'lecture-n
         try {
           // Delete the database record
           const { error } = await supabase
-            .from(tableName)
+            .from('meetings')
             .delete()
             .eq('id', meetingId);
           
@@ -246,7 +246,7 @@ export const useMeetingStorage = (storageType: 'meeting-recordings' | 'lecture-n
       if (supabase) {
         try {
           const { error } = await supabase
-            .from(tableName)
+            .from('meetings')
             .update({ title: newTitle })
             .eq('id', meetingId);
           

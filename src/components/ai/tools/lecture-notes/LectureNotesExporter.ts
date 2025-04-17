@@ -87,7 +87,7 @@ export const exportLectureNotesAsPDF = async (
   pdf.text(splitText, 20, yPosition);
   
   // Add footer
-  const pageCount = pdf.internal.getNumberOfPages();
+  const pageCount = pdf.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     pdf.setPage(i);
     pdf.setFontSize(9);
