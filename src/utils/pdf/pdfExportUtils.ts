@@ -1,4 +1,3 @@
-
 /**
  * Utilities for PDF document generation and export
  */
@@ -6,36 +5,203 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
 /**
- * Creates a styled header div for PDF exports
- * @param isArabicContent Whether the content is in Arabic (affects direction)
- * @returns The header div element with logo and title
+ * Process summary content for PDF export
+ * @param summary The markdown summary content
+ * @returns HTML-formatted content
  */
-export const createPdfHeaderDiv = (isArabicContent: boolean): HTMLDivElement => {
-  const headerDiv = document.createElement('div');
-  headerDiv.style.marginBottom = '30px';
-  headerDiv.style.paddingBottom = '15px';
-  headerDiv.style.borderBottom = '2px solid #0053c3';
-  headerDiv.style.display = 'flex';
-  headerDiv.style.justifyContent = 'space-between';
-  headerDiv.style.alignItems = 'center';
+export const processSummaryContent = (summary: string): string => {
+  // Extract any tasks if present
+  let tasks = "";
+  const taskMatch = summary.match(/##\s*Action Items[^#]*(?=##|$)/i);
   
-  // Logo and title with enhanced styling
-  headerDiv.innerHTML = `
-    <div style="display: flex; align-items: center;">
-      <div style="margin-right: 15px;">
-        <img src="/lovable-uploads/9b7d0693-89eb-4cc5-b90b-7834bfabda0e.png" style="width: 50px; height: 50px; border-radius: 6px; object-fit: cover; box-shadow: 0 4px 8px rgba(0,0,0,0.2);" />
-      </div>
-      <div>
-        <h1 style="color: #0053c3; font-size: 28px; font-weight: bold; margin: 0; padding: 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.05);">${isArabicContent ? 'ملخص الاجتماع' : 'Meeting Summary'}</h1>
-        <div style="color: #666; font-size: 14px; margin-top: 5px;">${isArabicContent ? 'تم إنشاؤه في' : 'Generated on'} ${new Date().toLocaleDateString(isArabicContent ? 'ar-SA' : 'en-US')} ${isArabicContent ? 'في' : 'at'} ${new Date().toLocaleTimeString(isArabicContent ? 'ar-SA' : 'en-US')}</div>
-      </div>
-    </div>
-    <div style="flex-shrink: 0;">
-      <img src="/lovable-uploads/9b7d0693-89eb-4cc5-b90b-7834bfabda0e.png" style="width: 30px; height: 30px; border-radius: 4px; object-fit: cover; opacity: 0.7;" />
-    </div>
+  if (taskMatch) {
+    const taskLines = taskMatch[0]
+      .replace(/^##\s*Action Items\s*/i, '')
+      .split('\n')
+      .filter(line => line.trim().startsWith('-') || line.trim().startsWith('*'))
+      .map(line => line.replace(/^[-*]\s*/, '').trim())
+      .filter(line => line.length > 0);
+    
+    tasks = taskLines.map(task => 
+      `<div class="line-item">[ ] ${task} ............................................. Date</div>`
+    ).join('');
+  }
+  
+  // Format the summary content for display
+  const formattedSummary = summary
+    .replace(/##\s*.*?\n/g, '') // Remove headers
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/\n\n/g, '<br><br>')
+    .trim();
+  
+  return {
+    summary: formattedSummary,
+    tasks: tasks
+  };
+};
+
+/**
+ * Creates the meeting summary HTML template for PDF exports
+ */
+export const createPdfHeaderDiv = (
+  summary: string,
+  recordingTime: number,
+  detectedLocation: string | null,
+  formatTime: (seconds: number) => string
+): string => {
+  
+  // Process the summary content
+  const { summary: formattedSummary, tasks } = processSummaryContent(summary);
+  
+  // Format meeting date
+  const meetingDate = new Date().toLocaleDateString();
+  
+  // Format meeting time
+  const meetingTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  
+  // Format duration
+  const duration = formatTime(recordingTime);
+  
+  // Create a list of agenda items (extracted from summary)
+  const agendaItems = summary
+    .split('\n')
+    .filter(line => line.trim().startsWith('-') || line.trim().startsWith('*'))
+    .slice(0, 3) // Limit to 3 items
+    .map(line => line.replace(/^[-*]\s*/, '').trim())
+    .filter(line => line.length > 0)
+    .map(item => `<div class="line-item">- ${item}</div>`)
+    .join('');
+  
+  // Create a default list if no agenda items found
+  const defaultAgenda = `
+    <div class="line-item">- Discussion of project status</div>
+    <div class="line-item">- Review of action items</div>
+    <div class="line-item">- Planning next steps</div>
   `;
   
-  return headerDiv;
+  // Create default tasks if none found
+  const defaultTasks = `
+    <div class="line-item">[ ] Follow up on discussion items ............................................. Date</div>
+    <div class="line-item">[ ] Share meeting summary ............................................. Date</div>
+    <div class="line-item">[ ] Schedule next meeting ............................................. Date</div>
+  `;
+  
+  // Return the complete HTML template
+  return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Meeting Summary</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          margin: 40px;
+          background: #fff;
+          color: #333;
+        }
+        .container {
+          max-width: 800px;
+          margin: auto;
+          padding: 30px;
+          border: 1px solid #ddd;
+        }
+        .header {
+          display: flex;
+          align-items: center;
+          gap: 20px;
+        }
+        .header img {
+          width: 70px;
+        }
+        .title {
+          font-size: 28px;
+          font-weight: bold;
+        }
+        .info {
+          margin: 20px 0;
+          font-size: 14px;
+          display: flex;
+          gap: 40px;
+          border-bottom: 1px solid #ccc;
+          padding-bottom: 10px;
+        }
+        .section-title {
+          font-weight: bold;
+          margin: 20px 0 5px;
+          font-size: 16px;
+        }
+        .summary-box {
+          border: 1px solid #ccc;
+          border-radius: 8px;
+          min-height: 100px;
+          padding: 10px;
+          margin-bottom: 20px;
+          line-height: 1.5;
+        }
+        .row {
+          display: flex;
+          justify-content: space-between;
+        }
+        .column {
+          width: 48%;
+        }
+        .agenda-tasks {
+          margin-bottom: 30px;
+        }
+        .line-item {
+          margin: 6px 0;
+        }
+        .attendees {
+          margin-bottom: 20px;
+        }
+        .footer {
+          text-align: center;
+          font-size: 12px;
+          color: #777;
+          margin-top: 40px;
+          border-top: 1px solid #eee;
+          padding-top: 10px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <img src="/lovable-uploads/9b7d0693-89eb-4cc5-b90b-7834bfabda0e.png" alt="Wakti Logo" />
+          <div class="title">MEETING SUMMARY</div>
+        </div>
+        <div class="info">
+          <div>Date: ${meetingDate}</div>
+          <div>Time: ${meetingTime}</div>
+          <div>Duration: ${duration}</div>
+          ${detectedLocation ? `<div>Location: ${detectedLocation}</div>` : ''}
+        </div>
+
+        <div class="section-title">SUMMARY</div>
+        <div class="summary-box">${formattedSummary}</div>
+
+        <div class="agenda-tasks row">
+          <div class="column">
+            <div class="section-title">AGENDA</div>
+            ${agendaItems || defaultAgenda}
+          </div>
+          <div class="column">
+            <div class="section-title">TASKS <span style="float: right; font-weight: normal;">COMPLETION DATE</span></div>
+            ${tasks || defaultTasks}
+          </div>
+        </div>
+
+        <div class="section-title">ATTENDEES</div>
+        <div class="attendees">Virtual Meeting Participants</div>
+
+        <div class="footer">Powered by WAKTI</div>
+      </div>
+    </body>
+    </html>
+  `;
 };
 
 /**
@@ -81,80 +247,90 @@ export const createPdfMetadataDiv = (
 };
 
 /**
- * Process summary content for PDF export
- * @param summary The markdown summary content
- * @returns HTML-formatted content
+ * Exports the meeting summary as PDF
+ * @param summary The meeting summary text
+ * @param recordingTime The recording duration in seconds
+ * @param detectedLocation Optional location information
  */
-export const processSummaryContent = (summary: string): string => {
-  // Extract any tasks if present
-  let tasks = "";
-  const taskMatch = summary.match(/##\s*Action Items[^#]*(?=##|$)/i);
-  
-  if (taskMatch) {
-    tasks = `
-      <div style="margin-top: 30px; margin-bottom: 30px; padding: 20px; background-color: #f0f9ff; border-left: 4px solid #0053c3; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
-        <h3 style="color: #0053c3; margin-top: 0; margin-bottom: 15px; font-size: 18px;">Action Items:</h3>
-        <ul style="margin-top: 10px; padding-left: 20px; list-style-type: none;">
-          ${taskMatch[0].replace(/^##\s*Action Items\s*/i, '')
-            .split('\n')
-            .filter(line => line.trim().startsWith('-') || line.trim().startsWith('*'))
-            .map(line => `<li style="margin-bottom: 10px; position: relative; padding-left: 22px;">
-              <span style="position: absolute; left: 0; top: 5px; height: 10px; width: 10px; background-color: #0053c3; border-radius: 50%;"></span>
-              ${line.replace(/^[-*]\s*/, '')}
-            </li>`)
-            .join('')
-          }
-        </ul>
-      </div>
-    `;
+export const exportMeetingSummary = async (
+  summary: string,
+  recordingTime: number,
+  detectedLocation: string | null
+) => {
+  try {
+    // Format time function
+    const formatTime = (seconds: number): string => {
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      const remainingSeconds = seconds % 60;
+      
+      if (hours > 0) {
+        return `${hours}h ${minutes}m ${remainingSeconds}s`;
+      } else if (minutes > 0) {
+        return `${minutes}m ${remainingSeconds}s`;
+      } else {
+        return `${remainingSeconds}s`;
+      }
+    };
+    
+    // Create the HTML template for PDF
+    const htmlTemplate = createPdfHeaderDiv(
+      summary,
+      recordingTime,
+      detectedLocation,
+      formatTime
+    );
+    
+    // Create a temporary div to render the template
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = htmlTemplate;
+    tempDiv.style.position = 'absolute';
+    tempDiv.style.left = '-9999px';
+    tempDiv.style.backgroundColor = '#ffffff';
+    
+    // Add to document for rendering
+    document.body.appendChild(tempDiv);
+    
+    // Convert to canvas
+    const canvas = await html2canvas(tempDiv, {
+      scale: 2,
+      useCORS: true,
+      logging: false
+    });
+    
+    // Generate PDF
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'pt',
+      format: 'a4'
+    });
+    
+    const imgWidth = 595; // A4 width in points
+    const imgHeight = canvas.height * imgWidth / canvas.width;
+    
+    pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+    
+    // Add multiple pages if needed
+    if (imgHeight > 842) {
+      let heightLeft = imgHeight - 842;
+      let position = -842;
+      
+      while (heightLeft > 0) {
+        position = position - 842;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= 842;
+      }
+    }
+    
+    // Save the PDF
+    pdf.save(`meeting-summary-${new Date().toISOString().slice(0, 10)}.pdf`);
+    
+    // Clean up
+    document.body.removeChild(tempDiv);
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    throw error;
   }
-  
-  // Process the main content with improved formatting
-  let processedContent = summary
-    // Style headings with improved formatting
-    .replace(/^## (.*)/gm, '<h2 style="color: #0053c3; font-size: 22px; margin-top: 35px; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid #e9ecef; font-weight: 600;">$1</h2>')
-    .replace(/^### (.*)/gm, '<h3 style="color: #0053c3; font-size: 18px; margin-top: 25px; margin-bottom: 10px; font-weight: 600;">$1</h3>')
-    
-    // Highlight important terms (dates, numbers, names)
-    .replace(/\b(\d{1,2}\/\d{1,2}\/\d{2,4})\b/g, '<span style="background-color: #f0f9ff; padding: 2px 4px; border-radius: 3px; font-weight: 500;">$1</span>') // dates
-    .replace(/\b(\d{1,2}:\d{2}(?:am|pm|AM|PM)?)\b/g, '<span style="background-color: #f0f9ff; padding: 2px 4px; border-radius: 3px; font-weight: 500;">$1</span>') // times
-    .replace(/\$(\d+(?:,\d{3})*(?:\.\d{2})?)\b/g, '<span style="background-color: #f0f9ff; padding: 2px 4px; border-radius: 3px; font-weight: 500;">$$$1</span>') // money
-    
-    // Style lists with custom bullets and spacing
-    .replace(/^\* (.*)/gm, '<li style="margin-bottom: 10px; position: relative; padding-left: 18px;"><span style="position: absolute; left: 0; top: 8px; height: 6px; width: 6px; background-color: #0053c3; border-radius: 50%;"></span>$1</li>')
-    .replace(/^- (.*)/gm, '<li style="margin-bottom: 10px; position: relative; padding-left: 18px;"><span style="position: absolute; left: 0; top: 8px; height: 6px; width: 6px; background-color: #0053c3; border-radius: 50%;"></span>$1</li>')
-    .replace(/^(\d+)\. (.*)/gm, '<li style="margin-bottom: 10px;"><strong style="color: #0053c3;">$1.</strong> $2</li>')
-    
-    // Wrap lists with proper styling
-    .replace(/(<li.*<\/li>)\n(<li.*<\/li>)/g, '$1\n<ul style="margin-bottom: 20px; padding-left: 5px; list-style-type: none;">$2')
-    .replace(/(<li.*<\/li>)\n(?!<li)/g, '$1</ul>\n')
-    
-    // Style bold and italic with improved visuals
-    .replace(/\*\*(.*?)\*\*/g, '<strong style="color: #0053c3;">$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em style="color: #555;">$1</em>')
-    
-    // Convert newlines to breaks with proper spacing
-    .replace(/\n\n/g, '<div style="margin: 15px 0;"></div>');
-  
-  // Structure the content into clearly defined sections with improved styling
-  let structuredContent = `
-    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-      <section>
-        <h2 style="color: #0053c3; font-size: 22px; margin-top: 35px; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid #e9ecef;">Key Points</h2>
-        ${processedContent}
-      </section>
-      
-      ${tasks}
-      
-      <footer style="margin-top: 50px; padding-top: 20px; border-top: 1px solid #e9ecef; text-align: center; color: #6c757d; font-size: 12px;">
-        <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 10px;">
-          <img src="/lovable-uploads/9b7d0693-89eb-4cc5-b90b-7834bfabda0e.png" style="width: 20px; height: 20px; margin-right: 5px; border-radius: 3px;" />
-          <span>Powered by WAKTI AI Meeting Summary Tool</span>
-        </div>
-        <div>Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</div>
-      </footer>
-    </div>
-  `;
-  
-  return structuredContent;
 };
