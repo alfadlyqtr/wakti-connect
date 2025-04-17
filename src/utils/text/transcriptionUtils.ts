@@ -148,22 +148,13 @@ export const detectLocationFromText = (text: string): string | null => {
       const commonNonLocations = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday',
         'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
       
-      const potentialLocations = properNounMatch.filter(name => 
-        !commonNonLocations.includes(name) && name.length > 3);
-      
-      if (potentialLocations.length > 0) {
-        // Try to find locations that appear before or after location-related words
-        const locationContexts = ['at', 'in', 'near', 'location', 'venue', 'place', 'meet', 'meeting', 'office'];
-        
-        for (const location of potentialLocations) {
-          const contextCheck = new RegExp(`(${locationContexts.join('|')})\\s+${location}|${location}\\s+(${locationContexts.join('|')})`, 'i');
-          if (text.match(contextCheck)) {
-            return location;
-          }
+      for (const match of properNounMatch) {
+        if (!commonNonLocations.includes(match)) {
+          return match.trim();
         }
       }
     }
   }
-
+  
   return null;
 };

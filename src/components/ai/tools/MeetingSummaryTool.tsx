@@ -36,20 +36,6 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     downloadAudio
   } = useMeetingSummary();
 
-  const { 
-    isListening,
-    transcript,
-    lastTranscript,
-    supportsVoice,
-    error,
-    isProcessing,
-    startListening,
-    stopListening,
-    recordingDuration
-  } = useVoiceInteraction({
-    continuousListening: false,
-  });
-  
   // Reference to the pulse animation element
   const pulseElementRef = useRef<HTMLDivElement>(null);
   
@@ -60,7 +46,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
 
   // Handler for starting recording with voice interaction settings
   const handleStartRecording = () => {
-    startRecordingHook(supportsVoice);
+    startRecordingHook();
   };
 
   // Handler for exporting summary as PDF
@@ -89,7 +75,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
       </CardHeader>
       
       <CardContent className="space-y-4">
-        {!supportsVoice && (
+        {!state.supportsVoice && (
           <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 p-3 rounded-md flex items-start">
             <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
             <div>
