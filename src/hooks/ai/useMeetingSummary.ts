@@ -1,3 +1,4 @@
+
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useVoiceInteraction } from './useVoiceInteraction';
 import { toast } from '@/components/ui/use-toast';
@@ -16,7 +17,7 @@ interface MeetingState {
 }
 
 // Type for saved meeting
-interface SavedMeeting {
+export interface SavedMeeting {
   id: string;
   title: string;
   date: string;
@@ -200,9 +201,16 @@ export const useMeetingSummary = () => {
     setIsDownloadingAudio(true);
     
     try {
-      // Create a link to download the audio
+      // Create a link to download the audio - converting string to Blob
+      const binaryAudio = atob(state.audioData);
+      const bytes = new Uint8Array(binaryAudio.length);
+      for (let i = 0; i < binaryAudio.length; i++) {
+        bytes[i] = binaryAudio.charCodeAt(i);
+      }
+      const audioBlob = new Blob([bytes], { type: 'audio/webm' });
+      
       const link = document.createElement('a');
-      link.href = `data:audio/webm;base64,${state.audioData}`;
+      link.href = URL.createObjectURL(audioBlob);
       link.download = `meeting-recording-${new Date().toISOString().slice(0, 10)}.webm`;
       document.body.appendChild(link);
       link.click();

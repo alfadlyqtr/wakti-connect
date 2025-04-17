@@ -1,4 +1,3 @@
-
 import React from "react";
 import { createBrowserRouter, RouteObject } from "react-router-dom";
 import { publicRoutes } from "./routes/publicRoutes";
@@ -111,6 +110,20 @@ const dashboardRoutes: RouteObject[] = [
     element: withSuspense(DashboardJobCards),
   },
 ];
+
+// Define a function to check if the user is authenticated
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated, user } = useAuth(); // Removed the loading property
+  const location = useLocation();
+
+  // Check if user is authenticated
+  if (!isAuthenticated) {
+    // Redirect to login page with the current path as the "from" location
+    return <Navigate to="/auth/login" replace state={{ from: location.pathname }} />;
+  }
+
+  return <>{children}</>;
+};
 
 export const router = createBrowserRouter([
   // Auth routes with AuthShell wrapper
