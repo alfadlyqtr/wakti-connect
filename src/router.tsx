@@ -1,5 +1,6 @@
+
 import React from "react";
-import { createBrowserRouter, RouteObject } from "react-router-dom";
+import { createBrowserRouter, RouteObject, Navigate, useLocation } from "react-router-dom";
 import { publicRoutes } from "./routes/publicRoutes";
 import { authRoutes } from "./routes/authRoutes";
 import { businessRoutes, bookingRoutes } from "./routes/businessRoutes";
@@ -7,7 +8,7 @@ import { superadminRoutes } from "./routes/superadminRoutes";
 import NotFound from "./pages/NotFound";
 import PublicLayout from "./components/layout/PublicLayout";
 import DashboardLayout from "./components/dashboard/DashboardLayout";
-import ProtectedRoute from "./components/auth/ProtectedRoute";
+import ProtectedRouteComponent from "./components/auth/ProtectedRoute";
 import SuperAdminGuard from "./components/auth/SuperAdminGuard";
 import SuperAdminLayout from "./components/superadmin/SuperAdminLayout";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,6 +19,7 @@ import { TaskProvider } from "@/contexts/TaskContext";
 import NotificationListener from "./components/notifications/NotificationListener";
 import ErrorBoundary from "./components/ui/ErrorBoundary";
 import AuthShell from "@/components/auth/AuthShell";
+import { useAuth } from "@/hooks/auth";
 
 // Lazy load dashboard pages
 import { lazy, Suspense } from "react";
@@ -113,7 +115,7 @@ const dashboardRoutes: RouteObject[] = [
 
 // Define a function to check if the user is authenticated
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, user } = useAuth(); // Removed the loading property
+  const { isAuthenticated } = useAuth(); // Removed the loading property
   const location = useLocation();
 
   // Check if user is authenticated
