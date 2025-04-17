@@ -1,3 +1,4 @@
+
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -41,41 +42,40 @@ export const useMeetingSummary = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [isDownloadingAudio, setIsDownloadingAudio] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState('en');
   const summaryRef = useRef<HTMLDivElement>(null);
 
   const {
-    startRecording: startVoiceRecording,
-    stopRecording: stopVoiceRecording,
-    transcribe,
-    clearTranscript,
-    recordingError,
-    isTranscribing,
-    audioData,
+    startListening,
+    stopListening,
+    transcript,
+    lastTranscript,
+    error,
+    isProcessing,
     supportsVoice,
-    selectedLanguage,
-    setSelectedLanguage
+    recordingDuration,
   } = useVoiceInteraction();
 
   useEffect(() => {
-    if (recordingError) {
-      setState(prevState => ({ ...prevState, recordingError }));
+    if (error) {
+      setState(prevState => ({ ...prevState, recordingError: error.message }));
     }
-  }, [recordingError]);
+  }, [error]);
 
   useEffect(() => {
-    if (audioData) {
-      setState(prevState => ({ ...prevState, audioData }));
+    if (lastTranscript) {
+      setState(prevState => ({ ...prevState, transcribedText: lastTranscript }));
     }
-  }, [audioData]);
+  }, [lastTranscript]);
 
   const startRecording = () => {
     setState(prevState => ({ ...prevState, isRecording: true, recordingTime: 0, recordingError: null }));
-    startVoiceRecording();
+    startListening();
   };
 
   const stopRecording = () => {
     setState(prevState => ({ ...prevState, isRecording: false }));
-    stopVoiceRecording();
+    stopListening();
   };
 
   const generateSummary = useCallback(async () => {
@@ -140,7 +140,8 @@ export const useMeetingSummary = () => {
         date: new Date().toISOString(),
         location: meetingContext?.location || null,
         language: selectedLanguage,
-        title: meetingTitle
+        title: meetingTitle,
+        user_id: (await supabase.auth.getUser()).data.user?.id
       }).select();
 
       if (error) {
@@ -196,28 +197,13 @@ export const useMeetingSummary = () => {
   }, [state.isRecording]);
 
   useEffect(() => {
-    if (isTranscribing && transcribe) {
-      setState(prevState => ({ ...prevState, isSummarizing: true }));
-      transcribe()
-        .then(transcription => {
-          setState(prevState => ({
-            ...prevState,
-            transcribedText: transcription,
-          }));
-        })
-        .catch(error => {
-          console.error("Transcription error:", error);
-          toast({
-            title: "Transcription failed",
-            description: error instanceof Error ? error.message : "Failed to transcribe audio.",
-            variant: "destructive"
-          });
-        })
-        .finally(() => {
-          setState(prevState => ({ ...prevState, isSummarizing: false }));
-        });
+    if (transcript) {
+      setState(prevState => ({
+        ...prevState,
+        transcribedText: transcript,
+      }));
     }
-  }, [isTranscribing, transcribe]);
+  }, [transcript]);
 
   const deleteMeeting = async (id: string) => {
     try {

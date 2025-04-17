@@ -64,7 +64,7 @@ const RecordingControls: React.FC<RecordingControlsProps> = ({
             <Button 
               onClick={startRecording} 
               variant="default"
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+              className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
             >
               <Mic className="h-4 w-4" />
               <span>Start Recording</span>
