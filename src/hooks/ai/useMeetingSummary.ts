@@ -104,8 +104,14 @@ export const useMeetingSummary = () => {
     selectedLanguage
   ]);
 
-  const downloadAudio = useCallback(async (meetingId?: string) => {
-    await downloadAudioBase(recordingState.audioData, meetingId);
+  // Enhanced downloadAudio function that can handle both meeting ID and direct blob data
+  const downloadAudio = useCallback(async (meetingIdOrBlob?: string | Blob) => {
+    // If input is a string, it's a meeting ID; otherwise, it's audio blob data
+    if (typeof meetingIdOrBlob === 'string') {
+      await downloadAudioBase(null, meetingIdOrBlob);
+    } else {
+      await downloadAudioBase(recordingState.audioData);
+    }
   }, [downloadAudioBase, recordingState.audioData]);
 
   // Enhanced export function

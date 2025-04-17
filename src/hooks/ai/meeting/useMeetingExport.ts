@@ -38,12 +38,14 @@ export const useMeetingExport = () => {
       setIsDownloadingAudio(true);
       
       if (meetingId) {
+        console.log('Downloading audio from storage for meeting:', meetingId);
         // Download from storage
         const { data, error } = await supabase.storage
           .from('meeting-recordings')
           .download(`${meetingId}.webm`);
         
         if (error) {
+          console.error('Supabase download error:', error);
           throw new Error('Audio recording not found or could not be downloaded.');
         }
         
@@ -57,8 +59,14 @@ export const useMeetingExport = () => {
           a.click();
           URL.revokeObjectURL(url);
           document.body.removeChild(a);
+          
+          toast({
+            title: "Download complete",
+            description: "Audio recording has been downloaded.",
+          });
         }
       } else if (audioBlob) {
+        console.log('Downloading current audio blob');
         // Download current meeting audio
         const url = URL.createObjectURL(audioBlob);
         const a = document.createElement('a');
@@ -68,14 +76,14 @@ export const useMeetingExport = () => {
         a.click();
         URL.revokeObjectURL(url);
         document.body.removeChild(a);
+        
+        toast({
+          title: "Download complete",
+          description: "Audio recording has been downloaded.",
+        });
       } else {
         throw new Error('No audio recording available to download.');
       }
-      
-      toast({
-        title: "Download complete",
-        description: "Audio recording has been downloaded.",
-      });
     } catch (error) {
       console.error('Error downloading audio:', error);
       toast({

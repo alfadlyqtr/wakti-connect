@@ -170,6 +170,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
           isLoadingHistory={isLoadingHistory}
           onDeleteMeeting={deleteMeeting}
           onEditMeetingTitle={updateMeetingTitle}
+          onDownloadAudio={downloadAudio}  // Add this prop to pass the download function
         />
       </CardContent>
     </Card>
