@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Paperclip, Camera, Mic, MicOff, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -12,6 +12,7 @@ interface InputToolbarProps {
   onVoiceToggle?: () => void;
   onFileSelected?: (file: File) => void;
   onImageCapture?: () => void;
+  recordingDuration?: number;
 }
 
 export const InputToolbar: React.FC<InputToolbarProps> = ({
@@ -19,14 +20,37 @@ export const InputToolbar: React.FC<InputToolbarProps> = ({
   isListening = false,
   onVoiceToggle,
   onFileSelected,
-  onImageCapture
+  onImageCapture,
+  recordingDuration = 0
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isCompleted, setIsCompleted] = useState(false);
   
-  // Use the new hook for audio monitoring
+  // Use the hook for audio monitoring
   const { audioLevel } = useAudioLevelMonitor({
     isActive: isListening
   });
+  
+  // Reset completed state when recording starts
+  useEffect(() => {
+    if (isListening) {
+      setIsCompleted(false);
+    }
+  }, [isListening]);
+  
+  // Set completed state briefly when recording stops
+  useEffect(() => {
+    if (!isListening && recordingDuration > 0) {
+      setIsCompleted(true);
+      
+      // Reset after animation completes
+      const timer = setTimeout(() => {
+        setIsCompleted(false);
+      }, 2000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isListening, recordingDuration]);
   
   const handleFileButtonClick = () => {
     if (fileInputRef.current) {
@@ -52,6 +76,8 @@ export const InputToolbar: React.FC<InputToolbarProps> = ({
           isDisabled={isLoading}
           audioLevel={audioLevel}
           onPress={onVoiceToggle}
+          recordingDuration={recordingDuration}
+          isCompleted={isCompleted}
         />
       )}
       

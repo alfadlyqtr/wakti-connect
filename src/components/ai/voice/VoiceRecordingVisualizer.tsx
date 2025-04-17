@@ -48,7 +48,7 @@ export const VoiceRecordingVisualizer: React.FC<VoiceRecordingVisualizerProps> =
       
       // Set line style
       ctx.lineWidth = 2;
-      ctx.strokeStyle = 'rgb(59, 130, 246)'; // Blue color
+      ctx.strokeStyle = isActive ? 'rgb(239, 68, 68)' : 'rgb(59, 130, 246)'; // Red when active, blue otherwise
       
       // Update offset for animation
       offsetRef.current += 0.05;
@@ -94,7 +94,7 @@ export const VoiceRecordingVisualizer: React.FC<VoiceRecordingVisualizerProps> =
   
   return (
     <div className={cn(
-      "relative rounded-md bg-blue-50 border border-blue-200 overflow-hidden",
+      "relative rounded-md bg-red-50 border border-red-200 overflow-hidden",
       sizeMap[size].container,
       className
     )}>
@@ -105,7 +105,7 @@ export const VoiceRecordingVisualizer: React.FC<VoiceRecordingVisualizerProps> =
         height={50}
       />
       <motion.div 
-        className="absolute inset-0 bg-blue-400/10"
+        className="absolute inset-0 bg-red-400/10"
         animate={{ opacity: [0.2, 0.4, 0.2] }}
         transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
       />

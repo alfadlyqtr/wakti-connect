@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAIPersonality } from '@/components/ai/personality-switcher/AIPersonalityContext';
 import { InputToolbar } from '../input/InputToolbar';
@@ -37,7 +37,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     transcript, 
     startListening, 
     stopListening,
-    supportsVoice
+    supportsVoice,
+    recordingDuration
   } = useVoiceInteraction({
     onTranscriptComplete: (text) => {
       if (text) {
@@ -47,10 +48,13 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         });
         setIsListening(false);
       }
-    }
+    },
+    maxDuration: 60,
+    autoStopAfterSilence: false
   });
 
-  React.useEffect(() => {
+  // Sync listening state with voice hook state
+  useEffect(() => {
     setIsListening(voiceIsListening);
   }, [voiceIsListening]);
   
@@ -122,6 +126,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                 isLoading={isLoading} 
                 isListening={isListening}
                 onVoiceToggle={handleVoiceToggle}
+                recordingDuration={recordingDuration}
               />
             </div>
             

@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Mic, MicOff, Loader2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Mic, MicOff, Loader2, CheckCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { VoiceRecordingVisualizer } from '../voice/VoiceRecordingVisualizer';
@@ -12,6 +12,8 @@ interface VoiceButtonProps {
   audioLevel?: number;
   onPress: () => void;
   className?: string;
+  recordingDuration?: number;
+  isCompleted?: boolean;
 }
 
 export const VoiceButton: React.FC<VoiceButtonProps> = ({
@@ -20,21 +22,60 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({
   isDisabled = false,
   audioLevel = 0.2,
   onPress,
-  className
+  className,
+  recordingDuration = 0,
+  isCompleted = false
 }) => {
+  const [timeLeft, setTimeLeft] = useState(60);
+  
+  // Reset timer when recording starts
+  useEffect(() => {
+    if (isListening) {
+      setTimeLeft(60);
+    }
+  }, [isListening]);
+  
+  // Update countdown when recording is in progress
+  useEffect(() => {
+    let timer: NodeJS.Timeout | null = null;
+    
+    if (isListening && timeLeft > 0) {
+      timer = setInterval(() => {
+        setTimeLeft(prev => prev - 1);
+      }, 1000);
+    }
+    
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [isListening, timeLeft]);
+  
+  // Set timer based on the duration from props
+  useEffect(() => {
+    if (isListening && recordingDuration) {
+      setTimeLeft(Math.max(0, 60 - recordingDuration));
+    }
+  }, [isListening, recordingDuration]);
+  
   return (
     <div className="relative inline-flex items-center">
       <Button
         type="button"
-        variant={isListening ? "destructive" : "ghost"}
+        variant={isListening ? "destructive" : isCompleted ? "success" : "ghost"}
         size="icon"
-        className={cn("h-9 w-9 rounded-full relative", className)}
+        className={cn("h-9 w-9 rounded-full relative transition-colors duration-300", 
+          isListening ? "bg-red-500 hover:bg-red-600" : 
+          isCompleted ? "bg-green-500 hover:bg-green-600" : "",
+          className
+        )}
         onClick={onPress}
         disabled={isDisabled || isLoading}
         aria-label={isListening ? "Stop recording" : "Start voice recording"}
       >
         {isLoading ? (
           <Loader2 className="h-4 w-4 animate-spin" />
+        ) : isCompleted ? (
+          <CheckCheck className="h-4 w-4 text-white" />
         ) : isListening ? (
           <MicOff className="h-4 w-4" />
         ) : (
@@ -50,13 +91,20 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({
       </Button>
       
       {isListening && (
-        <div className="absolute top-10 left-0 z-10">
-          <VoiceRecordingVisualizer 
-            isActive={isListening}
-            audioLevel={audioLevel}
-            size="sm"
-          />
-        </div>
+        <>
+          <div className="absolute top-10 left-0 z-10">
+            <VoiceRecordingVisualizer 
+              isActive={isListening}
+              audioLevel={audioLevel}
+              size="sm"
+            />
+          </div>
+          
+          {/* Countdown timer */}
+          <div className="absolute top-1.5 -right-8 text-xs font-medium bg-red-100 text-red-800 rounded-full px-1.5 py-0.5 min-w-[36px] text-center">
+            {timeLeft}s
+          </div>
+        </>
       )}
     </div>
   );
