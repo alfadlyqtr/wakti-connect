@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Paperclip, Camera, Mic, MicOff, Loader2, CheckCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,7 @@ export const InputToolbar: React.FC<InputToolbarProps> = ({
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [showVoicePrompt, setShowVoicePrompt] = useState(false);
   
   const { audioLevel } = useAudioLevelMonitor({
     isActive: isListening,
@@ -33,11 +35,15 @@ export const InputToolbar: React.FC<InputToolbarProps> = ({
   useEffect(() => {
     if (isListening) {
       setIsCompleted(false);
+      setShowVoicePrompt(true);
+    } else {
+      setShowVoicePrompt(false);
     }
   }, [isListening]);
   
   useEffect(() => {
-    if (!isListening && recordingDuration > 0) {
+    // If we just stopped listening and have recording duration, we've completed a recording
+    if (!isListening && !isLoading && recordingDuration > 0) {
       setIsCompleted(true);
       
       const timer = setTimeout(() => {
@@ -46,7 +52,7 @@ export const InputToolbar: React.FC<InputToolbarProps> = ({
       
       return () => clearTimeout(timer);
     }
-  }, [isListening, recordingDuration]);
+  }, [isListening, isLoading, recordingDuration]);
   
   const handleFileButtonClick = () => {
     if (fileInputRef.current) {
@@ -66,12 +72,12 @@ export const InputToolbar: React.FC<InputToolbarProps> = ({
       {onVoiceToggle && (
         <VoiceButton
           isListening={isListening}
-          isLoading={isLoading}
-          isDisabled={isLoading}
+          isLoading={!isListening && isLoading}
+          isDisabled={isLoading && !isListening}
           audioLevel={audioLevel}
           onPress={onVoiceToggle}
           recordingDuration={recordingDuration}
-          isCompleted={isCompleted}
+          isCompleted={isCompleted && !isListening && !isLoading}
         />
       )}
       
@@ -111,7 +117,7 @@ export const InputToolbar: React.FC<InputToolbarProps> = ({
         </Button>
       )}
       
-      {isListening && (
+      {showVoicePrompt && (
         <div className="text-xs text-red-500 ml-1 flex items-center bg-red-50 px-2 py-0.5 rounded-full border border-red-100">
           <span className="relative flex h-2 w-2 mr-1">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
@@ -121,7 +127,7 @@ export const InputToolbar: React.FC<InputToolbarProps> = ({
         </div>
       )}
       
-      {isCompleted && !isListening && (
+      {isCompleted && !isListening && !isLoading && (
         <div className="text-xs text-green-600 ml-1 flex items-center bg-green-50 px-2 py-0.5 rounded-full border border-green-100">
           <CheckCheck className="h-3 w-3 mr-1" />
           Processing complete

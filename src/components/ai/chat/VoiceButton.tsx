@@ -107,6 +107,12 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({
         </>
       )}
       
+      {isLoading && (
+        <div className="absolute top-10 left-0 z-10 bg-blue-100 text-blue-800 rounded-md px-2 py-1 text-xs whitespace-nowrap">
+          Processing...
+        </div>
+      )}
+      
       {isCompleted && (
         <div className="absolute top-10 left-0 z-10 bg-green-100 text-green-800 rounded-md px-2 py-1 text-xs whitespace-nowrap">
           Speech processed
