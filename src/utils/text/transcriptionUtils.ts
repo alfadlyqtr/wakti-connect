@@ -1,4 +1,3 @@
-
 /**
  * Utilities for handling meeting transcription data
  */
@@ -8,6 +7,13 @@ export interface MeetingContext {
   location?: string;
   host?: string;
   participants?: string[];
+}
+
+export interface LectureContext {
+  course?: string;
+  lecturer?: string;
+  university?: string;
+  date?: string;
 }
 
 /**
@@ -77,6 +83,55 @@ export const extractMeetingContext = (
   }
   
   // Return the merged context
+  return context;
+};
+
+/**
+ * Extracts lecture context from transcript text and combines with user-provided context
+ * @param transcript - The transcript text to analyze
+ * @param providedContext - Optional user-provided context
+ * @returns Combined lecture context object
+ */
+export const extractLectureContext = (
+  transcript: string,
+  providedContext: {
+    course?: string;
+    lecturer?: string;
+    university?: string;
+    date?: string;
+  }
+): LectureContext => {
+  const context: LectureContext = {};
+  
+  // Use provided context
+  if (providedContext.course) context.course = providedContext.course;
+  if (providedContext.lecturer) context.lecturer = providedContext.lecturer;
+  if (providedContext.university) context.university = providedContext.university;
+  if (providedContext.date) context.date = providedContext.date;
+  
+  // Try to extract course/subject from transcript if not provided
+  if (!context.course) {
+    // Look for common course identifiers in the transcript
+    const courseMatches = transcript.match(/\b(course|class|subject):?\s([A-Z][A-Za-z\s]{2,40})/i) ||
+                           transcript.match(/\bin\s(this|the|our|today'?s)\s([A-Z][A-Za-z\s]{2,40})\s(class|course|lecture)/i) ||
+                           transcript.match(/\bwelcome\sto\s([A-Z][A-Za-z\s]{2,40})\b/i);
+    
+    if (courseMatches && courseMatches[2]) {
+      context.course = courseMatches[2].trim();
+    }
+  }
+  
+  // Try to extract lecturer if not provided
+  if (!context.lecturer) {
+    // Look for common patterns to identify the lecturer
+    const lecturerMatches = transcript.match(/\b(professor|prof\.?|dr\.?|instructor|lecturer)\s([A-Z][A-Za-z\s\.-]{2,30})/i) ||
+                            transcript.match(/\bmy name is\s([A-Z][A-Za-z\s\.-]{2,30})/i);
+    
+    if (lecturerMatches && lecturerMatches[2]) {
+      context.lecturer = lecturerMatches[2].trim();
+    }
+  }
+  
   return context;
 };
 
