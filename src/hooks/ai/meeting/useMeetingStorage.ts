@@ -1,20 +1,10 @@
-
 import { useState, useCallback } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { MeetingContext, extractMeetingContext } from '@/utils/text/transcriptionUtils';
+import { Meeting, SavedMeeting } from '@/types/meeting';
 
-export interface SavedMeeting {
-  id: string;
-  date: string;
-  summary: string;
-  duration: number;
-  title: string;
-  location?: string;
-  hasAudio?: boolean;
-  audioExpiresAt?: string;
-  daysUntilExpiration?: number;
-}
+export { SavedMeeting };
 
 export const useMeetingStorage = () => {
   const [savedMeetings, setSavedMeetings] = useState<SavedMeeting[]>([]);
@@ -146,7 +136,7 @@ export const useMeetingStorage = () => {
 
       // Calculate days until expiration for each meeting with audio
       const now = new Date();
-      const processedMeetings = data.map(meeting => {
+      const processedMeetings = data.map((meeting: Meeting) => {
         let daysUntilExpiration = null;
         
         if (meeting.has_audio && meeting.audio_expires_at) {

@@ -3,6 +3,7 @@ import { useState, useCallback } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { MeetingContext } from '@/utils/text/transcriptionUtils';
+import { Meeting } from '@/types/meeting';
 
 export const useMeetingExport = () => {
   const [isExporting, setIsExporting] = useState(false);
