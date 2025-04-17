@@ -38,7 +38,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     startListening, 
     stopListening,
     supportsVoice,
-    recordingDuration
+    recordingDuration,
+    isProcessing
   } = useVoiceInteraction({
     onTranscriptComplete: (text) => {
       console.log("Transcript complete callback received:", text);
@@ -54,6 +55,11 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     },
     maxDuration: 60,
     autoStopAfterSilence: false
+  });
+
+  const { audioLevel } = useAudioLevelMonitor({
+    isActive: isListening,
+    sensitivity: 2.0
   });
 
   // Synchronize the transcript when it changes
@@ -89,6 +95,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
   const handleVoiceToggle = () => {
     console.log("Voice toggle clicked. Current state:", isListening);
+    
     if (isListening) {
       stopListening();
     } else {
@@ -150,7 +157,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               )}
               
               <SendButton
-                isLoading={isLoading}
+                isLoading={isLoading || isProcessing}
                 isDisabled={isDisabled}
                 isActive={!!inputValue.trim()}
               />

@@ -14,8 +14,8 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
   const { 
     onTranscriptComplete, 
     continuousListening = false,
-    autoStopAfterSilence = false, // Changed default to false for more reliable user control
-    maxDuration = 60 // 60 seconds max by default
+    autoStopAfterSilence = false, 
+    maxDuration = 60 
   } = options;
   
   const [isListening, setIsListening] = useState(false);
@@ -70,31 +70,31 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
     setApiKeyStatus('valid');
   }, []);
   
-  // Function to send audio data to ElevenLabs for processing
-  const processAudioWithElevenLabs = async (audioData: string): Promise<string> => {
+  // Function to process audio data with our edge function
+  const processAudioWithEdgeFunction = async (audioData: string): Promise<string> => {
     try {
       setIsProcessing(true);
-      console.log("Processing audio with ElevenLabs...");
+      console.log("Processing audio with voice-transcription edge function...");
       
       const { data, error } = await supabase.functions.invoke('voice-transcription', {
         body: { audio: audioData }
       });
       
-      console.log("ElevenLabs response:", data, error);
+      console.log("Edge function response:", data, error);
       
       if (error) {
-        console.error("Error from ElevenLabs edge function:", error);
-        throw new Error(`ElevenLabs API error: ${error.message}`);
+        console.error("Error from edge function:", error);
+        throw new Error(`Edge function error: ${error.message}`);
       }
       
       if (!data || !data.text) {
-        throw new Error("No transcript received from ElevenLabs");
+        throw new Error("No transcript received from edge function");
       }
       
-      console.log("Received transcript from ElevenLabs:", data.text);
+      console.log("Received transcript from edge function:", data.text);
       return data.text;
     } catch (err) {
-      console.error("Failed to process audio with ElevenLabs:", err);
+      console.error("Failed to process audio with edge function:", err);
       throw err;
     } finally {
       setIsProcessing(false);
@@ -280,24 +280,25 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
                 
                 console.log("Audio converted to base64, length:", base64data.length);
                 
-                // Process with fallbacks
                 let finalTranscript = "";
+                
                 try {
-                  // Try ElevenLabs first via edge function
-                  finalTranscript = await processAudioWithElevenLabs(base64data);
+                  // Try with edge function
+                  finalTranscript = await processAudioWithEdgeFunction(base64data);
                   console.log("Successfully got transcript from edge function:", finalTranscript);
-                } catch (elevenLabsError) {
-                  console.error("Edge function failed:", elevenLabsError);
+                } catch (edgeFunctionError) {
+                  console.error("Edge function failed:", edgeFunctionError);
+                  
                   // Use browser as fallback or the existing transcript
-                  try {
-                    finalTranscript = await processAudioWithBrowser();
-                    console.log("Got transcript from browser:", finalTranscript);
-                  } catch (browserError) {
-                    console.error("Browser transcription failed:", browserError);
-                    if (transcript) {
-                      finalTranscript = transcript;
-                      console.log("Using existing transcript:", finalTranscript);
-                    } else {
+                  if (transcript) {
+                    finalTranscript = transcript;
+                    console.log("Using existing transcript as fallback:", finalTranscript);
+                  } else {
+                    try {
+                      finalTranscript = await processAudioWithBrowser();
+                      console.log("Got transcript from browser fallback:", finalTranscript);
+                    } catch (browserError) {
+                      console.error("Browser transcription failed:", browserError);
                       throw new Error("All transcription methods failed");
                     }
                   }
@@ -320,6 +321,7 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
                 } else {
                   throw new Error('No transcription generated');
                 }
+                
               } catch (err) {
                 console.error('Transcription error:', err);
                 

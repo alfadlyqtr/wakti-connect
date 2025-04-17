@@ -1,66 +1,75 @@
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
-import { motion } from 'framer-motion';
 
 interface VoiceRecordingVisualizerProps {
   isActive: boolean;
-  audioLevel: number;
-  className?: string;
-  size?: 'sm' | 'md' | 'lg';
+  audioLevel?: number;
+  size?: 'xs' | 'sm' | 'md' | 'lg';
 }
 
 export const VoiceRecordingVisualizer: React.FC<VoiceRecordingVisualizerProps> = ({
   isActive,
-  audioLevel,
-  className,
+  audioLevel = 0.5, // Default level
   size = 'md'
 }) => {
-  const sizeMap = {
-    sm: { container: 'p-1.5 gap-0.5', bar: 'h-4 w-1' },
-    md: { container: 'p-2 gap-1', bar: 'h-6 w-1.5' },
-    lg: { container: 'p-3 gap-1.5', bar: 'h-8 w-2' }
+  const getBarCount = (size: string) => {
+    switch (size) {
+      case 'xs': return 5;
+      case 'sm': return 10;
+      case 'md': return 15;
+      case 'lg': return 20;
+      default: return 15;
+    }
   };
   
-  if (!isActive) return null;
+  const barCount = getBarCount(size);
   
-  // Number of bars in the visualizer
-  const bars = 5;
+  const renderBars = () => {
+    const bars = [];
+    const baseHeight = size === 'xs' ? 10 : size === 'sm' ? 12 : size === 'md' ? 16 : 20;
+    
+    for (let i = 0; i < barCount; i++) {
+      // Calculate a sine-wave based height modifier
+      const position = i / barCount;
+      const sineWave = Math.sin(position * Math.PI);
+      
+      // Add randomness factor when active
+      const randomFactor = isActive ? Math.random() * 0.5 : 0;
+      
+      // Combine factors for final height
+      const heightFactor = isActive 
+        ? 0.4 + (sineWave * 0.3) + (randomFactor * audioLevel) + (audioLevel * 0.7)
+        : 0.2 + (sineWave * 0.1);
+      
+      const height = Math.max(2, Math.round(baseHeight * heightFactor));
+      
+      bars.push(
+        <div
+          key={i}
+          className={cn(
+            "w-0.5 sm:w-1 mx-px rounded-full bg-current transition-all duration-100",
+            isActive ? "bg-red-500" : "bg-gray-400"
+          )}
+          style={{
+            height: `${height}px`,
+            opacity: isActive ? (0.5 + heightFactor * 0.5) : 0.5
+          }}
+        />
+      );
+    }
+    return bars;
+  };
   
   return (
     <div className={cn(
-      "rounded-md bg-red-50 border border-red-200 flex items-center justify-center",
-      sizeMap[size].container,
-      className
+      "flex items-center justify-center space-x-[1px] sm:space-x-0.5",
+      size === 'xs' ? "h-3" : 
+      size === 'sm' ? "h-4" : 
+      size === 'md' ? "h-5" : 
+      "h-6"
     )}>
-      {Array.from({ length: bars }).map((_, i) => {
-        // Calculate dynamic height based on position and audio level
-        // Center bars are taller than edge bars
-        const positionFactor = 1 - Math.abs((i - (bars - 1) / 2) / ((bars - 1) / 2));
-        const heightFactor = 0.3 + (audioLevel * 0.7);
-        const finalFactor = positionFactor * heightFactor;
-        
-        return (
-          <motion.div
-            key={i}
-            className={cn(
-              "bg-red-400 rounded-full",
-              sizeMap[size].bar
-            )}
-            animate={{
-              height: `${Math.max(20, finalFactor * 100)}%`,
-              opacity: Math.max(0.5, finalFactor)
-            }}
-            transition={{
-              duration: 0.2,
-              ease: "easeInOut"
-            }}
-            style={{
-              transformOrigin: "bottom"
-            }}
-          />
-        );
-      })}
+      {renderBars()}
     </div>
   );
 };
