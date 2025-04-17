@@ -13,7 +13,7 @@ const VoiceTools = () => {
 
   return (
     <div 
-      className="min-h-screen bg-black/20 dark:bg-black/40" 
+      className="min-h-screen" 
       style={{ 
         background: 'transparent',
         minHeight: 'calc(100vh - 60px)'

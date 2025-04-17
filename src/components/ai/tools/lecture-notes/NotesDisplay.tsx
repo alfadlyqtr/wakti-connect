@@ -1,151 +1,123 @@
 
-import React from 'react';
+import React, { RefObject } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Copy, Download, Book, User, School, Calendar } from 'lucide-react';
-import { formatDuration } from '@/utils/text/transcriptionUtils';
+import { Check, Copy, Download, FileText, Loader2, Book, FileUp } from 'lucide-react';
+import { LectureNotesExportContext } from './LectureNotesExporter';
+import ReactMarkdown from 'react-markdown';
 import { Badge } from '@/components/ui/badge';
-import { LectureContext } from '@/utils/text/transcriptionUtils';
 
 interface NotesDisplayProps {
   notes: string;
-  detectedCourse?: string | null;
-  recordingTime: number;
+  detectedCourse: string | null;
   copied: boolean;
+  copyNotes: (notes: string) => void;
+  exportAsPDF: () => Promise<void>;
+  downloadAudio: (lectureId?: string) => Promise<void>;
   isExporting: boolean;
   isDownloadingAudio: boolean;
   audioData: Blob | null;
-  notesRef: React.RefObject<HTMLDivElement>;
-  copyNotes: (notes: string) => void;
-  exportAsPDF: () => void;
-  downloadAudio: () => void;
-  lectureContext?: LectureContext | null;
+  notesRef: RefObject<HTMLDivElement>;
+  recordingTime: number;
+  lectureContext: LectureNotesExportContext | null;
 }
 
 const NotesDisplay: React.FC<NotesDisplayProps> = ({
   notes,
   detectedCourse,
-  recordingTime,
   copied,
+  copyNotes,
+  exportAsPDF,
+  downloadAudio,
   isExporting,
   isDownloadingAudio,
   audioData,
   notesRef,
-  copyNotes,
-  exportAsPDF,
-  downloadAudio,
+  recordingTime,
   lectureContext
 }) => {
-  // Process notes to convert markdown to HTML
-  const formattedNotes = notes
-    .replace(/^## (.*$)/gm, '<h3 class="text-lg font-bold mt-4 mb-2">$1</h3>')
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/- (.*?)(?:\n|$)/g, '<li>$1</li>')
-    .replace(/<li>/g, '<ul class="list-disc pl-5 my-2"><li>')
-    .replace(/<\/li>(?!\n<li>)/g, '</li></ul>')
-    .replace(/<\/li>\n<li>/g, '</li><li>');
-
-  // Determine if we have any context to display
-  const hasContext = lectureContext?.course || 
-                    (lectureContext?.lecturer) || 
-                    (lectureContext?.date) || 
-                    detectedCourse;
-
   return (
-    <Card className="bg-white dark:bg-gray-900 shadow-lg border border-gray-200 dark:border-gray-800">
-      <CardHeader className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 pb-2">
-        <CardTitle className="flex items-center justify-between">
-          <span className="text-lg">Lecture Notes</span>
-          <Badge variant="outline" className="ml-auto">
-            {formatDuration(recordingTime)}
-          </Badge>
-        </CardTitle>
-      </CardHeader>
-
-      {/* Context information display */}
-      {hasContext && (
-        <div className="bg-blue-50 dark:bg-blue-900/20 p-2 sm:p-3 border-b border-blue-100 dark:border-blue-800/50">
-          <div className="flex flex-wrap gap-y-2 gap-x-4 text-sm text-blue-800 dark:text-blue-200">
-            {(lectureContext?.course || detectedCourse) && (
-              <div className="flex items-center gap-1">
-                <Book className="h-3.5 w-3.5" />
-                <span>{lectureContext?.course || detectedCourse}</span>
-              </div>
-            )}
+    <Card className="shadow-sm">
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center">
+            <Book className="h-4 w-4 mr-2 text-green-500" />
+            <h3 className="text-sm font-medium">Lecture Notes</h3>
             
-            {lectureContext?.lecturer && (
-              <div className="flex items-center gap-1">
-                <User className="h-3.5 w-3.5" />
-                <span>Lecturer: {lectureContext.lecturer}</span>
-              </div>
+            {detectedCourse && (
+              <Badge className="ml-2 bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/40">
+                {detectedCourse}
+              </Badge>
             )}
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => copyNotes(notes)}
+              className="h-8"
+            >
+              {copied ? <Check className="h-3.5 w-3.5 mr-1.5" /> : <Copy className="h-3.5 w-3.5 mr-1.5" />}
+              {copied ? "Copied" : "Copy"}
+            </Button>
             
-            {lectureContext?.date && (
-              <div className="flex items-center gap-1">
-                <Calendar className="h-3.5 w-3.5" />
-                <span>Date: {lectureContext.date}</span>
-              </div>
-            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exportAsPDF}
+              disabled={isExporting}
+              className="h-8"
+            >
+              {isExporting ? (
+                <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+              ) : (
+                <FileUp className="h-3.5 w-3.5 mr-1.5" />
+              )}
+              Export PDF
+            </Button>
             
-            {lectureContext?.university && (
-              <div className="flex items-center gap-1">
-                <School className="h-3.5 w-3.5" />
-                <span>{lectureContext.university}</span>
-              </div>
+            {audioData && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => downloadAudio()}
+                disabled={isDownloadingAudio}
+                className="h-8"
+              >
+                {isDownloadingAudio ? (
+                  <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                ) : (
+                  <Download className="h-3.5 w-3.5 mr-1.5" />
+                )}
+                Audio
+              </Button>
             )}
           </div>
         </div>
-      )}
-
-      <CardContent className="p-0">
-        <ScrollArea className="h-[300px] sm:h-[400px] w-full">
-          <div 
-            ref={notesRef} 
-            className="p-4 space-y-3 text-sm sm:text-base"
-            dangerouslySetInnerHTML={{ __html: formattedNotes }}
-          />
-        </ScrollArea>
-      </CardContent>
-      
-      <CardFooter className="flex justify-between items-center p-3 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="text-xs sm:text-sm flex items-center gap-1" 
-            onClick={() => copyNotes(notes)}
-          >
-            <Copy className="h-3.5 w-3.5" />
-            {copied ? 'Copied!' : 'Copy Notes'}
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="text-xs sm:text-sm flex items-center gap-1"
-            onClick={exportAsPDF}
-            disabled={isExporting}
-          >
-            <Book className="h-3.5 w-3.5" />
-            {isExporting ? 'Exporting...' : 'Export PDF'}
-          </Button>
-        </div>
         
-        {audioData && (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="text-xs sm:text-sm flex items-center gap-1"
-            onClick={downloadAudio}
-            disabled={isDownloadingAudio}
-          >
-            <Download className="h-3.5 w-3.5" />
-            {isDownloadingAudio ? 'Downloading...' : 'Download Audio'}
-          </Button>
-        )}
-      </CardFooter>
+        <Tabs defaultValue="notes">
+          <TabsList className="mb-2 h-8">
+            <TabsTrigger value="notes" className="text-xs h-7">
+              <Book className="h-3 w-3 mr-1" />
+              Notes
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="notes" className="mt-0">
+            <div 
+              ref={notesRef}
+              className="prose prose-sm max-w-none dark:prose-invert"
+            >
+              <ScrollArea className="h-[300px] bg-gray-50 dark:bg-gray-900/50 rounded-md p-3">
+                <ReactMarkdown>{notes}</ReactMarkdown>
+              </ScrollArea>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </CardContent>
     </Card>
   );
 };

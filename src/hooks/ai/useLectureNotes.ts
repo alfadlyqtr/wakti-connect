@@ -1,3 +1,4 @@
+
 import { useRef, useCallback, useEffect, useState } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { extractLectureContext } from '@/utils/text/transcriptionUtils';

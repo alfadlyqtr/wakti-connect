@@ -1,10 +1,11 @@
 
 import React from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { VoiceTranscriptionControl } from '@/components/ai/voice/VoiceTranscriptionControl';
+import { Mic, MicOff, Languages, AlertCircle } from 'lucide-react';
 import { formatDuration } from '@/utils/text/transcriptionUtils';
-import { AlertCircle } from 'lucide-react';
+import { VoiceRecordingVisualizer } from '@/components/ai/voice/VoiceRecordingVisualizer';
 
 interface RecordingControlsProps {
   isRecording: boolean;
@@ -26,53 +27,67 @@ const RecordingControls: React.FC<RecordingControlsProps> = ({
   recordingError
 }) => {
   return (
-    <div className="bg-gray-50 dark:bg-gray-800/50 border rounded-lg p-3 sm:p-4">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-2 sm:gap-3">
-          <VoiceTranscriptionControl
-            isRecording={isRecording}
-            isProcessing={false}
-            startRecording={startRecording}
-            stopRecording={stopRecording}
-            size="md"
-          />
-          
-          <div className="flex flex-col">
-            <span className="text-sm font-medium">
-              {isRecording ? 'Recording lecture...' : 'Ready to record'}
-            </span>
+    <Card className="shadow-sm">
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Voice Recording</span>
             {isRecording && (
-              <span className="text-xs text-muted-foreground">
-                Duration: {formatDuration(recordingTime)}
-              </span>
+              <span className="h-2 w-2 bg-red-500 rounded-full animate-pulse"></span>
             )}
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Select 
+              value={selectedLanguage} 
+              onValueChange={setSelectedLanguage}
+              disabled={isRecording}
+            >
+              <SelectTrigger className="h-8 w-[110px]">
+                <Languages className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                <SelectValue placeholder="Language" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="en">English</SelectItem>
+                <SelectItem value="ar">Arabic</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Button
+              onClick={isRecording ? stopRecording : startRecording}
+              variant={isRecording ? "destructive" : "default"}
+              className="h-8"
+              size="sm"
+            >
+              {isRecording ? (
+                <>
+                  <MicOff className="h-3.5 w-3.5 mr-1.5" />
+                  Stop Recording ({formatDuration(recordingTime)})
+                </>
+              ) : (
+                <>
+                  <Mic className="h-3.5 w-3.5 mr-1.5" />
+                  Start Recording
+                </>
+              )}
+            </Button>
           </div>
         </div>
         
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <Select
-            value={selectedLanguage}
-            onValueChange={setSelectedLanguage}
-            disabled={isRecording}
-          >
-            <SelectTrigger className="h-9 w-full sm:w-[120px]">
-              <SelectValue placeholder="Language" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="en">English</SelectItem>
-              <SelectItem value="ar">Arabic</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      
-      {recordingError && (
-        <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md flex items-start text-red-800 dark:text-red-200">
-          <AlertCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-          <p className="text-sm">{recordingError}</p>
-        </div>
-      )}
-    </div>
+        {recordingError && (
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 p-3 rounded-md mb-3 flex gap-2 items-center text-sm">
+            <AlertCircle className="h-4 w-4 flex-shrink-0" />
+            <span>{recordingError}</span>
+          </div>
+        )}
+        
+        {isRecording && (
+          <div className="h-24 flex items-center justify-center">
+            <VoiceRecordingVisualizer isActive={isRecording} audioLevel={0.5} />
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

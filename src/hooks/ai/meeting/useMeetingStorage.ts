@@ -45,7 +45,7 @@ export const useMeetingStorage = (storageType: 'meeting-recordings' | 'lecture-n
       // Try to load from Supabase
       try {
         const { data, error } = await supabase
-          .from('meetings')
+          .from(tableName)
           .select('*')
           .order('created_at', { ascending: false });
 
@@ -126,7 +126,7 @@ export const useMeetingStorage = (storageType: 'meeting-recordings' | 'lecture-n
           };
           
           const { error } = await supabase
-            .from('meetings')
+            .from(tableName)
             .insert(insertData);
           
           if (error) throw error;
@@ -186,7 +186,7 @@ export const useMeetingStorage = (storageType: 'meeting-recordings' | 'lecture-n
       });
       return null;
     }
-  }, [savedMeetings, folder, loadSavedMeetings]);
+  }, [savedMeetings, folder, loadSavedMeetings, tableName]);
 
   const deleteMeeting = useCallback(async (meetingId: string) => {
     try {
@@ -197,7 +197,7 @@ export const useMeetingStorage = (storageType: 'meeting-recordings' | 'lecture-n
         try {
           // Delete the database record
           const { error } = await supabase
-            .from('meetings')
+            .from(tableName)
             .delete()
             .eq('id', meetingId);
           
@@ -237,7 +237,7 @@ export const useMeetingStorage = (storageType: 'meeting-recordings' | 'lecture-n
         variant: "destructive"
       });
     }
-  }, [savedMeetings, folder, supabase, storageType]);
+  }, [savedMeetings, folder, supabase, tableName, storageType]);
 
   const updateMeetingTitle = useCallback(async (meetingId: string, newTitle: string) => {
     try {
@@ -247,7 +247,7 @@ export const useMeetingStorage = (storageType: 'meeting-recordings' | 'lecture-n
       if (supabase) {
         try {
           const { error } = await supabase
-            .from('meetings')
+            .from(tableName)
             .update({ title: newTitle })
             .eq('id', meetingId);
           
@@ -283,7 +283,7 @@ export const useMeetingStorage = (storageType: 'meeting-recordings' | 'lecture-n
         variant: "destructive"
       });
     }
-  }, [savedMeetings, folder, supabase]);
+  }, [savedMeetings, folder, supabase, tableName]);
 
   return {
     savedMeetings,
