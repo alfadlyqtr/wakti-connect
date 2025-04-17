@@ -41,10 +41,13 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     recordingDuration
   } = useVoiceInteraction({
     onTranscriptComplete: (text) => {
+      console.log("Transcript complete callback received:", text);
       if (text) {
         setInputValue(prev => {
           const separator = prev && !prev.endsWith(' ') && !text.startsWith(' ') ? ' ' : '';
-          return prev + separator + text;
+          const newValue = prev + separator + text;
+          console.log("New input value:", newValue);
+          return newValue;
         });
         setIsListening(false);
       }
@@ -52,6 +55,13 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     maxDuration: 60,
     autoStopAfterSilence: false
   });
+
+  // Synchronize the transcript when it changes
+  useEffect(() => {
+    if (transcript && !isListening) {
+      console.log("Transcript changed outside callback:", transcript);
+    }
+  }, [transcript, isListening]);
 
   // Sync listening state with voice hook state
   useEffect(() => {
@@ -78,6 +88,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   };
 
   const handleVoiceToggle = () => {
+    console.log("Voice toggle clicked. Current state:", isListening);
     if (isListening) {
       stopListening();
     } else {

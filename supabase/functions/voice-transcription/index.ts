@@ -27,6 +27,8 @@ serve(async (req) => {
       console.error('No audio data provided');
       throw new Error('No audio data provided');
     }
+
+    console.log("Audio data received, length:", audio.length);
     
     // Check if we have an ElevenLabs API key - Priority 1
     if (ELEVENLABS_API_KEY) {

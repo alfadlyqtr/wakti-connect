@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client'; // Import from the correct location
 import { toast } from '@/components/ui/use-toast';
 
 interface VoiceInteractionOptions {
@@ -76,9 +76,11 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
       setIsProcessing(true);
       console.log("Processing audio with ElevenLabs...");
       
-      const { data, error } = await supabase.functions.invoke('elevenlabs-speech-to-text', {
+      const { data, error } = await supabase.functions.invoke('voice-transcription', {
         body: { audio: audioData }
       });
+      
+      console.log("ElevenLabs response:", data, error);
       
       if (error) {
         console.error("Error from ElevenLabs edge function:", error);
@@ -99,36 +101,7 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
     }
   };
   
-  // Attempt to process audio using OpenAI as a fallback
-  const processAudioWithOpenAI = async (audioData: string): Promise<string> => {
-    try {
-      setIsProcessing(true);
-      console.log("Falling back to OpenAI for audio processing...");
-      
-      const { data, error } = await supabase.functions.invoke('ai-voice-to-text', {
-        body: { audio: audioData }
-      });
-      
-      if (error) {
-        console.error("Error from OpenAI edge function:", error);
-        throw new Error(`OpenAI API error: ${error.message}`);
-      }
-      
-      if (!data || !data.text) {
-        throw new Error("No transcript received from OpenAI");
-      }
-      
-      console.log("Received transcript from OpenAI:", data.text);
-      return data.text;
-    } catch (err) {
-      console.error("Failed to process audio with OpenAI:", err);
-      throw err;
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-  
-  // Process audio using browser's built-in speech recognition as last resort
+  // Process audio using browser's built-in speech recognition
   const processAudioWithBrowser = async (): Promise<string> => {
     return new Promise((resolve, reject) => {
       try {
@@ -138,23 +111,23 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
         }
         
         console.log("Using browser's built-in speech recognition");
-        const recognition = new SpeechRecognition();
-        recognition.lang = 'en-US';
-        recognition.interimResults = false;
-        recognition.maxAlternatives = 1;
+        const browserRecognition = new SpeechRecognition();
+        browserRecognition.lang = 'en-US';
+        browserRecognition.interimResults = false;
+        browserRecognition.maxAlternatives = 1;
         
-        recognition.onresult = (event: any) => {
+        browserRecognition.onresult = (event: any) => {
           const transcript = event.results[0][0].transcript;
           console.log("Browser recognized:", transcript);
           resolve(transcript);
         };
         
-        recognition.onerror = (event: any) => {
+        browserRecognition.onerror = (event: any) => {
           console.error("Browser recognition error:", event.error);
           reject(new Error(`Browser recognition error: ${event.error}`));
         };
         
-        recognition.start();
+        browserRecognition.start();
       } catch (err) {
         console.error("Failed to initialize browser speech recognition:", err);
         reject(err);
@@ -172,6 +145,8 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
       // Reset state
       setTranscript('');
       audioChunksRef.current = [];
+      
+      console.log("Starting voice recording...");
       
       // Get microphone access
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -249,6 +224,8 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
   }, [continuousListening, maxDuration, recordingStartTime, supportsVoice]);
   
   const stopListening = useCallback(async () => {
+    console.log("Stopping voice recording...");
+    
     // Clear any timers
     if (timerInterval) {
       clearInterval(timerInterval);
@@ -301,18 +278,28 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
                   throw new Error('Failed to convert audio to base64');
                 }
                 
+                console.log("Audio converted to base64, length:", base64data.length);
+                
                 // Process with fallbacks
                 let finalTranscript = "";
                 try {
-                  // Try ElevenLabs first
+                  // Try ElevenLabs first via edge function
                   finalTranscript = await processAudioWithElevenLabs(base64data);
+                  console.log("Successfully got transcript from edge function:", finalTranscript);
                 } catch (elevenLabsError) {
+                  console.error("Edge function failed:", elevenLabsError);
+                  // Use browser as fallback or the existing transcript
                   try {
-                    // Try OpenAI as fallback
-                    finalTranscript = await processAudioWithOpenAI(base64data);
-                  } catch (openaiError) {
-                    // Use browser as last resort or the existing transcript
-                    finalTranscript = transcript || await processAudioWithBrowser();
+                    finalTranscript = await processAudioWithBrowser();
+                    console.log("Got transcript from browser:", finalTranscript);
+                  } catch (browserError) {
+                    console.error("Browser transcription failed:", browserError);
+                    if (transcript) {
+                      finalTranscript = transcript;
+                      console.log("Using existing transcript:", finalTranscript);
+                    } else {
+                      throw new Error("All transcription methods failed");
+                    }
                   }
                 }
                 
@@ -321,6 +308,7 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
                   setLastTranscript(finalTranscript);
                   
                   if (onTranscriptComplete) {
+                    console.log("Calling onTranscriptComplete with:", finalTranscript);
                     onTranscriptComplete(finalTranscript);
                   }
                   
@@ -337,6 +325,7 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
                 
                 // Use any existing transcript from browser recognition as fallback
                 if (transcript && onTranscriptComplete) {
+                  console.log("Using fallback transcript:", transcript);
                   onTranscriptComplete(transcript);
                   setLastTranscript(transcript);
                 } else {
@@ -358,6 +347,7 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
         } else {
           // If no audio data was collected
           if (transcript && onTranscriptComplete) {
+            console.log("No audio chunks, but using existing transcript:", transcript);
             onTranscriptComplete(transcript);
             setLastTranscript(transcript);
           }
@@ -370,36 +360,6 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
       setIsListening(false);
     }
   }, [timerInterval, transcript, onTranscriptComplete]);
-  
-  // Process audio with multiple fallback methods
-  const processAudioWithFallbacks = async (audioData: string): Promise<string> => {
-    try {
-      // Try ElevenLabs first
-      return await processAudioWithElevenLabs(audioData);
-    } catch (elevenLabsError) {
-      console.warn("ElevenLabs failed, trying OpenAI fallback...");
-      toast({
-        title: "Speech recognition fallback",
-        description: "Using alternative service for voice recognition...",
-        duration: 3000,
-      });
-      
-      try {
-        // Try OpenAI as fallback
-        return await processAudioWithOpenAI(audioData);
-      } catch (openaiError) {
-        console.warn("OpenAI fallback failed, trying browser recognition...");
-        toast({
-          title: "Using browser recognition",
-          description: "External services unavailable, using browser capabilities...",
-          duration: 3000,
-        });
-        
-        // Last resort: browser's built-in recognition
-        return await processAudioWithBrowser();
-      }
-    }
-  };
   
   // Clean up on unmount
   useEffect(() => {
@@ -429,7 +389,6 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
     isProcessing,
     startListening,
     stopListening,
-    processAudioWithFallbacks,
     recordingDuration,
     // Add these properties to fix TypeScript errors
     apiKeyStatus,
