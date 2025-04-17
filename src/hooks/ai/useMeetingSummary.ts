@@ -1,18 +1,14 @@
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useRef, useCallback, useEffect } from 'react';
 import { toast } from '@/components/ui/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { useVoiceInteraction } from './useVoiceInteraction';
-import { MeetingContext, extractMeetingContext } from '@/utils/text/transcriptionUtils';
-
-export interface SavedMeeting {
-  id: string;
-  date: string;
-  summary: string;
-  duration: number;
-  title: string;
-  location?: string;
-}
+import { extractMeetingContext } from '@/utils/text/transcriptionUtils';
+import { exportMeetingSummaryAsPDF } from '@/components/ai/tools/meeting-summary/MeetingSummaryExporter';
+import { 
+  useMeetingRecording, 
+  useMeetingSummaryGeneration, 
+  useMeetingStorage, 
+  useMeetingExport 
+} from './meeting';
 
 export interface MeetingSummaryState {
   isRecording: boolean;
@@ -25,364 +21,116 @@ export interface MeetingSummaryState {
   audioData: Blob | null;
 }
 
-export const useMeetingSummary = () => {
-  const [state, setState] = useState<MeetingSummaryState>({
-    isRecording: false,
-    recordingTime: 0,
-    recordingError: null,
-    transcribedText: '',
-    isSummarizing: false,
-    summary: '',
-    detectedLocation: null,
-    audioData: null,
-  });
+export interface SavedMeeting {
+  id: string;
+  date: string;
+  summary: string;
+  duration: number;
+  title: string;
+  location?: string;
+}
 
-  const [savedMeetings, setSavedMeetings] = useState<SavedMeeting[]>([]);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
-  const [isDownloadingAudio, setIsDownloadingAudio] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState('en');
-  const summaryRef = useRef<HTMLDivElement>(null);
+export const useMeetingSummary = () => {
+  // Initialize all the sub-hooks
+  const {
+    recordingState,
+    selectedLanguage,
+    setSelectedLanguage,
+    supportsVoice,
+    startRecording: startRecordingBase,
+    stopRecording,
+    clearRecording
+  } = useMeetingRecording();
 
   const {
-    startListening,
-    stopListening,
-    transcript,
-    lastTranscript,
-    error,
-    isProcessing,
-    supportsVoice,
-    recordingDuration,
-  } = useVoiceInteraction();
+    summaryState,
+    generateSummary: generateSummaryBase,
+    clearSummary
+  } = useMeetingSummaryGeneration();
 
-  useEffect(() => {
-    if (error) {
-      setState(prevState => ({ ...prevState, recordingError: error.message }));
-    }
-  }, [error]);
+  const {
+    savedMeetings,
+    isLoadingHistory,
+    saveMeetingToSupabase: saveMeetingBase,
+    loadSavedMeetings,
+    deleteMeeting,
+    updateMeetingTitle
+  } = useMeetingStorage();
 
-  useEffect(() => {
-    if (lastTranscript) {
-      setState(prevState => ({ ...prevState, transcribedText: lastTranscript }));
-    }
-  }, [lastTranscript]);
+  const {
+    isExporting,
+    setIsExporting,
+    isDownloadingAudio,
+    copied,
+    copySummary,
+    downloadAudio: downloadAudioBase
+  } = useMeetingExport();
 
-  const startRecording = () => {
-    setState(prevState => ({ ...prevState, isRecording: true, recordingTime: 0, recordingError: null }));
-    startListening();
+  // References
+  const summaryRef = useRef<HTMLDivElement>(null);
+
+  // Compute the combined state
+  const state: MeetingSummaryState = {
+    isRecording: recordingState.isRecording,
+    recordingTime: recordingState.recordingTime,
+    recordingError: recordingState.recordingError,
+    transcribedText: recordingState.transcribedText,
+    isSummarizing: summaryState.isSummarizing,
+    summary: summaryState.summary,
+    detectedLocation: summaryState.detectedLocation,
+    audioData: recordingState.audioData
   };
 
-  const stopRecording = () => {
-    setState(prevState => ({ ...prevState, isRecording: false }));
-    stopListening();
-  };
-
+  // Wrapped functions with enhanced functionality
   const generateSummary = useCallback(async () => {
-    if (!state.transcribedText) {
-      toast({
-        title: "Nothing to summarize",
-        description: "Please record a meeting or transcribe some text first.",
-      });
-      return;
-    }
-
-    setState(prevState => ({ ...prevState, isSummarizing: true }));
-
-    try {
-      const response = await fetch('/api/ai/meeting-summary', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ transcript: state.transcribedText, language: selectedLanguage }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      setState(prevState => ({
-        ...prevState,
-        summary: data.summary,
-        detectedLocation: data.location || null,
-      }));
-    } catch (error) {
-      console.error("Error generating summary:", error);
-      toast({
-        title: "Summary failed",
-        description: error instanceof Error ? error.message : "Failed to generate meeting summary.",
-        variant: "destructive"
-      });
-    } finally {
-      setState(prevState => ({ ...prevState, isSummarizing: false }));
-    }
-  }, [state.transcribedText, selectedLanguage]);
+    return await generateSummaryBase(recordingState.transcribedText, selectedLanguage);
+  }, [generateSummaryBase, recordingState.transcribedText, selectedLanguage]);
 
   const saveMeetingToSupabase = useCallback(async (title?: string) => {
+    return await saveMeetingBase(
+      summaryState.summary,
+      recordingState.transcribedText,
+      recordingState.recordingTime,
+      selectedLanguage,
+      recordingState.audioData,
+      title
+    );
+  }, [
+    saveMeetingBase, 
+    summaryState.summary, 
+    recordingState.transcribedText, 
+    recordingState.recordingTime, 
+    recordingState.audioData, 
+    selectedLanguage
+  ]);
+
+  const downloadAudio = useCallback(async (meetingId?: string) => {
+    await downloadAudioBase(recordingState.audioData, meetingId);
+  }, [downloadAudioBase, recordingState.audioData]);
+
+  // Enhanced export function
+  const handleExportAsPDF = useCallback(async () => {
+    setIsExporting(true);
     try {
-      if (!state.summary) {
-        return;
-      }
-
-      // Extract location from transcript if available
-      const meetingContext = extractMeetingContext(state.transcribedText);
-      
-      // Determine title - use provided title, extract from transcript, or use default
-      const meetingTitle = title || 
-        (meetingContext?.title || 'Meeting Summary');
-
-      // Save to Supabase
-      const { data, error } = await supabase.from('meetings').insert({
-        summary: state.summary,
-        duration: state.recordingTime,
-        date: new Date().toISOString(),
-        location: meetingContext?.location || null,
-        language: selectedLanguage,
-        title: meetingTitle,
-        user_id: (await supabase.auth.getUser()).data.user?.id
-      }).select();
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      // Save audio data if available
-      if (state.audioData) {
-        const audioFile = new File(
-          [state.audioData], 
-          `meeting_${data[0].id}.webm`, 
-          { type: 'audio/webm' }
-        );
-
-        const { error: uploadError } = await supabase.storage
-          .from('meeting-recordings')
-          .upload(`${data[0].id}.webm`, audioFile);
-
-        if (uploadError) {
-          console.error('Error uploading audio:', uploadError);
-        }
-      }
-
-      toast({
-        title: "Meeting saved",
-        description: "Your meeting summary has been saved successfully.",
-      });
-
-      // Refresh the list of saved meetings
-      loadSavedMeetings();
-    } catch (error) {
-      console.error('Error saving meeting:', error);
-      toast({
-        title: "Save failed",
-        description: error instanceof Error ? error.message : "Failed to save meeting summary.",
-        variant: "destructive"
-      });
-    }
-  }, [state.summary, state.transcribedText, state.recordingTime, state.audioData, selectedLanguage]);
-
-  useEffect(() => {
-    let intervalId: NodeJS.Timeout;
-
-    if (state.isRecording) {
-      intervalId = setInterval(() => {
-        setState(prevState => ({ ...prevState, recordingTime: prevState.recordingTime + 1 }));
-      }, 1000);
-    } else {
-      clearInterval(intervalId);
-    }
-
-    return () => clearInterval(intervalId);
-  }, [state.isRecording]);
-
-  useEffect(() => {
-    if (transcript) {
-      setState(prevState => ({
-        ...prevState,
-        transcribedText: transcript,
-      }));
-    }
-  }, [transcript]);
-
-  const deleteMeeting = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('meetings')
-        .delete()
-        .eq('id', id);
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      // Also remove the audio recording if it exists
-      await supabase.storage
-        .from('meeting-recordings')
-        .remove([`${id}.webm`]);
-
-      // Update local state
-      setSavedMeetings(prevMeetings => 
-        prevMeetings.filter(meeting => meeting.id !== id)
+      // Extract context from transcript
+      const exportContext = state.detectedLocation 
+        ? { location: state.detectedLocation } 
+        : null;
+          
+      await exportMeetingSummaryAsPDF(
+        state.summary,
+        state.recordingTime,
+        exportContext
       );
-
-      toast({
-        title: "Meeting deleted",
-        description: "The meeting has been removed successfully.",
-      });
-    } catch (error) {
-      console.error('Error deleting meeting:', error);
-      toast({
-        title: "Delete failed",
-        description: error instanceof Error ? error.message : "Failed to delete the meeting.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const updateMeetingTitle = async (id: string, newTitle: string) => {
-    try {
-      const { error } = await supabase
-        .from('meetings')
-        .update({ title: newTitle })
-        .eq('id', id);
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      // Update local state
-      setSavedMeetings(prevMeetings => 
-        prevMeetings.map(meeting => 
-          meeting.id === id ? { ...meeting, title: newTitle } : meeting
-        )
-      );
-
-      toast({
-        title: "Title updated",
-        description: "The meeting title has been updated successfully.",
-      });
-    } catch (error) {
-      console.error('Error updating title:', error);
-      toast({
-        title: "Update failed",
-        description: error instanceof Error ? error.message : "Failed to update the meeting title.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const copySummary = () => {
-    if (state.summary && summaryRef.current) {
-      navigator.clipboard.writeText(state.summary)
-        .then(() => {
-          setCopied(true);
-          toast({
-            title: "Summary copied",
-            description: "The meeting summary has been copied to your clipboard.",
-          });
-          setTimeout(() => {
-            setCopied(false);
-          }, 2000);
-        })
-        .catch(err => {
-          console.error("Failed to copy summary:", err);
-          toast({
-            title: "Copy failed",
-            description: "Failed to copy the meeting summary to your clipboard.",
-            variant: "destructive"
-          });
-        });
-    }
-  };
-
-  const loadSavedMeetings = useCallback(async () => {
-    setIsLoadingHistory(true);
-    try {
-      const { data, error } = await supabase
-        .from('meetings')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      setSavedMeetings(data.map(meeting => ({
-        id: meeting.id,
-        date: meeting.date,
-        summary: meeting.summary,
-        duration: meeting.duration,
-        title: meeting.title || 'Untitled Meeting',
-        location: meeting.location
-      })));
-    } catch (error) {
-      console.error('Error loading meetings:', error);
-      toast({
-        title: "Error loading history",
-        description: error instanceof Error ? error.message : "Failed to load meeting history.",
-        variant: "destructive"
-      });
     } finally {
-      setIsLoadingHistory(false);
+      setIsExporting(false);
     }
-  }, []);
+  }, [state.summary, state.recordingTime, state.detectedLocation, setIsExporting]);
 
-  const downloadAudio = async (meetingId?: string) => {
-    try {
-      setIsDownloadingAudio(true);
-      
-      if (meetingId) {
-        // Download from storage
-        const { data, error } = await supabase.storage
-          .from('meeting-recordings')
-          .download(`${meetingId}.webm`);
-        
-        if (error) {
-          throw new Error('Audio recording not found or could not be downloaded.');
-        }
-        
-        // Create download link
-        if (data) {
-          const url = URL.createObjectURL(data);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `meeting_recording_${meetingId}.webm`;
-          document.body.appendChild(a);
-          a.click();
-          URL.revokeObjectURL(url);
-          document.body.removeChild(a);
-        }
-      } else if (state.audioData) {
-        // Download current meeting audio
-        const url = URL.createObjectURL(state.audioData);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'meeting_recording.webm';
-        document.body.appendChild(a);
-        a.click();
-        URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      } else {
-        throw new Error('No audio recording available to download.');
-      }
-      
-      toast({
-        title: "Download complete",
-        description: "Audio recording has been downloaded.",
-      });
-    } catch (error) {
-      console.error('Error downloading audio:', error);
-      toast({
-        title: "Download failed",
-        description: error instanceof Error ? error.message : "Failed to download audio recording.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsDownloadingAudio(false);
-    }
-  };
+  // Load saved meetings on first render
+  useEffect(() => {
+    loadSavedMeetings();
+  }, [loadSavedMeetings]);
 
   return {
     state,
@@ -396,7 +144,7 @@ export const useMeetingSummary = () => {
     savedMeetings,
     isLoadingHistory,
     loadSavedMeetings,
-    startRecording,
+    startRecording: startRecordingBase,
     stopRecording,
     generateSummary,
     saveMeetingToSupabase,
@@ -404,6 +152,7 @@ export const useMeetingSummary = () => {
     updateMeetingTitle,
     downloadAudio,
     copySummary,
-    supportsVoice
+    supportsVoice,
+    exportAsPDF: handleExportAsPDF
   };
 };

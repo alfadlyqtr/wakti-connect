@@ -2,10 +2,8 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { AlertCircle } from 'lucide-react';
-import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
 import { useMeetingSummary } from '@/hooks/ai/useMeetingSummary';
-import { exportMeetingSummaryAsPDF } from './meeting-summary/MeetingSummaryExporter';
-import { MeetingContext, extractMeetingContext } from '@/utils/text/transcriptionUtils';
+import { extractMeetingContext } from '@/utils/text/transcriptionUtils';
 
 // Import the refactored components
 import RecordingControls from './meeting-summary/RecordingControls';
@@ -25,28 +23,25 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     savedMeetings,
     isLoadingHistory,
     isExporting,
-    setIsExporting,
     selectedLanguage,
     setSelectedLanguage,
     copied,
     summaryRef,
     loadSavedMeetings,
-    startRecording: startRecordingHook,
+    startRecording,
     stopRecording,
     generateSummary,
     copySummary,
     downloadAudio,
     deleteMeeting,
     updateMeetingTitle,
-    supportsVoice
+    supportsVoice,
+    exportAsPDF
   } = useMeetingSummary();
 
   // State for meeting context dialog
   const [showContextDialog, setShowContextDialog] = useState(false);
   const [meetingContext, setMeetingContext] = useState<MeetingContextData | null>(null);
-  
-  // Reference to the pulse animation element
-  const pulseElementRef = useRef<HTMLDivElement>(null);
   
   // Load saved meetings on component mount
   useEffect(() => {
@@ -69,39 +64,13 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     }
     
     // Start recording after dialog is closed
-    startRecordingHook();
+    startRecording();
   };
 
   // Enhanced summary generation with context
   const handleGenerateSummary = async () => {
-    // Extract context from transcript and combine with user-provided context
-    const extractedContext = meetingContext 
-      ? extractMeetingContext(state.transcribedText, meetingContext)
-      : extractMeetingContext(state.transcribedText);
-    
-    // Pass the context to summary generation
+    // Generate summary
     await generateSummary();
-  };
-
-  // Handler for exporting summary as PDF
-  const handleExportAsPDF = async () => {
-    setIsExporting(true);
-    try {
-      // Extract context from transcript and combine with user-provided context if available
-      const exportContext = meetingContext 
-        ? extractMeetingContext(state.transcribedText, meetingContext)
-        : state.detectedLocation 
-          ? { location: state.detectedLocation } as MeetingContext
-          : null;
-          
-      await exportMeetingSummaryAsPDF(
-        state.summary,
-        state.recordingTime,
-        exportContext
-      );
-    } finally {
-      setIsExporting(false);
-    }
   };
 
   return (
@@ -157,7 +126,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
             detectedLocation={state.detectedLocation}
             copied={copied}
             copySummary={copySummary}
-            exportAsPDF={handleExportAsPDF}
+            exportAsPDF={exportAsPDF}
             downloadAudio={downloadAudio}
             isExporting={isExporting}
             isDownloadingAudio={isDownloadingAudio}
