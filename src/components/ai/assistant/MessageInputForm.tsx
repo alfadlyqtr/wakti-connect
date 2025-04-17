@@ -170,7 +170,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
                   ref={fileInputRef}
                   className="hidden"
                   onChange={handleFileChange}
-                  accept=".pdf,.doc,.docx,.txt,.md"
+                  accept=".pdf,.doc,.docx,.txt,.md,.jpg,.jpeg,.png"
                 />
               </>
             )}

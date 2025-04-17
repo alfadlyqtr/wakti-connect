@@ -1,7 +1,7 @@
 
 import React, { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Camera, Paperclip, Mic, MicOff, X } from 'lucide-react';
+import { Camera, Paperclip, Mic, MicOff, FileText, Image, Film, X } from 'lucide-react';
 import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
@@ -29,8 +29,6 @@ export const InputToolbar = ({
     onTranscriptComplete: () => {}
   });
   
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -38,14 +36,8 @@ export const InputToolbar = ({
     const file = files[0];
     console.log('File to process:', file);
     
-    setSelectedFile(file);
-    
     if (onFileSelected) {
       onFileSelected(file);
-      toast({
-        title: "File Selected",
-        description: `Selected ${file.name}`,
-      });
     }
     
     e.target.value = '';
@@ -121,6 +113,27 @@ export const InputToolbar = ({
           </Button>
         </motion.div>
         
+        {/* Document button */}
+        <motion.div 
+          whileHover={{ scale: 1.05, y: -4 }} 
+          whileTap={{ scale: 0.95 }}
+        >
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            onClick={() => {
+              fileInputRef.current?.click();
+            }}
+            disabled={isLoading || isListening}
+            className={`${buttonSize} rounded-full bg-white/10 dark:bg-black/50 text-blue-600 border border-blue-100/30 dark:border-blue-900/50 backdrop-blur-xl shadow-xl hover:shadow-2xl hover:bg-blue-50/20 dark:hover:bg-blue-900/30 transition-all`}
+            style={buttonStyle}
+          >
+            <FileText className="h-5 w-5 text-blue-500 dark:text-blue-400" />
+            <span className="sr-only">Upload document</span>
+          </Button>
+        </motion.div>
+        
         {/* Voice input button */}
         {supportsVoice && (
           <motion.div
@@ -161,22 +174,8 @@ export const InputToolbar = ({
         ref={fileInputRef}
         onChange={handleFileUpload}
         className="hidden"
-        accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+        accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.md"
       />
-      
-      {selectedFile && (
-        <div className="ml-2 flex items-center bg-primary/10 px-2 py-1 rounded-full">
-          <span className="text-xs truncate max-w-[150px]">{selectedFile.name}</span>
-          <Button 
-            size="icon" 
-            variant="ghost" 
-            className="h-5 w-5 ml-1"
-            onClick={() => setSelectedFile(null)}
-          >
-            <X className="h-3 w-3" />
-          </Button>
-        </div>
-      )}
     </div>
   );
 };
