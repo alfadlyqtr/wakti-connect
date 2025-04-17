@@ -1,87 +1,113 @@
 
-/**
- * Core PDF generation functionality
- */
-
-import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { formatTime } from '../helpers/timeFormatters';
 import { processSummaryContent } from '../processors/summaryContentProcessor';
-import { createMeetingSummaryTemplate } from '../templates/meetingSummaryTemplate';
+import { MeetingContext } from '@/utils/text/transcriptionUtils';
 
-/**
- * Generates and exports a PDF document from the meeting summary
- * @param summary The meeting summary text
- * @param recordingTime The recording duration in seconds
- * @param detectedLocation Optional location information
- */
 export const generatePdf = async (
   summary: string,
   recordingTime: number,
-  detectedLocation: string | null
-): Promise<void> => {
-  try {
-    // Process the summary content
-    const { summary: formattedSummary, tasks } = processSummaryContent(summary);
+  meetingContext: MeetingContext | null = null
+) => {
+  const doc = new jsPDF();
+  const { summary: processedSummary, tasks } = processSummaryContent(summary);
+  
+  // Set up document
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(20);
+  doc.text('Meeting Summary', 20, 20);
+  
+  // Add date and duration
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(12);
+  doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 30);
+  doc.text(`Duration: ${formatTime(recordingTime)}`, 20, 37);
+  
+  // Add meeting context if available
+  let yOffset = 44;
+  
+  if (meetingContext) {
+    if (meetingContext.location) {
+      doc.text(`Location: ${meetingContext.location}`, 20, yOffset);
+      yOffset += 7;
+    }
     
-    // Create the HTML template for PDF
-    const htmlTemplate = createMeetingSummaryTemplate(
-      summary,
-      recordingTime,
-      detectedLocation,
-      formattedSummary,
-      tasks
-    );
-    
-    // Create a temporary div to render the template
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = htmlTemplate;
-    tempDiv.style.position = 'absolute';
-    tempDiv.style.left = '-9999px';
-    tempDiv.style.backgroundColor = '#ffffff';
-    
-    // Add to document for rendering
-    document.body.appendChild(tempDiv);
-    
-    // Convert to canvas
-    const canvas = await html2canvas(tempDiv, {
-      scale: 2,
-      useCORS: true,
-      logging: false
-    });
-    
-    // Generate PDF
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'pt',
-      format: 'a4'
-    });
-    
-    const imgWidth = 595; // A4 width in points
-    const imgHeight = canvas.height * imgWidth / canvas.width;
-    
-    pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-    
-    // Add multiple pages if needed
-    if (imgHeight > 842) {
-      let heightLeft = imgHeight - 842;
-      let position = -842;
-      
-      while (heightLeft > 0) {
-        position = position - 842;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= 842;
+    if (meetingContext.participants && meetingContext.participants.length > 0) {
+      const participantsText = Array.isArray(meetingContext.participants)
+        ? meetingContext.participants.join(', ')
+        : meetingContext.participants;
+        
+      // Check if participants text is too long
+      if (participantsText.length > 70) {
+        doc.text('Participants:', 20, yOffset);
+        yOffset += 7;
+        
+        const splitParticipants = doc.splitTextToSize(participantsText, 170);
+        doc.text(splitParticipants, 25, yOffset);
+        yOffset += splitParticipants.length * 7;
+      } else {
+        doc.text(`Participants: ${participantsText}`, 20, yOffset);
+        yOffset += 7;
       }
     }
     
-    // Save the PDF
-    pdf.save(`meeting-summary-${new Date().toISOString().slice(0, 10)}.pdf`);
-    
-    // Clean up
-    document.body.removeChild(tempDiv);
-  } catch (error) {
-    console.error('Error generating PDF:', error);
-    throw error;
+    if (meetingContext.host) {
+      doc.text(`Host: ${meetingContext.host}`, 20, yOffset);
+      yOffset += 7;
+    }
   }
+  
+  // Add separator line
+  doc.setDrawColor(200, 200, 200);
+  doc.line(20, yOffset, 190, yOffset);
+  yOffset += 10;
+  
+  // Add summary title
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(16);
+  doc.text('Summary', 20, yOffset);
+  yOffset += 10;
+  
+  // Add summary content
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(12);
+  
+  const splitSummary = doc.splitTextToSize(processedSummary, 170);
+  doc.text(splitSummary, 20, yOffset);
+  
+  // Calculate next Y position based on summary length
+  yOffset += splitSummary.length * 7 + 10;
+  
+  // Add tasks section if available
+  if (tasks) {
+    // Check if we need a new page for tasks
+    if (yOffset > 250) {
+      doc.addPage();
+      yOffset = 20;
+    }
+    
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.text('Action Items', 20, yOffset);
+    yOffset += 10;
+    
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(12);
+    
+    // Process tasks
+    const taskList = tasks.split('[ ]').map(t => t.trim()).filter(t => t.length > 0);
+    for (const task of taskList) {
+      doc.text(`□ ${task.split('Date')[0].trim()}`, 20, yOffset);
+      yOffset += 7;
+      
+      // Add new page if necessary
+      if (yOffset > 280) {
+        doc.addPage();
+        yOffset = 20;
+      }
+    }
+  }
+  
+  // Save the PDF
+  doc.save('meeting-summary.pdf');
 };
