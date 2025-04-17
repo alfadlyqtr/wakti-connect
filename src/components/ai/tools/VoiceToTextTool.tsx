@@ -28,7 +28,8 @@ export const VoiceToTextTool: React.FC<VoiceToTextToolProps> = ({
     startListening, 
     stopListening,
     supportsVoice,
-    error
+    error,
+    recordingDuration
   } = useVoiceInteraction({
     onTranscriptComplete: (text) => {
       setEditedTranscript(text);
@@ -117,7 +118,7 @@ export const VoiceToTextTool: React.FC<VoiceToTextToolProps> = ({
               {isListening ? (
                 <>
                   <MicOff className="h-5 w-5 mr-2" />
-                  Stop Recording
+                  Stop Recording {recordingDuration > 0 ? `(${Math.floor(recordingDuration)}s)` : ''}
                 </>
               ) : isProcessing ? (
                 <>

@@ -37,7 +37,15 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
   } = useMeetingSummary();
 
   const { 
-    supportsVoice
+    isListening,
+    transcript,
+    lastTranscript,
+    supportsVoice,
+    error,
+    isProcessing,
+    startListening,
+    stopListening,
+    recordingDuration
   } = useVoiceInteraction({
     continuousListening: false,
   });
