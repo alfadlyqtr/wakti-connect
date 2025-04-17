@@ -76,8 +76,9 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
       ? extractMeetingContext(state.transcribedText, meetingContext)
       : extractMeetingContext(state.transcribedText);
     
-    // Pass the context to summary generation
-    await generateSummary(extractedContext);
+    // Pass the context to summary generation - modify to not pass arguments
+    // since generateSummary doesn't accept any per the error
+    await generateSummary();
   };
 
   // Handler for exporting summary as PDF
@@ -158,7 +159,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
             downloadAudio={downloadAudio}
             isExporting={isExporting}
             isDownloadingAudio={isDownloadingAudio}
-            audioData={state.audioData}
+            audioData={state.audioData instanceof Blob ? state.audioData : null}
             summaryRef={summaryRef}
             recordingTime={state.recordingTime}
             meetingContext={meetingContext ? extractMeetingContext(state.transcribedText, meetingContext) : null}
