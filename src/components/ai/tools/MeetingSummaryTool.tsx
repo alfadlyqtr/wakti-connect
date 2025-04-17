@@ -16,6 +16,9 @@ interface MeetingSummaryToolProps {
   onUseSummary?: (summary: string) => void;
 }
 
+// Local Storage key for language preference
+const LANGUAGE_STORAGE_KEY = 'meeting-summary-language-preference';
+
 export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSummary }) => {
   const {
     state,
@@ -42,6 +45,20 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
   // State for meeting context dialog
   const [showContextDialog, setShowContextDialog] = useState(false);
   const [meetingContext, setMeetingContext] = useState<MeetingContextData | null>(null);
+  
+  // Load saved language preference from local storage on component mount
+  useEffect(() => {
+    const savedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
+    if (savedLanguage) {
+      setSelectedLanguage(savedLanguage);
+    }
+  }, [setSelectedLanguage]);
+
+  // Save language preference to local storage whenever it changes
+  const handleLanguageChange = (language: string) => {
+    setSelectedLanguage(language);
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+  };
   
   // Load saved meetings on component mount
   useEffect(() => {
@@ -116,7 +133,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
           isRecording={state.isRecording}
           recordingTime={state.recordingTime}
           selectedLanguage={selectedLanguage}
-          setSelectedLanguage={setSelectedLanguage}
+          setSelectedLanguage={handleLanguageChange}
           startRecording={handleStartRecording}
           stopRecording={stopRecording}
           recordingError={state.recordingError}

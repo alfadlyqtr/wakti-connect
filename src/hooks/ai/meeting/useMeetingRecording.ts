@@ -3,6 +3,9 @@ import { useState, useEffect } from 'react';
 import { useVoiceInteraction } from '../useVoiceInteraction';
 import { toast } from '@/components/ui/use-toast';
 
+// Local Storage key for language preference
+const LANGUAGE_STORAGE_KEY = 'meeting-summary-language-preference';
+
 export interface MeetingRecordingState {
   isRecording: boolean;
   recordingTime: number;
@@ -20,7 +23,10 @@ export const useMeetingRecording = () => {
     audioData: null,
   });
   
-  const [selectedLanguage, setSelectedLanguage] = useState('en');
+  // Initialize with saved language from localStorage or default to 'en'
+  const [selectedLanguage, setSelectedLanguage] = useState(() => {
+    return localStorage.getItem(LANGUAGE_STORAGE_KEY) || 'en';
+  });
 
   const {
     startListening,
