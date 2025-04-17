@@ -60,18 +60,38 @@ export const useMeetingStorage = () => {
 
       // Save audio data if available
       if (audioData) {
-        const audioFile = new File(
-          [audioData], 
-          `meeting_${data[0].id}.webm`, 
-          { type: 'audio/webm' }
-        );
+        console.log('Saving audio recording for meeting:', data[0].id);
+        
+        // First, check if the bucket exists
+        const { data: bucketData, error: bucketError } = await supabase.storage
+          .getBucket('meeting-recordings');
+          
+        if (bucketError) {
+          console.error('Error checking meeting-recordings bucket:', bucketError);
+          console.warn('Audio recording will not be saved - bucket not found');
+          // Continue without audio rather than failing the whole save
+        } else {
+          // Upload the audio file
+          const audioFile = new File(
+            [audioData], 
+            `meeting_${data[0].id}.webm`, 
+            { type: 'audio/webm' }
+          );
 
-        const { error: uploadError } = await supabase.storage
-          .from('meeting-recordings')
-          .upload(`${data[0].id}.webm`, audioFile);
+          const { data: audioData, error: uploadError } = await supabase.storage
+            .from('meeting-recordings')
+            .upload(`${data[0].id}.webm`, audioFile);
 
-        if (uploadError) {
-          console.error('Error uploading audio:', uploadError);
+          if (uploadError) {
+            console.error('Error uploading audio:', uploadError);
+            toast({
+              title: "Audio save warning",
+              description: "Summary saved but audio recording could not be uploaded.",
+              variant: "destructive"
+            });
+          } else {
+            console.log('Audio recording saved successfully:', audioData?.path);
+          }
         }
       }
 

@@ -39,6 +39,33 @@ export const useMeetingExport = () => {
       
       if (meetingId) {
         console.log('Downloading audio from storage for meeting:', meetingId);
+        
+        // First check if the meeting-recordings bucket exists
+        const { data: bucketData, error: bucketError } = await supabase.storage
+          .getBucket('meeting-recordings');
+          
+        if (bucketError) {
+          console.error('Bucket error:', bucketError);
+          throw new Error('Audio storage not available. Please contact support.');
+        }
+        
+        // Check if the file exists before trying to download
+        const { data: fileData, error: fileError } = await supabase.storage
+          .from('meeting-recordings')
+          .list('', {
+            search: `${meetingId}.webm`
+          });
+          
+        if (fileError) {
+          console.error('File search error:', fileError);
+          throw new Error('Error finding audio recording.');
+        }
+        
+        if (!fileData || fileData.length === 0) {
+          console.error('Audio file not found for meeting:', meetingId);
+          throw new Error('Audio recording was not found for this meeting.');
+        }
+        
         // Download from storage
         const { data, error } = await supabase.storage
           .from('meeting-recordings')
@@ -46,7 +73,7 @@ export const useMeetingExport = () => {
         
         if (error) {
           console.error('Supabase download error:', error);
-          throw new Error('Audio recording not found or could not be downloaded.');
+          throw new Error('Audio recording could not be downloaded. Please try again later.');
         }
         
         // Create download link
