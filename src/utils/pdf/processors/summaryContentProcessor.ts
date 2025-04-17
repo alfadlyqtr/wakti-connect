@@ -1,41 +1,51 @@
 
 /**
- * Process summary content for PDF export
+ * Process meeting summary content for PDF generation
  */
 
 /**
- * Process summary content for PDF export
- * @param summary The markdown summary content
- * @returns Object containing HTML-formatted content and tasks
+ * Processes summary content to extract tasks and format the content
+ * @param summary The raw summary text
+ * @returns Object containing processed summary and extracted tasks
  */
-export const processSummaryContent = (summary: string): { summary: string; tasks: string } => {
-  // Extract any tasks if present
-  let tasks = "";
-  const taskMatch = summary.match(/##\s*Action Items[^#]*(?=##|$)/i);
+export const processSummaryContent = (summary: string) => {
+  // Extract task list if present
+  const taskListMatch = summary.match(/(?:## Task|## Action|## To-Do)[\s\S]*$/i);
+  const tasks = taskListMatch ? taskListMatch[0] : null;
   
-  if (taskMatch) {
-    const taskLines = taskMatch[0]
-      .replace(/^##\s*Action Items\s*/i, '')
-      .split('\n')
-      .filter(line => line.trim().startsWith('-') || line.trim().startsWith('*'))
-      .map(line => line.replace(/^[-*]\s*/, '').trim())
-      .filter(line => line.length > 0);
-    
-    tasks = taskLines.map(task => 
-      `<div class="line-item">[ ] ${task} ............................................. Date</div>`
-    ).join('');
+  // Remove tasks from main summary if extracted separately
+  let processedSummary = tasks 
+    ? summary.substring(0, summary.indexOf(taskListMatch[0])).trim()
+    : summary;
+  
+  // Format markdown headings for PDF
+  processedSummary = processedSummary
+    .replace(/^# (.*)/gm, '<<strong>$1</strong>>')
+    .replace(/^## (.*)/gm, '<<strong>$1</strong>>')
+    .replace(/^### (.*)/gm, '<<strong>$1</strong>>');
+  
+  // Format bullet points
+  processedSummary = processedSummary
+    .replace(/^\* (.*)/gm, '• $1')
+    .replace(/^- (.*)/gm, '• $1');
+  
+  // Format bold text
+  processedSummary = processedSummary
+    .replace(/\*\*(.*?)\*\*/g, '<<strong>$1</strong>>');
+  
+  // Convert temporary tags back to HTML
+  processedSummary = processedSummary
+    .replace(/<<strong>(.*?)<\/strong>>/g, '<strong>$1</strong>');
+  
+  // Support for Arabic text direction
+  if (/[\u0600-\u06FF]/.test(processedSummary)) {
+    // Add direction attributes for mixed content
+    processedSummary = processedSummary
+      .replace(/([\u0600-\u06FF].+?)(?=\n|$)/g, '<span dir="rtl">$1</span>');
   }
   
-  // Format the summary content for display
-  const formattedSummary = summary
-    .replace(/##\s*.*?\n/g, '') // Remove headers
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/\n\n/g, '<br><br>')
-    .trim();
-  
   return {
-    summary: formattedSummary,
-    tasks: tasks
+    summary: processedSummary,
+    tasks
   };
 };

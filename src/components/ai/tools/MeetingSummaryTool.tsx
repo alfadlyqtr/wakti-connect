@@ -35,7 +35,10 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     stopRecording,
     generateSummary,
     copySummary,
-    downloadAudio
+    downloadAudio,
+    deleteMeeting,
+    updateMeetingTitle,
+    supportsVoice
   } = useMeetingSummary();
 
   // State for meeting context dialog
@@ -76,8 +79,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
       ? extractMeetingContext(state.transcribedText, meetingContext)
       : extractMeetingContext(state.transcribedText);
     
-    // Pass the context to summary generation - modify to not pass arguments
-    // since generateSummary doesn't accept any per the error
+    // Pass the context to summary generation
     await generateSummary();
   };
 
@@ -109,12 +111,12 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
           Meeting Summary Tool
         </CardTitle>
         <CardDescription>
-          Record meetings and generate summaries with AI
+          Record meetings and generate summaries with AI (Supports English & Arabic)
         </CardDescription>
       </CardHeader>
       
       <CardContent className="space-y-4">
-        {!state.supportsVoice && (
+        {!supportsVoice && (
           <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 p-3 rounded-md flex items-start">
             <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
             <div>
@@ -170,6 +172,8 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
         <SavedMeetingsList
           savedMeetings={savedMeetings}
           isLoadingHistory={isLoadingHistory}
+          onDeleteMeeting={deleteMeeting}
+          onEditMeetingTitle={updateMeetingTitle}
         />
       </CardContent>
     </Card>

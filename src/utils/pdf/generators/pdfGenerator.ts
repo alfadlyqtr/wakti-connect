@@ -3,6 +3,7 @@ import jsPDF from 'jspdf';
 import { formatTime } from '../helpers/timeFormatters';
 import { processSummaryContent } from '../processors/summaryContentProcessor';
 import { MeetingContext } from '@/utils/text/transcriptionUtils';
+import { containsArabic, getTextDirection } from '@/utils/text/transcriptionUtils';
 
 export const generatePdf = async (
   summary: string,
@@ -12,10 +13,34 @@ export const generatePdf = async (
   const doc = new jsPDF();
   const { summary: processedSummary, tasks } = processSummaryContent(summary);
   
+  // Determine if content has Arabic text and set appropriate font
+  const hasArabicContent = containsArabic(summary);
+  
+  // Load Arabic font if needed
+  if (hasArabicContent) {
+    // Standard jsPDF doesn't support Arabic font by default
+    // In a real implementation, we would need to add custom font support
+    // This is a placeholder for future implementation
+    console.log("Arabic content detected in summary");
+  }
+  
   // Set up document
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(20);
-  doc.text('Meeting Summary', 20, 20);
+  
+  // Add title - either from context or default
+  let docTitle = "Meeting Summary";
+  if (meetingContext?.title) {
+    docTitle = meetingContext.title;
+  } else {
+    // Try to extract title from the first line of summary
+    const firstLineMatch = summary.match(/^# (.+)$/m);
+    if (firstLineMatch && firstLineMatch[1]) {
+      docTitle = firstLineMatch[1];
+    }
+  }
+  
+  doc.text(docTitle, 20, 20);
   
   // Add date and duration
   doc.setFont('helvetica', 'normal');
@@ -72,11 +97,46 @@ export const generatePdf = async (
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(12);
   
-  const splitSummary = doc.splitTextToSize(processedSummary, 170);
-  doc.text(splitSummary, 20, yOffset);
-  
-  // Calculate next Y position based on summary length
-  yOffset += splitSummary.length * 7 + 10;
+  // Handle bidirectional text (English/Arabic)
+  if (hasArabicContent) {
+    // For mixed content documents, we need special handling
+    // This is a simplified approach - in production would use proper RTL handling libraries
+    
+    // Split by paragraphs
+    const paragraphs = processedSummary.split('\n\n');
+    
+    for (const paragraph of paragraphs) {
+      if (paragraph.trim().length === 0) continue;
+      
+      // Determine direction for this paragraph
+      const direction = getTextDirection(paragraph);
+      const splitParagraph = doc.splitTextToSize(paragraph, 170);
+      
+      if (direction === 'rtl') {
+        // For RTL text, special handling would be needed
+        // This is simplified - in production, would use proper RTL rendering
+        // Right-align text for Arabic paragraphs
+        doc.text(splitParagraph, 190, yOffset, { align: 'right' });
+      } else {
+        doc.text(splitParagraph, 20, yOffset);
+      }
+      
+      yOffset += splitParagraph.length * 7 + 5;
+      
+      // Check if we need a new page
+      if (yOffset > 280) {
+        doc.addPage();
+        yOffset = 20;
+      }
+    }
+  } else {
+    // Standard handling for English-only content
+    const splitSummary = doc.splitTextToSize(processedSummary, 170);
+    doc.text(splitSummary, 20, yOffset);
+    
+    // Calculate next Y position based on summary length
+    yOffset += splitSummary.length * 7 + 10;
+  }
   
   // Add tasks section if available
   if (tasks) {
@@ -108,6 +168,11 @@ export const generatePdf = async (
     }
   }
   
+  // Add filename with meeting title if available
+  const filename = meetingContext?.title 
+    ? `meeting-${meetingContext.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.pdf`
+    : 'meeting-summary.pdf';
+  
   // Save the PDF
-  doc.save('meeting-summary.pdf');
+  doc.save(filename);
 };

@@ -1,119 +1,111 @@
 
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { MapPin, Users, User, Info } from 'lucide-react';
 
 export interface MeetingContextData {
-  location: string;
-  participants: string;
-  host: string;
+  title?: string;
+  location?: string;
+  host?: string;
+  participants?: string[];
 }
 
 interface MeetingContextDialogProps {
   open: boolean;
   onClose: (data?: MeetingContextData) => void;
+  initialData?: MeetingContextData;
 }
 
-export const MeetingContextDialog: React.FC<MeetingContextDialogProps> = ({
-  open,
-  onClose
+export const MeetingContextDialog: React.FC<MeetingContextDialogProps> = ({ 
+  open, 
+  onClose,
+  initialData = {}
 }) => {
-  const [contextData, setContextData] = useState<MeetingContextData>({
-    location: '',
-    participants: '',
-    host: ''
+  const [formData, setFormData] = useState<MeetingContextData>({
+    title: initialData.title || '',
+    location: initialData.location || '',
+    host: initialData.host || '',
+    participants: initialData.participants || []
   });
 
-  const handleInputChange = (field: keyof MeetingContextData, value: string) => {
-    setContextData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    
+    if (name === 'participants') {
+      // Convert comma-separated string to array
+      setFormData({
+        ...formData,
+        participants: value.split(',').map(p => p.trim()).filter(p => p)
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value
+      });
+    }
   };
 
-  const handleSubmit = () => {
-    onClose(contextData);
-  };
-
-  const handleSkip = () => {
-    onClose();
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onClose(formData);
   };
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleSkip()}>
-      <DialogContent className="sm:max-w-md">
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="text-center text-xl">Meeting Context</DialogTitle>
-          <DialogDescription className="text-center">
-            Provide optional details to improve your meeting summary
-          </DialogDescription>
+          <DialogTitle>Meeting Context</DialogTitle>
         </DialogHeader>
-        
-        <div className="grid gap-4 py-2">
-          <div className="grid gap-2">
-            <Label htmlFor="location" className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-muted-foreground" /> Location
-            </Label>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="title">Meeting Title</Label>
+            <Input
+              id="title"
+              name="title"
+              placeholder="Weekly Team Sync"
+              value={formData.title}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="location">Location</Label>
             <Input
               id="location"
-              placeholder="Main Conference Room"
-              value={contextData.location}
-              onChange={(e) => handleInputChange('location', e.target.value)}
-              className="w-full"
+              name="location"
+              placeholder="Conference Room B"
+              value={formData.location}
+              onChange={handleChange}
             />
           </div>
-          
-          <div className="grid gap-2">
-            <Label htmlFor="participants" className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-muted-foreground" /> Participants
-            </Label>
-            <Input
-              id="participants"
-              placeholder="John, Sarah, Michael"
-              value={contextData.participants}
-              onChange={(e) => handleInputChange('participants', e.target.value)}
-              className="w-full"
-            />
-          </div>
-          
-          <div className="grid gap-2">
-            <Label htmlFor="host" className="flex items-center gap-2">
-              <User className="h-4 w-4 text-muted-foreground" /> Host
-            </Label>
+          <div className="space-y-2">
+            <Label htmlFor="host">Host</Label>
             <Input
               id="host"
-              placeholder="Team Lead"
-              value={contextData.host}
-              onChange={(e) => handleInputChange('host', e.target.value)}
-              className="w-full"
+              name="host"
+              placeholder="Jane Doe"
+              value={formData.host}
+              onChange={handleChange}
             />
           </div>
-          
-          <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-2">
-            <Info className="h-4 w-4" />
-            <p>Entering details helps create a better summary, but we'll try to detect them from the conversation if skipped.</p>
+          <div className="space-y-2">
+            <Label htmlFor="participants">Participants (comma-separated)</Label>
+            <Input
+              id="participants"
+              name="participants"
+              placeholder="John, Sarah, Ahmed"
+              value={formData.participants?.join(', ')}
+              onChange={handleChange}
+            />
           </div>
-        </div>
-        
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-2 mt-2">
-          <Button 
-            variant="outline" 
-            className="sm:flex-1" 
-            onClick={handleSkip}
-          >
-            Skip and Start Recording
-          </Button>
-          <Button 
-            variant="default"
-            className="sm:flex-1"
-            onClick={handleSubmit}
-          >
-            Continue
-          </Button>
-        </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onClose()}>
+              Cancel
+            </Button>
+            <Button type="submit">Continue</Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
