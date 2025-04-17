@@ -11,6 +11,9 @@ export interface SavedMeeting {
   duration: number;
   title: string;
   location?: string;
+  hasAudio?: boolean;
+  audioExpiresAt?: string;
+  daysUntilExpiration?: number;
 }
 
 export const useMeetingStorage = () => {
@@ -43,6 +46,9 @@ export const useMeetingStorage = () => {
         throw new Error('User not authenticated');
       }
 
+      // Calculate audio expiration (10 days from now)
+      const audioExpiresAt = audioData ? new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString() : null;
+      
       // Save to Supabase
       const { data, error } = await supabase.from('meetings').insert({
         summary: summary,
@@ -51,7 +57,10 @@ export const useMeetingStorage = () => {
         location: meetingContext?.location || null,
         language: language,
         title: meetingTitle,
-        user_id: user.id
+        user_id: user.id,
+        has_audio: !!audioData,
+        audio_expires_at: audioExpiresAt,
+        audio_uploaded_at: audioData ? new Date().toISOString() : null
       }).select();
 
       if (error) {
@@ -89,6 +98,13 @@ export const useMeetingStorage = () => {
               description: "Summary saved but audio recording could not be uploaded.",
               variant: "destructive"
             });
+            
+            // Update the meeting record to indicate no audio
+            await supabase.from('meetings').update({
+              has_audio: false,
+              audio_expires_at: null,
+              audio_uploaded_at: null
+            }).eq('id', data[0].id);
           } else {
             console.log('Audio recording saved successfully:', uploadData?.path);
           }
@@ -128,14 +144,32 @@ export const useMeetingStorage = () => {
         throw new Error(error.message);
       }
 
-      setSavedMeetings(data.map(meeting => ({
-        id: meeting.id,
-        date: meeting.date,
-        summary: meeting.summary,
-        duration: meeting.duration,
-        title: meeting.title || 'Untitled Meeting',
-        location: meeting.location
-      })));
+      // Calculate days until expiration for each meeting with audio
+      const now = new Date();
+      const processedMeetings = data.map(meeting => {
+        let daysUntilExpiration = null;
+        
+        if (meeting.has_audio && meeting.audio_expires_at) {
+          const expiryDate = new Date(meeting.audio_expires_at);
+          const diffTime = expiryDate.getTime() - now.getTime();
+          daysUntilExpiration = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          daysUntilExpiration = Math.max(0, daysUntilExpiration); // Ensure it's not negative
+        }
+        
+        return {
+          id: meeting.id,
+          date: meeting.date,
+          summary: meeting.summary,
+          duration: meeting.duration,
+          title: meeting.title || 'Untitled Meeting',
+          location: meeting.location,
+          hasAudio: meeting.has_audio,
+          audioExpiresAt: meeting.audio_expires_at,
+          daysUntilExpiration
+        };
+      });
+
+      setSavedMeetings(processedMeetings);
     } catch (error) {
       console.error('Error loading meetings:', error);
       toast({
