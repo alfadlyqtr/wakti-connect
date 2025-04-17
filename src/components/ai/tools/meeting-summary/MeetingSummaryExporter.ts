@@ -1,107 +1,65 @@
 
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import { formatTime } from '@/utils/audio/audioProcessing';
-import { createPdfHeaderDiv, createPdfMetadataDiv, processSummaryContent } from '@/utils/pdf/pdfExportUtils';
 
-/**
- * Exports the meeting summary as a PDF file
- * @param summary The markdown summary text
- * @param recordingTime The duration of the meeting in seconds
- * @param detectedLocation Optional location information
- */
+// Function to export the meeting summary as PDF
 export const exportMeetingSummaryAsPDF = async (
   summary: string,
   recordingTime: number,
   detectedLocation: string | null
 ) => {
-  if (!summary) return;
-  
   try {
-    // Create a temporary container for the PDF export
-    const pdfContainer = document.createElement('div');
-    pdfContainer.style.width = '800px';
-    pdfContainer.style.padding = '40px';
-    pdfContainer.style.backgroundColor = '#ffffff';
-    pdfContainer.style.color = '#000000';
-    pdfContainer.style.fontFamily = 'Arial, sans-serif';
-    document.body.appendChild(pdfContainer);
+    // Create a temporary div with the summary content
+    const tempDiv = document.createElement('div');
+    tempDiv.style.width = '595px'; // A4 width in pixels at 72 dpi
+    tempDiv.style.padding = '40px';
+    tempDiv.style.fontFamily = 'Arial, sans-serif';
+    tempDiv.style.position = 'absolute';
+    tempDiv.style.left = '-9999px';
     
-    // Check if content is in Arabic
-    const isArabicContent = /[\u0600-\u06FF]/.test(summary);
-    if (isArabicContent) {
-      pdfContainer.style.direction = 'rtl';
-      pdfContainer.style.textAlign = 'right';
-    }
+    // Add title and metadata
+    let content = `
+      <h1 style="font-size: 24px; margin-bottom: 20px;">Meeting Summary</h1>
+      <div style="margin-bottom: 20px; font-size: 14px; color: #666;">
+        <p><strong>Date:</strong> ${new Date().toLocaleString()}</p>
+        <p><strong>Duration:</strong> ${Math.floor(recordingTime / 60)}m ${recordingTime % 60}s</p>
+        ${detectedLocation ? `<p><strong>Location:</strong> ${detectedLocation}</p>` : ''}
+      </div>
+      <div style="font-size: 14px; line-height: 1.5;">
+        ${summary.replace(/\n/g, '<br>')}
+      </div>
+    `;
     
-    // Add WAKTI branding header
-    const headerDiv = createPdfHeaderDiv(isArabicContent);
-    pdfContainer.appendChild(headerDiv);
+    tempDiv.innerHTML = content;
+    document.body.appendChild(tempDiv);
     
-    // Add meeting metadata table
-    const metadataDiv = createPdfMetadataDiv(isArabicContent, recordingTime, detectedLocation, formatTime);
-    pdfContainer.appendChild(metadataDiv);
-    
-    // Process the summary content to apply enhanced styling
-    const contentDiv = document.createElement('div');
-    contentDiv.style.lineHeight = '1.6';
-    
-    // Style the content with enhanced formatting
-    const styledContent = processSummaryContent(summary);
-    contentDiv.innerHTML = styledContent;
-    pdfContainer.appendChild(contentDiv);
-    
-    // Use html2canvas to capture the PDF container
-    const canvas = await html2canvas(pdfContainer, {
+    // Convert to canvas
+    const canvas = await html2canvas(tempDiv, {
       scale: 2,
       useCORS: true,
-      logging: false,
+      logging: false
     });
     
-    // Create PDF
+    // Generate PDF
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF({
       orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4',
+      unit: 'pt',
+      format: 'a4'
     });
     
-    // Calculate dimensions to fit the content into the PDF
-    const imgWidth = 210; // A4 width in mm
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    const imgWidth = 595; // A4 width in points
+    const imgHeight = canvas.height * imgWidth / canvas.width;
     
-    let position = 0;
-    
-    // If content is too tall for one page, split it across multiple pages
-    while (position < imgHeight) {
-      if (position > 0) {
-        pdf.addPage();
-      }
-      
-      const contentHeight = Math.min(297, imgHeight - position); // 297mm is A4 height
-      
-      pdf.addImage(
-        imgData,
-        'PNG',
-        0,
-        -position,
-        imgWidth,
-        imgHeight
-      );
-      
-      position += 297;
-    }
+    pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
     
     // Save the PDF
-    const meetingDate = new Date().toISOString().slice(0, 10);
-    pdf.save(`WAKTI_Meeting_Summary_${meetingDate}.pdf`);
+    pdf.save(`meeting-summary-${new Date().toISOString().slice(0, 10)}.pdf`);
     
     // Clean up
-    document.body.removeChild(pdfContainer);
-    
-    return true;
+    document.body.removeChild(tempDiv);
   } catch (error) {
-    console.error('Error creating PDF:', error);
-    return false;
+    console.error('Error generating PDF:', error);
+    throw error;
   }
 };

@@ -56,7 +56,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
   // Load saved meetings on component mount
   useEffect(() => {
     loadSavedMeetings();
-  }, []);
+  }, [loadSavedMeetings]);
 
   // Handler for starting recording with voice interaction settings
   const handleStartRecording = () => {
