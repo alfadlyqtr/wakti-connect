@@ -3,6 +3,7 @@ import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Download, FileDown, Copy, Check, MapPin } from 'lucide-react';
+import { formatDuration } from '@/utils/text/transcriptionUtils';
 
 interface SummaryDisplayProps {
   summary: string;

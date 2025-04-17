@@ -1,6 +1,7 @@
 
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { createPdfHeaderDiv, createPdfMetadataDiv, processSummaryContent } from '@/utils/pdf/pdfExportUtils';
 
 // Function to export the meeting summary as PDF
 export const exportMeetingSummaryAsPDF = async (
@@ -9,6 +10,17 @@ export const exportMeetingSummaryAsPDF = async (
   detectedLocation: string | null
 ) => {
   try {
+    // Format time function
+    const formatTime = (seconds: number): string => {
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = seconds % 60;
+      return `${minutes}m ${remainingSeconds}s`;
+    };
+    
+    // Detect if content is Arabic
+    const isArabicContent = /[\u0600-\u06FF]/.test(summary) && 
+                         summary.match(/[\u0600-\u06FF]/g)!.length > summary.length * 0.5;
+    
     // Create a temporary div with the summary content
     const tempDiv = document.createElement('div');
     tempDiv.style.width = '595px'; // A4 width in pixels at 72 dpi
@@ -16,21 +28,22 @@ export const exportMeetingSummaryAsPDF = async (
     tempDiv.style.fontFamily = 'Arial, sans-serif';
     tempDiv.style.position = 'absolute';
     tempDiv.style.left = '-9999px';
+    tempDiv.style.direction = isArabicContent ? 'rtl' : 'ltr';
     
-    // Add title and metadata
-    let content = `
-      <h1 style="font-size: 24px; margin-bottom: 20px;">Meeting Summary</h1>
-      <div style="margin-bottom: 20px; font-size: 14px; color: #666;">
-        <p><strong>Date:</strong> ${new Date().toLocaleString()}</p>
-        <p><strong>Duration:</strong> ${Math.floor(recordingTime / 60)}m ${recordingTime % 60}s</p>
-        ${detectedLocation ? `<p><strong>Location:</strong> ${detectedLocation}</p>` : ''}
-      </div>
-      <div style="font-size: 14px; line-height: 1.5;">
-        ${summary.replace(/\n/g, '<br>')}
-      </div>
-    `;
+    // Create header div
+    const headerDiv = createPdfHeaderDiv(isArabicContent);
+    tempDiv.appendChild(headerDiv);
     
-    tempDiv.innerHTML = content;
+    // Create metadata div
+    const metadataDiv = createPdfMetadataDiv(isArabicContent, recordingTime, detectedLocation, formatTime);
+    tempDiv.appendChild(metadataDiv);
+    
+    // Process the summary content
+    const contentDiv = document.createElement('div');
+    contentDiv.innerHTML = processSummaryContent(summary);
+    tempDiv.appendChild(contentDiv);
+    
+    // Add to document for rendering
     document.body.appendChild(tempDiv);
     
     // Convert to canvas
@@ -52,6 +65,19 @@ export const exportMeetingSummaryAsPDF = async (
     const imgHeight = canvas.height * imgWidth / canvas.width;
     
     pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+    
+    // Add multiple pages if needed
+    if (imgHeight > 842) {
+      let heightLeft = imgHeight - 842;
+      let position = -842;
+      
+      while (heightLeft > 0) {
+        position = position - 842;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= 842;
+      }
+    }
     
     // Save the PDF
     pdf.save(`meeting-summary-${new Date().toISOString().slice(0, 10)}.pdf`);
