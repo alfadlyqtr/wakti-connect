@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { AlertCircle } from 'lucide-react';
@@ -9,6 +10,7 @@ import RecordingControls from './meeting-summary/RecordingControls';
 import SummaryDisplay from './meeting-summary/SummaryDisplay';
 import SavedMeetingsList from './meeting-summary/SavedMeetingsList';
 import TranscriptionPanel from './meeting-summary/TranscriptionPanel';
+import { toast } from '@/components/ui/toast'; // Add this import
 
 interface MeetingSummaryToolProps {
   onUseSummary?: (summary: string) => void;
