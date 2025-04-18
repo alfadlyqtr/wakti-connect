@@ -1,8 +1,10 @@
+
 import { useState, useCallback, useRef } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from '@/components/ui/use-toast';
 import { useVoiceSettings } from '@/store/voiceSettings';
 import { useVoiceInteraction } from './useVoiceInteraction';
+import React from 'react';
 
 interface MeetingSummaryState {
   isRecording: boolean;
@@ -35,7 +37,7 @@ export const useMeetingSummary = () => {
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState('en');
   const [copied, setCopied] = useState(false);
-  const summaryRef = React.useRef<HTMLDivElement>(null);
+  const summaryRef = useRef<HTMLDivElement>(null);
 
   const loadSavedMeetings = async () => {
     try {
@@ -164,13 +166,14 @@ export const useMeetingSummary = () => {
     silenceThreshold,
     maxRecordingDuration
   } = useVoiceSettings();
+  
   const { 
     supportsVoice,
     apiKeyStatus,
     apiKeyErrorDetails,
     startListening,
     stopListening,
-    processAudioWithFallbacks
+    // Remove the reference to processAudioWithFallbacks as it doesn't exist in the returned object
   } = useVoiceInteraction({
     continuousListening: false,
     onTranscriptComplete: (finalTranscript) => {
