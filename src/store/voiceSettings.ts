@@ -2,7 +2,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-type Language = 'en' | 'ar' | 'auto';
+type Language = 'en' | 'es' | 'fr' | 'de' | 'ar' | 'auto';
 
 interface VoiceSettingsState {
   autoSilenceDetection: boolean;
