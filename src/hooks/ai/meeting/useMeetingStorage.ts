@@ -1,10 +1,17 @@
+
 import { useState, useCallback } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { MeetingContext, extractMeetingContext } from '@/utils/text/transcriptionUtils';
-import type { Meeting, SavedMeeting } from '@/types/meeting';
 
-export type { SavedMeeting };
+export interface SavedMeeting {
+  id: string;
+  date: string;
+  summary: string;
+  duration: number;
+  title: string;
+  location?: string;
+}
 
 export const useMeetingStorage = () => {
   const [savedMeetings, setSavedMeetings] = useState<SavedMeeting[]>([]);
@@ -23,18 +30,20 @@ export const useMeetingStorage = () => {
         return null;
       }
 
+      // Extract location from transcript if available
       const meetingContext = extractMeetingContext(transcribedText);
       
+      // Determine title - use provided title, extract from transcript, or use default
       const meetingTitle = title || 
         (meetingContext?.title || 'Meeting Summary');
 
+      // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         throw new Error('User not authenticated');
       }
 
-      const audioExpiresAt = audioData ? new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString() : null;
-      
+      // Save to Supabase
       const { data, error } = await supabase.from('meetings').insert({
         summary: summary,
         duration: recordingTime,
@@ -42,53 +51,27 @@ export const useMeetingStorage = () => {
         location: meetingContext?.location || null,
         language: language,
         title: meetingTitle,
-        user_id: user.id,
-        has_audio: !!audioData,
-        audio_expires_at: audioExpiresAt,
-        audio_uploaded_at: audioData ? new Date().toISOString() : null
+        user_id: user.id
       }).select();
 
       if (error) {
         throw new Error(error.message);
       }
 
+      // Save audio data if available
       if (audioData) {
-        console.log('Saving audio recording for meeting:', data[0].id);
-        
-        const { data: bucketData, error: bucketError } = await supabase.storage
-          .getBucket('meeting-recordings');
-          
-        if (bucketError) {
-          console.error('Error checking meeting-recordings bucket:', bucketError);
-          console.warn('Audio recording will not be saved - bucket not found');
-          // Continue without audio rather than failing the whole save
-        } else {
-          const audioFile = new File(
-            [audioData], 
-            `meeting_${data[0].id}.webm`, 
-            { type: 'audio/webm' }
-          );
+        const audioFile = new File(
+          [audioData], 
+          `meeting_${data[0].id}.webm`, 
+          { type: 'audio/webm' }
+        );
 
-          const { data: uploadData, error: uploadError } = await supabase.storage
-            .from('meeting-recordings')
-            .upload(`${data[0].id}.webm`, audioFile);
+        const { error: uploadError } = await supabase.storage
+          .from('meeting-recordings')
+          .upload(`${data[0].id}.webm`, audioFile);
 
-          if (uploadError) {
-            console.error('Error uploading audio:', uploadError);
-            toast({
-              title: "Audio save warning",
-              description: "Summary saved but audio recording could not be uploaded.",
-              variant: "destructive"
-            });
-            
-            await supabase.from('meetings').update({
-              has_audio: false,
-              audio_expires_at: null,
-              audio_uploaded_at: null
-            }).eq('id', data[0].id);
-          } else {
-            console.log('Audio recording saved successfully:', uploadData?.path);
-          }
+        if (uploadError) {
+          console.error('Error uploading audio:', uploadError);
         }
       }
 
@@ -97,6 +80,7 @@ export const useMeetingStorage = () => {
         description: "Your meeting summary has been saved successfully.",
       });
 
+      // Refresh the list of saved meetings
       loadSavedMeetings();
       
       return data[0];
@@ -124,31 +108,14 @@ export const useMeetingStorage = () => {
         throw new Error(error.message);
       }
 
-      const now = new Date();
-      const processedMeetings = data.map((meeting: Meeting) => {
-        let daysUntilExpiration = null;
-        
-        if (meeting.has_audio && meeting.audio_expires_at) {
-          const expiryDate = new Date(meeting.audio_expires_at);
-          const diffTime = expiryDate.getTime() - now.getTime();
-          daysUntilExpiration = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-          daysUntilExpiration = Math.max(0, daysUntilExpiration);
-        }
-        
-        return {
-          id: meeting.id,
-          date: meeting.date,
-          summary: meeting.summary,
-          duration: meeting.duration,
-          title: meeting.title || 'Untitled Meeting',
-          location: meeting.location,
-          hasAudio: meeting.has_audio,
-          audioExpiresAt: meeting.audio_expires_at,
-          daysUntilExpiration
-        };
-      });
-
-      setSavedMeetings(processedMeetings);
+      setSavedMeetings(data.map(meeting => ({
+        id: meeting.id,
+        date: meeting.date,
+        summary: meeting.summary,
+        duration: meeting.duration,
+        title: meeting.title || 'Untitled Meeting',
+        location: meeting.location
+      })));
     } catch (error) {
       console.error('Error loading meetings:', error);
       toast({
@@ -172,10 +139,12 @@ export const useMeetingStorage = () => {
         throw new Error(error.message);
       }
 
+      // Also remove the audio recording if it exists
       await supabase.storage
         .from('meeting-recordings')
         .remove([`${id}.webm`]);
 
+      // Update local state
       setSavedMeetings(prevMeetings => 
         prevMeetings.filter(meeting => meeting.id !== id)
       );
@@ -205,6 +174,7 @@ export const useMeetingStorage = () => {
         throw new Error(error.message);
       }
 
+      // Update local state
       setSavedMeetings(prevMeetings => 
         prevMeetings.map(meeting => 
           meeting.id === id ? { ...meeting, title: newTitle } : meeting

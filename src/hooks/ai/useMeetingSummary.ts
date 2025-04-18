@@ -1,3 +1,4 @@
+
 import { useRef, useCallback, useEffect } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { extractMeetingContext } from '@/utils/text/transcriptionUtils';
@@ -103,35 +104,15 @@ export const useMeetingSummary = () => {
     selectedLanguage
   ]);
 
-  // Enhanced downloadAudio function that handles different input types and checks storage status
+  // Enhanced downloadAudio function that can handle both meeting ID and direct blob data
   const downloadAudio = useCallback(async (meetingIdOrBlob?: string | Blob) => {
-    try {
-      // If input is a string, it's a meeting ID for a saved recording
-      if (typeof meetingIdOrBlob === 'string') {
-        console.log('Downloading saved meeting audio:', meetingIdOrBlob);
-        await downloadAudioBase(null, meetingIdOrBlob);
-      } 
-      // If it's a Blob object, use it directly
-      else if (meetingIdOrBlob instanceof Blob) {
-        console.log('Downloading provided audio blob');
-        await downloadAudioBase(meetingIdOrBlob);
-      } 
-      // Otherwise use the recording state's audio data
-      else {
-        console.log('Downloading current recording audio');
-        await downloadAudioBase(recordingState.audioData);
-      }
-    } catch (error) {
-      console.error('Download audio error in useMeetingSummary:', error);
-      toast({
-        title: "Download failed",
-        description: error instanceof Error 
-          ? error.message 
-          : "Could not download audio recording. Try again later.",
-        variant: "destructive"
-      });
+    // If input is a string, it's a meeting ID; otherwise, it's audio blob data
+    if (typeof meetingIdOrBlob === 'string') {
+      await downloadAudioBase(null, meetingIdOrBlob);
+    } else {
+      await downloadAudioBase(recordingState.audioData);
     }
-  }, [downloadAudioBase, recordingState.audioData, toast]);
+  }, [downloadAudioBase, recordingState.audioData]);
 
   // Enhanced export function
   const handleExportAsPDF = useCallback(async () => {

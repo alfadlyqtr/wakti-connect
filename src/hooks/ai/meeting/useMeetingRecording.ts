@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useVoiceInteraction } from '../useVoiceInteraction';
 import { toast } from '@/components/ui/use-toast';
 
+// Local Storage key for language preference
 const LANGUAGE_STORAGE_KEY = 'meeting-summary-language-preference';
 
 export interface MeetingRecordingState {
@@ -22,6 +23,7 @@ export const useMeetingRecording = () => {
     audioData: null,
   });
   
+  // Initialize with saved language from localStorage or default to 'en'
   const [selectedLanguage, setSelectedLanguage] = useState(() => {
     return localStorage.getItem(LANGUAGE_STORAGE_KEY) || 'en';
   });
@@ -36,18 +38,21 @@ export const useMeetingRecording = () => {
     recordingDuration,
   } = useVoiceInteraction();
 
+  // Update state when voice interaction error occurs
   useEffect(() => {
     if (error) {
       setState(prevState => ({ ...prevState, recordingError: error.message }));
     }
   }, [error]);
 
+  // Update transcribed text when new transcript is available
   useEffect(() => {
     if (lastTranscript) {
       setState(prevState => ({ ...prevState, transcribedText: lastTranscript }));
     }
   }, [lastTranscript]);
 
+  // Update transcribed text when full transcript changes
   useEffect(() => {
     if (transcript) {
       setState(prevState => ({
@@ -57,6 +62,7 @@ export const useMeetingRecording = () => {
     }
   }, [transcript]);
 
+  // Recording timer
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
 
@@ -76,8 +82,7 @@ export const useMeetingRecording = () => {
       ...prevState, 
       isRecording: true, 
       recordingTime: 0, 
-      recordingError: null,
-      transcribedText: '', // Reset transcribed text when starting new recording
+      recordingError: null 
     }));
     startListening();
     

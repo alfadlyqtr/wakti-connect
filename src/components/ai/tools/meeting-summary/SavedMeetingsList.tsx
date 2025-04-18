@@ -2,14 +2,13 @@
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, FileDown, Download, Clock, Trash2, Pencil, AlertCircle } from 'lucide-react';
-import { SavedMeeting } from '@/hooks/ai/meeting/useMeetingStorage';
+import { Loader2, FileDown, Download, Clock, Trash2, Pencil } from 'lucide-react';
+import { SavedMeeting } from '@/hooks/ai/useMeetingSummary';
 import { toast } from '@/components/ui/use-toast';
 import { formatDuration } from '@/utils/text/transcriptionUtils';
 import { exportMeetingSummaryAsPDF } from './MeetingSummaryExporter';
 import { MeetingContext } from '@/utils/text/transcriptionUtils';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface SavedMeetingsListProps {
   savedMeetings: SavedMeeting[];
@@ -149,52 +148,6 @@ const SavedMeetingsList: React.FC<SavedMeetingsListProps> = ({
     }
   };
 
-  // Function to render the audio expiration countdown
-  const renderAudioExpiration = (meeting: SavedMeeting) => {
-    if (!meeting.hasAudio) return null;
-    
-    if (meeting.daysUntilExpiration === undefined) return null;
-    
-    let badge = null;
-
-    if (meeting.daysUntilExpiration <= 0) {
-      badge = (
-        <span className="text-xs bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 px-2 py-0.5 rounded-full flex items-center gap-1">
-          <AlertCircle className="h-3 w-3" />
-          Expired
-        </span>
-      );
-    } else if (meeting.daysUntilExpiration <= 2) {
-      badge = (
-        <span className="text-xs bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 px-2 py-0.5 rounded-full flex items-center gap-1">
-          <AlertCircle className="h-3 w-3" />
-          Expires soon: {meeting.daysUntilExpiration}d
-        </span>
-      );
-    } else {
-      badge = (
-        <span className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 px-2 py-0.5 rounded-full flex items-center gap-1">
-          <Clock className="h-3 w-3" />
-          {meeting.daysUntilExpiration}/10d
-        </span>
-      );
-    }
-    
-    return (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            {badge}
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Audio recording will be deleted in {meeting.daysUntilExpiration} days.</p>
-            <p className="text-xs mt-1 text-muted-foreground">All audio recordings are automatically deleted after 10 days</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    );
-  };
-
   if (isLoadingHistory) {
     return (
       <div className="flex justify-center p-4">
@@ -247,15 +200,12 @@ const SavedMeetingsList: React.FC<SavedMeetingsListProps> = ({
               </span>
             </div>
             
-            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-              <div className="flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                <span>Duration: {formatDuration(meeting.duration)}</span>
-              </div>
+            <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
+              <Clock className="h-3 w-3" />
+              <span>Duration: {formatDuration(meeting.duration)}</span>
               {meeting.location && (
                 <span className="ml-2">• Location: {meeting.location}</span>
               )}
-              {renderAudioExpiration(meeting)}
             </div>
             
             <div className="flex justify-between items-center">
@@ -279,22 +229,20 @@ const SavedMeetingsList: React.FC<SavedMeetingsListProps> = ({
                   <span className="ml-1 text-xs">PDF</span>
                 </Button>
                 
-                {meeting.hasAudio && (
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className={`h-7 px-2 ${meeting.daysUntilExpiration === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    onClick={() => handleDownloadAudio(meeting)}
-                    disabled={actionInProgress !== null || meeting.daysUntilExpiration === 0}
-                  >
-                    {actionInProgress?.id === meeting.id && actionInProgress?.type === 'audio' ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <Download className="h-3 w-3" />
-                    )}
-                    <span className="ml-1 text-xs">Audio</span>
-                  </Button>
-                )}
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="h-7 px-2"
+                  onClick={() => handleDownloadAudio(meeting)}
+                  disabled={actionInProgress !== null}
+                >
+                  {actionInProgress?.id === meeting.id && actionInProgress?.type === 'audio' ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Download className="h-3 w-3" />
+                  )}
+                  <span className="ml-1 text-xs">Audio</span>
+                </Button>
                 
                 <Button 
                   variant="outline" 
