@@ -1,24 +1,15 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Trash2, Clock, Download } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-
-export interface SavedMeeting {
-  id: string;
-  title: string;
-  summary: string;
-  date: string;
-  duration: number;
-  audioUrl?: string;
-}
+import { SavedMeeting } from '@/hooks/ai/useMeetingSummary';
 
 interface SavedMeetingsListProps {
   savedMeetings: SavedMeeting[];
   isLoadingHistory: boolean;
   onDelete?: (id: string) => void;
   onSelect?: (meeting: SavedMeeting) => void;
-  onDownload?: (meeting: SavedMeeting) => void;
+  onDownload?: () => void; // Updated type to match the original signature
 }
 
 const SavedMeetingsList: React.FC<SavedMeetingsListProps> = ({
@@ -65,7 +56,7 @@ const SavedMeetingsList: React.FC<SavedMeetingsListProps> = ({
                 <Button 
                   variant="ghost" 
                   size="icon"
-                  onClick={() => onDownload(meeting)}
+                  onClick={onDownload}  // This is now a no-argument function
                   title="Download audio"
                 >
                   <Download className="h-4 w-4" />
