@@ -1,4 +1,3 @@
-
 import {
   LayoutDashboard,
   Settings,
@@ -14,7 +13,8 @@ import {
   FileText,
   Bot,
   MessageSquare,
-  Headphones
+  Headphones,
+  Mic,
 } from "lucide-react";
 import { UserRole } from "@/types/user";
 
@@ -116,6 +116,12 @@ export const navItems: NavItem[] = [
     path: "staff-communication",
     icon: Headphones,
     showFor: ['staff', 'super-admin'],
+  },
+  {
+    label: "Meeting Summary",
+    path: "meeting-summary",
+    icon: Mic,
+    showFor: ['free', 'individual', 'business', 'staff', 'super-admin'],
   },
 ];
 

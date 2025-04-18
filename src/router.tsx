@@ -1,4 +1,3 @@
-
 import React from "react";
 import { createBrowserRouter, RouteObject } from "react-router-dom";
 import { publicRoutes } from "./routes/publicRoutes";
@@ -40,6 +39,7 @@ const DashboardContacts = lazy(() => import("@/pages/dashboard/DashboardContacts
 const StaffDashboard = lazy(() => import("@/pages/dashboard/StaffDashboard"));
 const DashboardJobs = lazy(() => import("@/pages/dashboard/DashboardJobs"));
 const DashboardJobCards = lazy(() => import("@/pages/dashboard/DashboardJobCards"));
+const DashboardMeetingSummary = lazy(() => import("@/pages/dashboard/MeetingSummary"));
 
 // Wrap components with Suspense for lazy loading
 const withSuspense = (Component: React.ComponentType) => (
@@ -109,6 +109,10 @@ const dashboardRoutes: RouteObject[] = [
   {
     path: "job-cards",
     element: withSuspense(DashboardJobCards),
+  },
+  {
+    path: "meeting-summary",
+    element: withSuspense(DashboardMeetingSummary),
   },
 ];
 
