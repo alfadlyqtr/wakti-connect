@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { AlertCircle } from 'lucide-react';
@@ -8,6 +9,9 @@ import TranscriptionPanel from './meeting-summary/TranscriptionPanel';
 import SummaryDisplay from './meeting-summary/SummaryDisplay';
 import SavedMeetingsList from './meeting-summary/SavedMeetingsList';
 import { MeetingContextDialog, MeetingContextData } from './meeting-summary/MeetingContextDialog';
+
+// Import the constant from the same file where useMeetingRecording is defined
+const LANGUAGE_STORAGE_KEY = 'meeting-summary-language-preference';
 
 interface MeetingSummaryToolProps {
   onUseSummary?: (summary: string) => void;
