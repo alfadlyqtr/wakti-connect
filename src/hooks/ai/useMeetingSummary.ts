@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { useVoiceSettings } from '@/store/voiceSettings';
 import { improveTranscriptionAccuracy, detectLocationFromText, detectAttendeesFromText } from '@/utils/text/transcriptionUtils';
@@ -90,7 +91,7 @@ export const useMeetingSummary = () => {
     }
   };
   
-  const saveMeeting = async (summary: string, audioData: Blob | null) => {
+  const saveMeeting = (summary: string, audioData: Blob | null) => {
     try {
       const newMeeting: SavedMeeting = {
         id: uuidv4(),
@@ -98,27 +99,8 @@ export const useMeetingSummary = () => {
         summary,
         date: new Date().toISOString(),
         duration: state.recordingTime,
+        audioUrl: audioData ? URL.createObjectURL(audioData) : undefined
       };
-
-      // If there's audio data, upload it to Supabase storage
-      if (audioData) {
-        const fileName = `${newMeeting.id}.webm`;
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('meeting-recordings')
-          .upload(fileName, audioData);
-
-        if (uploadError) {
-          console.error('Error uploading audio:', uploadError);
-          throw uploadError;
-        }
-
-        // Get the public URL for the audio file
-        const { data: { publicUrl } } = supabase.storage
-          .from('meeting-recordings')
-          .getPublicUrl(fileName);
-
-        newMeeting.audioUrl = publicUrl;
-      }
       
       const updatedMeetings = [newMeeting, ...storedMeetings];
       setStoredMeetings(updatedMeetings);
@@ -429,50 +411,36 @@ export const useMeetingSummary = () => {
     }
   };
   
-  const downloadAudio = async (meeting: SavedMeeting) => {
-    if (!meeting.audioUrl) {
-      toast({
-        title: 'Error',
-        description: 'No audio recording available for this meeting.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setIsDownloadingAudio(true);
-    
-    try {
-      // Get the file name from the URL
-      const fileName = meeting.audioUrl.split('/').pop() || 'meeting_recording.webm';
+  // Download audio recording
+  const downloadAudio = () => {
+    if (state.audioData) {
+      setIsDownloadingAudio(true);
       
-      // Download the file
-      const response = await fetch(meeting.audioUrl);
-      const blob = await response.blob();
-      
-      // Create download link
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `meeting_recording_${new Date(meeting.date).toISOString().split('T')[0]}.webm`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      
-      toast({
-        title: 'Audio Downloaded',
-        description: 'Meeting recording has been downloaded.',
-      });
-      
-      setTimeout(() => URL.revokeObjectURL(url), 100);
-    } catch (error) {
-      console.error('Error downloading audio:', error);
-      toast({
-        title: 'Download Failed',
-        description: 'Could not download audio recording.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsDownloadingAudio(false);
+      try {
+        const url = URL.createObjectURL(state.audioData);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `meeting_recording_${new Date().toISOString().split('T')[0]}.webm`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        toast({
+          title: 'Audio Downloaded',
+          description: 'Meeting recording has been downloaded.',
+        });
+        
+        setTimeout(() => URL.revokeObjectURL(url), 100);
+      } catch (error) {
+        console.error('Error downloading audio:', error);
+        toast({
+          title: 'Download Failed',
+          description: 'Could not download audio recording.',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsDownloadingAudio(false);
+      }
     }
   };
   
