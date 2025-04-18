@@ -1,8 +1,10 @@
+
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useVoiceInteraction } from './useVoiceInteraction';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useVoiceSettings } from '@/store/voiceSettings';
+import { Language } from '@/store/voiceSettings';
 
 // Type for meeting state
 interface MeetingState {
@@ -51,12 +53,12 @@ export const useMeetingSummary = () => {
   const [isDownloadingAudio, setIsDownloadingAudio] = useState(false);
   const [savedMeetings, setSavedMeetings] = useState<SavedMeeting[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState(language || 'en');
+  const [selectedLanguage, setSelectedLanguage] = useState<Language>(language || 'en');
   const [copied, setCopied] = useState(false);
   
   // Update voice settings store when language changes
   useEffect(() => {
-    setLanguage(selectedLanguage as any);
+    setLanguage(selectedLanguage);
   }, [selectedLanguage, setLanguage]);
   
   // Ref for summary display
@@ -308,8 +310,8 @@ export const useMeetingSummary = () => {
   // Load saved language from localStorage
   useEffect(() => {
     const savedLanguage = localStorage.getItem('meetingSummaryLanguage');
-    if (savedLanguage) {
-      setSelectedLanguage(savedLanguage);
+    if (savedLanguage && ['en', 'ar', 'es', 'fr', 'de', 'auto'].includes(savedLanguage)) {
+      setSelectedLanguage(savedLanguage as Language);
     }
   }, []);
   

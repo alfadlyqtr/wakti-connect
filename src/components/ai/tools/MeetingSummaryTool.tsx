@@ -59,6 +59,14 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
 
   const supportsVoice = typeof window !== 'undefined' && ('MediaRecorder' in window);
 
+  // Handler for language selection that ensures type safety
+  const handleLanguageChange = (lang: string) => {
+    // Validate that the language is one of the allowed values before setting it
+    if (['en', 'ar', 'es', 'fr', 'de', 'auto'].includes(lang)) {
+      setSelectedLanguage(lang as "en" | "ar" | "es" | "fr" | "de" | "auto");
+    }
+  };
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -86,7 +94,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
           isRecording={state.isRecording}
           recordingTime={state.recordingTime}
           selectedLanguage={selectedLanguage}
-          setSelectedLanguage={setSelectedLanguage}
+          setSelectedLanguage={handleLanguageChange}
           startRecording={() => startRecording(supportsVoice)}
           stopRecording={stopRecording}
           recordingError={state.recordingError}
