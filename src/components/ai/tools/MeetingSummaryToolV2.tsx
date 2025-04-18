@@ -39,20 +39,24 @@ export const MeetingSummaryToolV2 = () => {
     }));
   };
 
-  const generateSummary = () => {
+  // Update the generateSummary function to return a Promise
+  const generateSummary = async (): Promise<void> => {
     setState((prev) => ({
       ...prev,
       isSummarizing: true,
     }));
 
     // Dummy summary after delay
-    setTimeout(() => {
-      setState((prev) => ({
-        ...prev,
-        summary: 'This is an AI-generated summary.',
-        isSummarizing: false,
-      }));
-    }, 2000);
+    return new Promise<void>((resolve) => {
+      setTimeout(() => {
+        setState((prev) => ({
+          ...prev,
+          summary: 'This is an AI-generated summary.',
+          isSummarizing: false,
+        }));
+        resolve();
+      }, 2000);
+    });
   };
 
   const copySummary = () => {
