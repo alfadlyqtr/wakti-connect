@@ -24,66 +24,42 @@ serve(async (req) => {
     }
     
     console.log(`Processing file from URL: ${fileUrl}`);
-    
-    // Try ElevenLabs first
-    try {
-      console.log("Attempting ElevenLabs transcription");
-      
-      const response = await fetch('https://api.elevenlabs.io/v1/speech-to-text', {
-        method: 'POST',
-        headers: {
-          'xi-api-key': Deno.env.get('ELEVENLABS_API_KEY') || '',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          audio_url: fileUrl,
-          model_id: 'whisper-1',
-          language: language,
-        }),
-      });
+    console.log("Attempting OpenAI Whisper transcription");
 
-      if (!response.ok) {
-        throw new Error(`ElevenLabs API error: ${await response.text()}`);
-      }
-
-      const result = await response.json();
-      console.log("Transcription received from ElevenLabs");
-
-      return new Response(
-        JSON.stringify({ text: result.text, source: 'elevenlabs' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    } catch (error) {
-      console.error("ElevenLabs transcription failed:", error);
-      
-      // Fallback to OpenAI Whisper
-      try {
-        console.log("Attempting OpenAI Whisper transcription");
-        const whisperResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
-            'Content-Type': 'multipart/form-data',
-          },
-          body: await (await fetch(fileUrl)).blob()
-        });
-
-        if (!whisperResponse.ok) {
-          throw new Error(`OpenAI Whisper API error: ${await whisperResponse.text()}`);
-        }
-
-        const whisperResult = await whisperResponse.json();
-        console.log("Transcription received from OpenAI Whisper");
-
-        return new Response(
-          JSON.stringify({ text: whisperResult.text, source: 'openai' }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      } catch (whisperError) {
-        console.error("OpenAI Whisper transcription failed:", whisperError);
-        throw whisperError;
-      }
+    // Download the audio file
+    const audioResponse = await fetch(fileUrl);
+    if (!audioResponse.ok) {
+      throw new Error('Failed to fetch audio file');
     }
+    const audioBlob = await audioResponse.blob();
+
+    // Create form data for Whisper API
+    const formData = new FormData();
+    formData.append('file', audioBlob, 'audio.webm');
+    formData.append('model', 'whisper-1');
+    formData.append('language', language);
+
+    // Send to Whisper API
+    const whisperResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+      },
+      body: formData
+    });
+
+    if (!whisperResponse.ok) {
+      throw new Error(`OpenAI Whisper API error: ${await whisperResponse.text()}`);
+    }
+
+    const result = await whisperResponse.json();
+    console.log("Transcription received from OpenAI Whisper");
+
+    return new Response(
+      JSON.stringify({ text: result.text, source: 'whisper' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
   } catch (error) {
     console.error("Error in voice transcription function:", error);
     
