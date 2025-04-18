@@ -1,8 +1,9 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Trash2, Clock, Download } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import { Trash2, Clock, Download, Edit2, Check, X } from 'lucide-react';
+import { formatDistanceToNow, differenceInDays } from 'date-fns';
+import { Input } from '@/components/ui/input';
 
 export interface SavedMeeting {
   id: string;
@@ -11,6 +12,7 @@ export interface SavedMeeting {
   date: string;
   duration: number;
   audioUrl?: string;
+  expiresAt: string;
 }
 
 interface SavedMeetingsListProps {
@@ -19,6 +21,7 @@ interface SavedMeetingsListProps {
   onDelete?: (id: string) => void;
   onSelect?: (meeting: SavedMeeting) => void;
   onDownload?: (meeting: SavedMeeting) => void;
+  onUpdateTitle?: (id: string, newTitle: string) => void;
 }
 
 const SavedMeetingsList: React.FC<SavedMeetingsListProps> = ({
@@ -26,8 +29,12 @@ const SavedMeetingsList: React.FC<SavedMeetingsListProps> = ({
   isLoadingHistory,
   onDelete,
   onSelect,
-  onDownload
+  onDownload,
+  onUpdateTitle
 }) => {
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState('');
+
   if (isLoadingHistory) {
     return (
       <div className="py-4 text-center">
@@ -41,50 +48,123 @@ const SavedMeetingsList: React.FC<SavedMeetingsListProps> = ({
     return null;
   }
 
+  const handleEditStart = (meeting: SavedMeeting) => {
+    setEditingId(meeting.id);
+    setEditingTitle(meeting.title);
+  };
+
+  const handleEditSave = async (id: string) => {
+    if (onUpdateTitle) {
+      await onUpdateTitle(id, editingTitle);
+    }
+    setEditingId(null);
+    setEditingTitle('');
+  };
+
+  const handleEditCancel = () => {
+    setEditingId(null);
+    setEditingTitle('');
+  };
+
+  const getDaysRemaining = (expiresAt: string) => {
+    const daysLeft = differenceInDays(new Date(expiresAt), new Date());
+    return Math.max(0, daysLeft);
+  };
+
   return (
     <div className="mt-6">
       <h3 className="text-lg font-semibold mb-3">Saved Meetings</h3>
       <div className="space-y-3">
-        {savedMeetings.map((meeting) => (
-          <div 
-            key={meeting.id} 
-            className="p-3 border rounded-md flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-          >
-            <div className="flex-1 cursor-pointer" onClick={() => onSelect && onSelect(meeting)}>
-              <h4 className="font-medium">{meeting.title || 'Untitled Meeting'}</h4>
-              <div className="flex items-center text-sm text-muted-foreground">
-                <Clock className="h-3 w-3 mr-1" />
-                <span>{formatDistanceToNow(new Date(meeting.date), { addSuffix: true })}</span>
-                <span className="mx-1">•</span>
-                <span>{Math.floor(meeting.duration / 60)}:{(meeting.duration % 60).toString().padStart(2, '0')}</span>
+        {savedMeetings.map((meeting) => {
+          const daysRemaining = getDaysRemaining(meeting.expiresAt);
+          
+          return (
+            <div 
+              key={meeting.id} 
+              className="p-3 border rounded-md flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+            >
+              <div className="flex-1 cursor-pointer" onClick={() => onSelect && onSelect(meeting)}>
+                <div className="flex items-center gap-2">
+                  {editingId === meeting.id ? (
+                    <div className="flex items-center gap-2 w-full">
+                      <Input
+                        value={editingTitle}
+                        onChange={(e) => setEditingTitle(e.target.value)}
+                        className="flex-1"
+                        placeholder="Enter title"
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEditSave(meeting.id)}
+                        title="Save"
+                      >
+                        <Check className="h-4 w-4 text-green-500" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleEditCancel}
+                        title="Cancel"
+                      >
+                        <X className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      <h4 className="font-medium flex-1">{meeting.title}</h4>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditStart(meeting);
+                        }}
+                        title="Edit title"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                    </>
+                  )}
+                </div>
+                <div className="flex items-center text-sm text-muted-foreground mt-1">
+                  <Clock className="h-3 w-3 mr-1" />
+                  <span>{formatDistanceToNow(new Date(meeting.date), { addSuffix: true })}</span>
+                  <span className="mx-1">•</span>
+                  <span>{Math.floor(meeting.duration / 60)}:{(meeting.duration % 60).toString().padStart(2, '0')}</span>
+                  <span className="mx-1">•</span>
+                  <span className={`${daysRemaining <= 2 ? 'text-red-500' : ''}`}>
+                    {daysRemaining} days left
+                  </span>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                {meeting.audioUrl && onDownload && (
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    onClick={() => onDownload(meeting)}
+                    title="Download audio"
+                  >
+                    <Download className="h-4 w-4" />
+                  </Button>
+                )}
+                
+                {onDelete && (
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    onClick={() => onDelete(meeting.id)}
+                    title="Delete meeting"
+                  >
+                    <Trash2 className="h-4 w-4 text-red-500" />
+                  </Button>
+                )}
               </div>
             </div>
-            
-            <div className="flex items-center gap-2">
-              {meeting.audioUrl && onDownload && (
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  onClick={() => onDownload(meeting)}
-                  title="Download audio"
-                >
-                  <Download className="h-4 w-4" />
-                </Button>
-              )}
-              
-              {onDelete && (
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  onClick={() => onDelete(meeting.id)}
-                  title="Delete meeting"
-                >
-                  <Trash2 className="h-4 w-4 text-red-500" />
-                </Button>
-              )}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
