@@ -130,6 +130,7 @@ export default function RecordingControlsV2({
                 <SelectValue placeholder="Select language" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="auto">Auto (Mixed Language)</SelectItem> {/* ✅ ADDED */}
                 <SelectItem value="en">English</SelectItem>
                 <SelectItem value="es">Spanish</SelectItem>
                 <SelectItem value="fr">French</SelectItem>
