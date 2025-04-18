@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Trash2, Clock, Download } from 'lucide-react';
@@ -9,7 +10,7 @@ interface SavedMeetingsListProps {
   isLoadingHistory: boolean;
   onDelete?: (id: string) => void;
   onSelect?: (meeting: SavedMeeting) => void;
-  onDownload?: () => void; // Updated type to match the original signature
+  onDownload?: () => void;
 }
 
 const SavedMeetingsList: React.FC<SavedMeetingsListProps> = ({
@@ -56,7 +57,7 @@ const SavedMeetingsList: React.FC<SavedMeetingsListProps> = ({
                 <Button 
                   variant="ghost" 
                   size="icon"
-                  onClick={onDownload}  // This is now a no-argument function
+                  onClick={() => onDownload()}
                   title="Download audio"
                 >
                   <Download className="h-4 w-4" />
