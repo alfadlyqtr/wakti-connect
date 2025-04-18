@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import TranscriptionPanel from './meeting-summary/TranscriptionPanel';
 
@@ -99,8 +100,10 @@ export const MeetingSummaryToolV2 = () => {
   const maxRecordingDuration = 3600; // ⏱ 1 hour limit
   const warnBeforeEndSeconds = 30;   // ⏳ Warn when 30s left
 
+  // Fix: Explicitly define return type and make sure it returns a Promise
   const handleViewSummary = async (): Promise<void> => {
     setActiveTab("summary");
+    return Promise.resolve();
   };
 
   return (
