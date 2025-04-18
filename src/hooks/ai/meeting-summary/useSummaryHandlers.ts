@@ -1,9 +1,9 @@
 
 import { useCallback } from 'react';
 import { toast } from "sonner";
-import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { v4 as uuidv4 } from 'uuid';
 import { MeetingSummaryState } from './types';
+import { supabase } from '@/integrations/supabase/client'; // Import the supabase client directly
 
 export const useSummaryHandlers = (
   state: MeetingSummaryState,
@@ -69,6 +69,7 @@ export const useSummaryHandlers = (
   return { generateSummary };
 };
 
+// Move this outside of the hook to avoid React hooks rules violation
 const saveMeetingSummary = async ({ 
   title, 
   date, 
@@ -85,9 +86,14 @@ const saveMeetingSummary = async ({
   audioBlobs: Blob[] 
 }) => {
   try {
-    const supabase = useSupabaseClient();
-    const user = (await supabase.auth.getUser()).data.user;
-    if (!user) return;
+    // Get the current user directly from supabase
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      console.error("Error getting user:", userError);
+      toast("User authentication required to save meeting");
+      return;
+    }
     
     const meetingId = uuidv4();
     

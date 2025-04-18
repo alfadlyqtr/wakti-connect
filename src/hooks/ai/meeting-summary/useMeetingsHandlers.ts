@@ -1,14 +1,19 @@
 
 import { useCallback } from 'react';
 import { toast } from "sonner";
-import { useSupabaseClient } from "@supabase/auth-helpers-react";
+import { supabase } from '@/integrations/supabase/client'; // Import directly
 
 export const useMeetingsHandlers = () => {
   const loadSavedMeetings = useCallback(async () => {
     try {
-      const supabase = useSupabaseClient();
-      const user = (await supabase.auth.getUser()).data.user;
-      if (!user) return [];
+      // Get user directly from supabase
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        console.error("Error getting user:", userError);
+        toast("User authentication required to load meetings");
+        return [];
+      }
       
       const { data, error } = await supabase
         .from('meetings')
@@ -31,7 +36,6 @@ export const useMeetingsHandlers = () => {
 
   const deleteMeeting = useCallback(async (meetingId: string) => {
     try {
-      const supabase = useSupabaseClient();
       const { error } = await supabase
         .from('meetings')
         .delete()

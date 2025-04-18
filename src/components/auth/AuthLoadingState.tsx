@@ -18,7 +18,7 @@ const AuthLoadingState: React.FC<AuthLoadingStateProps> = ({ authError }) => {
     }, 5000);
     
     return () => clearTimeout(timeout);
-  }, []);
+  }, [authError]);
   
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
