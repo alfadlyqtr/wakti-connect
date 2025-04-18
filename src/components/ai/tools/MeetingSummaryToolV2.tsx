@@ -99,7 +99,7 @@ export const MeetingSummaryToolV2 = () => {
   const maxRecordingDuration = 3600; // ⏱ 1 hour limit
   const warnBeforeEndSeconds = 30;   // ⏳ Warn when 30s left
 
-  const handleViewSummary = async () => {
+  const handleViewSummary = async (): Promise<void> => {
     setActiveTab("summary");
   };
 
