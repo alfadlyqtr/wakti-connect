@@ -8,6 +8,7 @@ import './App.css';
 import { AuthProvider } from './hooks/auth';
 import { CurrencyProvider } from './contexts/CurrencyContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import React from 'react'; // Explicitly import React
 
 // Create a client for React Query
 const queryClient = new QueryClient({
@@ -28,13 +29,15 @@ const root = createRoot(rootElement!);
 window.WAKTI_DEBUG = true;
 console.log("Application initializing...");
 
-// Render the app directly
+// Render the app directly with React.StrictMode
 root.render(
-  <AuthProvider>
-    <QueryClientProvider client={queryClient}>
-      <CurrencyProvider>
-        <RouterProvider router={router} />
-      </CurrencyProvider>
-    </QueryClientProvider>
-  </AuthProvider>
+  <React.StrictMode>
+    <AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <CurrencyProvider>
+          <RouterProvider router={router} />
+        </CurrencyProvider>
+      </QueryClientProvider>
+    </AuthProvider>
+  </React.StrictMode>
 );
