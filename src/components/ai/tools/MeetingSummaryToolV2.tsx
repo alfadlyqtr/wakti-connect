@@ -1,6 +1,9 @@
-import { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
+import TranscriptionPanel from './meeting-summary/TranscriptionPanel';
 
-export function useMeetingSummaryV2() {
+export const MeetingSummaryToolV2 = () => {
+  const [activeTab, setActiveTab] = useState('transcription');
+  
   const [state, setState] = useState({
     isRecording: false,
     recordingTime: 0,
@@ -93,23 +96,29 @@ export function useMeetingSummaryV2() {
 
   const isExporting = false;
   const isDownloadingAudio = false;
+  const maxRecordingDuration = 3600; // ⏱ 1 hour limit
+  const warnBeforeEndSeconds = 30;   // ⏳ Warn when 30s left
 
-  return {
-    state,
-    startRecording,
-    stopRecording,
-    startNextPart,
-    generateSummary,
-    copySummary,
-    downloadAudio,
-    setIntakeData,
-    resetSession,
-    loadSavedMeetings,
-    deleteMeeting,
-    summaryRef,
-    isExporting,
-    isDownloadingAudio,
-    maxRecordingDuration: 3600, // ⏱ 1 hour limit
-    warnBeforeEndSeconds: 30,   // ⏳ Warn when 30s left
+  const handleViewSummary = async () => {
+    setActiveTab("summary");
   };
-}
+
+  return (
+    <div>
+      {activeTab === 'transcription' && (
+        <TranscriptionPanel
+          transcribedText={state.transcribedText}
+          isSummarizing={state.isSummarizing}
+          generateSummary={generateSummary}
+          onViewSummary={handleViewSummary}
+        />
+      )}
+      {activeTab === 'summary' && (
+        <div>
+          <h2>Summary</h2>
+          <p>{state.summary}</p>
+        </div>
+      )}
+    </div>
+  );
+};
