@@ -9,12 +9,14 @@ interface TranscriptionPanelProps {
   transcribedText: string;
   isSummarizing: boolean;
   generateSummary: () => Promise<void>;
+  onViewSummary?: () => void;
 }
 
 const TranscriptionPanel: React.FC<TranscriptionPanelProps> = ({
   transcribedText,
   isSummarizing,
-  generateSummary
+  generateSummary,
+  onViewSummary
 }) => {
   if (!transcribedText) {
     return null;
@@ -28,20 +30,31 @@ const TranscriptionPanel: React.FC<TranscriptionPanelProps> = ({
         readOnly
         className="w-full h-40 mb-3"
       />
-      <Button 
-        onClick={generateSummary}
-        disabled={isSummarizing || !transcribedText}
-        className="bg-blue-600 hover:bg-blue-700"
-      >
-        {isSummarizing ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Generating Summary...
-          </>
-        ) : (
-          "Generate Summary"
+      <div className="flex gap-2">
+        <Button 
+          onClick={generateSummary}
+          disabled={isSummarizing || !transcribedText}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
+          {isSummarizing ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Generating Summary...
+            </>
+          ) : (
+            "Generate Summary"
+          )}
+        </Button>
+        
+        {onViewSummary && transcribedText && !isSummarizing && (
+          <Button 
+            onClick={onViewSummary}
+            variant="outline"
+          >
+            View Summary
+          </Button>
         )}
-      </Button>
+      </div>
     </Card>
   );
 };

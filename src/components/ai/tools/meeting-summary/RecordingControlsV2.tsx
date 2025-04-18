@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -53,7 +52,6 @@ export default function RecordingControlsV2({
   const formattedTime = formatRecordingDuration(recordingTime);
   const formattedMaxTime = formatRecordingDuration(maxRecordingDuration);
   
-  // Show warning if approaching max duration
   const isApproachingLimit = maxRecordingDuration - recordingTime <= warnBeforeEndSeconds;
   
   return (
@@ -79,7 +77,6 @@ export default function RecordingControlsV2({
           <Progress 
             value={progressPercentage} 
             className={`h-2 ${isApproachingLimit ? "bg-red-200 dark:bg-red-950" : ""}`}
-            indicatorClassName={isApproachingLimit ? "bg-red-500" : undefined}
           />
           {isApproachingLimit && (
             <p className="text-xs text-red-500">
