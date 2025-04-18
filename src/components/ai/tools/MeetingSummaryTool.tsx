@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { AlertCircle } from 'lucide-react';
 import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
 import { useMeetingSummary } from '@/hooks/ai/useMeetingSummary';
+import { useVoiceSettings } from '@/store/voiceSettings';
 import { exportMeetingSummaryAsPDF } from './meeting-summary/MeetingSummaryExporter';
 
 // Import the refactored components
@@ -19,15 +20,16 @@ interface MeetingSummaryToolProps {
 export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSummary }) => {
   const {
     state,
+    isExporting,
+    setIsExporting,
     isDownloadingAudio,
     savedMeetings,
     isLoadingHistory,
-    isExporting,
-    setIsExporting,
     selectedLanguage,
     setSelectedLanguage,
     copied,
     summaryRef,
+    deleteMeeting,
     loadSavedMeetings,
     startRecording: startRecordingHook,
     stopRecording,
@@ -35,6 +37,16 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     copySummary,
     downloadAudio
   } = useMeetingSummary();
+
+  const { 
+    autoSilenceDetection, 
+    toggleAutoSilenceDetection,
+    visualFeedback,
+    toggleVisualFeedback,
+    silenceThreshold,
+    setSilenceThreshold,
+    maxRecordingDuration
+  } = useVoiceSettings();
 
   const { 
     supportsVoice,
@@ -65,10 +77,18 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
       await exportMeetingSummaryAsPDF(
         state.summary,
         state.recordingTime,
-        state.detectedLocation
+        state.detectedLocation,
+        state.detectedAttendees
       );
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  // Use summary in chat or parent component
+  const handleUseSummary = () => {
+    if (onUseSummary && state.summary) {
+      onUseSummary(state.summary);
     }
   };
 
@@ -100,9 +120,16 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
           recordingTime={state.recordingTime}
           selectedLanguage={selectedLanguage}
           setSelectedLanguage={setSelectedLanguage}
+          autoSilenceDetection={autoSilenceDetection}
+          toggleAutoSilenceDetection={toggleAutoSilenceDetection}
+          visualFeedback={visualFeedback}
+          toggleVisualFeedback={toggleVisualFeedback}
+          silenceThreshold={silenceThreshold}
+          setSilenceThreshold={setSilenceThreshold}
           startRecording={handleStartRecording}
           stopRecording={stopRecording}
           recordingError={state.recordingError}
+          maxRecordingDuration={maxRecordingDuration}
         />
         
         {/* Transcribed Text Section */}
@@ -117,6 +144,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
           <SummaryDisplay
             summary={state.summary}
             detectedLocation={state.detectedLocation}
+            detectedAttendees={state.detectedAttendees}
             copied={copied}
             copySummary={copySummary}
             exportAsPDF={handleExportAsPDF}
@@ -132,6 +160,13 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
         <SavedMeetingsList
           savedMeetings={savedMeetings}
           isLoadingHistory={isLoadingHistory}
+          onDelete={deleteMeeting}
+          onSelect={(meeting) => {
+            // Load a saved meeting
+          }}
+          onDownload={(meeting) => {
+            // Download saved meeting audio
+          }}
         />
       </CardContent>
     </Card>

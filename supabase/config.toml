@@ -37,6 +37,12 @@ backend = "postgres"
 file_size_limit = "50MiB"
 
 # Enable our edge functions
+[functions.voice-transcription]
+verify_jwt = true
+
+[functions.ai-meeting-summary]
+verify_jwt = true
+
 [functions.ai-task-parser]
 verify_jwt = true
 

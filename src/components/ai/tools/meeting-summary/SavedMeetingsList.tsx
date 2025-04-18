@@ -1,74 +1,92 @@
 
 import React from 'react';
-import { Card } from '@/components/ui/card';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { formatTime } from '@/utils/audio/audioProcessing';
-import { Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Trash2, Clock, Download } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
 
-interface SavedMeeting {
+export interface SavedMeeting {
   id: string;
+  title: string;
+  summary: string;
   date: string;
   duration: number;
-  location: string | null;
-  summary: string;
+  audioUrl?: string;
 }
 
 interface SavedMeetingsListProps {
   savedMeetings: SavedMeeting[];
   isLoadingHistory: boolean;
+  onDelete?: (id: string) => void;
+  onSelect?: (meeting: SavedMeeting) => void;
+  onDownload?: (meeting: SavedMeeting) => void;
 }
 
 const SavedMeetingsList: React.FC<SavedMeetingsListProps> = ({
   savedMeetings,
   isLoadingHistory,
+  onDelete,
+  onSelect,
+  onDownload
 }) => {
   if (isLoadingHistory) {
     return (
-      <div className="flex justify-center items-center p-4">
-        <Loader2 className="h-6 w-6 animate-spin mr-2" />
-        <p>Loading meeting history...</p>
+      <div className="py-4 text-center">
+        <div className="animate-spin h-6 w-6 border-2 border-blue-500 border-t-transparent rounded-full inline-block mr-2"></div>
+        <span>Loading saved meetings...</span>
       </div>
     );
   }
 
   if (savedMeetings.length === 0) {
-    return (
-      <Card className="p-4 text-center text-gray-500">
-        No saved meeting summaries
-      </Card>
-    );
+    return null;
   }
 
   return (
-    <Card className="p-4">
-      <h3 className="text-lg font-semibold mb-3">Recent Summaries</h3>
-      <Accordion type="single" collapsible className="w-full">
-        {savedMeetings.map((meeting) => {
-          const meetingDate = new Date(meeting.date).toLocaleDateString();
-          return (
-            <AccordionItem key={meeting.id} value={meeting.id}>
-              <AccordionTrigger className="text-left">
-                <div>
-                  <p className="font-medium">{meetingDate}</p>
-                  <p className="text-sm text-gray-500">
-                    Duration: {formatTime(meeting.duration)}
-                    {meeting.location && ` • Location: ${meeting.location}`}
-                  </p>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent>
-                <div 
-                  className="prose dark:prose-invert max-w-none text-sm"
-                  dangerouslySetInnerHTML={{ 
-                    __html: meeting.summary.replace(/\n/g, '<br />') 
-                  }} 
-                />
-              </AccordionContent>
-            </AccordionItem>
-          );
-        })}
-      </Accordion>
-    </Card>
+    <div className="mt-6">
+      <h3 className="text-lg font-semibold mb-3">Saved Meetings</h3>
+      <div className="space-y-3">
+        {savedMeetings.map((meeting) => (
+          <div 
+            key={meeting.id} 
+            className="p-3 border rounded-md flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+          >
+            <div className="flex-1 cursor-pointer" onClick={() => onSelect && onSelect(meeting)}>
+              <h4 className="font-medium">{meeting.title || 'Untitled Meeting'}</h4>
+              <div className="flex items-center text-sm text-muted-foreground">
+                <Clock className="h-3 w-3 mr-1" />
+                <span>{formatDistanceToNow(new Date(meeting.date), { addSuffix: true })}</span>
+                <span className="mx-1">•</span>
+                <span>{Math.floor(meeting.duration / 60)}:{(meeting.duration % 60).toString().padStart(2, '0')}</span>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              {meeting.audioUrl && onDownload && (
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => onDownload(meeting)}
+                  title="Download audio"
+                >
+                  <Download className="h-4 w-4" />
+                </Button>
+              )}
+              
+              {onDelete && (
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => onDelete(meeting.id)}
+                  title="Delete meeting"
+                >
+                  <Trash2 className="h-4 w-4 text-red-500" />
+                </Button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 };
 

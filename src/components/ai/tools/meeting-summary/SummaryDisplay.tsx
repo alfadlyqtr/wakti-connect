@@ -1,15 +1,13 @@
 
-import React, { useEffect, useRef, useState } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Copy, Check, Download, FileDown, Map } from 'lucide-react';
-import { GOOGLE_MAPS_API_KEY, generateGoogleMapsUrl } from '@/config/maps';
-import { useTranslation } from 'react-i18next';
-import { toast } from '@/components/ui/use-toast';
 
 interface SummaryDisplayProps {
   summary: string;
   detectedLocation: string | null;
+  detectedAttendees: string[] | null;
   copied: boolean;
   copySummary: () => void;
   exportAsPDF: () => Promise<void>;
@@ -23,6 +21,7 @@ interface SummaryDisplayProps {
 const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
   summary,
   detectedLocation,
+  detectedAttendees,
   copied,
   copySummary,
   exportAsPDF,
@@ -32,112 +31,51 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
   audioData,
   summaryRef
 }) => {
-  const { t } = useTranslation();
-  const mapRef = useRef<HTMLIFrameElement>(null);
-  const [mapUrl, setMapUrl] = useState<string>('');
-  
-  // States for button feedback
-  const [copyFeedback, setCopyFeedback] = useState(false);
-  const [exportFeedback, setExportFeedback] = useState(false);
-  const [downloadFeedback, setDownloadFeedback] = useState(false);
-
-  useEffect(() => {
-    if (detectedLocation) {
-      try {
-        const encodedLocation = encodeURIComponent(detectedLocation);
-        setMapUrl(`https://www.google.com/maps/embed/v1/place?key=${GOOGLE_MAPS_API_KEY}&q=${encodedLocation}`);
-      } catch (error) {
-        console.error('Error generating map URL:', error);
-      }
-    }
-  }, [detectedLocation]);
-  
-  // Custom wrapper for copy with feedback
-  const handleCopy = () => {
-    copySummary();
-    setCopyFeedback(true);
-    toast({
-      title: t('common.success'),
-      description: t('summary.summaryCopied'),
-      variant: 'success',
-      duration: 2000,
-    });
-    setTimeout(() => setCopyFeedback(false), 2000);
-  };
-  
-  // Custom wrapper for export with feedback
-  const handleExport = async () => {
-    await exportAsPDF();
-    setExportFeedback(true);
-    toast({
-      title: t('common.success'),
-      description: t('summary.pdfExported'),
-      variant: 'success',
-      duration: 2000,
-    });
-    setTimeout(() => setExportFeedback(false), 2000);
-  };
-  
-  // Custom wrapper for download with feedback
-  const handleDownload = () => {
-    downloadAudio();
-    setDownloadFeedback(true);
-    toast({
-      title: t('common.success'),
-      description: t('summary.audioDownloaded'),
-      variant: 'success',
-      duration: 2000,
-    });
-    setTimeout(() => setDownloadFeedback(false), 2000);
-  };
-
   if (!summary) {
     return null;
   }
 
+  // Function to generate Google Maps URL
+  const generateGoogleMapsUrl = (location: string) => {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
+  };
+
   return (
     <Card className="p-4 mt-4">
       <div className="flex justify-between items-center mb-3">
-        <h3 className="text-lg font-semibold">{t('summary.meetingSummary')}</h3>
+        <h3 className="text-lg font-semibold">Meeting Summary</h3>
         <div className="flex space-x-2">
           <Button
-            variant={copyFeedback ? "success" : "outline"}
+            variant="outline"
             size="sm"
-            onClick={handleCopy}
-            disabled={copyFeedback}
-            className="flex items-center space-x-1 min-w-[120px] transition-colors duration-200"
+            onClick={copySummary}
+            className="flex items-center space-x-1"
           >
-            {copyFeedback ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-            <span>{copyFeedback ? t('common.copied') : t('summary.copySummary')}</span>
+            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+            <span>{copied ? "Copied" : "Copy"}</span>
           </Button>
           
           <Button
-            variant={exportFeedback ? "success" : "outline"}
+            variant="outline"
             size="sm"
-            onClick={handleExport}
-            disabled={isExporting || exportFeedback}
-            className="flex items-center space-x-1 min-w-[120px] transition-colors duration-200"
+            onClick={exportAsPDF}
+            disabled={isExporting}
+            className="flex items-center space-x-1"
           >
             <Download className="h-4 w-4" />
-            <span>
-              {isExporting ? t('common.exporting') : 
-                exportFeedback ? t('summary.exported') : t('summary.exportPDF')}
-            </span>
+            <span>{isExporting ? "Exporting..." : "Export PDF"}</span>
           </Button>
           
           {audioData && (
             <Button
-              variant={downloadFeedback ? "success" : "outline"}
+              variant="outline"
               size="sm"
-              onClick={handleDownload}
-              disabled={isDownloadingAudio || downloadFeedback}
-              className="flex items-center space-x-1 min-w-[140px] transition-colors duration-200"
+              onClick={downloadAudio}
+              disabled={isDownloadingAudio}
+              className="flex items-center space-x-1"
             >
               <FileDown className="h-4 w-4" />
-              <span>
-                {isDownloadingAudio ? t('common.downloading') : 
-                  downloadFeedback ? t('summary.downloaded') : t('summary.downloadAudio')}
-              </span>
+              <span>{isDownloadingAudio ? "Downloading..." : "Download Audio"}</span>
             </Button>
           )}
         </div>
@@ -156,41 +94,36 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
         }}
       />
       
+      {detectedAttendees && detectedAttendees.length > 0 && (
+        <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md">
+          <h4 className="font-medium mb-1">Detected Attendees:</h4>
+          <ul className="list-disc pl-5 space-y-1">
+            {detectedAttendees.map((attendee, index) => (
+              <li key={index} className="text-sm">{attendee}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      
       {detectedLocation && (
         <div className="mt-4 border rounded-md p-4">
           <div className="flex items-center justify-between mb-2">
             <h4 className="font-medium flex items-center">
               <Map className="h-4 w-4 mr-2" />
-              {t('summary.detectedLocation')}
+              Detected Location
             </h4>
             <Button
               variant="link"
               size="sm"
-              onClick={() => {
-                window.open(generateGoogleMapsUrl(detectedLocation), '_blank');
-                toast({
-                  title: t('common.openingMap'),
-                  description: t('summary.openingInNewTab'),
-                  duration: 2000,
-                });
-              }}
+              onClick={() => window.open(generateGoogleMapsUrl(detectedLocation), '_blank')}
             >
-              {t('summary.openInGoogleMaps')}
+              Open in Google Maps
             </Button>
           </div>
           
-          {mapUrl && (
-            <iframe
-              ref={mapRef}
-              width="100%"
-              height="200"
-              style={{ border: 0 }}
-              loading="lazy"
-              src={mapUrl}
-              title={t('summary.meetingLocation')}
-              className="rounded-md"
-            />
-          )}
+          <p className="text-sm bg-gray-50 dark:bg-gray-900 p-2 rounded">
+            {detectedLocation}
+          </p>
         </div>
       )}
     </Card>

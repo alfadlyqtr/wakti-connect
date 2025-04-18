@@ -6,11 +6,18 @@
 /**
  * Improves transcription accuracy with common post-processing techniques
  * @param text The raw transcription text
- * @param language The language code (e.g., 'en', 'ar')
+ * @param language The language code (e.g., 'en', 'ar', 'auto')
  * @returns Improved transcription text
  */
 export const improveTranscriptionAccuracy = (text: string, language: string): string => {
   if (!text) return '';
+  
+  // If auto-detect, try to determine language
+  if (language === 'auto') {
+    // Simple language detection - more sophisticated logic could be added
+    const hasArabicChars = /[\u0600-\u06FF]/.test(text);
+    language = hasArabicChars ? 'ar' : 'en';
+  }
   
   if (language === 'en') {
     // English improvements
@@ -166,4 +173,69 @@ export const detectLocationFromText = (text: string): string | null => {
   }
 
   return null;
+};
+
+/**
+ * Extracts potential attendees from meeting transcript
+ * @param text The transcribed text to analyze
+ * @returns Array of detected attendee names or null if none found
+ */
+export const detectAttendeesFromText = (text: string): string[] | null => {
+  if (!text) return null;
+  
+  const attendees: string[] = [];
+  
+  // Check if we're processing Arabic text
+  const isArabicText = /[\u0600-\u06FF]/.test(text);
+  
+  if (isArabicText) {
+    // Arabic attendee patterns (simplified)
+    const arabicAttendeePatterns = [
+      /(?:حضر|الحاضرون|المشاركون).*?(?:هم|:)([ء-ي\s,،]+)/i,
+    ];
+    
+    for (const pattern of arabicAttendeePatterns) {
+      const matches = text.match(pattern);
+      if (matches && matches[1]) {
+        // Split by commas or 'and' in Arabic
+        const names = matches[1].split(/[,،]\s*|(?:\s+و\s+)/);
+        attendees.push(...names.map(name => name.trim()).filter(name => name.length > 0));
+      }
+    }
+  } else {
+    // English attendee patterns
+    const attendeePatterns = [
+      // Common meeting starter language
+      /(?:attendees|participants|attendants|present|joined)(?:\s+(?:were|included|are|:))([^\.]+)/i,
+      // Introductions
+      /(?:introductions|introducing)(?:\s+(?:were|from|by|:))([^\.]+)/i,
+      // List of people often at start
+      /^(?:present|attending)(?:\s+(?:were|:))([^\.]+)/i,
+    ];
+
+    for (const pattern of attendeePatterns) {
+      const matches = text.match(pattern);
+      if (matches && matches[1]) {
+        // Split by commas or 'and'
+        const names = matches[1].split(/[,]\s*|(?:\s+and\s+)/);
+        attendees.push(...names.map(name => name.trim()).filter(name => name.length > 0));
+      }
+    }
+    
+    // Look for phrases like "X joined the meeting"
+    const joinPatterns = [
+      /([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2})\s+(?:joined|attended|participated in)\s+(?:the|this|our)\s+(?:meeting|call|discussion)/gi,
+    ];
+    
+    for (const pattern of joinPatterns) {
+      let match;
+      while ((match = pattern.exec(text)) !== null) {
+        if (match[1]) {
+          attendees.push(match[1].trim());
+        }
+      }
+    }
+  }
+  
+  return attendees.length > 0 ? [...new Set(attendees)] : null; // Remove duplicates
 };
