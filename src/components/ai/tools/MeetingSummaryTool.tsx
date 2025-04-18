@@ -7,11 +7,11 @@ import { useMeetingSummary } from '@/hooks/ai/useMeetingSummary';
 import { useVoiceSettings } from '@/store/voiceSettings';
 import { exportMeetingSummaryAsPDF } from './meeting-summary/MeetingSummaryExporter';
 
-// Import the refactored components
+// Modify import statements to use default imports
 import RecordingControls from './meeting-summary/RecordingControls';
-import TranscriptionPanel from './meeting-summary/TranscriptionPanel';
 import SummaryDisplay from './meeting-summary/SummaryDisplay';
 import SavedMeetingsList from './meeting-summary/SavedMeetingsList';
+import TranscriptionPanel from './meeting-summary/TranscriptionPanel';
 
 interface MeetingSummaryToolProps {
   onUseSummary?: (summary: string) => void;

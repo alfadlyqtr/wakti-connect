@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Trash2, Clock, Download } from 'lucide-react';
@@ -11,6 +10,7 @@ export interface SavedMeeting {
   date: string;
   duration: number;
   audioUrl?: string;
+  audioStoragePath?: string;
 }
 
 interface SavedMeetingsListProps {
@@ -61,7 +61,7 @@ const SavedMeetingsList: React.FC<SavedMeetingsListProps> = ({
             </div>
             
             <div className="flex items-center gap-2">
-              {meeting.audioUrl && onDownload && (
+              {(meeting.audioUrl || meeting.audioStoragePath) && onDownload && (
                 <Button 
                   variant="ghost" 
                   size="icon"

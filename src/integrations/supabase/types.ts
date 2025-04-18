@@ -1266,6 +1266,7 @@ export type Database = {
       meetings: {
         Row: {
           audio_expires_at: string | null
+          audio_storage_path: string | null
           audio_uploaded_at: string | null
           created_at: string
           date: string
@@ -1280,6 +1281,7 @@ export type Database = {
         }
         Insert: {
           audio_expires_at?: string | null
+          audio_storage_path?: string | null
           audio_uploaded_at?: string | null
           created_at?: string
           date: string
@@ -1294,6 +1296,7 @@ export type Database = {
         }
         Update: {
           audio_expires_at?: string | null
+          audio_storage_path?: string | null
           audio_uploaded_at?: string | null
           created_at?: string
           date?: string
