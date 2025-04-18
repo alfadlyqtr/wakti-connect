@@ -54,7 +54,6 @@ export const MeetingSummaryToolV2: React.FC = () => {
       setSavedMeetings(meetings);
       setIsLoadingHistory(false);
     };
-    
     fetchMeetings();
   }, [loadSavedMeetings]);
   
@@ -79,9 +78,7 @@ export const MeetingSummaryToolV2: React.FC = () => {
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle className="flex items-center text-lg">
-          Meeting Summary Tool
-        </CardTitle>
+        <CardTitle className="flex items-center text-lg">Meeting Summary Tool</CardTitle>
         <CardDescription>
           Record meetings and generate AI-powered summaries
         </CardDescription>
@@ -143,7 +140,10 @@ export const MeetingSummaryToolV2: React.FC = () => {
                   transcribedText={state.transcribedText}
                   isSummarizing={state.isSummarizing}
                   generateSummary={generateSummary}
-                  onViewSummary={async () => setActiveTab("summary")}
+                  onViewSummary={async () => {
+                    await new Promise(resolve => setTimeout(resolve, 0));
+                    setActiveTab("summary");
+                  }}
                 />
               </>
             )}
