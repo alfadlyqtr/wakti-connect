@@ -1,9 +1,8 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { toast } from "sonner";
 import { v4 as uuidv4 } from 'uuid';
-import { supabase } from "@/integrations/supabase/client";
+import { useSupabaseClient } from "@supabase/auth-helpers-react";
 
-// Define types to ensure correct usage throughout the codebase
 interface MeetingPart {
   partNumber: number;
   duration: number;
@@ -49,22 +48,18 @@ export function useMeetingSummaryV2() {
     meetingLocation: undefined
   });
 
-  // Constants for recording
   const maxRecordingDuration = 300; // 5 minutes per part
   const warnBeforeEndSeconds = 30; // Warn 30 seconds before the end
 
-  // References
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<number | null>(null);
   const summaryRef = useRef<HTMLDivElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  // For loading and exporting states
   const [isExporting, setIsExporting] = useState(false);
   const [isDownloadingAudio, setIsDownloadingAudio] = useState(false);
 
-  // Reset the recording session
   const resetSession = useCallback(() => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -93,7 +88,6 @@ export function useMeetingSummaryV2() {
     });
   }, []);
 
-  // Clean up on unmount
   useEffect(() => {
     return () => {
       if (timerRef.current) {
@@ -106,10 +100,8 @@ export function useMeetingSummaryV2() {
     };
   }, []);
 
-  // Start recording
   const startRecording = useCallback(async () => {
     try {
-      // Reset any previous recording errors
       setState(prev => ({ ...prev, recordingError: null }));
       
       audioChunksRef.current = [];
@@ -147,7 +139,6 @@ export function useMeetingSummaryV2() {
       
       setState(prev => ({ ...prev, isRecording: true }));
       
-      // Start timer
       let seconds = 0;
       timerRef.current = window.setInterval(() => {
         seconds += 1;
@@ -163,16 +154,13 @@ export function useMeetingSummaryV2() {
     }
   }, []);
 
-  // Stop recording
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && state.isRecording) {
       mediaRecorderRef.current.stop();
       
-      // Create a new meeting part
       const partNumber = state.meetingParts.length + 1;
       const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
       
-      // Add the new part to state
       setState(prev => ({
         ...prev,
         isRecording: false,
@@ -187,40 +175,30 @@ export function useMeetingSummaryV2() {
         audioBlobs: [...(prev.audioBlobs || []), audioBlob]
       }));
       
-      // Stop and clear the stream
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
         streamRef.current = null;
       }
       
-      // Clear timer
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
       }
       
-      // Process the recording (transcribe etc.)
       processRecording(audioBlob);
     }
   }, [state.isRecording, state.meetingParts, state.recordingTime, state.audioBlobs]);
 
-  // Start next part of the recording
   const startNextPart = useCallback(() => {
-    // Reset timer but keep the state of previous parts
     setState(prev => ({ ...prev, recordingTime: 0 }));
     
-    // Start a new recording
     startRecording();
   }, [startRecording]);
 
-  // Process recorded audio
   const processRecording = useCallback(async (audioBlob: Blob) => {
     try {
-      // Here we would transcribe the audio
-      // This is a placeholder - in a real app you would send the audio to a transcription service
       const mockTranscription = "This is a placeholder transcription. In a real application, this text would come from processing the audio through a transcription service.";
       
-      // Update state with transcription
       setState(prev => ({
         ...prev,
         transcribedText: prev.transcribedText 
@@ -234,16 +212,13 @@ export function useMeetingSummaryV2() {
     }
   }, []);
 
-  // Generate a summary from the transcription
   const generateSummary = useCallback(async () => {
     if (!state.transcribedText) return;
     
     setState(prev => ({ ...prev, isSummarizing: true }));
     
     try {
-      // In a real app, you would send the transcription to an AI service
-      // This is a placeholder
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate processing time
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
       const mockSummary = `
         ## Meeting Summary
@@ -274,7 +249,6 @@ export function useMeetingSummaryV2() {
         detectedAttendees
       }));
       
-      // Save to database
       if (state.meetingParts.length > 0 && state.audioBlobs) {
         const totalDuration = state.meetingParts.reduce((sum, part) => sum + part.duration, 0);
         
@@ -295,7 +269,6 @@ export function useMeetingSummaryV2() {
     }
   }, [state.transcribedText, state.meetingParts, state.audioBlobs, state.meetingTitle, state.meetingDate, state.meetingLocation]);
 
-  // Save meeting summary to database
   const saveMeetingSummary = useCallback(async ({ 
     title, 
     date, 
@@ -312,13 +285,12 @@ export function useMeetingSummaryV2() {
     audioBlobs: Blob[] 
   }) => {
     try {
-      const user = (await supabase.auth.getUser()).data.user;
+      const user = (await useSupabaseClient().auth.getUser()).data.user;
       if (!user) return;
       
       const meetingId = uuidv4();
       
-      // Save to database
-      const { error } = await supabase.from('meetings').insert({
+      const { error } = await useSupabaseClient().from('meetings').insert({
         id: meetingId,
         user_id: user.id,
         title,
@@ -346,13 +318,12 @@ export function useMeetingSummaryV2() {
     }
   }, []);
 
-  // Load saved meetings
   const loadSavedMeetings = useCallback(async () => {
     try {
-      const user = (await supabase.auth.getUser()).data.user;
+      const user = (await useSupabaseClient().auth.getUser()).data.user;
       if (!user) return [];
       
-      const { data, error } = await supabase
+      const { data, error } = await useSupabaseClient()
         .from('meetings')
         .select('*')
         .eq('user_id', user.id)
@@ -374,10 +345,9 @@ export function useMeetingSummaryV2() {
     }
   }, []);
 
-  // Delete a meeting
   const deleteMeeting = useCallback(async (meetingId: string) => {
     try {
-      const { error } = await supabase
+      const { error } = await useSupabaseClient()
         .from('meetings')
         .delete()
         .eq('id', meetingId);
@@ -399,7 +369,6 @@ export function useMeetingSummaryV2() {
     }
   }, []);
 
-  // Copy summary to clipboard
   const copySummary = useCallback(async () => {
     if (!state.summary) return;
     
@@ -412,17 +381,14 @@ export function useMeetingSummaryV2() {
     }
   }, [state.summary]);
 
-  // Download audio recording
   const downloadAudio = useCallback(async () => {
     if (!state.audioBlobs) return;
     
     setIsDownloadingAudio(true);
     
     try {
-      // Combine all audio blobs into one file
       const combinedBlob = new Blob(state.audioBlobs, { type: 'audio/webm' });
       
-      // Create a download link
       const url = URL.createObjectURL(combinedBlob);
       const a = document.createElement('a');
       a.href = url;
@@ -430,7 +396,6 @@ export function useMeetingSummaryV2() {
       document.body.appendChild(a);
       a.click();
       
-      // Clean up
       setTimeout(() => {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
@@ -446,7 +411,6 @@ export function useMeetingSummaryV2() {
     }
   }, [state.audioBlobs, state.meetingTitle]);
 
-  // Set meeting intake data
   const setIntakeData = useCallback((data: IntakeData) => {
     setState(prev => ({
       ...prev,
