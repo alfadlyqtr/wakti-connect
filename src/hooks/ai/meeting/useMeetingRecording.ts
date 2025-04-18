@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from 'react';
 import { useVoiceInteraction } from '../useVoiceInteraction';
 import { toast } from '@/components/ui/use-toast';
 
 // Local Storage key for language preference
-const LANGUAGE_STORAGE_KEY = 'meeting-summary-language-preference';
+export const LANGUAGE_STORAGE_KEY = 'meeting-summary-language-preference';
 
 export interface MeetingRecordingState {
   isRecording: boolean;
