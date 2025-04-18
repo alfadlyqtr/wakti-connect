@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { AlertCircle } from 'lucide-react';
@@ -34,7 +35,9 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     stopRecording,
     generateSummary,
     copySummary,
-    downloadAudio
+    downloadAudio,
+    downloadSavedAudio,
+    selectMeeting
   } = useMeetingSummary();
 
   const { 
@@ -63,7 +66,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
   }, []);
 
   const handleStartRecording = () => {
-    startRecordingHook(supportsVoice, apiKeyStatus, apiKeyErrorDetails);
+    startRecordingHook();
   };
 
   const handleExportAsPDF = async () => {
@@ -152,10 +155,8 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
           isLoadingHistory={isLoadingHistory}
           onDelete={deleteMeeting}
           onUpdateTitle={updateMeetingTitle}
-          onSelect={(meeting) => {
-          }}
-          onDownload={(meeting) => {
-          }}
+          onSelect={selectMeeting}
+          onDownload={downloadSavedAudio}
         />
       </CardContent>
     </Card>

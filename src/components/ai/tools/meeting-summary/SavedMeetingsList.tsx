@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +11,7 @@ export interface SavedMeeting {
   summary: string;
   date: string;
   duration: number;
-  audioUrl?: string;
+  has_audio?: boolean;
   expiresAt: string;
 }
 
@@ -20,7 +21,7 @@ interface SavedMeetingsListProps {
   onDelete?: (id: string) => void;
   onUpdateTitle?: (id: string, newTitle: string) => void;
   onSelect?: (meeting: SavedMeeting) => void;
-  onDownload?: (meeting: SavedMeeting) => void;
+  onDownload?: (meetingId: string) => void;
 }
 
 const SavedMeetingsList: React.FC<SavedMeetingsListProps> = ({
@@ -139,11 +140,14 @@ const SavedMeetingsList: React.FC<SavedMeetingsListProps> = ({
               </div>
               
               <div className="flex items-center gap-2">
-                {meeting.audioUrl && onDownload && (
+                {meeting.has_audio && onDownload && (
                   <Button 
                     variant="ghost" 
                     size="icon"
-                    onClick={() => onDownload(meeting)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDownload(meeting.id);
+                    }}
                     title="Download audio"
                   >
                     <Download className="h-4 w-4" />
@@ -154,7 +158,10 @@ const SavedMeetingsList: React.FC<SavedMeetingsListProps> = ({
                   <Button 
                     variant="ghost" 
                     size="icon"
-                    onClick={() => onDelete(meeting.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(meeting.id);
+                    }}
                     title="Delete meeting"
                   >
                     <Trash2 className="h-4 w-4 text-red-500" />

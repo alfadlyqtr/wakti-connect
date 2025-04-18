@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from '@/components/ui/use-toast';
 import { useVoiceSettings } from '@/store/voiceSettings';
 import { useVoiceInteraction } from './useVoiceInteraction';
-import React from 'react';
+import { addDays } from 'date-fns';
 
 interface MeetingSummaryState {
   isRecording: boolean;
@@ -48,7 +48,14 @@ export const useMeetingSummary = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setSavedMeetings(meetings || []);
+      
+      // Process the meetings to add expiration date (30 days from creation)
+      const processedMeetings = meetings?.map(meeting => ({
+        ...meeting,
+        expiresAt: addDays(new Date(meeting.created_at), 30).toISOString()
+      })) || [];
+      
+      setSavedMeetings(processedMeetings);
     } catch (error) {
       console.error('Error loading meetings:', error);
       toast({
@@ -144,8 +151,13 @@ export const useMeetingSummary = () => {
         if (uploadError) throw uploadError;
       }
 
-      // Add the new meeting to local state
-      setSavedMeetings(prev => [data, ...prev]);
+      // Add the new meeting to local state with expiration date
+      const newMeeting = {
+        ...data,
+        expiresAt: addDays(new Date(), 30).toISOString()
+      };
+      
+      setSavedMeetings(prev => [newMeeting, ...prev]);
 
       toast({
         title: 'Meeting saved',
@@ -172,8 +184,7 @@ export const useMeetingSummary = () => {
     apiKeyStatus,
     apiKeyErrorDetails,
     startListening,
-    stopListening,
-    // Remove the reference to processAudioWithFallbacks as it doesn't exist in the returned object
+    stopListening
   } = useVoiceInteraction({
     continuousListening: false,
     onTranscriptComplete: (finalTranscript) => {
@@ -188,7 +199,7 @@ export const useMeetingSummary = () => {
   const audioChunksRef = useRef<Blob[]>([]);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
 
-  const startRecordingHook = useCallback(async (supportsVoice: boolean, apiKeyStatus: string, apiKeyErrorDetails: string | null) => {
+  const startRecordingHook = useCallback(async () => {
     if (!supportsVoice) {
       toast({
         title: 'Error',
@@ -258,7 +269,7 @@ export const useMeetingSummary = () => {
         variant: 'destructive',
       });
     }
-  }, [apiKeyErrorDetails, apiKeyStatus, maxRecordingDuration, startListening, supportsVoice, stopListening]);
+  }, [apiKeyErrorDetails, apiKeyStatus, maxRecordingDuration, startListening, supportsVoice]);
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
@@ -366,6 +377,55 @@ export const useMeetingSummary = () => {
     }
   }, [state.audioData]);
 
+  const downloadSavedAudio = useCallback(async (meetingId: string) => {
+    try {
+      setIsDownloadingAudio(true);
+      
+      // Get the audio file from storage
+      const { data, error } = await supabase.storage
+        .from('meeting_recordings')
+        .download(`recordings/${meetingId}.webm`);
+        
+      if (error) throw error;
+      
+      // Create a download link
+      const url = URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `meeting_recording_${meetingId}.webm`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: 'Download complete',
+        description: 'The meeting audio has been downloaded.',
+      });
+    } catch (error) {
+      console.error('Error downloading saved audio:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to download saved audio.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDownloadingAudio(false);
+    }
+  }, []);
+
+  const selectMeeting = useCallback((meeting: any) => {
+    setState(prevState => ({
+      ...prevState,
+      summary: meeting.summary,
+      recordingTime: meeting.duration,
+      detectedLocation: meeting.location,
+      detectedAttendees: meeting.attendees,
+      transcribedText: '', // Clear previous transcriptions
+      audioData: null // Clear previous audio data
+    }));
+  }, []);
+
   return {
     state,
     setState,
@@ -389,6 +449,8 @@ export const useMeetingSummary = () => {
     stopRecording,
     generateSummary,
     copySummary,
-    downloadAudio
+    downloadAudio,
+    downloadSavedAudio,
+    selectMeeting
   };
 };
