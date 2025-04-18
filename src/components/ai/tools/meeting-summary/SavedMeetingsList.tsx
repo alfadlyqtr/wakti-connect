@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Trash2, Clock, Download, Edit2, Check, X } from 'lucide-react';
 import { formatDistanceToNow, differenceInDays } from 'date-fns';
-import { Input } from '@/components/ui/input';
 
 export interface SavedMeeting {
   id: string;
@@ -19,18 +18,18 @@ interface SavedMeetingsListProps {
   savedMeetings: SavedMeeting[];
   isLoadingHistory: boolean;
   onDelete?: (id: string) => void;
+  onUpdateTitle?: (id: string, newTitle: string) => void;
   onSelect?: (meeting: SavedMeeting) => void;
   onDownload?: (meeting: SavedMeeting) => void;
-  onUpdateTitle?: (id: string, newTitle: string) => void;
 }
 
 const SavedMeetingsList: React.FC<SavedMeetingsListProps> = ({
   savedMeetings,
   isLoadingHistory,
   onDelete,
+  onUpdateTitle,
   onSelect,
-  onDownload,
-  onUpdateTitle
+  onDownload
 }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState('');
