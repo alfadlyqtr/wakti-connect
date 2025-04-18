@@ -7,6 +7,7 @@ import { useMeetingSummary } from '@/hooks/ai/useMeetingSummary';
 import { useVoiceSettings } from '@/store/voiceSettings';
 import { exportMeetingSummaryAsPDF } from './meeting-summary/MeetingSummaryExporter';
 
+// Import the refactored components
 import RecordingControls from './meeting-summary/RecordingControls';
 import TranscriptionPanel from './meeting-summary/TranscriptionPanel';
 import SummaryDisplay from './meeting-summary/SummaryDisplay';
@@ -30,14 +31,11 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     summaryRef,
     deleteMeeting,
     loadSavedMeetings,
-    updateMeetingTitle,
     startRecording: startRecordingHook,
     stopRecording,
     generateSummary,
     copySummary,
-    downloadAudio,
-    downloadSavedAudio,
-    selectMeeting
+    downloadAudio
   } = useMeetingSummary();
 
   const { 
@@ -59,16 +57,20 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     continuousListening: false,
   });
   
+  // Reference to the pulse animation element
   const pulseElementRef = useRef<HTMLDivElement>(null);
   
+  // Load saved meetings on component mount
   useEffect(() => {
     loadSavedMeetings();
   }, []);
 
+  // Handler for starting recording with voice interaction settings
   const handleStartRecording = () => {
-    startRecordingHook();
+    startRecordingHook(supportsVoice, apiKeyStatus, apiKeyErrorDetails);
   };
 
+  // Handler for exporting summary as PDF
   const handleExportAsPDF = async () => {
     setIsExporting(true);
     try {
@@ -83,6 +85,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     }
   };
 
+  // Use summary in chat or parent component
   const handleUseSummary = () => {
     if (onUseSummary && state.summary) {
       onUseSummary(state.summary);
@@ -111,6 +114,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
           </div>
         )}
         
+        {/* Voice Recording Controls */}
         <RecordingControls
           isRecording={state.isRecording}
           recordingTime={state.recordingTime}
@@ -128,12 +132,14 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
           maxRecordingDuration={maxRecordingDuration}
         />
         
+        {/* Transcribed Text Section */}
         <TranscriptionPanel
           transcribedText={state.transcribedText}
           isSummarizing={state.isSummarizing}
           generateSummary={generateSummary}
         />
         
+        {/* Meeting Summary Display */}
         {state.summary && (
           <SummaryDisplay
             summary={state.summary}
@@ -150,13 +156,17 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
           />
         )}
         
+        {/* Meeting History */}
         <SavedMeetingsList
           savedMeetings={savedMeetings}
           isLoadingHistory={isLoadingHistory}
           onDelete={deleteMeeting}
-          onUpdateTitle={updateMeetingTitle}
-          onSelect={selectMeeting}
-          onDownload={downloadSavedAudio}
+          onSelect={(meeting) => {
+            // Load a saved meeting
+          }}
+          onDownload={(meeting) => {
+            // Download saved meeting audio
+          }}
         />
       </CardContent>
     </Card>
