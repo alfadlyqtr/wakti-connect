@@ -148,7 +148,7 @@ export const MeetingSummaryToolV2: React.FC = () => {
                   transcribedText={state.transcribedText}
                   isSummarizing={state.isSummarizing}
                   generateSummary={generateSummary}
-                  onViewSummary={() => setActiveTab("summary")}
+                  onViewSummary={async () => setActiveTab("summary")}
                 />
               </>
             )}
@@ -166,7 +166,7 @@ export const MeetingSummaryToolV2: React.FC = () => {
                 downloadAudio={downloadAudio}
                 isExporting={isExporting}
                 isDownloadingAudio={isDownloadingAudio}
-                audioData={state.meetingParts}
+                audioData={state.audioBlobs || []}
                 summaryRef={summaryRef}
                 onReset={handleReset}
               />

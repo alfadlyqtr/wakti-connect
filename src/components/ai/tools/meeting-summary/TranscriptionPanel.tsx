@@ -9,7 +9,7 @@ interface TranscriptionPanelProps {
   transcribedText: string;
   isSummarizing: boolean;
   generateSummary: () => Promise<void>;
-  onViewSummary?: () => void;
+  onViewSummary?: () => Promise<void>;
 }
 
 const TranscriptionPanel: React.FC<TranscriptionPanelProps> = ({
