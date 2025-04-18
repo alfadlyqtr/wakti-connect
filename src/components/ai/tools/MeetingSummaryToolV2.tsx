@@ -21,14 +21,22 @@ export const MeetingSummaryToolV2 = () => {
   const summaryRef = useRef(null);
 
   const startRecording = () => {
+    console.log('Starting recording...');
     setState((prev) => ({ ...prev, isRecording: true }));
   };
 
   const stopRecording = () => {
+    console.log('Stopping recording...');
     setState((prev) => ({ ...prev, isRecording: false }));
+    // Simulate transcription for testing
+    setState((prev) => ({ 
+      ...prev, 
+      transcribedText: 'This is a test transcription. The meeting was about testing functionality.'
+    }));
   };
 
   const startNextPart = () => {
+    console.log('Starting next part...');
     setState((prev) => ({
       ...prev,
       meetingParts: [
@@ -41,6 +49,7 @@ export const MeetingSummaryToolV2 = () => {
 
   // Update the generateSummary function to return a Promise
   const generateSummary = async (): Promise<void> => {
+    console.log('Generating summary...');
     setState((prev) => ({
       ...prev,
       isSummarizing: true,
@@ -49,9 +58,20 @@ export const MeetingSummaryToolV2 = () => {
     // Dummy summary after delay
     return new Promise<void>((resolve) => {
       setTimeout(() => {
+        console.log('Summary generated!');
         setState((prev) => ({
           ...prev,
-          summary: 'This is an AI-generated summary.',
+          summary: `## Meeting Summary
+          
+### Key Points:
+- Test meeting conducted
+- Functionality verification performed
+- System working as expected
+
+### Action Items:
+- Review test results
+- Document findings
+- Plan next steps`,
           isSummarizing: false,
         }));
         resolve();
@@ -106,12 +126,34 @@ export const MeetingSummaryToolV2 = () => {
 
   // Fix: Explicitly define return type and make sure it returns a Promise
   const handleViewSummary = async (): Promise<void> => {
+    console.log('Switching to summary view...');
     setActiveTab("summary");
     return Promise.resolve();
   };
 
   return (
-    <div>
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Meeting Summary Tool</h2>
+        <div className="space-x-2">
+          {!state.isRecording ? (
+            <button 
+              onClick={startRecording}
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              Start Recording
+            </button>
+          ) : (
+            <button 
+              onClick={stopRecording}
+              className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+            >
+              Stop Recording
+            </button>
+          )}
+        </div>
+      </div>
+
       {activeTab === 'transcription' && (
         <TranscriptionPanel
           transcribedText={state.transcribedText}
@@ -120,12 +162,19 @@ export const MeetingSummaryToolV2 = () => {
           onViewSummary={handleViewSummary}
         />
       )}
-      {activeTab === 'summary' && (
-        <div>
-          <h2>Summary</h2>
-          <p>{state.summary}</p>
+      
+      {activeTab === 'summary' && state.summary && (
+        <div className="bg-white p-4 rounded-lg shadow">
+          <h2 className="text-xl font-bold mb-4">Summary</h2>
+          <div 
+            className="prose"
+            dangerouslySetInnerHTML={{ 
+              __html: state.summary.replace(/\n/g, '<br />') 
+            }} 
+          />
         </div>
       )}
     </div>
   );
 };
+
