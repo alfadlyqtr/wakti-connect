@@ -81,7 +81,6 @@ export function useMeetingSummaryV2() {
   };
 
   const loadSavedMeetings = async () => {
-    // Dummy example data
     return [
       { id: '1', title: 'Meeting A' },
       { id: '2', title: 'Meeting B' },
@@ -110,7 +109,7 @@ export function useMeetingSummaryV2() {
     summaryRef,
     isExporting,
     isDownloadingAudio,
-    maxRecordingDuration: 3600,
-    warnBeforeEndSeconds: 30,
+    maxRecordingDuration: 3600, // ⏱ 1 hour limit
+    warnBeforeEndSeconds: 30,   // ⏳ Warn when 30s left
   };
 }
