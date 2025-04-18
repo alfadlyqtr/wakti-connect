@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useMeetingSummaryV2 } from '@/hooks/ai/useMeetingSummaryV2';
@@ -48,7 +47,6 @@ export const MeetingSummaryToolV2: React.FC = () => {
   const [showIntakeForm, setShowIntakeForm] = useState(true);
   const [activeTab, setActiveTab] = useState<string>("record");
   
-  // Load saved meetings
   useEffect(() => {
     const fetchMeetings = async () => {
       setIsLoadingHistory(true);
@@ -60,7 +58,6 @@ export const MeetingSummaryToolV2: React.FC = () => {
     fetchMeetings();
   }, [loadSavedMeetings]);
   
-  // Handle meeting deletion
   const handleDeleteMeeting = async (meetingId: string) => {
     const success = await deleteMeeting(meetingId);
     if (success) {
@@ -68,13 +65,11 @@ export const MeetingSummaryToolV2: React.FC = () => {
     }
   };
   
-  // Handle intake form submission
   const handleIntakeSubmit = (data: any) => {
     setIntakeData(data);
     setShowIntakeForm(false);
   };
   
-  // Reset the session and show intake form again
   const handleReset = () => {
     resetSession();
     setShowIntakeForm(true);
@@ -166,7 +161,7 @@ export const MeetingSummaryToolV2: React.FC = () => {
                 downloadAudio={downloadAudio}
                 isExporting={isExporting}
                 isDownloadingAudio={isDownloadingAudio}
-                audioData={state.audioBlobs || []}
+                audioData={state.audioBlobs?.map(blob => new Blob([blob], { type: 'audio/webm' })) || []}
                 summaryRef={summaryRef}
                 onReset={handleReset}
               />
@@ -196,7 +191,6 @@ export const MeetingSummaryToolV2: React.FC = () => {
   );
 };
 
-// Helper function to format duration
 function formatDuration(seconds: number): string {
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
