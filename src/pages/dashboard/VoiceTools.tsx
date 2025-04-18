@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { MeetingSummaryTool } from '@/components/ai/tools/MeetingSummaryTool';
@@ -8,7 +8,7 @@ import { Mic, FileText } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const VoiceTools = () => {
-  const [activeTab, setActiveTab] = useState('meeting-summary');
+  const [activeTab, setActiveTab] = React.useState('meeting-summary');
 
   return (
     <div 
