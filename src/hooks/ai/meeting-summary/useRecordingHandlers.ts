@@ -22,7 +22,9 @@ export const useRecordingHandlers = (
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
       
-      const mediaRecorder = new MediaRecorder(stream);
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm;codecs=opus'
+      });
       mediaRecorderRef.current = mediaRecorder;
       
       mediaRecorder.ondataavailable = (event) => {
@@ -74,15 +76,26 @@ export const useRecordingHandlers = (
       const partNumber = state.meetingParts.length + 1;
       const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
       
-      // Convert blob to base64 for API transmission
-      const base64Audio = await blobToBase64(audioBlob);
-      
-      // Try ElevenLabs first
       try {
+        // Upload the audio file to Supabase storage
+        const fileName = `meeting_${Date.now()}_part${partNumber}.webm`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('meeting-recordings')
+          .upload(`recordings/${fileName}`, audioBlob);
+
+        if (uploadError) {
+          throw new Error('Failed to upload audio file');
+        }
+
+        // Get the public URL for the uploaded file
+        const { data: { publicUrl } } = supabase.storage
+          .from('meeting-recordings')
+          .getPublicUrl(`recordings/${fileName}`);
+
         console.log("Attempting transcription with ElevenLabs...");
         const { data: elevenLabsData, error: elevenLabsError } = await supabase.functions.invoke(
-          'elevenlabs-speech-to-text',
-          { body: { audio: base64Audio } }
+          'voice-transcription',
+          { body: { fileUrl: publicUrl } }
         );
         
         if (!elevenLabsError && elevenLabsData?.text) {
@@ -91,32 +104,32 @@ export const useRecordingHandlers = (
         }
         
         console.log("ElevenLabs transcription failed, trying OpenAI...");
-      } catch (err) {
-        console.warn("ElevenLabs error:", err);
-      }
-      
-      // Try OpenAI as fallback
-      try {
-        console.log("Attempting transcription with OpenAI Whisper...");
-        const { data: whisperData, error: whisperError } = await supabase.functions.invoke(
-          'voice-transcription',
-          { body: { audio: base64Audio } }
-        );
         
-        if (!whisperError && whisperData?.text) {
-          processTranscription(whisperData.text, audioBlob, partNumber);
-          return;
+        // If ElevenLabs fails, try OpenAI Whisper
+        const formData = new FormData();
+        formData.append('file', audioBlob);
+        formData.append('model', 'whisper-1');
+        
+        const whisperResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+          },
+          body: formData,
+        });
+
+        if (!whisperResponse.ok) {
+          throw new Error('OpenAI transcription failed');
         }
-        
-        console.error("Both transcription services failed");
-        toast.error("Transcription failed. Please try recording again.");
-        
+
+        const whisperData = await whisperResponse.json();
+        processTranscription(whisperData.text, audioBlob, partNumber);
+
       } catch (error) {
         console.error("Error processing recording:", error);
         toast.error("Failed to process recording. Please try again.");
+        cleanup();
       }
-      
-      cleanup();
     }
   }, [state.isRecording, state.meetingParts.length]);
 
