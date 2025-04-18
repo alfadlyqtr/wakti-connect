@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { supabase } from '@/lib/supabase';
-import { useVoiceSettings } from '@/store/voiceSettings';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 interface VoiceInteractionOptions {
   onTranscriptComplete?: (transcript: string) => void;
@@ -47,10 +47,11 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
     try {
       setState(prev => ({ ...prev, apiKeyStatus: 'checking' }));
       
-      // Test ElevenLabs connection
+      // Test ElevenLabs connection first
       const { data: elevenLabsData, error: elevenLabsError } = await supabase.functions.invoke('test-elevenlabs-connection');
       
-      if (elevenLabsData?.valid) {
+      if (!elevenLabsError && elevenLabsData?.valid) {
+        console.log("ElevenLabs validation successful");
         setState(prev => ({
           ...prev,
           apiKeyStatus: 'valid',
@@ -62,7 +63,8 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
       // If ElevenLabs fails, test OpenAI connection
       const { data: openaiData, error: openaiError } = await supabase.functions.invoke('test-openai-connection');
       
-      if (openaiData?.valid) {
+      if (!openaiError && openaiData?.valid) {
+        console.log("OpenAI validation successful");
         setState(prev => ({
           ...prev,
           apiKeyStatus: 'valid',
@@ -71,18 +73,21 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
         return;
       }
 
-      // If both fail, set invalid status
+      console.log("API validation failed:", { elevenLabsError, openaiError });
+      
+      // Both services failed
       setState(prev => ({
         ...prev,
         apiKeyStatus: 'invalid',
-        apiKeyErrorDetails: 'No valid speech service available'
+        apiKeyErrorDetails: 'Speech services unavailable. Please check API keys.'
       }));
+      
     } catch (error) {
       console.error('Error validating API keys:', error);
       setState(prev => ({
         ...prev,
         apiKeyStatus: 'invalid',
-        apiKeyErrorDetails: error.message
+        apiKeyErrorDetails: error instanceof Error ? error.message : 'Failed to validate speech services'
       }));
     }
   };

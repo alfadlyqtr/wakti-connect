@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { AlertCircle } from 'lucide-react';
@@ -10,13 +9,15 @@ import RecordingControls from './meeting-summary/RecordingControls';
 import SummaryDisplay from './meeting-summary/SummaryDisplay';
 import SavedMeetingsList from './meeting-summary/SavedMeetingsList';
 import TranscriptionPanel from './meeting-summary/TranscriptionPanel';
-import { toast } from '@/components/ui/toast'; // Add this import
+import { useToast } from '@/hooks/use-toast';
 
 interface MeetingSummaryToolProps {
   onUseSummary?: (summary: string) => void;
 }
 
 export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSummary }) => {
+  const { toast } = useToast();
+  
   const {
     state,
     isExporting,
@@ -66,7 +67,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     if (apiKeyStatus === 'invalid' && apiKeyErrorDetails) {
       toast({
         title: "Speech Service Unavailable",
-        description: "Unable to connect to speech services. Please check your API keys.",
+        description: apiKeyErrorDetails || "Unable to connect to speech services. Please check your API keys.",
         variant: "destructive"
       });
       return;
