@@ -28,11 +28,7 @@ const RecordingControls: React.FC<RecordingControlsProps> = ({
   // Language options for speech recognition
   const languageOptions = [
     { value: 'en', label: 'English' },
-    { value: 'ar', label: 'العربية (Arabic)' },
-    { value: 'es', label: 'Español (Spanish)' },
-    { value: 'fr', label: 'Français (French)' },
-    { value: 'de', label: 'Deutsch (German)' },
-    { value: 'auto', label: 'Auto-detect' }
+    { value: 'ar', label: 'العربية (Arabic)' }
   ];
   
   return (

@@ -1,16 +1,14 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAIPersonality } from '@/components/ai/personality-switcher/AIPersonalityContext';
 import { InputToolbar } from '../input/InputToolbar';
 import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
-import { useAudioLevelMonitor } from '@/hooks/ai/useAudioLevelMonitor';
 import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 import { ChatInputField } from './ChatInputField';
 import { ClearChatButton } from './ClearChatButton';
 import { SendButton } from './SendButton';
 import { VoiceButton } from './VoiceButton';
-import { VoiceRecordingVisualizer } from '../voice/VoiceRecordingVisualizer';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface ChatInputProps {
@@ -37,40 +35,20 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     transcript, 
     startListening, 
     stopListening,
-    supportsVoice,
-    recordingDuration,
-    isProcessing
+    supportsVoice
   } = useVoiceInteraction({
     onTranscriptComplete: (text) => {
-      console.log("Transcript complete callback received:", text);
       if (text) {
         setInputValue(prev => {
           const separator = prev && !prev.endsWith(' ') && !text.startsWith(' ') ? ' ' : '';
-          const newValue = prev + separator + text;
-          console.log("New input value:", newValue);
-          return newValue;
+          return prev + separator + text;
         });
         setIsListening(false);
       }
-    },
-    maxDuration: 60,
-    autoStopAfterSilence: false
-  });
-
-  const { audioLevel } = useAudioLevelMonitor({
-    isActive: isListening,
-    sensitivity: 2.0
-  });
-
-  // Synchronize the transcript when it changes
-  useEffect(() => {
-    if (transcript && !isListening) {
-      console.log("Transcript changed outside callback:", transcript);
     }
-  }, [transcript, isListening]);
+  });
 
-  // Sync listening state with voice hook state
-  useEffect(() => {
+  React.useEffect(() => {
     setIsListening(voiceIsListening);
   }, [voiceIsListening]);
   
@@ -94,8 +72,6 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   };
 
   const handleVoiceToggle = () => {
-    console.log("Voice toggle clicked. Current state:", isListening);
-    
     if (isListening) {
       stopListening();
     } else {
@@ -144,7 +120,6 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                 isLoading={isLoading} 
                 isListening={isListening}
                 onVoiceToggle={handleVoiceToggle}
-                recordingDuration={recordingDuration}
               />
             </div>
             
@@ -157,7 +132,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               )}
               
               <SendButton
-                isLoading={isLoading || isProcessing}
+                isLoading={isLoading}
                 isDisabled={isDisabled}
                 isActive={!!inputValue.trim()}
               />

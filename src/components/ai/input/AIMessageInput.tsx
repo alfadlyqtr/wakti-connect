@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Textarea } from '@/components/ui/textarea';
@@ -7,13 +6,11 @@ import { InputToolbar } from './InputToolbar';
 import { useAIPersonality } from '@/components/ai/personality-switcher/AIPersonalityContext';
 import { useGlobalChat } from '@/hooks/useGlobalChat';
 import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
+import { toast } from '@/components/ui/use-toast';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { CameraIcon, Loader2, Send, X } from 'lucide-react';
 import { generateUUID } from '@/lib/utils/uuid';
-import { CameraModal } from '../camera/CameraModal';
-import { FilePreview } from './FilePreview';
-import { processFile } from '@/lib/utils/fileProcessor';
 
 interface AIMessageInputProps {
   activeMode: any; // Use the proper type from your types file
@@ -25,16 +22,9 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { sendMessage, isLoading } = useGlobalChat();
   const { currentPersonality } = useAIPersonality();
-  const { toast } = useToast();
-  
-  // File and image state
-  const [files, setFiles] = useState<Array<{
-    file: File, 
-    preview: string | null, 
-    isProcessing?: boolean,
-    status?: string
-  }>>([]);
-  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const { toast: toastMessage } = useToast();
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   
   const {
     isListening,
@@ -42,8 +32,7 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
     startListening,
     stopListening,
     isProcessing,
-    error,
-    supportsVoice
+    error
   } = useVoiceInteraction({
     onTranscriptComplete: (text) => {
       if (text) {
@@ -60,7 +49,7 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
   };
   
   // Camera ref for handling camera capture
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   
   // Update rows based on content
   useEffect(() => {
@@ -99,60 +88,41 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!message.trim() && files.length === 0) return;
+    if (!message.trim() && !imageFile) return;
     
     try {
-      // If there are files, process them first
-      if (files.length > 0) {
-        // Handle file uploads
-        const filePromises = files.map(async (fileObj) => {
-          // Set processing state
-          updateFileStatus(fileObj.file.name, true, "Processing file...");
-          
-          try {
-            const processedFile = await processFile(fileObj.file);
-            
-            let promptPrefix = "";
-            if (processedFile.type === 'image') {
-              promptPrefix = "Analyze this image: ";
-            } else if (processedFile.type === 'document' || processedFile.type === 'pdf') {
-              promptPrefix = "Analyze this document: ";
-            } else if (processedFile.type === 'text') {
-              promptPrefix = "Analyze this text: ";
-            }
-            
-            updateFileStatus(fileObj.file.name, true, "File ready");
-            
-            const filePrompt = message.trim() 
-              ? message.trim()
-              : `${promptPrefix}${fileObj.file.name}`;
-              
-            await sendMessage(filePrompt);
-          } catch (error) {
-            console.error("Error processing file:", error);
-            toast({
-              title: "Error",
-              description: "Failed to process file. Please try again.",
-              variant: "destructive",
-            });
-          } finally {
-            // Clear processing state
-            updateFileStatus(fileObj.file.name, false);
-          }
-        });
+      // If there's an image, process it
+      if (imageFile) {
+        // Handle image upload logic here
+        const reader = new FileReader();
         
-        await Promise.all(filePromises);
-      } else {
-        // Regular text message
-        await sendMessage(message.trim());
+        reader.onload = async (event) => {
+          if (event.target?.result) {
+            const imageDataUrl = event.target.result.toString();
+            // Send the message with image prompt
+            const imagePrompt = message.trim() 
+              ? `Generate an image based on: ${message.trim()}`
+              : `Analyze this image and respond with insights`;
+              
+            await sendMessage(imagePrompt);
+            
+            // Reset state
+            setImageFile(null);
+            setImagePreview(null);
+            setMessage("");
+          }
+        };
+        
+        reader.readAsDataURL(imageFile);
+        return;
       }
       
-      // Clear state
+      // Regular text message
+      await sendMessage(message.trim());
       setMessage("");
-      setFiles([]);
     } catch (error) {
       console.error("Error sending message:", error);
-      toast({
+      toastMessage({
         title: "Error",
         description: "Failed to send message. Please try again.",
         variant: "destructive",
@@ -168,92 +138,74 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
     }
   };
   
-  const handleFileSelected = async (file: File) => {
-    try {
-      // Process file to get preview
-      const processedFile = await processFile(file);
-      
-      // Add file to state
-      setFiles(prev => [
-        ...prev, 
-        { 
-          file, 
-          preview: processedFile.preview,
-          isProcessing: false
+  const handleFileSelected = (file: File) => {
+    // Check if file is an image
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          setImagePreview(e.target.result.toString());
         }
-      ]);
-      
-      toast({
-        title: "File Added",
-        description: `${file.name} ready to send`,
-      });
-    } catch (error) {
-      console.error("Error processing file:", error);
-      toast({
-        title: "Error",
-        description: "Failed to process file. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-  
-  const updateFileStatus = (fileName: string, isProcessing?: boolean, status?: string) => {
-    setFiles(prev => prev.map(fileObj => {
-      if (fileObj.file.name === fileName) {
-        return { ...fileObj, isProcessing, status };
-      }
-      return fileObj;
-    }));
-  };
-  
-  const removeFile = (fileName: string) => {
-    setFiles(prev => prev.filter(fileObj => fileObj.file.name !== fileName));
-  };
-  
-  const handleImageCapture = (file: File, preview: string) => {
-    setFiles(prev => [...prev, { file, preview, isProcessing: false }]);
-    setIsCameraOpen(false);
-    
-    toast({
-      title: "Photo Captured",
-      description: "Photo ready to send",
-    });
-  };
-  
-  const openCamera = () => {
-    if (supportsVoice) {
-      setIsCameraOpen(true);
+      };
+      reader.readAsDataURL(file);
+      setImageFile(file);
     } else {
+      // Handle other file types if needed
       toast({
-        title: "Camera Not Available",
-        description: "Your browser doesn't support camera access",
+        title: "File Type Not Supported",
+        description: "Only image files are currently supported.",
         variant: "destructive"
       });
     }
+  };
+  
+  const handleImageCapture = () => {
+    // Trigger the file input for camera
+    if (cameraInputRef.current) {
+      cameraInputRef.current.click();
+    }
+  };
+  
+  const handleCameraCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    const file = files[0];
+    handleFileSelected(file);
+    
+    // Reset the input
+    e.target.value = '';
   };
 
   return (
     <div className="message-input-container relative">
       <form onSubmit={handleSubmit} className="flex flex-col">
-        {/* File previews */}
+        {/* Image preview */}
         <AnimatePresence>
-          {files.length > 0 && (
+          {imagePreview && (
             <motion.div 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
-              className="mb-2 space-y-2"
+              className="relative mb-2 rounded-lg overflow-hidden border border-border"
             >
-              {files.map((fileObj) => (
-                <FilePreview
-                  key={fileObj.file.name}
-                  file={fileObj.file}
-                  previewUrl={fileObj.preview}
-                  onRemove={() => removeFile(fileObj.file.name)}
-                  isProcessing={fileObj.isProcessing}
-                  processingStatus={fileObj.status}
-                />
-              ))}
+              <img 
+                src={imagePreview} 
+                alt="Selected image" 
+                className="w-full max-h-60 object-contain" 
+              />
+              <Button
+                type="button"
+                variant="destructive"
+                size="icon"
+                className="absolute top-2 right-2 h-6 w-6 rounded-full"
+                onClick={() => {
+                  setImagePreview(null);
+                  setImageFile(null);
+                }}
+              >
+                <X className="h-3 w-3" />
+              </Button>
             </motion.div>
           )}
         </AnimatePresence>
@@ -271,7 +223,7 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                if (message.trim() || files.length > 0) {
+                if (message.trim() || imageFile) {
                   handleSubmit(e);
                 }
               }
@@ -284,7 +236,7 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
             <Button 
               type="submit" 
               size="icon" 
-              disabled={(files.length === 0 && !message.trim()) || isLoading}
+              disabled={(!message.trim() && !imageFile) || isLoading}
               className={cn(
                 "h-9 w-9 rounded-full transition-all shadow-md",
                 isLoading ? "bg-muted" : ""
@@ -304,28 +256,17 @@ export const AIMessageInput = ({ activeMode }: AIMessageInputProps) => {
           isListening={isListening} 
           onVoiceToggle={toggleVoiceRecording}
           onFileSelected={handleFileSelected}
-          onImageCapture={openCamera}
+          onImageCapture={handleImageCapture}
         />
         
-        {/* Hidden file input */}
+        {/* Hidden camera input */}
         <input
           type="file"
-          ref={fileInputRef}
-          accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.md"
+          ref={cameraInputRef}
+          accept="image/*"
+          capture="user"
           className="hidden"
-          onChange={(e) => {
-            const files = e.target.files;
-            if (!files || files.length === 0) return;
-            handleFileSelected(files[0]);
-            e.target.value = '';
-          }}
-        />
-        
-        {/* Camera Modal */}
-        <CameraModal 
-          isOpen={isCameraOpen}
-          onClose={() => setIsCameraOpen(false)}
-          onCapture={handleImageCapture}
+          onChange={handleCameraCapture}
         />
       </form>
     </div>

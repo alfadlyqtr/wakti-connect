@@ -2,6 +2,7 @@
 import React, { useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { AlertCircle } from 'lucide-react';
+import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
 import { useMeetingSummary } from '@/hooks/ai/useMeetingSummary';
 import { exportMeetingSummaryAsPDF } from './meeting-summary/MeetingSummaryExporter';
 
@@ -28,12 +29,21 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     copied,
     summaryRef,
     loadSavedMeetings,
-    startRecording,
+    startRecording: startRecordingHook,
     stopRecording,
     generateSummary,
     copySummary,
     downloadAudio
   } = useMeetingSummary();
+
+  const { 
+    supportsVoice,
+    apiKeyStatus,
+    apiKeyErrorDetails,
+    retryApiKeyValidation
+  } = useVoiceInteraction({
+    continuousListening: false,
+  });
   
   // Reference to the pulse animation element
   const pulseElementRef = useRef<HTMLDivElement>(null);
@@ -41,7 +51,12 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
   // Load saved meetings on component mount
   useEffect(() => {
     loadSavedMeetings();
-  }, [loadSavedMeetings]);
+  }, []);
+
+  // Handler for starting recording with voice interaction settings
+  const handleStartRecording = () => {
+    startRecordingHook(supportsVoice, apiKeyStatus, apiKeyErrorDetails);
+  };
 
   // Handler for exporting summary as PDF
   const handleExportAsPDF = async () => {
@@ -54,16 +69,6 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
       );
     } finally {
       setIsExporting(false);
-    }
-  };
-
-  const supportsVoice = typeof window !== 'undefined' && ('MediaRecorder' in window);
-
-  // Handler for language selection that ensures type safety
-  const handleLanguageChange = (lang: string) => {
-    // Validate that the language is one of the allowed values before setting it
-    if (['en', 'ar', 'es', 'fr', 'de', 'auto'].includes(lang)) {
-      setSelectedLanguage(lang as "en" | "ar" | "es" | "fr" | "de" | "auto");
     }
   };
 
@@ -94,8 +99,8 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
           isRecording={state.isRecording}
           recordingTime={state.recordingTime}
           selectedLanguage={selectedLanguage}
-          setSelectedLanguage={handleLanguageChange}
-          startRecording={() => startRecording(supportsVoice)}
+          setSelectedLanguage={setSelectedLanguage}
+          startRecording={handleStartRecording}
           stopRecording={stopRecording}
           recordingError={state.recordingError}
         />
@@ -112,8 +117,6 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
           <SummaryDisplay
             summary={state.summary}
             detectedLocation={state.detectedLocation}
-            detectedAttendees={state.detectedAttendees}
-            detectedActionItems={state.detectedActionItems}
             copied={copied}
             copySummary={copySummary}
             exportAsPDF={handleExportAsPDF}

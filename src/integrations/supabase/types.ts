@@ -1265,45 +1265,33 @@ export type Database = {
       }
       meetings: {
         Row: {
-          audio_expires_at: string | null
-          audio_uploaded_at: string | null
           created_at: string
           date: string
           duration: number
-          has_audio: boolean | null
           id: string
           language: string | null
           location: string | null
           summary: string
-          title: string | null
           user_id: string
         }
         Insert: {
-          audio_expires_at?: string | null
-          audio_uploaded_at?: string | null
           created_at?: string
           date: string
           duration: number
-          has_audio?: boolean | null
           id?: string
           language?: string | null
           location?: string | null
           summary: string
-          title?: string | null
           user_id: string
         }
         Update: {
-          audio_expires_at?: string | null
-          audio_uploaded_at?: string | null
           created_at?: string
           date?: string
           duration?: number
-          has_audio?: boolean | null
           id?: string
           language?: string | null
           location?: string | null
           summary?: string
-          title?: string | null
           user_id?: string
         }
         Relationships: []

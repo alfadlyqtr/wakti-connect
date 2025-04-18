@@ -6,26 +6,18 @@ import { toast } from '@/components/ui/use-toast';
 interface VoiceInteractionOptions {
   onTranscriptComplete?: (transcript: string) => void;
   continuousListening?: boolean;
-  autoStopAfterSilence?: boolean;
-  maxDuration?: number; // in seconds
 }
 
 export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
-  const { 
-    onTranscriptComplete, 
-    continuousListening = false,
-    autoStopAfterSilence = true,
-    maxDuration = 60 // 60 seconds max by default
-  } = options;
+  const { onTranscriptComplete, continuousListening = false } = options;
   
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [lastTranscript, setLastTranscript] = useState('');
   const [error, setError] = useState<Error | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [recordingStartTime, setRecordingStartTime] = useState<number | null>(null);
-  const [recordingDuration, setRecordingDuration] = useState(0);
-  const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(null);
+  const [apiKeyStatus, setApiKeyStatus] = useState<'valid' | 'invalid' | 'unknown'>('unknown');
+  const [apiKeyErrorDetails, setApiKeyErrorDetails] = useState<string | null>(null);
   
   // Check if browser supports speech recognition
   const supportsVoice = typeof window !== 'undefined' && 
@@ -144,25 +136,6 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
       recognition.onstart = () => {
         setIsListening(true);
         setTranscript('');
-        
-        // Start duration timer
-        setRecordingStartTime(Date.now());
-        setRecordingDuration(0);
-        
-        const interval = setInterval(() => {
-          const now = Date.now();
-          const startTime = recordingStartTime || now;
-          const duration = Math.floor((now - startTime) / 1000);
-          
-          setRecordingDuration(duration);
-          
-          // Auto-stop if reached max duration
-          if (duration >= maxDuration) {
-            stopListening();
-          }
-        }, 1000);
-        
-        setTimerInterval(interval);
       };
       
       recognition.onresult = (event: any) => {
@@ -181,12 +154,6 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
       recognition.onend = () => {
         setIsListening(false);
         
-        // Clear timer
-        if (timerInterval) {
-          clearInterval(timerInterval);
-          setTimerInterval(null);
-        }
-        
         if (onTranscriptComplete && transcript) {
           onTranscriptComplete(transcript);
           setLastTranscript(transcript);
@@ -194,32 +161,49 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
       };
       
       recognition.start();
-      
-      // Show visual feedback
-      toast({
-        title: "Voice Recognition Active",
-        description: "Speak clearly, then pause when you're done.",
-        duration: 3000,
-      });
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Unknown error'));
       setIsListening(false);
     }
-  }, [continuousListening, onTranscriptComplete, supportsVoice, transcript, maxDuration, recordingStartTime, timerInterval]);
+  }, [continuousListening, onTranscriptComplete, supportsVoice, transcript]);
   
   const stopListening = useCallback(() => {
     if (recognition) {
       recognition.stop();
     }
-    
-    // Clear timer
-    if (timerInterval) {
-      clearInterval(timerInterval);
-      setTimerInterval(null);
-    }
-    
     setIsListening(false);
-  }, [timerInterval]);
+  }, []);
+  
+  // Function to validate the OpenAI API key
+  const retryApiKeyValidation = async (): Promise<boolean> => {
+    setIsProcessing(true);
+    
+    try {
+      // Simple validation - you would typically replace this with a real API check
+      const { data, error } = await supabase.functions.invoke('test-elevenlabs-connection', {
+        body: {}
+      });
+      
+      if (error || !data || !data.success) {
+        console.error('Error validating API key:', error || 'Unknown error');
+        setApiKeyStatus('invalid');
+        setApiKeyErrorDetails(error?.message || 'Failed to validate API key');
+        setIsProcessing(false);
+        return false;
+      }
+      
+      setApiKeyStatus('valid');
+      setApiKeyErrorDetails(null);
+      setIsProcessing(false);
+      return true;
+    } catch (err) {
+      console.error('Error validating API key:', err);
+      setApiKeyStatus('invalid');
+      setApiKeyErrorDetails(err instanceof Error ? err.message : 'Unknown error');
+      setIsProcessing(false);
+      return false;
+    }
+  };
   
   // Process audio with multiple fallback methods
   const processAudioWithFallbacks = async (audioData: string): Promise<string> => {
@@ -257,12 +241,8 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
       if (recognition) {
         recognition.stop();
       }
-      
-      if (timerInterval) {
-        clearInterval(timerInterval);
-      }
     };
-  }, [timerInterval]);
+  }, []);
   
   return {
     isListening,
@@ -273,7 +253,9 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
     isProcessing,
     startListening,
     stopListening,
-    processAudioWithFallbacks,
-    recordingDuration
+    apiKeyStatus,
+    apiKeyErrorDetails,
+    retryApiKeyValidation,
+    processAudioWithFallbacks
   };
 };

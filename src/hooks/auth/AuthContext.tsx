@@ -124,6 +124,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isInitializedRef.current = true;
         
         return () => {
+          isMounted = false;
           subscription.unsubscribe();
         };
       } catch (error: any) {

@@ -7,7 +7,6 @@ interface AuthLoadingStateProps {
 }
 
 const AuthLoadingState: React.FC<AuthLoadingStateProps> = ({ authError }) => {
-  // Move useState inside the component function
   const [extendedLoading, setExtendedLoading] = useState(false);
   
   useEffect(() => {
@@ -19,7 +18,7 @@ const AuthLoadingState: React.FC<AuthLoadingStateProps> = ({ authError }) => {
     }, 5000);
     
     return () => clearTimeout(timeout);
-  }, [authError]); // Added authError as a dependency
+  }, []);
   
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">

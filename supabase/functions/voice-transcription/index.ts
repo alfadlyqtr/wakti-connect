@@ -21,78 +21,14 @@ serve(async (req) => {
     
     // Get request body
     const requestData = await req.json();
-    const { audio, language = 'en' } = requestData;
+    const { audio } = requestData;
     
     if (!audio) {
       console.error('No audio data provided');
       throw new Error('No audio data provided');
     }
-
-    console.log("Audio data received, length:", audio.length);
-    console.log("Language setting:", language);
     
-    // Map language codes to proper format
-    const languageMap: Record<string, string> = {
-      'en': 'en-US',
-      'ar': 'ar',
-      'es': 'es-ES',
-      'fr': 'fr-FR',
-      'de': 'de-DE',
-    };
-    
-    const languageCode = languageMap[language] || 'en-US';
-    
-    // Check if we have an OpenAI API key - Primary transcription service
-    if (OPENAI_API_KEY) {
-      try {
-        console.log(`Attempting OpenAI transcription with language: ${languageCode}`);
-        
-        // Process the base64 audio
-        const binaryAudio = Uint8Array.from(atob(audio), c => c.charCodeAt(0));
-        const blob = new Blob([binaryAudio], { type: 'audio/webm' });
-        
-        // Create FormData for OpenAI API
-        const formData = new FormData();
-        formData.append('file', blob, 'audio.webm');
-        formData.append('model', 'whisper-1');
-        formData.append('language', languageCode.split('-')[0]);
-        
-        const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${OPENAI_API_KEY}`,
-          },
-          body: formData,
-        });
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error(`OpenAI Whisper API error (${response.status}):`, errorText);
-          throw new Error(`OpenAI Whisper API error (${response.status}): ${errorText}`);
-        }
-        
-        const result = await response.json();
-        console.log("Transcription received from OpenAI Whisper:", result.text);
-        
-        return new Response(
-          JSON.stringify({ 
-            text: result.text,
-            source: 'whisper',
-          }),
-          { 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 200
-          }
-        );
-      } catch (error) {
-        console.error("OpenAI Whisper transcription failed:", error);
-        // Fall through to ElevenLabs fallback
-      }
-    } else {
-      console.log("No OpenAI API key found, falling back to ElevenLabs");
-    }
-    
-    // Fallback to ElevenLabs if OpenAI fails
+    // Check if we have an ElevenLabs API key - Priority 1
     if (ELEVENLABS_API_KEY) {
       try {
         console.log("Attempting ElevenLabs transcription");
@@ -130,13 +66,64 @@ serve(async (req) => {
           }
         );
       } catch (error) {
-        console.error("ElevenLabs transcription failed:", error);
-        // Fall through to browser fallback message
+        console.error("ElevenLabs transcription failed, falling back to OpenAI:", error);
+        // Fall through to OpenAI fallback
       }
+    } else {
+      console.log("No ElevenLabs API key found, falling back to OpenAI");
     }
     
-    // If we got here, both OpenAI and ElevenLabs fallbacks failed
-    console.warn("Browser fallback activated - both OpenAI and ElevenLabs transcription failed");
+    // Fallback to OpenAI Whisper API - Priority 2
+    if (OPENAI_API_KEY) {
+      try {
+        console.log("Attempting OpenAI Whisper transcription");
+        
+        // Process the base64 audio
+        const binaryAudio = Uint8Array.from(atob(audio), c => c.charCodeAt(0));
+        const blob = new Blob([binaryAudio]);
+        
+        // Create FormData for OpenAI API
+        const formData = new FormData();
+        formData.append('file', blob, 'audio.webm');
+        formData.append('model', 'whisper-1');
+        
+        const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${OPENAI_API_KEY}`,
+          },
+          body: formData,
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`OpenAI Whisper API error (${response.status}):`, errorText);
+          throw new Error(`OpenAI Whisper API error (${response.status}): ${errorText}`);
+        }
+        
+        const result = await response.json();
+        console.log("Transcription received from OpenAI Whisper:", result.text);
+        
+        return new Response(
+          JSON.stringify({ 
+            text: result.text,
+            source: 'whisper',
+          }),
+          { 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200
+          }
+        );
+      } catch (error) {
+        console.error("OpenAI Whisper transcription failed:", error);
+        // Fall through to browser fallback message
+      }
+    } else {
+      console.log("No OpenAI API key found");
+    }
+    
+    // If we got here, both ElevenLabs and OpenAI fallbacks failed
+    console.warn("Browser fallback activated - both ElevenLabs and OpenAI transcription failed");
     
     return new Response(
       JSON.stringify({ 

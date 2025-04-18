@@ -1,6 +1,6 @@
 
 import React from "react";
-import { createBrowserRouter, RouteObject, Navigate, useLocation } from "react-router-dom";
+import { createBrowserRouter, RouteObject } from "react-router-dom";
 import { publicRoutes } from "./routes/publicRoutes";
 import { authRoutes } from "./routes/authRoutes";
 import { businessRoutes, bookingRoutes } from "./routes/businessRoutes";
@@ -8,7 +8,7 @@ import { superadminRoutes } from "./routes/superadminRoutes";
 import NotFound from "./pages/NotFound";
 import PublicLayout from "./components/layout/PublicLayout";
 import DashboardLayout from "./components/dashboard/DashboardLayout";
-import ProtectedRouteComponent from "./components/auth/ProtectedRoute";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 import SuperAdminGuard from "./components/auth/SuperAdminGuard";
 import SuperAdminLayout from "./components/superadmin/SuperAdminLayout";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -19,7 +19,6 @@ import { TaskProvider } from "@/contexts/TaskContext";
 import NotificationListener from "./components/notifications/NotificationListener";
 import ErrorBoundary from "./components/ui/ErrorBoundary";
 import AuthShell from "@/components/auth/AuthShell";
-import { useAuth } from "@/hooks/auth";
 
 // Lazy load dashboard pages
 import { lazy, Suspense } from "react";
@@ -41,7 +40,6 @@ const DashboardContacts = lazy(() => import("@/pages/dashboard/DashboardContacts
 const StaffDashboard = lazy(() => import("@/pages/dashboard/StaffDashboard"));
 const DashboardJobs = lazy(() => import("@/pages/dashboard/DashboardJobs"));
 const DashboardJobCards = lazy(() => import("@/pages/dashboard/DashboardJobCards"));
-const VoiceTools = lazy(() => import("@/pages/dashboard/VoiceTools")); // Added import for VoiceTools
 
 // Wrap components with Suspense for lazy loading
 const withSuspense = (Component: React.ComponentType) => (
@@ -93,10 +91,6 @@ const dashboardRoutes: RouteObject[] = [
     element: withSuspense(DashboardAIAssistant),
   },
   {
-    path: "voice-tools", // Added route for voice-tools
-    element: withSuspense(VoiceTools),
-  },
-  {
     path: "settings",
     element: withSuspense(DashboardSettings),
   },
@@ -117,20 +111,6 @@ const dashboardRoutes: RouteObject[] = [
     element: withSuspense(DashboardJobCards),
   },
 ];
-
-// Define a function to check if the user is authenticated
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated } = useAuth(); // Removed the loading property
-  const location = useLocation();
-
-  // Check if user is authenticated
-  if (!isAuthenticated) {
-    // Redirect to login page with the current path as the "from" location
-    return <Navigate to="/auth/login" replace state={{ from: location.pathname }} />;
-  }
-
-  return <>{children}</>;
-};
 
 export const router = createBrowserRouter([
   // Auth routes with AuthShell wrapper

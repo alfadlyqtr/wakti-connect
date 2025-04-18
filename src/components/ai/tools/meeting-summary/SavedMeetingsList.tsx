@@ -1,8 +1,17 @@
 
 import React from 'react';
 import { Card } from '@/components/ui/card';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { formatTime } from '@/utils/audio/audioProcessing';
 import { Loader2 } from 'lucide-react';
-import { SavedMeeting } from '@/hooks/ai/useMeetingSummary';
+
+interface SavedMeeting {
+  id: string;
+  date: string;
+  duration: number;
+  location: string | null;
+  summary: string;
+}
 
 interface SavedMeetingsListProps {
   savedMeetings: SavedMeeting[];
@@ -11,44 +20,54 @@ interface SavedMeetingsListProps {
 
 const SavedMeetingsList: React.FC<SavedMeetingsListProps> = ({
   savedMeetings,
-  isLoadingHistory
+  isLoadingHistory,
 }) => {
   if (isLoadingHistory) {
     return (
-      <div className="flex justify-center p-4">
-        <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+      <div className="flex justify-center items-center p-4">
+        <Loader2 className="h-6 w-6 animate-spin mr-2" />
+        <p>Loading meeting history...</p>
       </div>
     );
   }
 
   if (savedMeetings.length === 0) {
-    return null;
+    return (
+      <Card className="p-4 text-center text-gray-500">
+        No saved meeting summaries
+      </Card>
+    );
   }
 
   return (
     <Card className="p-4">
-      <h3 className="text-lg font-semibold mb-4">Recent Meetings</h3>
-      <div className="space-y-3">
-        {savedMeetings.map((meeting) => (
-          <div 
-            key={meeting.id}
-            className="p-3 bg-gray-50 dark:bg-gray-900 rounded-md border border-gray-200 dark:border-gray-800"
-          >
-            <div className="flex justify-between items-center mb-1">
-              <h4 className="font-medium text-sm">{meeting.title}</h4>
-              <span className="text-xs text-muted-foreground">
-                {new Date(meeting.date).toLocaleString()}
-              </span>
-            </div>
-            <div className="text-xs text-muted-foreground mb-2">
-              Duration: {Math.floor(meeting.duration / 60)}m {meeting.duration % 60}s
-            </div>
-            <div className="text-sm line-clamp-2">
-              {meeting.summary}
-            </div>
-          </div>
-        ))}
-      </div>
+      <h3 className="text-lg font-semibold mb-3">Recent Summaries</h3>
+      <Accordion type="single" collapsible className="w-full">
+        {savedMeetings.map((meeting) => {
+          const meetingDate = new Date(meeting.date).toLocaleDateString();
+          return (
+            <AccordionItem key={meeting.id} value={meeting.id}>
+              <AccordionTrigger className="text-left">
+                <div>
+                  <p className="font-medium">{meetingDate}</p>
+                  <p className="text-sm text-gray-500">
+                    Duration: {formatTime(meeting.duration)}
+                    {meeting.location && ` • Location: ${meeting.location}`}
+                  </p>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent>
+                <div 
+                  className="prose dark:prose-invert max-w-none text-sm"
+                  dangerouslySetInnerHTML={{ 
+                    __html: meeting.summary.replace(/\n/g, '<br />') 
+                  }} 
+                />
+              </AccordionContent>
+            </AccordionItem>
+          );
+        })}
+      </Accordion>
     </Card>
   );
 };

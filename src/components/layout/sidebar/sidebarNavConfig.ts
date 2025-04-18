@@ -1,3 +1,4 @@
+
 import {
   LayoutDashboard,
   Settings,
@@ -13,8 +14,7 @@ import {
   FileText,
   Bot,
   MessageSquare,
-  Headphones,
-  Mic
+  Headphones
 } from "lucide-react";
 import { UserRole } from "@/types/user";
 
@@ -100,12 +100,6 @@ export const navItems: NavItem[] = [
     showFor: ['free', 'individual', 'business', 'staff', 'super-admin'],
   },
   {
-    label: "Voice Tools",
-    path: "voice-tools",
-    icon: Mic,
-    showFor: ['free', 'individual', 'business', 'staff', 'super-admin'],
-  },
-  {
     label: "Settings",
     path: "settings",
     icon: Settings,
@@ -125,6 +119,7 @@ export const navItems: NavItem[] = [
   },
 ];
 
+// Items moved to dropdown menu - these are not in sidebar
 export const dropdownNavItems: NavItem[] = [
   {
     label: "Messages",
