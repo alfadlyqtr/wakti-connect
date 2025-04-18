@@ -4,138 +4,29 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { MeetingIntakeForm } from './meeting-summary/MeetingIntakeForm';
 import TranscriptionPanel from './meeting-summary/TranscriptionPanel';
 import RecordingControlsV2 from './meeting-summary/RecordingControlsV2';
+import { useMeetingSummaryV2 } from '@/hooks/ai/useMeetingSummaryV2';
 
 export const MeetingSummaryToolV2 = () => {
   const [activeTab, setActiveTab] = useState('intake');
   
-  const [state, setState] = useState({
-    isRecording: false,
-    recordingTime: 0,
-    recordingError: null,
-    meetingParts: [],
-    transcribedText: '',
-    isSummarizing: false,
-    summary: '',
-    detectedLocation: '',
-    detectedAttendees: [],
-    audioBlobs: [],
-  });
-
-  const summaryRef = useRef(null);
-
-  const startRecording = () => {
-    console.log('Starting recording...');
-    setState((prev) => ({ ...prev, isRecording: true }));
-  };
-
-  const stopRecording = () => {
-    console.log('Stopping recording...');
-    setState((prev) => ({ ...prev, isRecording: false }));
-    // Simulate transcription for testing
-    setState((prev) => ({ 
-      ...prev, 
-      transcribedText: 'This is a test transcription. The meeting was about testing functionality.'
-    }));
-  };
-
-  const startNextPart = () => {
-    console.log('Starting next part...');
-    setState((prev) => ({
-      ...prev,
-      meetingParts: [
-        ...prev.meetingParts,
-        { partNumber: prev.meetingParts.length + 1, duration: prev.recordingTime },
-      ],
-      recordingTime: 0,
-    }));
-  };
-
-  // Update the generateSummary function to return a Promise
-  const generateSummary = async (): Promise<void> => {
-    console.log('Generating summary...');
-    setState((prev) => ({
-      ...prev,
-      isSummarizing: true,
-    }));
-
-    // Dummy summary after delay
-    return new Promise<void>((resolve) => {
-      setTimeout(() => {
-        console.log('Summary generated!');
-        setState((prev) => ({
-          ...prev,
-          summary: `## Meeting Summary
-          
-### Key Points:
-- Test meeting conducted
-- Functionality verification performed
-- System working as expected
-
-### Action Items:
-- Review test results
-- Document findings
-- Plan next steps`,
-          isSummarizing: false,
-        }));
-        resolve();
-      }, 2000);
-    });
-  };
-
-  const copySummary = () => {
-    if (state.summary) {
-      navigator.clipboard.writeText(state.summary);
-    }
-  };
-
-  const downloadAudio = () => {
-    // Dummy implementation
-  };
-
-  const setIntakeData = (data) => {
-    // Placeholder: handle intake data
-  };
-
-  const resetSession = () => {
-    setState({
-      isRecording: false,
-      recordingTime: 0,
-      recordingError: null,
-      meetingParts: [],
-      transcribedText: '',
-      isSummarizing: false,
-      summary: '',
-      detectedLocation: '',
-      detectedAttendees: [],
-      audioBlobs: [],
-    });
-  };
-
-  const loadSavedMeetings = async () => {
-    return [
-      { id: '1', title: 'Meeting A' },
-      { id: '2', title: 'Meeting B' },
-    ];
-  };
-
-  const deleteMeeting = async (id) => {
-    return true;
-  };
-
-  const isExporting = false;
-  const isDownloadingAudio = false;
-  const maxRecordingDuration = 3600; // ⏱ 1 hour limit
-  const warnBeforeEndSeconds = 30;   // ⏳ Warn when 30s left
-
-  // Handle view summary function
-  const handleViewSummary = async (): Promise<void> => {
-    console.log('Switching to summary view...');
-    setActiveTab("summary");
-    return Promise.resolve();
-  };
+  const {
+    state,
+    startRecording,
+    stopRecording,
+    startNextPart,
+    generateSummary,
+    setIntakeData,
+    maxRecordingDuration,
+    warnBeforeEndSeconds
+  } = useMeetingSummaryV2();
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
+  };
+
+  const handleViewSummary = async (): Promise<void> => {
+    setActiveTab("summary");
+    return Promise.resolve();
   };
 
   return (

@@ -1,7 +1,7 @@
 
-import { useState, useRef, useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { toast } from "sonner";
-import { MeetingSummaryState, MeetingPart } from './types';
+import { MeetingSummaryState } from './types';
 
 export const useRecordingHandlers = (
   setState: React.Dispatch<React.SetStateAction<MeetingSummaryState>>,
@@ -103,6 +103,7 @@ export const useRecordingHandlers = (
 
   const processRecording = useCallback(async (audioBlob: Blob) => {
     try {
+      // For now, using mock transcription
       const mockTranscription = "This is a placeholder transcription. In a real application, this text would come from processing the audio through a transcription service.";
       
       setState(prev => ({
@@ -112,9 +113,11 @@ export const useRecordingHandlers = (
           : mockTranscription
       }));
       
+      toast.success("Recording processed successfully");
+      
     } catch (error) {
       console.error("Error processing recording:", error);
-      toast("Failed to process the recording. Please try again.");
+      toast.error("Failed to process the recording. Please try again.");
     }
   }, [setState]);
 
