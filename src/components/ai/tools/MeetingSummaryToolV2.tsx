@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useMeetingSummaryV2, IntakeFormData } from '@/hooks/ai/useMeetingSummaryV2';
+import { useMeetingSummaryV2 } from '@/hooks/ai/useMeetingSummaryV2';
 import { useVoiceSettings } from '@/store/voiceSettings';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -69,7 +69,7 @@ export const MeetingSummaryToolV2: React.FC = () => {
   };
   
   // Handle intake form submission
-  const handleIntakeSubmit = (data: IntakeFormData) => {
+  const handleIntakeSubmit = (data: any) => {
     setIntakeData(data);
     setShowIntakeForm(false);
   };
