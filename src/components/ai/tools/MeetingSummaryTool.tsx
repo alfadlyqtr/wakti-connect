@@ -41,7 +41,7 @@ export const MeetingSummaryTool: React.FC = () => {
       <SavedMeetingsList 
         savedMeetings={savedMeetings} 
         isLoadingHistory={false}
-        onDownload={() => downloadAudio(savedMeetings[0])}  // Wrap downloadAudio in a no-argument function
+        onDownload={(meeting) => () => downloadAudio(meeting)}  // This is the only change - wrapping in an anonymous function
       />
     </div>
   );
