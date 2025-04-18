@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -43,6 +44,9 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
 
   return (
     <Card className="w-full">
+      <div className="text-sm text-muted-foreground mb-4 px-4 pt-4">
+        Don't feel like filling anything up? No worries 😊👍 WAKTI AI will listen carefully and pick it up.
+      </div>
       <Card className="w-full">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
@@ -56,7 +60,7 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
                     <span>Session Type</span>
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Brainstorming Session" {...field} />
+                    <Input placeholder="e.g., Staff meeting or English lecture" {...field} />
                   </FormControl>
                 </FormItem>
               )}
@@ -72,7 +76,7 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
                     <span>Hosted By</span>
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., John Doe" {...field} />
+                    <Input placeholder="e.g., Jabor Abdullah" {...field} />
                   </FormControl>
                 </FormItem>
               )}
@@ -88,7 +92,7 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
                     <span>Location</span>
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Conference Room A" {...field} />
+                    <Input placeholder="e.g., Oryx Tower, Doha College" {...field} />
                   </FormControl>
                 </FormItem>
               )}
@@ -104,7 +108,7 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
                     <span>Attendees</span>
                   </FormLabel>
                   <FormControl>
-                    <Textarea placeholder="e.g., John Doe, Jane Smith" {...field} />
+                    <Textarea placeholder="e.g., John, Alanoud, Mozah, Hassan" {...field} />
                   </FormControl>
                 </FormItem>
               )}
@@ -117,7 +121,7 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
                 <FormItem>
                   <FormLabel>Agenda</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="e.g., Discuss project timeline" {...field} />
+                    <Textarea placeholder="e.g., Project deadline, Final exams" {...field} />
                   </FormControl>
                 </FormItem>
               )}
@@ -125,8 +129,8 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
 
             <div className="flex justify-between">
               <Button type="submit">Submit</Button>
-              <Button type="button" variant="secondary" onClick={onSkip}>
-                Skip
+              <Button type="button" variant="success" onClick={onSkip}>
+                Skip and Start
               </Button>
             </div>
           </form>
