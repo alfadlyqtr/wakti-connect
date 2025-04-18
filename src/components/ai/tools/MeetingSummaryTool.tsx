@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { AlertCircle } from 'lucide-react';
@@ -67,8 +68,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     if (apiKeyStatus === 'invalid' && apiKeyErrorDetails) {
       toast({
         title: "Speech Service Unavailable",
-        description: apiKeyErrorDetails || "Unable to connect to speech services. Please check your API keys.",
-        variant: "destructive"
+        description: apiKeyErrorDetails || "Unable to connect to speech services. Please check your API keys."
       });
       return;
     }
@@ -152,7 +152,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
             downloadAudio={downloadAudio}
             isExporting={isExporting}
             isDownloadingAudio={isDownloadingAudio}
-            audioData={state.audioData}
+            audioData={Array.isArray(state.audioData) ? state.audioData : state.audioData ? [state.audioData] : null}
             summaryRef={summaryRef}
           />
         )}

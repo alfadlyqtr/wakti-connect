@@ -209,7 +209,7 @@ export function useMeetingSummaryV2() {
       
     } catch (error) {
       console.error("Error processing recording:", error);
-      toast.error("Failed to process the recording. Please try again.");
+      toast("Failed to process the recording. Please try again.");
     }
   }, []);
 
@@ -266,7 +266,7 @@ export function useMeetingSummaryV2() {
     } catch (error) {
       console.error("Error generating summary:", error);
       setState(prev => ({ ...prev, isSummarizing: false }));
-      toast.error("Failed to generate summary. Please try again.");
+      toast("Failed to generate summary. Please try again.");
     }
   }, [state.transcribedText, state.meetingParts, state.audioBlobs, state.meetingTitle, state.meetingDate, state.meetingLocation]);
 
@@ -308,13 +308,11 @@ export function useMeetingSummaryV2() {
         throw error;
       }
       
-      toast.success("Meeting summary saved successfully!");
+      toast("Meeting summary saved successfully!");
       
     } catch (error) {
       console.error("Error saving meeting:", error);
-      toast({
-        description: "There was an error saving your meeting data",
-      });
+      toast("There was an error saving your meeting data");
     }
   }, []);
 
@@ -337,9 +335,7 @@ export function useMeetingSummaryV2() {
       
     } catch (error) {
       console.error("Error loading meetings:", error);
-      toast({
-        description: "There was an error retrieving your saved meetings",
-      });
+      toast("There was an error retrieving your saved meetings");
       return [];
     }
   }, []);
@@ -355,14 +351,12 @@ export function useMeetingSummaryV2() {
         throw error;
       }
       
-      toast.success("Meeting deleted successfully");
+      toast("Meeting deleted successfully");
       return true;
       
     } catch (error) {
       console.error("Error deleting meeting:", error);
-      toast({
-        description: "There was an error deleting the meeting",
-      });
+      toast("There was an error deleting the meeting");
       return false;
     }
   }, []);
@@ -372,10 +366,10 @@ export function useMeetingSummaryV2() {
     
     try {
       await navigator.clipboard.writeText(state.summary);
-      toast.success("Summary copied to clipboard");
+      toast("Summary copied to clipboard");
     } catch (error) {
       console.error("Error copying text:", error);
-      toast.error("Failed to copy. Please try again.");
+      toast("Failed to copy. Please try again.");
     }
   }, [state.summary]);
 
@@ -399,11 +393,11 @@ export function useMeetingSummaryV2() {
         URL.revokeObjectURL(url);
       }, 100);
       
-      toast.success("Audio downloaded successfully");
+      toast("Audio downloaded successfully");
       
     } catch (error) {
       console.error("Error downloading audio:", error);
-      toast.error("Failed to download audio. Please try again.");
+      toast("Failed to download audio. Please try again.");
     } finally {
       setIsDownloadingAudio(false);
     }
