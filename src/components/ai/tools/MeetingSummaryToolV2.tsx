@@ -46,6 +46,7 @@ export const MeetingSummaryToolV2: React.FC = () => {
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [showIntakeForm, setShowIntakeForm] = useState(true);
   const [activeTab, setActiveTab] = useState<string>("record");
+  const [selectedLanguageOverride, setSelectedLanguageOverride] = useState<string>("auto"); // ⬅️ NEW
   
   useEffect(() => {
     const fetchMeetings = async () => {
@@ -103,14 +104,14 @@ export const MeetingSummaryToolV2: React.FC = () => {
                 <RecordingControlsV2
                   isRecording={state.isRecording}
                   recordingTime={state.recordingTime}
-                  selectedLanguage={selectedLanguage}
+                  selectedLanguage={selectedLanguageOverride} // ⬅️ default is "auto"
                   autoSilenceDetection={autoSilenceDetection}
                   visualFeedback={visualFeedback}
                   silenceThreshold={silenceThreshold}
                   startRecording={startRecording}
                   stopRecording={stopRecording}
                   startNextPart={startNextPart}
-                  setSelectedLanguage={setSelectedLanguage}
+                  setSelectedLanguage={setSelectedLanguageOverride} // ⬅️ override logic only
                   toggleAutoSilenceDetection={toggleAutoSilenceDetection}
                   toggleVisualFeedback={toggleVisualFeedback}
                   setSilenceThreshold={setSilenceThreshold}
@@ -140,9 +141,9 @@ export const MeetingSummaryToolV2: React.FC = () => {
                   transcribedText={state.transcribedText}
                   isSummarizing={state.isSummarizing}
                   generateSummary={generateSummary}
-                  onViewSummary={() => {
+                  onViewSummary={async () => {
+                    await new Promise(resolve => setTimeout(resolve, 0));
                     setActiveTab("summary");
-                    return Promise.resolve();
                   }}
                 />
               </>
@@ -157,7 +158,7 @@ export const MeetingSummaryToolV2: React.FC = () => {
                 detectedAttendees={state.detectedAttendees}
                 copied={false}
                 copySummary={copySummary}
-                exportAsPDF={() => {}} // To be implemented 
+                exportAsPDF={() => {}} 
                 downloadAudio={downloadAudio}
                 isExporting={isExporting}
                 isDownloadingAudio={isDownloadingAudio}
@@ -181,8 +182,8 @@ export const MeetingSummaryToolV2: React.FC = () => {
               savedMeetings={savedMeetings}
               isLoadingHistory={isLoadingHistory}
               onDelete={handleDeleteMeeting}
-              onSelect={() => {}} // To be implemented
-              onDownload={() => {}} // To be implemented
+              onSelect={() => {}} 
+              onDownload={() => {}} 
             />
           </TabsContent>
         </Tabs>
