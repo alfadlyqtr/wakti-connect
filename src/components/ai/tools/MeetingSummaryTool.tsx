@@ -1,11 +1,8 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { AlertCircle } from 'lucide-react';
 import { useMeetingSummary } from '@/hooks/ai/useMeetingSummary';
 import { extractMeetingContext } from '@/utils/text/transcriptionUtils';
-
-// Import the refactored components
 import RecordingControls from './meeting-summary/RecordingControls';
 import TranscriptionPanel from './meeting-summary/TranscriptionPanel';
 import SummaryDisplay from './meeting-summary/SummaryDisplay';
@@ -15,9 +12,6 @@ import { MeetingContextDialog, MeetingContextData } from './meeting-summary/Meet
 interface MeetingSummaryToolProps {
   onUseSummary?: (summary: string) => void;
 }
-
-// Local Storage key for language preference
-const LANGUAGE_STORAGE_KEY = 'meeting-summary-language-preference';
 
 export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSummary }) => {
   const {
@@ -42,11 +36,9 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     exportAsPDF
   } = useMeetingSummary();
 
-  // State for meeting context dialog
   const [showContextDialog, setShowContextDialog] = useState(false);
   const [meetingContext, setMeetingContext] = useState<MeetingContextData | null>(null);
-  
-  // Load saved language preference from local storage on component mount
+
   useEffect(() => {
     const savedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
     if (savedLanguage) {
@@ -54,47 +46,36 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     }
   }, [setSelectedLanguage]);
 
-  // Save language preference to local storage whenever it changes
   const handleLanguageChange = (language: string) => {
     setSelectedLanguage(language);
     localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
   };
-  
-  // Load saved meetings on component mount
+
   useEffect(() => {
     loadSavedMeetings();
   }, [loadSavedMeetings]);
 
-  // Start recording with context gathering flow
   const handleStartRecording = () => {
-    // Show context dialog before starting recording
     setShowContextDialog(true);
   };
 
-  // Handler for context dialog close
   const handleContextDialogClose = (data?: MeetingContextData) => {
     setShowContextDialog(false);
     
     if (data) {
-      // Save the context data if provided
       setMeetingContext(data);
     }
     
-    // Start recording after dialog is closed
     startRecording();
   };
 
-  // Enhanced summary generation with context
   const handleGenerateSummary = async () => {
-    // Generate summary
     await generateSummary();
   };
 
-  // Handle using the summary in the parent component if needed
   const handleCopySummary = (summary: string) => {
     copySummary(summary);
     
-    // If onUseSummary is provided, call it with the summary
     if (onUseSummary) {
       onUseSummary(summary);
     }
@@ -122,13 +103,11 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
           </div>
         )}
         
-        {/* Meeting Context Dialog */}
         <MeetingContextDialog 
           open={showContextDialog} 
           onClose={handleContextDialogClose} 
         />
         
-        {/* Voice Recording Controls */}
         <RecordingControls
           isRecording={state.isRecording}
           recordingTime={state.recordingTime}
@@ -139,14 +118,14 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
           recordingError={state.recordingError}
         />
         
-        {/* Transcribed Text Section */}
-        <TranscriptionPanel
-          transcribedText={state.transcribedText}
-          isSummarizing={state.isSummarizing}
-          generateSummary={handleGenerateSummary}
-        />
+        {state.transcribedText && (
+          <TranscriptionPanel
+            transcribedText={state.transcribedText}
+            isSummarizing={state.isSummarizing}
+            generateSummary={handleGenerateSummary}
+          />
+        )}
         
-        {/* Meeting Summary Display */}
         {state.summary && (
           <SummaryDisplay
             summary={state.summary}
@@ -157,20 +136,19 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
             downloadAudio={downloadAudio}
             isExporting={isExporting}
             isDownloadingAudio={isDownloadingAudio}
-            audioData={typeof state.audioData === 'object' && state.audioData !== null ? state.audioData : null}
+            audioData={state.audioData}
             summaryRef={summaryRef}
             recordingTime={state.recordingTime}
             meetingContext={meetingContext ? extractMeetingContext(state.transcribedText, meetingContext) : null}
           />
         )}
         
-        {/* Meeting History */}
         <SavedMeetingsList
           savedMeetings={savedMeetings}
           isLoadingHistory={isLoadingHistory}
           onDeleteMeeting={deleteMeeting}
           onEditMeetingTitle={updateMeetingTitle}
-          onDownloadAudio={downloadAudio}  // Add this prop to pass the download function
+          onDownloadAudio={downloadAudio}
         />
       </CardContent>
     </Card>
