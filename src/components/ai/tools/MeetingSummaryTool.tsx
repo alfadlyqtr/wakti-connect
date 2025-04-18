@@ -5,8 +5,6 @@ import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
 import { useMeetingSummary } from '@/hooks/ai/useMeetingSummary';
 import { useVoiceSettings } from '@/store/voiceSettings';
 import { exportMeetingSummaryAsPDF } from './meeting-summary/MeetingSummaryExporter';
-
-// Modify import statements to use default imports
 import RecordingControls from './meeting-summary/RecordingControls';
 import SummaryDisplay from './meeting-summary/SummaryDisplay';
 import SavedMeetingsList from './meeting-summary/SavedMeetingsList';
@@ -56,20 +54,25 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     continuousListening: false,
   });
   
-  // Reference to the pulse animation element
   const pulseElementRef = useRef<HTMLDivElement>(null);
   
-  // Load saved meetings on component mount
   useEffect(() => {
     loadSavedMeetings();
   }, []);
 
-  // Handler for starting recording with voice interaction settings
   const handleStartRecording = () => {
+    if (apiKeyStatus === 'invalid' && apiKeyErrorDetails) {
+      toast({
+        title: "Speech Service Unavailable",
+        description: "Unable to connect to speech services. Please check your API keys.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     startRecordingHook(supportsVoice, apiKeyStatus as "valid" | "invalid" | "checking" | "unchecked", apiKeyErrorDetails);
   };
 
-  // Handler for exporting summary as PDF
   const handleExportAsPDF = async () => {
     setIsExporting(true);
     try {
@@ -84,7 +87,6 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     }
   };
 
-  // Use summary in chat or parent component
   const handleUseSummary = () => {
     if (onUseSummary && state.summary) {
       onUseSummary(state.summary);
@@ -113,7 +115,6 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
           </div>
         )}
         
-        {/* Voice Recording Controls */}
         <RecordingControls
           isRecording={state.isRecording}
           recordingTime={state.recordingTime}
@@ -131,14 +132,12 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
           maxRecordingDuration={maxRecordingDuration}
         />
         
-        {/* Transcribed Text Section */}
         <TranscriptionPanel
           transcribedText={state.transcribedText}
           isSummarizing={state.isSummarizing}
           generateSummary={generateSummary}
         />
         
-        {/* Meeting Summary Display */}
         {state.summary && (
           <SummaryDisplay
             summary={state.summary}
@@ -155,7 +154,16 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
           />
         )}
         
-        {/* Meeting History */}
+        {apiKeyStatus === 'invalid' && (
+          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 p-3 rounded-md flex items-start">
+            <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-medium">Speech Service Unavailable</p>
+              <p className="text-sm mt-1">Please check your API keys in the Supabase settings.</p>
+            </div>
+          </div>
+        )}
+        
         <SavedMeetingsList
           savedMeetings={savedMeetings}
           isLoadingHistory={isLoadingHistory}

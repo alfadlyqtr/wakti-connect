@@ -20,11 +20,20 @@ serve(async (req) => {
     
     if (!ELEVENLABS_API_KEY) {
       console.error('ElevenLabs API key not configured');
-      throw new Error('ElevenLabs API key not configured');
+      return new Response(
+        JSON.stringify({ 
+          valid: false, 
+          error: 'ElevenLabs API key not configured' 
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200 // Return 200 to handle gracefully
+        }
+      );
     }
     
     // Test the ElevenLabs connection
-    const response = await fetch('https://api.elevenlabs.io/v1/user', {
+    const response = await fetch('https://api.elevenlabs.io/v1/voices', {
       method: 'GET',
       headers: {
         'xi-api-key': ELEVENLABS_API_KEY,
@@ -35,7 +44,16 @@ serve(async (req) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`ElevenLabs API error (${response.status}):`, errorText);
-      throw new Error(`ElevenLabs connection test failed (${response.status})`);
+      return new Response(
+        JSON.stringify({ 
+          valid: false, 
+          error: `ElevenLabs API error: ${response.status}` 
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200 // Return 200 to handle gracefully
+        }
+      );
     }
 
     const result = await response.json();
@@ -58,7 +76,7 @@ serve(async (req) => {
         error: error.message
       }),
       {
-        status: 200, // Still 200 to handle gracefully
+        status: 200, // Return 200 to handle gracefully
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );

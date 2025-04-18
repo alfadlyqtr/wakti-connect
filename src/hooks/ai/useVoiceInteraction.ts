@@ -38,107 +38,58 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
   const audioChunksRef = useRef<Blob[]>([]);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   
+  // Validate API keys on mount
   useEffect(() => {
-    checkElevenLabsApiValidity();
+    validateApiKeys();
   }, []);
-  
-  const checkElevenLabsApiValidity = async () => {
+
+  const validateApiKeys = async () => {
     try {
-      setState(prev => ({ ...prev, isLoading: true, apiKeyStatus: 'checking' }));
+      setState(prev => ({ ...prev, apiKeyStatus: 'checking' }));
       
-      // Try ElevenLabs API first
-      const elevenLabsValid = await testElevenLabsConnection();
+      // Test ElevenLabs connection
+      const { data: elevenLabsData, error: elevenLabsError } = await supabase.functions.invoke('test-elevenlabs-connection');
       
-      if (elevenLabsValid) {
-        console.log("ElevenLabs API key is valid");
+      if (elevenLabsData?.valid) {
         setState(prev => ({
           ...prev,
-          isLoading: false,
-          error: null,
           apiKeyStatus: 'valid',
           apiKeyErrorDetails: null
         }));
-        return true;
-      } else {
-        console.warn("ElevenLabs API key is invalid or missing, falling back to Whisper");
+        return;
       }
+
+      // If ElevenLabs fails, test OpenAI connection
+      const { data: openaiData, error: openaiError } = await supabase.functions.invoke('test-openai-connection');
       
-      // If ElevenLabs fails, check OpenAI Whisper
-      const whisperValid = await testWhisperConnection();
-      
-      if (whisperValid) {
-        console.log("Whisper API is available for fallback");
+      if (openaiData?.valid) {
         setState(prev => ({
           ...prev,
-          isLoading: false,
-          error: null,
           apiKeyStatus: 'valid',
           apiKeyErrorDetails: null
         }));
-        return true;
-      } else {
-        console.warn("Whisper API is not available, falling back to browser");
+        return;
       }
-      
-      // If both fail, we'll fall back to browser speech recognition
-      console.warn("Browser fallback activated: External speech services unavailable");
+
+      // If both fail, set invalid status
       setState(prev => ({
         ...prev,
-        isLoading: false,
-        error: new Error("API connections failed, falling back to browser speech recognition"),
         apiKeyStatus: 'invalid',
-        apiKeyErrorDetails: "External speech services unavailable"
+        apiKeyErrorDetails: 'No valid speech service available'
       }));
-      
-      return false;
     } catch (error) {
-      console.error('Error testing API connections:', error);
+      console.error('Error validating API keys:', error);
       setState(prev => ({
         ...prev,
-        isLoading: false,
-        error,
         apiKeyStatus: 'invalid',
         apiKeyErrorDetails: error.message
       }));
-      return false;
     }
   };
-  
-  const testElevenLabsConnection = async () => {
-    try {
-      // Test the ElevenLabs connection via edge function
-      const { data, error } = await supabase.functions.invoke('test-elevenlabs-connection');
-      
-      if (error) {
-        console.error("ElevenLabs connection error:", error);
-        throw error;
-      }
-      return data?.valid || false;
-    } catch (error) {
-      console.error('ElevenLabs connection test failed:', error);
-      return false;
-    }
-  };
-  
-  const testWhisperConnection = async () => {
-    try {
-      // Test the OpenAI Whisper via our Edge Function
-      const { data, error } = await supabase.functions.invoke('test-openai-connection');
-      
-      if (error) {
-        console.error("Whisper connection error:", error);
-        throw error;
-      }
-      return data?.valid || false;
-    } catch (error) {
-      console.error('Whisper connection test failed:', error);
-      return false;
-    }
-  };
-  
-  const retryApiKeyValidation = async () => {
-    return await checkElevenLabsApiValidity();
-  };
+
+  const retryApiKeyValidation = useCallback(async () => {
+    return await validateApiKeys();
+  }, []);
 
   const startListening = useCallback(() => {
     setState(prev => ({ ...prev, isListening: true, transcript: '' }));
