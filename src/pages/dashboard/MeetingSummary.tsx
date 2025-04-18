@@ -2,7 +2,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Mic } from 'lucide-react';
-import { MeetingSummaryTool } from '@/components/ai/tools/meeting-summary/MeetingSummaryTool';
+import { MeetingSummaryTool } from '@/components/ai/tools/MeetingSummaryTool';
 
 const MeetingSummary = () => {
   return (
