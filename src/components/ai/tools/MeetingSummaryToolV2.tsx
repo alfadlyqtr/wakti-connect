@@ -140,9 +140,9 @@ export const MeetingSummaryToolV2: React.FC = () => {
                   transcribedText={state.transcribedText}
                   isSummarizing={state.isSummarizing}
                   generateSummary={generateSummary}
-                  onViewSummary={async () => {
-                    await new Promise(resolve => setTimeout(resolve, 0));
+                  onViewSummary={() => {
                     setActiveTab("summary");
+                    return Promise.resolve();
                   }}
                 />
               </>
