@@ -1,113 +1,124 @@
+import { useState, useRef, useCallback, useEffect } from 'react';
+import { toast } from "sonner";
+import { v4 as uuidv4 } from 'uuid';
+import { supabase } from "@/integrations/supabase/client";
 
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { toast } from '@/components/ui/use-toast';
-import { useSupabaseClient } from '@/integrations/supabase/client';
-// Import local types rather than relying on potentially missing modules
-import { useVoiceSettings } from '@/store/voiceSettings';
-
-// Create stub types to replace the missing ones
-interface IntakeFormData {
-  title?: string;
-  date?: string;
-  location?: string;
-  attendees?: string[];
-}
-
+// Define types to ensure correct usage throughout the codebase
 interface MeetingPart {
   partNumber: number;
   duration: number;
-  audioBlob?: Blob;
+  audioBlob: Blob;
 }
 
 interface MeetingSummaryState {
   isRecording: boolean;
   recordingTime: number;
-  recordingError: string | null;
-  meetingParts: MeetingPart[];
-  audioBlobs: Blob[] | null;
   transcribedText: string;
   isSummarizing: boolean;
-  isSaving: boolean;
-  isTranscribing: boolean;
   summary: string | null;
+  recordingError: string | null;
   detectedLocation: string | null;
   detectedAttendees: string[] | null;
-  intakeData: IntakeFormData | null;
+  meetingParts: MeetingPart[];
+  audioBlobs: Blob[] | null;
+  meetingTitle?: string;
+  meetingDate?: string;
+  meetingLocation?: string;
 }
 
-export const useMeetingSummaryV2 = () => {
-  const supabase = useSupabaseClient();
-  const voiceSettings = useVoiceSettings();
+interface IntakeData {
+  title?: string;
+  date?: string;
+  location?: string;
+}
+
+export function useMeetingSummaryV2() {
   const [state, setState] = useState<MeetingSummaryState>({
     isRecording: false,
     recordingTime: 0,
-    recordingError: null,
-    meetingParts: [],
-    audioBlobs: null,
     transcribedText: '',
     isSummarizing: false,
-    isSaving: false,
-    isTranscribing: false,
     summary: null,
+    recordingError: null,
     detectedLocation: null,
     detectedAttendees: null,
-    intakeData: null,
+    meetingParts: [],
+    audioBlobs: null,
+    meetingTitle: undefined,
+    meetingDate: undefined,
+    meetingLocation: undefined
   });
 
-  const [isExporting, setIsExporting] = useState(false);
-  const [isDownloadingAudio, setIsDownloadingAudio] = useState(false);
-  
+  // Constants for recording
+  const maxRecordingDuration = 300; // 5 minutes per part
+  const warnBeforeEndSeconds = 30; // Warn 30 seconds before the end
+
+  // References
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<number | null>(null);
-  const summaryRef = useRef<HTMLDivElement>(null);
-  
-  const maxRecordingDuration = 2100; // 35 minutes in seconds
-  const warnBeforeEndSeconds = 60; // Warn 60 seconds before end
-  
-  // Reset session state
+  const summaryRef = useRef<HTMLDivElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
+  // For loading and exporting states
+  const [isExporting, setIsExporting] = useState(false);
+  const [isDownloadingAudio, setIsDownloadingAudio] = useState(false);
+
+  // Reset the recording session
   const resetSession = useCallback(() => {
     if (timerRef.current) {
-      window.clearInterval(timerRef.current);
+      clearInterval(timerRef.current);
       timerRef.current = null;
     }
-    
-    if (mediaRecorderRef.current && state.isRecording) {
-      mediaRecorderRef.current.stop();
+
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
     }
-    
+
     setState({
       isRecording: false,
       recordingTime: 0,
-      recordingError: null,
-      meetingParts: [],
-      audioBlobs: null,
       transcribedText: '',
       isSummarizing: false,
-      isSaving: false,
-      isTranscribing: false,
       summary: null,
+      recordingError: null,
       detectedLocation: null,
       detectedAttendees: null,
-      intakeData: null,
+      meetingParts: [],
+      audioBlobs: null,
+      meetingTitle: undefined,
+      meetingDate: undefined,
+      meetingLocation: undefined
     });
-    
-    mediaRecorderRef.current = null;
-    audioChunksRef.current = [];
-  }, [state.isRecording]);
-  
+  }, []);
+
+  // Clean up on unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+      
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, []);
+
   // Start recording
   const startRecording = useCallback(async () => {
     try {
+      // Reset any previous recording errors
       setState(prev => ({ ...prev, recordingError: null }));
       
-      // Request microphone access
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioChunksRef.current = [];
       
-      // Set up MediaRecorder
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
       
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
@@ -116,306 +127,227 @@ export const useMeetingSummaryV2 = () => {
       };
       
       mediaRecorder.onerror = (event) => {
-        console.error('MediaRecorder error:', event);
         setState(prev => ({ 
           ...prev, 
-          isRecording: false,
-          recordingError: 'Recording device error. Please check your microphone.'
+          recordingError: "Error occurred during recording. Please try again.",
+          isRecording: false 
         }));
         
         if (timerRef.current) {
-          window.clearInterval(timerRef.current);
+          clearInterval(timerRef.current);
           timerRef.current = null;
         }
+        
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach(track => track.stop());
+        }
       };
+            
+      mediaRecorder.start();
       
-      // Start recording
-      mediaRecorder.start(1000); // Collect data every second
+      setState(prev => ({ ...prev, isRecording: true }));
       
       // Start timer
-      let recordingTime = 0;
+      let seconds = 0;
       timerRef.current = window.setInterval(() => {
-        recordingTime += 1;
-        setState(prev => ({ ...prev, recordingTime }));
-        
-        // Auto-stop if reached max duration
-        if (recordingTime >= maxRecordingDuration) {
-          if (mediaRecorderRef.current) {
-            mediaRecorderRef.current.stop();
-            
-            if (timerRef.current) {
-              window.clearInterval(timerRef.current);
-              timerRef.current = null;
-            }
-            
-            setState(prev => ({ 
-              ...prev, 
-              isRecording: false,
-              recordingError: 'Maximum recording duration reached.'
-            }));
-          }
-        }
+        seconds += 1;
+        setState(prev => ({ ...prev, recordingTime: seconds }));
       }, 1000);
       
-      setState(prev => ({ ...prev, isRecording: true, recordingTime: 0 }));
-    } catch (error) {
-      console.error('Error starting recording:', error);
+    } catch (err) {
+      console.error('Error starting recording:', err);
+      setState(prev => ({ 
+        ...prev, 
+        recordingError: "Microphone access denied. Please allow microphone access and try again."
+      }));
+    }
+  }, []);
+
+  // Stop recording
+  const stopRecording = useCallback(() => {
+    if (mediaRecorderRef.current && state.isRecording) {
+      mediaRecorderRef.current.stop();
       
-      // Handle common errors
-      let errorMessage = 'Unknown error starting recording.';
+      // Create a new meeting part
+      const partNumber = state.meetingParts.length + 1;
+      const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
       
-      if (error instanceof DOMException) {
-        if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-          errorMessage = 'Microphone access denied. Please allow microphone access.';
-        } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
-          errorMessage = 'No microphone found. Please connect a microphone.';
-        } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
-          errorMessage = 'Microphone is busy or not readable. Please close other apps using the microphone.';
-        }
+      // Add the new part to state
+      setState(prev => ({
+        ...prev,
+        isRecording: false,
+        meetingParts: [
+          ...prev.meetingParts,
+          {
+            partNumber,
+            duration: prev.recordingTime,
+            audioBlob
+          }
+        ],
+        audioBlobs: [...(prev.audioBlobs || []), audioBlob]
+      }));
+      
+      // Stop and clear the stream
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
       }
       
-      setState(prev => ({ ...prev, recordingError: errorMessage }));
-    }
-  }, [maxRecordingDuration]);
-  
-  // Stop recording and process audio
-  const stopRecording = useCallback(async () => {
-    if (!mediaRecorderRef.current || !state.isRecording) {
-      return;
-    }
-    
-    // Stop media recorder
-    mediaRecorderRef.current.stop();
-    
-    // Stop timer
-    if (timerRef.current) {
-      window.clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    
-    // Collect recorded audio data
-    const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-    
-    // Create a new meeting part
-    const newPart: MeetingPart = {
-      partNumber: state.meetingParts.length + 1,
-      duration: state.recordingTime,
-      audioBlob
-    };
-    
-    // Update state
-    setState(prev => ({
-      ...prev,
-      isRecording: false,
-      recordingTime: 0,
-      meetingParts: [...prev.meetingParts, newPart],
-      audioBlobs: [...(prev.audioBlobs || []), audioBlob],
-    }));
-    
-    // Clear device access
-    const tracks = mediaRecorderRef.current.stream.getTracks();
-    tracks.forEach(track => track.stop());
-    
-    // Reset for next recording
-    mediaRecorderRef.current = null;
-    audioChunksRef.current = [];
-    
-    // Auto-transcribe if we have audio
-    if (audioBlob.size > 0) {
-      try {
-        setState(prev => ({ ...prev, isTranscribing: true }));
-        
-        // Here we'd call the transcription API
-        // This is simplified for the example
-        toast({
-          title: "Starting transcription...",
-          description: "This may take a few moments.",
-          duration: 3000,
-        });
-        
-        // Simulate transcription for now 
-        // In a real app, replace with actual API call
-        setTimeout(() => {
-          setState(prev => ({ 
-            ...prev, 
-            isTranscribing: false,
-            transcribedText: prev.transcribedText + 
-              (prev.transcribedText ? '\n\n' : '') + 
-              `[Part ${newPart.partNumber}]\nThis would contain the transcribed text from the audio recording.` 
-          }));
-        }, 3000);
-      } catch (error) {
-        console.error('Transcription error:', error);
-        setState(prev => ({ ...prev, isTranscribing: false }));
-        
-        toast({
-          title: "Transcription Error",
-          description: "Failed to transcribe audio. Please try again.",
-          variant: "destructive", // Changed from "warning" to valid "destructive"
-        });
+      // Clear timer
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
       }
+      
+      // Process the recording (transcribe etc.)
+      processRecording(audioBlob);
     }
   }, [state.isRecording, state.meetingParts, state.recordingTime, state.audioBlobs]);
-  
-  // Start a new recording part
-  const startNextPart = useCallback(async () => {
-    try {
-      // Start new recording
-      await startRecording();
-    } catch (error) {
-      console.error('Error starting next part:', error);
-      toast({
-        title: "Error Starting Recording",
-        description: "Failed to start the next recording part. Please try again.",
-        variant: "destructive", // Changed from "warning" to valid "destructive"
-      });
-    }
+
+  // Start next part of the recording
+  const startNextPart = useCallback(() => {
+    // Reset timer but keep the state of previous parts
+    setState(prev => ({ ...prev, recordingTime: 0 }));
+    
+    // Start a new recording
+    startRecording();
   }, [startRecording]);
-  
-  // Generate meeting summary
-  const generateSummary = useCallback(async () => {
-    if (!state.transcribedText || state.isSummarizing) {
-      return;
+
+  // Process recorded audio
+  const processRecording = useCallback(async (audioBlob: Blob) => {
+    try {
+      // Here we would transcribe the audio
+      // This is a placeholder - in a real app you would send the audio to a transcription service
+      const mockTranscription = "This is a placeholder transcription. In a real application, this text would come from processing the audio through a transcription service.";
+      
+      // Update state with transcription
+      setState(prev => ({
+        ...prev,
+        transcribedText: prev.transcribedText 
+          ? `${prev.transcribedText}\n\n${mockTranscription}`
+          : mockTranscription
+      }));
+      
+    } catch (error) {
+      console.error("Error processing recording:", error);
+      toast.error("Failed to process the recording. Please try again.");
     }
+  }, []);
+
+  // Generate a summary from the transcription
+  const generateSummary = useCallback(async () => {
+    if (!state.transcribedText) return;
     
     setState(prev => ({ ...prev, isSummarizing: true }));
     
     try {
-      // Here we'd call the summarization API
-      // For now, we'll simulate it
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      // In a real app, you would send the transcription to an AI service
+      // This is a placeholder
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate processing time
       
-      const mockSummary = {
-        summary: "This is a mock summary of the meeting. It would contain key points, action items, and important discussions.",
-        location: state.intakeData?.location || "Meeting Room A",
-        attendees: state.intakeData?.attendees || ["John Doe", "Jane Smith"]
-      };
+      const mockSummary = `
+        ## Meeting Summary
+
+        ### Key Points:
+        - Point 1: Important discussion about project timeline.
+        - Point 2: Decision to allocate more resources to development.
+        - Point 3: Agreement on next sprint goals.
+
+        ### Action Items:
+        - Action 1: Team to prepare status report by Friday.
+        - Action 2: Schedule follow-up meeting next week.
+        - Action 3: Review budget allocations.
+
+        ### Decisions:
+        - Decision 1: Approved new feature roadmap.
+        - Decision 2: Postponed marketing campaign until Q3.
+      `;
+      
+      const detectedLocation = state.meetingLocation || "Conference Room A";
+      const detectedAttendees = ["John Doe", "Jane Smith", "Alex Johnson"];
       
       setState(prev => ({
         ...prev,
+        summary: mockSummary,
         isSummarizing: false,
-        summary: mockSummary.summary,
-        detectedLocation: mockSummary.location,
-        detectedAttendees: mockSummary.attendees
+        detectedLocation,
+        detectedAttendees
       }));
       
-      // Save the meeting summary to the database
-      if (supabase) {
-        setState(prev => ({ ...prev, isSaving: true }));
+      // Save to database
+      if (state.meetingParts.length > 0 && state.audioBlobs) {
+        const totalDuration = state.meetingParts.reduce((sum, part) => sum + part.duration, 0);
         
-        try {
-          // Insert meeting record
-          const { error } = await supabase.from('meetings').insert({
-            user_id: (await supabase.auth.getUser()).data.user?.id,
-            duration: state.meetingParts.reduce((total, part) => total + part.duration, 0),
-            date: state.intakeData?.date || new Date().toISOString().split('T')[0],
-            location: mockSummary.location,
-            summary: mockSummary.summary,
-            language: voiceSettings.language,
-            title: state.intakeData?.title || `Meeting on ${new Date().toLocaleDateString()}`
-          });
-          
-          if (error) throw error;
-          
-          toast({
-            title: "Meeting Saved",
-            description: "Your meeting summary has been saved.",
-            duration: 3000,
-          });
-        } catch (error) {
-          console.error('Error saving meeting:', error);
-          toast({
-            title: "Error Saving Meeting",
-            description: "Failed to save your meeting summary. Please try again.",
-            variant: "destructive",
-          });
-        } finally {
-          setState(prev => ({ ...prev, isSaving: false }));
-        }
+        await saveMeetingSummary({
+          title: state.meetingTitle || "Untitled Meeting",
+          date: state.meetingDate || new Date().toISOString().split('T')[0],
+          location: detectedLocation,
+          summary: mockSummary,
+          duration: totalDuration,
+          audioBlobs: state.audioBlobs
+        });
       }
+      
     } catch (error) {
-      console.error('Error generating summary:', error);
+      console.error("Error generating summary:", error);
       setState(prev => ({ ...prev, isSummarizing: false }));
+      toast.error("Failed to generate summary. Please try again.");
+    }
+  }, [state.transcribedText, state.meetingParts, state.audioBlobs, state.meetingTitle, state.meetingDate, state.meetingLocation]);
+
+  // Save meeting summary to database
+  const saveMeetingSummary = useCallback(async ({ 
+    title, 
+    date, 
+    location, 
+    summary, 
+    duration,
+    audioBlobs 
+  }: { 
+    title: string, 
+    date: string, 
+    location: string, 
+    summary: string, 
+    duration: number,
+    audioBlobs: Blob[] 
+  }) => {
+    try {
+      const user = (await supabase.auth.getUser()).data.user;
+      if (!user) return;
       
-      toast({
-        title: "Summarization Error",
-        description: "Failed to generate meeting summary. Please try again.",
+      const meetingId = uuidv4();
+      
+      // Save to database
+      const { error } = await supabase.from('meetings').insert({
+        id: meetingId,
+        user_id: user.id,
+        title,
+        date,
+        location,
+        summary,
+        duration,
+        has_audio: audioBlobs.length > 0,
+        language: 'en',
+        created_at: new Date().toISOString()
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      toast.success("Meeting summary saved successfully!");
+      
+    } catch (error) {
+      console.error("Error saving meeting:", error);
+      toast("Failed to save meeting summary", {
+        description: "There was an error saving your meeting data",
         variant: "destructive",
       });
     }
-  }, [state.transcribedText, state.isSummarizing, state.intakeData, state.meetingParts, supabase, voiceSettings.language]);
-  
-  // Set intake form data
-  const setIntakeData = useCallback((data: IntakeFormData) => {
-    setState(prev => ({ ...prev, intakeData: data }));
   }, []);
-  
-  // Copy summary to clipboard
-  const copySummary = useCallback(async () => {
-    if (!state.summary) return;
-    
-    try {
-      await navigator.clipboard.writeText(state.summary);
-      toast({
-        title: "Copied to Clipboard",
-        description: "Meeting summary copied to clipboard.",
-        duration: 2000,
-      });
-    } catch (error) {
-      console.error('Failed to copy summary:', error);
-      toast({
-        title: "Copy Failed",
-        description: "Failed to copy summary to clipboard. Try again.",
-        variant: "destructive",
-      });
-    }
-  }, [state.summary]);
-  
-  // Download audio recording
-  const downloadAudio = useCallback(async () => {
-    if (!state.audioBlobs || state.audioBlobs.length === 0) {
-      return;
-    }
-    
-    setIsDownloadingAudio(true);
-    
-    try {
-      // Combine all audio parts
-      const combinedBlob = new Blob(state.audioBlobs, { type: 'audio/webm' });
-      
-      // Create download link
-      const url = URL.createObjectURL(combinedBlob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `meeting_recording_${new Date().toISOString().slice(0, 10)}.webm`;
-      document.body.appendChild(a);
-      a.click();
-      
-      // Clean up
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      
-      toast({
-        title: "Download Started",
-        description: "Your meeting recording is being downloaded.",
-        duration: 3000,
-      });
-    } catch (error) {
-      console.error('Error downloading audio:', error);
-      toast({
-        title: "Download Failed",
-        description: "Failed to download meeting recording. Try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsDownloadingAudio(false);
-    }
-  }, [state.audioBlobs]);
-  
+
   // Load saved meetings
   const loadSavedMeetings = useCallback(async () => {
-    if (!supabase) return [];
-    
     try {
       const user = (await supabase.auth.getUser()).data.user;
       if (!user) return [];
@@ -426,66 +358,104 @@ export const useMeetingSummaryV2 = () => {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
       
       return data || [];
+      
     } catch (error) {
-      console.error('Error loading meetings:', error);
-      toast({
-        title: "Error Loading Meetings",
-        description: "Failed to load your saved meetings. Please try again.",
-        variant: "destructive", 
+      console.error("Error loading meetings:", error);
+      toast("Failed to load meetings", {
+        description: "There was an error retrieving your saved meetings",
+        variant: "destructive",
       });
       return [];
     }
-  }, [supabase]);
-  
+  }, []);
+
   // Delete a meeting
   const deleteMeeting = useCallback(async (meetingId: string) => {
-    if (!supabase) return false;
-    
     try {
       const { error } = await supabase
         .from('meetings')
         .delete()
         .eq('id', meetingId);
       
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
       
-      toast({
-        title: "Meeting Deleted",
-        description: "The meeting has been deleted.",
-        duration: 3000,
-      });
-      
+      toast.success("Meeting deleted successfully");
       return true;
+      
     } catch (error) {
-      console.error('Error deleting meeting:', error);
-      toast({
-        title: "Error Deleting Meeting",
-        description: "Failed to delete the meeting. Please try again.",
+      console.error("Error deleting meeting:", error);
+      toast("Failed to delete meeting", {
+        description: "There was an error deleting the meeting",
         variant: "destructive",
       });
       return false;
     }
-  }, [supabase]);
-  
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) {
-        window.clearInterval(timerRef.current);
-      }
+  }, []);
+
+  // Copy summary to clipboard
+  const copySummary = useCallback(async () => {
+    if (!state.summary) return;
+    
+    try {
+      await navigator.clipboard.writeText(state.summary);
+      toast.success("Summary copied to clipboard");
+    } catch (error) {
+      console.error("Error copying text:", error);
+      toast.error("Failed to copy. Please try again.");
+    }
+  }, [state.summary]);
+
+  // Download audio recording
+  const downloadAudio = useCallback(async () => {
+    if (!state.audioBlobs) return;
+    
+    setIsDownloadingAudio(true);
+    
+    try {
+      // Combine all audio blobs into one file
+      const combinedBlob = new Blob(state.audioBlobs, { type: 'audio/webm' });
       
-      if (mediaRecorderRef.current && state.isRecording) {
-        mediaRecorderRef.current.stop();
-        
-        const tracks = mediaRecorderRef.current.stream.getTracks();
-        tracks.forEach(track => track.stop());
-      }
-    };
-  }, [state.isRecording]);
-  
+      // Create a download link
+      const url = URL.createObjectURL(combinedBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${state.meetingTitle || 'meeting'}_recording.webm`;
+      document.body.appendChild(a);
+      a.click();
+      
+      // Clean up
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 100);
+      
+      toast.success("Audio downloaded successfully");
+      
+    } catch (error) {
+      console.error("Error downloading audio:", error);
+      toast.error("Failed to download audio. Please try again.");
+    } finally {
+      setIsDownloadingAudio(false);
+    }
+  }, [state.audioBlobs, state.meetingTitle]);
+
+  // Set meeting intake data
+  const setIntakeData = useCallback((data: IntakeData) => {
+    setState(prev => ({
+      ...prev,
+      meetingTitle: data.title,
+      meetingDate: data.date,
+      meetingLocation: data.location
+    }));
+  }, []);
+
   return {
     state,
     startRecording,
@@ -504,6 +474,4 @@ export const useMeetingSummaryV2 = () => {
     isExporting,
     isDownloadingAudio
   };
-};
-
-export type { IntakeFormData };
+}

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useMeetingSummaryV2 } from '@/hooks/ai/useMeetingSummaryV2';
@@ -161,7 +162,7 @@ export const MeetingSummaryToolV2: React.FC = () => {
                 downloadAudio={downloadAudio}
                 isExporting={isExporting}
                 isDownloadingAudio={isDownloadingAudio}
-                audioData={state.audioBlobs?.map(blob => new Blob([blob], { type: 'audio/webm' })) || []}
+                audioData={state.audioBlobs?.map(blob => new Blob([blob], { type: 'audio/webm' }))}
                 summaryRef={summaryRef}
                 onReset={handleReset}
               />
