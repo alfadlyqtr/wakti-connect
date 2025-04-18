@@ -45,3 +45,9 @@ verify_jwt = true
 
 [functions.ai-image-generation]
 verify_jwt = true
+
+[functions.ai-meeting-summary]
+verify_jwt = true
+
+[functions.voice-transcription]
+verify_jwt = true

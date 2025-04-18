@@ -21,7 +21,7 @@ serve(async (req) => {
     
     // Get request body
     const requestData = await req.json();
-    const { audio } = requestData;
+    const { audio, language = 'en' } = requestData;
     
     if (!audio) {
       console.error('No audio data provided');
@@ -29,11 +29,23 @@ serve(async (req) => {
     }
 
     console.log("Audio data received, length:", audio.length);
+    console.log("Language setting:", language);
+    
+    // Map language codes to proper format
+    const languageMap: Record<string, string> = {
+      'en': 'en-US',
+      'ar': 'ar',
+      'es': 'es-ES',
+      'fr': 'fr-FR',
+      'de': 'de-DE',
+    };
+    
+    const languageCode = languageMap[language] || 'en-US';
     
     // Check if we have an OpenAI API key - Primary transcription service
     if (OPENAI_API_KEY) {
       try {
-        console.log("Attempting OpenAI transcription");
+        console.log(`Attempting OpenAI transcription with language: ${languageCode}`);
         
         // Process the base64 audio
         const binaryAudio = Uint8Array.from(atob(audio), c => c.charCodeAt(0));
@@ -43,6 +55,7 @@ serve(async (req) => {
         const formData = new FormData();
         formData.append('file', blob, 'audio.webm');
         formData.append('model', 'whisper-1');
+        formData.append('language', languageCode.split('-')[0]);
         
         const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
           method: 'POST',

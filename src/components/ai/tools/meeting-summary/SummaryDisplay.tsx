@@ -2,11 +2,14 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download, FileDown, Copy, Check, MapPin } from 'lucide-react';
+import { Download, FileDown, Copy, Check, MapPin, Users, ListChecks } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface SummaryDisplayProps {
   summary: string;
   detectedLocation: string | null;
+  detectedAttendees?: string | null;
+  detectedActionItems?: string | null;
   copied: boolean;
   copySummary: () => void;
   exportAsPDF: () => void;
@@ -20,6 +23,8 @@ interface SummaryDisplayProps {
 const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
   summary,
   detectedLocation,
+  detectedAttendees,
+  detectedActionItems,
   copied,
   copySummary,
   exportAsPDF,
@@ -70,19 +75,55 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
         </div>
       </div>
       
-      {detectedLocation && (
-        <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
-          <MapPin className="h-3 w-3" />
-          <span>Location: {detectedLocation}</span>
-        </div>
-      )}
-      
-      <div 
-        ref={summaryRef}
-        className="bg-muted/50 p-3 rounded-md text-sm whitespace-pre-wrap"
-      >
-        {summary}
-      </div>
+      <Tabs defaultValue="summary" className="w-full">
+        <TabsList className="grid grid-cols-3 mb-4">
+          <TabsTrigger value="summary" className="text-xs">Summary</TabsTrigger>
+          {detectedAttendees && <TabsTrigger value="attendees" className="text-xs">Attendees</TabsTrigger>}
+          {detectedActionItems && <TabsTrigger value="actions" className="text-xs">Action Items</TabsTrigger>}
+        </TabsList>
+        
+        <TabsContent value="summary">
+          {detectedLocation && (
+            <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
+              <MapPin className="h-3 w-3" />
+              <span>Location: {detectedLocation}</span>
+            </div>
+          )}
+          
+          <div 
+            ref={summaryRef}
+            className="bg-muted/50 p-3 rounded-md text-sm whitespace-pre-wrap"
+          >
+            {summary}
+          </div>
+        </TabsContent>
+        
+        {detectedAttendees && (
+          <TabsContent value="attendees">
+            <div className="flex items-center gap-1 text-sm text-muted-foreground mb-2">
+              <Users className="h-4 w-4" />
+              <span>Meeting Attendees</span>
+            </div>
+            
+            <div className="bg-muted/50 p-3 rounded-md text-sm whitespace-pre-wrap">
+              {detectedAttendees}
+            </div>
+          </TabsContent>
+        )}
+        
+        {detectedActionItems && (
+          <TabsContent value="actions">
+            <div className="flex items-center gap-1 text-sm text-muted-foreground mb-2">
+              <ListChecks className="h-4 w-4" />
+              <span>Action Items</span>
+            </div>
+            
+            <div className="bg-muted/50 p-3 rounded-md text-sm whitespace-pre-wrap">
+              {detectedActionItems}
+            </div>
+          </TabsContent>
+        )}
+      </Tabs>
     </Card>
   );
 };

@@ -4,10 +4,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 
 interface VoiceInteractionOptions {
-  onTranscriptComplete?: (transcript: string) => void;
+  onTranscriptComplete?: (transcript: string, audioData?: string) => void;
   continuousListening?: boolean;
   autoStopAfterSilence?: boolean;
   maxDuration?: number; // in seconds
+  language?: string;
 }
 
 export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
@@ -15,7 +16,8 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
     onTranscriptComplete, 
     continuousListening = false,
     autoStopAfterSilence = false, 
-    maxDuration = 60 
+    maxDuration = 60,
+    language = 'en'
   } = options;
   
   const [isListening, setIsListening] = useState(false);
@@ -26,6 +28,7 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
   const [recordingStartTime, setRecordingStartTime] = useState<number | null>(null);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(null);
+  const [audioBase64, setAudioBase64] = useState<string | null>(null);
   
   // Reference to the MediaRecorder and audio chunks
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -46,17 +49,20 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
     try {
       // Reset state
       setTranscript('');
+      setAudioBase64(null);
       setError(null);
       audioChunksRef.current = [];
       
-      console.log("Starting voice recording...");
+      console.log(`Starting voice recording with language: ${language}`);
       
       // Get microphone access
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
       
       // Create MediaRecorder for audio capture
-      const mediaRecorder = new MediaRecorder(stream);
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm' // Most widely supported format
+      });
       mediaRecorderRef.current = mediaRecorder;
       
       mediaRecorder.ondataavailable = (event) => {
@@ -122,7 +128,7 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
         variant: "destructive"
       });
     }
-  }, [maxDuration, recordingStartTime, supportsVoice]);
+  }, [maxDuration, recordingStartTime, supportsVoice, language]);
   
   // Process the recorded audio
   const processRecording = async () => {
@@ -136,6 +142,10 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
       
       // Create audio blob
       const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+      
+      // Calculate audio size
+      const audioSizeMB = audioBlob.size / (1024 * 1024);
+      console.log(`Audio recording size: ${audioSizeMB.toFixed(2)} MB`);
       
       // Show feedback
       toast({
@@ -156,11 +166,17 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
               throw new Error("Failed to convert audio to base64");
             }
             
-            console.log("Audio data converted to base64, calling edge function...");
+            // Save the audio data
+            setAudioBase64(base64Audio);
+            
+            console.log(`Audio data converted to base64 (${base64Audio.length} chars), calling edge function...`);
             
             // Call voice-transcription edge function
             const { data, error } = await supabase.functions.invoke('voice-transcription', {
-              body: { audio: base64Audio }
+              body: { 
+                audio: base64Audio,
+                language: language
+              }
             });
             
             console.log("Edge function response:", data, error);
@@ -187,7 +203,7 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
             
             if (onTranscriptComplete) {
               console.log("Calling onTranscriptComplete with:", finalTranscript);
-              onTranscriptComplete(finalTranscript);
+              onTranscriptComplete(finalTranscript, base64Audio);
             }
             
             toast({
@@ -257,6 +273,35 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
     }
   }, [timerInterval]);
   
+  // Process audio with multiple fallback methods
+  const processAudioWithFallbacks = async (audioData: string): Promise<string> => {
+    setIsProcessing(true);
+    try {
+      // Call voice-transcription edge function
+      const { data, error } = await supabase.functions.invoke('voice-transcription', {
+        body: { 
+          audio: audioData,
+          language: language
+        }
+      });
+      
+      if (error) {
+        throw new Error(`Transcription error: ${error.message}`);
+      }
+      
+      if (!data || !data.text) {
+        throw new Error("No transcription received");
+      }
+      
+      return data.text;
+    } catch (err) {
+      console.error("Error in processAudioWithFallbacks:", err);
+      throw err;
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+  
   // Clean up on unmount
   useEffect(() => {
     return () => {
@@ -286,6 +331,8 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
     isProcessing,
     startListening,
     stopListening,
-    recordingDuration
+    recordingDuration,
+    audioBase64,
+    processAudioWithFallbacks
   };
 };

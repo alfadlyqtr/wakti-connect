@@ -7,7 +7,7 @@ import { VoiceToTextTool } from '@/components/ai/tools/VoiceToTextTool';
 import { Mic, FileText } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-const VoiceTools = () => {
+const VoiceTools: React.FC = () => {
   const [activeTab, setActiveTab] = React.useState('meeting-summary');
 
   return (
