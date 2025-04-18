@@ -14,8 +14,9 @@ interface SummaryDisplayProps {
   downloadAudio: () => void;
   isExporting: boolean;
   isDownloadingAudio: boolean;
-  audioData: Blob | null;
+  audioData: Blob[] | null;
   summaryRef: React.RefObject<HTMLDivElement>;
+  onReset?: () => void;
 }
 
 const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
@@ -29,7 +30,8 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
   isExporting,
   isDownloadingAudio,
   audioData,
-  summaryRef
+  summaryRef,
+  onReset
 }) => {
   if (!summary) {
     return null;
@@ -124,6 +126,17 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
           <p className="text-sm bg-gray-50 dark:bg-gray-900 p-2 rounded">
             {detectedLocation}
           </p>
+        </div>
+      )}
+
+      {onReset && (
+        <div className="mt-4">
+          <Button
+            variant="outline"
+            onClick={onReset}
+          >
+            Start New Meeting
+          </Button>
         </div>
       )}
     </Card>

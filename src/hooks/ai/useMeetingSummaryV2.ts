@@ -1,3 +1,4 @@
+
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { toast } from "sonner";
 import { v4 as uuidv4 } from 'uuid';
@@ -311,9 +312,8 @@ export function useMeetingSummaryV2() {
       
     } catch (error) {
       console.error("Error saving meeting:", error);
-      toast("Failed to save meeting summary", {
+      toast({
         description: "There was an error saving your meeting data",
-        variant: "destructive",
       });
     }
   }, []);
@@ -337,9 +337,8 @@ export function useMeetingSummaryV2() {
       
     } catch (error) {
       console.error("Error loading meetings:", error);
-      toast("Failed to load meetings", {
+      toast({
         description: "There was an error retrieving your saved meetings",
-        variant: "destructive",
       });
       return [];
     }
@@ -361,9 +360,8 @@ export function useMeetingSummaryV2() {
       
     } catch (error) {
       console.error("Error deleting meeting:", error);
-      toast("Failed to delete meeting", {
+      toast({
         description: "There was an error deleting the meeting",
-        variant: "destructive",
       });
       return false;
     }
