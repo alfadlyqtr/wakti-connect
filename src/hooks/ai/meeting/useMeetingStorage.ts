@@ -1,10 +1,11 @@
+
 import { useState, useCallback } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { MeetingContext, extractMeetingContext } from '@/utils/text/transcriptionUtils';
-import type { Meeting, SavedMeeting } from '@/types/meeting';
+import { Meeting, SavedMeeting } from '@/types/meeting';
 
-export type { SavedMeeting };
+export { SavedMeeting };
 
 export const useMeetingStorage = () => {
   const [savedMeetings, setSavedMeetings] = useState<SavedMeeting[]>([]);
@@ -23,18 +24,23 @@ export const useMeetingStorage = () => {
         return null;
       }
 
+      // Extract location from transcript if available
       const meetingContext = extractMeetingContext(transcribedText);
       
+      // Determine title - use provided title, extract from transcript, or use default
       const meetingTitle = title || 
         (meetingContext?.title || 'Meeting Summary');
 
+      // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         throw new Error('User not authenticated');
       }
 
+      // Calculate audio expiration (10 days from now)
       const audioExpiresAt = audioData ? new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString() : null;
       
+      // Save to Supabase
       const { data, error } = await supabase.from('meetings').insert({
         summary: summary,
         duration: recordingTime,
@@ -52,9 +58,11 @@ export const useMeetingStorage = () => {
         throw new Error(error.message);
       }
 
+      // Save audio data if available
       if (audioData) {
         console.log('Saving audio recording for meeting:', data[0].id);
         
+        // First, check if the bucket exists
         const { data: bucketData, error: bucketError } = await supabase.storage
           .getBucket('meeting-recordings');
           
@@ -63,6 +71,7 @@ export const useMeetingStorage = () => {
           console.warn('Audio recording will not be saved - bucket not found');
           // Continue without audio rather than failing the whole save
         } else {
+          // Upload the audio file
           const audioFile = new File(
             [audioData], 
             `meeting_${data[0].id}.webm`, 
@@ -81,6 +90,7 @@ export const useMeetingStorage = () => {
               variant: "destructive"
             });
             
+            // Update the meeting record to indicate no audio
             await supabase.from('meetings').update({
               has_audio: false,
               audio_expires_at: null,
@@ -97,6 +107,7 @@ export const useMeetingStorage = () => {
         description: "Your meeting summary has been saved successfully.",
       });
 
+      // Refresh the list of saved meetings
       loadSavedMeetings();
       
       return data[0];
@@ -124,6 +135,7 @@ export const useMeetingStorage = () => {
         throw new Error(error.message);
       }
 
+      // Calculate days until expiration for each meeting with audio
       const now = new Date();
       const processedMeetings = data.map((meeting: Meeting) => {
         let daysUntilExpiration = null;
@@ -132,7 +144,7 @@ export const useMeetingStorage = () => {
           const expiryDate = new Date(meeting.audio_expires_at);
           const diffTime = expiryDate.getTime() - now.getTime();
           daysUntilExpiration = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-          daysUntilExpiration = Math.max(0, daysUntilExpiration);
+          daysUntilExpiration = Math.max(0, daysUntilExpiration); // Ensure it's not negative
         }
         
         return {
@@ -172,10 +184,12 @@ export const useMeetingStorage = () => {
         throw new Error(error.message);
       }
 
+      // Also remove the audio recording if it exists
       await supabase.storage
         .from('meeting-recordings')
         .remove([`${id}.webm`]);
 
+      // Update local state
       setSavedMeetings(prevMeetings => 
         prevMeetings.filter(meeting => meeting.id !== id)
       );
@@ -205,6 +219,7 @@ export const useMeetingStorage = () => {
         throw new Error(error.message);
       }
 
+      // Update local state
       setSavedMeetings(prevMeetings => 
         prevMeetings.map(meeting => 
           meeting.id === id ? { ...meeting, title: newTitle } : meeting
