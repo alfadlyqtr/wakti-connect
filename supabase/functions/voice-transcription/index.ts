@@ -21,12 +21,14 @@ serve(async (req) => {
     
     // Get request body
     const requestData = await req.json();
-    const { audio } = requestData;
+    const { fileUrl, language = 'en' } = requestData;
     
-    if (!audio) {
-      console.error('No audio data provided');
-      throw new Error('No audio data provided');
+    if (!fileUrl) {
+      console.error('No file URL provided');
+      throw new Error('No file URL provided');
     }
+    
+    console.log(`Processing file from URL: ${fileUrl}`);
     
     // Check if we have an ElevenLabs API key - Priority 1
     if (ELEVENLABS_API_KEY) {
@@ -37,6 +39,7 @@ serve(async (req) => {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minute timeout
         
+        // Use the file URL directly
         const response = await fetch('https://api.elevenlabs.io/v1/speech-to-text', {
           method: 'POST',
           headers: {
@@ -44,8 +47,9 @@ serve(async (req) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            audio: audio,
+            audio_url: fileUrl,
             model_id: 'whisper-1',
+            language: language,
           }),
           signal: controller.signal,
         });
@@ -83,14 +87,22 @@ serve(async (req) => {
       try {
         console.log("Attempting OpenAI Whisper transcription");
         
-        // Process the base64 audio
-        const binaryAudio = Uint8Array.from(atob(audio), c => c.charCodeAt(0));
-        const blob = new Blob([binaryAudio], { type: 'audio/webm' });
+        // Fetch the file from the URL
+        const fileResponse = await fetch(fileUrl);
+        if (!fileResponse.ok) {
+          throw new Error(`Failed to fetch audio file: ${fileResponse.status}`);
+        }
         
-        // Create FormData for OpenAI API with increased timeout
+        // Get the file as a blob
+        const fileBlob = await fileResponse.blob();
+        
+        // Create FormData for OpenAI API
         const formData = new FormData();
-        formData.append('file', blob, 'audio.webm');
+        formData.append('file', fileBlob, 'audio.webm');
         formData.append('model', 'whisper-1');
+        if (language && language !== 'auto') {
+          formData.append('language', language);
+        }
         
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minute timeout

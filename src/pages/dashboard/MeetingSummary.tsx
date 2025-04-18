@@ -2,7 +2,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Mic } from 'lucide-react';
-import { MeetingSummaryTool } from '@/components/ai/tools/MeetingSummaryTool';
+import { MeetingSummaryToolV2 } from '@/components/ai/tools/MeetingSummaryToolV2';
 
 const MeetingSummary = () => {
   return (
@@ -11,7 +11,7 @@ const MeetingSummary = () => {
         className="mx-auto p-4 sm:p-6 lg:p-8 space-y-6"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
       >
         <div className="flex flex-col gap-2 max-w-4xl mx-auto">
           <div className="flex items-center gap-3">
@@ -28,7 +28,7 @@ const MeetingSummary = () => {
         </div>
 
         <div className="max-w-4xl mx-auto w-full">
-          <MeetingSummaryTool />
+          <MeetingSummaryToolV2 />
         </div>
       </motion.div>
     </div>
