@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { useVoiceSettings } from '@/store/voiceSettings';
 
 interface VoiceInteractionOptions {
   onTranscriptComplete?: (transcript: string) => void;
