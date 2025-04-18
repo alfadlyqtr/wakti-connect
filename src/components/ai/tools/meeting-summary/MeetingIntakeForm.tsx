@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -43,95 +44,110 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
 
   return (
     <Card className="w-full">
-      <Card className="w-full">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="sessionType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center space-x-2">
-                    <GraduationCap className="h-4 w-4" />
-                    <span>Session Type</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., Brainstorming Session" {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="sessionType"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="flex items-center space-x-2">
+                  <GraduationCap className="h-4 w-4" />
+                  <span>Session Type</span>
+                </FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="e.g., Staff Meeting, English Lecture" 
+                    {...field} 
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
 
-            <FormField
-              control={form.control}
-              name="hostedBy"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center space-x-2">
-                    <Users className="h-4 w-4" />
-                    <span>Hosted By</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., John Doe" {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+          <FormField
+            control={form.control}
+            name="hostedBy"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="flex items-center space-x-2">
+                  <Users className="h-4 w-4" />
+                  <span>Hosted By</span>
+                </FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="e.g., Jabor Abdullah" 
+                    {...field} 
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
 
-            <FormField
-              control={form.control}
-              name="location"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center space-x-2">
-                    <MapPin className="h-4 w-4" />
-                    <span>Location</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., Conference Room A" {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+          <FormField
+            control={form.control}
+            name="location"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="flex items-center space-x-2">
+                  <MapPin className="h-4 w-4" />
+                  <span>Location</span>
+                </FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="e.g., Oryx Tower, Doha College" 
+                    {...field} 
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
 
-            <FormField
-              control={form.control}
-              name="attendees"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center space-x-2">
-                    <Building className="h-4 w-4" />
-                    <span>Attendees</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="e.g., John Doe, Jane Smith" {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+          <FormField
+            control={form.control}
+            name="attendees"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="flex items-center space-x-2">
+                  <Building className="h-4 w-4" />
+                  <span>Attendees</span>
+                </FormLabel>
+                <FormControl>
+                  <Textarea 
+                    placeholder="e.g., John, Alanoud, Mozah, Hassan" 
+                    {...field} 
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
 
-            <FormField
-              control={form.control}
-              name="agenda"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Agenda</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="e.g., Discuss project timeline" {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+          <FormField
+            control={form.control}
+            name="agenda"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Agenda</FormLabel>
+                <FormControl>
+                  <Textarea 
+                    placeholder="e.g., Project Deadline, Final Exams" 
+                    {...field} 
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
 
-            <div className="flex justify-between">
-              <Button type="submit">Submit</Button>
-              <Button type="button" variant="secondary" onClick={onSkip}>
-                Skip
-              </Button>
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-2">
+              <Button type="submit" variant="success">Skip and Start</Button>
+              <span className="text-sm text-muted-foreground">
+                😊 No worries! WAKTI AI will help you pick up
+              </span>
             </div>
-          </form>
-        </Form>
-      </Card>
+          </div>
+        </form>
+      </Form>
     </Card>
   );
 };
