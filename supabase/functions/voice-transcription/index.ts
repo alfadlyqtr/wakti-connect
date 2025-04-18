@@ -33,7 +33,10 @@ serve(async (req) => {
       try {
         console.log("Attempting ElevenLabs transcription");
         
-        // Call ElevenLabs API
+        // Call ElevenLabs API with increased timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minute timeout
+        
         const response = await fetch('https://api.elevenlabs.io/v1/speech-to-text', {
           method: 'POST',
           headers: {
@@ -44,7 +47,10 @@ serve(async (req) => {
             audio: audio,
             model_id: 'whisper-1',
           }),
+          signal: controller.signal,
         });
+        
+        clearTimeout(timeoutId);
         
         if (!response.ok) {
           const errorText = await response.text();
@@ -67,7 +73,6 @@ serve(async (req) => {
         );
       } catch (error) {
         console.error("ElevenLabs transcription failed, falling back to OpenAI:", error);
-        // Fall through to OpenAI fallback
       }
     } else {
       console.log("No ElevenLabs API key found, falling back to OpenAI");
@@ -80,12 +85,15 @@ serve(async (req) => {
         
         // Process the base64 audio
         const binaryAudio = Uint8Array.from(atob(audio), c => c.charCodeAt(0));
-        const blob = new Blob([binaryAudio]);
+        const blob = new Blob([binaryAudio], { type: 'audio/webm' });
         
-        // Create FormData for OpenAI API
+        // Create FormData for OpenAI API with increased timeout
         const formData = new FormData();
         formData.append('file', blob, 'audio.webm');
         formData.append('model', 'whisper-1');
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minute timeout
         
         const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
           method: 'POST',
@@ -93,7 +101,10 @@ serve(async (req) => {
             'Authorization': `Bearer ${OPENAI_API_KEY}`,
           },
           body: formData,
+          signal: controller.signal,
         });
+        
+        clearTimeout(timeoutId);
         
         if (!response.ok) {
           const errorText = await response.text();
@@ -116,34 +127,19 @@ serve(async (req) => {
         );
       } catch (error) {
         console.error("OpenAI Whisper transcription failed:", error);
-        // Fall through to browser fallback message
+        throw error; // No more fallbacks, propagate the error
       }
     } else {
       console.log("No OpenAI API key found");
+      throw new Error('No transcription services available');
     }
     
-    // If we got here, both ElevenLabs and OpenAI fallbacks failed
-    console.warn("Browser fallback activated - both ElevenLabs and OpenAI transcription failed");
-    
-    return new Response(
-      JSON.stringify({ 
-        text: null,
-        source: 'none',
-        fallback: true,
-        message: "API transcription services unavailable. Using browser fallback."
-      }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200  // Still return 200 to handle gracefully
-      }
-    );
-
   } catch (error) {
     console.error("Error in voice transcription function:", error);
     
     return new Response(
       JSON.stringify({ 
-        error: error.message, 
+        error: error.message,
         fallback: true,
         message: "Voice transcription error. Using browser fallback."
       }),

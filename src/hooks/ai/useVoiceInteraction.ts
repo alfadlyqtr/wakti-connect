@@ -38,6 +38,8 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
   
   const audioChunksRef = useRef<Blob[]>([]);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordingStartTimeRef = useRef<number>(0);
+  const { maxRecordingDuration } = useVoiceSettings();
   
   // Validate API keys on mount
   useEffect(() => {
@@ -76,7 +78,6 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
 
       console.log("API validation failed:", { elevenLabsError, openaiError });
       
-      // Both services failed
       setState(prev => ({
         ...prev,
         apiKeyStatus: 'invalid',
@@ -90,6 +91,58 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
         apiKeyStatus: 'invalid',
         apiKeyErrorDetails: error instanceof Error ? error.message : 'Failed to validate speech services'
       }));
+    }
+  };
+
+  const startVoiceRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        } 
+      });
+      
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm' // Using WebM format for best compatibility
+      });
+      
+      // Reset audio chunks and start time
+      audioChunksRef.current = [];
+      recordingStartTimeRef.current = Date.now();
+      
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+          
+          // Check recording duration
+          const currentDuration = (Date.now() - recordingStartTimeRef.current) / 1000;
+          if (currentDuration >= maxRecordingDuration) {
+            console.log(`Recording reached maximum duration of ${maxRecordingDuration} seconds`);
+            stopListening();
+          }
+        }
+      };
+      
+      mediaRecorder.start(1000); // Collect data every second for better handling of long recordings
+      
+      // Save references
+      mediaRecorderRef.current = mediaRecorder;
+      
+    } catch (error) {
+      console.error('Error starting voice recording:', error);
+      setState(prev => ({ 
+        ...prev, 
+        error: error instanceof Error ? error : new Error('Error starting recording'),
+        isListening: false
+      }));
+      
+      toast({
+        title: "Recording Error",
+        description: "Could not start recording. Please check microphone permissions.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -122,48 +175,6 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
       setState(prev => ({ ...prev, isProcessing: false }));
     }
   }, [state.apiKeyStatus]);
-  
-  const startVoiceRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
-        } 
-      });
-      
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm' // Using WebM format for best compatibility
-      });
-      
-      // Reset audio chunks
-      audioChunksRef.current = [];
-      
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
-      };
-      
-      mediaRecorder.start(100); // Collect data every 100ms
-      
-      // Save references
-      mediaRecorderRef.current = mediaRecorder;
-      
-    } catch (error) {
-      console.error('Error starting voice recording:', error);
-      setState(prev => ({ 
-        ...prev, 
-        error: error instanceof Error ? error : new Error('Error starting recording'),
-        isListening: false
-      }));
-      
-      // Fall back to browser speech recognition
-      console.warn('Browser fallback activated: Error starting recording');
-      startBrowserSpeechRecognition();
-    }
-  };
   
   const processRecordedAudio = async () => {
     try {

@@ -20,7 +20,7 @@ export const useVoiceSettings = create<VoiceSettings>()(
       autoSilenceDetection: true,
       visualFeedback: true,
       silenceThreshold: -45,
-      maxRecordingDuration: 300,
+      maxRecordingDuration: 2100, // 35 minutes in seconds
       language: 'en-US',
       toggleAutoSilenceDetection: () =>
         set((state) => ({ autoSilenceDetection: !state.autoSilenceDetection })),
