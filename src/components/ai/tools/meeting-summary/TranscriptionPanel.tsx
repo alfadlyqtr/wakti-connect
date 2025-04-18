@@ -16,6 +16,10 @@ const TranscriptionPanel: React.FC<TranscriptionPanelProps> = ({
   isSummarizing,
   generateSummary
 }) => {
+  if (!transcribedText) {
+    return null;
+  }
+
   return (
     <Card className="p-4 mt-4">
       <h3 className="text-lg font-semibold mb-2">Transcribed Text</h3>

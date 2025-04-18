@@ -1,14 +1,16 @@
-import React, { useRef, useEffect, useState } from 'react';
+
+import React, { useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { AlertCircle } from 'lucide-react';
+import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
 import { useMeetingSummary } from '@/hooks/ai/useMeetingSummary';
-import { extractMeetingContext } from '@/utils/text/transcriptionUtils';
+import { exportMeetingSummaryAsPDF } from './meeting-summary/MeetingSummaryExporter';
+
+// Import the refactored components
 import RecordingControls from './meeting-summary/RecordingControls';
 import TranscriptionPanel from './meeting-summary/TranscriptionPanel';
 import SummaryDisplay from './meeting-summary/SummaryDisplay';
 import SavedMeetingsList from './meeting-summary/SavedMeetingsList';
-import { MeetingContextDialog, MeetingContextData } from './meeting-summary/MeetingContextDialog';
-import { LANGUAGE_STORAGE_KEY } from '@/hooks/ai/meeting/useMeetingRecording';
 
 interface MeetingSummaryToolProps {
   onUseSummary?: (summary: string) => void;
@@ -21,63 +23,57 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     savedMeetings,
     isLoadingHistory,
     isExporting,
+    setIsExporting,
     selectedLanguage,
     setSelectedLanguage,
     copied,
     summaryRef,
     loadSavedMeetings,
-    startRecording,
+    startRecording: startRecordingHook,
     stopRecording,
     generateSummary,
     copySummary,
-    downloadAudio,
-    deleteMeeting,
-    updateMeetingTitle,
-    supportsVoice,
-    exportAsPDF
+    downloadAudio
   } = useMeetingSummary();
 
-  const [showContextDialog, setShowContextDialog] = useState(false);
-  const [meetingContext, setMeetingContext] = useState<MeetingContextData | null>(null);
-
-  useEffect(() => {
-    const savedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
-    if (savedLanguage) {
-      setSelectedLanguage(savedLanguage);
-    }
-  }, [setSelectedLanguage]);
-
-  const handleLanguageChange = (language: string) => {
-    setSelectedLanguage(language);
-    localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
-  };
-
+  const { 
+    isListening,
+    transcript,
+    lastTranscript,
+    supportsVoice,
+    error,
+    isProcessing,
+    startListening,
+    stopListening,
+    recordingDuration
+  } = useVoiceInteraction({
+    continuousListening: false,
+  });
+  
+  // Reference to the pulse animation element
+  const pulseElementRef = useRef<HTMLDivElement>(null);
+  
+  // Load saved meetings on component mount
   useEffect(() => {
     loadSavedMeetings();
-  }, [loadSavedMeetings]);
+  }, []);
 
+  // Handler for starting recording with voice interaction settings
   const handleStartRecording = () => {
-    setShowContextDialog(true);
+    startRecordingHook(supportsVoice);
   };
 
-  const handleContextDialogClose = (data?: MeetingContextData) => {
-    setShowContextDialog(false);
-    
-    if (data) {
-      setMeetingContext(data);
-      startRecording();
-    }
-  };
-
-  const handleGenerateSummary = async () => {
-    await generateSummary();
-  };
-
-  const handleCopySummary = (summary: string) => {
-    copySummary(summary);
-    
-    if (onUseSummary) {
-      onUseSummary(summary);
+  // Handler for exporting summary as PDF
+  const handleExportAsPDF = async () => {
+    setIsExporting(true);
+    try {
+      await exportMeetingSummaryAsPDF(
+        state.summary,
+        state.recordingTime,
+        state.detectedLocation
+      );
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -88,7 +84,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
           Meeting Summary Tool
         </CardTitle>
         <CardDescription>
-          Record meetings and generate summaries with AI (Supports English & Arabic)
+          Record meetings and generate summaries with AI
         </CardDescription>
       </CardHeader>
       
@@ -103,52 +99,44 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
           </div>
         )}
         
-        <MeetingContextDialog 
-          open={showContextDialog} 
-          onClose={handleContextDialogClose} 
-        />
-        
+        {/* Voice Recording Controls */}
         <RecordingControls
           isRecording={state.isRecording}
           recordingTime={state.recordingTime}
           selectedLanguage={selectedLanguage}
-          setSelectedLanguage={handleLanguageChange}
+          setSelectedLanguage={setSelectedLanguage}
           startRecording={handleStartRecording}
           stopRecording={stopRecording}
           recordingError={state.recordingError}
         />
         
-        {state.transcribedText && (
-          <TranscriptionPanel
-            transcribedText={state.transcribedText}
-            isSummarizing={state.isSummarizing}
-            generateSummary={handleGenerateSummary}
-          />
-        )}
+        {/* Transcribed Text Section */}
+        <TranscriptionPanel
+          transcribedText={state.transcribedText}
+          isSummarizing={state.isSummarizing}
+          generateSummary={generateSummary}
+        />
         
+        {/* Meeting Summary Display */}
         {state.summary && (
           <SummaryDisplay
             summary={state.summary}
             detectedLocation={state.detectedLocation}
             copied={copied}
-            copySummary={handleCopySummary}
-            exportAsPDF={exportAsPDF}
+            copySummary={copySummary}
+            exportAsPDF={handleExportAsPDF}
             downloadAudio={downloadAudio}
             isExporting={isExporting}
             isDownloadingAudio={isDownloadingAudio}
             audioData={state.audioData}
             summaryRef={summaryRef}
-            recordingTime={state.recordingTime}
-            meetingContext={meetingContext ? extractMeetingContext(state.transcribedText, meetingContext) : null}
           />
         )}
         
+        {/* Meeting History */}
         <SavedMeetingsList
           savedMeetings={savedMeetings}
           isLoadingHistory={isLoadingHistory}
-          onDeleteMeeting={deleteMeeting}
-          onEditMeetingTitle={updateMeetingTitle}
-          onDownloadAudio={downloadAudio}
         />
       </CardContent>
     </Card>

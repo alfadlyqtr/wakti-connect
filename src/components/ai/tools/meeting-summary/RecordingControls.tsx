@@ -1,9 +1,10 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Mic, StopCircle, AlertCircle } from 'lucide-react';
+import { Mic, MicOff } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { formatTime } from '@/utils/audio/audioProcessing';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { formatDuration } from '@/utils/text/transcriptionUtils';
 
 interface RecordingControlsProps {
   isRecording: boolean;
@@ -24,72 +25,85 @@ const RecordingControls: React.FC<RecordingControlsProps> = ({
   stopRecording,
   recordingError
 }) => {
+  // Language options for speech recognition
+  const languageOptions = [
+    { value: 'en', label: 'English' },
+    { value: 'ar', label: 'العربية (Arabic)' }
+  ];
+  
   return (
-    <div className="border rounded-lg p-4 space-y-4 bg-card">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="flex-1">
-          <h3 className="text-lg font-medium mb-1">Voice Recording</h3>
-          <p className="text-sm text-muted-foreground">
-            Record your meeting to generate an AI summary
-          </p>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          <Select
-            value={selectedLanguage}
-            onValueChange={setSelectedLanguage}
-            disabled={isRecording}
-          >
-            <SelectTrigger className="w-[130px]">
-              <SelectValue placeholder="Language" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="en">English</SelectItem>
-              <SelectItem value="ar">Arabic</SelectItem>
-              <SelectItem value="auto">Auto-detect</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          {isRecording ? (
-            <Button 
-              onClick={stopRecording} 
-              variant="destructive"
-              className="flex items-center gap-2"
-            >
-              <StopCircle className="h-4 w-4" />
-              <span>Stop Recording</span>
-              <span className="ml-1 font-mono">{formatDuration(recordingTime)}</span>
-            </Button>
-          ) : (
-            <Button 
-              onClick={startRecording} 
-              variant="default"
-              className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
-            >
-              <Mic className="h-4 w-4" />
-              <span>Start Recording</span>
-            </Button>
-          )}
-        </div>
+    <div className="space-y-4">
+      {/* Language selector */}
+      <div className="flex items-center justify-between">
+        <label className="block text-sm font-medium mb-1">
+          Recognition Language:
+        </label>
+        <Select
+          value={selectedLanguage}
+          onValueChange={setSelectedLanguage}
+          disabled={isRecording}
+        >
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="Select Language" />
+          </SelectTrigger>
+          <SelectContent>
+            {languageOptions.map((lang) => (
+              <SelectItem key={lang.value} value={lang.value}>
+                {lang.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       
-      {recordingError && (
-        <div className="bg-destructive/10 border border-destructive/30 text-destructive p-3 rounded-md flex items-start">
-          <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
-          <span>{recordingError}</span>
-        </div>
-      )}
-      
-      {isRecording && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-3 rounded-md flex items-center">
-          <div className="mr-2 h-3 w-3 relative">
-            <div className="absolute w-full h-full bg-red-500 rounded-full animate-ping opacity-75"></div>
-            <div className="relative w-full h-full bg-red-500 rounded-full"></div>
+      {/* Recording controls */}
+      <div className="flex flex-col items-center justify-center space-y-2">
+        {isRecording ? (
+          <div className="flex flex-col items-center">
+            <motion.div
+              className="w-16 h-16 rounded-full bg-red-500 flex items-center justify-center shadow-lg mb-2"
+              animate={{ scale: [1, 1.1, 1] }}
+              transition={{ repeat: Infinity, duration: 1.5 }}
+            >
+              <MicOff className="h-8 w-8 text-white" />
+            </motion.div>
+            <div className="text-lg font-semibold">{formatTime(recordingTime)}</div>
+            <Button
+              variant="destructive"
+              className="mt-2"
+              onClick={stopRecording}
+            >
+              Stop Recording
+            </Button>
           </div>
-          <span className="text-red-700 dark:text-red-300 text-sm">
-            Recording in progress...{' '}
-            <span className="font-mono">{formatDuration(recordingTime)}</span>
-          </span>
+        ) : (
+          <div className="flex flex-col items-center">
+            <Button
+              className="w-16 h-16 rounded-full flex items-center justify-center mb-2 bg-blue-600 hover:bg-blue-700"
+              onClick={startRecording}
+            >
+              <Mic className="h-8 w-8" />
+            </Button>
+            <Button
+              variant="outline"
+              className="mt-2"
+              onClick={startRecording}
+            >
+              Start Recording
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* Error display */}
+      {recordingError && (
+        <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded mt-4">
+          <div className="flex items-center">
+            <svg className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd"></path>
+            </svg>
+            <span className="text-sm">{recordingError}</span>
+          </div>
         </div>
       )}
     </div>

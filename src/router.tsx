@@ -41,7 +41,6 @@ const DashboardContacts = lazy(() => import("@/pages/dashboard/DashboardContacts
 const StaffDashboard = lazy(() => import("@/pages/dashboard/StaffDashboard"));
 const DashboardJobs = lazy(() => import("@/pages/dashboard/DashboardJobs"));
 const DashboardJobCards = lazy(() => import("@/pages/dashboard/DashboardJobCards"));
-const VoiceTools = lazy(() => import("@/pages/dashboard/VoiceTools"));
 
 // Wrap components with Suspense for lazy loading
 const withSuspense = (Component: React.ComponentType) => (
@@ -91,10 +90,6 @@ const dashboardRoutes: RouteObject[] = [
   {
     path: "ai-assistant",
     element: withSuspense(DashboardAIAssistant),
-  },
-  {
-    path: "voice-tools",
-    element: withSuspense(VoiceTools),
   },
   {
     path: "settings",
