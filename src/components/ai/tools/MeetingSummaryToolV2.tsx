@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { MeetingIntakeForm } from './meeting-summary/MeetingIntakeForm';
@@ -5,7 +6,7 @@ import TranscriptionPanel from './meeting-summary/TranscriptionPanel';
 import RecordingControlsV2 from './meeting-summary/RecordingControlsV2';
 
 export const MeetingSummaryToolV2 = () => {
-  const [activeTab, setActiveTab] = useState('transcription');
+  const [activeTab, setActiveTab] = useState('intake');
   
   const [state, setState] = useState({
     isRecording: false,
@@ -126,11 +127,15 @@ export const MeetingSummaryToolV2 = () => {
   const maxRecordingDuration = 3600; // ⏱ 1 hour limit
   const warnBeforeEndSeconds = 30;   // ⏳ Warn when 30s left
 
-  // Fix: Explicitly define return type and make sure it returns a Promise
+  // Handle view summary function
   const handleViewSummary = async (): Promise<void> => {
     console.log('Switching to summary view...');
     setActiveTab("summary");
     return Promise.resolve();
+  };
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
   };
 
   return (
@@ -139,7 +144,7 @@ export const MeetingSummaryToolV2 = () => {
         <h2 className="text-2xl font-bold">Meeting Summary Tool</h2>
       </div>
 
-      <Tabs defaultValue="intake" className="w-full">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="intake">Meeting Details</TabsTrigger>
           <TabsTrigger value="transcription">Recording</TabsTrigger>
