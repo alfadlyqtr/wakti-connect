@@ -55,9 +55,35 @@ serve(async (req) => {
       );
     } catch (error) {
       console.error("ElevenLabs transcription failed:", error);
-      throw error;
-    }
+      
+      // Fallback to OpenAI Whisper
+      try {
+        console.log("Attempting OpenAI Whisper transcription");
+        const whisperResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+            'Content-Type': 'multipart/form-data',
+          },
+          body: await (await fetch(fileUrl)).blob()
+        });
 
+        if (!whisperResponse.ok) {
+          throw new Error(`OpenAI Whisper API error: ${await whisperResponse.text()}`);
+        }
+
+        const whisperResult = await whisperResponse.json();
+        console.log("Transcription received from OpenAI Whisper");
+
+        return new Response(
+          JSON.stringify({ text: whisperResult.text, source: 'openai' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (whisperError) {
+        console.error("OpenAI Whisper transcription failed:", whisperError);
+        throw whisperError;
+      }
+    }
   } catch (error) {
     console.error("Error in voice transcription function:", error);
     
