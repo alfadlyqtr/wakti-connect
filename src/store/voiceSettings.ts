@@ -2,64 +2,35 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-type Language = 'en' | 'es' | 'fr' | 'de' | 'ar' | 'auto';
-
-interface VoiceSettingsState {
+interface VoiceSettings {
   autoSilenceDetection: boolean;
   visualFeedback: boolean;
-  language: Language;
-  voiceEnabled: boolean;
   silenceThreshold: number;
-  maxRecordingDuration: number; // in seconds
+  maxRecordingDuration: number;
   toggleAutoSilenceDetection: () => void;
   toggleVisualFeedback: () => void;
-  setLanguage: (language: Language) => void;
-  toggleVoiceEnabled: () => void;
-  setSilenceThreshold: (threshold: number) => void;
-  setMaxRecordingDuration: (duration: number) => void;
-  resetSettings: () => void;
+  setSilenceThreshold: (value: number) => void;
+  language: string;
+  setLanguage: (lang: string) => void;
 }
 
-export const useVoiceSettings = create<VoiceSettingsState>()(
+export const useVoiceSettings = create<VoiceSettings>()(
   persist(
     (set) => ({
       autoSilenceDetection: true,
       visualFeedback: true,
-      language: 'en',
-      voiceEnabled: true,
-      silenceThreshold: 0.05,
-      maxRecordingDuration: 2700, // 45 minutes in seconds
-      
-      toggleAutoSilenceDetection: () => 
+      silenceThreshold: -45,
+      maxRecordingDuration: 300,
+      language: 'en-US',
+      toggleAutoSilenceDetection: () =>
         set((state) => ({ autoSilenceDetection: !state.autoSilenceDetection })),
-      
-      toggleVisualFeedback: () => 
+      toggleVisualFeedback: () =>
         set((state) => ({ visualFeedback: !state.visualFeedback })),
-      
-      setLanguage: (language) => 
-        set({ language }),
-      
-      toggleVoiceEnabled: () => 
-        set((state) => ({ voiceEnabled: !state.voiceEnabled })),
-      
-      setSilenceThreshold: (threshold) =>
-        set({ silenceThreshold: threshold }),
-        
-      setMaxRecordingDuration: (duration) =>
-        set({ maxRecordingDuration: duration }),
-      
-      resetSettings: () => 
-        set({ 
-          autoSilenceDetection: true, 
-          visualFeedback: true, 
-          language: 'en',
-          voiceEnabled: true,
-          silenceThreshold: 0.05,
-          maxRecordingDuration: 2700
-        })
+      setSilenceThreshold: (value: number) => set({ silenceThreshold: value }),
+      setLanguage: (lang: string) => set({ language: lang }),
     }),
     {
-      name: 'wakti-voice-settings',
+      name: 'voice-settings',
     }
   )
 );

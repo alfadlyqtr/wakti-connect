@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { AlertCircle } from 'lucide-react';
@@ -67,7 +66,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
 
   // Handler for starting recording with voice interaction settings
   const handleStartRecording = () => {
-    startRecordingHook(supportsVoice, apiKeyStatus, apiKeyErrorDetails);
+    startRecordingHook(supportsVoice, apiKeyStatus as "valid" | "invalid" | "checking" | "unchecked", apiKeyErrorDetails);
   };
 
   // Handler for exporting summary as PDF

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useVoiceSettings } from '@/store/voiceSettings';
@@ -11,7 +10,7 @@ interface VoiceInteractionOptions {
 interface VoiceInteractionState {
   isLoading: boolean;
   error: Error | null;
-  apiKeyStatus: 'unknown' | 'valid' | 'invalid' | 'checking';
+  apiKeyStatus: 'unchecked' | 'valid' | 'invalid' | 'checking';
   apiKeyErrorDetails: string | null;
   isListening: boolean;
   isProcessing: boolean;
@@ -27,7 +26,7 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
   const [state, setState] = useState<VoiceInteractionState>({
     isLoading: false,
     error: null,
-    apiKeyStatus: 'unknown',
+    apiKeyStatus: 'unchecked',
     apiKeyErrorDetails: null,
     isListening: false,
     isProcessing: false,
