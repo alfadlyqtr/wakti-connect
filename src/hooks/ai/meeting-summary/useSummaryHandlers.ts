@@ -1,7 +1,9 @@
+
 import { useCallback } from 'react';
 import { toast } from "sonner";
 import { MeetingSummaryState } from './types';
 import { supabase } from '@/integrations/supabase/client';
+import { generateUUID } from '@/lib/utils/uuid';
 
 export const useSummaryHandlers = (
   state: MeetingSummaryState,
@@ -76,7 +78,7 @@ const saveMeetingSummary = async ({
       return;
     }
     
-    const meetingId = uuidv4();
+    const meetingId = generateUUID();
     
     const { error } = await supabase.from('meetings').insert({
       id: meetingId,

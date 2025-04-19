@@ -10,6 +10,7 @@ import { exportMeetingSummaryAsPDF } from '@/components/ai/tools/meeting-summary
 export function useMeetingSummaryV2() {
   const [state, setState] = useState<MeetingSummaryState>({
     isRecording: false,
+    isProcessing: false,
     recordingTime: 0,
     transcribedText: '',
     isSummarizing: false,
@@ -49,6 +50,7 @@ export function useMeetingSummaryV2() {
     cleanup();
     setState({
       isRecording: false,
+      isProcessing: false,
       recordingTime: 0,
       transcribedText: '',
       isSummarizing: false,
