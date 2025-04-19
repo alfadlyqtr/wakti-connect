@@ -4,10 +4,10 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { MeetingIntakeForm } from './meeting-summary/MeetingIntakeForm';
 import TranscriptionPanel from './meeting-summary/TranscriptionPanel';
 import RecordingControlsV2 from './meeting-summary/RecordingControlsV2';
-import { useMeetingSummaryV2 } from '@/hooks/ai/useMeetingSummaryV2';
+import { useMeetingSummaryV2 } from '@/hooks/ai/meeting-summary/useMeetingSummaryV2';
 import SummaryDisplay from './meeting-summary/SummaryDisplay';
 
-export const MeetingSummaryToolV2 = () => {
+export const MeetingSummaryTool = () => {
   const [activeTab, setActiveTab] = useState('intake');
   const [selectedLanguage, setSelectedLanguage] = useState('auto');
   const summaryRef = useRef<HTMLDivElement>(null);
