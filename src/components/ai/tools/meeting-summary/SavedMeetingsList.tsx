@@ -50,7 +50,10 @@ const SavedMeetingsList: React.FC<SavedMeetingsListProps> = ({
             key={meeting.id} 
             className="p-3 border rounded-md flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
           >
-            <div className="flex-1 cursor-pointer" onClick={() => onSelect && onSelect(meeting)}>
+            <div 
+              className="flex-1 cursor-pointer" 
+              onClick={() => onSelect && onSelect(meeting)}
+            >
               <h4 className="font-medium">{meeting.title || 'Untitled Meeting'}</h4>
               <div className="flex items-center text-sm text-muted-foreground">
                 <Clock className="h-3 w-3 mr-1" />
