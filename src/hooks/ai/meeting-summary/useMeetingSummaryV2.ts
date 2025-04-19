@@ -1,4 +1,5 @@
 
+// This is the same as the existing useMeetingSummaryV2.ts file
 import { useState, useRef, useCallback } from 'react';
 import { toast } from "sonner";
 import { MeetingSummaryState, IntakeData } from './types';
