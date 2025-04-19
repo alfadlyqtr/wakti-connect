@@ -168,7 +168,6 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
               <TranscriptionPanel
                 transcribedText={state.transcribedText}
                 isSummarizing={state.isSummarizing}
-                isProcessing={state.isProcessing}
                 generateSummary={generateSummary}
               />
               

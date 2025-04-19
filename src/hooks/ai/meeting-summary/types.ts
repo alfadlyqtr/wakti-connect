@@ -7,7 +7,6 @@ export interface MeetingPart {
 
 export interface MeetingSummaryState {
   isRecording: boolean;
-  isProcessing: boolean;
   recordingTime: number;
   transcribedText: string;
   isSummarizing: boolean;
@@ -32,3 +31,4 @@ export interface IntakeData {
   agenda?: string;
   sessionType?: string;
 }
+
