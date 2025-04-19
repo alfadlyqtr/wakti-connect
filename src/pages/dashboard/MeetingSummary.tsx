@@ -2,7 +2,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Mic } from 'lucide-react';
-import { MeetingSummaryToolV2 } from '@/components/ai/tools/MeetingSummaryToolV2';
+import { MeetingSummaryTool } from '@/components/ai/tools/MeetingSummaryTool';
 
 const MeetingSummary = () => {
   return (
@@ -28,7 +28,7 @@ const MeetingSummary = () => {
         </div>
 
         <div className="max-w-4xl mx-auto w-full">
-          <MeetingSummaryToolV2 />
+          <MeetingSummaryTool />
         </div>
       </motion.div>
     </div>
