@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -7,8 +8,9 @@ import { Card } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { MapPin, Users, GraduationCap, Building } from 'lucide-react';
+import { MapPin, Users, GraduationCap } from 'lucide-react';
 import { toast } from 'sonner';
+import { useEventLocation } from '@/hooks/events/useEventLocation';
 
 const formSchema = z.object({
   sessionType: z.string().min(2, {
@@ -26,6 +28,8 @@ interface MeetingIntakeFormProps {
 }
 
 export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, onSkip }) => {
+  const { getCurrentLocation, location, updateLocation, isGettingLocation, error } = useEventLocation();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -37,30 +41,17 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
     },
   });
 
-  const getCurrentLocation = () => {
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          try {
-            const response = await fetch(
-              `https://api.mapbox.com/geocoding/v5/mapbox.places/${position.coords.longitude},${position.coords.latitude}.json?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`
-            );
-            const data = await response.json();
-            if (data.features && data.features[0]) {
-              form.setValue('location', data.features[0].place_name);
-            }
-          } catch (error) {
-            console.error('Error getting location:', error);
-            toast.error('Could not get current location');
-          }
-        },
-        (error) => {
-          console.error('Error:', error);
-          toast.error('Could not access location');
-        }
-      );
-    } else {
-      toast.error('Geolocation is not supported by your browser');
+  // Watch for location changes from useEventLocation and update form
+  React.useEffect(() => {
+    if (location) {
+      form.setValue('location', location);
+    }
+  }, [location, form]);
+
+  const handleGetCurrentLocation = async () => {
+    const success = await getCurrentLocation();
+    if (!success && error) {
+      toast.error(error || 'Could not get current location');
     }
   };
 
@@ -138,7 +129,8 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
                     variant="outline"
                     size="icon"
                     className="h-[42px] w-[42px]"
-                    onClick={getCurrentLocation}
+                    onClick={handleGetCurrentLocation}
+                    disabled={isGettingLocation}
                   >
                     <MapPin className="h-4 w-4" />
                   </Button>
@@ -153,7 +145,7 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
             render={({ field }) => (
               <FormItem className="space-y-2">
                 <FormLabel className="flex items-center space-x-2">
-                  <Building className="h-4 w-4" />
+                  <Users className="h-4 w-4" />
                   <span>Attendees</span>
                 </FormLabel>
                 <FormControl>
@@ -193,7 +185,7 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
             </Button>
             <Button 
               type="button" 
-              variant="success" 
+              variant="outline" 
               onClick={onSkip} 
               className="flex-1"
             >
