@@ -92,17 +92,18 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     setIsStartingRecording(true);
     setIntakeData(data);
     
-    // Call startRecordingHook without parameters as it seems the hook implementation
-    // doesn't require them anymore
-    startRecordingHook();
+    // When calling startRecordingHook, we need to provide the expected arguments
+    // We can pass default values if specific values aren't needed
+    startRecordingHook(false, '', null);
   };
 
   const handleSkipIntake = () => {
     setShowIntakeDialog(false);
     setIsStartingRecording(true);
     
-    // Call startRecordingHook without parameters
-    startRecordingHook();
+    // When calling startRecordingHook, we need to provide the expected arguments
+    // We can pass default values if specific values aren't needed
+    startRecordingHook(false, '', null);
   };
 
   const handleExportAsPDF = async () => {
@@ -163,7 +164,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
                 toggleVisualFeedback={toggleVisualFeedback}
                 silenceThreshold={silenceThreshold}
                 setSilenceThreshold={setSilenceThreshold}
-                startRecording={() => startRecordingHook()}
+                startRecording={() => startRecordingHook(false, '', null)}
                 stopRecording={stopRecording}
                 startNextPart={() => {}}
                 recordingError={state.recordingError}
