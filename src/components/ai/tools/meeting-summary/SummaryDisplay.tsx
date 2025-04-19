@@ -1,8 +1,8 @@
 
 import React from 'react';
+import { motion } from 'framer-motion';
+import { Map, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Copy, Check, Download, FileDown, Map } from 'lucide-react';
 
 interface SummaryDisplayProps {
   summary: string;
@@ -43,103 +43,71 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
   };
 
   return (
-    <Card className="p-4 mt-4">
-      <div className="flex justify-between items-center mb-3">
-        <h3 className="text-lg font-semibold">Meeting Summary</h3>
-        <div className="flex space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={copySummary}
-            className="flex items-center space-x-1"
-          >
-            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-            <span>{copied ? "Copied" : "Copy"}</span>
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={exportAsPDF}
-            disabled={isExporting}
-            className="flex items-center space-x-1"
-          >
-            <Download className="h-4 w-4" />
-            <span>{isExporting ? "Exporting..." : "Export PDF"}</span>
-          </Button>
-          
-          {audioData && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={downloadAudio}
-              disabled={isDownloadingAudio}
-              className="flex items-center space-x-1"
-            >
-              <FileDown className="h-4 w-4" />
-              <span>{isDownloadingAudio ? "Downloading..." : "Download Audio"}</span>
-            </Button>
-          )}
-        </div>
-      </div>
-      
+    <div className="p-4">
       <div
         ref={summaryRef}
-        className="prose max-w-none dark:prose-invert mb-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-md"
+        className="prose max-w-none dark:prose-invert mb-6"
         dangerouslySetInnerHTML={{
           __html: summary
             .replace(/\n/g, "<br />")
-            .replace(/^## (.*)/gm, '<h2 class="text-xl font-bold mt-4 mb-2">$1</h2>')
-            .replace(/^### (.*)/gm, '<h3 class="text-lg font-semibold mt-3 mb-1">$1</h3>')
-            .replace(/^\- (.*)/gm, '<li>$1</li>')
-            .replace(/^\* (.*)/gm, '<li>$1</li>')
+            .replace(/^## (.*)/gm, '<h2 class="text-xl font-bold mt-6 mb-3 text-blue-700">$1</h2>')
+            .replace(/^### (.*)/gm, '<h3 class="text-lg font-semibold mt-4 mb-2 text-blue-600">$1</h3>')
+            .replace(/^\- (.*)/gm, '<li class="my-1">$1</li>')
+            .replace(/^\* (.*)/gm, '<li class="my-1">$1</li>')
         }}
       />
       
-      {detectedAttendees && detectedAttendees.length > 0 && (
-        <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md">
-          <h4 className="font-medium mb-1">Detected Attendees:</h4>
-          <ul className="list-disc pl-5 space-y-1">
-            {detectedAttendees.map((attendee, index) => (
-              <li key={index} className="text-sm">{attendee}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-      
-      {detectedLocation && (
-        <div className="mt-4 border rounded-md p-4">
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="font-medium flex items-center">
-              <Map className="h-4 w-4 mr-2" />
-              Detected Location
-            </h4>
-            <Button
-              variant="link"
-              size="sm"
-              onClick={() => window.open(generateGoogleMapsUrl(detectedLocation), '_blank')}
-            >
-              Open in Google Maps
-            </Button>
-          </div>
-          
-          <p className="text-sm bg-gray-50 dark:bg-gray-900 p-2 rounded">
-            {detectedLocation}
-          </p>
-        </div>
-      )}
-
-      {onReset && (
-        <div className="mt-4">
-          <Button
-            variant="outline"
-            onClick={onReset}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+        {detectedAttendees && detectedAttendees.length > 0 && (
+          <motion.div 
+            className="bg-blue-50 rounded-lg p-4 border border-blue-100"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
           >
-            Start New Meeting
-          </Button>
-        </div>
-      )}
-    </Card>
+            <div className="flex items-center gap-2 mb-3">
+              <Users className="h-5 w-5 text-blue-500" />
+              <h4 className="font-medium text-blue-700">Detected Attendees</h4>
+            </div>
+            <ul className="space-y-1 text-sm text-gray-700">
+              {detectedAttendees.map((attendee, index) => (
+                <li key={index} className="flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 bg-blue-400 rounded-full"></span>
+                  {attendee}
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+        )}
+        
+        {detectedLocation && (
+          <motion.div 
+            className="bg-green-50 rounded-lg p-4 border border-green-100"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Map className="h-5 w-5 text-green-500" />
+                <h4 className="font-medium text-green-700">Detected Location</h4>
+              </div>
+              <Button
+                variant="link"
+                size="sm"
+                className="text-green-600 p-0 h-auto"
+                onClick={() => window.open(generateGoogleMapsUrl(detectedLocation), '_blank')}
+              >
+                View on Map
+              </Button>
+            </div>
+            <p className="text-sm bg-white p-2 rounded border border-green-100">
+              {detectedLocation}
+            </p>
+          </motion.div>
+        )}
+      </div>
+    </div>
   );
 };
 

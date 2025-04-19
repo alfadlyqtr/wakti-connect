@@ -6,7 +6,7 @@ import { MeetingSummaryTool } from '@/components/ai/tools/MeetingSummaryTool';
 
 const MeetingSummary = () => {
   return (
-    <div className="min-h-screen bg-black/20 dark:bg-black/40">
+    <div className="min-h-screen bg-white">
       <motion.div 
         className="mx-auto p-4 sm:p-6 lg:p-8 space-y-6"
         initial={{ opacity: 0, y: 20 }}
