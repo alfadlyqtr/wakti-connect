@@ -2002,6 +2002,10 @@ export type Database = {
         Args: { table_name: string }
         Returns: boolean
       }
+      cleanup_expired_audio_recordings: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       complete_job_card: {
         Args: { job_card_id: string; end_timestamp: string }
         Returns: boolean

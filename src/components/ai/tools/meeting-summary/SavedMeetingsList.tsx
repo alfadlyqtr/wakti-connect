@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Trash2, Clock, Download } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import { Trash2, Clock, Download, AlertTriangle } from 'lucide-react';
+import { formatDistanceToNow, differenceInDays } from 'date-fns';
 
 export interface SavedMeeting {
   id: string;
@@ -11,6 +12,8 @@ export interface SavedMeeting {
   duration: number;
   audioUrl?: string;
   audioStoragePath?: string;
+  audio_expires_at?: string;
+  has_audio?: boolean;
 }
 
 interface SavedMeetingsListProps {
@@ -41,6 +44,31 @@ const SavedMeetingsList: React.FC<SavedMeetingsListProps> = ({
     return null;
   }
 
+  const getAudioStatus = (meeting: SavedMeeting) => {
+    if (!meeting.has_audio) return null;
+    if (!meeting.audio_expires_at) return null;
+
+    const expiresAt = new Date(meeting.audio_expires_at);
+    const daysRemaining = differenceInDays(expiresAt, new Date());
+
+    if (daysRemaining <= 0) return null;
+
+    if (daysRemaining <= 2) {
+      return (
+        <div className="text-xs text-amber-500 flex items-center gap-1">
+          <AlertTriangle className="h-3 w-3" />
+          <span>Expires in {daysRemaining} day{daysRemaining !== 1 ? 's' : ''}</span>
+        </div>
+      );
+    }
+
+    return (
+      <div className="text-xs text-muted-foreground">
+        Audio available for {daysRemaining} days
+      </div>
+    );
+  };
+
   return (
     <div className="mt-6">
       <h3 className="text-lg font-semibold mb-3">Saved Meetings</h3>
@@ -61,10 +89,11 @@ const SavedMeetingsList: React.FC<SavedMeetingsListProps> = ({
                 <span className="mx-1">•</span>
                 <span>{Math.floor(meeting.duration / 60)}:{(meeting.duration % 60).toString().padStart(2, '0')}</span>
               </div>
+              {getAudioStatus(meeting)}
             </div>
             
             <div className="flex items-center gap-2">
-              {(meeting.audioUrl || meeting.audioStoragePath) && onDownload && (
+              {meeting.has_audio && (meeting.audioUrl || meeting.audioStoragePath) && onDownload && (
                 <Button 
                   variant="ghost" 
                   size="icon"
