@@ -118,14 +118,13 @@ export const navItems: NavItem[] = [
     showFor: ['staff', 'super-admin'],
   },
   {
-    label: "Meeting Summary",
+    label: "Voice Recorder & Transcription",
     path: "meeting-summary",
     icon: Mic,
     showFor: ['free', 'individual', 'business', 'staff', 'super-admin'],
   },
 ];
 
-// Items moved to dropdown menu - these are not in sidebar
 export const dropdownNavItems: NavItem[] = [
   {
     label: "Messages",

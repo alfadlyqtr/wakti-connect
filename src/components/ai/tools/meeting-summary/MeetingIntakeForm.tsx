@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -8,7 +7,8 @@ import { Card } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { GraduationCap, Users, MapPin, Building } from 'lucide-react';
+import { MapPin, Users, GraduationCap, Building } from 'lucide-react';
+import { toast } from 'sonner';
 
 const formSchema = z.object({
   sessionType: z.string().min(2, {
@@ -37,12 +37,39 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
     },
   });
 
+  const getCurrentLocation = () => {
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const response = await fetch(
+              `https://api.mapbox.com/geocoding/v5/mapbox.places/${position.coords.longitude},${position.coords.latitude}.json?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`
+            );
+            const data = await response.json();
+            if (data.features && data.features[0]) {
+              form.setValue('location', data.features[0].place_name);
+            }
+          } catch (error) {
+            console.error('Error getting location:', error);
+            toast.error('Could not get current location');
+          }
+        },
+        (error) => {
+          console.error('Error:', error);
+          toast.error('Could not access location');
+        }
+      );
+    } else {
+      toast.error('Geolocation is not supported by your browser');
+    }
+  };
+
   const handleSubmit = (values: z.infer<typeof formSchema>) => {
     onSubmit(values);
   };
 
   return (
-    <Card className="w-full p-6 space-y-6">
+    <Card className="w-full p-8 space-y-6">
       <div className="text-sm text-muted-foreground mb-4">
         Don't feel like filling anything up? No worries 😊👍 WAKTI AI will listen carefully and pick it up.
       </div>
@@ -98,13 +125,24 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
                   <MapPin className="h-4 w-4" />
                   <span>Location</span>
                 </FormLabel>
-                <FormControl>
-                  <Input 
-                    placeholder="e.g., Oryx Tower, Doha College" 
-                    {...field} 
-                    className="py-3"
-                  />
-                </FormControl>
+                <div className="flex gap-2">
+                  <FormControl>
+                    <Input 
+                      placeholder="e.g., Oryx Tower, Doha College" 
+                      {...field} 
+                      className="py-3"
+                    />
+                  </FormControl>
+                  <Button 
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-[42px] w-[42px]"
+                    onClick={getCurrentLocation}
+                  >
+                    <MapPin className="h-4 w-4" />
+                  </Button>
+                </div>
               </FormItem>
             )}
           />

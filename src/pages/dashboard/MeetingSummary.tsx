@@ -19,11 +19,11 @@ const MeetingSummary = () => {
               <Mic className="h-5 w-5 text-white" />
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-              Meeting Summary
+              Voice Recorder & Transcription
             </h1>
           </div>
           <p className="text-muted-foreground">
-            Record meetings and generate AI-powered summaries with transcription, key points, and action items.
+            Record meetings, lectures, and more to get AI-powered transcripts with key points and summaries.
           </p>
         </div>
 
