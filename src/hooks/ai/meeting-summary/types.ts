@@ -20,6 +20,7 @@ export interface MeetingSummaryState {
   meetingDate?: string;
   meetingLocation?: string;
   audioData?: Blob | Blob[];
+  isProcessing?: boolean;
 }
 
 export interface IntakeData {
@@ -31,4 +32,3 @@ export interface IntakeData {
   agenda?: string;
   sessionType?: string;
 }
-

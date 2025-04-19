@@ -12,6 +12,7 @@ interface TranscriptionPanelProps {
   generateSummary: () => Promise<void>;
   onViewSummary?: () => Promise<void>;
   onStartNewMeeting?: () => void;
+  isProcessing?: boolean;
 }
 
 const TranscriptionPanel: React.FC<TranscriptionPanelProps> = ({
@@ -19,7 +20,8 @@ const TranscriptionPanel: React.FC<TranscriptionPanelProps> = ({
   isSummarizing,
   generateSummary,
   onViewSummary,
-  onStartNewMeeting
+  onStartNewMeeting,
+  isProcessing
 }) => {
   if (!transcribedText) {
     return (
@@ -48,13 +50,13 @@ const TranscriptionPanel: React.FC<TranscriptionPanelProps> = ({
         <div className="flex gap-2">
           <Button 
             onClick={generateSummary}
-            disabled={isSummarizing || !transcribedText}
+            disabled={isSummarizing || !transcribedText || isProcessing}
             className="bg-blue-600 hover:bg-blue-700"
           >
-            {isSummarizing ? "Generating Summary..." : "Generate Summary"}
+            {isSummarizing ? "Generating Summary..." : isProcessing ? "Processing..." : "Generate Summary"}
           </Button>
           
-          {onViewSummary && transcribedText && !isSummarizing && (
+          {onViewSummary && transcribedText && !isSummarizing && !isProcessing && (
             <Button 
               onClick={onViewSummary}
               variant="outline"
@@ -79,4 +81,3 @@ const TranscriptionPanel: React.FC<TranscriptionPanelProps> = ({
 };
 
 export default TranscriptionPanel;
-
