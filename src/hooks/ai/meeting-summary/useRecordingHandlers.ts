@@ -1,3 +1,4 @@
+
 import { useCallback, useRef } from 'react';
 import { toast } from "sonner";
 import { MeetingSummaryState } from './types';
@@ -11,6 +12,18 @@ export const useRecordingHandlers = (
   const audioChunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<number | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+
+  const cleanup = useCallback(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+  }, []);
 
   const startRecording = useCallback(async () => {
     try {
@@ -99,7 +112,7 @@ export const useRecordingHandlers = (
         setState(prev => ({ ...prev, isProcessing: false }));
       }
     }
-  }, [state.isRecording, state.meetingParts.length, cleanup]);
+  }, [state.isRecording, state.meetingParts.length, setState, cleanup]);
 
   const processTranscription = (text: string, audioBlob: Blob, partNumber: number) => {
     setState(prev => ({
@@ -123,18 +136,6 @@ export const useRecordingHandlers = (
     cleanup();
     toast.success("Recording transcribed successfully!");
   };
-
-  const cleanup = useCallback(() => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-  }, []);
 
   return {
     startRecording,
