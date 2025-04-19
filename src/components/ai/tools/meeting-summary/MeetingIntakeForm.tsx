@@ -8,8 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { GraduationCap, Building, MapPin, Users } from 'lucide-react';
+import { GraduationCap, Users, MapPin, Building } from 'lucide-react';
 
 const formSchema = z.object({
   sessionType: z.string().min(2, {
@@ -43,99 +42,128 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
   };
 
   return (
-    <Card className="w-full">
-      <div className="text-sm text-muted-foreground mb-4 px-4 pt-4">
+    <Card className="w-full p-6 space-y-6">
+      <div className="text-sm text-muted-foreground mb-4">
         Don't feel like filling anything up? No worries 😊👍 WAKTI AI will listen carefully and pick it up.
       </div>
-      <Card className="w-full">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="sessionType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center space-x-2">
-                    <GraduationCap className="h-4 w-4" />
-                    <span>Session Type</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., Staff meeting or English lecture" {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+      
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+          <FormField
+            control={form.control}
+            name="sessionType"
+            render={({ field }) => (
+              <FormItem className="space-y-2">
+                <FormLabel className="flex items-center space-x-2">
+                  <GraduationCap className="h-4 w-4" />
+                  <span>Session Type</span>
+                </FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="e.g., Staff meeting or English lecture" 
+                    {...field} 
+                    className="py-3"
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
 
-            <FormField
-              control={form.control}
-              name="hostedBy"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center space-x-2">
-                    <Users className="h-4 w-4" />
-                    <span>Hosted By</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., Jabor Abdullah" {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+          <FormField
+            control={form.control}
+            name="hostedBy"
+            render={({ field }) => (
+              <FormItem className="space-y-2">
+                <FormLabel className="flex items-center space-x-2">
+                  <Users className="h-4 w-4" />
+                  <span>Hosted By</span>
+                </FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="e.g., Jabor Abdullah" 
+                    {...field} 
+                    className="py-3"
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
 
-            <FormField
-              control={form.control}
-              name="location"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center space-x-2">
-                    <MapPin className="h-4 w-4" />
-                    <span>Location</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., Oryx Tower, Doha College" {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+          <FormField
+            control={form.control}
+            name="location"
+            render={({ field }) => (
+              <FormItem className="space-y-2">
+                <FormLabel className="flex items-center space-x-2">
+                  <MapPin className="h-4 w-4" />
+                  <span>Location</span>
+                </FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="e.g., Oryx Tower, Doha College" 
+                    {...field} 
+                    className="py-3"
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
 
-            <FormField
-              control={form.control}
-              name="attendees"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center space-x-2">
-                    <Building className="h-4 w-4" />
-                    <span>Attendees</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="e.g., John, Alanoud, Mozah, Hassan" {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+          <FormField
+            control={form.control}
+            name="attendees"
+            render={({ field }) => (
+              <FormItem className="space-y-2">
+                <FormLabel className="flex items-center space-x-2">
+                  <Building className="h-4 w-4" />
+                  <span>Attendees</span>
+                </FormLabel>
+                <FormControl>
+                  <Textarea 
+                    placeholder="e.g., John, Alanoud, Mozah, Hassan" 
+                    {...field} 
+                    className="min-h-[100px]"
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
 
-            <FormField
-              control={form.control}
-              name="agenda"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Agenda</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="e.g., Project deadline, Final exams" {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+          <FormField
+            control={form.control}
+            name="agenda"
+            render={({ field }) => (
+              <FormItem className="space-y-2">
+                <FormLabel>Agenda</FormLabel>
+                <FormControl>
+                  <Textarea 
+                    placeholder="e.g., Project deadline, Final exams" 
+                    {...field} 
+                    className="min-h-[100px]"
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
 
-            <div className="flex justify-between">
-              <Button type="submit">Submit</Button>
-              <Button type="button" variant="success" onClick={onSkip}>
-                Skip and Start
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </Card>
+          <div className="flex justify-between space-x-4 pt-4">
+            <Button 
+              type="submit" 
+              className="flex-1"
+            >
+              Submit
+            </Button>
+            <Button 
+              type="button" 
+              variant="success" 
+              onClick={onSkip} 
+              className="flex-1"
+            >
+              Skip and Start
+            </Button>
+          </div>
+        </form>
+      </Form>
     </Card>
   );
 };
