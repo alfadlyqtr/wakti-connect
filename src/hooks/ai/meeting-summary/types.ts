@@ -20,10 +20,15 @@ export interface MeetingSummaryState {
   meetingTitle?: string;
   meetingDate?: string;
   meetingLocation?: string;
+  audioData?: Blob | Blob[];
 }
 
 export interface IntakeData {
   title?: string;
   date?: string;
   location?: string;
+  hostedBy?: string;
+  attendees?: string;
+  agenda?: string;
+  sessionType?: string;
 }

@@ -1,15 +1,19 @@
-import React, { useRef, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { AlertCircle } from 'lucide-react';
+
+import React, { useRef, useEffect, useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { AlertCircle, Mic } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
 import { useMeetingSummary } from '@/hooks/ai/useMeetingSummary';
 import { useVoiceSettings } from '@/store/voiceSettings';
 import { exportMeetingSummaryAsPDF } from './meeting-summary/MeetingSummaryExporter';
-import RecordingControls from './meeting-summary/RecordingControls';
+import RecordingControlsV2 from './meeting-summary/RecordingControlsV2';
 import SummaryDisplay from './meeting-summary/SummaryDisplay';
 import SavedMeetingsList from './meeting-summary/SavedMeetingsList';
 import TranscriptionPanel from './meeting-summary/TranscriptionPanel';
+import { MeetingIntakeDialog } from './meeting-summary/MeetingIntakeDialog';
 import { useToast } from '@/hooks/use-toast';
+import { motion } from 'framer-motion';
 
 interface MeetingSummaryToolProps {
   onUseSummary?: (summary: string) => void;
@@ -17,6 +21,8 @@ interface MeetingSummaryToolProps {
 
 export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSummary }) => {
   const { toast } = useToast();
+  const [showIntakeDialog, setShowIntakeDialog] = useState(false);
+  const [isStartingRecording, setIsStartingRecording] = useState(false);
   
   const {
     state,
@@ -35,7 +41,8 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     stopRecording,
     generateSummary,
     copySummary,
-    downloadAudio
+    downloadAudio,
+    setIntakeData
   } = useMeetingSummary();
 
   const { 
@@ -56,9 +63,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
   } = useVoiceInteraction({
     continuousListening: false,
   });
-  
-  const pulseElementRef = useRef<HTMLDivElement>(null);
-  
+
   useEffect(() => {
     loadSavedMeetings();
   }, []);
@@ -72,6 +77,19 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
       return;
     }
     
+    setShowIntakeDialog(true);
+  };
+
+  const handleIntakeSubmit = (data: any) => {
+    setShowIntakeDialog(false);
+    setIsStartingRecording(true);
+    setIntakeData(data);
+    startRecordingHook(supportsVoice, apiKeyStatus as "valid" | "invalid" | "checking" | "unchecked", apiKeyErrorDetails);
+  };
+
+  const handleSkipIntake = () => {
+    setShowIntakeDialog(false);
+    setIsStartingRecording(true);
     startRecordingHook(supportsVoice, apiKeyStatus as "valid" | "invalid" | "checking" | "unchecked", apiKeyErrorDetails);
   };
 
@@ -96,89 +114,92 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center text-lg">
-          Meeting Summary Tool
-        </CardTitle>
-        <CardDescription>
-          Record meetings and generate summaries with AI
-        </CardDescription>
-      </CardHeader>
-      
-      <CardContent className="space-y-4">
-        {!supportsVoice && (
-          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 p-3 rounded-md flex items-start">
-            <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-medium">Voice recording not supported</p>
-              <p className="text-sm mt-1">Your browser doesn't support voice recording. Please use Chrome, Edge, or Safari for full functionality.</p>
-            </div>
-          </div>
-        )}
-        
-        <RecordingControls
-          isRecording={state.isRecording}
-          recordingTime={state.recordingTime}
-          selectedLanguage={selectedLanguage}
-          setSelectedLanguage={setSelectedLanguage}
-          autoSilenceDetection={autoSilenceDetection}
-          toggleAutoSilenceDetection={toggleAutoSilenceDetection}
-          visualFeedback={visualFeedback}
-          toggleVisualFeedback={toggleVisualFeedback}
-          silenceThreshold={silenceThreshold}
-          setSilenceThreshold={setSilenceThreshold}
-          startRecording={handleStartRecording}
-          stopRecording={stopRecording}
-          recordingError={state.recordingError}
-          maxRecordingDuration={maxRecordingDuration}
-        />
-        
-        <TranscriptionPanel
-          transcribedText={state.transcribedText}
-          isSummarizing={state.isSummarizing}
-          isProcessing={state.isProcessing}
-          generateSummary={generateSummary}
-        />
-        
-        {state.summary && (
-          <SummaryDisplay
-            summary={state.summary}
-            detectedLocation={state.detectedLocation}
-            detectedAttendees={state.detectedAttendees}
-            copied={copied}
-            copySummary={copySummary}
-            exportAsPDF={handleExportAsPDF}
-            downloadAudio={downloadAudio}
-            isExporting={isExporting}
-            isDownloadingAudio={isDownloadingAudio}
-            audioData={Array.isArray(state.audioData) ? state.audioData : state.audioData ? [state.audioData] : null}
-            summaryRef={summaryRef}
+    <div className="w-full min-h-screen bg-gradient-to-br from-blue-900/90 to-purple-900/90 p-4 sm:p-6">
+      <Card className="max-w-4xl mx-auto bg-black/40 border-none shadow-2xl backdrop-blur-xl">
+        <CardContent className="p-6 space-y-6">
+          {!state.isRecording && !state.transcribedText && (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center py-12"
+            >
+              <Button
+                onClick={handleStartRecording}
+                size="lg"
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-6 rounded-full text-lg font-medium shadow-xl hover:shadow-2xl transform transition-all hover:scale-105"
+              >
+                <Mic className="w-6 h-6 mr-2" />
+                Start Recording
+              </Button>
+            </motion.div>
+          )}
+          
+          {(state.isRecording || state.transcribedText) && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="space-y-6"
+            >
+              <RecordingControlsV2
+                isRecording={state.isRecording}
+                recordingTime={state.recordingTime}
+                selectedLanguage={selectedLanguage}
+                setSelectedLanguage={setSelectedLanguage}
+                autoSilenceDetection={autoSilenceDetection}
+                toggleAutoSilenceDetection={toggleAutoSilenceDetection}
+                visualFeedback={visualFeedback}
+                toggleVisualFeedback={toggleVisualFeedback}
+                silenceThreshold={silenceThreshold}
+                setSilenceThreshold={setSilenceThreshold}
+                startRecording={startRecordingHook}
+                stopRecording={stopRecording}
+                startNextPart={() => {}}
+                recordingError={state.recordingError}
+                maxRecordingDuration={maxRecordingDuration}
+                warnBeforeEndSeconds={30}
+              />
+
+              <TranscriptionPanel
+                transcribedText={state.transcribedText}
+                isSummarizing={state.isSummarizing}
+                isProcessing={state.isProcessing}
+                generateSummary={generateSummary}
+              />
+              
+              {state.summary && (
+                <SummaryDisplay
+                  summary={state.summary}
+                  detectedLocation={state.detectedLocation}
+                  detectedAttendees={state.detectedAttendees}
+                  copied={copied}
+                  copySummary={copySummary}
+                  exportAsPDF={handleExportAsPDF}
+                  downloadAudio={downloadAudio}
+                  isExporting={isExporting}
+                  isDownloadingAudio={isDownloadingAudio}
+                  audioData={Array.isArray(state.audioData) ? state.audioData : state.audioData ? [state.audioData] : null}
+                  summaryRef={summaryRef}
+                />
+              )}
+            </motion.div>
+          )}
+          
+          <SavedMeetingsList
+            savedMeetings={savedMeetings}
+            isLoadingHistory={isLoadingHistory}
+            onDelete={deleteMeeting}
+            onSelect={() => {}}
+            onDownload={() => {}}
           />
-        )}
-        
-        {apiKeyStatus === 'invalid' && (
-          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 p-3 rounded-md flex items-start">
-            <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-medium">Speech Service Unavailable</p>
-              <p className="text-sm mt-1">Please check your API keys in the Supabase settings.</p>
-            </div>
-          </div>
-        )}
-        
-        <SavedMeetingsList
-          savedMeetings={savedMeetings}
-          isLoadingHistory={isLoadingHistory}
-          onDelete={deleteMeeting}
-          onSelect={(meeting) => {
-            // Load a saved meeting
-          }}
-          onDownload={(meeting) => {
-            // Download saved meeting audio
-          }}
-        />
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      <MeetingIntakeDialog
+        isOpen={showIntakeDialog}
+        onClose={() => setShowIntakeDialog(false)}
+        onSubmit={handleIntakeSubmit}
+        onSkip={handleSkipIntake}
+      />
+    </div>
   );
 };
