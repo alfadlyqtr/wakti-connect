@@ -5,6 +5,7 @@ import { MeetingSummaryState, IntakeData } from './meeting-summary/types';
 import { useRecordingHandlers } from './meeting-summary/useRecordingHandlers';
 import { useSummaryHandlers } from './meeting-summary/useSummaryHandlers';
 import { useMeetingsHandlers } from './meeting-summary/useMeetingsHandlers';
+import { exportMeetingSummaryAsPDF } from '@/components/ai/tools/meeting-summary/MeetingSummaryExporter';
 
 export function useMeetingSummaryV2() {
   const [state, setState] = useState<MeetingSummaryState>({
@@ -105,6 +106,44 @@ export function useMeetingSummaryV2() {
     }
   }, [state.audioBlobs, state.meetingTitle]);
 
+  const exportAsPDF = useCallback(async () => {
+    if (!state.summary) return;
+    
+    setIsExporting(true);
+    
+    try {
+      // Calculate total duration
+      const totalDuration = state.meetingParts.reduce((sum, part) => 
+        sum + part.duration, 0);
+      
+      // Get summary HTML content
+      const summaryContent = state.summary
+        .replace(/\n/g, "<br />")
+        .replace(/^## (.*)/gm, '<h2 style="font-size: 18px; margin-top: 16px; margin-bottom: 8px;">$1</h2>')
+        .replace(/^### (.*)/gm, '<h3 style="font-size: 16px; margin-top: 12px; margin-bottom: 6px;">$1</h3>')
+        .replace(/^\- (.*)/gm, '<li style="margin-bottom: 4px;">$1</li>')
+        .replace(/^\* (.*)/gm, '<li style="margin-bottom: 4px;">$1</li>');
+      
+      await exportMeetingSummaryAsPDF(
+        summaryContent,
+        totalDuration,
+        state.detectedLocation,
+        state.detectedAttendees,
+        {
+          title: state.meetingTitle || 'Meeting Summary'
+        }
+      );
+      
+      toast("PDF exported successfully");
+      
+    } catch (error) {
+      console.error("Error exporting PDF:", error);
+      toast("Failed to export PDF. Please try again.");
+    } finally {
+      setIsExporting(false);
+    }
+  }, [state.summary, state.meetingParts, state.detectedLocation, state.detectedAttendees, state.meetingTitle]);
+
   const setIntakeData = useCallback((data: IntakeData) => {
     setState(prev => ({
       ...prev,
@@ -125,6 +164,7 @@ export function useMeetingSummaryV2() {
     generateSummary,
     copySummary,
     downloadAudio,
+    exportAsPDF,
     setIntakeData,
     resetSession,
     loadSavedMeetings,
