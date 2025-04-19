@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { AlertCircle } from 'lucide-react';
@@ -138,7 +137,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
         <TranscriptionPanel
           transcribedText={state.transcribedText}
           isSummarizing={state.isSummarizing}
-          isProcessing={state.isProcessing || false}
+          isProcessing={state.isProcessing}
           generateSummary={generateSummary}
         />
         
