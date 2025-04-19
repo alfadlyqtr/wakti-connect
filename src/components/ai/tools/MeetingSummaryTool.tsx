@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { AlertCircle, Mic } from 'lucide-react';
@@ -83,8 +82,6 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
 
   const setIntakeData = (data: IntakeData) => {
     setIntakeDataLocal(data);
-    // In a real implementation, we would want to update the state in the hook
-    // For now, we're just capturing it locally
   };
 
   const handleIntakeSubmit = (data: IntakeData) => {
@@ -92,18 +89,14 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     setIsStartingRecording(true);
     setIntakeData(data);
     
-    // When calling startRecordingHook, we need to provide the expected arguments
-    // We can pass default values if specific values aren't needed
-    startRecordingHook(false, '', null);
+    startRecordingHook(false, 'unchecked', null);
   };
 
   const handleSkipIntake = () => {
     setShowIntakeDialog(false);
     setIsStartingRecording(true);
     
-    // When calling startRecordingHook, we need to provide the expected arguments
-    // We can pass default values if specific values aren't needed
-    startRecordingHook(false, '', null);
+    startRecordingHook(false, 'unchecked', null);
   };
 
   const handleExportAsPDF = async () => {
@@ -164,7 +157,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
                 toggleVisualFeedback={toggleVisualFeedback}
                 silenceThreshold={silenceThreshold}
                 setSilenceThreshold={setSilenceThreshold}
-                startRecording={() => startRecordingHook(false, '', null)}
+                startRecording={() => startRecordingHook(false, 'unchecked', null)}
                 stopRecording={stopRecording}
                 startNextPart={() => {}}
                 recordingError={state.recordingError}
