@@ -33,23 +33,6 @@ export const useRecordingHandlers = (
         }
       };
       
-      mediaRecorder.onerror = () => {
-        setState(prev => ({ 
-          ...prev, 
-          recordingError: "Error occurred during recording. Please try again.",
-          isRecording: false 
-        }));
-        
-        if (timerRef.current) {
-          clearInterval(timerRef.current);
-          timerRef.current = null;
-        }
-        
-        if (streamRef.current) {
-          streamRef.current.getTracks().forEach(track => track.stop());
-        }
-      };
-            
       mediaRecorder.start();
       
       setState(prev => ({ ...prev, isRecording: true }));
@@ -71,6 +54,7 @@ export const useRecordingHandlers = (
 
   const stopRecording = useCallback(async () => {
     if (mediaRecorderRef.current && state.isRecording) {
+      setState(prev => ({ ...prev, isProcessing: true }));
       mediaRecorderRef.current.stop();
       
       const partNumber = state.meetingParts.length + 1;
@@ -83,52 +67,34 @@ export const useRecordingHandlers = (
           .from('meeting-recordings')
           .upload(`recordings/${fileName}`, audioBlob);
 
-        if (uploadError) {
-          throw new Error('Failed to upload audio file');
-        }
+        if (uploadError) throw new Error('Failed to upload audio file');
 
         // Get the public URL for the uploaded file
         const { data: { publicUrl } } = supabase.storage
           .from('meeting-recordings')
           .getPublicUrl(`recordings/${fileName}`);
 
-        console.log("Attempting transcription with ElevenLabs...");
-        const { data: elevenLabsData, error: elevenLabsError } = await supabase.functions.invoke(
+        console.log("Attempting transcription with voice-transcription...");
+        
+        const { data: transcriptionData, error: transcriptionError } = await supabase.functions.invoke(
           'voice-transcription',
           { body: { fileUrl: publicUrl } }
         );
         
-        if (!elevenLabsError && elevenLabsData?.text) {
-          processTranscription(elevenLabsData.text, audioBlob, partNumber);
+        if (transcriptionError) throw transcriptionError;
+        
+        if (transcriptionData?.text) {
+          processTranscription(transcriptionData.text, audioBlob, partNumber);
           return;
         }
         
-        console.log("ElevenLabs transcription failed, trying OpenAI...");
+        throw new Error('No transcription generated');
         
-        // If ElevenLabs fails, try OpenAI Whisper
-        const formData = new FormData();
-        formData.append('file', audioBlob);
-        formData.append('model', 'whisper-1');
-        
-        const whisperResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-          },
-          body: formData,
-        });
-
-        if (!whisperResponse.ok) {
-          throw new Error('OpenAI transcription failed');
-        }
-
-        const whisperData = await whisperResponse.json();
-        processTranscription(whisperData.text, audioBlob, partNumber);
-
       } catch (error) {
         console.error("Error processing recording:", error);
         toast.error("Failed to process recording. Please try again.");
         cleanup();
+        setState(prev => ({ ...prev, isProcessing: false }));
       }
     }
   }, [state.isRecording, state.meetingParts.length]);
@@ -137,6 +103,7 @@ export const useRecordingHandlers = (
     setState(prev => ({
       ...prev,
       isRecording: false,
+      isProcessing: false,
       meetingParts: [
         ...prev.meetingParts,
         {
@@ -152,22 +119,7 @@ export const useRecordingHandlers = (
     }));
     
     cleanup();
-  };
-
-  const blobToBase64 = (blob: Blob): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result?.toString().split(',')[1];
-        if (base64String) {
-          resolve(base64String);
-        } else {
-          reject(new Error('Failed to convert blob to base64'));
-        }
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
+    toast.success("Recording transcribed successfully!");
   };
 
   const cleanup = useCallback(() => {

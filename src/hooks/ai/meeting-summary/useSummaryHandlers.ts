@@ -1,9 +1,7 @@
-
 import { useCallback } from 'react';
 import { toast } from "sonner";
-import { v4 as uuidv4 } from 'uuid';
 import { MeetingSummaryState } from './types';
-import { supabase } from '@/integrations/supabase/client'; // Import the supabase client directly
+import { supabase } from '@/integrations/supabase/client';
 
 export const useSummaryHandlers = (
   state: MeetingSummaryState,
@@ -15,45 +13,29 @@ export const useSummaryHandlers = (
     setState(prev => ({ ...prev, isSummarizing: true }));
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const { data, error } = await supabase.functions.invoke('ai-meeting-summary', {
+        body: { text: state.transcribedText }
+      });
       
-      const mockSummary = `
-        ## Meeting Summary
-
-        ### Key Points:
-        - Point 1: Important discussion about project timeline.
-        - Point 2: Decision to allocate more resources to development.
-        - Point 3: Agreement on next sprint goals.
-
-        ### Action Items:
-        - Action 1: Team to prepare status report by Friday.
-        - Action 2: Schedule follow-up meeting next week.
-        - Action 3: Review budget allocations.
-
-        ### Decisions:
-        - Decision 1: Approved new feature roadmap.
-        - Decision 2: Postponed marketing campaign until Q3.
-      `;
+      if (error) throw error;
       
-      const detectedLocation = state.meetingLocation || "Conference Room A";
-      const detectedAttendees = ["John Doe", "Jane Smith", "Alex Johnson"];
+      const { summary } = data;
       
       setState(prev => ({
         ...prev,
-        summary: mockSummary,
-        isSummarizing: false,
-        detectedLocation,
-        detectedAttendees
+        summary,
+        isSummarizing: false
       }));
       
+      // Save meeting data if we have recording parts
       if (state.meetingParts.length > 0 && state.audioBlobs) {
         const totalDuration = state.meetingParts.reduce((sum, part) => sum + part.duration, 0);
         
         await saveMeetingSummary({
           title: state.meetingTitle || "Untitled Meeting",
           date: state.meetingDate || new Date().toISOString().split('T')[0],
-          location: detectedLocation,
-          summary: mockSummary,
+          location: state.meetingLocation || state.detectedLocation,
+          summary,
           duration: totalDuration,
           audioBlobs: state.audioBlobs
         });
@@ -62,14 +44,13 @@ export const useSummaryHandlers = (
     } catch (error) {
       console.error("Error generating summary:", error);
       setState(prev => ({ ...prev, isSummarizing: false }));
-      toast("Failed to generate summary. Please try again.");
+      toast.error("Failed to generate summary. Please try again.");
     }
   }, [state, setState]);
 
   return { generateSummary };
 };
 
-// Move this outside of the hook to avoid React hooks rules violation
 const saveMeetingSummary = async ({ 
   title, 
   date, 

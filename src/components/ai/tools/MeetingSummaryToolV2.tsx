@@ -10,7 +10,6 @@ import SummaryDisplay from './meeting-summary/SummaryDisplay';
 export const MeetingSummaryToolV2 = () => {
   const [activeTab, setActiveTab] = useState('intake');
   const [selectedLanguage, setSelectedLanguage] = useState('auto');
-  const [copied, setCopied] = useState(false);
   const summaryRef = useRef<HTMLDivElement>(null);
   
   const {
@@ -37,12 +36,6 @@ export const MeetingSummaryToolV2 = () => {
   const handleViewSummary = async (): Promise<void> => {
     setActiveTab("summary");
     return Promise.resolve();
-  };
-
-  const handleCopySummary = async () => {
-    await copySummary();
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -82,14 +75,14 @@ export const MeetingSummaryToolV2 = () => {
             warnBeforeEndSeconds={warnBeforeEndSeconds}
           />
 
-          {state.transcribedText && (
-            <TranscriptionPanel
-              transcribedText={state.transcribedText}
-              isSummarizing={state.isSummarizing}
-              generateSummary={generateSummary}
-              onViewSummary={handleViewSummary}
-            />
-          )}
+          <TranscriptionPanel
+            transcribedText={state.transcribedText}
+            isSummarizing={state.isSummarizing}
+            isProcessing={state.isProcessing}
+            generateSummary={generateSummary}
+            onViewSummary={handleViewSummary}
+            onStartNewMeeting={resetSession}
+          />
         </TabsContent>
 
         <TabsContent value="summary" className="mt-4">
@@ -98,15 +91,14 @@ export const MeetingSummaryToolV2 = () => {
               summary={state.summary}
               detectedLocation={state.detectedLocation}
               detectedAttendees={state.detectedAttendees}
-              copied={copied}
-              copySummary={handleCopySummary}
+              copied={false}
+              copySummary={copySummary}
               exportAsPDF={exportAsPDF}
               downloadAudio={downloadAudio}
               isExporting={isExporting}
               isDownloadingAudio={isDownloadingAudio}
               audioData={state.audioBlobs}
               summaryRef={summaryRef}
-              onReset={resetSession}
             />
           )}
         </TabsContent>

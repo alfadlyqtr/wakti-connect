@@ -7,6 +7,7 @@ export interface MeetingPart {
 
 export interface MeetingSummaryState {
   isRecording: boolean;
+  isProcessing: boolean;
   recordingTime: number;
   transcribedText: string;
   isSummarizing: boolean;
