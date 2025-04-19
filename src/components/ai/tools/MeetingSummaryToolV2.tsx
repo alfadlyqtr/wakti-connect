@@ -1,13 +1,17 @@
-import React, { useState } from 'react';
+
+import React, { useState, useRef } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { MeetingIntakeForm } from './meeting-summary/MeetingIntakeForm';
 import TranscriptionPanel from './meeting-summary/TranscriptionPanel';
 import RecordingControlsV2 from './meeting-summary/RecordingControlsV2';
 import { useMeetingSummaryV2 } from '@/hooks/ai/useMeetingSummaryV2';
+import SummaryDisplay from './meeting-summary/SummaryDisplay';
 
 export const MeetingSummaryToolV2 = () => {
   const [activeTab, setActiveTab] = useState('intake');
   const [selectedLanguage, setSelectedLanguage] = useState('auto');
+  const [copied, setCopied] = useState(false);
+  const summaryRef = useRef<HTMLDivElement>(null);
   
   const {
     state,
@@ -17,7 +21,13 @@ export const MeetingSummaryToolV2 = () => {
     generateSummary,
     setIntakeData,
     maxRecordingDuration,
-    warnBeforeEndSeconds
+    warnBeforeEndSeconds,
+    copySummary,
+    downloadAudio,
+    resetSession,
+    isExporting,
+    isDownloadingAudio,
+    exportAsPDF
   } = useMeetingSummaryV2();
 
   const handleTabChange = (value: string) => {
@@ -27,6 +37,12 @@ export const MeetingSummaryToolV2 = () => {
   const handleViewSummary = async (): Promise<void> => {
     setActiveTab("summary");
     return Promise.resolve();
+  };
+
+  const handleCopySummary = async () => {
+    await copySummary();
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -78,15 +94,20 @@ export const MeetingSummaryToolV2 = () => {
 
         <TabsContent value="summary" className="mt-4">
           {state.summary && (
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
-              <h2 className="text-xl font-bold mb-4">Meeting Summary</h2>
-              <div 
-                className="prose dark:prose-invert max-w-none"
-                dangerouslySetInnerHTML={{ 
-                  __html: state.summary.replace(/\n/g, '<br />') 
-                }} 
-              />
-            </div>
+            <SummaryDisplay
+              summary={state.summary}
+              detectedLocation={state.detectedLocation}
+              detectedAttendees={state.detectedAttendees}
+              copied={copied}
+              copySummary={handleCopySummary}
+              exportAsPDF={exportAsPDF}
+              downloadAudio={downloadAudio}
+              isExporting={isExporting}
+              isDownloadingAudio={isDownloadingAudio}
+              audioData={state.audioBlobs}
+              summaryRef={summaryRef}
+              onReset={resetSession}
+            />
           )}
         </TabsContent>
       </Tabs>
