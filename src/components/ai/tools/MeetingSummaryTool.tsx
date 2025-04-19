@@ -92,7 +92,8 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     setIsStartingRecording(true);
     setIntakeData(data);
     
-    // Changed to accommodate the function signature
+    // Call startRecordingHook without parameters as it seems the hook implementation
+    // doesn't require them anymore
     startRecordingHook();
   };
 
@@ -100,7 +101,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     setShowIntakeDialog(false);
     setIsStartingRecording(true);
     
-    // Changed to accommodate the function signature
+    // Call startRecordingHook without parameters
     startRecordingHook();
   };
 
