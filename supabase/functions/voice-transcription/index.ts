@@ -16,7 +16,7 @@ serve(async (req) => {
   try {
     console.log("Voice transcription service starting");
     
-    const { fileUrl, language = 'en' } = await req.json();
+    const { fileUrl, language = 'auto' } = await req.json();
     
     if (!fileUrl) {
       console.error('No file URL provided');
@@ -37,7 +37,10 @@ serve(async (req) => {
     const formData = new FormData();
     formData.append('file', audioBlob, 'audio.webm');
     formData.append('model', 'whisper-1');
-    formData.append('language', language);
+    // Only append language if it's not 'auto'
+    if (language !== 'auto') {
+      formData.append('language', language);
+    }
 
     // Send to Whisper API
     const whisperResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {

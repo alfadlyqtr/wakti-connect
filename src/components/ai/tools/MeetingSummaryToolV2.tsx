@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { MeetingIntakeForm } from './meeting-summary/MeetingIntakeForm';
@@ -8,6 +7,7 @@ import { useMeetingSummaryV2 } from '@/hooks/ai/useMeetingSummaryV2';
 
 export const MeetingSummaryToolV2 = () => {
   const [activeTab, setActiveTab] = useState('intake');
+  const [selectedLanguage, setSelectedLanguage] = useState('auto');
   
   const {
     state,
@@ -50,14 +50,14 @@ export const MeetingSummaryToolV2 = () => {
           <RecordingControlsV2
             isRecording={state.isRecording}
             recordingTime={state.recordingTime}
-            selectedLanguage="en"
+            selectedLanguage={selectedLanguage}
             autoSilenceDetection={false}
             visualFeedback={true}
             silenceThreshold={-45}
             startRecording={startRecording}
             stopRecording={stopRecording}
             startNextPart={startNextPart}
-            setSelectedLanguage={() => {}}
+            setSelectedLanguage={setSelectedLanguage}
             toggleAutoSilenceDetection={() => {}}
             toggleVisualFeedback={() => {}}
             setSilenceThreshold={() => {}}
