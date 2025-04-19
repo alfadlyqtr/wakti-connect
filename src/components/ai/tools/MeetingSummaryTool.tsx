@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { AlertCircle, Mic } from 'lucide-react';
@@ -14,7 +13,7 @@ import TranscriptionPanel from './meeting-summary/TranscriptionPanel';
 import { MeetingIntakeDialog } from './meeting-summary/MeetingIntakeDialog';
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
-import { IntakeData } from '@/hooks/ai/meeting-summary/types';
+import { IntakeData, MeetingSummaryState } from '@/hooks/ai/meeting-summary/types';
 
 interface MeetingSummaryToolProps {
   onUseSummary?: (summary: string) => void;
