@@ -1,5 +1,3 @@
-
-// This is the same as the existing useMeetingSummaryV2.ts file
 import { useState, useRef, useCallback } from 'react';
 import { toast } from "sonner";
 import { MeetingSummaryState, IntakeData } from './types';
@@ -119,29 +117,22 @@ export function useMeetingSummaryV2() {
       const totalDuration = state.meetingParts.reduce((sum, part) => 
         sum + part.duration, 0);
       
-      // Get summary HTML content
-      const summaryContent = state.summary
-        .replace(/\n/g, "<br />")
-        .replace(/^## (.*)/gm, '<h2 style="font-size: 18px; margin-top: 16px; margin-bottom: 8px;">$1</h2>')
-        .replace(/^### (.*)/gm, '<h3 style="font-size: 16px; margin-top: 12px; margin-bottom: 6px;">$1</h3>')
-        .replace(/^\- (.*)/gm, '<li style="margin-bottom: 4px;">$1</li>')
-        .replace(/^\* (.*)/gm, '<li style="margin-bottom: 4px;">$1</li>');
-      
       await exportMeetingSummaryAsPDF(
-        summaryContent,
+        state.summary,
         totalDuration,
         state.detectedLocation,
         state.detectedAttendees,
         {
-          title: state.meetingTitle || 'Meeting Summary'
+          title: state.meetingTitle || 'Meeting Summary',
+          companyLogo: '/lovable-uploads/9b7d0693-89eb-4cc5-b90b-7834bfabda0e.png'
         }
       );
       
-      toast("PDF exported successfully");
+      toast.success("PDF exported successfully");
       
     } catch (error) {
       console.error("Error exporting PDF:", error);
-      toast("Failed to export PDF. Please try again.");
+      toast.error("Failed to export PDF. Please try again.");
     } finally {
       setIsExporting(false);
     }

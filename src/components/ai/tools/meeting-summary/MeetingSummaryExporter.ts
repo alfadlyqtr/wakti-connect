@@ -1,4 +1,3 @@
-
 /**
  * Utility functions for exporting meeting summaries
  */
@@ -28,7 +27,7 @@ export const exportMeetingSummaryAsPDF = async (
   attendees?: string[] | null,
   options: MeetingSummaryPDFOptions = {}
 ): Promise<void> => {
-  // Create PDF content with styling
+  // Create PDF content with enhanced styling
   const today = new Date();
   const dateString = today.toLocaleDateString();
   const timeString = today.toLocaleTimeString();
@@ -36,6 +35,15 @@ export const exportMeetingSummaryAsPDF = async (
   const title = options.title || 'Meeting Summary';
   const companyName = options.companyName || 'WAKTI';
   const includeFooter = options.includeFooter !== false;
+
+  // Extract action items if present
+  const actionItemsMatch = summary.match(/##\s*Action Items[^#]*(?=##|$)/i);
+  const actionItems = actionItemsMatch ? actionItemsMatch[0]
+    .replace(/^##\s*Action Items\s*/i, '')
+    .split('\n')
+    .filter(line => line.trim().startsWith('-') || line.trim().startsWith('*'))
+    .map(item => item.replace(/^[-*]\s*/, ''))
+    .join('</li><li>') : '';
 
   let pdfContent = `
     <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;">
@@ -70,8 +78,16 @@ export const exportMeetingSummaryAsPDF = async (
         </div>` : ''}
       </div>
       
+      ${actionItems ? `
+      <div style="background-color: #fff3e0; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ff9800;">
+        <h2 style="color: #e65100; margin: 0 0 10px 0; font-size: 18px;">Action Items</h2>
+        <ul style="margin: 0; padding-left: 20px;">
+          <li>${actionItems}</li>
+        </ul>
+      </div>` : ''}
+      
       <div style="line-height: 1.6;">
-        ${summary}
+        ${summary.replace(/##\s*Action Items[^#]*(?=##|$)/i, '')} // Remove action items section from main content
       </div>
       
       ${includeFooter ? `
