@@ -1,4 +1,3 @@
-
 import { useCallback, useRef } from 'react';
 import { toast } from "sonner";
 import { MeetingSummaryState } from './types';
@@ -54,14 +53,19 @@ export const useRecordingHandlers = (
 
   const stopRecording = useCallback(async () => {
     if (mediaRecorderRef.current && state.isRecording) {
-      setState(prev => ({ ...prev, isProcessing: true }));
+      setState(prev => ({ 
+        ...prev, 
+        isRecording: false,
+        isProcessing: true 
+      }));
+      
       mediaRecorderRef.current.stop();
+      cleanup();
       
       const partNumber = state.meetingParts.length + 1;
       const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
       
       try {
-        // Upload the audio file to Supabase storage
         const fileName = `meeting_${Date.now()}_part${partNumber}.webm`;
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('meeting-recordings')
@@ -69,7 +73,6 @@ export const useRecordingHandlers = (
 
         if (uploadError) throw new Error('Failed to upload audio file');
 
-        // Get the public URL for the uploaded file
         const { data: { publicUrl } } = supabase.storage
           .from('meeting-recordings')
           .getPublicUrl(`recordings/${fileName}`);
@@ -93,11 +96,10 @@ export const useRecordingHandlers = (
       } catch (error) {
         console.error("Error processing recording:", error);
         toast.error("Failed to process recording. Please try again.");
-        cleanup();
         setState(prev => ({ ...prev, isProcessing: false }));
       }
     }
-  }, [state.isRecording, state.meetingParts.length]);
+  }, [state.isRecording, state.meetingParts.length, cleanup]);
 
   const processTranscription = (text: string, audioBlob: Blob, partNumber: number) => {
     setState(prev => ({
