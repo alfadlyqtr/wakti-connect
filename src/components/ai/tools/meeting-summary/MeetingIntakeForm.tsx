@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -13,9 +12,7 @@ import { toast } from 'sonner';
 import { useEventLocation } from '@/hooks/events/useEventLocation';
 
 const formSchema = z.object({
-  sessionType: z.string().min(2, {
-    message: 'Session type must be at least 2 characters.',
-  }),
+  sessionType: z.string().optional(),
   hostedBy: z.string().optional(),
   location: z.string().optional(),
   attendees: z.string().optional(),
@@ -55,10 +52,6 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
     }
   };
 
-  const handleSubmit = (values: z.infer<typeof formSchema>) => {
-    onSubmit(values);
-  };
-
   return (
     <Card className="w-full p-8 space-y-6">
       <div className="text-sm text-muted-foreground mb-4">
@@ -66,7 +59,7 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
       </div>
       
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <FormField
             control={form.control}
             name="sessionType"
@@ -79,26 +72,6 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
                 <FormControl>
                   <Input 
                     placeholder="e.g., Staff meeting or English lecture" 
-                    {...field} 
-                    className="py-3"
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="hostedBy"
-            render={({ field }) => (
-              <FormItem className="space-y-2">
-                <FormLabel className="flex items-center space-x-2">
-                  <Users className="h-4 w-4" />
-                  <span>Hosted By</span>
-                </FormLabel>
-                <FormControl>
-                  <Input 
-                    placeholder="e.g., Jabor Abdullah" 
                     {...field} 
                     className="py-3"
                   />
@@ -135,6 +108,26 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
                     <MapPin className="h-4 w-4" />
                   </Button>
                 </div>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="hostedBy"
+            render={({ field }) => (
+              <FormItem className="space-y-2">
+                <FormLabel className="flex items-center space-x-2">
+                  <Users className="h-4 w-4" />
+                  <span>Hosted By</span>
+                </FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="e.g., Jabor Abdullah" 
+                    {...field} 
+                    className="py-3"
+                  />
+                </FormControl>
               </FormItem>
             )}
           />
@@ -187,7 +180,7 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
               type="button" 
               variant="outline" 
               onClick={onSkip} 
-              className="flex-1"
+              className="flex-1 bg-white hover:bg-gray-50"
             >
               Skip and Start
             </Button>
