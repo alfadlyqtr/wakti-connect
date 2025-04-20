@@ -6,9 +6,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
-import { FileDown, Copy, Download, Volume2 } from 'lucide-react';
+import { FileDown, Copy, Download, Volume2, Stop } from 'lucide-react';
 import SummaryDisplay from './SummaryDisplay';
-import { playTextWithVoiceRSS } from '@/utils/voiceRSS';
+import { playTextWithVoiceRSS, stopCurrentAudio } from '@/utils/voiceRSS';
 
 interface MeetingPreviewDialogProps {
   isOpen: boolean;
@@ -44,7 +44,11 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
   if (!meeting) return null;
 
   const handlePlaySummary = async () => {
-    if (isPlaying) return;
+    if (isPlaying) {
+      stopCurrentAudio();
+      setIsPlaying(false);
+      return;
+    }
     
     try {
       setIsPlaying(true);
@@ -69,11 +73,19 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
               variant="outline"
               size="sm"
               onClick={handlePlaySummary}
-              disabled={isPlaying}
               className="flex items-center gap-1"
             >
-              <Volume2 className="h-4 w-4" />
-              <span>{isPlaying ? "Playing..." : "Play Summary"}</span>
+              {isPlaying ? (
+                <>
+                  <Stop className="h-4 w-4" />
+                  <span>Stop Playing</span>
+                </>
+              ) : (
+                <>
+                  <Volume2 className="h-4 w-4" />
+                  <span>Play Summary</span>
+                </>
+              )}
             </Button>
             
             <Button

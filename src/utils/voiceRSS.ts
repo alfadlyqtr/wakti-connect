@@ -5,7 +5,20 @@ interface VoiceRSSOptions {
   voice?: 'John' | 'Hareth';
 }
 
+let currentAudio: HTMLAudioElement | null = null;
+
+export const stopCurrentAudio = () => {
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
+    currentAudio = null;
+  }
+};
+
 export const playTextWithVoiceRSS = async ({ text, language, voice }: VoiceRSSOptions) => {
+  // Stop any currently playing audio
+  stopCurrentAudio();
+
   // Auto-detect language if not provided (simple check for Arabic characters)
   const hasArabic = /[\u0600-\u06FF]/.test(text);
   const selectedLanguage = language || (hasArabic ? 'ar-sa' : 'en-us');
@@ -16,6 +29,7 @@ export const playTextWithVoiceRSS = async ({ text, language, voice }: VoiceRSSOp
 
   try {
     const audio = new Audio(url);
+    currentAudio = audio;
     await audio.play();
     return audio;
   } catch (error) {
