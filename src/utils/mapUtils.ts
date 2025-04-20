@@ -1,19 +1,33 @@
 
+import { supabase } from '@/integrations/supabase/client';
+
 const validateMapsKey = () => {
-  const key = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+  const key = import.meta.env.VITE_TOMTOM_API_KEY;
   if (!key) {
-    console.warn('Warning: Missing Google Maps API key');
+    console.warn('Warning: Missing TomTom Maps API key');
     return false;
   }
   return true;
 };
 
-export const getMapThumbnailUrl = (location: string): string => {
+export const getMapThumbnailUrl = async (location: string): Promise<string> => {
   if (!location || !validateMapsKey()) return '';
   
   try {
-    const encodedLocation = encodeURIComponent(location);
-    return `https://maps.googleapis.com/maps/api/staticmap?center=${encodedLocation}&zoom=15&size=300x200&scale=2&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&markers=color:red%7C${encodedLocation}&style=feature:all|element:labels|visibility:on`;
+    // Get coordinates from TomTom API
+    const { data, error } = await supabase.functions.invoke('tomtom-geocode', {
+      body: { query: location }
+    });
+
+    if (error || !data?.coordinates) {
+      console.error('Error getting coordinates:', error);
+      return '';
+    }
+
+    const { lat, lon } = data.coordinates;
+    
+    // Generate TomTom static map URL
+    return `https://api.tomtom.com/map/1/staticimage?key=${import.meta.env.VITE_TOMTOM_API_KEY}&center=${lon},${lat}&zoom=15&width=300&height=200&format=png&layer=basic&style=main&marker=color:red|${lon},${lat}`;
   } catch (error) {
     console.error('Error generating map thumbnail URL:', error);
     return '';
