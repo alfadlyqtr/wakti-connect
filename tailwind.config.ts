@@ -1,4 +1,3 @@
-
 import { fontFamily } from "tailwindcss/defaultTheme";
 import { type Config } from "tailwindcss";
 import tailwindcssAnimate from "tailwindcss-animate";
@@ -70,6 +69,8 @@ const config = {
         },
         "wakti-blue": "#0053c3",
         "wakti-gold": "#ffc529",
+        "wakti-navy": "#000080",
+        "wakti-beige": "#F5E6D3",
       },
       borderRadius: {
         lg: "var(--radius)",
