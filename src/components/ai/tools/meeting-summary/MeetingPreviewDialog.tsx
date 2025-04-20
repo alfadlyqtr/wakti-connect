@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -149,7 +150,7 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
                 variant="link"
                 size="sm"
                 className="p-0 h-auto text-green-600 flex items-center gap-1"
-                onClick={() => location && openInMaps(location)}
+                onClick={openInMaps}
               >
                 <span className="text-xs">View on Map</span>
                 <ExternalLink className="h-3 w-3" />
