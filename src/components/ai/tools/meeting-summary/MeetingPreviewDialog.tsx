@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -12,6 +11,7 @@ import SummaryDisplay from './SummaryDisplay';
 import { playTextWithVoiceRSS, pauseCurrentAudio, resumeCurrentAudio, stopCurrentAudio, restartCurrentAudio } from '@/utils/voiceRSS';
 import { generateGoogleMapsUrl } from '@/config/maps';
 import { motion } from 'framer-motion';
+import { formatRelativeTime } from '@/lib/utils';
 
 interface MeetingPreviewDialogProps {
   isOpen: boolean;
@@ -46,8 +46,31 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [locationName, setLocationName] = useState<string | null>(null);
 
-  if (!meeting) return null;
+  useEffect(() => {
+    if (meeting?.detectedLocation) {
+      fetchLocationName(meeting.detectedLocation);
+    }
+  }, [meeting?.detectedLocation]);
+
+  const fetchLocationName = async (location: string) => {
+    try {
+      const response = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(location)}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`);
+      const data = await response.json();
+      
+      if (data.results && data.results[0]) {
+        const result = data.results[0];
+        const name = result.name || 
+                    result.address_components.find(c => c.types.includes('establishment'))?.long_name ||
+                    result.formatted_address;
+        setLocationName(name);
+      }
+    } catch (error) {
+      console.error('Error fetching location name:', error);
+      setLocationName(location);
+    }
+  };
 
   const extractTitleFromSummary = (summary: string) => {
     const titleMatch = summary.match(/Meeting Title:\s*([^\n]+)/i) || 
@@ -56,10 +79,6 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
                       summary.match(/^## ([^\n]+)/m);
     return titleMatch ? titleMatch[1].trim() : 'Untitled Meeting';
   };
-
-  const displayTitle = meeting.title || extractTitleFromSummary(meeting.summary);
-  const location = meeting.detectedLocation;
-  const showMapButton = location && location.length > 0;
 
   const handlePlaySummary = async () => {
     try {
@@ -105,13 +124,17 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
   };
 
   const openInMaps = () => {
-    if (location) {
-      window.open(generateGoogleMapsUrl(location), '_blank');
+    if (locationName) {
+      window.open(generateGoogleMapsUrl(locationName), '_blank');
     }
   };
 
-  // Determine if we should show the audio download button
-  const hasAudio = meeting.has_audio || !!meeting.audioUrl || !!meeting.audioStoragePath;
+  const displayTitle = meeting.title || extractTitleFromSummary(meeting.summary);
+  const location = locationName || meeting.detectedLocation;
+  const showMapButton = location && location.length > 0;
+  const hasAudio = meeting?.has_audio || !!meeting?.audioUrl || !!meeting?.audioStoragePath;
+
+  const formattedDate = meeting ? formatRelativeTime(new Date(meeting.date)) : '';
 
   return (
     <Dialog open={isOpen} onOpenChange={() => onClose()}>
@@ -126,7 +149,7 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
                 variant="link"
                 size="sm"
                 className="p-0 h-auto text-green-600 flex items-center gap-1"
-                onClick={openInMaps}
+                onClick={() => location && openInMaps(location)}
               >
                 <span className="text-xs">View on Map</span>
                 <ExternalLink className="h-3 w-3" />

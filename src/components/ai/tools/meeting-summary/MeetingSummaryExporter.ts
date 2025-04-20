@@ -1,11 +1,6 @@
-
-/**
- * Utility functions for exporting meeting summaries
- */
-
 import { formatTime } from '@/utils/audio/audioProcessing';
 import html2pdf from 'html2pdf.js';
-import { GOOGLE_MAPS_API_KEY } from '@/config/maps';
+import { getMapThumbnailUrl } from '@/utils/mapUtils';
 
 export interface MeetingSummaryPDFOptions {
   title?: string;
@@ -13,12 +8,6 @@ export interface MeetingSummaryPDFOptions {
   companyLogo?: string;
   includeFooter?: boolean;
 }
-
-// Helper to generate Google Maps Static API URL
-const getMapThumbnailUrl = (location: string): string => {
-  const encodedLocation = encodeURIComponent(location);
-  return `https://maps.googleapis.com/maps/api/staticmap?center=${encodedLocation}&zoom=14&size=400x200&key=${GOOGLE_MAPS_API_KEY}&markers=color:red%7C${encodedLocation}&style=feature:all|element:labels|visibility:on`;
-};
 
 // Extract title from meeting summary
 const extractTitleFromSummary = (summary: string): string => {
@@ -71,12 +60,12 @@ export const exportMeetingSummaryAsPDF = async (
     .replace(/^\- (.*)/gm, '<li style="margin-bottom: 5px;">$1</li>')
     .replace(/^\* (.*)/gm, '<li style="margin-bottom: 5px;">$1</li>');
 
-  // Generate map URL if location is provided
+  // Generate map URL if location is provided with the new size
   const mapImageHtml = location ? `
-    <div style="margin-top: 15px; text-align: center;">
+    <div style="margin: 10px 0;">
       <img src="${getMapThumbnailUrl(location)}" 
            alt="Meeting Location Map" 
-           style="width: 100%; max-width: 400px; height: auto; border-radius: 4px; border: 1px solid #ddd;" />
+           style="width: 300px; height: 200px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd;" />
       <p style="margin: 5px 0 0 0; font-size: 12px; color: #666;">
         ${location}
       </p>
