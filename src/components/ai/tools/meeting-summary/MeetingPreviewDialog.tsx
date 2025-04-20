@@ -6,7 +6,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
-import { FileDown, Copy, Download, Volume2, Stop } from 'lucide-react';
+import { FileDown, Copy, Download, Volume2, StopCircle } from 'lucide-react';
 import SummaryDisplay from './SummaryDisplay';
 import { playTextWithVoiceRSS, stopCurrentAudio } from '@/utils/voiceRSS';
 
@@ -77,7 +77,7 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
             >
               {isPlaying ? (
                 <>
-                  <Stop className="h-4 w-4" />
+                  <StopCircle className="h-4 w-4" />
                   <span>Stop Playing</span>
                 </>
               ) : (
