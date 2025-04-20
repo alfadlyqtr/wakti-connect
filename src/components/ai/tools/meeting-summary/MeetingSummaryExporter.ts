@@ -1,3 +1,4 @@
+
 /**
  * Utility functions for exporting meeting summaries
  */
@@ -45,6 +46,14 @@ export const exportMeetingSummaryAsPDF = async (
     .map(item => item.replace(/^[-*]\s*/, ''))
     .join('</li><li>') : '';
 
+  // Process the main content while preserving action items
+  const mainContent = summary.replace(/##\s*Action Items[^#]*(?=##|$)/i, '')
+    .replace(/\n/g, "<br />")
+    .replace(/^## (.*)/gm, '<h2 style="color: #333; margin-top: 20px; margin-bottom: 10px; font-size: 18px;">$1</h2>')
+    .replace(/^### (.*)/gm, '<h3 style="color: #444; margin-top: 15px; margin-bottom: 8px; font-size: 16px;">$1</h3>')
+    .replace(/^\- (.*)/gm, '<li style="margin-bottom: 5px;">$1</li>')
+    .replace(/^\* (.*)/gm, '<li style="margin-bottom: 5px;">$1</li>');
+
   let pdfContent = `
     <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -87,7 +96,7 @@ export const exportMeetingSummaryAsPDF = async (
       </div>` : ''}
       
       <div style="line-height: 1.6;">
-        ${summary.replace(/##\s*Action Items[^#]*(?=##|$)/i, '')} // Remove action items section from main content
+        ${mainContent}
       </div>
       
       ${includeFooter ? `
