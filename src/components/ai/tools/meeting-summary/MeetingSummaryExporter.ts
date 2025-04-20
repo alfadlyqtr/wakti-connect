@@ -1,10 +1,10 @@
-
 /**
  * Utility functions for exporting meeting summaries
  */
 
 import { formatTime } from '@/utils/audio/audioProcessing';
 import html2pdf from 'html2pdf.js';
+import { GOOGLE_MAPS_API_KEY } from '@/config/maps';
 
 export interface MeetingSummaryPDFOptions {
   title?: string;
@@ -12,6 +12,12 @@ export interface MeetingSummaryPDFOptions {
   companyLogo?: string;
   includeFooter?: boolean;
 }
+
+// Helper to generate Google Maps Static API URL
+const getMapThumbnailUrl = (location: string): string => {
+  const encodedLocation = encodeURIComponent(location);
+  return `https://maps.googleapis.com/maps/api/staticmap?center=${encodedLocation}&zoom=14&size=300x200&key=${GOOGLE_MAPS_API_KEY}&markers=color:red%7C${encodedLocation}`;
+};
 
 /**
  * Exports the meeting summary as a PDF file
@@ -84,6 +90,13 @@ export const exportMeetingSummaryAsPDF = async (
           <ul style="margin: 5px 0; padding-left: 20px;">
             ${attendees.map(attendee => `<li>${attendee}</li>`).join('')}
           </ul>
+        </div>` : ''}
+
+        ${location ? `
+        <div style="margin-top: 15px;">
+          <img src="${getMapThumbnailUrl(location)}" 
+               alt="Meeting Location Map" 
+               style="width: 100%; max-width: 300px; height: 200px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd;" />
         </div>` : ''}
       </div>
       
