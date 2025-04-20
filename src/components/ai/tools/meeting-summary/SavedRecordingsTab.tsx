@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import MeetingPreviewDialog from './MeetingPreviewDialog';
 import { exportMeetingSummaryAsPDF } from './MeetingSummaryExporter';
 import { motion } from 'framer-motion';
+import { differenceInDays } from 'date-fns';
 
 const SavedRecordingsTab = () => {
   const { loadSavedMeetings, deleteMeeting } = useMeetingSummaryV2();
@@ -26,7 +27,12 @@ const SavedRecordingsTab = () => {
     setIsLoadingHistory(true);
     try {
       const loadedMeetings = await loadSavedMeetings();
-      setMeetings(loadedMeetings);
+      // Ensure meetings have valid dates
+      const processedMeetings = loadedMeetings.map(meeting => ({
+        ...meeting,
+        date: meeting.date || new Date().toISOString() // Provide fallback if date is missing
+      }));
+      setMeetings(processedMeetings);
     } catch (error) {
       console.error('Error loading meetings:', error);
       toast.error('Failed to load saved recordings');
@@ -98,9 +104,12 @@ const SavedRecordingsTab = () => {
   };
 
   const handlePreview = (meeting: any) => {
+    if (!meeting) return;
+    
     // Process meeting data to ensure it has all required properties
     const enhancedMeeting = {
       ...meeting,
+      date: meeting.date || new Date().toISOString(), // Ensure date exists
       detectedLocation: meeting.location || meeting.detectedLocation || null,
       detectedAttendees: meeting.attendees || meeting.detectedAttendees || extractAttendeesFromSummary(meeting.summary),
       has_audio: meeting.has_audio || !!meeting.audioUrl || !!meeting.audioStoragePath
@@ -111,6 +120,8 @@ const SavedRecordingsTab = () => {
   };
 
   const extractAttendeesFromSummary = (summary: string): string[] | null => {
+    if (!summary) return null;
+    
     const attendeesMatch = summary.match(/Attendees:([^#]*?)(?=##|$)/i);
     if (!attendeesMatch) return null;
     
@@ -158,6 +169,8 @@ const SavedRecordingsTab = () => {
   };
 
   const extractTitleFromSummary = (summary: string): string => {
+    if (!summary) return '';
+    
     const titleMatch = summary.match(/Meeting Title:\s*([^\n]+)/i) || 
                        summary.match(/Title:\s*([^\n]+)/i) ||
                        summary.match(/^# ([^\n]+)/m) ||

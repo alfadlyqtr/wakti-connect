@@ -1,3 +1,4 @@
+
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -7,12 +8,19 @@ export function cn(...inputs: ClassValue[]) {
 
 /**
  * Formats a timestamp to a relative time string (e.g. "2 minutes ago")
+ * with improved accuracy for recent timestamps
  */
 export function formatRelativeTime(date: Date | string): string {
   const now = new Date();
   const timestamp = date instanceof Date ? date : new Date(date);
   
-  const seconds = Math.floor((now.getTime() - timestamp.getTime()) / 1000);
+  // Handle invalid dates
+  if (isNaN(timestamp.getTime())) {
+    return 'Invalid date';
+  }
+  
+  const milliseconds = now.getTime() - timestamp.getTime();
+  const seconds = Math.floor(milliseconds / 1000);
   
   // Less than a minute
   if (seconds < 60) {

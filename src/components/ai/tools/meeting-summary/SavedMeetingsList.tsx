@@ -2,8 +2,9 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Trash2, Clock, Download, AlertTriangle, MapPin, File } from 'lucide-react';
-import { formatDistanceToNow, differenceInDays } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
+import { formatRelativeTime } from '@/lib/utils';
 
 export interface SavedMeeting {
   id: string;
@@ -112,7 +113,7 @@ const SavedMeetingsList: React.FC<SavedMeetingsListProps> = ({
               <h4 className="font-medium text-blue-700">{getDisplayTitle(meeting)}</h4>
               <div className="flex items-center text-sm text-muted-foreground">
                 <Clock className="h-3 w-3 mr-1" />
-                <span>{formatDistanceToNow(new Date(meeting.date), { addSuffix: true })}</span>
+                <span>{formatRelativeTime(new Date(meeting.date))}</span>
                 <span className="mx-1">•</span>
                 <span>{formatDuration(meeting.duration)}</span>
               </div>
