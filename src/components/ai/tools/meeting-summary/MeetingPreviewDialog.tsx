@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -129,6 +128,10 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
       window.open(generateGoogleMapsUrl(locationName), '_blank');
     }
   };
+
+  if (!meeting) {
+    return null;
+  }
 
   const displayTitle = meeting.title || extractTitleFromSummary(meeting.summary);
   const location = locationName || meeting.detectedLocation;
