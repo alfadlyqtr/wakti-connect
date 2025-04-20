@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -7,8 +6,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
-import { FileDown, Copy, Download } from 'lucide-react';
+import { FileDown, Copy, Download, Volume2 } from 'lucide-react';
 import SummaryDisplay from './SummaryDisplay';
+import { playTextWithVoiceRSS } from '@/utils/voiceRSS';
 
 interface MeetingPreviewDialogProps {
   isOpen: boolean;
@@ -39,7 +39,22 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
   isExporting,
   isDownloadingAudio,
 }) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+
   if (!meeting) return null;
+
+  const handlePlaySummary = async () => {
+    if (isPlaying) return;
+    
+    try {
+      setIsPlaying(true);
+      const audio = await playTextWithVoiceRSS({ text: meeting.summary });
+      audio.onended = () => setIsPlaying(false);
+    } catch (error) {
+      console.error('Failed to play summary:', error);
+      setIsPlaying(false);
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={() => onClose()}>
@@ -50,6 +65,17 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
 
         <div className="space-y-4">
           <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePlaySummary}
+              disabled={isPlaying}
+              className="flex items-center gap-1"
+            >
+              <Volume2 className="h-4 w-4" />
+              <span>{isPlaying ? "Playing..." : "Play Summary"}</span>
+            </Button>
+            
             <Button
               variant="outline"
               size="sm"
