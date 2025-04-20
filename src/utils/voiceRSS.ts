@@ -1,4 +1,3 @@
-
 interface VoiceRSSOptions {
   text: string;
   language?: 'en-us' | 'ar-sa';
@@ -15,10 +14,19 @@ export const stopCurrentAudio = () => {
   }
 };
 
-export const playTextWithVoiceRSS = async ({ text, language, voice }: VoiceRSSOptions) => {
-  // Stop any currently playing audio
-  stopCurrentAudio();
+export const pauseCurrentAudio = () => {
+  if (currentAudio) {
+    currentAudio.pause();
+  }
+};
 
+export const resumeCurrentAudio = () => {
+  if (currentAudio) {
+    currentAudio.play();
+  }
+};
+
+export const playTextWithVoiceRSS = async ({ text, language, voice }: VoiceRSSOptions) => {
   // Auto-detect language if not provided (simple check for Arabic characters)
   const hasArabic = /[\u0600-\u06FF]/.test(text);
   const selectedLanguage = language || (hasArabic ? 'ar-sa' : 'en-us');
@@ -28,6 +36,13 @@ export const playTextWithVoiceRSS = async ({ text, language, voice }: VoiceRSSOp
   const url = `https://api.voicerss.org/?key=${API_KEY}&hl=${selectedLanguage}&v=${selectedVoice}&src=${encodeURIComponent(text)}`;
 
   try {
+    // If there's already an audio playing, just resume it
+    if (currentAudio && !currentAudio.ended) {
+      await currentAudio.play();
+      return currentAudio;
+    }
+
+    // Otherwise create a new audio instance
     const audio = new Audio(url);
     currentAudio = audio;
     await audio.play();

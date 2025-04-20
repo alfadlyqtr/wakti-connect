@@ -6,9 +6,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
-import { FileDown, Copy, Download, Volume2, StopCircle } from 'lucide-react';
+import { FileDown, Copy, Download, Volume2, Pause, Play } from 'lucide-react';
 import SummaryDisplay from './SummaryDisplay';
-import { playTextWithVoiceRSS, stopCurrentAudio } from '@/utils/voiceRSS';
+import { playTextWithVoiceRSS, pauseCurrentAudio, resumeCurrentAudio } from '@/utils/voiceRSS';
 
 interface MeetingPreviewDialogProps {
   isOpen: boolean;
@@ -40,23 +40,34 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
   isDownloadingAudio,
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
 
   if (!meeting) return null;
 
   const handlePlaySummary = async () => {
     if (isPlaying) {
-      stopCurrentAudio();
+      pauseCurrentAudio();
+      setIsPaused(true);
       setIsPlaying(false);
       return;
     }
     
     try {
+      if (isPaused) {
+        await resumeCurrentAudio();
+      } else {
+        const audio = await playTextWithVoiceRSS({ text: meeting.summary });
+        audio.onended = () => {
+          setIsPlaying(false);
+          setIsPaused(false);
+        };
+      }
       setIsPlaying(true);
-      const audio = await playTextWithVoiceRSS({ text: meeting.summary });
-      audio.onended = () => setIsPlaying(false);
+      setIsPaused(false);
     } catch (error) {
       console.error('Failed to play summary:', error);
       setIsPlaying(false);
+      setIsPaused(false);
     }
   };
 
@@ -77,8 +88,13 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
             >
               {isPlaying ? (
                 <>
-                  <StopCircle className="h-4 w-4" />
-                  <span>Stop Playing</span>
+                  <Pause className="h-4 w-4" />
+                  <span>Pause</span>
+                </>
+              ) : isPaused ? (
+                <>
+                  <Play className="h-4 w-4" />
+                  <span>Resume</span>
                 </>
               ) : (
                 <>
