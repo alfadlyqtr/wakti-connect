@@ -1,8 +1,9 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Map, Users } from 'lucide-react';
+import { Map, Users, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { generateGoogleMapsUrl } from '@/config/maps';
 
 interface SummaryDisplayProps {
   summary: string;
@@ -37,13 +38,36 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
     return null;
   }
 
-  // Function to generate Google Maps URL
-  const generateGoogleMapsUrl = (location: string) => {
-    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
+  // Extract title from summary if present
+  const extractTitle = () => {
+    const titleMatch = summary.match(/Meeting Title:\s*([^\n]+)/i) || 
+                      summary.match(/Title:\s*([^\n]+)/i) ||
+                      summary.match(/^# ([^\n]+)/m) ||
+                      summary.match(/^## ([^\n]+)/m);
+    return titleMatch ? titleMatch[1].trim() : null;
+  };
+
+  const meetingTitle = extractTitle();
+
+  // Get a thumbnail map URL for the location
+  const getMapThumbnailUrl = (location: string): string => {
+    const encodedLocation = encodeURIComponent(location);
+    return `https://maps.googleapis.com/maps/api/staticmap?center=${encodedLocation}&zoom=14&size=400x200&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'AIzaSyD5QBJ4O3ovpZ9UI6ZekiZ7H4h9gN_lDg0'}&markers=color:red%7C${encodedLocation}`;
   };
 
   return (
     <div className="p-4">
+      {meetingTitle && (
+        <motion.h1 
+          className="text-xl sm:text-2xl font-bold text-blue-800 mb-4"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          {meetingTitle}
+        </motion.h1>
+      )}
+      
       <div
         ref={summaryRef}
         className="prose max-w-none dark:prose-invert mb-6"
@@ -71,8 +95,8 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
             </div>
             <ul className="space-y-1 text-sm text-gray-700">
               {detectedAttendees.map((attendee, index) => (
-                <li key={index} className="flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 bg-blue-400 rounded-full"></span>
+                <li key={index} className="flex items-start gap-2">
+                  <span className="h-1.5 w-1.5 bg-blue-400 rounded-full mt-1.5 flex-shrink-0"></span>
                   {attendee}
                 </li>
               ))}
@@ -95,15 +119,27 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
               <Button
                 variant="link"
                 size="sm"
-                className="text-green-600 p-0 h-auto"
+                className="text-green-600 p-0 h-auto flex items-center gap-1"
                 onClick={() => window.open(generateGoogleMapsUrl(detectedLocation), '_blank')}
               >
-                View on Map
+                <span>View on Map</span>
+                <ExternalLink className="h-3 w-3" />
               </Button>
             </div>
-            <p className="text-sm bg-white p-2 rounded border border-green-100">
+            <p className="text-sm mb-3 bg-white p-2 rounded border border-green-100">
               {detectedLocation}
             </p>
+            
+            {/* Map thumbnail */}
+            <div className="overflow-hidden rounded-md border border-green-200">
+              <img 
+                src={getMapThumbnailUrl(detectedLocation)} 
+                alt="Location Map" 
+                className="w-full h-[120px] object-cover hover:scale-105 transition-transform duration-300"
+                onClick={() => window.open(generateGoogleMapsUrl(detectedLocation), '_blank')}
+                style={{ cursor: 'pointer' }}
+              />
+            </div>
           </motion.div>
         )}
       </div>

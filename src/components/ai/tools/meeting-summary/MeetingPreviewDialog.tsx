@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -6,9 +7,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
-import { FileDown, Copy, Download, Volume2, Pause, RefreshCcw, StopCircle, Play } from 'lucide-react';
+import { FileDown, Copy, Download, Volume2, Pause, RefreshCcw, StopCircle, Play, Map, ExternalLink } from 'lucide-react';
 import SummaryDisplay from './SummaryDisplay';
 import { playTextWithVoiceRSS, pauseCurrentAudio, resumeCurrentAudio, stopCurrentAudio, restartCurrentAudio } from '@/utils/voiceRSS';
+import { generateGoogleMapsUrl } from '@/config/maps';
+import { motion } from 'framer-motion';
 
 interface MeetingPreviewDialogProps {
   isOpen: boolean;
@@ -45,11 +48,16 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
   if (!meeting) return null;
 
   const extractTitleFromSummary = (summary: string) => {
-    const titleMatch = summary.match(/Meeting Title:\s*([^\n]+)/);
+    const titleMatch = summary.match(/Meeting Title:\s*([^\n]+)/i) || 
+                      summary.match(/Title:\s*([^\n]+)/i) ||
+                      summary.match(/^# ([^\n]+)/m) ||
+                      summary.match(/^## ([^\n]+)/m);
     return titleMatch ? titleMatch[1].trim() : 'Untitled Meeting';
   };
 
   const displayTitle = meeting.title || extractTitleFromSummary(meeting.summary);
+  const location = meeting.detectedLocation;
+  const showMapButton = location && location.length > 0;
 
   const handlePlaySummary = async () => {
     try {
@@ -94,15 +102,41 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
     setIsPaused(false);
   };
 
+  const openInMaps = () => {
+    if (location) {
+      window.open(generateGoogleMapsUrl(location), '_blank');
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={() => onClose()}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{displayTitle}</DialogTitle>
+          {showMapButton && (
+            <div className="flex items-center mt-1 text-sm text-muted-foreground">
+              <Map className="h-3.5 w-3.5 mr-1 text-green-600" />
+              <span className="mr-2">{location}</span>
+              <Button
+                variant="link"
+                size="sm"
+                className="p-0 h-auto text-green-600 flex items-center gap-1"
+                onClick={openInMaps}
+              >
+                <span className="text-xs">View on Map</span>
+                <ExternalLink className="h-3 w-3" />
+              </Button>
+            </div>
+          )}
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="flex justify-end gap-2">
+          <motion.div 
+            className="flex justify-end gap-2 flex-wrap"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
             {!isPlaying && !isPaused && (
               <Button
                 variant="outline"
@@ -200,19 +234,19 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
               <span>{isExporting ? "Exporting..." : "Export PDF"}</span>
             </Button>
             
-            {meeting.audioUrl && (
+            {(meeting.audioUrl || meeting.has_audio) && (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={onDownloadAudio}
                 disabled={isDownloadingAudio}
-                className="flex items-center gap-1"
+                className="flex items-center gap-1 bg-blue-50 border-blue-200 hover:bg-blue-100"
               >
                 <Download className="h-4 w-4" />
                 <span>{isDownloadingAudio ? "Downloading..." : "Download Audio"}</span>
               </Button>
             )}
-          </div>
+          </motion.div>
 
           <div className="bg-white rounded-lg border">
             <SummaryDisplay

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { MapPin, Users, GraduationCap } from 'lucide-react';
 import { toast } from 'sonner';
 import { useEventLocation } from '@/hooks/events/useEventLocation';
+import { motion } from 'framer-motion';
 
 const formSchema = z.object({
   sessionType: z.string().optional(),
@@ -176,14 +178,20 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
             >
               Submit
             </Button>
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={onSkip} 
-              className="flex-1 bg-white hover:bg-gray-50"
+            <motion.div 
+              className="flex-1"
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.98 }}
             >
-              Skip and Start
-            </Button>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={onSkip} 
+                className="w-full bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200 hover:border-purple-300 hover:from-purple-100 hover:to-blue-100 hover:shadow-md transition-all duration-300"
+              >
+                Skip and Start
+              </Button>
+            </motion.div>
           </div>
         </form>
       </Form>

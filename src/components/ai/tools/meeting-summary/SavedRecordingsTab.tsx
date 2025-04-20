@@ -7,6 +7,7 @@ import { FileDown } from 'lucide-react';
 import { toast } from 'sonner';
 import MeetingPreviewDialog from './MeetingPreviewDialog';
 import { exportMeetingSummaryAsPDF } from './MeetingSummaryExporter';
+import { motion } from 'framer-motion';
 
 const SavedRecordingsTab = () => {
   const { loadSavedMeetings, deleteMeeting } = useMeetingSummaryV2();
@@ -35,31 +36,58 @@ const SavedRecordingsTab = () => {
   };
 
   const handleDelete = async (id: string) => {
-    const success = await deleteMeeting(id);
-    if (success) {
-      setMeetings(meetings.filter(meeting => meeting.id !== id));
-      if (selectedMeeting?.id === id) {
-        setIsPreviewOpen(false);
+    try {
+      const success = await deleteMeeting(id);
+      if (success) {
+        setMeetings(meetings.filter(meeting => meeting.id !== id));
+        if (selectedMeeting?.id === id) {
+          setIsPreviewOpen(false);
+        }
+        toast.success('Recording deleted successfully');
       }
+    } catch (error) {
+      console.error('Error deleting meeting:', error);
+      toast.error('Failed to delete recording');
     }
   };
 
   const handleDownload = async (meeting: any) => {
     setIsDownloadingAudio(true);
     try {
-      if (!meeting.audioUrl) {
+      if (!meeting.audioUrl && !meeting.audioStoragePath) {
         throw new Error('No audio available');
       }
-      const response = await fetch(meeting.audioUrl);
+      
+      const audioUrl = meeting.audioUrl || meeting.audioStoragePath;
+      const response = await fetch(audioUrl);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch audio: ${response.status}`);
+      }
+      
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
+      
+      // Extract title from summary for better filename
+      const titleMatch = meeting.summary.match(/Meeting Title:\s*([^\n]+)/i) || 
+                       meeting.summary.match(/Title:\s*([^\n]+)/i) ||
+                       meeting.summary.match(/^# ([^\n]+)/m) ||
+                       meeting.summary.match(/^## ([^\n]+)/m);
+                       
+      const safeTitle = titleMatch 
+        ? titleMatch[1].trim().replace(/[^a-z0-9]/gi, '_').toLowerCase()
+        : 'recording';
+        
+      const filename = `${safeTitle}_${new Date(meeting.date).toISOString().split('T')[0]}.webm`;
+      
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${meeting.title || 'recording'}.webm`;
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
+      
       toast.success('Audio downloaded successfully');
     } catch (error) {
       console.error('Error downloading audio:', error);
@@ -70,8 +98,29 @@ const SavedRecordingsTab = () => {
   };
 
   const handlePreview = (meeting: any) => {
-    setSelectedMeeting(meeting);
+    // Process meeting data to ensure it has all required properties
+    const enhancedMeeting = {
+      ...meeting,
+      detectedLocation: meeting.location || meeting.detectedLocation || null,
+      detectedAttendees: meeting.attendees || meeting.detectedAttendees || extractAttendeesFromSummary(meeting.summary),
+      has_audio: meeting.has_audio || !!meeting.audioUrl || !!meeting.audioStoragePath
+    };
+    
+    setSelectedMeeting(enhancedMeeting);
     setIsPreviewOpen(true);
+  };
+
+  const extractAttendeesFromSummary = (summary: string): string[] | null => {
+    const attendeesMatch = summary.match(/Attendees:([^#]*?)(?=##|$)/i);
+    if (!attendeesMatch) return null;
+    
+    const attendeesList = attendeesMatch[1]
+      .split('\n')
+      .filter(line => line.trim().startsWith('-') || line.trim().startsWith('*'))
+      .map(line => line.trim().replace(/^[-*]\s*/, ''))
+      .filter(Boolean);
+      
+    return attendeesList.length > 0 ? attendeesList : null;
   };
 
   const handleExportPDF = async () => {
@@ -91,10 +140,10 @@ const SavedRecordingsTab = () => {
       await exportMeetingSummaryAsPDF(
         selectedMeeting.summary,
         duration,
-        selectedMeeting.location || null,
-        selectedMeeting.detectedAttendees || null,
+        selectedMeeting.location || selectedMeeting.detectedLocation || null,
+        selectedMeeting.attendees || selectedMeeting.detectedAttendees || extractAttendeesFromSummary(selectedMeeting.summary),
         {
-          title: selectedMeeting.title || 'Meeting Summary',
+          title: selectedMeeting.title || extractTitleFromSummary(selectedMeeting.summary) || 'Meeting Summary',
           companyLogo: '/lovable-uploads/9b7d0693-89eb-4cc5-b90b-7834bfabda0e.png'
         }
       );
@@ -106,6 +155,15 @@ const SavedRecordingsTab = () => {
     } finally {
       setIsExporting(false);
     }
+  };
+
+  const extractTitleFromSummary = (summary: string): string => {
+    const titleMatch = summary.match(/Meeting Title:\s*([^\n]+)/i) || 
+                       summary.match(/Title:\s*([^\n]+)/i) ||
+                       summary.match(/^# ([^\n]+)/m) ||
+                       summary.match(/^## ([^\n]+)/m);
+                       
+    return titleMatch ? titleMatch[1].trim() : '';
   };
 
   const handleCopy = async () => {
@@ -121,7 +179,12 @@ const SavedRecordingsTab = () => {
   };
 
   return (
-    <div className="space-y-4">
+    <motion.div 
+      className="space-y-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Previous Recordings</h2>
         <Button 
@@ -129,6 +192,7 @@ const SavedRecordingsTab = () => {
           size="sm" 
           onClick={loadMeetings}
           disabled={isLoadingHistory}
+          className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200 hover:border-blue-300 hover:from-blue-100 hover:to-purple-100"
         >
           <FileDown className="h-4 w-4 mr-2" />
           Refresh
@@ -153,7 +217,7 @@ const SavedRecordingsTab = () => {
         isExporting={isExporting}
         isDownloadingAudio={isDownloadingAudio}
       />
-    </div>
+    </motion.div>
   );
 };
 

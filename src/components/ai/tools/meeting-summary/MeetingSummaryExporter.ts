@@ -1,3 +1,4 @@
+
 /**
  * Utility functions for exporting meeting summaries
  */
@@ -16,7 +17,17 @@ export interface MeetingSummaryPDFOptions {
 // Helper to generate Google Maps Static API URL
 const getMapThumbnailUrl = (location: string): string => {
   const encodedLocation = encodeURIComponent(location);
-  return `https://maps.googleapis.com/maps/api/staticmap?center=${encodedLocation}&zoom=14&size=300x200&key=${GOOGLE_MAPS_API_KEY}&markers=color:red%7C${encodedLocation}`;
+  return `https://maps.googleapis.com/maps/api/staticmap?center=${encodedLocation}&zoom=14&size=400x200&key=${GOOGLE_MAPS_API_KEY}&markers=color:red%7C${encodedLocation}&style=feature:all|element:labels|visibility:on`;
+};
+
+// Extract title from meeting summary
+const extractTitleFromSummary = (summary: string): string => {
+  const titleMatch = summary.match(/Meeting Title:\s*([^\n]+)/i) || 
+                     summary.match(/Title:\s*([^\n]+)/i) ||
+                     summary.match(/^# ([^\n]+)/m) ||
+                     summary.match(/^## ([^\n]+)/m);
+                     
+  return titleMatch ? titleMatch[1].trim() : 'Meeting Summary';
 };
 
 /**
@@ -39,7 +50,7 @@ export const exportMeetingSummaryAsPDF = async (
   const dateString = today.toLocaleDateString();
   const timeString = today.toLocaleTimeString();
   
-  const title = options.title || 'Meeting Summary';
+  const title = options.title || extractTitleFromSummary(summary) || 'Meeting Summary';
   const companyName = options.companyName || 'WAKTI';
   const includeFooter = options.includeFooter !== false;
 
@@ -55,16 +66,27 @@ export const exportMeetingSummaryAsPDF = async (
   // Process the main content while preserving action items
   const mainContent = summary.replace(/##\s*Action Items[^#]*(?=##|$)/i, '')
     .replace(/\n/g, "<br />")
-    .replace(/^## (.*)/gm, '<h2 style="color: #333; margin-top: 20px; margin-bottom: 10px; font-size: 18px;">$1</h2>')
+    .replace(/^## (.*)/gm, '<h2 style="color: #333; margin-top: 20px; margin-bottom: 10px; font-size: 18px; border-bottom: 1px solid #eee; padding-bottom: 5px;">$1</h2>')
     .replace(/^### (.*)/gm, '<h3 style="color: #444; margin-top: 15px; margin-bottom: 8px; font-size: 16px;">$1</h3>')
     .replace(/^\- (.*)/gm, '<li style="margin-bottom: 5px;">$1</li>')
     .replace(/^\* (.*)/gm, '<li style="margin-bottom: 5px;">$1</li>');
+
+  // Generate map URL if location is provided
+  const mapImageHtml = location ? `
+    <div style="margin-top: 15px; text-align: center;">
+      <img src="${getMapThumbnailUrl(location)}" 
+           alt="Meeting Location Map" 
+           style="width: 100%; max-width: 400px; height: auto; border-radius: 4px; border: 1px solid #ddd;" />
+      <p style="margin: 5px 0 0 0; font-size: 12px; color: #666;">
+        ${location}
+      </p>
+    </div>` : '';
 
   let pdfContent = `
     <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <div>
-          <h1 style="color: #333; margin: 0;">${title}</h1>
+          <h1 style="color: #0053c3; margin: 0; font-size: 24px;">${title}</h1>
           <p style="color: #666; margin: 5px 0;">Generated on ${dateString} at ${timeString}</p>
         </div>
         ${options.companyLogo ? `<img src="${options.companyLogo}" alt="${companyName} Logo" style="height: 60px;">` : ''}
@@ -92,12 +114,7 @@ export const exportMeetingSummaryAsPDF = async (
           </ul>
         </div>` : ''}
 
-        ${location ? `
-        <div style="margin-top: 15px;">
-          <img src="${getMapThumbnailUrl(location)}" 
-               alt="Meeting Location Map" 
-               style="width: 100%; max-width: 300px; height: 200px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd;" />
-        </div>` : ''}
+        ${location ? mapImageHtml : ''}
       </div>
       
       ${actionItems ? `
@@ -122,7 +139,7 @@ export const exportMeetingSummaryAsPDF = async (
   // Configure PDF options
   const pdfOptions = {
     margin: [15, 15, 15, 15],
-    filename: `meeting_summary_${today.toISOString().split('T')[0]}.pdf`,
+    filename: `meeting_summary_${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${today.toISOString().split('T')[0]}.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
     html2canvas: { scale: 2, useCORS: true },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
