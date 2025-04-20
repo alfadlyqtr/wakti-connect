@@ -6,9 +6,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Using a more reliable Maps API key - same as in the client config
-const MAPS_API_KEY = 'AIzaSyD5QBJ4O3ovpZ9UI6ZekiZ7H4h9gN_lDg0';
-
 serve(async (req) => {
   // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
@@ -17,17 +14,19 @@ serve(async (req) => {
 
   try {
     // Get the Maps API key from environment variables
-    const apiKey = Deno.env.get('GOOGLE_MAPS_API_KEY');
+    const apiKey = Deno.env.get('GOOGLE_MAPS_API_KEY') || import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
     
-    // If no API key is set in environment, use the fallback key
     if (!apiKey) {
-      console.log('GOOGLE_MAPS_API_KEY not found in environment variables, using fallback key');
+      console.error('GOOGLE_MAPS_API_KEY not found in environment variables');
       return new Response(
         JSON.stringify({ 
-          apiKey: MAPS_API_KEY, 
-          source: 'fallback'
+          error: 'API key not configured',
+          source: 'error'
         }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
       );
     }
 
@@ -43,11 +42,13 @@ serve(async (req) => {
     console.error('Error retrieving Maps API key:', error);
     return new Response(
       JSON.stringify({ 
-        error: error.message, 
-        apiKey: MAPS_API_KEY, 
-        source: 'error-fallback'
+        error: error.message,
+        source: 'error'
       }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
     );
   }
 });

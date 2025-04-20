@@ -6,8 +6,8 @@
 const MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
 // Validate that we have a valid API key
-if (!MAPS_API_KEY || MAPS_API_KEY === 'FAKE-123') {
-  console.warn('Warning: No valid Google Maps API key found. Map functionality will be limited.');
+if (!MAPS_API_KEY) {
+  console.warn('Warning: No Google Maps API key found. Map functionality will be limited.');
 }
 
 export const GOOGLE_MAPS_API_KEY = MAPS_API_KEY;

@@ -1,8 +1,8 @@
 
 const validateMapsKey = () => {
   const key = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-  if (!key || key === 'FAKE-123') {
-    console.warn('Warning: Missing or invalid Google Maps API key');
+  if (!key) {
+    console.warn('Warning: Missing Google Maps API key');
     return false;
   }
   return true;
