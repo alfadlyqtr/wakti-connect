@@ -1,4 +1,3 @@
-
 import React from "react";
 import { BusinessPageSection, BusinessPage } from "@/types/business.types";
 
@@ -153,9 +152,10 @@ const BusinessPageSections = ({ pageSections, businessPage }: BusinessPageSectio
           
         case 'contact':
           return <BusinessContactSection 
-            content={content} 
-            businessId={businessPage.business_id} 
-            pageId={businessPage.id} 
+            businessName={content.business_name || businessPage.business_name || ''}
+            businessAddress={content.address || ''}
+            businessPhoneNumber={content.phone || ''}
+            businessEmail={content.email || ''}
           />;
           
         case 'hours':

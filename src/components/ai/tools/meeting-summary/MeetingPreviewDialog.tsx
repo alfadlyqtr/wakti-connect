@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -10,6 +11,7 @@ import { FileDown, Copy, Download, Volume2, Pause, RefreshCcw, StopCircle, Play,
 import SummaryDisplay from './SummaryDisplay';
 import { playTextWithVoiceRSS, pauseCurrentAudio, resumeCurrentAudio, stopCurrentAudio, restartCurrentAudio } from '@/utils/voiceRSS';
 import { generateTomTomMapsUrl } from '@/config/maps';
+import { supabase } from "@/integrations/supabase/client";
 import { motion } from 'framer-motion';
 import { formatRelativeTime } from '@/lib/utils';
 

@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,7 +8,7 @@ import { toast } from "@/components/ui/use-toast";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { generateTomTomMapsUrl, TOMTOM_API_KEY } from "@/config/maps";
 
-interface BusinessContactSectionProps {
+export interface BusinessContactSectionProps {
   businessName: string;
   businessAddress: string;
   businessPhoneNumber: string;
