@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, Clock, X, Copy, FileDown, Download } from 'lucide-react';
@@ -10,6 +9,7 @@ import RecordingControlsV2 from './meeting-summary/RecordingControlsV2';
 import TranscriptionPanel from './meeting-summary/TranscriptionPanel';
 import SummaryDisplay from './meeting-summary/SummaryDisplay';
 import SavedRecordingsTab from './meeting-summary/SavedRecordingsTab';
+import ProcessingSpinner from './meeting-summary/ProcessingSpinner';
 
 export const MeetingSummaryTool = () => {
   const [activeTab, setActiveTab] = useState('record');
@@ -83,6 +83,8 @@ export const MeetingSummaryTool = () => {
 
   return (
     <div className="max-w-4xl mx-auto bg-white rounded-lg overflow-hidden shadow-sm">
+      <ProcessingSpinner isVisible={state.isProcessing && !showFeedbackPopup} />
+      
       <Tabs defaultValue="record" value={activeTab} onValueChange={setActiveTab}>
         <div className="px-6 pt-6">
           <TabsList className="grid w-full grid-cols-2 mb-6">
