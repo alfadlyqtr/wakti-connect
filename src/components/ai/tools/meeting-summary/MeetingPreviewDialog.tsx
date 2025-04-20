@@ -44,6 +44,13 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
 
   if (!meeting) return null;
 
+  const extractTitleFromSummary = (summary: string) => {
+    const titleMatch = summary.match(/Meeting Title:\s*([^\n]+)/);
+    return titleMatch ? titleMatch[1].trim() : 'Untitled Meeting';
+  };
+
+  const displayTitle = meeting.title || extractTitleFromSummary(meeting.summary);
+
   const handlePlaySummary = async () => {
     try {
       if (isPaused) {
@@ -91,7 +98,7 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
     <Dialog open={isOpen} onOpenChange={() => onClose()}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{meeting.title || 'Untitled Meeting'}</DialogTitle>
+          <DialogTitle>{displayTitle}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">

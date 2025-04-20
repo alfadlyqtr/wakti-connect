@@ -81,6 +81,13 @@ export const MeetingSummaryTool = () => {
     setIsSummaryMode(false);
   };
 
+  const extractTitleFromSummary = (summary: string) => {
+    const titleMatch = summary.match(/Meeting Title:\s*([^\n]+)/);
+    return titleMatch ? titleMatch[1].trim() : 'Untitled Meeting';
+  };
+
+  const displayTitle = state.meetingTitle || (state.summary ? extractTitleFromSummary(state.summary) : 'Untitled Meeting');
+
   return (
     <div className="max-w-4xl mx-auto bg-white rounded-lg overflow-hidden shadow-sm">
       <ProcessingSpinner isVisible={state.isProcessing && !showFeedbackPopup} />
@@ -244,7 +251,7 @@ export const MeetingSummaryTool = () => {
                 className="p-6"
               >
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold tracking-tight">Meeting Summary</h2>
+                  <h2 className="text-2xl font-bold tracking-tight">{displayTitle}</h2>
                   <Button 
                     variant="outline" 
                     onClick={handleStartNewMeeting}
@@ -281,7 +288,7 @@ export const MeetingSummaryTool = () => {
                         <span>{isExporting ? "Exporting..." : "Export PDF"}</span>
                       </Button>
                       
-                      {state.audioBlobs && (
+                      {state.audioBlobs && state.audioBlobs.length > 0 && (
                         <Button
                           variant="outline"
                           size="sm"
