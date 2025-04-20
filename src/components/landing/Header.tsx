@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Moon, Sun, User, ChevronDown, ChevronUp } from "lucide-react";
@@ -17,7 +16,7 @@ const Header = () => {
   };
   
   return (
-    <header className="bg-background/80 backdrop-blur-md border-b border-border sticky top-0 z-50">
+    <header className="bg-wakti-navy/95 backdrop-blur-md border-b border-wakti-beige/20 sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Link to="/" className="flex items-center gap-2">
@@ -26,19 +25,19 @@ const Header = () => {
               alt="WAKTI" 
               className="w-10 h-10 rounded-md object-cover"
             />
-            <span className="font-bold text-xl">WAKTI</span>
+            <span className="font-bold text-xl text-wakti-beige">WAKTI</span>
           </Link>
         </div>
         
         {/* Desktop navigation */}
         <div className="hidden md:flex items-center space-x-4">
-          <Link to="/pricing" className="text-sm font-medium hover:text-primary transition-colors">
+          <Link to="/pricing" className="text-sm font-medium text-wakti-beige hover:text-white transition-colors">
             Pricing
           </Link>
-          <Link to="/features" className="text-sm font-medium hover:text-primary transition-colors">
+          <Link to="/features" className="text-sm font-medium text-wakti-beige hover:text-white transition-colors">
             Features
           </Link>
-          <Link to="/contact" className="text-sm font-medium hover:text-primary transition-colors">
+          <Link to="/contact" className="text-sm font-medium text-wakti-beige hover:text-white transition-colors">
             Contact
           </Link>
           <LanguageSwitcher />
@@ -46,19 +45,12 @@ const Header = () => {
             variant="ghost" 
             size="icon" 
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")} 
-            aria-label={theme === "dark" ? "Light Mode" : "Dark Mode"} 
-            title={theme === "dark" ? "Light Mode" : "Dark Mode"} 
-            className="text-foreground hover:text-foreground"
+            className="text-wakti-beige hover:text-white"
           >
             {theme === "dark" ? <Sun className="h-[1.2rem] w-[1.2rem]" /> : <Moon className="h-[1.2rem] w-[1.2rem]" />}
           </Button>
-          <Button asChild size="sm" className="ml-2">
+          <Button asChild size="sm" className="bg-wakti-beige text-wakti-navy hover:bg-wakti-beige/90">
             <Link to="/auth/login">Sign In / Create Account</Link>
-          </Button>
-          <Button asChild variant="ghost" size="icon" className="rounded-full bg-muted text-foreground ml-2">
-            <Link to="/auth/login" aria-label="Sign In" title="Sign In / Create Account">
-              <User className="h-[1.2rem] w-[1.2rem]" />
-            </Link>
           </Button>
         </div>
         
