@@ -24,44 +24,85 @@ serve(async (req) => {
     }
     
     console.log(`Processing file from URL: ${fileUrl}`);
-    console.log("Attempting OpenAI Whisper transcription");
-
+    
     // Download the audio file
     const audioResponse = await fetch(fileUrl);
     if (!audioResponse.ok) {
+      console.error(`Failed to fetch audio file: ${audioResponse.status}`);
       throw new Error('Failed to fetch audio file');
     }
+    
     const audioBlob = await audioResponse.blob();
-
-    // Create form data for Whisper API
-    const formData = new FormData();
-    formData.append('file', audioBlob, 'audio.webm');
-    formData.append('model', 'whisper-1');
-    // Only append language if it's not 'auto'
-    if (language !== 'auto') {
-      formData.append('language', language);
+    console.log(`Audio file size: ${audioBlob.size} bytes`);
+    
+    if (audioBlob.size === 0) {
+      throw new Error('Audio file is empty');
     }
 
-    // Send to Whisper API
-    const whisperResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
-      },
-      body: formData
-    });
+    // Try Whisper first
+    try {
+      console.log("Attempting OpenAI Whisper transcription");
+      
+      // Create form data for Whisper API
+      const formData = new FormData();
+      formData.append('file', audioBlob, 'audio.webm');
+      formData.append('model', 'whisper-1');
+      if (language !== 'auto') {
+        formData.append('language', language);
+      }
 
-    if (!whisperResponse.ok) {
-      throw new Error(`OpenAI Whisper API error: ${await whisperResponse.text()}`);
+      const whisperResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+        },
+        body: formData
+      });
+
+      if (!whisperResponse.ok) {
+        throw new Error(`OpenAI Whisper API error: ${await whisperResponse.text()}`);
+      }
+
+      const result = await whisperResponse.json();
+      console.log("Transcription received from OpenAI Whisper");
+      
+      return new Response(
+        JSON.stringify({ text: result.text, source: 'whisper' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+
+    } catch (whisperError) {
+      console.error("Whisper transcription failed:", whisperError);
+      console.log("Falling back to DeepSeek...");
+
+      // Try DeepSeek as fallback
+      try {
+        const deepseekResponse = await fetch('https://api.deepseek.com/v1/audio/transcriptions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${Deno.env.get('DEEPSEEK_API_KEY')}`,
+            'Content-Type': 'multipart/form-data',
+          },
+          body: formData
+        });
+
+        if (!deepseekResponse.ok) {
+          throw new Error(`DeepSeek API error: ${await deepseekResponse.text()}`);
+        }
+
+        const deepseekResult = await deepseekResponse.json();
+        console.log("Transcription received from DeepSeek");
+
+        return new Response(
+          JSON.stringify({ text: deepseekResult.text, source: 'deepseek' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+
+      } catch (deepseekError) {
+        console.error("DeepSeek transcription also failed:", deepseekError);
+        throw new Error("All transcription services failed");
+      }
     }
-
-    const result = await whisperResponse.json();
-    console.log("Transcription received from OpenAI Whisper");
-
-    return new Response(
-      JSON.stringify({ text: result.text, source: 'whisper' }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
 
   } catch (error) {
     console.error("Error in voice transcription function:", error);

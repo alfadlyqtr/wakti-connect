@@ -31,7 +31,13 @@ export const useRecordingHandlers = (
       
       audioChunksRef.current = [];
       
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        } 
+      });
       streamRef.current = stream;
       
       const mediaRecorder = new MediaRecorder(stream, {
@@ -64,7 +70,27 @@ export const useRecordingHandlers = (
     }
   }, [setState]);
 
+  // Wrap mediaRecorder.stop() in a Promise
+  const stopMediaRecorder = async (): Promise<Blob> => {
+    return new Promise((resolve) => {
+      if (!mediaRecorderRef.current) {
+        resolve(new Blob([]));
+        return;
+      }
+      
+      const handleStop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        mediaRecorderRef.current?.removeEventListener('stop', handleStop);
+        resolve(audioBlob);
+      };
+      
+      mediaRecorderRef.current.addEventListener('stop', handleStop);
+      mediaRecorderRef.current.stop();
+    });
+  };
+
   const stopRecording = useCallback(async () => {
+    console.log("Stopping recording...");
     if (mediaRecorderRef.current && state.isRecording) {
       setState(prev => ({ 
         ...prev, 
@@ -72,49 +98,75 @@ export const useRecordingHandlers = (
         isProcessing: true 
       }));
       
-      mediaRecorderRef.current.stop();
       cleanup();
       
-      const partNumber = state.meetingParts.length + 1;
-      const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-      
       try {
+        // Wait for the media recorder to finish and get the blob
+        console.log("Waiting for media recorder to finish...");
+        const audioBlob = await stopMediaRecorder();
+        console.log(`Audio blob created: ${audioBlob.size} bytes`);
+        
+        if (audioBlob.size === 0) {
+          throw new Error('No audio data recorded');
+        }
+        
+        const partNumber = state.meetingParts.length + 1;
         const fileName = `meeting_${Date.now()}_part${partNumber}.webm`;
+        
+        // Upload to Supabase Storage
+        console.log("Uploading to Supabase Storage...");
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('meeting-recordings')
           .upload(`recordings/${fileName}`, audioBlob);
 
-        if (uploadError) throw new Error('Failed to upload audio file');
+        if (uploadError) {
+          console.error("Upload error:", uploadError);
+          throw new Error('Failed to upload audio file');
+        }
 
         const { data: { publicUrl } } = supabase.storage
           .from('meeting-recordings')
           .getPublicUrl(`recordings/${fileName}`);
 
-        console.log("Attempting transcription with voice-transcription...");
+        console.log("File uploaded, public URL:", publicUrl);
         
+        // Send to transcription service
+        console.log("Starting transcription...");
         const { data: transcriptionData, error: transcriptionError } = await supabase.functions.invoke(
           'voice-transcription',
-          { body: { fileUrl: publicUrl } }
+          { 
+            body: { 
+              fileUrl: publicUrl,
+              language: 'auto'
+            } 
+          }
         );
         
-        if (transcriptionError) throw transcriptionError;
-        
-        if (transcriptionData?.text) {
-          processTranscription(transcriptionData.text, audioBlob, partNumber);
-          return;
+        if (transcriptionError) {
+          console.error("Transcription error:", transcriptionError);
+          throw transcriptionError;
         }
         
-        throw new Error('No transcription generated');
+        if (!transcriptionData?.text) {
+          console.error("No transcription received");
+          throw new Error('No transcription generated');
+        }
+        
+        console.log("Transcription successful:", transcriptionData.text.substring(0, 100) + "...");
+        
+        // Process the transcription
+        processTranscription(transcriptionData.text, audioBlob, partNumber);
         
       } catch (error) {
         console.error("Error processing recording:", error);
-        toast.error("Failed to process recording. Please try again.");
+        toast.error(error instanceof Error ? error.message : "Failed to process recording");
         setState(prev => ({ ...prev, isProcessing: false }));
       }
     }
   }, [state.isRecording, state.meetingParts.length, setState, cleanup]);
 
   const processTranscription = (text: string, audioBlob: Blob, partNumber: number) => {
+    console.log("Processing transcription for part", partNumber);
     setState(prev => ({
       ...prev,
       isRecording: false,
