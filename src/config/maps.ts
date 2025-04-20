@@ -1,16 +1,19 @@
 
-// Create the missing maps config file that exports the GOOGLE_MAPS_API_KEY
-// and generateGoogleMapsUrl function
-
 /**
- * Google Maps API Key for map embeds and geocoding
+ * Maps configuration and utilities
  */
-export const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
+
+const MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+
+// Validate that we have a valid API key
+if (!MAPS_API_KEY || MAPS_API_KEY === 'FAKE-123') {
+  console.warn('Warning: No valid Google Maps API key found. Map functionality will be limited.');
+}
+
+export const GOOGLE_MAPS_API_KEY = MAPS_API_KEY;
 
 /**
  * Generate a Google Maps URL for linking to a specific location
- * @param location The location string to generate a map URL for
- * @returns Google Maps URL for the specified location
  */
 export const generateGoogleMapsUrl = (location: string): string => {
   if (!location) return '';
@@ -21,24 +24,16 @@ export const generateGoogleMapsUrl = (location: string): string => {
 
 /**
  * Check if a URL is a valid Google Maps URL
- * @param url URL to check
- * @returns boolean indicating if the URL is a valid Google Maps URL
  */
 export const isValidGoogleMapsUrl = (url: string): boolean => {
   if (!url) return false;
-  
-  // Simple check if it's a Google Maps URL
   return url.includes('google.com/maps') || url.includes('goo.gl/maps');
 };
 
 /**
  * Format a Google Maps URL for display
- * @param url URL to format
- * @returns Formatted URL for display
  */
 export const formatMapsUrl = (url: string): string => {
   if (!url) return '';
-  
-  // Remove protocol and trailing slashes for display
   return url.replace(/^https?:\/\//, '').replace(/\/$/, '');
 };

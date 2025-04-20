@@ -1,6 +1,15 @@
 
+const validateMapsKey = () => {
+  const key = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+  if (!key || key === 'FAKE-123') {
+    console.warn('Warning: Missing or invalid Google Maps API key');
+    return false;
+  }
+  return true;
+};
+
 export const getMapThumbnailUrl = (location: string): string => {
-  if (!location) return '';
+  if (!location || !validateMapsKey()) return '';
   
   const encodedLocation = encodeURIComponent(location);
   return `https://maps.googleapis.com/maps/api/staticmap?center=${encodedLocation}&zoom=15&size=300x200&scale=2&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&markers=color:red%7C${encodedLocation}&style=feature:all|element:labels|visibility:on`;
