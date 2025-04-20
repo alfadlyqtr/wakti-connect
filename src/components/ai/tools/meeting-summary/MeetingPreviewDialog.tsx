@@ -22,6 +22,8 @@ interface MeetingPreviewDialogProps {
     date: string;
     duration: number;
     audioUrl?: string;
+    has_audio?: boolean;
+    audioStoragePath?: string;
     detectedLocation?: string | null;
     detectedAttendees?: string[] | null;
   } | null;
@@ -107,6 +109,9 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
       window.open(generateGoogleMapsUrl(location), '_blank');
     }
   };
+
+  // Determine if we should show the audio download button
+  const hasAudio = meeting.has_audio || !!meeting.audioUrl || !!meeting.audioStoragePath;
 
   return (
     <Dialog open={isOpen} onOpenChange={() => onClose()}>
@@ -234,7 +239,7 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
               <span>{isExporting ? "Exporting..." : "Export PDF"}</span>
             </Button>
             
-            {(meeting.audioUrl || meeting.has_audio) && (
+            {hasAudio && (
               <Button
                 variant="outline"
                 size="sm"
