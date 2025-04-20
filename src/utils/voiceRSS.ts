@@ -1,3 +1,4 @@
+
 interface VoiceRSSOptions {
   text: string;
   language?: 'en-us' | 'ar-sa';
@@ -5,6 +6,7 @@ interface VoiceRSSOptions {
 }
 
 let currentAudio: HTMLAudioElement | null = null;
+let currentAudioUrl: string | null = null;
 
 export const stopCurrentAudio = () => {
   if (currentAudio) {
@@ -26,6 +28,13 @@ export const resumeCurrentAudio = () => {
   }
 };
 
+export const restartCurrentAudio = () => {
+  if (currentAudio) {
+    currentAudio.currentTime = 0;
+    currentAudio.play();
+  }
+};
+
 export const playTextWithVoiceRSS = async ({ text, language, voice }: VoiceRSSOptions) => {
   // Auto-detect language if not provided (simple check for Arabic characters)
   const hasArabic = /[\u0600-\u06FF]/.test(text);
@@ -36,8 +45,8 @@ export const playTextWithVoiceRSS = async ({ text, language, voice }: VoiceRSSOp
   const url = `https://api.voicerss.org/?key=${API_KEY}&hl=${selectedLanguage}&v=${selectedVoice}&src=${encodeURIComponent(text)}`;
 
   try {
-    // If there's already an audio playing, just resume it
-    if (currentAudio && !currentAudio.ended) {
+    // If there's already an audio playing and it's the same URL, just control that
+    if (currentAudio && currentAudioUrl === url && !currentAudio.ended) {
       await currentAudio.play();
       return currentAudio;
     }
@@ -45,6 +54,7 @@ export const playTextWithVoiceRSS = async ({ text, language, voice }: VoiceRSSOp
     // Otherwise create a new audio instance
     const audio = new Audio(url);
     currentAudio = audio;
+    currentAudioUrl = url;
     await audio.play();
     return audio;
   } catch (error) {

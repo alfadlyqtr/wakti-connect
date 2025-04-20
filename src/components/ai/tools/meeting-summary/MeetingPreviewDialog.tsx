@@ -6,9 +6,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
-import { FileDown, Copy, Download, Volume2, Pause, Play } from 'lucide-react';
+import { FileDown, Copy, Download, Volume2, Pause, RefreshCcw, StopCircle, Play } from 'lucide-react';
 import SummaryDisplay from './SummaryDisplay';
-import { playTextWithVoiceRSS, pauseCurrentAudio, resumeCurrentAudio } from '@/utils/voiceRSS';
+import { playTextWithVoiceRSS, pauseCurrentAudio, resumeCurrentAudio, stopCurrentAudio, restartCurrentAudio } from '@/utils/voiceRSS';
 
 interface MeetingPreviewDialogProps {
   isOpen: boolean;
@@ -45,30 +45,46 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
   if (!meeting) return null;
 
   const handlePlaySummary = async () => {
-    if (isPlaying) {
-      pauseCurrentAudio();
-      setIsPaused(true);
-      setIsPlaying(false);
-      return;
-    }
-    
     try {
       if (isPaused) {
         await resumeCurrentAudio();
+        setIsPlaying(true);
+        setIsPaused(false);
       } else {
         const audio = await playTextWithVoiceRSS({ text: meeting.summary });
         audio.onended = () => {
           setIsPlaying(false);
           setIsPaused(false);
         };
+        setIsPlaying(true);
       }
-      setIsPlaying(true);
-      setIsPaused(false);
     } catch (error) {
       console.error('Failed to play summary:', error);
       setIsPlaying(false);
       setIsPaused(false);
     }
+  };
+
+  const handlePauseSummary = () => {
+    pauseCurrentAudio();
+    setIsPaused(true);
+    setIsPlaying(false);
+  };
+
+  const handleRestartSummary = async () => {
+    try {
+      restartCurrentAudio();
+      setIsPlaying(true);
+      setIsPaused(false);
+    } catch (error) {
+      console.error('Failed to restart summary:', error);
+    }
+  };
+
+  const handleStopSummary = () => {
+    stopCurrentAudio();
+    setIsPlaying(false);
+    setIsPaused(false);
   };
 
   return (
@@ -80,29 +96,81 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
 
         <div className="space-y-4">
           <div className="flex justify-end gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handlePlaySummary}
-              className="flex items-center gap-1"
-            >
-              {isPlaying ? (
-                <>
+            {!isPlaying && !isPaused && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handlePlaySummary}
+                className="flex items-center gap-1"
+              >
+                <Volume2 className="h-4 w-4" />
+                <span>Play Summary</span>
+              </Button>
+            )}
+
+            {isPlaying && (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRestartSummary}
+                  className="flex items-center gap-1"
+                >
+                  <RefreshCcw className="h-4 w-4" />
+                  <span>Restart</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePauseSummary}
+                  className="flex items-center gap-1"
+                >
                   <Pause className="h-4 w-4" />
                   <span>Pause</span>
-                </>
-              ) : isPaused ? (
-                <>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleStopSummary}
+                  className="flex items-center gap-1"
+                >
+                  <StopCircle className="h-4 w-4" />
+                  <span>Stop</span>
+                </Button>
+              </>
+            )}
+
+            {isPaused && (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRestartSummary}
+                  className="flex items-center gap-1"
+                >
+                  <RefreshCcw className="h-4 w-4" />
+                  <span>Restart</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePlaySummary}
+                  className="flex items-center gap-1"
+                >
                   <Play className="h-4 w-4" />
                   <span>Resume</span>
-                </>
-              ) : (
-                <>
-                  <Volume2 className="h-4 w-4" />
-                  <span>Play Summary</span>
-                </>
-              )}
-            </Button>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleStopSummary}
+                  className="flex items-center gap-1"
+                >
+                  <StopCircle className="h-4 w-4" />
+                  <span>Stop</span>
+                </Button>
+              </>
+            )}
             
             <Button
               variant="outline"
