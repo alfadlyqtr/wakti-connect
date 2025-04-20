@@ -43,7 +43,7 @@ export const exportMeetingSummaryAsPDF = async (
     .replace(/^##\s*Action Items\s*/i, '')
     .split('\n')
     .filter(line => line.trim().startsWith('-') || line.trim().startsWith('*'))
-    .map(item => item.replace(/^[-*]\s*/, ''))
+    .map(item => item.trim().replace(/^[-*]\s*/, ''))
     .join('</li><li>') : '';
 
   // Process the main content while preserving action items

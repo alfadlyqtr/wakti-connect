@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { FileDown } from 'lucide-react';
 import { toast } from 'sonner';
 import MeetingPreviewDialog from './MeetingPreviewDialog';
+import { exportMeetingSummaryAsPDF } from './MeetingSummaryExporter';
 
 const SavedRecordingsTab = () => {
   const { loadSavedMeetings, deleteMeeting } = useMeetingSummaryV2();
@@ -74,9 +75,37 @@ const SavedRecordingsTab = () => {
   };
 
   const handleExportPDF = async () => {
+    if (!selectedMeeting?.summary) {
+      toast.error("No summary to export");
+      return;
+    }
+    
     setIsExporting(true);
-    // Implementation would go here using the existing PDF export functionality
-    setIsExporting(false);
+    
+    try {
+      // Calculate duration - if it's a number, use it directly
+      const duration = typeof selectedMeeting.duration === 'number' 
+        ? selectedMeeting.duration 
+        : 0;
+      
+      await exportMeetingSummaryAsPDF(
+        selectedMeeting.summary,
+        duration,
+        selectedMeeting.location || null,
+        selectedMeeting.detectedAttendees || null,
+        {
+          title: selectedMeeting.title || 'Meeting Summary',
+          companyLogo: '/lovable-uploads/9b7d0693-89eb-4cc5-b90b-7834bfabda0e.png'
+        }
+      );
+      
+      toast.success("PDF exported successfully");
+    } catch (error) {
+      console.error("Error exporting PDF:", error);
+      toast.error("Failed to export PDF. Please try again.");
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const handleCopy = async () => {
