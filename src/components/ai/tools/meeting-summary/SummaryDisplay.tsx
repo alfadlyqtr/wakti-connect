@@ -3,7 +3,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Map, Users, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { generateGoogleMapsUrl } from '@/config/maps';
+import { generateTomTomMapsUrl } from '@/config/maps';
 
 interface SummaryDisplayProps {
   summary: string;
@@ -52,7 +52,8 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
   // Get a thumbnail map URL for the location
   const getMapThumbnailUrl = (location: string): string => {
     const encodedLocation = encodeURIComponent(location);
-    return `https://maps.googleapis.com/maps/api/staticmap?center=${encodedLocation}&zoom=14&size=400x200&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'AIzaSyD5QBJ4O3ovpZ9UI6ZekiZ7H4h9gN_lDg0'}&markers=color:red%7C${encodedLocation}`;
+    // Use TomTom static map API instead of Google Maps
+    return `https://api.tomtom.com/map/1/staticimage?key=${import.meta.env.VITE_TOMTOM_API_KEY || ''}&center=${encodedLocation}&zoom=14&width=400&height=200&format=png&layer=basic&style=main&markers=color:red%7C${encodedLocation}`;
   };
 
   return (
@@ -120,7 +121,7 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
                 variant="link"
                 size="sm"
                 className="text-green-600 p-0 h-auto flex items-center gap-1"
-                onClick={() => window.open(generateGoogleMapsUrl(detectedLocation), '_blank')}
+                onClick={() => window.open(generateTomTomMapsUrl(detectedLocation), '_blank')}
               >
                 <span>View on Map</span>
                 <ExternalLink className="h-3 w-3" />
@@ -136,7 +137,7 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
                 src={getMapThumbnailUrl(detectedLocation)} 
                 alt="Location Map" 
                 className="w-full h-[120px] object-cover hover:scale-105 transition-transform duration-300"
-                onClick={() => window.open(generateGoogleMapsUrl(detectedLocation), '_blank')}
+                onClick={() => window.open(generateTomTomMapsUrl(detectedLocation), '_blank')}
                 style={{ cursor: 'pointer' }}
               />
             </div>

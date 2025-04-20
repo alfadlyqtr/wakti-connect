@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { FileDown, Copy, Download, Volume2, Pause, RefreshCcw, StopCircle, Play, Map, ExternalLink } from 'lucide-react';
 import SummaryDisplay from './SummaryDisplay';
 import { playTextWithVoiceRSS, pauseCurrentAudio, resumeCurrentAudio, stopCurrentAudio, restartCurrentAudio } from '@/utils/voiceRSS';
-import { generateGoogleMapsUrl } from '@/config/maps';
+import { generateTomTomMapsUrl } from '@/config/maps';
 import { motion } from 'framer-motion';
 import { formatRelativeTime } from '@/lib/utils';
 
@@ -56,15 +56,18 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
 
   const fetchLocationName = async (location: string) => {
     try {
-      const response = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(location)}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`);
-      const data = await response.json();
+      const { data, error } = await supabase.functions.invoke('tomtom-geocode', {
+        body: { query: location }
+      });
       
-      if (data.results && data.results[0]) {
-        const result = data.results[0];
-        const name = result.name || 
-                    result.address_components.find(c => c.types.includes('establishment'))?.long_name ||
-                    result.formatted_address;
-        setLocationName(name);
+      if (error || !data) {
+        console.error('Error fetching location details:', error);
+        setLocationName(location);
+        return;
+      }
+      
+      if (data.coordinates) {
+        setLocationName(location);
       }
     } catch (error) {
       console.error('Error fetching location name:', error);
@@ -125,7 +128,7 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
 
   const openInMaps = () => {
     if (locationName) {
-      window.open(generateGoogleMapsUrl(locationName), '_blank');
+      window.open(generateTomTomMapsUrl(locationName), '_blank');
     }
   };
 

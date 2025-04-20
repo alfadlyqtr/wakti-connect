@@ -2,6 +2,7 @@
 /**
  * Maps configuration and utilities
  */
+import { supabase } from "@/integrations/supabase/client";
 
 const MAPS_API_KEY = import.meta.env.VITE_TOMTOM_API_KEY;
 
@@ -14,8 +15,19 @@ export const TOMTOM_API_KEY = MAPS_API_KEY;
 
 /**
  * Generate a TomTom Maps URL for linking to a specific location
+ * Returns a string directly instead of a Promise to fix type issues
  */
-export const generateTomTomMapsUrl = async (location: string): Promise<string> => {
+export const generateTomTomMapsUrl = (location: string): string => {
+  if (!location) return '';
+  
+  // Generate a simple URL for immediate use (non-async)
+  return `https://www.tomtom.com/en_gb/maps/search/${encodeURIComponent(location)}/`;
+};
+
+/**
+ * Async version that properly geocodes but needs to be awaited
+ */
+export const generateTomTomMapsUrlAsync = async (location: string): Promise<string> => {
   if (!location) return '';
   
   try {
@@ -26,7 +38,7 @@ export const generateTomTomMapsUrl = async (location: string): Promise<string> =
 
     if (error) {
       console.error('Error geocoding location:', error);
-      return '';
+      return generateTomTomMapsUrl(location); // Fallback to simple URL
     }
 
     if (data && data.coordinates) {
@@ -34,10 +46,10 @@ export const generateTomTomMapsUrl = async (location: string): Promise<string> =
       return `https://www.tomtom.com/en_gb/maps/view?lat=${lat}&lon=${lon}`;
     }
 
-    return '';
+    return generateTomTomMapsUrl(location); // Fallback to simple URL
   } catch (error) {
     console.error('Error generating TomTom Maps URL:', error);
-    return '';
+    return generateTomTomMapsUrl(location); // Fallback to simple URL
   }
 };
 
@@ -70,6 +82,8 @@ export const handleMapsError = (error: any): string => {
   }
 };
 
-// Remove Google Maps backward compatibility exports
+// For backward compatibility with Google Maps references
+export const GOOGLE_MAPS_API_KEY = TOMTOM_API_KEY;
 export const generateGoogleMapsUrl = generateTomTomMapsUrl;
+export const generateGoogleMapsUrlAsync = generateTomTomMapsUrlAsync;
 export const isValidGoogleMapsUrl = isValidMapsUrl;

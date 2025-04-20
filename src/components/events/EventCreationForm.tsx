@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -40,12 +39,8 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
     location,
     locationType,
     mapsUrl,
-    coordinates,
     isGettingLocation,
-    handleLocationChange,
-    handleCoordinatesChange,
-    getCurrentLocation,
-    setMapsUrl
+    handleLocationChange
   } = useEventLocation();
   
   // Default customization state
@@ -101,7 +96,7 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
     setEndTime,
     setLocation: (loc) => handleLocationChange(loc, 'manual'),
     setLocationType: (type) => handleLocationChange(location, type),
-    setMapsUrl,
+    setMapsUrl: () => {},
     setCustomization: (newCustomization: EventCustomization) => setCustomization(newCustomization)
   });
 
@@ -223,7 +218,7 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
           isAllDay={isAllDay}
           locationType={locationType}
           mapsUrl={mapsUrl}
-          getCurrentLocation={getCurrentLocation}
+          getCurrentLocation={() => {}}  // Empty function as we don't need this anymore
           isGettingLocation={isGettingLocation}
           shareTab={shareTab}
           setShareTab={setShareTab}

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,7 +6,7 @@ import { MapPin, Link as LinkIcon, Navigation, ExternalLink } from 'lucide-react
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import LocationPicker from './LocationPicker';
-import { generateGoogleMapsUrl, isValidGoogleMapsUrl, formatMapsUrl } from '@/config/maps';
+import { generateTomTomMapsUrl, isValidMapsUrl, formatMapsUrl } from '@/config/maps';
 import { toast } from '@/components/ui/use-toast';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -31,8 +30,8 @@ const LocationInput: React.FC<LocationInputProps> = ({
   const handleMapUrlChange = (url: string) => {
     setMapUrl(url);
     
-    if (url && !isValidGoogleMapsUrl(url)) {
-      setUrlError('Please enter a valid Google Maps URL');
+    if (url && !isValidMapsUrl(url)) {
+      setUrlError('Please enter a valid TomTom Maps URL');
     } else {
       setUrlError(null);
       onLocationChange(location, 'google_maps', url);
@@ -40,7 +39,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
   };
   
   const handlePreviewMap = () => {
-    if (mapUrl && isValidGoogleMapsUrl(mapUrl)) {
+    if (mapUrl && isValidMapsUrl(mapUrl)) {
       window.open(mapUrl, '_blank');
     }
   };
@@ -49,10 +48,9 @@ const LocationInput: React.FC<LocationInputProps> = ({
     if (locationType === 'manual') {
       onLocationChange(value, 'manual');
     } else {
-      // For Google Maps type, generate a maps URL if we have coordinates
       const newMapsUrl = lat && lng 
-        ? generateGoogleMapsUrl(`${lat},${lng}`) 
-        : generateGoogleMapsUrl(value);
+        ? `https://www.tomtom.com/en_gb/maps/view?lat=${lat}&lon=${lng}`
+        : generateTomTomMapsUrl(value); 
       
       setMapUrl(newMapsUrl);
       onLocationChange(value, 'google_maps', newMapsUrl);
@@ -75,13 +73,10 @@ const LocationInput: React.FC<LocationInputProps> = ({
       (position) => {
         const { latitude, longitude } = position.coords;
         
-        // Create a location string with coordinates
         const locationStr = `Current Location (${latitude.toFixed(6)}, ${longitude.toFixed(6)})`;
         
-        // Generate a Google Maps URL for the coordinates
-        const mapsUrl = generateGoogleMapsUrl(`${latitude},${longitude}`);
+        const mapsUrl = `https://www.tomtom.com/en_gb/maps/view?lat=${latitude}&lon=${longitude}`;
         
-        // Update the location and URL
         setMapUrl(mapsUrl);
         onLocationChange(locationStr, 'google_maps', mapsUrl);
         
