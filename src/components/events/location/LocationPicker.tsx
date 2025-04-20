@@ -63,6 +63,7 @@ const LocationPickerComponent: React.FC<LocationPickerProps> = ({
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
+  const [scriptError, setScriptError] = useState(false);
   const [placeDetails, setPlaceDetails] = useState<{
     name?: string;
     address?: string;
@@ -84,6 +85,15 @@ const LocationPickerComponent: React.FC<LocationPickerProps> = ({
       script.async = true;
       script.defer = true;
       script.onload = () => setScriptLoaded(true);
+      script.onerror = (error) => {
+        console.error('Error loading Google Maps API:', error);
+        setScriptError(true);
+        toast({
+          title: "Maps Error",
+          description: "Google Maps could not be loaded. Location autocomplete is disabled.",
+          variant: "destructive"
+        });
+      };
       document.body.appendChild(script);
       
       return () => {
@@ -91,12 +101,13 @@ const LocationPickerComponent: React.FC<LocationPickerProps> = ({
       };
     } catch (error) {
       console.error('Error loading Google Maps API:', error);
+      setScriptError(true);
     }
   }, []);
 
   // Initialize autocomplete
   useEffect(() => {
-    if (scriptLoaded && inputRef.current && window.google) {
+    if (scriptLoaded && inputRef.current && window.google && !scriptError) {
       try {
         autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
           fields: ['formatted_address', 'geometry', 'name', 'place_id', 'url'],
@@ -138,7 +149,7 @@ const LocationPickerComponent: React.FC<LocationPickerProps> = ({
         console.error('Error initializing Google Maps Autocomplete:', error);
       }
     }
-  }, [scriptLoaded, onChange, onMapUrlChange]);
+  }, [scriptLoaded, onChange, onMapUrlChange, scriptError]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);

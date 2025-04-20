@@ -18,8 +18,13 @@ export const GOOGLE_MAPS_API_KEY = MAPS_API_KEY;
 export const generateGoogleMapsUrl = (location: string): string => {
   if (!location) return '';
   
-  const encodedLocation = encodeURIComponent(location);
-  return `https://www.google.com/maps/search/?api=1&query=${encodedLocation}`;
+  try {
+    const encodedLocation = encodeURIComponent(location);
+    return `https://www.google.com/maps/search/?api=1&query=${encodedLocation}`;
+  } catch (error) {
+    console.error('Error generating Google Maps URL:', error);
+    return '';
+  }
 };
 
 /**
@@ -36,4 +41,17 @@ export const isValidGoogleMapsUrl = (url: string): boolean => {
 export const formatMapsUrl = (url: string): string => {
   if (!url) return '';
   return url.replace(/^https?:\/\//, '').replace(/\/$/, '');
+};
+
+/**
+ * Handle common Google Maps API errors
+ */
+export const handleGoogleMapsError = (error: any): string => {
+  if (error.status === "REQUEST_DENIED") {
+    return "API key restrictions are preventing this request. Please check your Google Cloud Console settings.";
+  } else if (error.status === "ZERO_RESULTS") {
+    return "No results found for this location.";
+  } else {
+    return "An error occurred while accessing Google Maps services.";
+  }
 };
