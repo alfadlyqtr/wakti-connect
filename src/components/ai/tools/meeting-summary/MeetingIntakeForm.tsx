@@ -8,10 +8,11 @@ import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { MapPin, Users, GraduationCap, ArrowRight } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from "sonner";
 import { useEventLocation } from '@/hooks/events/useEventLocation';
 import { motion } from 'framer-motion';
 import MeetingFormLayout from './MeetingFormLayout';
+import { supabase } from '@/integrations/supabase/client';
 
 const formSchema = z.object({
   sessionType: z.string().optional(),
@@ -27,7 +28,7 @@ interface MeetingIntakeFormProps {
 }
 
 export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, onSkip }) => {
-  const { getCurrentLocation, location, updateLocation, isGettingLocation, error } = useEventLocation();
+  const { handleLocationChange, location, isGettingLocation } = useEventLocation();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -47,9 +48,35 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
   }, [location, form]);
 
   const handleGetCurrentLocation = async () => {
-    const success = await getCurrentLocation();
-    if (!success && error) {
-      toast.error(error || 'Could not get current location');
+    if (!navigator.geolocation) {
+      toast.error("Geolocation is not supported by your browser");
+      return;
+    }
+    
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject);
+      });
+
+      const { latitude, longitude } = position.coords;
+      
+      // Use TomTom reverse geocoding via our edge function
+      const { data: geoData, error: geoError } = await supabase.functions.invoke('tomtom-geocode', {
+        body: { query: `${latitude},${longitude}` }
+      });
+
+      if (geoError) {
+        toast.error("Could not get location details");
+        return;
+      }
+
+      // Update form with location
+      const locationStr = `Current Location (${latitude.toFixed(6)}, ${longitude.toFixed(6)})`;
+      handleLocationChange(locationStr, 'manual');
+      
+    } catch (error: any) {
+      console.error("Error getting location:", error);
+      toast.error(error.message || "Could not get your location");
     }
   };
 

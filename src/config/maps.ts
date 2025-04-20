@@ -70,6 +70,6 @@ export const handleMapsError = (error: any): string => {
   }
 };
 
-// Backwards compatibility for existing code
+// Remove Google Maps backward compatibility exports
 export const generateGoogleMapsUrl = generateTomTomMapsUrl;
 export const isValidGoogleMapsUrl = isValidMapsUrl;
