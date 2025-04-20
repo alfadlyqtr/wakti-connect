@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { generateGoogleMapsUrl } from "@/config/maps";
 
@@ -8,7 +7,6 @@ export function useEventLocation() {
   const [mapsUrl, setMapsUrl] = useState<string | null>(null);
   const [coordinates, setCoordinates] = useState<{lat: number, lng: number} | null>(null);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleLocationChange = (newLocation: string | null, type: 'manual' | 'google_maps' = 'manual', url?: string) => {
@@ -46,11 +44,24 @@ export function useEventLocation() {
       const { latitude, longitude } = position.coords;
       setCoordinates({ lat: latitude, lng: longitude });
       
-      // Use Reverse Geocoding to get address from coordinates
-      // This would be a real implementation, but for this example, we'll just set a placeholder
-      setLocation("Current Location");
-      setLocationType('manual');
-      setMapsUrl(generateGoogleMapsUrl(`${latitude},${longitude}`));
+      try {
+        const response = await fetch(
+          `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`
+        );
+        
+        const data = await response.json();
+        
+        if (data.results && data.results[0]) {
+          setLocation(data.results[0].formatted_address);
+          setLocationType('google_maps');
+          setMapsUrl(generateGoogleMapsUrl(`${latitude},${longitude}`));
+        } else {
+          setLocation(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+        }
+      } catch (error) {
+        setLocation(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+        console.error("Error getting address from coordinates:", error);
+      }
       
       return true;
     } catch (err) {
@@ -72,7 +83,6 @@ export function useEventLocation() {
     mapsUrl,
     coordinates,
     isGettingLocation,
-    isLoading,
     error,
     updateLocation,
     handleLocationChange,
