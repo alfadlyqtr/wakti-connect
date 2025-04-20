@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Moon, Sun, User, ChevronDown, ChevronUp } from "lucide-react";
@@ -16,7 +17,7 @@ const Header = () => {
   };
   
   return (
-    <header className="bg-wakti-navy/95 backdrop-blur-md border-b border-wakti-beige/20 sticky top-0 z-50">
+    <header className="bg-wakti-beige backdrop-blur-md border-b border-wakti-navy/20 sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Link to="/" className="flex items-center gap-2">
@@ -25,19 +26,19 @@ const Header = () => {
               alt="WAKTI" 
               className="w-10 h-10 rounded-md object-cover"
             />
-            <span className="font-bold text-xl text-wakti-beige">WAKTI</span>
+            <span className="font-bold text-xl text-wakti-navy">WAKTI</span>
           </Link>
         </div>
         
         {/* Desktop navigation */}
         <div className="hidden md:flex items-center space-x-4">
-          <Link to="/pricing" className="text-sm font-medium text-wakti-beige hover:text-white transition-colors">
+          <Link to="/pricing" className="text-sm font-medium text-wakti-navy hover:text-wakti-navy/80 transition-colors">
             Pricing
           </Link>
-          <Link to="/features" className="text-sm font-medium text-wakti-beige hover:text-white transition-colors">
+          <Link to="/features" className="text-sm font-medium text-wakti-navy hover:text-wakti-navy/80 transition-colors">
             Features
           </Link>
-          <Link to="/contact" className="text-sm font-medium text-wakti-beige hover:text-white transition-colors">
+          <Link to="/contact" className="text-sm font-medium text-wakti-navy hover:text-wakti-navy/80 transition-colors">
             Contact
           </Link>
           <LanguageSwitcher />
@@ -45,11 +46,11 @@ const Header = () => {
             variant="ghost" 
             size="icon" 
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")} 
-            className="text-wakti-beige hover:text-white"
+            className="text-wakti-navy hover:text-wakti-navy/80"
           >
             {theme === "dark" ? <Sun className="h-[1.2rem] w-[1.2rem]" /> : <Moon className="h-[1.2rem] w-[1.2rem]" />}
           </Button>
-          <Button asChild size="sm" className="bg-wakti-beige text-wakti-navy hover:bg-wakti-beige/90">
+          <Button asChild size="sm" className="bg-wakti-navy text-wakti-beige hover:bg-wakti-navy/90">
             <Link to="/auth/login">Sign In / Create Account</Link>
           </Button>
         </div>
@@ -63,7 +64,7 @@ const Header = () => {
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")} 
             aria-label={theme === "dark" ? "Light Mode" : "Dark Mode"} 
             title={theme === "dark" ? "Light Mode" : "Dark Mode"} 
-            className="text-foreground hover:text-foreground"
+            className="text-wakti-navy hover:text-wakti-navy/80"
           >
             {theme === "dark" ? <Sun className="h-[1.2rem] w-[1.2rem]" /> : <Moon className="h-[1.2rem] w-[1.2rem]" />}
           </Button>
@@ -83,39 +84,39 @@ const Header = () => {
       
       {/* Mobile menu dropdown */}
       {isMobile && isMenuOpen && (
-        <div className="md:hidden bg-popover border-t border-border animate-fade-in">
+        <div className="md:hidden bg-wakti-beige border-t border-wakti-navy/20 animate-fade-in">
           <div className="container py-3 flex flex-col space-y-3">
             <Link 
               to="/pricing" 
-              className="flex items-center px-4 py-3 hover:bg-muted rounded-md transition-colors"
+              className="flex items-center px-4 py-3 hover:bg-wakti-navy/10 rounded-md transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
-              <span className="font-medium">Pricing</span>
+              <span className="font-medium text-wakti-navy">Pricing</span>
             </Link>
             <Link 
               to="/features" 
-              className="flex items-center px-4 py-3 hover:bg-muted rounded-md transition-colors"
+              className="flex items-center px-4 py-3 hover:bg-wakti-navy/10 rounded-md transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
-              <span className="font-medium">Features</span>
+              <span className="font-medium text-wakti-navy">Features</span>
             </Link>
             <Link 
               to="/contact" 
-              className="flex items-center px-4 py-3 hover:bg-muted rounded-md transition-colors"
+              className="flex items-center px-4 py-3 hover:bg-wakti-navy/10 rounded-md transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
-              <span className="font-medium">Contact</span>
+              <span className="font-medium text-wakti-navy">Contact</span>
             </Link>
             <Link 
               to="/auth/login" 
-              className="flex items-center px-4 py-3 hover:bg-muted rounded-md transition-colors"
+              className="flex items-center px-4 py-3 hover:bg-wakti-navy/10 rounded-md transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
-              <User className="h-4 w-4 mr-2" />
-              <span className="font-medium">Sign In / Create Account</span>
+              <User className="h-4 w-4 mr-2 text-wakti-navy" />
+              <span className="font-medium text-wakti-navy">Sign In / Create Account</span>
             </Link>
             <div className="pt-2 px-4">
-              <Button asChild size="sm" className="w-full">
+              <Button asChild size="sm" className="w-full bg-wakti-navy text-wakti-beige">
                 <Link 
                   to="/auth/login"
                   onClick={() => setIsMenuOpen(false)}
