@@ -1,12 +1,12 @@
 
 import React from 'react';
-import { Mic, Send, AlertCircle, Paperclip, Camera, MicOff } from 'lucide-react';
+import { Mic, Send, AlertCircle, Paperclip, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { AIAssistantUpgradeCard } from '../AIAssistantUpgradeCard';
+import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
 import { useIsMobile } from '@/hooks/useIsMobile';
-import { useWaktiAIBrowserSpeech } from "@/hooks/ai/useWaktiAIBrowserSpeech";
 
 interface MessageInputFormProps {
   inputMessage: string;
@@ -39,46 +39,36 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
 }) => {
   const isMobile = useIsMobile();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-
-  // WAKTI AI Voice via Browser Speech (Web Speech API)
+  
   const {
-    isListening: browserIsListening,
-    transcript: browserTranscript,
-    supportsVoice: browserSupportsVoice,
-    startListening: browserStartListening,
-    stopListening: browserStopListening
-  } = useWaktiAIBrowserSpeech();
-
-  // Track the current displayed text including any live speech
-  const [currentTranscript, setCurrentTranscript] = React.useState('');
-
-  // Update transcript as user speaks
-  React.useEffect(() => {
-    if (browserTranscript) {
-      setCurrentTranscript(browserTranscript);
+    isListening: internalIsListening,
+    transcript,
+    supportsVoice,
+    startListening: internalStartListening,
+    stopListening: internalStopListening
+  } = useVoiceInteraction({
+    onTranscriptComplete: (text) => {
+      if (text) {
+        const updatedText = inputMessage + (inputMessage && !inputMessage.endsWith(' ') && !text.startsWith(' ') ? ' ' : '') + text;
+        setInputMessage(updatedText);
+      }
     }
-  }, [browserTranscript]);
+  });
 
-  // When speech stops, update the input message with the final transcript
+  // Use external listening state if provided, otherwise use internal state
+  const activeListening = onStartVoiceInput && onStopVoiceInput ? isListening : internalIsListening;
+  
   React.useEffect(() => {
-    if (!browserIsListening && currentTranscript) {
-      setInputMessage(inputMessage + 
-        (inputMessage && !inputMessage.endsWith(" ") ? " " : "") + 
-        currentTranscript);
-      setCurrentTranscript('');
+    if (transcript) {
+      const updatedText = inputMessage + (inputMessage && !inputMessage.endsWith(' ') && !transcript.startsWith(' ') ? ' ' : '') + transcript;
+      setInputMessage(updatedText);
     }
-  }, [browserIsListening, currentTranscript, inputMessage, setInputMessage]);
-
-  // The displayed text combines the current input message and any live speech transcript
-  const displayedText = browserIsListening
-    ? inputMessage + 
-      (inputMessage && !inputMessage.endsWith(" ") && currentTranscript ? " " : "") + 
-      currentTranscript
-    : inputMessage;
+  }, [transcript, setInputMessage, inputMessage]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0 || !onFileUpload) return;
+    
     onFileUpload(files[0]);
     e.target.value = ''; // Reset the input
   };
@@ -94,17 +84,25 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey && !isMobile) {
       e.preventDefault();
-      if (displayedText.trim() && !isLoading) {
-        handleSendMessage(e as unknown as React.FormEvent);
+      if (inputMessage.trim() && !isLoading) {
+        handleSendMessage(e);
       }
     }
   };
 
   const handleVoiceClick = () => {
-    if (browserIsListening) {
-      browserStopListening();
+    if (onStartVoiceInput && onStopVoiceInput) {
+      if (isListening) {
+        onStopVoiceInput();
+      } else {
+        onStartVoiceInput();
+      }
     } else {
-      browserStartListening();
+      if (internalIsListening) {
+        internalStopListening();
+      } else {
+        internalStartListening();
+      }
     }
   };
 
@@ -112,7 +110,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
     <form 
       onSubmit={(e) => {
         e.preventDefault();
-        if (displayedText.trim() && !isLoading) {
+        if (inputMessage.trim() && !isLoading) {
           handleSendMessage(e);
         }
       }}
@@ -122,38 +120,35 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
         <div className="relative w-full">
           <Textarea
             placeholder="Type a message..."
-            value={displayedText}
+            value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyDown={handleKeyDown}
             className={cn(
               "min-h-[60px] sm:min-h-[80px] max-h-[150px] sm:max-h-[200px] resize-none py-3 px-4 text-sm md:text-base",
-              browserIsListening && "bg-primary/5 border-primary/20"
+              activeListening && "bg-primary/5 border-primary/20"
             )}
-            disabled={isLoading || browserIsListening}
+            disabled={isLoading || activeListening}
           />
           <div className="absolute bottom-3 right-3 flex gap-1.5">
-            {browserSupportsVoice && (
+            {supportsVoice && (
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
                 className={cn(
-                  "h-8 w-8 sm:h-9 sm:w-9 rounded-full",
-                  browserIsListening && "bg-primary text-white hover:bg-primary hover:text-white"
+                  "h-8 w-8 sm:h-9 sm:w-9 rounded-full", 
+                  activeListening && "bg-primary text-white hover:bg-primary hover:text-white"
                 )}
                 onClick={handleVoiceClick}
                 disabled={isLoading}
               >
-                {browserIsListening ? (
-                  <MicOff className="h-4 w-4 sm:h-5 sm:w-5" />
-                ) : (
-                  <Mic className="h-4 w-4 sm:h-5 sm:w-5" />
-                )}
-                <span className="sr-only">{browserIsListening ? "Stop recording" : "Start recording"}</span>
+                <Mic className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="sr-only">{activeListening ? "Stop recording" : "Start recording"}</span>
               </Button>
             )}
           </div>
         </div>
+        
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             {/* File Upload */}
@@ -179,6 +174,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
                 />
               </>
             )}
+            
             {/* Camera */}
             {onCameraCapture && (
               <Button
@@ -194,10 +190,11 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
               </Button>
             )}
           </div>
-          <Button
-            type="submit"
-            size="default"
-            disabled={!displayedText.trim() || isLoading}
+          
+          <Button 
+            type="submit" 
+            size="default" 
+            disabled={!inputMessage.trim() || isLoading}
             className="h-9 px-4 sm:h-10 sm:px-5 rounded-full w-full sm:w-auto"
           >
             {isLoading ? (
@@ -209,20 +206,22 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
           </Button>
         </div>
       </div>
+      
+      {/* Mobile note */}
       {isMobile && (
         <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-          <AlertCircle className="h-3 w-3" />
+          <AlertCircle className="h-3 w-3" /> 
           Tap send button to submit your message
         </p>
       )}
+      
+      {/* Desktop note */}
       {!isMobile && (
         <p className="text-xs text-muted-foreground mt-2 hidden sm:flex items-center gap-1">
-          <AlertCircle className="h-3 w-3" />
+          <AlertCircle className="h-3 w-3" /> 
           Press Enter to send, Shift+Enter for new line
         </p>
       )}
     </form>
   );
 };
-
-export default MessageInputForm;

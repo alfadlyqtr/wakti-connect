@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useMeetingSummaryV2 } from '@/hooks/ai/meeting-summary/useMeetingSummaryV2';
 import SavedMeetingsList from './SavedMeetingsList';
 import { Button } from '@/components/ui/button';
-import { FileDown, Trash2 } from 'lucide-react'; // Added Trash2 import for the icon
+import { FileDown } from 'lucide-react';
 import { toast } from 'sonner';
 import MeetingPreviewDialog from './MeetingPreviewDialog';
 import { exportMeetingSummaryAsPDF } from './MeetingSummaryExporter';
@@ -27,10 +27,14 @@ const SavedRecordingsTab = () => {
     setIsLoadingHistory(true);
     try {
       const loadedMeetings = await loadSavedMeetings();
+      // Ensure meetings have valid dates
       const processedMeetings = loadedMeetings.map(meeting => ({
         ...meeting,
-        date: meeting.date
+        date: meeting.date || new Date().toISOString() // Provide fallback if date is missing
       }));
+      
+      // Add console logs to debug data
+      console.log("Loaded meetings data:", processedMeetings);
       setMeetings(processedMeetings);
     } catch (error) {
       console.error('Error loading meetings:', error);
@@ -73,11 +77,12 @@ const SavedRecordingsTab = () => {
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       
+      // Extract title from summary for better filename
       const titleMatch = meeting.summary.match(/Meeting Title:\s*([^\n]+)/i) || 
-                         meeting.summary.match(/Title:\s*([^\n]+)/i) ||
-                         meeting.summary.match(/^# ([^\n]+)/m) ||
-                         meeting.summary.match(/^## ([^\n]+)/m);
-                         
+                       meeting.summary.match(/Title:\s*([^\n]+)/i) ||
+                       meeting.summary.match(/^# ([^\n]+)/m) ||
+                       meeting.summary.match(/^## ([^\n]+)/m);
+                       
       const safeTitle = titleMatch 
         ? titleMatch[1].trim().replace(/[^a-z0-9]/gi, '_').toLowerCase()
         : 'recording';
@@ -103,13 +108,16 @@ const SavedRecordingsTab = () => {
 
   const handlePreview = (meeting: any) => {
     if (!meeting) return;
+    
+    // Process meeting data to ensure it has all required properties
     const enhancedMeeting = {
       ...meeting,
-      date: meeting.date,
+      date: meeting.date || new Date().toISOString(), // Ensure date exists
       detectedLocation: meeting.location || meeting.detectedLocation || null,
       detectedAttendees: meeting.attendees || meeting.detectedAttendees || extractAttendeesFromSummary(meeting.summary),
       has_audio: meeting.has_audio || !!meeting.audioUrl || !!meeting.audioStoragePath
     };
+    
     setSelectedMeeting(enhancedMeeting);
     setIsPreviewOpen(true);
   };
@@ -138,6 +146,7 @@ const SavedRecordingsTab = () => {
     setIsExporting(true);
     
     try {
+      // Calculate duration - if it's a number, use it directly
       const duration = typeof selectedMeeting.duration === 'number' 
         ? selectedMeeting.duration 
         : 0;
@@ -185,45 +194,6 @@ const SavedRecordingsTab = () => {
     }
   };
 
-  // Improved formatting to show both date and time more clearly
-  const formatDateWithTime = (isoString: string | undefined) => {
-    if (!isoString) return "No date";
-    const date = new Date(isoString);
-    if (isNaN(date.getTime())) return "Invalid date";
-
-    // Use differenceInDays to highlight "today" or relative days if desired
-    const now = new Date();
-    const daysDiff = differenceInDays(now, date);
-
-    if (daysDiff === 0) {
-      return `Today • ${date.toLocaleTimeString(undefined, {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      })}`;
-    } else if (daysDiff === 1) {
-      return `Yesterday • ${date.toLocaleTimeString(undefined, {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      })}`;
-    }
-
-    return (
-      date.toLocaleDateString(undefined, { 
-        year: "numeric",
-        month: "short",
-        day: "numeric"
-      }) +
-      " • " +
-      date.toLocaleTimeString(undefined, { 
-        hour: "2-digit", 
-        minute: "2-digit",
-        hour12: true,
-      })
-    );
-  };
-
   return (
     <motion.div 
       className="space-y-4"
@@ -235,7 +205,7 @@ const SavedRecordingsTab = () => {
         <div>
           <h2 className="text-xl font-semibold">Previous Recordings</h2>
           <div className="text-xs text-muted-foreground mt-1">
-            <span>All previous recordings include their actual creation date &amp; time.</span>
+            <span>All previous recordings are available for 10 days from creation and then deleted.</span>
           </div>
         </div>
         <Button 
@@ -250,82 +220,13 @@ const SavedRecordingsTab = () => {
         </Button>
       </div>
 
-      <div className="space-y-3">
-        {meetings.length === 0 && !isLoadingHistory && (
-          <div className="py-6 text-center text-muted-foreground">
-            No recorded meetings found.
-          </div>
-        )}
-        {meetings.map(meeting => (
-          <motion.div
-            key={meeting.id}
-            className="p-4 border rounded-lg flex flex-col sm:flex-row justify-between gap-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors hover:shadow-md"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2 }}
-            whileHover={{ scale: 1.01 }}
-          >
-            <div 
-              className="flex-1 cursor-pointer"
-              onClick={() => handlePreview(meeting)}
-            >
-              <h4 className="font-medium text-blue-700">{meeting.title || "Untitled Meeting"}</h4>
-              <div className="flex flex-wrap items-center text-xs text-muted-foreground gap-2 mb-1">
-                <span>
-                  <span className="font-medium">Created:</span>{" "}
-                  {formatDateWithTime(meeting.date)}
-                </span>
-                {typeof meeting.duration === "number" && meeting.duration > 0 && (
-                  <>
-                    <span className="mx-1">•</span>
-                    <span>
-                      <span className="font-medium">Duration:</span>{" "}
-                      {Math.floor(meeting.duration / 60)} min {meeting.duration % 60}s
-                    </span>
-                  </>
-                )}
-              </div>
-              {meeting.location && (
-                <div className="flex items-center text-xs text-gray-500 mt-1 gap-2">
-                  <span className="truncate max-w-[250px]">{meeting.location}</span>
-                </div>
-              )}
-            </div>
-            <div className="flex items-center gap-2 self-end sm:self-center">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 px-2 text-blue-600"
-                onClick={() => handlePreview(meeting)}
-              >
-                <span className="text-xs">View</span>
-              </Button>
-              {meeting.has_audio && (meeting.audioUrl || meeting.audioStoragePath) && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleDownload(meeting)}
-                  title="Download audio"
-                  className="h-8 px-2 bg-blue-50 text-blue-600 hover:bg-blue-100"
-                  disabled={isDownloadingAudio}
-                >
-                  <FileDown className="h-3.5 w-3.5 mr-1" />
-                  <span className="text-xs">Audio</span>
-                </Button>
-              )}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleDelete(meeting.id)}
-                title="Delete meeting"
-                className="h-8 w-8"
-              >
-                <Trash2 className="h-4 w-4 text-red-500" />
-              </Button>
-            </div>
-          </motion.div>
-        ))}
-      </div>
+      <SavedMeetingsList
+        savedMeetings={meetings}
+        isLoadingHistory={isLoadingHistory}
+        onDelete={handleDelete}
+        onSelect={handlePreview}
+        onDownload={handleDownload}
+      />
 
       <MeetingPreviewDialog
         isOpen={isPreviewOpen}
@@ -342,4 +243,3 @@ const SavedRecordingsTab = () => {
 };
 
 export default SavedRecordingsTab;
-

@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import md5 from "md5"; // We'll use md5 for fast hash
 import { v4 as uuidv4 } from "uuid";
@@ -48,69 +49,138 @@ const getTextHash = (text: string, voice: string, provider: Provider) =>
  * If not found, generates the audio and caches it.
  */
 export async function getOrGenerateAudio(params: TTSCacheParams): Promise<TTSCacheResult> {
-  const { text, voice = "Aria", language = "en", preferProvider = "voicerss" } = params;
-  const provider: Provider = "voicerss";
-  const textHash = getTextHash(text, voice, provider);
+  const { text, voice = "Aria", language = "en", preferProvider = "elevenlabs" } = params;
+  let triedProviders: Provider[] = [];
+  
+  for (const provider of [preferProvider, preferProvider === "elevenlabs" ? "voicerss" : "elevenlabs"]) {
+    triedProviders.push(provider as Provider);
+    const textHash = getTextHash(text, voice, provider as Provider);
 
-  // Step 1: Check Cache
-  const { data: cacheData, error: cacheError } = await supabase
-    .from("audio_cache" as any)
-    .select("*")
-    .eq("text_hash", textHash)
-    .limit(1)
-    .single() as { data: AudioCacheEntry | null, error: any };
-
-  if (cacheData) {
-    await supabase
+    // Step 1: Check Cache
+    // Use explicit type casting to handle the audio_cache table that's not in types yet
+    const { data: cacheData, error: cacheError } = await supabase
       .from("audio_cache" as any)
-      .update({
-        hit_count: (cacheData.hit_count || 0) + 1,
-        last_accessed: new Date().toISOString()
-      })
-      .eq("id", cacheData.id);
+      .select("*")
+      .eq("text_hash", textHash)
+      .limit(1)
+      .single() as { data: AudioCacheEntry | null, error: any };
 
-    return {
-      audioUrl: cacheData.audio_url,
-      provider: provider,
-      cacheHit: true,
-    };
+    if (cacheData) {
+      // Update hit_count and last_accessed
+      await supabase
+        .from("audio_cache" as any)
+        .update({
+          hit_count: (cacheData.hit_count || 0) + 1,
+          last_accessed: new Date().toISOString()
+        })
+        .eq("id", cacheData.id);
+
+      return {
+        audioUrl: cacheData.audio_url,
+        provider: provider as Provider,
+        cacheHit: true,
+      };
+    }
+
+    // Step 2: Try to Generate
+    try {
+      let audioBlob: Blob | null = null;
+      let fileExtension = ".mp3";
+      if (provider === "elevenlabs") {
+        console.log("Attempting ElevenLabs generation...");
+        audioBlob = await generateWithElevenLabs(text, voice, language);
+        fileExtension = ".mp3";
+      } else if (provider === "voicerss") {
+        console.log("Falling back to VoiceRSS generation...");
+        audioBlob = await generateWithVoiceRSS(text, language, voice);
+        fileExtension = ".mp3";
+      }
+
+      if (audioBlob) {
+        // Step 3: Upload to storage
+        const fileName = `tts-audio/${textHash}_${uuidv4()}${fileExtension}`;
+        const upload = await supabase.storage
+          .from("tts-audio")
+          .upload(fileName, audioBlob, {
+            cacheControl: "2592000", // 30 days in seconds
+            upsert: true,
+            contentType: "audio/mp3",
+          });
+
+        if (upload.error) throw upload.error;
+        // Step 4: Store cache record
+        const publicUrl = supabase.storage.from("tts-audio").getPublicUrl(fileName).data.publicUrl;
+        
+        // Insert the new cache entry
+        await supabase
+          .from("audio_cache" as any)
+          .insert({
+            text_hash: textHash,
+            text: text,
+            voice: voice,
+            tts_provider: provider,
+            audio_url: publicUrl,
+            created_at: new Date().toISOString(),
+            last_accessed: new Date().toISOString(),
+            hit_count: 1
+          });
+
+        return {
+          audioUrl: publicUrl,
+          provider: provider as Provider,
+          cacheHit: false,
+        };
+      }
+    } catch (err) {
+      console.warn(`[TTS] ${provider} audio generation failed:`, err);
+      continue; // try fallback
+    }
   }
 
-  // Only use VoiceRSS to generate audio now
-  try {
-    const audioBlob = await generateWithVoiceRSS(text, language, voice);
-    const fileName = `tts-audio/${textHash}_${uuidv4()}.mp3`;
-    const upload = await supabase.storage
-      .from("tts-audio")
-      .upload(fileName, audioBlob, {
-        cacheControl: "2592000",
-        upsert: true,
-        contentType: "audio/mp3",
-      });
+  throw new Error(`Failed to generate audio via providers: ${triedProviders.join(", ")}`);
+}
 
-    if (upload.error) throw upload.error;
-    const publicUrl = supabase.storage.from("tts-audio").getPublicUrl(fileName).data.publicUrl;
-    await supabase
-      .from("audio_cache" as any)
-      .insert({
-        text_hash: textHash,
-        text: text,
-        voice: voice,
-        tts_provider: provider,
-        audio_url: publicUrl,
-        created_at: new Date().toISOString(),
-        last_accessed: new Date().toISOString(),
-        hit_count: 1
-      });
-
-    return {
-      audioUrl: publicUrl,
-      provider: provider,
-      cacheHit: false,
-    };
-  } catch (err) {
-    throw new Error(`Failed to generate audio: ${err}`);
+// --- Helper: ElevenLabs (API KEY from Supabase secret on server only!) ---
+async function generateWithElevenLabs(
+  text: string,
+  voice: string,
+  language: string = "en"
+): Promise<Blob> {
+  // Get the secret from Supabase Edge Function
+  const apiKeyResp = await supabase.functions.invoke("get-elevenlabs-api-key", { body: {} });
+  console.log("ElevenLabs API Key Response:", apiKeyResp);
+  
+  if (apiKeyResp.error || !apiKeyResp.data?.apiKey) {
+    console.error("ElevenLabs API key missing:", apiKeyResp.error);
+    throw new Error("ElevenLabs API key missing");
   }
+
+  const apiKey = apiKeyResp.data.apiKey;
+  const voiceId = voice === "Aria" ? "9BWtsMINqrJLrRacOk9x" : voice; // Map voice name to ID if needed
+  
+  // Fix: Changed to proper endpoint structure and added content-type header
+  const response = await fetch(`${ELEVENLABS_URL}/${voiceId}`, {
+    method: "POST",
+    headers: {
+      "xi-api-key": apiKey,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      text: text,
+      model_id: "eleven_multilingual_v2",
+      voice_settings: {
+        stability: 0.5,
+        similarity_boost: 0.75
+      }
+    }),
+  });
+  
+  if (!response.ok) {
+    console.error("ElevenLabs response error:", await response.text());
+    throw new Error(`Failed to fetch ElevenLabs audio: ${response.status}`);
+  }
+  
+  return await response.blob();
 }
 
 // --- Helper: VoiceRSS (free/public) ---
