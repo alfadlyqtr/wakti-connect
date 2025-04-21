@@ -282,6 +282,42 @@ export type Database = {
         }
         Relationships: []
       }
+      audio_cache: {
+        Row: {
+          audio_url: string
+          created_at: string
+          hit_count: number
+          id: string
+          last_accessed: string
+          text: string
+          text_hash: string
+          tts_provider: string
+          voice: string
+        }
+        Insert: {
+          audio_url: string
+          created_at?: string
+          hit_count?: number
+          id?: string
+          last_accessed?: string
+          text: string
+          text_hash: string
+          tts_provider: string
+          voice: string
+        }
+        Update: {
+          audio_url?: string
+          created_at?: string
+          hit_count?: number
+          id?: string
+          last_accessed?: string
+          text?: string
+          text_hash?: string
+          tts_provider?: string
+          voice?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action_type: string

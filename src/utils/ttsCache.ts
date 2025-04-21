@@ -87,9 +87,11 @@ export async function getOrGenerateAudio(params: TTSCacheParams): Promise<TTSCac
       let audioBlob: Blob | null = null;
       let fileExtension = ".mp3";
       if (provider === "elevenlabs") {
+        console.log("Attempting ElevenLabs generation...");
         audioBlob = await generateWithElevenLabs(text, voice, language);
         fileExtension = ".mp3";
       } else if (provider === "voicerss") {
+        console.log("Falling back to VoiceRSS generation...");
         audioBlob = await generateWithVoiceRSS(text, language, voice);
         fileExtension = ".mp3";
       }
@@ -146,24 +148,38 @@ async function generateWithElevenLabs(
 ): Promise<Blob> {
   // Get the secret from Supabase Edge Function
   const apiKeyResp = await supabase.functions.invoke("get-elevenlabs-api-key", { body: {} });
-  if (apiKeyResp.error || !apiKeyResp.data?.apiKey)
+  console.log("ElevenLabs API Key Response:", apiKeyResp);
+  
+  if (apiKeyResp.error || !apiKeyResp.data?.apiKey) {
+    console.error("ElevenLabs API key missing:", apiKeyResp.error);
     throw new Error("ElevenLabs API key missing");
+  }
 
   const apiKey = apiKeyResp.data.apiKey;
-  const voiceId = voice || "9BWtsMINqrJLrRacOk9x"; // Default: Aria
+  const voiceId = voice === "Aria" ? "9BWtsMINqrJLrRacOk9x" : voice; // Map voice name to ID if needed
   
-  const response = await fetch(`${ELEVENLABS_URL}/${voiceId}/stream`, {
+  // Fix: Changed to proper endpoint structure and added content-type header
+  const response = await fetch(`${ELEVENLABS_URL}/${voiceId}`, {
     method: "POST",
     headers: {
       "xi-api-key": apiKey,
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      text,
-      model_id: "eleven_multilingual_v2"
+      text: text,
+      model_id: "eleven_multilingual_v2",
+      voice_settings: {
+        stability: 0.5,
+        similarity_boost: 0.75
+      }
     }),
   });
-  if (!response.ok) throw new Error("Failed to fetch ElevenLabs audio");
+  
+  if (!response.ok) {
+    console.error("ElevenLabs response error:", await response.text());
+    throw new Error(`Failed to fetch ElevenLabs audio: ${response.status}`);
+  }
+  
   return await response.blob();
 }
 

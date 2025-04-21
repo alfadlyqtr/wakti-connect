@@ -16,7 +16,11 @@ serve(async (req) => {
     // Get the API key from Supabase secrets
     const apiKey = Deno.env.get('ELEVENLABS_API_KEY');
     
+    console.log("Edge function called for ElevenLabs API key");
+    console.log("API key exists:", !!apiKey);
+    
     if (!apiKey) {
+      console.error("ELEVENLABS_API_KEY not found in environment variables");
       return new Response(
         JSON.stringify({ error: 'ElevenLabs API key not configured in project secrets' }),
         { 
@@ -35,6 +39,7 @@ serve(async (req) => {
       }
     );
   } catch (error) {
+    console.error("Error retrieving ElevenLabs API key:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
