@@ -101,10 +101,15 @@ export const useAuth = (): AuthContextType => {
     try {
       setIsLoading(true);
       
+      // Calculate trial end date (3 days from now)
+      const trialEndDate = new Date();
+      trialEndDate.setDate(trialEndDate.getDate() + 3);
+      
       // Prepare metadata
       const metadata: Record<string, any> = {
         full_name: name || '',
-        account_type: accountType
+        account_type: accountType,
+        trial_ends_at: trialEndDate.toISOString()
       };
       
       if (businessName && accountType === 'business') {
@@ -121,26 +126,6 @@ export const useAuth = (): AuthContextType => {
       });
 
       if (error) throw error;
-      
-      // If signup was successful, create a 3-day trial
-      if (data?.user) {
-        // Calculate trial end date (3 days from now)
-        const trialEndDate = new Date();
-        trialEndDate.setDate(trialEndDate.getDate() + 3);
-        
-        // Update user profile with trial end date
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({ 
-            trial_ends_at: trialEndDate.toISOString(),
-            is_in_trial: true
-          })
-          .eq('id', data.user.id);
-          
-        if (profileError) {
-          console.error('Error setting trial period:', profileError);
-        }
-      }
       
       return { error: null, data };
     } catch (error: any) {

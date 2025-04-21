@@ -34,19 +34,28 @@ export const TrialStatusProvider: React.FC<{ children: React.ReactNode }> = ({ c
           return;
         }
         
-        const { data: profile } = await supabase
+        // Get user profile to determine account type
+        const { data: profile, error } = await supabase
           .from('profiles')
-          .select('account_type, trial_ends_at')
+          .select('account_type')
           .eq('id', session.user.id)
           .single();
+        
+        if (error) {
+          console.error('Error fetching profile:', error);
+          setIsLoading(false);
+          return;
+        }
         
         if (profile) {
           // Set the current plan
           setCurrentPlan(profile.account_type as "individual" | "business");
           
-          // Check if trial_ends_at exists and is in the future
-          if (profile.trial_ends_at) {
-            const trialEnd = new Date(profile.trial_ends_at);
+          // Check user metadata for trial information
+          const { data: userData } = await supabase.auth.getUser();
+          
+          if (userData?.user?.user_metadata?.trial_ends_at) {
+            const trialEnd = new Date(userData.user.user_metadata.trial_ends_at);
             setTrialEndsAt(trialEnd);
             setIsInTrial(trialEnd > new Date());
           } else {
