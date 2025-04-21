@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMeetingSummaryV2 } from '@/hooks/ai/meeting-summary/useMeetingSummaryV2';
-import { Play, PauseCircle, Download, FileText, Repeat } from 'lucide-react';
+import { Play, PauseCircle, Download, FileText, Repeat, Volume2 } from 'lucide-react';
 import MeetingPreviewDialog from './meeting-summary/MeetingPreviewDialog';
 
 export const MeetingSummaryTool: React.FC = () => {
@@ -81,7 +81,7 @@ export const MeetingSummaryTool: React.FC = () => {
                 
                 <div className="flex flex-wrap gap-2">
                   <Button onClick={handlePreviewSummary} variant="outline" size="sm">
-                    <Play className="mr-2 h-4 w-4" /> Preview
+                    <Volume2 className="mr-2 h-4 w-4" /> Listen & Preview
                   </Button>
                   
                   <Button onClick={copySummary} variant="outline" size="sm">
@@ -123,6 +123,11 @@ export const MeetingSummaryTool: React.FC = () => {
         onClose={() => setPreviewDialogOpen(false)}
         title={state.meetingTitle || "Meeting Summary"}
         summary={state.summary || ""}
+        onExportPDF={exportAsPDF}
+        onCopy={copySummary}
+        onDownloadAudio={downloadAudio}
+        isExporting={isExporting}
+        isDownloadingAudio={isDownloadingAudio}
       />
     </>
   );

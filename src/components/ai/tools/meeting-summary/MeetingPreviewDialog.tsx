@@ -1,360 +1,411 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { PlayCircle, PauseCircle, XCircle, SpeakerHigh, Sparkles, AlertCircle } from "lucide-react";
-import { getOrGenerateAudio, TTSCacheResult, SPEECHIFY_VOICES, VOICERSS_VOICES, TTS_LANGUAGES } from "@/utils/ttsCache";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { formatDistance } from 'date-fns';
+import { getOrGenerateAudio, TTSCacheParams } from '@/utils/ttsCache';
+import { Loader2, Volume2, Download, FileText, Copy, VolumeX, ExternalLink, RefreshCw } from 'lucide-react';
+import { toast } from 'sonner';
+import { useSpeechSynthesis } from '@/hooks/ai/useSpeechSynthesis';
 
-interface MeetingPreviewDialogProps {
+export interface MeetingPreviewDialogProps {
   isOpen: boolean;
   onClose: () => void;
   title?: string;
   summary?: string;
+  meeting?: any; // Add meeting prop
+  onExportPDF?: () => Promise<void>;
+  onCopy?: () => Promise<void>;
+  onDownloadAudio?: () => Promise<void>;
+  isExporting?: boolean;
+  isDownloadingAudio?: boolean;
 }
+
+const SPEECHIFY_VOICES = {
+  english: [
+    { id: "Sandra", name: "Sandra (Default)" },
+    { id: "Sarah", name: "Sarah" },
+    { id: "John", name: "John" },
+    { id: "Mike", name: "Mike" },
+    { id: "Charlie", name: "Charlie" },
+    { id: "Roger", name: "Roger" },
+  ],
+  spanish: [
+    { id: "Miguel", name: "Miguel" },
+    { id: "Lucia", name: "Lucia" },
+  ],
+  french: [
+    { id: "Pierre", name: "Pierre" },
+    { id: "Marie", name: "Marie" },
+  ],
+  german: [
+    { id: "Hans", name: "Hans" },
+    { id: "Greta", name: "Greta" },
+  ],
+};
+
+const VOICERSS_VOICES = {
+  english: [
+    { id: "John", name: "John (Default)" },
+    { id: "Mary", name: "Mary" },
+    { id: "Mike", name: "Mike" },
+  ],
+  spanish: [
+    { id: "Juan", name: "Juan" },
+    { id: "Esperanza", name: "Esperanza" },
+  ],
+  french: [
+    { id: "Louis", name: "Louis" },
+    { id: "Amelie", name: "Amelie" },
+  ],
+  german: [
+    { id: "Klaus", name: "Klaus" },
+    { id: "Claudia", name: "Claudia" },
+  ],
+};
+
+const LANGUAGES = {
+  "en-us": "English",
+  "es-es": "Spanish",
+  "fr-fr": "French",
+  "de-de": "German",
+};
 
 const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
   isOpen,
   onClose,
-  title = "Meeting Summary",
-  summary = ""
+  title,
+  summary,
+  meeting,
+  onExportPDF,
+  onCopy,
+  onDownloadAudio,
+  isExporting = false,
+  isDownloadingAudio = false,
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
-  const [audioStatus, setAudioStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
-  const [selectedVoice, setSelectedVoice] = useState("Sandra"); // Default Speechify voice
+  const [isLoading, setIsLoading] = useState(false);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [provider, setProvider] = useState<"speechify" | "voicerss" | null>(null);
+  const [selectedVoice, setSelectedVoice] = useState("Sandra");
   const [selectedLanguage, setSelectedLanguage] = useState("en-us");
-  const [preferredProvider, setPreferredProvider] = useState<"speechify" | "voicerss">("speechify");
-  const [activeProvider, setActiveProvider] = useState<"speechify" | "voicerss" | null>(null);
   const [speakingRate, setSpeakingRate] = useState(1);
   const [pitch, setPitch] = useState(0);
-  const [error, setError] = useState<string | null>(null);
-  
-  // Combine voices from both providers
-  const allVoices = {
-    speechify: SPEECHIFY_VOICES,
-    voicerss: VOICERSS_VOICES
-  };
+  const [preferProvider, setPreferProvider] = useState<"speechify" | "voicerss">("speechify");
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const contentToRead = summary || (meeting?.summary || "");
+  const displayTitle = title || (meeting?.title || "Meeting Summary");
   
+  const { speak, cancel, speaking, supported: browserSpeechSupported } = useSpeechSynthesis();
+  
+  // Clean up audio on unmount
   useEffect(() => {
     return () => {
-      if (currentAudio) {
-        currentAudio.pause();
-        currentAudio.src = '';
+      if (audioUrl) {
+        URL.revokeObjectURL(audioUrl);
+      }
+      if (audioRef.current) {
+        audioRef.current.pause();
       }
     };
-  }, [currentAudio]);
+  }, [audioUrl]);
   
-  const stopAudio = () => {
-    if (currentAudio) {
-      currentAudio.pause();
-      currentAudio.currentTime = 0;
-      setIsPlaying(false);
+  // Reset audio state when dialog closes
+  useEffect(() => {
+    if (!isOpen) {
+      handleStop();
+      setAudioUrl(null);
+      setProvider(null);
     }
-  };
-
-  const togglePlayPause = () => {
-    if (!summary) return;
-    
-    if (isPlaying && currentAudio) {
-      currentAudio.pause();
-      setIsPlaying(false);
-      return;
-    }
-    
-    if (currentAudio && audioStatus === 'ready') {
-      currentAudio.play();
+  }, [isOpen]);
+  
+  const handlePlay = async () => {
+    if (audioUrl && audioRef.current) {
+      audioRef.current.play();
       setIsPlaying(true);
       return;
     }
     
-    // Need to generate new audio
-    playAudio();
-  };
-  
-  const playAudio = async () => {
+    if (!contentToRead) {
+      toast.error("No content to read");
+      return;
+    }
+    
     try {
-      setAudioStatus('loading');
-      setError(null);
+      setIsLoading(true);
       
-      if (currentAudio) {
-        currentAudio.pause();
-        currentAudio.src = '';
-      }
-      
-      // Generate audio using TTS
-      const result = await getOrGenerateAudio({
-        text: summary,
+      // Configure TTS parameters
+      const ttsParams: TTSCacheParams = {
+        text: contentToRead,
         voice: selectedVoice,
         language: selectedLanguage,
-        preferProvider: preferredProvider,
+        preferProvider: preferProvider,
         speakingRate: speakingRate,
         pitch: pitch,
-        model: "standard",
-        emotion: "neutral"
-      });
-      
-      const audio = new Audio(result.audioUrl);
-      audio.onended = () => {
-        setIsPlaying(false);
+        emotion: "neutral",
+        model: "standard"
       };
       
-      audio.oncanplaythrough = () => {
-        setAudioStatus('ready');
-        audio.play();
+      // Get audio from TTS service
+      const result = await getOrGenerateAudio(ttsParams);
+      
+      if (result.error) {
+        toast.error(`Error generating audio: ${result.error}`);
+        return;
+      }
+      
+      setAudioUrl(result.audioUrl);
+      setProvider(result.provider);
+      
+      // Play audio
+      if (audioRef.current) {
+        audioRef.current.src = result.audioUrl;
+        audioRef.current.play();
         setIsPlaying(true);
-      };
-      
-      audio.onerror = (e) => {
-        console.error('Audio playback error:', e);
-        setAudioStatus('error');
-        setError("Failed to play audio. Please try again or try a different voice.");
-        setIsPlaying(false);
-      };
-      
-      setCurrentAudio(audio);
-      setActiveProvider(result.provider);
-      
+      }
     } catch (error) {
-      console.error('Error generating audio:', error);
-      setAudioStatus('error');
-      setError("Failed to generate audio. Please check your internet connection and try again.");
-      setIsPlaying(false);
+      console.error("Error playing audio:", error);
+      toast.error("Failed to generate speech. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
   
-  const handleVoiceChange = (value: string) => {
-    stopAudio();
-    setSelectedVoice(value);
-    setAudioStatus('idle');
+  const handleStop = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+    setIsPlaying(false);
   };
   
-  const handleLanguageChange = (value: string) => {
-    stopAudio();
-    setSelectedLanguage(value);
+  // For voice selection dropdown
+  const getVoiceOptions = () => {
+    const voices = preferProvider === "speechify" ? SPEECHIFY_VOICES : VOICERSS_VOICES;
     
-    // Auto-select a voice for the selected language
-    if (value === 'ar-sa') {
-      setSelectedVoice('Hareth');
-      setPreferredProvider('voicerss');
-    } else if (value.startsWith('es')) {
-      setSelectedVoice(preferredProvider === 'speechify' ? 'Miguel' : 'Juan');
-    } else if (value.startsWith('fr')) {
-      setSelectedVoice(preferredProvider === 'speechify' ? 'Pierre' : 'Louis');
-    } else if (value.startsWith('de')) {
-      setSelectedVoice(preferredProvider === 'speechify' ? 'Hans' : 'Klaus');
-    } else {
-      // Default to English
-      setSelectedVoice(preferredProvider === 'speechify' ? 'Sandra' : 'John');
-    }
-    setAudioStatus('idle');
-  };
-  
-  const handleProviderChange = (value: "speechify" | "voicerss") => {
-    stopAudio();
-    setPreferredProvider(value);
+    // Map language code to language group
+    const languageGroup = selectedLanguage.startsWith("en") ? "english" :
+                         selectedLanguage.startsWith("es") ? "spanish" :
+                         selectedLanguage.startsWith("fr") ? "french" :
+                         selectedLanguage.startsWith("de") ? "german" : "english";
     
-    // Auto-select a voice for the selected provider
-    if (value === 'speechify') {
-      if (selectedLanguage === 'ar-sa') {
-        // Speechify doesn't support Arabic, stay with VoiceRSS
-        setPreferredProvider('voicerss');
-        setSelectedVoice('Hareth');
-      } else if (selectedLanguage.startsWith('es')) {
-        setSelectedVoice('Miguel');
-      } else if (selectedLanguage.startsWith('fr')) {
-        setSelectedVoice('Pierre');
-      } else if (selectedLanguage.startsWith('de')) {
-        setSelectedVoice('Hans');
-      } else {
-        setSelectedVoice('Sandra');
-      }
-    } else {
-      // VoiceRSS
-      if (selectedLanguage === 'ar-sa') {
-        setSelectedVoice('Hareth');
-      } else if (selectedLanguage.startsWith('es')) {
-        setSelectedVoice('Juan');
-      } else if (selectedLanguage.startsWith('fr')) {
-        setSelectedVoice('Louis');
-      } else if (selectedLanguage.startsWith('de')) {
-        setSelectedVoice('Klaus');
-      } else {
-        setSelectedVoice('John');
-      }
-    }
-    setAudioStatus('idle');
+    return voices[languageGroup] || voices.english;
   };
   
-  const handleClose = () => {
-    stopAudio();
-    onClose();
-  };
+  // Format date if available
+  const formattedDate = meeting?.date ? 
+    formatDistance(new Date(meeting.date), new Date(), { addSuffix: true }) : "";
   
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="sm:max-w-xl">
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
+          <DialogTitle className="text-xl">{displayTitle}</DialogTitle>
+          {formattedDate && (
+            <div className="text-sm text-muted-foreground">
+              Created {formattedDate}
+            </div>
+          )}
         </DialogHeader>
         
-        <div className="mt-4 space-y-4">
-          <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-md max-h-60 overflow-y-auto text-sm">
-            {summary || "No summary available"}
-          </div>
+        <div className="space-y-4 my-4">
+          {/* Summary content */}
+          <Card className="p-1">
+            <CardContent className="p-4 prose prose-sm max-w-none dark:prose-invert whitespace-pre-wrap">
+              {contentToRead}
+            </CardContent>
+          </Card>
           
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="tts-language">Language</Label>
-              <Select value={selectedLanguage} onValueChange={handleLanguageChange}>
-                <SelectTrigger id="tts-language">
-                  <SelectValue placeholder="Select Language" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(TTS_LANGUAGES).map(([code, name]) => (
-                    <SelectItem key={code} value={code}>{name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="tts-provider">Provider</Label>
-              <Select 
-                value={preferredProvider} 
-                onValueChange={(val: "speechify" | "voicerss") => handleProviderChange(val)}
-              >
-                <SelectTrigger id="tts-provider">
-                  <SelectValue placeholder="Select Provider" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="speechify">Speechify (High Quality)</SelectItem>
-                  <SelectItem value="voicerss">VoiceRSS (Fast)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="tts-voice">Voice</Label>
-            <Select value={selectedVoice} onValueChange={handleVoiceChange}>
-              <SelectTrigger id="tts-voice">
-                <SelectValue placeholder="Select Voice" />
-              </SelectTrigger>
-              <SelectContent>
-                {preferredProvider === 'speechify' ? (
-                  Object.entries(SPEECHIFY_VOICES).map(([langGroup, voices]) => (
-                    <React.Fragment key={langGroup}>
-                      {voices.map(voice => (
-                        <SelectItem key={voice.id} value={voice.id}>{voice.name}</SelectItem>
-                      ))}
-                    </React.Fragment>
-                  ))
-                ) : (
-                  Object.entries(VOICERSS_VOICES).map(([langGroup, voices]) => (
-                    <React.Fragment key={langGroup}>
-                      {voices.map(voice => (
-                        <SelectItem key={voice.id} value={voice.id}>{voice.name}</SelectItem>
-                      ))}
-                    </React.Fragment>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <Label htmlFor="speaking-rate">Speaking Rate</Label>
-              <span className="text-sm text-muted-foreground">{speakingRate.toFixed(1)}x</span>
-            </div>
-            <Slider
-              id="speaking-rate"
-              min={0.5}
-              max={1.5}
-              step={0.1}
-              value={[speakingRate]}
-              onValueChange={(values) => {
-                setSpeakingRate(values[0]);
-                if (audioStatus === 'ready') setAudioStatus('idle');
-              }}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <Label htmlFor="pitch">Pitch</Label>
-              <span className="text-sm text-muted-foreground">{pitch > 0 ? `+${pitch}` : pitch}</span>
-            </div>
-            <Slider
-              id="pitch"
-              min={-10}
-              max={10}
-              step={1}
-              value={[pitch]}
-              onValueChange={(values) => {
-                setPitch(values[0]);
-                if (audioStatus === 'ready') setAudioStatus('idle');
-              }}
-            />
-          </div>
-          
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-md flex items-center text-sm">
-              <AlertCircle className="h-4 w-4 mr-2" />
-              {error}
-            </div>
-          )}
-          
-          {activeProvider && (
-            <div className="flex items-center text-xs text-muted-foreground">
-              <span>Using {activeProvider === 'speechify' ? 'Speechify' : 'VoiceRSS'} TTS</span>
-              {activeProvider === 'speechify' && <Sparkles className="h-3 w-3 ml-1 text-blue-500" />}
-            </div>
-          )}
-          
-          <div className="flex justify-between pt-2">
-            <Button 
-              type="button" 
-              onClick={togglePlayPause}
-              disabled={!summary || audioStatus === 'loading'} 
-              className="flex items-center"
-              variant="default"
-            >
-              {audioStatus === 'loading' ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Generating...
-                </>
-              ) : isPlaying ? (
-                <>
-                  <PauseCircle className="h-5 w-5 mr-2" />
-                  Pause
-                </>
-              ) : (
-                <>
-                  <PlayCircle className="h-5 w-5 mr-2" />
-                  Play
-                </>
+          {/* TTS Controls */}
+          <div className="space-y-3 bg-slate-50 dark:bg-slate-900 p-4 rounded-md">
+            <div className="flex items-center justify-between">
+              <div className="text-sm font-medium">Text-to-Speech</div>
+              
+              {/* Provider status indicator */}
+              {provider && (
+                <div className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">
+                  {provider === "speechify" ? "Speechify TTS" : "VoiceRSS TTS"}
+                </div>
               )}
-            </Button>
+            </div>
             
-            <Button 
-              type="button" 
-              onClick={handleClose} 
-              variant="outline"
-            >
-              Close
-            </Button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Language selection */}
+              <div>
+                <label htmlFor="language" className="text-xs text-muted-foreground">
+                  Language
+                </label>
+                <select 
+                  id="language"
+                  className="w-full mt-1 p-2 text-sm border rounded-md"
+                  value={selectedLanguage}
+                  onChange={(e) => {
+                    setSelectedLanguage(e.target.value);
+                    // Reset voice when language changes
+                    const defaultVoice = preferProvider === "speechify" ? "Sandra" : "John";
+                    setSelectedVoice(defaultVoice);
+                  }}
+                >
+                  {Object.entries(LANGUAGES).map(([code, name]) => (
+                    <option key={code} value={code}>{name}</option>
+                  ))}
+                </select>
+              </div>
+              
+              {/* Voice selection */}
+              <div>
+                <label htmlFor="voice" className="text-xs text-muted-foreground">
+                  Voice
+                </label>
+                <select 
+                  id="voice"
+                  className="w-full mt-1 p-2 text-sm border rounded-md"
+                  value={selectedVoice}
+                  onChange={(e) => setSelectedVoice(e.target.value)}
+                >
+                  {getVoiceOptions().map((voice) => (
+                    <option key={voice.id} value={voice.id}>{voice.name}</option>
+                  ))}
+                </select>
+              </div>
+              
+              {/* Speed control */}
+              <div>
+                <label htmlFor="speed" className="text-xs text-muted-foreground flex justify-between">
+                  <span>Speed</span>
+                  <span>{speakingRate.toFixed(1)}x</span>
+                </label>
+                <input 
+                  id="speed"
+                  type="range" 
+                  min="0.5" 
+                  max="1.5" 
+                  step="0.1"
+                  value={speakingRate}
+                  onChange={(e) => setSpeakingRate(parseFloat(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+              
+              {/* Pitch control */}
+              <div>
+                <label htmlFor="pitch" className="text-xs text-muted-foreground flex justify-between">
+                  <span>Pitch</span>
+                  <span>{pitch > 0 ? `+${pitch}` : pitch}</span>
+                </label>
+                <input 
+                  id="pitch"
+                  type="range" 
+                  min="-10" 
+                  max="10" 
+                  step="1"
+                  value={pitch}
+                  onChange={(e) => setPitch(parseInt(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+              
+              {/* Provider selection */}
+              <div className="col-span-1 sm:col-span-2">
+                <div className="flex items-center gap-4">
+                  <label className="text-xs text-muted-foreground mr-3">TTS Provider</label>
+                  <div className="flex items-center gap-3">
+                    <label className="flex items-center gap-1.5">
+                      <input
+                        type="radio"
+                        value="speechify"
+                        checked={preferProvider === "speechify"}
+                        onChange={() => setPreferProvider("speechify")}
+                        className="accent-blue-600"
+                      />
+                      <span className="text-sm">Speechify</span>
+                    </label>
+                    
+                    <label className="flex items-center gap-1.5">
+                      <input
+                        type="radio"
+                        value="voicerss"
+                        checked={preferProvider === "voicerss"}
+                        onChange={() => setPreferProvider("voicerss")}
+                        className="accent-blue-600"
+                      />
+                      <span className="text-sm">VoiceRSS</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Play/stop button */}
+            <div className="flex justify-center">
+              <audio ref={audioRef} onEnded={() => setIsPlaying(false)} />
+              
+              {!isPlaying ? (
+                <Button
+                  onClick={handlePlay}
+                  disabled={isLoading || !contentToRead}
+                  className="w-32"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    <>
+                      <Volume2 className="mr-2 h-4 w-4" />
+                      Play
+                    </>
+                  )}
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleStop}
+                  variant="secondary"
+                  className="w-32"
+                >
+                  <VolumeX className="mr-2 h-4 w-4" />
+                  Stop
+                </Button>
+              )}
+            </div>
           </div>
         </div>
+        
+        <DialogFooter className="flex flex-wrap gap-2 sm:gap-0">
+          {onCopy && (
+            <Button onClick={onCopy} variant="outline" size="sm">
+              <Copy className="mr-2 h-4 w-4" />
+              Copy Text
+            </Button>
+          )}
+          
+          {onDownloadAudio && (
+            <Button 
+              onClick={onDownloadAudio} 
+              variant="outline" 
+              size="sm"
+              disabled={isDownloadingAudio}
+            >
+              <Download className="mr-2 h-4 w-4" />
+              {isDownloadingAudio ? 'Downloading...' : 'Download Audio'}
+            </Button>
+          )}
+          
+          {onExportPDF && (
+            <Button 
+              onClick={onExportPDF} 
+              variant="outline" 
+              size="sm"
+              disabled={isExporting}
+            >
+              <FileText className="mr-2 h-4 w-4" />
+              {isExporting ? 'Exporting...' : 'Export PDF'}
+            </Button>
+          )}
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
