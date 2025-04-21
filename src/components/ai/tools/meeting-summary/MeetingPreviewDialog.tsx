@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -143,7 +142,19 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
   const showMapButton = location && location.length > 0;
   const hasAudio = meeting?.has_audio || !!meeting?.audioUrl || !!meeting?.audioStoragePath;
 
-  const formattedDate = meeting ? formatRelativeTime(new Date(meeting.date)) : '';
+  const formattedDate = meeting ? formatRelativeTime(meeting.date) : '';
+  
+  React.useEffect(() => {
+    if (meeting) {
+      console.log('Meeting preview data:', { 
+        title: meeting.title, 
+        date: meeting.date,
+        has_audio: meeting.has_audio,
+        audioUrl: meeting.audioUrl,
+        formattedDate
+      });
+    }
+  }, [meeting, formattedDate]);
 
   return (
     <Dialog open={isOpen} onOpenChange={() => onClose()}>

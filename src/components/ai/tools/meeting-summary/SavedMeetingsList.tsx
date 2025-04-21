@@ -66,26 +66,42 @@ const SavedMeetingsList: React.FC<SavedMeetingsListProps> = ({
     if (!meeting.has_audio) return null;
     if (!meeting.audio_expires_at) return null;
 
-    const expiresAt = new Date(meeting.audio_expires_at);
-    const now = new Date();
-    const daysRemaining = differenceInDays(expiresAt, now);
+    try {
+      const expiresAt = new Date(meeting.audio_expires_at);
+      const now = new Date();
+      
+      // Debug information
+      console.log('Audio expiry calculation:', { 
+        meeting_id: meeting.id,
+        expires_at: expiresAt, 
+        now: now,
+        raw_expires_at: meeting.audio_expires_at
+      });
+      
+      const daysRemaining = differenceInDays(expiresAt, now);
+      
+      console.log('Days remaining:', daysRemaining);
 
-    if (daysRemaining <= 0) return null;
+      if (daysRemaining <= 0) return null;
 
-    if (daysRemaining <= 2) {
+      if (daysRemaining <= 2) {
+        return (
+          <div className="text-xs text-amber-500 flex items-center gap-1">
+            <AlertTriangle className="h-3 w-3" />
+            <span>Expires in {daysRemaining} day{daysRemaining !== 1 ? 's' : ''}</span>
+          </div>
+        );
+      }
+
       return (
-        <div className="text-xs text-amber-500 flex items-center gap-1">
-          <AlertTriangle className="h-3 w-3" />
-          <span>Expires in {daysRemaining} day{daysRemaining !== 1 ? 's' : ''}</span>
+        <div className="text-xs text-muted-foreground">
+          Audio available for {daysRemaining} day{daysRemaining !== 1 ? 's' : ''}
         </div>
       );
+    } catch (error) {
+      console.error('Error calculating audio expiration:', error);
+      return null;
     }
-
-    return (
-      <div className="text-xs text-muted-foreground">
-        Audio available for {daysRemaining} day{daysRemaining !== 1 ? 's' : ''}
-      </div>
-    );
   };
 
   const formatDuration = (seconds: number) => {
