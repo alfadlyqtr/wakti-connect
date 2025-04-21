@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import md5 from "md5"; // We'll use md5 for fast hash
 import { v4 as uuidv4 } from "uuid";
@@ -10,7 +9,7 @@ const ELEVENLABS_URL = "https://api.elevenlabs.io/v1/text-to-speech";
 const VOICERSS_URL = "https://api.voicerss.org/";
 
 // Define the Provider type to avoid string assignment issues
-type Provider = "elevenlabs" | "voicerss";
+type Provider = "elevenlabs" | "speechify" | "voicerss";
 
 export interface TTSCacheParams {
   text: string;
@@ -51,10 +50,18 @@ const getTextHash = (text: string, voice: string, provider: Provider) =>
 export async function getOrGenerateAudio(params: TTSCacheParams): Promise<TTSCacheResult> {
   const { text, voice = "Aria", language = "en", preferProvider = "elevenlabs" } = params;
   let triedProviders: Provider[] = [];
-  
-  for (const provider of [preferProvider, preferProvider === "elevenlabs" ? "voicerss" : "elevenlabs"]) {
-    triedProviders.push(provider as Provider);
-    const textHash = getTextHash(text, voice, provider as Provider);
+
+  // New provider ordering logic: elevenlabs → speechify → voicerss
+  const providerPriority: Provider[] =
+    preferProvider === "elevenlabs"
+      ? ["elevenlabs", "speechify", "voicerss"]
+      : preferProvider === "speechify"
+      ? ["speechify", "elevenlabs", "voicerss"]
+      : ["voicerss", "elevenlabs", "speechify"];
+
+  for (const provider of providerPriority) {
+    triedProviders.push(provider);
+    const textHash = getTextHash(text, voice, provider);
 
     // Step 1: Check Cache
     // Use explicit type casting to handle the audio_cache table that's not in types yet
@@ -77,7 +84,7 @@ export async function getOrGenerateAudio(params: TTSCacheParams): Promise<TTSCac
 
       return {
         audioUrl: cacheData.audio_url,
-        provider: provider as Provider,
+        provider,
         cacheHit: true,
       };
     }
@@ -89,6 +96,10 @@ export async function getOrGenerateAudio(params: TTSCacheParams): Promise<TTSCac
       if (provider === "elevenlabs") {
         console.log("Attempting ElevenLabs generation...");
         audioBlob = await generateWithElevenLabs(text, voice, language);
+        fileExtension = ".mp3";
+      } else if (provider === "speechify") {
+        console.log("Attempting Speechify generation...");
+        audioBlob = await generateWithSpeechify(text, language, voice);
         fileExtension = ".mp3";
       } else if (provider === "voicerss") {
         console.log("Falling back to VoiceRSS generation...");
@@ -127,7 +138,7 @@ export async function getOrGenerateAudio(params: TTSCacheParams): Promise<TTSCac
 
         return {
           audioUrl: publicUrl,
-          provider: provider as Provider,
+          provider,
           cacheHit: false,
         };
       }
@@ -180,6 +191,46 @@ async function generateWithElevenLabs(
     throw new Error(`Failed to fetch ElevenLabs audio: ${response.status}`);
   }
   
+  return await response.blob();
+}
+
+// --- Helper: Speechify (API KEY from Supabase secret) ---
+async function generateWithSpeechify(
+  text: string,
+  language: string = "en",
+  voice: string = "default"
+): Promise<Blob> {
+  // Get the secret from Supabase Edge Function
+  const apiKeyResp = await supabase.functions.invoke("get-speechify-api-key", { body: {} });
+  console.log("Speechify API Key Response:", apiKeyResp);
+
+  if (apiKeyResp.error || !apiKeyResp.data?.apiKey) {
+    console.error("Speechify API key missing:", apiKeyResp.error);
+    throw new Error("Speechify API key missing");
+  }
+
+  const apiKey = apiKeyResp.data.apiKey;
+  // Speechify API info (most Speechify endpoints are paid, so we'll use a sample endpoint as placeholder)
+  // You may want to customize language/voice mapping as per your needs.
+  const response = await fetch("https://api.speechify.com/tts/generate", {
+    method: "POST",
+    headers: {
+      "apikey": apiKey,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      text: text,
+      language: language,
+      voice: voice,
+      outputFormat: "mp3"
+    }),
+  });
+
+  if (!response.ok) {
+    console.error("Speechify response error:", await response.text());
+    throw new Error(`Failed to fetch Speechify audio: ${response.status}`);
+  }
+
   return await response.blob();
 }
 
