@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useMeetingSummaryV2 } from '@/hooks/ai/meeting-summary/useMeetingSummaryV2';
 import SavedMeetingsList from './SavedMeetingsList';
@@ -26,11 +27,13 @@ const SavedRecordingsTab = () => {
     setIsLoadingHistory(true);
     try {
       const loadedMeetings = await loadSavedMeetings();
+      // Ensure meetings have valid dates
       const processedMeetings = loadedMeetings.map(meeting => ({
         ...meeting,
-        date: meeting.date || new Date().toISOString()
+        date: meeting.date || new Date().toISOString() // Provide fallback if date is missing
       }));
       
+      // Add console logs to debug data
       console.log("Loaded meetings data:", processedMeetings);
       setMeetings(processedMeetings);
     } catch (error) {
@@ -74,6 +77,7 @@ const SavedRecordingsTab = () => {
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       
+      // Extract title from summary for better filename
       const titleMatch = meeting.summary.match(/Meeting Title:\s*([^\n]+)/i) || 
                        meeting.summary.match(/Title:\s*([^\n]+)/i) ||
                        meeting.summary.match(/^# ([^\n]+)/m) ||
@@ -105,9 +109,10 @@ const SavedRecordingsTab = () => {
   const handlePreview = (meeting: any) => {
     if (!meeting) return;
     
+    // Process meeting data to ensure it has all required properties
     const enhancedMeeting = {
       ...meeting,
-      date: meeting.date || new Date().toISOString(),
+      date: meeting.date || new Date().toISOString(), // Ensure date exists
       detectedLocation: meeting.location || meeting.detectedLocation || null,
       detectedAttendees: meeting.attendees || meeting.detectedAttendees || extractAttendeesFromSummary(meeting.summary),
       has_audio: meeting.has_audio || !!meeting.audioUrl || !!meeting.audioStoragePath
@@ -141,6 +146,7 @@ const SavedRecordingsTab = () => {
     setIsExporting(true);
     
     try {
+      // Calculate duration - if it's a number, use it directly
       const duration = typeof selectedMeeting.duration === 'number' 
         ? selectedMeeting.duration 
         : 0;
@@ -225,8 +231,6 @@ const SavedRecordingsTab = () => {
       <MeetingPreviewDialog
         isOpen={isPreviewOpen}
         onClose={() => setIsPreviewOpen(false)}
-        summary={selectedMeeting?.summary}
-        title={selectedMeeting?.title || extractTitleFromSummary(selectedMeeting?.summary) || 'Meeting Summary'}
         meeting={selectedMeeting}
         onExportPDF={handleExportPDF}
         onCopy={handleCopy}

@@ -1,414 +1,370 @@
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import React, { useState, useEffect } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { formatDistance } from 'date-fns';
-import { getOrGenerateAudio, TTSCacheParams } from '@/utils/ttsCache';
-import { Loader2, Volume2, Download, FileText, Copy, VolumeX, ExternalLink, RefreshCw } from 'lucide-react';
-import { toast } from 'sonner';
-import { useSpeechSynthesis } from '@/hooks/ai/useSpeechSynthesis';
+import { FileDown, Copy, Download, Volume2, Pause, RefreshCcw, StopCircle, Play, Map, ExternalLink } from 'lucide-react';
+import SummaryDisplay from './SummaryDisplay';
+import { generateTomTomMapsUrl } from '@/config/maps';
+import { supabase } from "@/integrations/supabase/client";
+import { motion } from 'framer-motion';
+import { formatRelativeTime } from '@/lib/utils';
+// Add TTS imports
+import { getOrGenerateAudio } from '@/utils/ttsCache';
 
-export interface MeetingPreviewDialogProps {
+interface MeetingPreviewDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  title?: string;
-  summary?: string;
-  meeting?: any; // Add meeting prop
-  onExportPDF?: () => Promise<void>;
-  onCopy?: () => Promise<void>;
-  onDownloadAudio?: () => Promise<void>;
-  isExporting?: boolean;
-  isDownloadingAudio?: boolean;
+  meeting: {
+    title: string;
+    summary: string;
+    date: string;
+    duration: number;
+    audioUrl?: string;
+    has_audio?: boolean;
+    audioStoragePath?: string;
+    detectedLocation?: string | null;
+    detectedAttendees?: string[] | null;
+  } | null;
+  onExportPDF: () => Promise<void>;
+  onCopy: () => void;
+  onDownloadAudio: () => void;
+  isExporting: boolean;
+  isDownloadingAudio: boolean;
 }
-
-const SPEECHIFY_VOICES = {
-  english: [
-    { id: "Sandra", name: "Sandra (Default)" },
-    { id: "Sarah", name: "Sarah" },
-    { id: "John", name: "John" },
-    { id: "Mike", name: "Mike" },
-    { id: "Charlie", name: "Charlie" },
-    { id: "Roger", name: "Roger" },
-  ],
-  spanish: [
-    { id: "Miguel", name: "Miguel" },
-    { id: "Lucia", name: "Lucia" },
-  ],
-  french: [
-    { id: "Pierre", name: "Pierre" },
-    { id: "Marie", name: "Marie" },
-  ],
-  german: [
-    { id: "Hans", name: "Hans" },
-    { id: "Greta", name: "Greta" },
-  ],
-};
-
-const VOICERSS_VOICES = {
-  english: [
-    { id: "John", name: "John (Default)" },
-    { id: "Mary", name: "Mary" },
-    { id: "Mike", name: "Mike" },
-  ],
-  spanish: [
-    { id: "Juan", name: "Juan" },
-    { id: "Esperanza", name: "Esperanza" },
-  ],
-  french: [
-    { id: "Louis", name: "Louis" },
-    { id: "Amelie", name: "Amelie" },
-  ],
-  german: [
-    { id: "Klaus", name: "Klaus" },
-    { id: "Claudia", name: "Claudia" },
-  ],
-};
-
-const LANGUAGES = {
-  "en-us": "English",
-  "es-es": "Spanish",
-  "fr-fr": "French",
-  "de-de": "German",
-};
 
 const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
   isOpen,
   onClose,
-  title,
-  summary,
   meeting,
   onExportPDF,
   onCopy,
   onDownloadAudio,
-  isExporting = false,
-  isDownloadingAudio = false,
+  isExporting,
+  isDownloadingAudio,
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [provider, setProvider] = useState<"speechify" | "voicerss" | null>(null);
-  const [selectedVoice, setSelectedVoice] = useState("Sandra");
-  const [selectedLanguage, setSelectedLanguage] = useState("en-us");
-  const [speakingRate, setSpeakingRate] = useState(1);
-  const [pitch, setPitch] = useState(0);
-  const [preferProvider, setPreferProvider] = useState<"speechify" | "voicerss">("speechify");
-  
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const contentToRead = summary || (meeting?.summary || "");
-  const displayTitle = title || (meeting?.title || "Meeting Summary");
-  
-  const { speak, cancel, speaking, supported: browserSpeechSupported } = useSpeechSynthesis();
-  
-  // Clean up audio on unmount
+  const [isPaused, setIsPaused] = useState(false);
+  const [locationName, setLocationName] = useState<string | null>(null);
+
+  // For local playback element control
+  const audioRef = React.useRef<HTMLAudioElement | null>(null);
+
   useEffect(() => {
-    return () => {
-      if (audioUrl) {
-        URL.revokeObjectURL(audioUrl);
-      }
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
-    };
-  }, [audioUrl]);
-  
-  // Reset audio state when dialog closes
+    if (meeting?.detectedLocation) {
+      fetchLocationName(meeting.detectedLocation);
+    }
+  }, [meeting?.detectedLocation]);
+
+  // Clean up audio when dialog closes
   useEffect(() => {
     if (!isOpen) {
-      handleStop();
-      setAudioUrl(null);
-      setProvider(null);
+      handleStopSummary();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
-  
-  const handlePlay = async () => {
-    if (audioUrl && audioRef.current) {
-      audioRef.current.play();
-      setIsPlaying(true);
-      return;
-    }
-    
-    if (!contentToRead) {
-      toast.error("No content to read");
-      return;
-    }
-    
+
+  const fetchLocationName = async (location: string) => {
     try {
-      setIsLoading(true);
+      const { data, error } = await supabase.functions.invoke('tomtom-geocode', {
+        body: { query: location }
+      });
       
-      // Configure TTS parameters
-      const ttsParams: TTSCacheParams = {
-        text: contentToRead,
-        voice: selectedVoice,
-        language: selectedLanguage,
-        preferProvider: preferProvider,
-        speakingRate: speakingRate,
-        pitch: pitch,
-        emotion: "neutral",
-        model: "standard"
-      };
-      
-      // Get audio from TTS service
-      const result = await getOrGenerateAudio(ttsParams);
-      
-      if (result.error) {
-        toast.error(`Error generating audio: ${result.error}`);
+      if (error || !data) {
+        console.error('Error fetching location details:', error);
+        setLocationName(location);
         return;
       }
       
-      setAudioUrl(result.audioUrl);
-      setProvider(result.provider);
-      
-      // Play audio
-      if (audioRef.current) {
-        audioRef.current.src = result.audioUrl;
-        audioRef.current.play();
-        setIsPlaying(true);
+      if (data.coordinates) {
+        setLocationName(location);
       }
     } catch (error) {
-      console.error("Error playing audio:", error);
-      toast.error("Failed to generate speech. Please try again.");
-    } finally {
-      setIsLoading(false);
+      console.error('Error fetching location name:', error);
+      setLocationName(location);
     }
   };
-  
-  const handleStop = () => {
+
+  const extractTitleFromSummary = (summary: string) => {
+    const titleMatch = summary.match(/Meeting Title:\s*([^\n]+)/i) || 
+                      summary.match(/Title:\s*([^\n]+)/i) ||
+                      summary.match(/^# ([^\n]+)/m) ||
+                      summary.match(/^## ([^\n]+)/m);
+    return titleMatch ? titleMatch[1].trim() : 'Untitled Meeting';
+  };
+
+  // --- AUDIO PLAYER LOGIC using new ttsCache.ts
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+
+  const handlePlaySummary = async () => {
+    try {
+      if (isPaused && audioRef.current) {
+        audioRef.current.play();
+        setIsPlaying(true);
+        setIsPaused(false);
+        return;
+      }
+
+      // If already playing something else, stop first
+      handleStopSummary();
+
+      // Request TTS audio via cache util (will select best provider)
+      const { audioUrl } = await getOrGenerateAudio({
+        text: meeting.summary,
+        // You could use meeting.language/voice here if available
+      });
+      setAudioUrl(audioUrl);
+
+      // Play the audio
+      const audio = new window.Audio(audioUrl);
+      audioRef.current = audio;
+      audio.play();
+      setIsPlaying(true);
+      setIsPaused(false);
+
+      audio.onended = () => {
+        setIsPlaying(false);
+        setIsPaused(false);
+      };
+      audio.onpause = () => {
+        setIsPaused(true);
+        setIsPlaying(false);
+      };
+      audio.onerror = (err) => {
+        setIsPlaying(false);
+        setIsPaused(false);
+        console.error('Failed to play summary:', err);
+      };
+
+    } catch (error) {
+      console.error('Failed to play summary:', error);
+      setIsPlaying(false);
+      setIsPaused(false);
+    }
+  };
+
+  const handlePauseSummary = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      setIsPaused(true);
+      setIsPlaying(false);
+    }
+  };
+
+  const handleRestartSummary = async () => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play();
+      setIsPlaying(true);
+      setIsPaused(false);
+    } else if (audioUrl) {
+      // If nothing is loaded, play from the URL again
+      const audio = new window.Audio(audioUrl);
+      audioRef.current = audio;
+      audio.play();
+      setIsPlaying(true);
+      setIsPaused(false);
+      audio.onended = () => {
+        setIsPlaying(false);
+        setIsPaused(false);
+      };
+    } else {
+      // If not loaded yet, play as if fresh
+      await handlePlaySummary();
+    }
+  };
+
+  const handleStopSummary = () => {
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
     }
     setIsPlaying(false);
+    setIsPaused(false);
   };
-  
-  // For voice selection dropdown
-  const getVoiceOptions = () => {
-    const voices = preferProvider === "speechify" ? SPEECHIFY_VOICES : VOICERSS_VOICES;
-    
-    // Map language code to language group
-    const languageGroup = selectedLanguage.startsWith("en") ? "english" :
-                         selectedLanguage.startsWith("es") ? "spanish" :
-                         selectedLanguage.startsWith("fr") ? "french" :
-                         selectedLanguage.startsWith("de") ? "german" : "english";
-    
-    return voices[languageGroup] || voices.english;
+
+  const openInMaps = () => {
+    if (locationName) {
+      window.open(generateTomTomMapsUrl(locationName), '_blank');
+    }
   };
-  
-  // Format date if available
-  const formattedDate = meeting?.date ? 
-    formatDistance(new Date(meeting.date), new Date(), { addSuffix: true }) : "";
-  
+
+  if (!meeting) {
+    return null;
+  }
+
+  const displayTitle = meeting.title || extractTitleFromSummary(meeting.summary);
+  const location = locationName || meeting.detectedLocation;
+  const showMapButton = location && location.length > 0;
+  const hasAudio = meeting?.has_audio || !!meeting?.audioUrl || !!meeting?.audioStoragePath;
+
+  const formattedDate = meeting ? formatRelativeTime(new Date(meeting.date)) : '';
+
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
+    <Dialog open={isOpen} onOpenChange={() => onClose()}>
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl">{displayTitle}</DialogTitle>
-          {formattedDate && (
-            <div className="text-sm text-muted-foreground">
-              Created {formattedDate}
+          <DialogTitle>{displayTitle}</DialogTitle>
+          {showMapButton && (
+            <div className="flex items-center mt-1 text-sm text-muted-foreground">
+              <Map className="h-3.5 w-3.5 mr-1 text-green-600" />
+              <span className="mr-2">{location}</span>
+              <Button
+                variant="link"
+                size="sm"
+                className="p-0 h-auto text-green-600 flex items-center gap-1"
+                onClick={openInMaps}
+              >
+                <span className="text-xs">View on Map</span>
+                <ExternalLink className="h-3 w-3" />
+              </Button>
             </div>
           )}
         </DialogHeader>
-        
-        <div className="space-y-4 my-4">
-          {/* Summary content */}
-          <Card className="p-1">
-            <CardContent className="p-4 prose prose-sm max-w-none dark:prose-invert whitespace-pre-wrap">
-              {contentToRead}
-            </CardContent>
-          </Card>
-          
-          {/* TTS Controls */}
-          <div className="space-y-3 bg-slate-50 dark:bg-slate-900 p-4 rounded-md">
-            <div className="flex items-center justify-between">
-              <div className="text-sm font-medium">Text-to-Speech</div>
-              
-              {/* Provider status indicator */}
-              {provider && (
-                <div className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">
-                  {provider === "speechify" ? "Speechify TTS" : "VoiceRSS TTS"}
-                </div>
-              )}
-            </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {/* Language selection */}
-              <div>
-                <label htmlFor="language" className="text-xs text-muted-foreground">
-                  Language
-                </label>
-                <select 
-                  id="language"
-                  className="w-full mt-1 p-2 text-sm border rounded-md"
-                  value={selectedLanguage}
-                  onChange={(e) => {
-                    setSelectedLanguage(e.target.value);
-                    // Reset voice when language changes
-                    const defaultVoice = preferProvider === "speechify" ? "Sandra" : "John";
-                    setSelectedVoice(defaultVoice);
-                  }}
-                >
-                  {Object.entries(LANGUAGES).map(([code, name]) => (
-                    <option key={code} value={code}>{name}</option>
-                  ))}
-                </select>
-              </div>
-              
-              {/* Voice selection */}
-              <div>
-                <label htmlFor="voice" className="text-xs text-muted-foreground">
-                  Voice
-                </label>
-                <select 
-                  id="voice"
-                  className="w-full mt-1 p-2 text-sm border rounded-md"
-                  value={selectedVoice}
-                  onChange={(e) => setSelectedVoice(e.target.value)}
-                >
-                  {getVoiceOptions().map((voice) => (
-                    <option key={voice.id} value={voice.id}>{voice.name}</option>
-                  ))}
-                </select>
-              </div>
-              
-              {/* Speed control */}
-              <div>
-                <label htmlFor="speed" className="text-xs text-muted-foreground flex justify-between">
-                  <span>Speed</span>
-                  <span>{speakingRate.toFixed(1)}x</span>
-                </label>
-                <input 
-                  id="speed"
-                  type="range" 
-                  min="0.5" 
-                  max="1.5" 
-                  step="0.1"
-                  value={speakingRate}
-                  onChange={(e) => setSpeakingRate(parseFloat(e.target.value))}
-                  className="w-full"
-                />
-              </div>
-              
-              {/* Pitch control */}
-              <div>
-                <label htmlFor="pitch" className="text-xs text-muted-foreground flex justify-between">
-                  <span>Pitch</span>
-                  <span>{pitch > 0 ? `+${pitch}` : pitch}</span>
-                </label>
-                <input 
-                  id="pitch"
-                  type="range" 
-                  min="-10" 
-                  max="10" 
-                  step="1"
-                  value={pitch}
-                  onChange={(e) => setPitch(parseInt(e.target.value))}
-                  className="w-full"
-                />
-              </div>
-              
-              {/* Provider selection */}
-              <div className="col-span-1 sm:col-span-2">
-                <div className="flex items-center gap-4">
-                  <label className="text-xs text-muted-foreground mr-3">TTS Provider</label>
-                  <div className="flex items-center gap-3">
-                    <label className="flex items-center gap-1.5">
-                      <input
-                        type="radio"
-                        value="speechify"
-                        checked={preferProvider === "speechify"}
-                        onChange={() => setPreferProvider("speechify")}
-                        className="accent-blue-600"
-                      />
-                      <span className="text-sm">Speechify</span>
-                    </label>
-                    
-                    <label className="flex items-center gap-1.5">
-                      <input
-                        type="radio"
-                        value="voicerss"
-                        checked={preferProvider === "voicerss"}
-                        onChange={() => setPreferProvider("voicerss")}
-                        className="accent-blue-600"
-                      />
-                      <span className="text-sm">VoiceRSS</span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {/* Play/stop button */}
-            <div className="flex justify-center">
-              <audio ref={audioRef} onEnded={() => setIsPlaying(false)} />
-              
-              {!isPlaying ? (
+
+        <div className="space-y-4">
+          <motion.div 
+            className="flex justify-end gap-2 flex-wrap"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            {/* Audio controls using new TTS logic */}
+            {!isPlaying && !isPaused && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handlePlaySummary}
+                className="flex items-center gap-1"
+              >
+                <Volume2 className="h-4 w-4" />
+                <span>Play Summary</span>
+              </Button>
+            )}
+
+            {isPlaying && (
+              <>
                 <Button
-                  onClick={handlePlay}
-                  disabled={isLoading || !contentToRead}
-                  className="w-32"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRestartSummary}
+                  className="flex items-center gap-1"
                 >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Loading...
-                    </>
-                  ) : (
-                    <>
-                      <Volume2 className="mr-2 h-4 w-4" />
-                      Play
-                    </>
-                  )}
+                  <RefreshCcw className="h-4 w-4" />
+                  <span>Restart</span>
                 </Button>
-              ) : (
                 <Button
-                  onClick={handleStop}
-                  variant="secondary"
-                  className="w-32"
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePauseSummary}
+                  className="flex items-center gap-1"
                 >
-                  <VolumeX className="mr-2 h-4 w-4" />
-                  Stop
+                  <Pause className="h-4 w-4" />
+                  <span>Pause</span>
                 </Button>
-              )}
-            </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleStopSummary}
+                  className="flex items-center gap-1"
+                >
+                  <StopCircle className="h-4 w-4" />
+                  <span>Stop</span>
+                </Button>
+              </>
+            )}
+
+            {isPaused && (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRestartSummary}
+                  className="flex items-center gap-1"
+                >
+                  <RefreshCcw className="h-4 w-4" />
+                  <span>Restart</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePlaySummary}
+                  className="flex items-center gap-1"
+                >
+                  <Play className="h-4 w-4" />
+                  <span>Resume</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleStopSummary}
+                  className="flex items-center gap-1"
+                >
+                  <StopCircle className="h-4 w-4" />
+                  <span>Stop</span>
+                </Button>
+              </>
+            )}
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onCopy}
+              className="flex items-center gap-1"
+            >
+              <Copy className="h-4 w-4" />
+              <span>Copy</span>
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onExportPDF}
+              disabled={isExporting}
+              className="flex items-center gap-1"
+            >
+              <FileDown className="h-4 w-4" />
+              <span>{isExporting ? "Exporting..." : "Export PDF"}</span>
+            </Button>
+            
+            {hasAudio && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onDownloadAudio}
+                disabled={isDownloadingAudio}
+                className="flex items-center gap-1 bg-blue-50 border-blue-200 hover:bg-blue-100"
+              >
+                <Download className="h-4 w-4" />
+                <span>{isDownloadingAudio ? "Downloading..." : "Download Audio"}</span>
+              </Button>
+            )}
+          </motion.div>
+
+          <div className="bg-white rounded-lg border">
+            <SummaryDisplay
+              summary={meeting.summary}
+              detectedLocation={meeting.detectedLocation}
+              detectedAttendees={meeting.detectedAttendees}
+              copied={false}
+              copySummary={onCopy}
+              exportAsPDF={onExportPDF}
+              downloadAudio={onDownloadAudio}
+              isExporting={isExporting}
+              isDownloadingAudio={isDownloadingAudio}
+              audioData={null}
+              summaryRef={null}
+            />
           </div>
         </div>
-        
-        <DialogFooter className="flex flex-wrap gap-2 sm:gap-0">
-          {onCopy && (
-            <Button onClick={onCopy} variant="outline" size="sm">
-              <Copy className="mr-2 h-4 w-4" />
-              Copy Text
-            </Button>
-          )}
-          
-          {onDownloadAudio && (
-            <Button 
-              onClick={onDownloadAudio} 
-              variant="outline" 
-              size="sm"
-              disabled={isDownloadingAudio}
-            >
-              <Download className="mr-2 h-4 w-4" />
-              {isDownloadingAudio ? 'Downloading...' : 'Download Audio'}
-            </Button>
-          )}
-          
-          {onExportPDF && (
-            <Button 
-              onClick={onExportPDF} 
-              variant="outline" 
-              size="sm"
-              disabled={isExporting}
-            >
-              <FileText className="mr-2 h-4 w-4" />
-              {isExporting ? 'Exporting...' : 'Export PDF'}
-            </Button>
-          )}
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 };
 
 export default MeetingPreviewDialog;
+
