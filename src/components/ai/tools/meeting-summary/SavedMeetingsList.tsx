@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Trash2, Clock, Download, AlertTriangle, MapPin, File } from 'lucide-react';
-import { differenceInDays, differenceInHours, parseISO, isValid as isValidDate } from 'date-fns';
+import { differenceInDays, differenceInHours, parseISO, isValid } from 'date-fns';
 import { motion } from 'framer-motion';
 import { formatRelativeTime } from '@/lib/utils';
 
@@ -67,7 +68,7 @@ const SavedMeetingsList: React.FC<SavedMeetingsListProps> = ({
     } catch {
       expiresAt = new Date(meeting.audio_expires_at as any);
     }
-    if (!isValidDate(expiresAt)) return null;
+    if (!isValid(expiresAt)) return null;
 
     // If the expiry is in the past, audio is gone.
     if (expiresAt.getTime() <= now.getTime()) return null;
@@ -124,7 +125,7 @@ const SavedMeetingsList: React.FC<SavedMeetingsListProps> = ({
               typeof meeting.date === "string" && meeting.date.length > 15 // crude ISO string length check
                 ? parseISO(meeting.date)
                 : new Date(meeting.date as any);
-            if (isValidDate(parsedDate)) {
+            if (isValid(parsedDate)) {
               displayRelativeTime = formatRelativeTime(parsedDate);
             }
           }

@@ -8,7 +8,7 @@ import MeetingPreviewDialog from './MeetingPreviewDialog';
 import { exportMeetingSummaryAsPDF } from './MeetingSummaryExporter';
 import { motion } from 'framer-motion';
 import { differenceInDays } from 'date-fns';
-import { parseISO, isValidDate } from 'date-fns';
+import { parseISO, isValid } from 'date-fns';
 
 const SavedRecordingsTab = () => {
   const { loadSavedMeetings, deleteMeeting } = useMeetingSummaryV2();
@@ -33,7 +33,7 @@ const SavedRecordingsTab = () => {
         let parsedDate: string = "";
         if (meeting.date && typeof meeting.date === "string" && meeting.date.length > 15) {
           const parsed = parseISO(meeting.date);
-          parsedDate = isValidDate(parsed) ? meeting.date : new Date().toISOString();
+          parsedDate = isValid(parsed) ? meeting.date : new Date().toISOString();
         } else {
           parsedDate = new Date().toISOString();
         }
@@ -42,7 +42,7 @@ const SavedRecordingsTab = () => {
         if (meeting.audio_expires_at) {
           if (typeof meeting.audio_expires_at === "string" && meeting.audio_expires_at.length > 15) {
             const parsed = parseISO(meeting.audio_expires_at);
-            parsedExpiresAt = isValidDate(parsed) ? meeting.audio_expires_at : undefined;
+            parsedExpiresAt = isValid(parsed) ? meeting.audio_expires_at : undefined;
           } else {
             parsedExpiresAt = undefined;
           }

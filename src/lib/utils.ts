@@ -2,7 +2,7 @@
 // Import parseISO for safe ISO string parsing
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { parseISO, isValid as isValidDate, format, formatDistanceToNow } from "date-fns";
+import { parseISO, isValid, format, formatDistanceToNow } from "date-fns";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -18,7 +18,7 @@ export function formatRelativeTime(date: Date | string): string {
     const timestamp = (typeof date === 'string') ? parseISO(date) : date;
     
     // Handle invalid dates
-    if (!isValidDate(timestamp)) {
+    if (!isValid(timestamp)) {
       console.warn('Invalid date passed to formatRelativeTime:', date);
       return 'Invalid date';
     }
@@ -33,4 +33,3 @@ export function formatRelativeTime(date: Date | string): string {
     return 'Unknown date';
   }
 }
-

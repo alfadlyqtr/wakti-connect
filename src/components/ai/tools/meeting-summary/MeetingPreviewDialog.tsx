@@ -13,7 +13,7 @@ import { generateTomTomMapsUrl } from '@/config/maps';
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from 'framer-motion';
 import { formatRelativeTime } from '@/lib/utils';
-import { parseISO, isValid as isValidDate } from "date-fns";
+import { parseISO, isValid } from "date-fns";
 
 interface MeetingPreviewDialogProps {
   isOpen: boolean;
@@ -141,7 +141,7 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
   let safeDate = "";
   if (meeting.date && typeof meeting.date === "string" && meeting.date.length > 15) {
     const parsed = parseISO(meeting.date);
-    safeDate = isValidDate(parsed) ? meeting.date : "";
+    safeDate = isValid(parsed) ? meeting.date : "";
   }
 
   const displayTitle = meeting.title || extractTitleFromSummary(meeting.summary);
