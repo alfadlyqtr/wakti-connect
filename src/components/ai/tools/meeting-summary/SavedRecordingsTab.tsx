@@ -1,8 +1,9 @@
+
 import React, { useState } from 'react';
 import { useMeetingSummaryV2 } from '@/hooks/ai/meeting-summary/useMeetingSummaryV2';
 import SavedMeetingsList from './SavedMeetingsList';
 import { Button } from '@/components/ui/button';
-import { FileDown } from 'lucide-react';
+import { FileDown, Trash2 } from 'lucide-react'; // Added Trash2 import for the icon
 import { toast } from 'sonner';
 import MeetingPreviewDialog from './MeetingPreviewDialog';
 import { exportMeetingSummaryAsPDF } from './MeetingSummaryExporter';
@@ -184,17 +185,41 @@ const SavedRecordingsTab = () => {
     }
   };
 
+  // Improved formatting to show both date and time more clearly
   const formatDateWithTime = (isoString: string | undefined) => {
     if (!isoString) return "No date";
     const date = new Date(isoString);
     if (isNaN(date.getTime())) return "Invalid date";
+
+    // Use differenceInDays to highlight "today" or relative days if desired
+    const now = new Date();
+    const daysDiff = differenceInDays(now, date);
+
+    if (daysDiff === 0) {
+      return `Today • ${date.toLocaleTimeString(undefined, {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      })}`;
+    } else if (daysDiff === 1) {
+      return `Yesterday • ${date.toLocaleTimeString(undefined, {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      })}`;
+    }
+
     return (
       date.toLocaleDateString(undefined, { 
-        year: "numeric", month: "short", day: "numeric"
+        year: "numeric",
+        month: "short",
+        day: "numeric"
       }) +
       " • " +
       date.toLocaleTimeString(undefined, { 
-        hour: "2-digit", minute: "2-digit"
+        hour: "2-digit", 
+        minute: "2-digit",
+        hour12: true,
       })
     );
   };
@@ -317,3 +342,4 @@ const SavedRecordingsTab = () => {
 };
 
 export default SavedRecordingsTab;
+
