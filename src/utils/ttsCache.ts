@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import md5 from "md5"; // We'll use md5 for fast hash
 import { v4 as uuidv4 } from "uuid";
@@ -68,7 +67,7 @@ export async function getOrGenerateAudio(params: TTSCacheParams): Promise<TTSCac
       .limit(1)
       .single() as { data: AudioCacheEntry | null, error: any };
 
-    if (cacheData) {
+    if (cacheData && cacheData.audio_url) {
       // Update hit_count and last_accessed
       await supabase
         .from("audio_cache" as any)
@@ -99,48 +98,54 @@ export async function getOrGenerateAudio(params: TTSCacheParams): Promise<TTSCac
         fileExtension = ".mp3";
       }
 
-      if (audioBlob) {
-        // Step 3: Upload to storage
-        const fileName = `tts-audio/${textHash}_${uuidv4()}${fileExtension}`;
-        const upload = await supabase.storage
-          .from("tts-audio")
-          .upload(fileName, audioBlob, {
-            cacheControl: "2592000", // 30 days in seconds
-            upsert: true,
-            contentType: "audio/mp3",
-          });
+      if (!audioBlob) throw new Error(provider + " returned no audio blob");
 
-        if (upload.error) throw upload.error;
-        // Step 4: Store cache record
-        const publicUrl = supabase.storage.from("tts-audio").getPublicUrl(fileName).data.publicUrl;
-
-        // Insert the new cache entry
-        await supabase
-          .from("audio_cache" as any)
-          .insert({
-            text_hash: textHash,
-            text: text,
-            voice: voice,
-            tts_provider: provider,
-            audio_url: publicUrl,
-            created_at: new Date().toISOString(),
-            last_accessed: new Date().toISOString(),
-            hit_count: 1
-          });
-
-        return {
-          audioUrl: publicUrl,
-          provider,
-          cacheHit: false,
-        };
+      // Defensive: check if the blob looks like audio (length > a few bytes)
+      if (audioBlob.size < 1000) {
+        throw new Error(provider + " audio blob too small (size:" + audioBlob.size + ")");
       }
-    } catch (err) {
-      console.warn(`[TTS] ${provider} audio generation failed:`, err);
+
+      // Step 3: Upload to storage
+      const fileName = `tts-audio/${textHash}_${uuidv4()}${fileExtension}`;
+      const upload = await supabase.storage
+        .from("tts-audio")
+        .upload(fileName, audioBlob, {
+          cacheControl: "2592000", // 30 days in seconds
+          upsert: true,
+          contentType: "audio/mp3",
+        });
+
+      if (upload.error) throw upload.error;
+      // Step 4: Store cache record
+      const publicUrl = supabase.storage.from("tts-audio").getPublicUrl(fileName).data.publicUrl;
+
+      // Insert the new cache entry
+      await supabase
+        .from("audio_cache" as any)
+        .insert({
+          text_hash: textHash,
+          text: text,
+          voice: voice,
+          tts_provider: provider,
+          audio_url: publicUrl,
+          created_at: new Date().toISOString(),
+          last_accessed: new Date().toISOString(),
+          hit_count: 1
+        });
+
+      return {
+        audioUrl: publicUrl,
+        provider,
+        cacheHit: false,
+      };
+    } catch (err: any) {
+      // LOG THE ERROR and DO NOT cache!
+      console.warn(`[TTS] ${provider} audio generation failed (expected fallback):`, err);
       continue; // try fallback
     }
   }
 
-  throw new Error(`Failed to generate audio via providers: ${triedProviders.join(", ")}`);
+  throw new Error(`Failed to generate audio via providers: ${triedProviders.join(", ")} (see console for details)`);
 }
 
 // --- Helper: Speechify (API KEY from Supabase secret) ---
@@ -173,12 +178,27 @@ async function generateWithSpeechify(
     }),
   });
 
+  // <<--- Enhanced Handling: Check for error
   if (!response.ok) {
-    console.error("Speechify response error:", await response.text());
-    throw new Error(`Failed to fetch Speechify audio: ${response.status}`);
+    const errText = await response.text();
+    console.error("Speechify response error:", errText);
+    throw new Error(`Failed to fetch Speechify audio: ${response.status} - ${errText}`);
+  }
+  const blob = await response.blob();
+
+  // Defensive: check if the blob is an audio/mp3
+  // Sometimes Speechify may return {"error":"..."} as a blob, so look for low file size
+  if (blob.size < 1000) {
+    // Try to parse for readable error
+    let errMsg = "";
+    try {
+      const textPreview = await blob.text();
+      errMsg = (textPreview.length < 100) ? textPreview : textPreview.slice(0, 100);
+    } catch { }
+    throw new Error("Speechify returned small or empty audio: " + errMsg);
   }
 
-  return await response.blob();
+  return blob;
 }
 
 // --- Helper: VoiceRSS (free/public) ---
@@ -193,5 +213,17 @@ async function generateWithVoiceRSS(
     )}&c=MP3&f=16khz_16bit_stereo`;
   const resp = await fetch(url);
   if (!resp.ok) throw new Error("VoiceRSS failed");
-  return await resp.blob();
+  const blob = await resp.blob();
+
+  // Defensive: check if the blob is likely audio
+  if (blob.size < 1000) {
+    // Try to read for text error
+    let errMsg = "";
+    try {
+      const textPreview = await blob.text();
+      errMsg = (textPreview.length < 100) ? textPreview : textPreview.slice(0, 100);
+    } catch { }
+    throw new Error("VoiceRSS returned small or empty audio: " + errMsg);
+  }
+  return blob;
 }
