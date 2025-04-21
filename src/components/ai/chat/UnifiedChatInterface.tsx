@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -15,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { VoiceButton } from '../voice/VoiceButton';
 import { useEnhancedVoiceInteraction } from '@/hooks/ai/useEnhancedVoiceInteraction';
+import { ChatVoiceController } from '@/components/voice/ChatVoiceController';
 
 export const UnifiedChatInterface: React.FC = () => {
   const { messages, sendMessage, isLoading, clearMessages } = useGlobalChat();
@@ -23,16 +23,6 @@ export const UnifiedChatInterface: React.FC = () => {
   const isMobile = useIsMobile();
 
   const [userInput, setUserInput] = useState("");
-  const {
-    isListening,
-    transcript,
-    showVoiceInput,
-    setShowVoiceInput,
-    handleVoiceToggle,
-    supportsVoice
-  } = useEnhancedVoiceInteraction({
-    setInputMessage: setUserInput,
-  });
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -162,14 +152,9 @@ export const UnifiedChatInterface: React.FC = () => {
       </div>
 
       <div className="flex gap-2 items-center px-2 sm:px-4 pb-4">
-        {supportsVoice && (
-          <VoiceButton
-            isListening={isListening}
-            isLoading={isLoading}
-            isDisabled={isLoading}
-            onToggle={handleVoiceToggle}
-          />
-        )}
+        <React.Suspense fallback={null}>
+          <ChatVoiceController setInputMessage={setUserInput} isDisabled={isLoading} />
+        </React.Suspense>
         <div className="flex-1">
           <ChatInput 
             onSendMessage={(msg) => {
@@ -182,11 +167,6 @@ export const UnifiedChatInterface: React.FC = () => {
             onChange={setUserInput}
             onClearChat={clearMessages}
           />
-          {showVoiceInput && isListening && (
-            <div className="text-xs text-pink-600 animate-pulse mt-1">
-              Listening... {transcript ? `"${transcript}"` : ""}
-            </div>
-          )}
         </div>
       </div>
     </div>
