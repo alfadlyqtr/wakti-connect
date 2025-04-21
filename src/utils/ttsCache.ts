@@ -51,22 +51,24 @@ const getTextHash = (text: string, voice: string, provider: Provider) =>
 export async function getOrGenerateAudio(params: TTSCacheParams): Promise<TTSCacheResult> {
   const { text, voice = "Aria", language = "en", preferProvider = "elevenlabs" } = params;
   let triedProviders: Provider[] = [];
+  
   for (const provider of [preferProvider, preferProvider === "elevenlabs" ? "voicerss" : "elevenlabs"]) {
     triedProviders.push(provider as Provider);
     const textHash = getTextHash(text, voice, provider as Provider);
 
     // Step 1: Check Cache
+    // Use explicit type casting to handle the audio_cache table that's not in types yet
     const { data: cacheData, error: cacheError } = await supabase
-      .from("audio_cache")
+      .from("audio_cache" as any)
       .select("*")
       .eq("text_hash", textHash)
       .limit(1)
-      .single();
+      .single() as { data: AudioCacheEntry | null, error: any };
 
     if (cacheData) {
       // Update hit_count and last_accessed
       await supabase
-        .from("audio_cache")
+        .from("audio_cache" as any)
         .update({
           hit_count: (cacheData.hit_count || 0) + 1,
           last_accessed: new Date().toISOString()
@@ -108,16 +110,18 @@ export async function getOrGenerateAudio(params: TTSCacheParams): Promise<TTSCac
         const publicUrl = supabase.storage.from("tts-audio").getPublicUrl(fileName).data.publicUrl;
         
         // Insert the new cache entry
-        await supabase.from("audio_cache").insert({
-          text_hash: textHash,
-          text: text,
-          voice: voice,
-          tts_provider: provider,
-          audio_url: publicUrl,
-          created_at: new Date().toISOString(),
-          last_accessed: new Date().toISOString(),
-          hit_count: 1
-        });
+        await supabase
+          .from("audio_cache" as any)
+          .insert({
+            text_hash: textHash,
+            text: text,
+            voice: voice,
+            tts_provider: provider,
+            audio_url: publicUrl,
+            created_at: new Date().toISOString(),
+            last_accessed: new Date().toISOString(),
+            hit_count: 1
+          });
 
         return {
           audioUrl: publicUrl,
@@ -147,12 +151,7 @@ async function generateWithElevenLabs(
 
   const apiKey = apiKeyResp.data.apiKey;
   const voiceId = voice || "9BWtsMINqrJLrRacOk9x"; // Default: Aria
-  const body = {
-    text,
-    voice_id: voiceId,
-    model_id: "eleven_multilingual_v2", // Or let user pick
-    output_format: "mp3",
-  };
+  
   const response = await fetch(`${ELEVENLABS_URL}/${voiceId}/stream`, {
     method: "POST",
     headers: {
