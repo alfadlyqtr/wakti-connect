@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -13,7 +14,6 @@ import { generateTomTomMapsUrl } from '@/config/maps';
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from 'framer-motion';
 import { formatRelativeTime } from '@/lib/utils';
-import { parseISO, isValid } from "date-fns";
 
 interface MeetingPreviewDialogProps {
   isOpen: boolean;
@@ -138,29 +138,12 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
     return null;
   }
 
-  let safeDate = "";
-  if (meeting.date && typeof meeting.date === "string" && meeting.date.length > 15) {
-    const parsed = parseISO(meeting.date);
-    safeDate = isValid(parsed) ? meeting.date : "";
-  }
-
   const displayTitle = meeting.title || extractTitleFromSummary(meeting.summary);
   const location = locationName || meeting.detectedLocation;
   const showMapButton = location && location.length > 0;
   const hasAudio = meeting?.has_audio || !!meeting?.audioUrl || !!meeting?.audioStoragePath;
-  const formattedDate = safeDate ? formatRelativeTime(safeDate) : "";
 
-  React.useEffect(() => {
-    if (meeting) {
-      console.log('Meeting preview data:', {
-        title: meeting.title,
-        date: meeting.date,
-        has_audio: meeting.has_audio,
-        audioUrl: meeting.audioUrl,
-        formattedDate
-      });
-    }
-  }, [meeting, formattedDate]);
+  const formattedDate = meeting ? formatRelativeTime(new Date(meeting.date)) : '';
 
   return (
     <Dialog open={isOpen} onOpenChange={() => onClose()}>
