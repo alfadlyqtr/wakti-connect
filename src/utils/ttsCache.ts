@@ -25,7 +25,7 @@ export interface TTSCacheResult {
   cacheHit: boolean;
 }
 
-// Define the type for cache entry to satisfy TypeScript
+// Define the type for cache entry
 interface AudioCacheEntry {
   id: string;
   text_hash: string;
@@ -56,15 +56,16 @@ export async function getOrGenerateAudio(params: TTSCacheParams): Promise<TTSCac
     const textHash = getTextHash(text, voice, provider as Provider);
 
     // Step 1: Check Cache
-    // Use custom method as workaround for typing issues
-    const { data: cacheItems, error: cacheError } = await fetchCacheByHash(textHash);
+    const { data: cacheData, error: cacheError } = await fetchCacheByHash(textHash);
 
-    if (cacheItems && cacheItems.audio_url) {
+    if (cacheData && cacheData.length > 0) {
+      const cacheEntry = cacheData[0] as AudioCacheEntry;
+      
       // Update hit_count and last_accessed
-      await updateCacheHitCount(cacheItems.id);
+      await updateCacheHitCount(cacheEntry.id);
 
       return {
-        audioUrl: cacheItems.audio_url,
+        audioUrl: cacheEntry.audio_url,
         provider: provider as Provider,
         cacheHit: true,
       };
@@ -97,14 +98,12 @@ export async function getOrGenerateAudio(params: TTSCacheParams): Promise<TTSCac
         // Step 4: Store cache record
         const publicUrl = supabase.storage.from("tts-audio").getPublicUrl(fileName).data.publicUrl;
         
-        // Use custom method instead of direct from() call
         await insertCacheEntry({
           text_hash: textHash,
           text,
           voice,
           tts_provider: provider as Provider,
-          audio_url: publicUrl,
-          hit_count: 1
+          audio_url: publicUrl
         });
 
         return {
@@ -122,9 +121,12 @@ export async function getOrGenerateAudio(params: TTSCacheParams): Promise<TTSCac
   throw new Error(`Failed to generate audio via providers: ${triedProviders.join(", ")}`);
 }
 
-// Custom methods to workaround TypeScript issues
+// Custom methods with proper typing for RPC functions
 async function fetchCacheByHash(textHash: string) {
-  return await supabase.rpc('get_audio_cache_by_hash', { hash_param: textHash });
+  return await supabase.rpc('get_audio_cache_by_hash', { hash_param: textHash }) as {
+    data: AudioCacheEntry[] | null,
+    error: any
+  };
 }
 
 async function updateCacheHitCount(id: string) {
@@ -136,8 +138,7 @@ async function insertCacheEntry(entry: {
   text: string,
   voice: string,
   tts_provider: Provider,
-  audio_url: string,
-  hit_count: number
+  audio_url: string
 }) {
   return await supabase.rpc('insert_audio_cache', {
     text_hash_param: entry.text_hash,
