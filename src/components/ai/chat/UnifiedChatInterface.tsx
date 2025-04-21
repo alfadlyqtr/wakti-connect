@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -12,7 +13,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/useIsMobile';
-import { VoiceButton } from '../VoiceButton';
+import { VoiceButton } from '../voice/VoiceButton';
 import { useEnhancedVoiceInteraction } from '@/hooks/ai/useEnhancedVoiceInteraction';
 
 export const UnifiedChatInterface: React.FC = () => {

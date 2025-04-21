@@ -1,11 +1,11 @@
 
 import React from 'react';
-import { AIMessage } from "@/components/ai/personality-switcher/types";
+import { ChatMemoryMessage } from "@/components/ai/personality-switcher/types";
 import { MessageContent } from "../message/MessageContent";
 import { MessageAvatar } from "../message/MessageAvatar";
 
 interface ChatMessageProps {
-  message: AIMessage;
+  message: ChatMemoryMessage;
   mode: string;
 }
 
