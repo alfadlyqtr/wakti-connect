@@ -59,13 +59,16 @@ export async function getOrGenerateAudio(params: TTSCacheParams): Promise<TTSCac
     triedProviders.push(provider);
     const textHash = getTextHash(text, voice, provider);
 
+    console.log(`[TTS] Trying provider: ${provider}, text hash: ${textHash}`);
+
     // Step 1: Check Cache
+    // FIX: Use .maybeSingle() instead of .single() to not throw if missing
     const { data: cacheData, error: cacheError } = await supabase
       .from("audio_cache" as any)
       .select("*")
       .eq("text_hash", textHash)
       .limit(1)
-      .single() as { data: AudioCacheEntry | null, error: any };
+      .maybeSingle() as { data: AudioCacheEntry | null, error: any };
 
     if (cacheData && cacheData.audio_url) {
       // Update hit_count and last_accessed
@@ -77,6 +80,7 @@ export async function getOrGenerateAudio(params: TTSCacheParams): Promise<TTSCac
         })
         .eq("id", cacheData.id);
 
+      console.log(`[TTS] Cache hit for provider: ${provider} — returning cached audio.`);
       return {
         audioUrl: cacheData.audio_url,
         provider,
@@ -89,20 +93,18 @@ export async function getOrGenerateAudio(params: TTSCacheParams): Promise<TTSCac
       let audioBlob: Blob | null = null;
       let fileExtension = ".mp3";
       if (provider === "speechify") {
-        console.log("Attempting Speechify generation...");
+        console.log("[TTS] Attempting Speechify generation...");
         audioBlob = await generateWithSpeechify(text, language, voice);
         fileExtension = ".mp3";
       } else if (provider === "voicerss") {
-        console.log("Falling back to VoiceRSS generation...");
+        console.log("[TTS] Falling back to VoiceRSS generation...");
         audioBlob = await generateWithVoiceRSS(text, language, voice);
         fileExtension = ".mp3";
       }
 
       if (!audioBlob) throw new Error(provider + " returned no audio blob");
-
-      // Defensive: check if the blob looks like audio (length > a few bytes)
       if (audioBlob.size < 1000) {
-        throw new Error(provider + " audio blob too small (size:" + audioBlob.size + ")");
+        throw new Error(`${provider} audio blob too small (size:${audioBlob.size})`);
       }
 
       // Step 3: Upload to storage
@@ -110,16 +112,15 @@ export async function getOrGenerateAudio(params: TTSCacheParams): Promise<TTSCac
       const upload = await supabase.storage
         .from("tts-audio")
         .upload(fileName, audioBlob, {
-          cacheControl: "2592000", // 30 days in seconds
+          cacheControl: "2592000",
           upsert: true,
           contentType: "audio/mp3",
         });
 
       if (upload.error) throw upload.error;
-      // Step 4: Store cache record
+
       const publicUrl = supabase.storage.from("tts-audio").getPublicUrl(fileName).data.publicUrl;
 
-      // Insert the new cache entry
       await supabase
         .from("audio_cache" as any)
         .insert({
@@ -133,6 +134,7 @@ export async function getOrGenerateAudio(params: TTSCacheParams): Promise<TTSCac
           hit_count: 1
         });
 
+      console.log(`[TTS] ${provider} generation and upload succeeded.`);
       return {
         audioUrl: publicUrl,
         provider,
@@ -140,11 +142,12 @@ export async function getOrGenerateAudio(params: TTSCacheParams): Promise<TTSCac
       };
     } catch (err: any) {
       // LOG THE ERROR and DO NOT cache!
-      console.warn(`[TTS] ${provider} audio generation failed (expected fallback):`, err);
-      continue; // try fallback
+      console.warn(`[TTS] ${provider} audio generation failed — expected fallback.`, err);
+      continue; // try fallback in the for-loop
     }
   }
 
+  console.error(`[TTS] All providers failed: ${triedProviders.join(", ")}.`);
   throw new Error(`Failed to generate audio via providers: ${triedProviders.join(", ")} (see console for details)`);
 }
 
