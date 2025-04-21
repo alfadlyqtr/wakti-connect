@@ -198,8 +198,13 @@ const SavedRecordingsTab = () => {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
     >
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Previous Recordings</h2>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
+        <div>
+          <h2 className="text-xl font-semibold">Previous Recordings</h2>
+          <div className="text-xs text-muted-foreground mt-1">
+            <span>All previous recordings are available for 10 days from creation and then deleted.</span>
+          </div>
+        </div>
         <Button 
           variant="outline" 
           size="sm" 

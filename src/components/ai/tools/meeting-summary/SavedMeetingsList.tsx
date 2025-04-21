@@ -1,9 +1,9 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Trash2, Clock, Download, AlertTriangle, MapPin, File } from 'lucide-react';
-import { formatDistanceToNow, differenceInDays } from 'date-fns';
+import { Trash2, Download, MapPin, File } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { formatRelativeTime } from '@/lib/utils';
+import { formatDateTime } from '@/utils/dateUtils';
 
 export interface SavedMeeting {
   id: string;
@@ -51,45 +51,11 @@ const SavedMeetingsList: React.FC<SavedMeetingsListProps> = ({
     if (meeting.title && meeting.title !== 'Untitled Meeting') {
       return meeting.title;
     }
-    
-    // Extract title from summary
     const titleMatch = meeting.summary.match(/Meeting Title:\s*([^\n]+)/i) || 
                       meeting.summary.match(/Title:\s*([^\n]+)/i) ||
                       meeting.summary.match(/^# ([^\n]+)/m) ||
                       meeting.summary.match(/^## ([^\n]+)/m);
-                      
     return titleMatch ? titleMatch[1].trim() : 'Untitled Meeting';
-  };
-
-  const getAudioStatus = (meeting: SavedMeeting) => {
-    if (!meeting.has_audio) return null;
-    if (!meeting.audio_expires_at) return null;
-
-    const expiresAt = new Date(meeting.audio_expires_at);
-    const daysRemaining = differenceInDays(expiresAt, new Date());
-
-    if (daysRemaining <= 0) return null;
-
-    if (daysRemaining <= 2) {
-      return (
-        <div className="text-xs text-amber-500 flex items-center gap-1">
-          <AlertTriangle className="h-3 w-3" />
-          <span>Expires in {daysRemaining} day{daysRemaining !== 1 ? 's' : ''}</span>
-        </div>
-      );
-    }
-
-    return (
-      <div className="text-xs text-muted-foreground">
-        Audio available for {daysRemaining} days
-      </div>
-    );
-  };
-
-  const formatDuration = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
   return (
@@ -111,20 +77,16 @@ const SavedMeetingsList: React.FC<SavedMeetingsListProps> = ({
             >
               <h4 className="font-medium text-blue-700">{getDisplayTitle(meeting)}</h4>
               <div className="flex items-center text-sm text-muted-foreground">
-                <Clock className="h-3 w-3 mr-1" />
-                <span>{formatRelativeTime(new Date(meeting.date))}</span>
-                <span className="mx-1">•</span>
-                <span>{formatDuration(meeting.duration)}</span>
+                <span>
+                  <span className="font-medium">Created:</span> {formatDateTime(meeting.date)}
+                </span>
               </div>
-              
               {meeting.location && (
                 <div className="flex items-center text-xs text-gray-500 mt-1">
                   <MapPin className="h-3 w-3 mr-1" />
                   <span className="truncate max-w-[250px]">{meeting.location}</span>
                 </div>
               )}
-              
-              {getAudioStatus(meeting)}
             </div>
             
             <div className="flex items-center gap-2 self-end sm:self-center">
