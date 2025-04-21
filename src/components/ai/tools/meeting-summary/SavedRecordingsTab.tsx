@@ -32,6 +32,9 @@ const SavedRecordingsTab = () => {
         ...meeting,
         date: meeting.date || new Date().toISOString() // Provide fallback if date is missing
       }));
+      
+      // Add console logs to debug data
+      console.log("Loaded meetings data:", processedMeetings);
       setMeetings(processedMeetings);
     } catch (error) {
       console.error('Error loading meetings:', error);

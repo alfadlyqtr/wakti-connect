@@ -25,6 +25,7 @@ export const useMeetingsHandlers = () => {
         throw error;
       }
       
+      console.log("Raw meetings data from database:", data);
       return data || [];
       
     } catch (error) {
