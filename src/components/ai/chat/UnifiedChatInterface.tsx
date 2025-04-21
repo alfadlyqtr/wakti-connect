@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { VoiceButton } from '../voice/VoiceButton';
 import { useEnhancedVoiceInteraction } from '@/hooks/ai/useEnhancedVoiceInteraction';
-import { ChatVoiceController } from '@/components/voice/ChatVoiceController';
+import { ChatVoiceController } from '@/components/ai/voice/ChatVoiceController';
 
 export const UnifiedChatInterface: React.FC = () => {
   const { messages, sendMessage, isLoading, clearMessages } = useGlobalChat();
