@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Mic, Send, AlertCircle, Paperclip, Camera, MicOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -40,39 +39,48 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
   const isMobile = useIsMobile();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  // Replace all other voice interaction for WAKTI AI with only the browser mic logic
+  // WAKTI AI Voice via Browser Speech (Web Speech API)
   const {
     isListening: browserIsListening,
     transcript: browserTranscript,
     supportsVoice: browserSupportsVoice,
     startListening: browserStartListening,
     stopListening: browserStopListening
-  } = useWaktiAIBrowserSpeech((text) => {
-    if (text) {
-      const updatedText =
-        inputMessage +
-        (inputMessage && !inputMessage.endsWith(" ") && !text.startsWith(" ") ? " " : "") +
-        text;
-      setInputMessage(updatedText);
-    }
-  });
+  } = useWaktiAIBrowserSpeech();
 
-  // Use the transcript directly from browser if needed (might be unnecessary due to callback above)
+  // Track the live transcript
+  const [liveTranscript, setLiveTranscript] = React.useState('');
+
+  // Whenever the browser transcript updates (live or after speaking), update the textarea
   React.useEffect(() => {
-    if (browserTranscript) {
-      const updatedText =
-        inputMessage +
-        (inputMessage && !inputMessage.endsWith(" ") && !browserTranscript.startsWith(" ") ? " " : "") +
-        browserTranscript;
-      setInputMessage(updatedText);
+    if (browserIsListening && browserTranscript) {
+      // While listening, preview transcript in textarea
+      setLiveTranscript(browserTranscript);
+    } else if (!browserIsListening && browserTranscript) {
+      // On stop, keep the text in box, clear liveTranscript
+      setInputMessage(prev => {
+        // Avoid duplicate appending if already included
+        if (!browserTranscript) return prev;
+        if (prev.includes(browserTranscript)) return prev;
+        return prev +
+          (prev && !prev.endsWith(" ") && !browserTranscript.startsWith(" ") ? " " : "") +
+          browserTranscript;
+      });
+      setLiveTranscript('');
     }
     // eslint-disable-next-line
-  }, [browserTranscript]);
+  }, [browserTranscript, browserIsListening]);
+
+  // The textarea always shows the final message + any current spoken words if listening
+  const displayedText = browserIsListening
+    ? (inputMessage +
+        (inputMessage && !inputMessage.endsWith(" ") && !!liveTranscript && !liveTranscript.startsWith(" ") ? " " : "") +
+        liveTranscript)
+    : inputMessage;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0 || !onFileUpload) return;
-    
     onFileUpload(files[0]);
     e.target.value = ''; // Reset the input
   };
@@ -88,8 +96,8 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey && !isMobile) {
       e.preventDefault();
-      if (inputMessage.trim() && !isLoading) {
-        handleSendMessage(e);
+      if (displayedText.trim() && !isLoading) {
+        handleSendMessage(e as unknown as React.FormEvent);
       }
     }
   };
@@ -98,6 +106,8 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
     if (browserIsListening) {
       browserStopListening();
     } else {
+      // Store current text as base, so every new transcript is appended
+      setLiveTranscript('');
       browserStartListening();
     }
   };
@@ -106,7 +116,8 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
     <form 
       onSubmit={(e) => {
         e.preventDefault();
-        if (inputMessage.trim() && !isLoading) {
+        if (displayedText.trim() && !isLoading) {
+          setInputMessage(displayedText); // save the text if any spoken words left unmerged
           handleSendMessage(e);
         }
       }}
@@ -116,16 +127,9 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
         <div className="relative w-full">
           <Textarea
             placeholder="Type a message..."
-            value={inputMessage}
+            value={displayedText}
             onChange={(e) => setInputMessage(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey && !isMobile) {
-                e.preventDefault();
-                if (inputMessage.trim() && !isLoading) {
-                  handleSendMessage(e as unknown as React.FormEvent);
-                }
-              }
-            }}
+            onKeyDown={handleKeyDown}
             className={cn(
               "min-h-[60px] sm:min-h-[80px] max-h-[150px] sm:max-h-[200px] resize-none py-3 px-4 text-sm md:text-base",
               browserIsListening && "bg-primary/5 border-primary/20"
@@ -165,7 +169,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
                   variant="ghost"
                   size="icon"
                   className="h-9 w-9 sm:h-10 sm:w-10 rounded-full"
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={handleFileUploadClick}
                   disabled={isLoading}
                 >
                   <Paperclip className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -175,12 +179,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
                   type="file"
                   ref={fileInputRef}
                   className="hidden"
-                  onChange={(e) => {
-                    const files = e.target.files;
-                    if (!files || files.length === 0 || !onFileUpload) return;
-                    onFileUpload(files[0]);
-                    e.target.value = "";
-                  }}
+                  onChange={handleFileChange}
                   accept=".pdf,.doc,.docx,.txt,.md"
                 />
               </>
@@ -203,7 +202,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
           <Button
             type="submit"
             size="default"
-            disabled={!inputMessage.trim() || isLoading}
+            disabled={!displayedText.trim() || isLoading}
             className="h-9 px-4 sm:h-10 sm:px-5 rounded-full w-full sm:w-auto"
           >
             {isLoading ? (
