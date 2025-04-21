@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useMeetingSummaryV2 } from '@/hooks/ai/meeting-summary/useMeetingSummaryV2';
 import SavedMeetingsList from './SavedMeetingsList';
@@ -9,6 +8,7 @@ import MeetingPreviewDialog from './MeetingPreviewDialog';
 import { exportMeetingSummaryAsPDF } from './MeetingSummaryExporter';
 import { motion } from 'framer-motion';
 import { differenceInDays } from 'date-fns';
+import { parseISO, isValidDate } from 'date-fns';
 
 const SavedRecordingsTab = () => {
   const { loadSavedMeetings, deleteMeeting } = useMeetingSummaryV2();
@@ -27,11 +27,32 @@ const SavedRecordingsTab = () => {
     setIsLoadingHistory(true);
     try {
       const loadedMeetings = await loadSavedMeetings();
-      // Ensure meetings have valid dates
-      const processedMeetings = loadedMeetings.map(meeting => ({
-        ...meeting,
-        date: meeting.date || new Date().toISOString() // Provide fallback if date is missing
-      }));
+
+      // Improved: Validate date and audio_expires_at, fallback only if really missing/invalid
+      const processedMeetings = loadedMeetings.map(meeting => {
+        let parsedDate: string = "";
+        if (meeting.date && typeof meeting.date === "string" && meeting.date.length > 15) {
+          const parsed = parseISO(meeting.date);
+          parsedDate = isValidDate(parsed) ? meeting.date : new Date().toISOString();
+        } else {
+          parsedDate = new Date().toISOString();
+        }
+        // Also keep audio_expires_at as string ISO if present
+        let parsedExpiresAt: string | undefined = "";
+        if (meeting.audio_expires_at) {
+          if (typeof meeting.audio_expires_at === "string" && meeting.audio_expires_at.length > 15) {
+            const parsed = parseISO(meeting.audio_expires_at);
+            parsedExpiresAt = isValidDate(parsed) ? meeting.audio_expires_at : undefined;
+          } else {
+            parsedExpiresAt = undefined;
+          }
+        }
+        return {
+          ...meeting,
+          date: parsedDate,
+          audio_expires_at: parsedExpiresAt,
+        };
+      });
       setMeetings(processedMeetings);
     } catch (error) {
       console.error('Error loading meetings:', error);

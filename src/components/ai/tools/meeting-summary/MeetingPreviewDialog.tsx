@@ -13,6 +13,7 @@ import { generateTomTomMapsUrl } from '@/config/maps';
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from 'framer-motion';
 import { formatRelativeTime } from '@/lib/utils';
+import { parseISO, isValid as isValidDate } from "date-fns";
 
 interface MeetingPreviewDialogProps {
   isOpen: boolean;
@@ -137,17 +138,22 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
     return null;
   }
 
+  let safeDate = "";
+  if (meeting.date && typeof meeting.date === "string" && meeting.date.length > 15) {
+    const parsed = parseISO(meeting.date);
+    safeDate = isValidDate(parsed) ? meeting.date : "";
+  }
+
   const displayTitle = meeting.title || extractTitleFromSummary(meeting.summary);
   const location = locationName || meeting.detectedLocation;
   const showMapButton = location && location.length > 0;
   const hasAudio = meeting?.has_audio || !!meeting?.audioUrl || !!meeting?.audioStoragePath;
+  const formattedDate = safeDate ? formatRelativeTime(safeDate) : "";
 
-  const formattedDate = meeting ? formatRelativeTime(meeting.date) : '';
-  
   React.useEffect(() => {
     if (meeting) {
-      console.log('Meeting preview data:', { 
-        title: meeting.title, 
+      console.log('Meeting preview data:', {
+        title: meeting.title,
         date: meeting.date,
         has_audio: meeting.has_audio,
         audioUrl: meeting.audioUrl,
