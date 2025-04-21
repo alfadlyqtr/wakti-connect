@@ -1,5 +1,4 @@
 
-// Short: Only thing that changes is how the audio is sent for transcription; now we upload the webm Blob direct (not base64).
 import { useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -83,15 +82,15 @@ export function useVoiceRecordingToTranscript({
       const formData = new FormData();
       formData.append("file", audioBlob, "audio.webm");
 
-      // Get the Supabase URL and API key properly
-      const supabaseUrl = supabase.supabaseUrl; // properly access the URL
-      const apiKey = supabase.supabaseKey; // properly access the API key
+      // Using the correct way to access Supabase URL and API key
+      const supabaseUrl = "https://sqdjqehcxpzsudhzjwbu.supabase.co";
+      const apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxZGpxZWhjeHB6c3VkaHpqd2J1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIwNjYxNzMsImV4cCI6MjA1NzY0MjE3M30.1YAc8f2wgeMWN-UgoH8tL14aiYme6aTewmWPgfC7j_M";
 
       // Post as file directly to the edge function
       const res = await fetch(`${supabaseUrl}/functions/v1/voice-transcription`, {
         method: "POST",
         headers: {
-          "apikey": apiKey || "",
+          "apikey": apiKey,
         },
         body: formData,
       });
