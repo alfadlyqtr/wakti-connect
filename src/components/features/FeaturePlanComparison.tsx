@@ -17,37 +17,31 @@ const FeaturePlanComparison = () => {
   const features = [
     {
       name: "Task Management",
-      free: "View Only",
       individual: true,
       business: true,
     },
     {
       name: "Task Sharing",
-      free: false,
       individual: true,
       business: true,
     },
     {
       name: "Custom Event Creation",
-      free: false,
       individual: true,
       business: true,
     },
     {
       name: "Business Booking Pages",
-      free: false,
       individual: false,
       business: true,
     },
     {
       name: "Staff Management",
-      free: false,
       individual: false,
       business: true,
     },
     {
       name: "Business Analytics",
-      free: false,
       individual: "Basic",
       business: "Advanced",
     },
@@ -76,7 +70,6 @@ const FeaturePlanComparison = () => {
           <TableHeader>
             <TableRow>
               <TableHead className="w-[180px]">Feature</TableHead>
-              <TableHead className="text-center">Free</TableHead>
               <TableHead className="text-center">Individual</TableHead>
               <TableHead className="text-center">Business</TableHead>
             </TableRow>
@@ -85,9 +78,6 @@ const FeaturePlanComparison = () => {
             {features.map((feature, index) => (
               <TableRow key={index}>
                 <TableCell className="font-medium">{feature.name}</TableCell>
-                <TableCell className="text-center">
-                  {renderStatus(feature.free)}
-                </TableCell>
                 <TableCell className="text-center">
                   {renderStatus(feature.individual)}
                 </TableCell>

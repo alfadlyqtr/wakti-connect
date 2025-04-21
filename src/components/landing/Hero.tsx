@@ -26,7 +26,7 @@ const Hero = () => {
           <div className="pt-6 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button asChild size="lg" className="w-full sm:w-auto bg-wakti-navy text-wakti-beige hover:bg-wakti-navy/90">
               <Link to="/auth?tab=register">
-                Start for Free
+                Start Your 3-Day Trial
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
@@ -38,7 +38,7 @@ const Hero = () => {
           </div>
           
           <div className="pt-8 text-sm text-wakti-navy/60">
-            <p>No credit card required</p>
+            <p>No credit card required for trial</p>
           </div>
         </div>
       </div>

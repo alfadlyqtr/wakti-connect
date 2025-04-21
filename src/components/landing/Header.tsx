@@ -70,16 +70,16 @@ const Header = () => {
           </Button>
           {/* Beige box with navy highlighted "Menu" text, navy border */}
           <button
-            className={`flex items-center gap-1 px-4 py-2 rounded-md border-2 border-wakti-navy shadow bg-wakti-beige ${
+            className={`flex items-center gap-1 px-4 py-2 rounded-md border-2 border-wakti-navy bg-wakti-beige text-wakti-navy ${
               isMenuOpen ? "ring-2 ring-wakti-navy" : ""
             }`}
             style={{ fontWeight: 600 }}
             onClick={toggleMenu}
           >
-            <span className="text-wakti-navy">Menu</span>
+            <span>Menu</span>
             {isMenuOpen ? 
-              <ChevronUp className="h-4 w-4 text-wakti-navy" /> : 
-              <ChevronDown className="h-4 w-4 text-wakti-navy" />
+              <ChevronUp className="h-4 w-4" /> : 
+              <ChevronDown className="h-4 w-4" />
             }
           </button>
         </div>

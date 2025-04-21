@@ -55,10 +55,14 @@ const PlanSelection = ({ selectedPlan, setSelectedPlan }: PlanSelectionProps) =>
               </Badge>
             </div>
             <div className="mb-4">
-              <span className="text-2xl font-bold">$9.99</span>
+              <span className="text-2xl font-bold">QAR 35</span>
               <span className="text-muted-foreground">/month</span>
             </div>
             <ul className="space-y-2">
+              <li className="flex items-center gap-2 text-sm">
+                <Check className="h-4 w-4 text-green-500" />
+                <span>3-day free trial</span>
+              </li>
               <li className="flex items-center gap-2 text-sm">
                 <Check className="h-4 w-4 text-green-500" />
                 <span>Full task management</span>
@@ -97,10 +101,14 @@ const PlanSelection = ({ selectedPlan, setSelectedPlan }: PlanSelectionProps) =>
               </Badge>
             </div>
             <div className="mb-4">
-              <span className="text-2xl font-bold">$29.99</span>
+              <span className="text-2xl font-bold">QAR 50</span>
               <span className="text-muted-foreground">/month</span>
             </div>
             <ul className="space-y-2">
+              <li className="flex items-center gap-2 text-sm">
+                <Check className="h-4 w-4 text-green-500" />
+                <span>3-day free trial</span>
+              </li>
               <li className="flex items-center gap-2 text-sm">
                 <Check className="h-4 w-4 text-green-500" />
                 <span>Everything in Individual plan</span>

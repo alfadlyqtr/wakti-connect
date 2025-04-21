@@ -17,7 +17,7 @@ export const useAuth = (): AuthContextType => {
           ...session.user,
           name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || '',
           displayName: session.user.user_metadata?.display_name || session.user.user_metadata?.full_name || '',
-          plan: session.user.user_metadata?.account_type || 'free'
+          plan: session.user.user_metadata?.account_type || 'individual'
         };
         setUser(userData);
         setIsAuthenticated(true);
@@ -38,7 +38,7 @@ export const useAuth = (): AuthContextType => {
             ...session.user,
             name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || '',
             displayName: session.user.user_metadata?.display_name || session.user.user_metadata?.full_name || '',
-            plan: session.user.user_metadata?.account_type || 'free'
+            plan: session.user.user_metadata?.account_type || 'individual'
           };
           setUser(userData);
           setIsAuthenticated(true);
@@ -95,7 +95,7 @@ export const useAuth = (): AuthContextType => {
     email: string, 
     password: string, 
     name?: string, 
-    accountType: string = 'free', 
+    accountType: string = 'individual', 
     businessName?: string
   ) => {
     try {
@@ -121,6 +121,26 @@ export const useAuth = (): AuthContextType => {
       });
 
       if (error) throw error;
+      
+      // If signup was successful, create a 3-day trial
+      if (data?.user) {
+        // Calculate trial end date (3 days from now)
+        const trialEndDate = new Date();
+        trialEndDate.setDate(trialEndDate.getDate() + 3);
+        
+        // Update user profile with trial end date
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ 
+            trial_ends_at: trialEndDate.toISOString(),
+            is_in_trial: true
+          })
+          .eq('id', data.user.id);
+          
+        if (profileError) {
+          console.error('Error setting trial period:', profileError);
+        }
+      }
       
       return { error: null, data };
     } catch (error: any) {

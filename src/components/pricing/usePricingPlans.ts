@@ -51,29 +51,15 @@ export const usePricingPlans = () => {
 
   const pricingPlans: PricingPlan[] = [
     {
-      name: "Free",
-      description: "Basic features to get started",
-      price: "0",
-      period: "forever",
-      features: [
-        "1 task per month",
-        "View appointments",
-        "Individual messaging (1 per month)",
-        "Basic support"
-      ],
-      buttonText: "Get Started",
-      buttonLink: "/auth?tab=register&plan=free",
-      highlight: false,
-    },
-    {
       name: "Individual",
       description: "Everything you need for personal productivity",
       price: billingCycle === "monthly" 
-        ? `${getCurrencyPrefix()} ${formatPrice(getPrice(20))}` 
-        : `${getCurrencyPrefix()} ${formatPrice(getPrice(20))}`,
+        ? `${getCurrencyPrefix()} ${formatPrice(getPrice(35))}` 
+        : `${getCurrencyPrefix()} ${formatPrice(getPrice(35))}`,
       period: billingCycle === "monthly" ? "per month" : "per year",
-      savings: billingCycle === "yearly" ? `Save ${getCurrencyPrefix()} ${formatPrice(getSavings(20))}/year` : null,
+      savings: billingCycle === "yearly" ? `Save ${getCurrencyPrefix()} ${formatPrice(getSavings(35))}/year` : null,
       features: [
+        "3-day free trial",
         "Unlimited tasks",
         "Create and manage appointments",
         "Individual messaging",
@@ -87,11 +73,12 @@ export const usePricingPlans = () => {
       name: "Business",
       description: "Advanced features for business management",
       price: billingCycle === "monthly" 
-        ? `${getCurrencyPrefix()} ${formatPrice(getPrice(45))}` 
-        : `${getCurrencyPrefix()} ${formatPrice(getPrice(45))}`,
+        ? `${getCurrencyPrefix()} ${formatPrice(getPrice(50))}` 
+        : `${getCurrencyPrefix()} ${formatPrice(getPrice(50))}`,
       period: billingCycle === "monthly" ? "per month" : "per year",
-      savings: billingCycle === "yearly" ? `Save ${getCurrencyPrefix()} ${formatPrice(getSavings(45))}/year` : null,
+      savings: billingCycle === "yearly" ? `Save ${getCurrencyPrefix()} ${formatPrice(getSavings(50))}/year` : null,
       features: [
+        "3-day free trial",
         "All Individual features",
         "Business profile page",
         "Customer booking system",

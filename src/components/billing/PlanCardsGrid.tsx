@@ -1,6 +1,5 @@
 
 import React from "react";
-import FreePlanCard from "./plan-cards/FreePlanCard";
 import IndividualPlanCard from "./plan-cards/IndividualPlanCard";
 import BusinessPlanCard from "./plan-cards/BusinessPlanCard";
 import { planFeatures } from "./PlanFeaturesData";
@@ -17,10 +16,7 @@ const PlanCardsGrid = ({
   billingCycle 
 }: PlanCardsGridProps) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {/* Free Plan */}
-      <FreePlanCard features={planFeatures.free} />
-      
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
       {/* Individual Plan */}
       <IndividualPlanCard 
         features={planFeatures.individual}

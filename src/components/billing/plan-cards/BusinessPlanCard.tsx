@@ -25,12 +25,12 @@ const BusinessPlanCard = ({
   billingCycle
 }: BusinessPlanCardProps) => {
   const getPrice = () => {
-    const basePrice = 29.99;
+    const basePrice = 50;
     return billingCycle === "yearly" ? (basePrice * 10).toFixed(2) : basePrice.toFixed(2);
   };
 
   const getSavings = () => {
-    const monthlyPrice = 29.99;
+    const monthlyPrice = 50;
     return (monthlyPrice * 12 - monthlyPrice * 10).toFixed(2);
   };
 
@@ -60,15 +60,18 @@ const BusinessPlanCard = ({
         </div>
         <CardDescription>For teams and businesses</CardDescription>
         <div className="mt-4">
-          <span className="text-3xl font-bold">${getPrice()}</span>
+          <span className="text-3xl font-bold">QAR {getPrice()}</span>
           <span className="text-muted-foreground">/{billingCycle === "monthly" ? "month" : "year"}</span>
           {billingCycle === "yearly" && (
             <div className="mt-1">
               <Badge variant="outline" className="bg-green-500/10 text-green-500">
-                Save ${getSavings()}/year
+                Save QAR {getSavings()}/year
               </Badge>
             </div>
           )}
+          <div className="mt-1 text-sm text-muted-foreground">
+            Includes 3-day free trial
+          </div>
         </div>
       </CardHeader>
       <CardContent className="h-[360px] overflow-y-auto">

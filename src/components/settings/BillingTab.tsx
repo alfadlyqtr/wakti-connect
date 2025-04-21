@@ -38,37 +38,30 @@ const BillingTab: React.FC<BillingTabProps> = ({ profile }) => {
   
   // Map account_type to display name, description and price
   const getPlanInfo = () => {
-    const planType = profile?.account_type || 'free';
+    const planType = profile?.account_type || 'individual';
     
     switch(planType) {
       case 'business':
         return {
           name: 'Business Plan',
           description: 'Full access to all business features including staff management, job tracking, analytics, AI assistant, and business landing page.',
-          priceQAR: 'QAR 45/month or QAR 400/year',
-          priceUSD: 'USD 12.50/month or USD 110/year'
+          priceQAR: 'QAR 50/month or QAR 500/year',
+          priceUSD: 'USD 13.50/month or USD 135/year'
         };
-      case 'individual':
+      default: // individual
         return {
           name: 'Individual Plan',
           description: 'Enhanced personal productivity tools with unlimited task storage, messaging, analytics, and AI assistant features.',
-          priceQAR: 'QAR 20/month or QAR 200/year',
-          priceUSD: 'USD 5.50/month or USD 55/year'
-        };
-      default:
-        return {
-          name: 'Free Plan',
-          description: 'Basic features with limited storage and functionality.',
-          priceQAR: 'Free',
-          priceUSD: 'Free'
+          priceQAR: 'QAR 35/month or QAR 350/year',
+          priceUSD: 'USD 9.50/month or USD 95/year'
         };
     }
   };
   
   const planInfo = getPlanInfo();
   
-  // Only show upgrade option for free or individual accounts
-  const showUpgradeOption = profile?.account_type === 'free' || profile?.account_type === 'individual';
+  // Only show upgrade option for individual accounts
+  const showUpgradeOption = profile?.account_type === 'individual';
   
   return (
     <Card>
@@ -83,7 +76,7 @@ const BillingTab: React.FC<BillingTabProps> = ({ profile }) => {
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-2">
             <h3 className="font-medium text-lg">{planInfo.name}</h3>
             <div className="flex items-center gap-2">
-              <Badge variant="outline" className="capitalize w-fit">{profile?.account_type || 'Free'}</Badge>
+              <Badge variant="outline" className="capitalize w-fit">{profile?.account_type || 'Individual'}</Badge>
             </div>
           </div>
           <p className="text-muted-foreground mb-2 text-sm sm:text-base">
@@ -107,7 +100,7 @@ const BillingTab: React.FC<BillingTabProps> = ({ profile }) => {
               className="w-full sm:w-auto"
               onClick={handleUpgradePlan}
             >
-              {profile?.account_type === 'free' ? 'Upgrade Plan' : 'Change Plan'}
+              Upgrade to Business
             </Button>
           )}
         </div>
@@ -174,8 +167,7 @@ const BillingTab: React.FC<BillingTabProps> = ({ profile }) => {
                 <p className="text-sm text-muted-foreground">Plan: {planInfo.name}</p>
               </div>
               <p className="font-medium">
-                {profile?.account_type === 'business' ? 'QAR 45.00' : 
-                profile?.account_type === 'individual' ? 'QAR 20.00' : 'QAR 0.00'}
+                {profile?.account_type === 'business' ? 'QAR 50.00' : 'QAR 35.00'}
               </p>
             </div>
             <div className="p-3 flex flex-col sm:flex-row sm:justify-between gap-1">
@@ -184,8 +176,7 @@ const BillingTab: React.FC<BillingTabProps> = ({ profile }) => {
                 <p className="text-sm text-muted-foreground">Plan: {planInfo.name}</p>
               </div>
               <p className="font-medium">
-                {profile?.account_type === 'business' ? 'QAR 45.00' : 
-                profile?.account_type === 'individual' ? 'QAR 20.00' : 'QAR 0.00'}
+                {profile?.account_type === 'business' ? 'QAR 50.00' : 'QAR 35.00'}
               </p>
             </div>
           </div>

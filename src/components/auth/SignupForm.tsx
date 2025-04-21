@@ -23,7 +23,7 @@ const SignupForm = ({ setError }: SignupFormProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [accountType, setAccountType] = useState("free");
+  const [accountType, setAccountType] = useState("individual");
   const [businessName, setBusinessName] = useState("");
   const [registerAttempts, setRegisterAttempts] = useState(0);
   const { register } = useAuth();
