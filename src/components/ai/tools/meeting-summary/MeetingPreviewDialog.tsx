@@ -9,11 +9,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { FileDown, Copy, Download, Volume2, Pause, RefreshCcw, StopCircle, Play, Map, ExternalLink } from 'lucide-react';
 import SummaryDisplay from './SummaryDisplay';
-import { playTextWithVoiceRSS, pauseCurrentAudio, resumeCurrentAudio, stopCurrentAudio, restartCurrentAudio } from '@/utils/voiceRSS';
 import { generateTomTomMapsUrl } from '@/config/maps';
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from 'framer-motion';
 import { formatRelativeTime } from '@/lib/utils';
+// Add TTS imports
+import { getOrGenerateAudio } from '@/utils/ttsCache';
 
 interface MeetingPreviewDialogProps {
   isOpen: boolean;
@@ -50,11 +51,22 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
   const [isPaused, setIsPaused] = useState(false);
   const [locationName, setLocationName] = useState<string | null>(null);
 
+  // For local playback element control
+  const audioRef = React.useRef<HTMLAudioElement | null>(null);
+
   useEffect(() => {
     if (meeting?.detectedLocation) {
       fetchLocationName(meeting.detectedLocation);
     }
   }, [meeting?.detectedLocation]);
+
+  // Clean up audio when dialog closes
+  useEffect(() => {
+    if (!isOpen) {
+      handleStopSummary();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const fetchLocationName = async (location: string) => {
     try {
@@ -85,20 +97,49 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
     return titleMatch ? titleMatch[1].trim() : 'Untitled Meeting';
   };
 
+  // --- AUDIO PLAYER LOGIC using new ttsCache.ts
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+
   const handlePlaySummary = async () => {
     try {
-      if (isPaused) {
-        await resumeCurrentAudio();
+      if (isPaused && audioRef.current) {
+        audioRef.current.play();
         setIsPlaying(true);
         setIsPaused(false);
-      } else {
-        const audio = await playTextWithVoiceRSS({ text: meeting.summary });
-        audio.onended = () => {
-          setIsPlaying(false);
-          setIsPaused(false);
-        };
-        setIsPlaying(true);
+        return;
       }
+
+      // If already playing something else, stop first
+      handleStopSummary();
+
+      // Request TTS audio via cache util (will select best provider)
+      const { audioUrl } = await getOrGenerateAudio({
+        text: meeting.summary,
+        // You could use meeting.language/voice here if available
+      });
+      setAudioUrl(audioUrl);
+
+      // Play the audio
+      const audio = new window.Audio(audioUrl);
+      audioRef.current = audio;
+      audio.play();
+      setIsPlaying(true);
+      setIsPaused(false);
+
+      audio.onended = () => {
+        setIsPlaying(false);
+        setIsPaused(false);
+      };
+      audio.onpause = () => {
+        setIsPaused(true);
+        setIsPlaying(false);
+      };
+      audio.onerror = (err) => {
+        setIsPlaying(false);
+        setIsPaused(false);
+        console.error('Failed to play summary:', err);
+      };
+
     } catch (error) {
       console.error('Failed to play summary:', error);
       setIsPlaying(false);
@@ -107,23 +148,41 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
   };
 
   const handlePauseSummary = () => {
-    pauseCurrentAudio();
-    setIsPaused(true);
-    setIsPlaying(false);
+    if (audioRef.current) {
+      audioRef.current.pause();
+      setIsPaused(true);
+      setIsPlaying(false);
+    }
   };
 
   const handleRestartSummary = async () => {
-    try {
-      restartCurrentAudio();
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play();
       setIsPlaying(true);
       setIsPaused(false);
-    } catch (error) {
-      console.error('Failed to restart summary:', error);
+    } else if (audioUrl) {
+      // If nothing is loaded, play from the URL again
+      const audio = new window.Audio(audioUrl);
+      audioRef.current = audio;
+      audio.play();
+      setIsPlaying(true);
+      setIsPaused(false);
+      audio.onended = () => {
+        setIsPlaying(false);
+        setIsPaused(false);
+      };
+    } else {
+      // If not loaded yet, play as if fresh
+      await handlePlaySummary();
     }
   };
 
   const handleStopSummary = () => {
-    stopCurrentAudio();
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
     setIsPlaying(false);
     setIsPaused(false);
   };
@@ -174,6 +233,7 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
+            {/* Audio controls using new TTS logic */}
             {!isPlaying && !isPaused && (
               <Button
                 variant="outline"
@@ -307,3 +367,4 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
 };
 
 export default MeetingPreviewDialog;
+
