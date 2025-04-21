@@ -56,16 +56,25 @@ export async function getOrGenerateAudio(params: TTSCacheParams): Promise<TTSCac
     const textHash = getTextHash(text, voice, provider as Provider);
 
     // Step 1: Check Cache
-    const { data: cacheData, error: cacheError } = await fetchCacheByHash(textHash);
+    const { data: cacheData, error: cacheError } = await supabase
+      .from("audio_cache")
+      .select("*")
+      .eq("text_hash", textHash)
+      .limit(1)
+      .single();
 
-    if (cacheData && cacheData.length > 0) {
-      const cacheEntry = cacheData[0] as AudioCacheEntry;
-      
+    if (cacheData) {
       // Update hit_count and last_accessed
-      await updateCacheHitCount(cacheEntry.id);
+      await supabase
+        .from("audio_cache")
+        .update({
+          hit_count: (cacheData.hit_count || 0) + 1,
+          last_accessed: new Date().toISOString()
+        })
+        .eq("id", cacheData.id);
 
       return {
-        audioUrl: cacheEntry.audio_url,
+        audioUrl: cacheData.audio_url,
         provider: provider as Provider,
         cacheHit: true,
       };
@@ -98,12 +107,16 @@ export async function getOrGenerateAudio(params: TTSCacheParams): Promise<TTSCac
         // Step 4: Store cache record
         const publicUrl = supabase.storage.from("tts-audio").getPublicUrl(fileName).data.publicUrl;
         
-        await insertCacheEntry({
+        // Insert the new cache entry
+        await supabase.from("audio_cache").insert({
           text_hash: textHash,
-          text,
-          voice,
-          tts_provider: provider as Provider,
-          audio_url: publicUrl
+          text: text,
+          voice: voice,
+          tts_provider: provider,
+          audio_url: publicUrl,
+          created_at: new Date().toISOString(),
+          last_accessed: new Date().toISOString(),
+          hit_count: 1
         });
 
         return {
@@ -119,34 +132,6 @@ export async function getOrGenerateAudio(params: TTSCacheParams): Promise<TTSCac
   }
 
   throw new Error(`Failed to generate audio via providers: ${triedProviders.join(", ")}`);
-}
-
-// Custom methods with proper typing for RPC functions
-async function fetchCacheByHash(textHash: string) {
-  return await supabase.rpc('get_audio_cache_by_hash', { hash_param: textHash }) as {
-    data: AudioCacheEntry[] | null,
-    error: any
-  };
-}
-
-async function updateCacheHitCount(id: string) {
-  return await supabase.rpc('update_audio_cache_hit_count', { id_param: id });
-}
-
-async function insertCacheEntry(entry: { 
-  text_hash: string,
-  text: string,
-  voice: string,
-  tts_provider: Provider,
-  audio_url: string
-}) {
-  return await supabase.rpc('insert_audio_cache', {
-    text_hash_param: entry.text_hash,
-    text_param: entry.text,
-    voice_param: entry.voice,
-    tts_provider_param: entry.tts_provider,
-    audio_url_param: entry.audio_url
-  });
 }
 
 // --- Helper: ElevenLabs (API KEY from Supabase secret on server only!) ---
