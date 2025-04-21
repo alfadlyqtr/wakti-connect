@@ -83,11 +83,15 @@ export function useVoiceRecordingToTranscript({
       const formData = new FormData();
       formData.append("file", audioBlob, "audio.webm");
 
+      // Get the Supabase URL and API key properly
+      const supabaseUrl = supabase.supabaseUrl; // properly access the URL
+      const apiKey = supabase.supabaseKey; // properly access the API key
+
       // Post as file directly to the edge function
-      const res = await fetch(`${supabase.functions._functionsUrl}/voice-transcription`, {
+      const res = await fetch(`${supabaseUrl}/functions/v1/voice-transcription`, {
         method: "POST",
         headers: {
-          "apikey": supabase._headers["apikey"] || "",
+          "apikey": apiKey || "",
         },
         body: formData,
       });
@@ -116,4 +120,3 @@ export function useVoiceRecordingToTranscript({
     stopRecording
   };
 }
-
