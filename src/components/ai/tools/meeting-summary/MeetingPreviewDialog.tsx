@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -50,6 +51,7 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
   const [isPaused, setIsPaused] = useState(false);
   const [locationName, setLocationName] = useState<string | null>(null);
   const [showKeyInput, setShowKeyInput] = useState(false);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
 
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
@@ -62,6 +64,7 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
   useEffect(() => {
     if (!isOpen) {
       handleStopSummary();
+      setAudioUrl(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
@@ -106,12 +109,12 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
 
       handleStopSummary();
 
-      const { audioUrl } = await getOrGenerateAudio({
+      const ttsResult = await getOrGenerateAudio({
         text: meeting.summary,
       });
-      setAudioUrl(audioUrl);
+      setAudioUrl(ttsResult.audioUrl);
 
-      const audio = new window.Audio(audioUrl);
+      const audio = new window.Audio(ttsResult.audioUrl);
       audioRef.current = audio;
       audio.play();
       setIsPlaying(true);
@@ -171,6 +174,7 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
+      audioRef.current = null;
     }
     setIsPlaying(false);
     setIsPaused(false);
@@ -358,3 +362,4 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
 };
 
 export default MeetingPreviewDialog;
+
