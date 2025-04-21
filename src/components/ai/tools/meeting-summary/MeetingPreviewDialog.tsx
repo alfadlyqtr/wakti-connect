@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -13,8 +12,8 @@ import { generateTomTomMapsUrl } from '@/config/maps';
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from 'framer-motion';
 import { formatRelativeTime } from '@/lib/utils';
-// Add TTS imports
-import { getOrGenerateAudio } from '@/utils/ttsCache';
+import { getOrGenerateAudio, SpeechifyApiKeyStore } from '@/utils/ttsCache';
+import SpeechifyApiKeyInput from '@/components/settings/ai/SpeechifyApiKeyInput';
 
 interface MeetingPreviewDialogProps {
   isOpen: boolean;
@@ -50,8 +49,8 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [locationName, setLocationName] = useState<string | null>(null);
+  const [showKeyInput, setShowKeyInput] = useState(false);
 
-  // For local playback element control
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -60,7 +59,6 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
     }
   }, [meeting?.detectedLocation]);
 
-  // Clean up audio when dialog closes
   useEffect(() => {
     if (!isOpen) {
       handleStopSummary();
@@ -97,9 +95,6 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
     return titleMatch ? titleMatch[1].trim() : 'Untitled Meeting';
   };
 
-  // --- AUDIO PLAYER LOGIC using new ttsCache.ts
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
-
   const handlePlaySummary = async () => {
     try {
       if (isPaused && audioRef.current) {
@@ -109,17 +104,13 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
         return;
       }
 
-      // If already playing something else, stop first
       handleStopSummary();
 
-      // Request TTS audio via cache util (will select best provider)
       const { audioUrl } = await getOrGenerateAudio({
         text: meeting.summary,
-        // You could use meeting.language/voice here if available
       });
       setAudioUrl(audioUrl);
 
-      // Play the audio
       const audio = new window.Audio(audioUrl);
       audioRef.current = audio;
       audio.play();
@@ -162,7 +153,6 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
       setIsPlaying(true);
       setIsPaused(false);
     } else if (audioUrl) {
-      // If nothing is loaded, play from the URL again
       const audio = new window.Audio(audioUrl);
       audioRef.current = audio;
       audio.play();
@@ -173,7 +163,6 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
         setIsPaused(false);
       };
     } else {
-      // If not loaded yet, play as if fresh
       await handlePlaySummary();
     }
   };
@@ -207,6 +196,9 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={() => onClose()}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+        <div className="flex flex-col gap-2">
+          <SpeechifyApiKeyInput className="mb-2 self-end" />
+        </div>
         <DialogHeader>
           <DialogTitle>{displayTitle}</DialogTitle>
           {showMapButton && (
@@ -233,7 +225,6 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            {/* Audio controls using new TTS logic */}
             {!isPlaying && !isPaused && (
               <Button
                 variant="outline"
@@ -367,4 +358,3 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
 };
 
 export default MeetingPreviewDialog;
-
