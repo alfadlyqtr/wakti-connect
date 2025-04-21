@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -8,28 +7,34 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
 import { FileDown, Copy, Download, Volume2, Pause, RefreshCcw, StopCircle, Play, Map, ExternalLink } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import SummaryDisplay from './SummaryDisplay';
 import { generateTomTomMapsUrl } from '@/config/maps';
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from 'framer-motion';
 import { formatRelativeTime } from '@/lib/utils';
-// Add TTS imports
-import { getOrGenerateAudio } from '@/utils/ttsCache';
+import { playTextWithVoiceRSS, stopCurrentAudio, pauseCurrentAudio, resumeCurrentAudio, restartCurrentAudio } from '@/utils/voiceRSS';
 
 interface MeetingPreviewDialogProps {
   isOpen: boolean;
   onClose: () => void;
   meeting: {
-    title: string;
+    title?: string;
     summary: string;
     date: string;
-    duration: number;
+    duration?: number;
     audioUrl?: string;
     has_audio?: boolean;
     audioStoragePath?: string;
     detectedLocation?: string | null;
     detectedAttendees?: string[] | null;
-  } | null;
+  };
   onExportPDF: () => Promise<void>;
   onCopy: () => void;
   onDownloadAudio: () => void;
@@ -49,10 +54,8 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [selectedVoice, setSelectedVoice] = useState<string>('John');
   const [locationName, setLocationName] = useState<string | null>(null);
-
-  // For local playback element control
-  const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     if (meeting?.detectedLocation) {
@@ -60,12 +63,10 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
     }
   }, [meeting?.detectedLocation]);
 
-  // Clean up audio when dialog closes
-  useEffect(() => {
+  React.useEffect(() => {
     if (!isOpen) {
       handleStopSummary();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   const fetchLocationName = async (location: string) => {
@@ -97,47 +98,28 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
     return titleMatch ? titleMatch[1].trim() : 'Untitled Meeting';
   };
 
-  // --- AUDIO PLAYER LOGIC using new ttsCache.ts
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
-
   const handlePlaySummary = async () => {
     try {
-      if (isPaused && audioRef.current) {
-        audioRef.current.play();
+      if (isPaused) {
+        resumeCurrentAudio();
         setIsPlaying(true);
         setIsPaused(false);
         return;
       }
 
-      // If already playing something else, stop first
-      handleStopSummary();
+      stopCurrentAudio();
 
-      // Request TTS audio via cache util (will select best provider)
-      const { audioUrl } = await getOrGenerateAudio({
+      const audio = await playTextWithVoiceRSS({
         text: meeting.summary,
-        // You could use meeting.language/voice here if available
+        voice: selectedVoice as any,
       });
-      setAudioUrl(audioUrl);
 
-      // Play the audio
-      const audio = new window.Audio(audioUrl);
-      audioRef.current = audio;
-      audio.play();
       setIsPlaying(true);
       setIsPaused(false);
 
       audio.onended = () => {
         setIsPlaying(false);
         setIsPaused(false);
-      };
-      audio.onpause = () => {
-        setIsPaused(true);
-        setIsPlaying(false);
-      };
-      audio.onerror = (err) => {
-        setIsPlaying(false);
-        setIsPaused(false);
-        console.error('Failed to play summary:', err);
       };
 
     } catch (error) {
@@ -148,49 +130,21 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
   };
 
   const handlePauseSummary = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      setIsPaused(true);
-      setIsPlaying(false);
-    }
-  };
-
-  const handleRestartSummary = async () => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = 0;
-      audioRef.current.play();
-      setIsPlaying(true);
-      setIsPaused(false);
-    } else if (audioUrl) {
-      // If nothing is loaded, play from the URL again
-      const audio = new window.Audio(audioUrl);
-      audioRef.current = audio;
-      audio.play();
-      setIsPlaying(true);
-      setIsPaused(false);
-      audio.onended = () => {
-        setIsPlaying(false);
-        setIsPaused(false);
-      };
-    } else {
-      // If not loaded yet, play as if fresh
-      await handlePlaySummary();
-    }
-  };
-
-  const handleStopSummary = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
+    pauseCurrentAudio();
+    setIsPaused(true);
     setIsPlaying(false);
+  };
+
+  const handleRestartSummary = () => {
+    restartCurrentAudio();
+    setIsPlaying(true);
     setIsPaused(false);
   };
 
-  const openInMaps = () => {
-    if (locationName) {
-      window.open(generateTomTomMapsUrl(locationName), '_blank');
-    }
+  const handleStopSummary = () => {
+    stopCurrentAudio();
+    setIsPlaying(false);
+    setIsPaused(false);
   };
 
   if (!meeting) {
@@ -201,8 +155,6 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
   const location = locationName || meeting.detectedLocation;
   const showMapButton = location && location.length > 0;
   const hasAudio = meeting?.has_audio || !!meeting?.audioUrl || !!meeting?.audioStoragePath;
-
-  const formattedDate = meeting ? formatRelativeTime(new Date(meeting.date)) : '';
 
   return (
     <Dialog open={isOpen} onOpenChange={() => onClose()}>
@@ -217,7 +169,7 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
                 variant="link"
                 size="sm"
                 className="p-0 h-auto text-green-600 flex items-center gap-1"
-                onClick={openInMaps}
+                onClick={() => location && window.open(generateTomTomMapsUrl(location), '_blank')}
               >
                 <span className="text-xs">View on Map</span>
                 <ExternalLink className="h-3 w-3" />
@@ -233,7 +185,19 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            {/* Audio controls using new TTS logic */}
+            <Select value={selectedVoice} onValueChange={setSelectedVoice}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Select voice" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="John">John (EN)</SelectItem>
+                <SelectItem value="Linda">Linda (EN)</SelectItem>
+                <SelectItem value="Mike">Mike (EN)</SelectItem>
+                <SelectItem value="Mary">Mary (EN)</SelectItem>
+                <SelectItem value="Hareth">Hareth (AR)</SelectItem>
+              </SelectContent>
+            </Select>
+
             {!isPlaying && !isPaused && (
               <Button
                 variant="outline"
@@ -309,7 +273,7 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
                 </Button>
               </>
             )}
-            
+
             <Button
               variant="outline"
               size="sm"
@@ -367,4 +331,3 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
 };
 
 export default MeetingPreviewDialog;
-

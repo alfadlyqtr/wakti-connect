@@ -2,7 +2,9 @@
 interface VoiceRSSOptions {
   text: string;
   language?: 'en-us' | 'ar-sa';
-  voice?: 'John' | 'Hareth';
+  voice?: 'John' | 'Linda' | 'Mike' | 'Mary' | 'Hareth';
+  speed?: number;
+  quality?: number;
 }
 
 let currentAudio: HTMLAudioElement | null = null;
@@ -35,14 +37,15 @@ export const restartCurrentAudio = () => {
   }
 };
 
-export const playTextWithVoiceRSS = async ({ text, language, voice }: VoiceRSSOptions) => {
-  // Auto-detect language if not provided (simple check for Arabic characters)
-  const hasArabic = /[\u0600-\u06FF]/.test(text);
-  const selectedLanguage = language || (hasArabic ? 'ar-sa' : 'en-us');
-  const selectedVoice = voice || (hasArabic ? 'Hareth' : 'John');
-
+export const playTextWithVoiceRSS = async ({ 
+  text, 
+  language = 'en-us', 
+  voice = 'John',
+  speed = 0,
+  quality = 8 
+}: VoiceRSSOptions) => {
   const API_KEY = 'ae8ae044c49f4afcbda7ac115f24c1c5';
-  const url = `https://api.voicerss.org/?key=${API_KEY}&hl=${selectedLanguage}&v=${selectedVoice}&src=${encodeURIComponent(text)}`;
+  const url = `https://api.voicerss.org/?key=${API_KEY}&hl=${language}&v=${voice}&src=${encodeURIComponent(text)}&r=${speed}&c=MP3&f=16khz_16bit_stereo`;
 
   try {
     // If there's already an audio playing and it's the same URL, just control that
