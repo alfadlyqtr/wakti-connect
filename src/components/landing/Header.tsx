@@ -24,7 +24,7 @@ const Header = () => {
             <img 
               src="/lovable-uploads/9b7d0693-89eb-4cc5-b90b-7834bfabda0e.png" 
               alt="WAKTI" 
-              className="w-10 h-10 rounded-md object-cover border border-wakti-navy"
+              className="w-10 h-10 rounded-md object-cover"
             />
             <span className="font-bold text-xl text-wakti-navy">WAKTI</span>
           </Link>
@@ -138,3 +138,4 @@ const Header = () => {
 };
 
 export default Header;
+
