@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Mic, Send, AlertCircle, Paperclip, Camera, MicOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -48,34 +49,31 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
     stopListening: browserStopListening
   } = useWaktiAIBrowserSpeech();
 
-  // Track the live transcript
-  const [liveTranscript, setLiveTranscript] = React.useState('');
+  // Track the current displayed text including any live speech
+  const [currentTranscript, setCurrentTranscript] = React.useState('');
 
-  // Whenever the browser transcript updates (live or after speaking), update the textarea
+  // Update transcript as user speaks
   React.useEffect(() => {
-    if (browserIsListening && browserTranscript) {
-      // While listening, preview transcript in textarea
-      setLiveTranscript(browserTranscript);
-    } else if (!browserIsListening && browserTranscript) {
-      // On stop, keep the text in box, clear liveTranscript
-      setInputMessage(prev => {
-        // Avoid duplicate appending if already included
-        if (!browserTranscript) return prev;
-        if (prev.includes(browserTranscript)) return prev;
-        return prev +
-          (prev && !prev.endsWith(" ") && !browserTranscript.startsWith(" ") ? " " : "") +
-          browserTranscript;
-      });
-      setLiveTranscript('');
+    if (browserTranscript) {
+      setCurrentTranscript(browserTranscript);
     }
-    // eslint-disable-next-line
-  }, [browserTranscript, browserIsListening]);
+  }, [browserTranscript]);
 
-  // The textarea always shows the final message + any current spoken words if listening
+  // When speech stops, update the input message with the final transcript
+  React.useEffect(() => {
+    if (!browserIsListening && currentTranscript) {
+      setInputMessage(inputMessage + 
+        (inputMessage && !inputMessage.endsWith(" ") ? " " : "") + 
+        currentTranscript);
+      setCurrentTranscript('');
+    }
+  }, [browserIsListening, currentTranscript, inputMessage, setInputMessage]);
+
+  // The displayed text combines the current input message and any live speech transcript
   const displayedText = browserIsListening
-    ? (inputMessage +
-        (inputMessage && !inputMessage.endsWith(" ") && !!liveTranscript && !liveTranscript.startsWith(" ") ? " " : "") +
-        liveTranscript)
+    ? inputMessage + 
+      (inputMessage && !inputMessage.endsWith(" ") && currentTranscript ? " " : "") + 
+      currentTranscript
     : inputMessage;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -106,8 +104,6 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
     if (browserIsListening) {
       browserStopListening();
     } else {
-      // Store current text as base, so every new transcript is appended
-      setLiveTranscript('');
       browserStartListening();
     }
   };
@@ -117,7 +113,6 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
       onSubmit={(e) => {
         e.preventDefault();
         if (displayedText.trim() && !isLoading) {
-          setInputMessage(displayedText); // save the text if any spoken words left unmerged
           handleSendMessage(e);
         }
       }}

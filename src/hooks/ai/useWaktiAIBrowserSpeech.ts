@@ -17,18 +17,27 @@ export function useWaktiAIBrowserSpeech(onResult?: (text: string) => void) {
       window.SpeechRecognition || (window as any).webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
     recognitionRef.current = recognition;
-    recognition.continuous = false;
-    recognition.interimResults = false;
+    // Enable continuous listening to capture full sentences
+    recognition.continuous = true;
+    // Enable interim results to show text as user speaks
+    recognition.interimResults = true;
     recognition.lang = "en-US";
 
     setTranscript("");
     setIsListening(true);
 
     recognition.onresult = (event: any) => {
-      const text = event.results[0][0].transcript;
-      setTranscript(text);
-      setIsListening(false);
-      if (onResult) onResult(text);
+      let currentTranscript = '';
+      for (let i = 0; i < event.results.length; i++) {
+        currentTranscript = event.results[i][0].transcript;
+      }
+      
+      setTranscript(currentTranscript);
+      
+      // Only call onResult for final results, not interim ones
+      if (event.results[event.results.length - 1].isFinal && onResult) {
+        onResult(currentTranscript);
+      }
     };
 
     recognition.onend = () => {
