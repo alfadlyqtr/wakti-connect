@@ -1,4 +1,5 @@
 
+// Short: Only thing that changes is how the audio is sent for transcription; now we upload the webm Blob direct (not base64).
 import { useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -10,7 +11,7 @@ interface UseVoiceRecordingToTranscriptOptions {
 
 export function useVoiceRecordingToTranscript({
   onTranscription,
-  maxDuration = 30
+  maxDuration = 60
 }: UseVoiceRecordingToTranscriptOptions) {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -69,6 +70,7 @@ export function useVoiceRecordingToTranscript({
   // Handler called by mediaRecorder.onstop
   const handleStopRecording = async () => {
     setIsProcessing(true);
+    setError(null);
     const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
     if (!audioBlob || audioBlob.size < 100) {
       setError("No audio data recorded.");
@@ -77,20 +79,25 @@ export function useVoiceRecordingToTranscript({
     }
 
     try {
-      // Convert blob to base64
-      const base64Audio = await blobToBase64(audioBlob);
+      // Create multipart/form-data
+      const formData = new FormData();
+      formData.append("file", audioBlob, "audio.webm");
 
-      // Try Whisper transcription (edge function)
-      const { data, error: transcriptionError } = await supabase.functions.invoke(
-        "voice-transcription",
-        {
-          body: { audio: base64Audio }
-        }
-      );
-      if (transcriptionError || !data?.text) {
-        throw new Error(transcriptionError?.message || "Transcription failed.");
+      // Post as file directly to the edge function
+      const res = await fetch(`${supabase.functions._functionsUrl}/voice-transcription`, {
+        method: "POST",
+        headers: {
+          "apikey": supabase._headers["apikey"] || "",
+        },
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.text) {
+        throw new Error(data?.error || "Transcription failed.");
       }
-      onTranscription(data.text);
+      onTranscription(data.text as string);
       toast.success("Voice transcribed!");
     } catch (err: any) {
       setError("Failed to transcribe audio.");
@@ -98,20 +105,6 @@ export function useVoiceRecordingToTranscript({
     } finally {
       setIsProcessing(false);
     }
-  };
-
-  // Helper: blob to base64
-  const blobToBase64 = (blob: Blob): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64data = reader.result?.toString().split(",")[1];
-        if (base64data) resolve(base64data);
-        else reject(new Error("Failed to convert blob to base64"));
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
   };
 
   return {
@@ -123,3 +116,4 @@ export function useVoiceRecordingToTranscript({
     stopRecording
   };
 }
+
