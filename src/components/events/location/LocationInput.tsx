@@ -31,7 +31,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
     setMapUrl(url);
     
     if (url && !isValidMapsUrl(url)) {
-      setUrlError('Please enter a valid TomTom Maps URL');
+      setUrlError('Please enter a valid Map URL');
     } else {
       setUrlError(null);
       onLocationChange(location, 'google_maps', url);
@@ -137,7 +137,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
           <RadioGroupItem value="google_maps" id="google-maps" className="sr-only" />
           <ExternalLink className="h-5 w-5 text-primary" />
           <Label htmlFor="google-maps" className="text-sm font-medium cursor-pointer">
-            Google Maps
+            Map
           </Label>
         </div>
       </RadioGroup>
@@ -194,19 +194,19 @@ const LocationInput: React.FC<LocationInputProps> = ({
                         <ExternalLink className="h-4 w-4" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>View on Google Maps</TooltipContent>
+                    <TooltipContent>View on Map</TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               )}
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="maps-url">Google Maps URL (Optional)</Label>
+              <Label htmlFor="maps-url">Map URL (Optional)</Label>
               <Input
                 id="maps-url"
                 value={mapUrl}
                 onChange={(e) => handleMapUrlChange(e.target.value)}
-                placeholder="https://maps.google.com/..."
+                placeholder="https://www.tomtom.com/en_gb/maps/..."
                 className="pr-9"
               />
               
