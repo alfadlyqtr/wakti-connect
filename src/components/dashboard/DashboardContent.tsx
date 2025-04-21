@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import StaffDashboardHeader from './StaffDashboardHeader';
 import DashboardLoading from './DashboardLoading';
@@ -28,24 +27,18 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
 }) => {
   const navigate = useNavigate();
   
-  // Redirect users to their appropriate dashboards on login
   useEffect(() => {
-    // Fix: Check for both "/dashboard" and "/dashboard/" paths
     const isMainDashboardPath = currentPath === '/dashboard' || currentPath === '/dashboard/';
     
     if (!isLoading && isMainDashboardPath && userId) {
       console.log("DashboardContent redirect - User role:", userRole, "Is staff:", isStaff);
       
-      // Only redirect staff users who are not business owners
       if (isStaff && userRole === 'staff') {
         navigate('/dashboard/staff-dashboard');
       }
-      // For business users we don't redirect them away from the main dashboard
-      // For individual/free users, we keep them on the main dashboard too
     }
   }, [isStaff, isLoading, currentPath, userId, navigate, userRole]);
   
-  // Calculate main content padding based on sidebar state and device
   const mainContentClass = isMobile 
     ? "pt-3 pb-16 px-3 transition-all duration-300" 
     : sidebarCollapsed 
@@ -59,7 +52,6 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
           <DashboardLoading />
         ) : (
           <>
-            {/* Only show staff header if user is staff AND not a business owner */}
             {isStaff && userId && userRole === 'staff' && (
               <div className="mb-5">
                 <StaffDashboardHeader staffId={userId} />
