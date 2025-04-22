@@ -173,7 +173,7 @@ const DashboardHome: React.FC = () => {
 
   if (!profileData || isLoading) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 p-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[...Array(6)].map((_, i) => (
             <Card key={i} className="animate-pulse">
@@ -195,12 +195,12 @@ const DashboardHome: React.FC = () => {
       {
         id: "tasks",
         content: <TasksOverview userRole={userRole} />,
-        span: "col-span-1"
+        span: "col-span-1 md:col-span-1"
       },
       {
         id: "reminders",
         content: <RemindersOverview userRole={userRole} />,
-        span: "col-span-1"
+        span: "col-span-1 md:col-span-1"
       },
       {
         id: "bookings",
@@ -209,23 +209,24 @@ const DashboardHome: React.FC = () => {
             <DashboardBookingsPreview userRole={userRole} />
           </ErrorBoundary>
         ),
-        span: "col-span-1"
+        span: "col-span-1 md:col-span-1"
       },
       {
         id: "calendar",
         content: (
-          <Card className="bg-gradient-to-br from-white/90 via-white/80 to-blue-50/30 dark:from-gray-900 dark:to-gray-800 shadow-lg hover:shadow-xl hover:translate-y-[-2px] transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
-            <CardHeader className="pb-2 flex flex-row items-center justify-between">
-              <CardTitle className="text-lg font-semibold">Calendar</CardTitle>
-              <div className="flex items-center">
+          <Card className="bg-gradient-to-br from-white/90 via-white/80 to-blue-50/30 dark:from-gray-900 dark:to-gray-800 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
+            <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
+              <CardTitle className="text-base sm:text-lg font-semibold">Calendar</CardTitle>
+              <div className="flex items-center gap-2">
                 <EventCountBadge 
                   count={eventCounts.today} 
                   label="today" 
-                  className="mr-2" 
+                  className="text-xs" 
                 />
                 <EventCountBadge 
                   count={eventCounts.total} 
-                  label="total" 
+                  label="total"
+                  className="text-xs" 
                 />
               </div>
             </CardHeader>
@@ -242,9 +243,9 @@ const DashboardHome: React.FC = () => {
       widgets.push({
         id: "subscribers",
         content: (
-          <Card className="bg-gradient-to-br from-white/90 via-white/80 to-blue-50/30 dark:from-gray-900 dark:to-gray-800 shadow-lg hover:shadow-xl hover:translate-y-[-2px] transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
+          <Card className="bg-gradient-to-br from-white/90 via-white/80 to-blue-50/30 dark:from-gray-900 dark:to-gray-800 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-semibold flex items-center">
+              <CardTitle className="text-base sm:text-lg font-semibold flex items-center">
                 <Users className="mr-2 h-5 w-5 text-blue-500" />
                 Subscribers
               </CardTitle>
@@ -254,7 +255,7 @@ const DashboardHome: React.FC = () => {
                 <div className="h-6 w-20 bg-muted animate-pulse rounded"></div>
               ) : (
                 <div className="space-y-2">
-                  <div className="text-3xl font-bold">{subscriberCount}</div>
+                  <div className="text-2xl sm:text-3xl font-bold">{subscriberCount}</div>
                   <p className="text-sm text-muted-foreground">
                     Total subscribers to your business
                   </p>
@@ -292,14 +293,16 @@ const DashboardHome: React.FC = () => {
   const orderedWidgets = getOrderedWidgets();
   
   return (
-    <div className="space-y-4">
-      <h1 className="text-3xl font-semibold mb-6">Dashboard</h1>
-      
+    <div className="space-y-4 p-2 sm:p-4">
+      <div className="flex flex-col space-y-2">
+        <h1 className="text-2xl sm:text-3xl font-semibold">Dashboard</h1>
+      </div>
+
       <DragDropContext onDragEnd={handleDragEnd}>
         <Droppable droppableId="dashboard-widgets" type="WIDGET" direction="horizontal">
           {(provided) => (
             <div 
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4"
               {...provided.droppableProps}
               ref={provided.innerRef}
             >
