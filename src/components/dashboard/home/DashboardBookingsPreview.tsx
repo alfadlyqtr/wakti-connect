@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar, Clock, Users, PlusCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { UserRole } from "@/types/user";
 
 interface BookingItem {
   id: string;
@@ -22,7 +23,7 @@ const mockBookings: BookingItem[] = [
 ];
 
 interface DashboardBookingsPreviewProps {
-  userRole: "individual" | "business" | "staff" | "super-admin";
+  userRole: UserRole; // Updated to use the complete UserRole type
 }
 
 const DashboardBookingsPreview: React.FC<DashboardBookingsPreviewProps> = ({ userRole }) => {
