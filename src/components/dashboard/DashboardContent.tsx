@@ -1,6 +1,8 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import StaffDashboardHeader from './StaffDashboardHeader';
 import DashboardLoading from './DashboardLoading';
+import { useProfileSettings } from '@/hooks/useProfileSettings';
+import DashboardProfilePreview from './home/DashboardProfilePreview';
 import { useNavigate } from 'react-router-dom';
 import { UserRole } from '@/types/user';
 
@@ -15,6 +17,13 @@ interface DashboardContentProps {
   sidebarCollapsed?: boolean;
 }
 
+const getDashboardTypeHeading = (role: UserRole | undefined, isStaff: boolean): string => {
+  if (role === 'business') return 'Business Dashboard';
+  if (role === 'staff' || isStaff) return 'Staff Dashboard';
+  if (role === 'super-admin') return 'Business Dashboard';
+  return 'Individual Dashboard';
+};
+
 const DashboardContent: React.FC<DashboardContentProps> = ({
   children,
   isLoading,
@@ -26,7 +35,8 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   sidebarCollapsed = true
 }) => {
   const navigate = useNavigate();
-  
+  const { data: profile } = useProfileSettings(); // For profile preview
+
   useEffect(() => {
     const isMainDashboardPath = currentPath === '/dashboard' || currentPath === '/dashboard/';
     
@@ -52,6 +62,14 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
           <DashboardLoading />
         ) : (
           <>
+            <h1 className="text-2xl sm:text-3xl font-bold mb-3 mt-2 text-center">
+              {getDashboardTypeHeading(userRole, isStaff)}
+            </h1>
+
+            <div className="max-w-md mx-auto mb-6">
+              <DashboardProfilePreview />
+            </div>
+
             {isStaff && userId && userRole === 'staff' && (
               <div className="mb-5">
                 <StaffDashboardHeader staffId={userId} />
