@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -7,6 +8,7 @@ import RecordingControlsV2 from './meeting-summary/RecordingControlsV2';
 import { Loader2, Download, FileUp, Copy, FileText } from 'lucide-react';
 import { formatTranscriptWithRTL, containsArabic } from '@/utils/audio/recordingUtils';
 import { toast } from "sonner";
+import TranscriptionPanel from './meeting-summary/TranscriptionPanel';
 
 export const MeetingSummaryTool: React.FC = () => {
   const [activeTab, setActiveTab] = useState("record");
@@ -29,7 +31,8 @@ export const MeetingSummaryTool: React.FC = () => {
     maxRecordingDuration,
     warnBeforeEndSeconds,
     language,
-    setLanguage
+    setLanguage,
+    updateTranscript
   } = useMeetingSummaryV2();
 
   const handleIntakeSubmit = (data: any) => {
@@ -52,6 +55,16 @@ export const MeetingSummaryTool: React.FC = () => {
   
   const isArabicTranscript = containsArabic(state.transcribedText);
   const isArabicSummary = state.summary ? containsArabic(state.summary) : false;
+  
+  // Define the onViewSummary function
+  const onViewSummary = async () => {
+    if (state.summary) {
+      setActiveTab("summary");
+    } else if (hasTranscription) {
+      await generateSummary();
+      setActiveTab("summary");
+    }
+  };
 
   return (
     <div className="mx-auto w-full max-w-4xl bg-white">
