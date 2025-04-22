@@ -7,14 +7,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
 import RemindersList from "@/components/reminders/RemindersList";
 import RemindersContainer from "@/components/reminders/RemindersContainer";
+import { UserRole } from "@/types/user";
 
 interface RemindersOverviewProps {
-  userRole: "individual" | "business" | "staff" | "super-admin";
+  userRole: UserRole;
 }
 
 const RemindersOverview: React.FC<RemindersOverviewProps> = ({ userRole }) => {
   const navigate = useNavigate();
-  const isPaidAccount = userRole !== "free";
+  // Update the check to handle all user roles properly
+  const isPaidAccount = userRole !== "free" && userRole !== "staff";
   
   return (
     <Card className="bg-gradient-to-br from-[#D6BCFA]/10 via-white/80 to-[#9b87f5]/10 dark:from-gray-900 dark:to-gray-800 shadow-lg hover:shadow-xl hover:translate-y-[-2px] transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">

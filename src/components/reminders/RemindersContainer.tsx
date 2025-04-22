@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { CreateReminderDialog } from "./CreateReminderDialog";
 import { toast } from "@/components/ui/use-toast";
+import { UserRole } from "@/types/user";
 
 interface RemindersContainerProps {
-  userRole: "free" | "individual" | "business" | "staff" | null;
+  userRole: UserRole;
   isPaidAccount: boolean;
 }
 
