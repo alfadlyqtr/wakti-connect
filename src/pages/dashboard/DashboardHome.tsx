@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDashboardUserProfile } from "@/hooks/useDashboardUserProfile";
@@ -14,8 +13,8 @@ import { useBusinessSubscribers } from "@/hooks/useBusinessSubscribers";
 import { Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import EventCountBadge from "@/components/dashboard/home/EventCountBadge";
 
-// Sample calendar events data
 const sampleEvents: CalendarEvent[] = [
   {
     id: "1",
@@ -47,7 +46,6 @@ const sampleEvents: CalendarEvent[] = [
   },
 ];
 
-// Define initial dashboard widget layout
 const defaultLayout = [
   { id: "tasks", order: 0 },
   { id: "reminders", order: 1 },
@@ -63,13 +61,11 @@ const DashboardHome: React.FC = () => {
   const [layout, setLayout] = useState(defaultLayout);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Get subscriber count for business accounts
   const { subscriberCount, isLoading: subscribersLoading } = 
     (userRole === 'business' || userRole === 'super-admin') && userId
       ? useBusinessSubscribers(userId)
       : { subscriberCount: 0, isLoading: false };
       
-  // Count events by type
   const eventCounts = {
     total: sampleEvents.length,
     tasks: sampleEvents.filter(event => event.type === "task").length,
@@ -83,7 +79,6 @@ const DashboardHome: React.FC = () => {
     }).length
   };
   
-  // Load user's saved layout from database
   useEffect(() => {
     const loadUserLayout = async () => {
       if (!userId) return;
@@ -96,6 +91,11 @@ const DashboardHome: React.FC = () => {
           .single();
           
         if (error) {
+          if (error.code === 'PGRST116') {
+            setIsLoading(false);
+            return;
+          }
+          
           console.error('Error loading dashboard layout:', error);
           setIsLoading(false);
           return;
@@ -105,9 +105,9 @@ const DashboardHome: React.FC = () => {
           setLayout(JSON.parse(data.dashboard_layout));
         }
         
+        setIsLoading(false);
       } catch (err) {
         console.error('Failed to parse dashboard layout:', err);
-      } finally {
         setIsLoading(false);
       }
     };
@@ -115,7 +115,6 @@ const DashboardHome: React.FC = () => {
     loadUserLayout();
   }, [userId]);
   
-  // Save layout when changed
   const saveLayout = async (newLayout) => {
     if (!userId) return;
     
@@ -126,7 +125,8 @@ const DashboardHome: React.FC = () => {
           user_id: userId,
           dashboard_layout: JSON.stringify(newLayout),
           updated_at: new Date().toISOString()
-        });
+        })
+        .select();
         
       if (error) {
         console.error('Error saving dashboard layout:', error);
@@ -141,7 +141,6 @@ const DashboardHome: React.FC = () => {
     }
   };
   
-  // Handle drag end event
   const handleDragEnd = (result) => {
     if (!result.destination) return;
     
@@ -149,7 +148,6 @@ const DashboardHome: React.FC = () => {
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
     
-    // Update order property for each item
     const updatedLayout = items.map((item, index) => ({
       ...item,
       order: index
@@ -158,8 +156,7 @@ const DashboardHome: React.FC = () => {
     setLayout(updatedLayout);
     saveLayout(updatedLayout);
   };
-  
-  // Early loading state
+
   if (!profileData || isLoading) {
     return (
       <div className="space-y-4">
@@ -179,13 +176,10 @@ const DashboardHome: React.FC = () => {
     );
   }
   
-  // Determine if role is business, handling super-admin as business
   const isBusinessAccount = userRole === 'business' || userRole === 'super-admin';
   
-  // Determine if role is staff, using explicit equality check
   const isStaffAccount = userRole === 'staff';
   
-  // Create array of widgets based on role and sorted by layout order
   const getOrderedWidgets = () => {
     const widgets = [
       {
@@ -210,9 +204,15 @@ const DashboardHome: React.FC = () => {
             <CardHeader className="pb-2 flex flex-row items-center justify-between">
               <CardTitle className="text-lg font-semibold">Calendar</CardTitle>
               <div className="flex items-center">
-                <span className="bg-primary/10 text-primary text-xs font-medium rounded-full px-2 py-0.5">
-                  {eventCounts.today} today
-                </span>
+                <EventCountBadge 
+                  count={eventCounts.today} 
+                  label="today" 
+                  className="mr-2" 
+                />
+                <EventCountBadge 
+                  count={eventCounts.total} 
+                  label="total" 
+                />
               </div>
             </CardHeader>
             <CardContent>
@@ -224,7 +224,6 @@ const DashboardHome: React.FC = () => {
       }
     ];
     
-    // Add subscribers widget for business accounts
     if (isBusinessAccount) {
       widgets.push({
         id: "subscribers",
@@ -253,7 +252,6 @@ const DashboardHome: React.FC = () => {
         span: "col-span-1"
       });
       
-      // Add analytics widget for business accounts
       widgets.push({
         id: "analytics",
         content: (
@@ -272,7 +270,6 @@ const DashboardHome: React.FC = () => {
       });
     }
     
-    // Sort widgets based on layout order
     return widgets
       .sort((a, b) => {
         const aIndex = layout.findIndex(item => item.id === a.id);
