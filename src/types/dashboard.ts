@@ -10,4 +10,4 @@ export interface DashboardLayoutItem {
   span: string;
 }
 
-export type WidgetType = 'tasks' | 'reminders' | 'bookings' | 'calendar' | 'subscribers' | 'analytics' | 'events';
+export type WidgetType = 'tasks' | 'reminders' | 'bookings' | 'calendar' | 'subscribers' | 'analytics' | 'events' | 'profile';
