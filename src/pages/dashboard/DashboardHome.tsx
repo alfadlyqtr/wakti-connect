@@ -8,12 +8,14 @@ import RemindersOverview from "@/components/dashboard/home/RemindersOverview";
 import DashboardBookingsPreview from "@/components/dashboard/home/DashboardBookingsPreview";
 import BusinessAnalyticsPreview from "@/components/dashboard/home/BusinessAnalyticsPreview";
 import TasksOverview from "@/components/dashboard/home/TasksOverview";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd";
 import { useBusinessSubscribers } from "@/hooks/useBusinessSubscribers";
 import { Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import EventCountBadge from "@/components/dashboard/home/EventCountBadge";
+import { DashboardWidgetLayout } from "@/types/dashboard";
+import ErrorBoundary from "@/components/ui/ErrorBoundary";
 
 const sampleEvents: CalendarEvent[] = [
   {
@@ -46,19 +48,19 @@ const sampleEvents: CalendarEvent[] = [
   },
 ];
 
-const defaultLayout = [
+const defaultLayout: DashboardWidgetLayout[] = [
   { id: "tasks", order: 0 },
   { id: "reminders", order: 1 },
   { id: "bookings", order: 2 },
   { id: "subscribers", order: 3 },
   { id: "calendar", order: 4 },
-  { id: "analytics", order: 5 },
+  { id: "analytics", order: 5 }
 ];
 
 const DashboardHome: React.FC = () => {
   const { profileData, userRole, userId } = useDashboardUserProfile();
   const { toast } = useToast();
-  const [layout, setLayout] = useState(defaultLayout);
+  const [layout, setLayout] = useState<DashboardWidgetLayout[]>(defaultLayout);
   const [isLoading, setIsLoading] = useState(true);
   
   const isBusinessOrAdmin = userRole === 'business' || userRole === 'super-admin';
@@ -127,17 +129,15 @@ const DashboardHome: React.FC = () => {
     loadUserLayout();
   }, [userId]);
   
-  const saveLayout = async (newLayout) => {
+  const saveLayout = async (newLayout: DashboardWidgetLayout[]) => {
     if (!userId) return;
     
     try {
-      const layoutString = JSON.stringify(newLayout);
-      
       const { error } = await supabase
         .from('user_preferences')
         .upsert({
           user_id: userId,
-          dashboard_layout: layoutString,
+          dashboard_layout: JSON.stringify(newLayout),
           updated_at: new Date().toISOString()
         })
         .select();
@@ -155,7 +155,7 @@ const DashboardHome: React.FC = () => {
     }
   };
   
-  const handleDragEnd = (result) => {
+  const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
     
     const items = Array.from(layout);
@@ -204,7 +204,11 @@ const DashboardHome: React.FC = () => {
       },
       {
         id: "bookings",
-        content: <DashboardBookingsPreview userRole={userRole} />,
+        content: (
+          <ErrorBoundary>
+            <DashboardBookingsPreview userRole={userRole} />
+          </ErrorBoundary>
+        ),
         span: "col-span-1"
       },
       {
