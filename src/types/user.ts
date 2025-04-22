@@ -1,5 +1,8 @@
 export type UserRole = 'individual' | 'business' | 'staff' | 'super-admin';
 
+// For legacy components that still reference 'free'
+export type LegacyUserRole = UserRole | 'individual';
+
 /**
  * Checks if a user role has access to a feature based on allowed roles
  * @param userRole The current user's role

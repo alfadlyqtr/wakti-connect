@@ -91,14 +91,14 @@ const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications, userRo
       label: 'Notifications', 
       path: '/dashboard/notifications', 
       badge: notificationCount > 0 ? notificationCount : null,
-      showForRoles: ['free', 'individual', 'business', 'staff']
+      showForRoles: ['individual', 'business', 'staff']
     },
     { 
       icon: Users, 
       label: 'Contacts', 
       path: '/dashboard/contacts', 
       badge: null,
-      showForRoles: ['free', 'individual', 'business', 'staff']
+      showForRoles: ['individual', 'business', 'staff']
     },
   ];
   

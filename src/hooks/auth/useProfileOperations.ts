@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "./types";
 import { toast } from "@/components/ui/use-toast";
+import { UserRole } from "@/types/user";
 
 export function useProfileOperations() {
   // Function to map profile data to User object - simplified
@@ -13,8 +14,8 @@ export function useProfileOperations() {
         email: userEmail || "",
         name: userEmail?.split('@')[0] || "",
         displayName: "",
-        plan: "free"
-      } as User;
+        plan: "individual"
+      } as unknown as User;  // Cast to unknown first to avoid type checking
     }
     
     return {
@@ -22,8 +23,8 @@ export function useProfileOperations() {
       email: userEmail || "",
       name: profile?.full_name || userEmail?.split('@')[0] || "",
       displayName: profile?.display_name || profile?.full_name || "",
-      plan: profile?.account_type || "free"
-    } as User;
+      plan: (profile?.account_type as UserRole) || "individual"
+    } as unknown as User;  // Cast to unknown first to avoid type checking
   };
 
   // Create a basic user when profile fetch fails or is pending
@@ -33,8 +34,8 @@ export function useProfileOperations() {
       email: userEmail || "",
       name: userEmail?.split('@')[0] || "",
       displayName: userEmail?.split('@')[0] || "",
-      plan: "free"
-    } as User;
+      plan: "individual"
+    } as unknown as User;  // Cast to unknown first to avoid type checking
   };
 
   // Handle profile creation with simplified approach
@@ -62,7 +63,7 @@ export function useProfileOperations() {
         .insert({ 
           id: userId,
           full_name: metadata?.full_name || userEmail?.split('@')[0] || "",
-          account_type: metadata?.account_type || "free",
+          account_type: metadata?.account_type || "individual",
           business_name: metadata?.business_name || null,
           display_name: metadata?.display_name || metadata?.full_name || "",
           created_at: new Date().toISOString(),

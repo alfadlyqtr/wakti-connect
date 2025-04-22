@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "./types";
@@ -59,7 +60,7 @@ export function useAuthState() {
                   ...session.user,
                   name: profile?.full_name || session.user.email?.split('@')[0],
                   displayName: profile?.display_name || profile?.full_name,
-                  plan: (profile?.account_type as UserRole) || "free"
+                  plan: (profile?.account_type as UserRole) || "individual"
                 };
                 
                 if (isMounted) setUser(userData);
@@ -124,7 +125,7 @@ export function useAuthState() {
               ...session.user,
               name: profile?.full_name || session.user.email?.split('@')[0],
               displayName: profile?.display_name || profile?.full_name,
-              plan: (profile?.account_type as UserRole) || "free"
+              plan: (profile?.account_type as UserRole) || "individual"
             };
             
             if (isMounted) setUser(userData);

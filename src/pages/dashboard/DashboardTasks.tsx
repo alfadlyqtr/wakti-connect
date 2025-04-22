@@ -118,20 +118,20 @@ const DashboardTasks = () => {
           }}
           onCreateTask={() => setCreateTaskDialogOpen(true)}
           isPaidAccount={isPaidAccount}
-          userRole={displayRole as "free" | "individual" | "business" | "staff"}
+          userRole={displayRole as "individual" | "business" | "staff"}
           showCreateButton={activeTab === "my-tasks"}
         />
       )}
       
       {activeTab === "reminders" ? (
         <RemindersContainer 
-          userRole={displayRole as "free" | "individual" | "business" | "staff"}
+          userRole={displayRole as "individual" | "business" | "staff"}
           isPaidAccount={isPaidAccount}
         />
       ) : (
         <TasksContainer
           tasks={filteredTasks}
-          userRole={displayRole as "free" | "individual" | "business" | "staff"}
+          userRole={displayRole as "individual" | "business" | "staff"}
           refetch={refetchTasks}
           isPaidAccount={isPaidAccount}
           onCreateTask={() => setCreateTaskDialogOpen(true)}
@@ -146,7 +146,7 @@ const DashboardTasks = () => {
         open={createTaskDialogOpen}
         onOpenChange={setCreateTaskDialogOpen}
         onCreateTask={handleCreateTask}
-        userRole={displayRole as "free" | "individual" | "business" | "staff"}
+        userRole={displayRole as "individual" | "business" | "staff"}
       />
       
       <EditTaskDialog

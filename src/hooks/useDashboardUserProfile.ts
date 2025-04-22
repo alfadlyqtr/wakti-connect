@@ -8,7 +8,7 @@ import { UserRole } from "@/types/user";
 export const useDashboardUserProfile = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [isStaff, setIsStaff] = useState(false);
-  const [userRole, setUserRole] = useState<UserRole>('free');
+  const [userRole, setUserRole] = useState<UserRole>('individual');
   const [isSuperAdmin, setIsSuperAdmin] = useState<boolean>(localStorage.getItem('isSuperAdmin') === 'true');
   
   // Fetch profile data using React Query
@@ -88,12 +88,12 @@ export const useDashboardUserProfile = () => {
       }
       
       // Determine user role and store in localStorage for quick access
-      const accountType = profileData?.account_type || 'free';
+      const accountType = profileData?.account_type || 'individual';
       
       // Set the user role with proper prioritization
       // If user is both business owner and staff, business takes priority
       const effectiveRole = accountType === 'business' ? 'business' : 
-                          (staffStatus ? 'staff' : accountType);
+                          (staffStatus ? 'staff' : 'individual');
       
       setUserRole(effectiveRole as UserRole);
       localStorage.setItem('userRole', effectiveRole);

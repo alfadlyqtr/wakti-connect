@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -41,14 +42,14 @@ const NavItems = ({ unreadMessages, unreadNotifications, userRole, isMobile = fa
       label: 'Messages', 
       path: '/dashboard/messages', 
       badge: unreadMessages.length > 0 ? unreadMessages.length : null,
-      showForRoles: ['free', 'individual', 'business']
+      showForRoles: ['individual', 'business']
     },
     { 
       icon: Users, 
       label: 'Contacts', 
       path: '/dashboard/contacts', 
       badge: null,
-      showForRoles: ['free', 'individual', 'business']
+      showForRoles: ['individual', 'business']
     },
     { 
       icon: HeartHandshake, 
@@ -62,14 +63,16 @@ const NavItems = ({ unreadMessages, unreadNotifications, userRole, isMobile = fa
       label: 'Notifications', 
       path: '/dashboard/notifications', 
       badge: notificationCount > 0 ? notificationCount : null,
-      showForRoles: ['free', 'individual', 'business', 'staff']
+      showForRoles: ['individual', 'business', 'staff']
     },
   ];
 
   // Filter items based on user role
   const filteredItems = navItems.filter(item => {
+    // If no role, don't show any items
+    if (!userRole) return false;
     // If the user's role is in the showForRoles array, show the item
-    return item.showForRoles.includes(userRole as UserRole);
+    return item.showForRoles.includes(userRole);
   });
 
   return (

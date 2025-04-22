@@ -14,7 +14,7 @@ const FreeAccountBanner: React.FC = () => {
   return (
     <div className="w-full bg-[#D6BCFA] bg-opacity-80 text-gray-800 py-2.5 px-4 flex flex-col sm:flex-row items-center justify-between">
       <div className="font-medium mb-2 sm:mb-0 text-center sm:text-left">
-        FREE ACCOUNT — Unlock the power of WAKTI by upgrading your plan
+        INDIVIDUAL ACCOUNT — Unlock the power of WAKTI by upgrading your plan
       </div>
       <Button 
         variant="outline" 

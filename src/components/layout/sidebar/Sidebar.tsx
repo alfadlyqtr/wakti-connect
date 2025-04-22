@@ -1,23 +1,18 @@
 
 import React, { useEffect, useState } from "react";
-import { NavLink } from "react-router-dom";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Menu } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import SidebarNavItems from "./SidebarNavItems";
+import SidebarUpgradeBanner from "./SidebarUpgradeBanner";
 import SidebarProfile from "./SidebarProfile";
-import { navItems } from "./sidebarNavConfig";
+import CollapseToggle from "./sidebar/CollapseToggle";
+import SidebarContainer from "./sidebar/SidebarContainer";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { UserRole } from "@/types/user";
+import SidebarUpgradeButton from "./sidebar/SidebarUpgradeButton";
 
-interface SidebarProps {
-  collapsed: boolean;
-}
-
-// Update this interface to use UserRole type which includes 'super-admin'
+// Define profile type to ensure TypeScript knows about our new columns
 interface SidebarProfileData {
   id: string;
   full_name: string | null;
@@ -27,131 +22,126 @@ interface SidebarProfileData {
   avatar_url: string | null;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
-  const [profileData, setProfileData] = useState<SidebarProfileData | null>(null);
-  const { user, logout } = useAuth();
+interface SidebarProps {
+  isOpen: boolean;
+  userRole: "individual" | "business" | "staff";
+  onCollapseChange?: (collapsed: boolean) => void;
+  closeSidebar?: () => void;
+  openCommandSearch?: () => void;
+  showUpgradeButton?: boolean;
+}
+
+const Sidebar = ({ 
+  isOpen, 
+  userRole, 
+  onCollapseChange, 
+  closeSidebar,
+  openCommandSearch,
+  showUpgradeButton = false
+}: SidebarProps) => {
+  const [collapsed, setCollapsed] = useState(true); // Default to collapsed
   
+  // Check local storage for saved sidebar state
   useEffect(() => {
-    const fetchProfile = async () => {
+    const savedState = localStorage.getItem('sidebarCollapsed');
+    if (savedState !== null) {
+      setCollapsed(savedState === 'true');
+      // Notify parent about initial collapsed state
+      if (onCollapseChange) {
+        onCollapseChange(savedState === 'true');
+      }
+    }
+  }, [onCollapseChange]);
+  
+  // Save sidebar state to local storage
+  const toggleCollapse = () => {
+    const newState = !collapsed;
+    setCollapsed(newState);
+    localStorage.setItem('sidebarCollapsed', String(newState));
+    // Notify parent about changed collapsed state
+    if (onCollapseChange) {
+      onCollapseChange(newState);
+    }
+  };
+  
+  // Fetch user profile for sidebar
+  const { data: profileData } = useQuery({
+    queryKey: ['sidebarProfile'],
+    queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
       
-      if (session?.user) {
-        // First check if user is staff
-        const { data: staffData } = await supabase
-          .from('business_staff')
-          .select('id')
-          .eq('staff_id', session.user.id)
-          .maybeSingle();
-        
-        const isStaff = !!staffData;
-        
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-          
-        if (error) {
-          console.error("Error fetching profile:", error);
-        } else if (data) {
-          // Check if user is super admin
-          const { data: superAdminData } = await supabase
-            .from('super_admins')
-            .select('id')
-            .eq('id', session.user.id)
-            .maybeSingle();
-            
-          const isSuperAdmin = !!superAdminData;
-          
-          // Cast the account_type appropriately
-          let accountType: UserRole;
-          
-          if (isSuperAdmin) {
-            accountType = 'super-admin';
-          } else if (isStaff) {
-            accountType = 'staff';
-          } else {
-            accountType = (data.account_type as UserRole) || 'free';
-          }
-          
-          setProfileData({
-            id: data.id,
-            full_name: data.full_name,
-            display_name: data.display_name,
-            business_name: data.business_name,
-            account_type: accountType,
-            avatar_url: data.avatar_url,
-          });
-        }
+      if (!session?.user) {
+        return null;
       }
-    };
-    
-    fetchProfile();
-  }, []);
-  
-  const renderNavItems = () => {
-    // Get user role and staff status
-    const userRole = localStorage.getItem('userRole');
-    const isStaff = localStorage.getItem('isStaff') === 'true';
-    
-    return navItems
-      .filter(item => {
-        // Special handling for super-admin role - show all items
-        if (userRole === 'super-admin') {
-          return true;
-        }
-        
-        // Show items based on user account type or staff status
-        if (isStaff && item.showFor.includes('staff')) {
-          return true;
-        }
-        
-        if (!isStaff && profileData && item.showFor.includes(profileData.account_type as any)) {
-          return true;
-        }
-        
-        return false;
-      })
-      .map((item) => (
-        <li key={item.path}>
-          <NavLink
-            to={`/dashboard/${item.path}`}
-            className={({ isActive }) => 
-              `group flex items-center gap-x-3 rounded-md px-3 py-2 text-sm ${
-                isActive 
-                  ? 'bg-accent text-accent-foreground' 
-                  : 'hover:bg-muted'
-              }`
-            }
-          >
-            <item.icon className={`h-5 w-5 ${collapsed ? '' : 'mr-2'}`} />
-            {!collapsed && <span>{item.label}</span>}
-            {!collapsed && item.badge && (
-              <Badge variant="secondary">{item.badge}</Badge>
-            )}
-          </NavLink>
-        </li>
-      ));
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, display_name, business_name, account_type, avatar_url')
+        .eq('id', session.user.id)
+        .single();
+      
+      if (error) {
+        console.error("Error fetching sidebar profile:", error);
+        return null;
+      }
+      
+      // Ensure account_type is a valid UserRole
+      let effectiveRole: UserRole = 'individual';
+      if (data.account_type === 'business') {
+        effectiveRole = 'business';
+      } else if (data.account_type === 'staff') {
+        effectiveRole = 'staff';
+      } else if (data.account_type === 'super-admin') {
+        effectiveRole = 'super-admin';
+      }
+      
+      return {
+        ...data,
+        account_type: effectiveRole
+      } as SidebarProfileData;
+    },
+  });
+
+  // Handle navigation click to close sidebar on mobile
+  const handleNavClick = () => {
+    if (closeSidebar) {
+      closeSidebar();
+    }
   };
 
   return (
-    <div className="flex flex-col h-full space-y-4 py-4 border-r bg-secondary text-secondary-foreground">
+    <SidebarContainer 
+      isOpen={isOpen} 
+      collapsed={collapsed} 
+      onCollapseChange={onCollapseChange}
+    >
+      {/* Toggle collapse button - Only visible on desktop */}
+      <CollapseToggle collapsed={collapsed} toggleCollapse={toggleCollapse} />
+      
+      {/* User Profile Section */}
       <SidebarProfile profileData={profileData} collapsed={collapsed} />
-      <div className="flex-1 space-y-1">
-        <ScrollArea className="h-full">
-          <div className="space-y-1">
-            <ul>
-              {renderNavItems()}
-            </ul>
-          </div>
-        </ScrollArea>
-      </div>
-      <div className="p-4">
-        <Button variant="outline" className="w-full" onClick={logout}>
-          Sign Out
-        </Button>
-      </div>
-    </div>
+      
+      {/* Navigation Items - Wrap in ScrollArea for proper scrolling */}
+      <ScrollArea className="flex-grow">
+        <SidebarNavItems 
+          onNavClick={handleNavClick} 
+          isCollapsed={collapsed} 
+          openCommandSearch={openCommandSearch}
+        />
+        
+        {/* Upgrade Button - Only shown for accounts that need to upgrade */}
+        {showUpgradeButton && (
+          <SidebarUpgradeButton collapsed={collapsed} />
+        )}
+      </ScrollArea>
+      
+      {/* Upgrade Banner - Only show for individual users with limited features and when not collapsed */}
+      {userRole === "individual" && !collapsed && (
+        <div className="mt-auto px-3 pb-5">
+          <SidebarUpgradeBanner />
+        </div>
+      )}
+    </SidebarContainer>
   );
 };
 

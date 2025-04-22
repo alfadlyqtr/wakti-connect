@@ -67,8 +67,14 @@ export const useTaskQueries = (tab: TaskTab = "my-tasks"): UseTaskQueriesReturn 
             .eq('id', session.user.id)
             .single();
           
-          setUserRole((profileData?.account_type as UserRole) || "free");
-          console.log(`User role set to ${profileData?.account_type || "free"}`);
+          // Default to individual if account_type is not a valid UserRole
+          const accountType = profileData?.account_type as string;
+          if (accountType === 'business') {
+            setUserRole('business');
+          } else {
+            setUserRole("individual");
+          }
+          console.log(`User role set to ${userRole || "individual"}`);
         }
       } catch (error) {
         console.error("Error fetching user role:", error);
@@ -119,7 +125,7 @@ export const useTaskQueries = (tab: TaskTab = "my-tasks"): UseTaskQueriesReturn 
     isLoading,
     error,
     refetch,
-    userRole: userRole as "free" | "individual" | "business" | "staff" | "super-admin",
+    userRole: userRole || 'individual',
     isStaff
   };
 };

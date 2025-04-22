@@ -5,6 +5,7 @@ import { Task } from '@/types/task.types';
 import { useTaskOperations } from './useTaskOperations';
 import { UseTasksReturn } from './types';
 import { toast } from "@/components/ui/use-toast";
+import { UserRole } from '@/types/user';
 
 export const useTasks = (): UseTasksReturn => {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -13,7 +14,7 @@ export const useTasks = (): UseTasksReturn => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const [filterPriority, setFilterPriority] = useState<string | null>(null);
-  const [userRole, setUserRole] = useState<"free" | "individual" | "business" | "staff" | null>(null);
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [lastFetchTime, setLastFetchTime] = useState<number>(0);
 
   // Check user role
@@ -28,9 +29,17 @@ export const useTasks = (): UseTasksReturn => {
           .single();
           
         if (profile) {
-          setUserRole(profile.account_type as any);
+          const accountType = profile.account_type as string;
+          if (accountType === 'business') {
+            setUserRole('business');
+          } else if (accountType === 'staff') {
+            setUserRole('staff');
+          } else {
+            // Default to individual for any other value
+            setUserRole('individual');
+          }
         } else {
-          setUserRole('free');
+          setUserRole('individual');
         }
       }
     };
@@ -115,7 +124,7 @@ export const useTasks = (): UseTasksReturn => {
   });
 
   // Ensure we're passing both required arguments to useTaskOperations
-  const { createTask } = useTaskOperations(userRole, false);
+  const { createTask } = useTaskOperations(userRole || 'individual', false);
 
   return {
     tasks,
@@ -129,7 +138,7 @@ export const useTasks = (): UseTasksReturn => {
     filterPriority,
     setFilterPriority,
     createTask,
-    userRole,
+    userRole: userRole || 'individual',
     isStaff: false, // We removed staff functionality
     refetch: fetchTasks
   };

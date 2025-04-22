@@ -1,3 +1,4 @@
+
 import {
   LayoutDashboard,
   Settings,
@@ -31,19 +32,19 @@ export const navItems: NavItem[] = [
     label: "Dashboard",
     path: "",
     icon: LayoutDashboard,
-    showFor: ['free', 'individual', 'business', 'staff', 'super-admin'],
+    showFor: ['individual', 'business', 'staff', 'super-admin'],
   },
   {
     label: "Tasks",
     path: "tasks",
     icon: ListChecks,
-    showFor: ['free', 'individual', 'business', 'staff', 'super-admin'],
+    showFor: ['individual', 'business', 'staff', 'super-admin'],
   },
   {
     label: "Events",
     path: "events",
     icon: PartyPopper,
-    showFor: ['free', 'individual', 'business', 'staff', 'super-admin'],
+    showFor: ['individual', 'business', 'staff', 'super-admin'],
   },
   {
     label: "Bookings",
@@ -97,19 +98,19 @@ export const navItems: NavItem[] = [
     label: "WAKTI AI",
     path: "ai-assistant",
     icon: Bot,
-    showFor: ['free', 'individual', 'business', 'staff', 'super-admin'],
+    showFor: ['individual', 'business', 'staff', 'super-admin'],
   },
   {
     label: "Settings",
     path: "settings",
     icon: Settings,
-    showFor: ['free', 'individual', 'business', 'staff', 'super-admin'],
+    showFor: ['individual', 'business', 'staff', 'super-admin'],
   },
   {
     label: "Help",
     path: "help",
     icon: HelpCircle,
-    showFor: ['free', 'individual', 'business', 'staff', 'super-admin'],
+    showFor: ['individual', 'business', 'staff', 'super-admin'],
   },
   {
     label: "Staff Communication",
@@ -121,7 +122,7 @@ export const navItems: NavItem[] = [
     label: "Voice Recorder & Transcription",
     path: "meeting-summary",
     icon: Mic,
-    showFor: ['free', 'individual', 'business', 'staff', 'super-admin'],
+    showFor: ['individual', 'business', 'staff', 'super-admin'],
   },
 ];
 
@@ -130,7 +131,7 @@ export const dropdownNavItems: NavItem[] = [
     label: "Messages",
     path: "messages",
     icon: MessageSquare,
-    showFor: ['free', 'individual', 'business', 'staff', 'super-admin'],
+    showFor: ['individual', 'business', 'staff', 'super-admin'],
   },
   {
     label: "Subscribers",
