@@ -1,4 +1,6 @@
 
+import React from 'react';
+
 /**
  * Format the recording duration in mm:ss format
  */
@@ -22,24 +24,24 @@ export const formatTranscriptWithRTL = (text: string): JSX.Element => {
   // Split the text by paragraphs
   const paragraphs = text.split('\n');
   
-  return (
-    <>
-      {paragraphs.map((paragraph, idx) => {
-        // Check if paragraph contains Arabic script
-        const isArabic = /[\u0600-\u06FF]/.test(paragraph);
-        
-        return (
-          <p 
-            key={idx} 
-            dir={isArabic ? "rtl" : "ltr"} 
-            className={isArabic ? "text-right font-arabic" : "text-left"}
-            style={{ textAlign: isArabic ? "right" : "left" }}
-          >
-            {paragraph}
-          </p>
-        );
-      })}
-    </>
+  return React.createElement(
+    React.Fragment, 
+    null,
+    paragraphs.map((paragraph, idx) => {
+      // Check if paragraph contains Arabic script
+      const isArabic = /[\u0600-\u06FF]/.test(paragraph);
+      
+      return React.createElement(
+        'p',
+        {
+          key: idx,
+          dir: isArabic ? "rtl" : "ltr",
+          className: isArabic ? "text-right font-arabic" : "text-left",
+          style: { textAlign: isArabic ? "right" : "left" }
+        },
+        paragraph
+      );
+    })
   );
 };
 
