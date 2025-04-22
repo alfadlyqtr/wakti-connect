@@ -102,8 +102,10 @@ const DashboardHome: React.FC = () => {
           <div className="col-span-1 md:col-span-2 lg:col-span-1">
             <BusinessAnalyticsPreview 
               profileData={{
-                account_type: profileData.account_type as "individual" | "business",
-                business_name: profileData.business_name || undefined
+                account_type: (profileData.account_type === 'business' || profileData.account_type === 'super-admin') 
+                  ? 'business' 
+                  : 'individual',
+                business_name: 'business_name' in profileData ? profileData.business_name as string : undefined
               }} 
             />
           </div>

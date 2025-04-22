@@ -8,12 +8,14 @@ import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { Clock, CheckCircle, BellRing } from "lucide-react";
+import { UserRole } from "@/types/user";
 
 interface TasksOverviewProps {
-  tasks: Task[];
+  tasks?: Task[];
+  userRole: UserRole;
 }
 
-const TasksOverview: React.FC<TasksOverviewProps> = ({ tasks }) => {
+const TasksOverview: React.FC<TasksOverviewProps> = ({ tasks = [], userRole }) => {
   // Filter out archived tasks first
   const activeTasks = tasks.filter(task => !task.archived_at);
   
