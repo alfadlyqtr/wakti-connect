@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDashboardUserProfile } from "@/hooks/useDashboardUserProfile";
@@ -6,6 +7,7 @@ import { DashboardCalendar } from "@/components/dashboard/home/DashboardCalendar
 import { CalendarEvent } from "@/types/calendar.types";
 import RemindersOverview from "@/components/dashboard/home/RemindersOverview";
 import DashboardBookingsPreview from "@/components/dashboard/home/DashboardBookingsPreview";
+import DashboardEventsPreview from "@/components/dashboard/home/DashboardEventsPreview";
 import BusinessAnalyticsPreview from "@/components/dashboard/home/BusinessAnalyticsPreview";
 import TasksOverview from "@/components/dashboard/home/TasksOverview";
 import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd";
@@ -14,7 +16,7 @@ import { Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import EventCountBadge from "@/components/dashboard/home/EventCountBadge";
-import { DashboardWidgetLayout } from "@/types/dashboard";
+import { DashboardWidgetLayout, WidgetType } from "@/types/dashboard";
 import ErrorBoundary from "@/components/ui/ErrorBoundary";
 
 const sampleEvents: CalendarEvent[] = [
@@ -52,9 +54,10 @@ const defaultLayout: DashboardWidgetLayout[] = [
   { id: "tasks", order: 0 },
   { id: "reminders", order: 1 },
   { id: "bookings", order: 2 },
-  { id: "subscribers", order: 3 },
-  { id: "calendar", order: 4 },
-  { id: "analytics", order: 5 }
+  { id: "events", order: 3 },
+  { id: "subscribers", order: 4 },
+  { id: "calendar", order: 5 },
+  { id: "analytics", order: 6 }
 ];
 
 const DashboardHome: React.FC = () => {
@@ -112,6 +115,12 @@ const DashboardHome: React.FC = () => {
             } else {
               layoutData = data.dashboard_layout;
             }
+            
+            // Ensure the new 'events' widget is included
+            if (!layoutData.some((item: DashboardWidgetLayout) => item.id === 'events')) {
+              layoutData.push({ id: "events", order: layoutData.length });
+            }
+            
             setLayout(layoutData);
           } catch (parseError) {
             console.error('Failed to parse dashboard layout:', parseError);
@@ -133,14 +142,16 @@ const DashboardHome: React.FC = () => {
     if (!userId) return;
     
     try {
+      // Use UPSERT to avoid primary key conflicts
       const { error } = await supabase
         .from('user_preferences')
         .upsert({
           user_id: userId,
           dashboard_layout: JSON.stringify(newLayout),
           updated_at: new Date().toISOString()
-        })
-        .select();
+        }, {
+          onConflict: 'user_id' // Specify the conflict resolution field
+        });
         
       if (error) {
         console.error('Error saving dashboard layout:', error);
@@ -207,6 +218,15 @@ const DashboardHome: React.FC = () => {
         content: (
           <ErrorBoundary>
             <DashboardBookingsPreview userRole={userRole} />
+          </ErrorBoundary>
+        ),
+        span: "col-span-1 md:col-span-1"
+      },
+      {
+        id: "events",
+        content: (
+          <ErrorBoundary>
+            <DashboardEventsPreview userRole={userRole} />
           </ErrorBoundary>
         ),
         span: "col-span-1 md:col-span-1"

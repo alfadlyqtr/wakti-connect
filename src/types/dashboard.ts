@@ -9,3 +9,5 @@ export interface DashboardLayoutItem {
   content: React.ReactNode;
   span: string;
 }
+
+export type WidgetType = 'tasks' | 'reminders' | 'bookings' | 'calendar' | 'subscribers' | 'analytics' | 'events';

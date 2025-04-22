@@ -6,54 +6,60 @@ import { Calendar, Clock, Users, PlusCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { UserRole } from "@/types/user";
-
-interface BookingItem {
-  id: string;
-  title: string;
-  clientName?: string;
-  time: string;
-  status: "upcoming" | "completed" | "cancelled";
-}
-
-// Mock data for now - in a real implementation this would come from props or a hook
-const mockBookings: BookingItem[] = [
-  { id: "1", title: "Consultation", clientName: "John Smith", time: "2025-04-23 10:00 AM", status: "upcoming" },
-  { id: "2", title: "Follow-up", clientName: "Jane Doe", time: "2025-04-24 2:30 PM", status: "upcoming" },
-  { id: "3", title: "Initial Meeting", clientName: "Alex Johnson", time: "2025-04-25 11:15 AM", status: "upcoming" },
-];
+import { useBookings } from "@/hooks/useBookings";
+import { format } from "date-fns";
 
 interface DashboardBookingsPreviewProps {
-  userRole: UserRole; // Updated to use the complete UserRole type
+  userRole: UserRole;
 }
 
 const DashboardBookingsPreview: React.FC<DashboardBookingsPreviewProps> = ({ userRole }) => {
   const navigate = useNavigate();
   const isBusinessAccount = userRole === "business" || userRole === "super-admin";
   
+  const { 
+    bookings, 
+    isLoading 
+  } = useBookings();
+  
+  // Get only upcoming bookings (bookings with start_time in the future)
+  const upcomingBookings = (bookings || [])
+    .filter(booking => {
+      const bookingDate = new Date(booking.start_time);
+      return bookingDate > new Date() && booking.status !== 'cancelled' && booking.status !== 'no_show';
+    })
+    .slice(0, 3); // Limit to 3 bookings
+  
   return (
     <Card className="bg-gradient-to-br from-[#33C3F0]/10 via-white/80 to-[#1EAEDB]/10 dark:from-gray-900 dark:to-gray-800 shadow-lg hover:shadow-xl hover:translate-y-[-2px] transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-semibold flex items-center gap-2">
+        <CardTitle className="text-base sm:text-lg font-semibold flex items-center gap-2">
           <Calendar className="h-5 w-5 text-blue-500" />
           Upcoming Bookings
         </CardTitle>
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[220px]">
-          {mockBookings.length > 0 ? (
+          {isLoading ? (
             <div className="space-y-3">
-              {mockBookings.map((booking) => (
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="p-3 bg-white/50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700 animate-pulse h-[72px]"></div>
+              ))}
+            </div>
+          ) : upcomingBookings.length > 0 ? (
+            <div className="space-y-3">
+              {upcomingBookings.map((booking) => (
                 <div key={booking.id} className="p-3 bg-white/50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all duration-200">
                   <div className="flex justify-between">
                     <div>
                       <h4 className="font-medium">{booking.title}</h4>
-                      {booking.clientName && isBusinessAccount && (
-                        <p className="text-sm text-muted-foreground">{booking.clientName}</p>
+                      {booking.customer_name && isBusinessAccount && (
+                        <p className="text-sm text-muted-foreground">{booking.customer_name}</p>
                       )}
                     </div>
                     <div className="flex items-center text-sm text-muted-foreground">
                       <Clock className="h-3.5 w-3.5 mr-1" />
-                      {new Date(booking.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {format(new Date(booking.start_time), 'h:mm a')}
                     </div>
                   </div>
                   <div className="mt-2 flex justify-between items-center">
@@ -61,7 +67,7 @@ const DashboardBookingsPreview: React.FC<DashboardBookingsPreviewProps> = ({ use
                       {booking.status}
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      {new Date(booking.time).toLocaleDateString()}
+                      {format(new Date(booking.start_time), 'MMM d, yyyy')}
                     </div>
                   </div>
                 </div>
