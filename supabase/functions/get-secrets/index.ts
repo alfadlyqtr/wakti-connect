@@ -19,7 +19,7 @@ serve(async (req) => {
     const secrets: Record<string, string> = {}
     for (const key of keys) {
       const value = Deno.env.get(key)
-      if (!value && key === 'VOICERSS_API_KEY') {
+      if (!value && (key === 'VOICERSS_API_KEY' || key === 'SPEECHIFY_API_KEY')) {
         console.error('Missing required API key:', key)
         return new Response(
           JSON.stringify({ 
@@ -49,3 +49,4 @@ serve(async (req) => {
     )
   }
 })
+
