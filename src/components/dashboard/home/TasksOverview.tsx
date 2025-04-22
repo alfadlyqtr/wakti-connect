@@ -16,17 +16,13 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ tasks }) => {
   const inProgressTasks = tasks.filter(task => task.status === 'in-progress');
   const completedTasks = tasks.filter(task => task.status === 'completed');
   
-  // Filter out archived tasks for more accurate statistics
-  const activeTasks = tasks.filter(task => !task.archived_at);
-  
   // Calculate percentages
-  const totalTasks = activeTasks.length;
+  const totalTasks = tasks.length;
   const completionRate = totalTasks > 0 ? Math.round((completedTasks.length / totalTasks) * 100) : 0;
   
   // Convert Task[] to CalendarEvent[] for TaskList
-  // Only show non-archived tasks in the list
-  const taskEvents: CalendarEvent[] = activeTasks
-    .filter(task => !task.archived_at)
+  // Show all tasks, including archived ones
+  const taskEvents: CalendarEvent[] = tasks
     .slice(0, 5) // Limit to top 5 tasks for better UI
     .map(task => ({
       id: task.id,
@@ -62,7 +58,7 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ tasks }) => {
           <TaskList tasks={taskEvents} />
         ) : (
           <div className="p-4 text-center text-muted-foreground">
-            No active tasks found. Create a task to get started.
+            No tasks found. Create a task to get started.
           </div>
         )}
       </div>
