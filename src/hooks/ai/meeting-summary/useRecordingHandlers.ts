@@ -3,6 +3,7 @@ import { useCallback, useRef } from 'react';
 import { toast } from "sonner";
 import { MeetingSummaryState } from './types';
 import { supabase } from '@/integrations/supabase/client';
+import { improveTranscriptionAccuracy, detectLocationFromText, detectAttendeesFromText } from '@/utils/text/transcriptionUtils';
 
 export const useRecordingHandlers = (
   setState: React.Dispatch<React.SetStateAction<MeetingSummaryState>>,
@@ -168,17 +169,33 @@ export const useRecordingHandlers = (
   const processTranscription = (text: string, audioBlob: Blob, partNumber: number) => {
     console.log("Processing transcription for part", partNumber);
     
-    // Detect language and set text direction
-    const isArabic = /[\u0600-\u06FF]/.test(text);
-    console.log("Contains Arabic characters:", isArabic);
+    // Enhanced language detection
+    const hasArabic = /[\u0600-\u06FF]/.test(text);
+    const hasEnglish = /[a-zA-Z]/.test(text);
+    const isRTL = hasArabic && !hasEnglish;
+    const isMixedLanguage = hasArabic && hasEnglish;
+    
+    console.log("Language detection:", {
+      hasArabic,
+      hasEnglish,
+      isRTL,
+      isMixedLanguage
+    });
+    
+    // Improve transcription quality
+    const improvedText = improveTranscriptionAccuracy(text, isMixedLanguage ? 'mixed' : (isRTL ? 'ar' : 'en'));
+    
+    // Detect location and attendees from the transcription
+    const detectedLocation = detectLocationFromText(improvedText);
+    const detectedAttendees = detectAttendeesFromText(improvedText);
     
     setState(prev => {
       // Determine whether to append or start a new transcript
       let newTranscribedText;
       if (prev.transcribedText) {
-        newTranscribedText = `${prev.transcribedText}\n\n${isArabic ? 'الجزء' : 'Part'} ${partNumber}:\n${text}`;
+        newTranscribedText = `${prev.transcribedText}\n\n${isRTL ? 'الجزء' : 'Part'} ${partNumber}:\n${improvedText}`;
       } else {
-        newTranscribedText = `${isArabic ? 'الجزء' : 'Part'} ${partNumber}:\n${text}`;
+        newTranscribedText = `${isRTL ? 'الجزء' : 'Part'} ${partNumber}:\n${improvedText}`;
       }
       
       return {
@@ -191,16 +208,19 @@ export const useRecordingHandlers = (
             partNumber,
             duration: prev.recordingTime,
             audioBlob,
-            isRTL: isArabic
+            isRTL
           }
         ],
         audioBlobs: [...(prev.audioBlobs || []), audioBlob],
-        transcribedText: newTranscribedText
+        transcribedText: newTranscribedText,
+        detectedLocation: detectedLocation || prev.detectedLocation,
+        detectedAttendees: detectedAttendees || prev.detectedAttendees,
+        isRTL: isRTL
       };
     });
     
     cleanup();
-    toast.success(isArabic ? "تم نسخ التسجيل بنجاح!" : "Recording transcribed successfully!");
+    toast.success(isRTL ? "تم نسخ التسجيل بنجاح!" : "Recording transcribed successfully!");
   };
 
   return {

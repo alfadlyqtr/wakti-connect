@@ -1,3 +1,4 @@
+
 import { formatTime } from '@/utils/audio/audioProcessing';
 import html2pdf from 'html2pdf.js';
 import { getMapThumbnailUrl } from '@/utils/mapUtils';
@@ -7,6 +8,7 @@ export interface MeetingSummaryPDFOptions {
   companyName?: string;
   companyLogo?: string;
   includeFooter?: boolean;
+  isRTL?: boolean;
 }
 
 // Extract title from meeting summary
@@ -14,7 +16,9 @@ const extractTitleFromSummary = (summary: string): string => {
   const titleMatch = summary.match(/Meeting Title:\s*([^\n]+)/i) || 
                      summary.match(/Title:\s*([^\n]+)/i) ||
                      summary.match(/^# ([^\n]+)/m) ||
-                     summary.match(/^## ([^\n]+)/m);
+                     summary.match(/^## ([^\n]+)/m) ||
+                     summary.match(/عنوان الاجتماع:\s*([^\n]+)/i) ||
+                     summary.match(/^# ([^\n]+)/m);
                      
   return titleMatch ? titleMatch[1].trim() : 'Meeting Summary';
 };
@@ -34,130 +38,189 @@ export const exportMeetingSummaryAsPDF = async (
   attendees?: string[] | null,
   options: MeetingSummaryPDFOptions = {}
 ): Promise<void> => {
+  // Detect if content is RTL if not explicitly provided
+  const isRTL = options.isRTL !== undefined 
+    ? options.isRTL 
+    : /[\u0600-\u06FF]/.test(summary);
+  
   // Create PDF content with enhanced styling
   const today = new Date();
-  const dateString = today.toLocaleDateString();
-  const timeString = today.toLocaleTimeString();
+  const dateString = today.toLocaleDateString(isRTL ? 'ar-SA' : 'en-US');
+  const timeString = today.toLocaleTimeString(isRTL ? 'ar-SA' : 'en-US');
   
-  const title = options.title || extractTitleFromSummary(summary) || 'Meeting Summary';
+  const title = options.title || extractTitleFromSummary(summary) || (isRTL ? 'ملخص الاجتماع' : 'Meeting Summary');
   const companyName = options.companyName || 'WAKTI';
   const includeFooter = options.includeFooter !== false;
 
-  // Extract action items if present
-  const actionItemsMatch = summary.match(/##\s*Action Items[^#]*(?=##|$)/i);
-  const actionItems = actionItemsMatch ? actionItemsMatch[0]
-    .replace(/^##\s*Action Items\s*/i, '')
-    .split('\n')
-    .filter(line => line.trim().startsWith('-') || line.trim().startsWith('*'))
-    .map(item => item.trim().replace(/^[-*]\s*/, ''))
-    .join('</li><li>') : '';
-
-  // Process the main content while preserving action items
-  const mainContent = summary.replace(/##\s*Action Items[^#]*(?=##|$)/i, '')
-    .replace(/\n/g, "<br />")
-    .replace(/^## (.*)/gm, '<h2 style="color: #333; margin-top: 20px; margin-bottom: 10px; font-size: 18px; border-bottom: 1px solid #eee; padding-bottom: 5px;">$1</h2>')
-    .replace(/^### (.*)/gm, '<h3 style="color: #444; margin-top: 15px; margin-bottom: 8px; font-size: 16px;">$1</h3>')
-    .replace(/^\- (.*)/gm, '<li style="margin-bottom: 5px;">$1</li>')
-    .replace(/^\* (.*)/gm, '<li style="margin-bottom: 5px;">$1</li>');
-
-  // Generate map URL if location is provided with the new size
-  const mapImageHtml = location ? `
-    <div style="margin: 10px 0;">
-      <img src="${getMapThumbnailUrl(location)}" 
-           alt="Meeting Location Map" 
-           style="width: 300px; height: 200px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd;" />
-      <p style="margin: 5px 0 0 0; font-size: 12px; color: #666;">
-        ${location}
-      </p>
-    </div>` : '';
-
-  let pdfContent = `
-    <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <div>
-          <h1 style="color: #0053c3; margin: 0; font-size: 24px;">${title}</h1>
-          <p style="color: #666; margin: 5px 0;">Generated on ${dateString} at ${timeString}</p>
-        </div>
-        ${options.companyLogo ? `<img src="${options.companyLogo}" alt="${companyName} Logo" style="height: 60px;">` : ''}
-      </div>
-      
-      <div style="background-color: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-        <div style="display: flex; flex-wrap: wrap; gap: 15px;">
-          <div style="flex: 1; min-width: 200px;">
-            <p style="margin: 5px 0; font-weight: bold;">Duration:</p>
-            <p style="margin: 5px 0;">${formatTime(duration)}</p>
-          </div>
-          
-          ${location ? `
-          <div style="flex: 1; min-width: 200px;">
-            <p style="margin: 5px 0; font-weight: bold;">Location:</p>
-            <p style="margin: 5px 0;">${location}</p>
-          </div>` : ''}
-        </div>
-        
-        ${attendees && attendees.length > 0 ? `
-        <div style="margin-top: 15px;">
-          <p style="margin: 5px 0; font-weight: bold;">Attendees:</p>
-          <ul style="margin: 5px 0; padding-left: 20px;">
-            ${attendees.map(attendee => `<li>${attendee}</li>`).join('')}
-          </ul>
-        </div>` : ''}
-
-        ${location ? mapImageHtml : ''}
-      </div>
-      
-      ${actionItems ? `
-      <div style="background-color: #fff3e0; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ff9800;">
-        <h2 style="color: #e65100; margin: 0 0 10px 0; font-size: 18px;">Action Items</h2>
-        <ul style="margin: 0; padding-left: 20px;">
-          <li>${actionItems}</li>
-        </ul>
-      </div>` : ''}
-      
-      <div style="line-height: 1.6;">
-        ${mainContent}
-      </div>
-      
-      ${includeFooter ? `
-      <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #999; font-size: 12px; text-align: center;">
-        <p>Generated by ${companyName} Meeting Summary Tool</p>
-      </div>` : ''}
-    </div>
+  // Create PDF container
+  const container = document.createElement('div');
+  container.style.fontFamily = isRTL ? 'Arial, sans-serif, "Traditional Arabic"' : 'Arial, sans-serif';
+  container.style.direction = isRTL ? 'rtl' : 'ltr';
+  container.style.padding = '20px';
+  container.style.maxWidth = '800px';
+  container.style.margin = '0 auto';
+  container.style.backgroundColor = 'white';
+  container.style.color = '#333';
+  
+  // Create header
+  const header = document.createElement('div');
+  header.style.display = 'flex';
+  header.style.justifyContent = 'space-between';
+  header.style.alignItems = 'center';
+  header.style.borderBottom = '2px solid #0053c3';
+  header.style.marginBottom = '20px';
+  header.style.paddingBottom = '10px';
+  
+  // Logo
+  const logo = document.createElement('div');
+  logo.innerHTML = `
+    <img src="${options.companyLogo || '/lovable-uploads/9b7d0693-89eb-4cc5-b90b-7834bfabda0e.png'}" 
+      style="width: 50px; height: 50px; object-fit: contain;" />
   `;
-
-  // Configure PDF options
+  
+  // Title
+  const titleDiv = document.createElement('div');
+  titleDiv.style.flex = '1';
+  titleDiv.style.textAlign = isRTL ? 'right' : 'left';
+  titleDiv.style.marginLeft = isRTL ? '0' : '15px';
+  titleDiv.style.marginRight = isRTL ? '15px' : '0';
+  titleDiv.innerHTML = `
+    <h1 style="margin: 0; color: #0053c3; font-size: 24px;">${title}</h1>
+    <p style="margin: 5px 0 0; color: #666; font-size: 14px;">
+      ${isRTL ? `${dateString} - ${timeString}` : `${dateString} - ${timeString}`}
+    </p>
+  `;
+  
+  if (isRTL) {
+    header.appendChild(titleDiv);
+    header.appendChild(logo);
+  } else {
+    header.appendChild(logo);
+    header.appendChild(titleDiv);
+  }
+  
+  container.appendChild(header);
+  
+  // Create metadata section
+  const metadataSection = document.createElement('div');
+  metadataSection.style.marginBottom = '20px';
+  metadataSection.style.padding = '15px';
+  metadataSection.style.backgroundColor = '#f8f9fa';
+  metadataSection.style.borderRadius = '5px';
+  metadataSection.style.border = '1px solid #e9ecef';
+  
+  // Format duration
+  const formattedDuration = formatTime ? formatTime(duration) : 
+    `${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, '0')}`;
+  
+  // Metadata content
+  let metadataHTML = `
+    <h2 style="margin-top: 0; margin-bottom: 10px; font-size: 16px; color: #0053c3;">
+      ${isRTL ? 'معلومات الاجتماع' : 'Meeting Information'}
+    </h2>
+    <table style="width: 100%; border-collapse: collapse;">
+      <tr>
+        <td style="padding: 8px; font-weight: bold; width: 120px; color: #0053c3;">
+          ${isRTL ? 'المدة:' : 'Duration:'}
+        </td>
+        <td style="padding: 8px;">${formattedDuration}</td>
+  `;
+  
+  if (location) {
+    metadataHTML += `
+        <td style="padding: 8px; font-weight: bold; width: 120px; color: #0053c3;">
+          ${isRTL ? 'الموقع:' : 'Location:'}
+        </td>
+        <td style="padding: 8px;">${location}</td>
+      </tr>
+    `;
+  } else {
+    metadataHTML += `
+      </tr>
+    `;
+  }
+  
+  metadataHTML += `</table>`;
+  
+  // Add attendees if available
+  if (attendees && attendees.length > 0) {
+    metadataHTML += `
+      <div style="margin-top: 10px;">
+        <h3 style="font-size: 14px; color: #0053c3; margin-bottom: 5px;">
+          ${isRTL ? 'الحاضرون:' : 'Attendees:'}
+        </h3>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+    `;
+    
+    attendees.forEach(attendee => {
+      metadataHTML += `
+        <span style="background-color: #e6f3ff; border-radius: 4px; padding: 4px 8px; font-size: 12px;">
+          ${attendee}
+        </span>
+      `;
+    });
+    
+    metadataHTML += `
+        </div>
+      </div>
+    `;
+  }
+  
+  metadataSection.innerHTML = metadataHTML;
+  container.appendChild(metadataSection);
+  
+  // Process and add the main content
+  const contentSection = document.createElement('div');
+  contentSection.style.lineHeight = '1.6';
+  
+  // Process markdown content to HTML
+  let processedContent = summary
+    // Handle headers
+    .replace(/^## (.*)/gm, '<h2 style="color: #0053c3; font-size: 18px; margin-top: 20px; margin-bottom: 10px;">$1</h2>')
+    .replace(/^### (.*)/gm, '<h3 style="color: #0053c3; font-size: 16px; margin-top: 15px; margin-bottom: 8px;">$1</h3>')
+    // Handle lists
+    .replace(/^- (.*)/gm, '<li style="margin-bottom: 8px;">$1</li>')
+    .replace(/^\* (.*)/gm, '<li style="margin-bottom: 8px;">$1</li>')
+    // Handle paragraphs
+    .replace(/^([^<#\-\*].+)/gm, '<p style="margin-bottom: 15px;">$1</p>')
+    // Wrap lists
+    .replace(/(<li.+<\/li>)(?!\n<li)/gs, '<ul style="margin-bottom: 15px; padding-left: 20px;">$1</ul>')
+    // Handle newlines
+    .replace(/\n\n/g, '<br />');
+  
+  contentSection.innerHTML = processedContent;
+  container.appendChild(contentSection);
+  
+  // Add footer if enabled
+  if (includeFooter) {
+    const footer = document.createElement('div');
+    footer.style.marginTop = '30px';
+    footer.style.paddingTop = '15px';
+    footer.style.borderTop = '1px solid #e9ecef';
+    footer.style.textAlign = 'center';
+    footer.style.fontSize = '12px';
+    footer.style.color = '#6c757d';
+    
+    footer.innerHTML = isRTL
+      ? `تم إنشاؤه بواسطة WAKTI AI - ${dateString}`
+      : `Generated by WAKTI AI - ${dateString}`;
+    
+    container.appendChild(footer);
+  }
+  
+  // Generate PDF
   const pdfOptions = {
     margin: [15, 15, 15, 15],
-    filename: `meeting_summary_${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${today.toISOString().split('T')[0]}.pdf`,
+    filename: `${title.replace(/[^a-zA-Z0-9]/g, '_')}_${dateString.replace(/\//g, '-')}.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true },
+    html2canvas: { scale: 2 },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
   };
   
-  // Generate and download the PDF
-  const element = document.createElement('div');
-  element.innerHTML = pdfContent;
-  document.body.appendChild(element);
-  
   try {
-    await html2pdf().from(element).set(pdfOptions).save();
-  } finally {
-    document.body.removeChild(element);
+    await html2pdf().from(container).set(pdfOptions).save();
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    throw new Error('Failed to generate PDF');
   }
-};
-
-/**
- * Creates a download link for audio data
- * @param audioData Audio blob
- * @param filename Filename for the download
- */
-export const downloadAudioFile = (audioData: Blob, filename = 'meeting_recording.webm'): void => {
-  const url = URL.createObjectURL(audioData);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 100);
 };

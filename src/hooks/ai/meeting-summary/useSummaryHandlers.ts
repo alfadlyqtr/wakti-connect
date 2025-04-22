@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { MeetingSummaryState } from './types';
 import { supabase } from '@/integrations/supabase/client';
 import { generateUUID } from '@/lib/utils/uuid';
+import { containsArabic } from '@/utils/audio/recordingUtils';
 
 export const useSummaryHandlers = (
   state: MeetingSummaryState,
@@ -15,18 +16,31 @@ export const useSummaryHandlers = (
     setState(prev => ({ ...prev, isSummarizing: true }));
     
     try {
+      // Check for bilingual content
+      const hasArabic = containsArabic(state.transcribedText);
+      const isBilingual = hasArabic && /[a-zA-Z]/.test(state.transcribedText);
+      
+      // Use detected language(s) for better summary generation
+      const detectedLanguage = isBilingual ? 'mixed' : (hasArabic ? 'ar' : 'en');
+      
+      console.log(`Generating summary with detected language: ${detectedLanguage}`);
+      
       const { data, error } = await supabase.functions.invoke('ai-meeting-summary', {
-        body: { text: state.transcribedText }
+        body: { 
+          text: state.transcribedText,
+          language: detectedLanguage
+        }
       });
       
       if (error) throw error;
       
-      const { summary } = data;
+      const { summary, isRTL } = data;
       
       setState(prev => ({
         ...prev,
         summary,
-        isSummarizing: false
+        isSummarizing: false,
+        isRTL: isRTL || hasArabic
       }));
       
       // Save meeting data if we have recording parts
@@ -39,7 +53,8 @@ export const useSummaryHandlers = (
           location: state.meetingLocation || state.detectedLocation,
           summary,
           duration: totalDuration,
-          audioBlobs: state.audioBlobs
+          audioBlobs: state.audioBlobs,
+          language: detectedLanguage
         });
       }
       
@@ -59,14 +74,16 @@ const saveMeetingSummary = async ({
   location, 
   summary, 
   duration,
-  audioBlobs 
+  audioBlobs,
+  language
 }: { 
   title: string, 
   date: string, 
-  location: string, 
+  location: string | null, 
   summary: string, 
   duration: number,
-  audioBlobs: Blob[] 
+  audioBlobs: Blob[],
+  language: string 
 }) => {
   try {
     // Get the current user directly from supabase
@@ -89,7 +106,7 @@ const saveMeetingSummary = async ({
       summary,
       duration,
       has_audio: audioBlobs.length > 0,
-      language: 'en',
+      language,
       created_at: new Date().toISOString()
     });
     
@@ -97,10 +114,10 @@ const saveMeetingSummary = async ({
       throw error;
     }
     
-    toast("Meeting summary saved successfully!");
+    toast.success("Meeting summary saved successfully!");
     
   } catch (error) {
     console.error("Error saving meeting:", error);
-    toast("There was an error saving your meeting data");
+    toast.error("There was an error saving your meeting data");
   }
 };

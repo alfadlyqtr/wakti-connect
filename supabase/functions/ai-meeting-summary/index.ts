@@ -13,7 +13,34 @@ const generateSummaryPrompt = (text: string, language: string) => {
   if (language === 'auto' || language === 'mixed') {
     // Simple check for Arabic characters
     const hasArabicChars = /[\u0600-\u06FF]/.test(text);
-    language = hasArabicChars ? 'ar' : 'en';
+    const hasEnglishChars = /[a-zA-Z]/.test(text);
+    
+    if (hasArabicChars && hasEnglishChars) {
+      // For mixed language (bilingual) content
+      return `
+        You are an intelligent assistant specialized in summarizing bilingual meetings with both Arabic and English content.
+        Please analyze the following bilingual meeting transcript that contains both Arabic and English text.
+        
+        Create a well-formatted summary that respects both languages. When a section was mainly discussed in Arabic, 
+        summarize that section in Arabic. When a section was mainly in English, summarize that section in English.
+        
+        In your summary, please include:
+        - A meeting title that reflects the content (in the predominant language of the meeting)
+        - A brief overview of the main discussion (3-4 sentences)
+        - Key points discussed (bullet points)
+        - Action items, decisions, or tasks (if any)
+        - Any deadlines or important dates (if any)
+        
+        Meeting transcript:
+        ${text}
+        
+        Bilingual Meeting Summary:
+      `;
+    } else if (hasArabicChars) {
+      language = 'ar';
+    } else {
+      language = 'en';
+    }
   }
   
   if (language === 'ar') {
@@ -96,7 +123,7 @@ serve(async (req) => {
           body: JSON.stringify({
             model: 'deepseek-chat',
             messages: [
-              { role: 'system', content: 'You are a meeting summarization assistant.' },
+              { role: 'system', content: 'You are a multilingual meeting summarization assistant skilled in both Arabic and English.' },
               { role: 'user', content: prompt }
             ],
             temperature: 0.3,
@@ -133,7 +160,7 @@ serve(async (req) => {
           body: JSON.stringify({
             model: 'gpt-4o-mini',
             messages: [
-              { role: 'system', content: 'You are a meeting summarization assistant.' },
+              { role: 'system', content: 'You are a multilingual meeting summarization assistant skilled in both Arabic and English.' },
               { role: 'user', content: prompt }
             ],
             temperature: 0.3,

@@ -5,14 +5,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MeetingIntakeForm } from './meeting-summary/MeetingIntakeForm';
 import { useMeetingSummaryV2 } from '@/hooks/ai/meeting-summary/useMeetingSummaryV2';
 import RecordingControlsV2 from './meeting-summary/RecordingControlsV2';
-import { Loader2, Download, FileUp, Copy, FileText } from 'lucide-react';
+import { Loader2, Download, FileUp, Copy, FileText, Volume2 } from 'lucide-react';
 import { formatTranscriptWithRTL, containsArabic } from '@/utils/audio/recordingUtils';
 import { toast } from "sonner";
 import TranscriptionPanel from './meeting-summary/TranscriptionPanel';
+import SavedRecordingsTab from './meeting-summary/SavedRecordingsTab';
+import { 
+  playTextWithVoiceRSS, 
+  stopCurrentAudio, 
+  pauseCurrentAudio, 
+  resumeCurrentAudio, 
+  restartCurrentAudio 
+} from '@/utils/voiceRSS';
+import { VoiceControls } from './meeting-summary/components/VoiceControls';
 
 export const MeetingSummaryTool: React.FC = () => {
   const [activeTab, setActiveTab] = useState("record");
   const [showIntakeForm, setShowIntakeForm] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   
   const {
     state,
@@ -56,6 +67,63 @@ export const MeetingSummaryTool: React.FC = () => {
   const isArabicTranscript = containsArabic(state.transcribedText);
   const isArabicSummary = state.summary ? containsArabic(state.summary) : false;
   
+  // Define voice play controls
+  const handlePlaySummary = async () => {
+    try {
+      if (isPaused) {
+        resumeCurrentAudio();
+        setIsPlaying(true);
+        setIsPaused(false);
+        return;
+      }
+
+      stopCurrentAudio();
+
+      // Detect language for voice selection
+      const isArabic = containsArabic(state.summary || '');
+      const voice = isArabic ? 'Hareth' : 'John';
+      const languageCode = isArabic ? 'ar-sa' : 'en-us';
+
+      const audio = await playTextWithVoiceRSS({
+        text: state.summary || '',
+        language: languageCode,
+        voice: voice,
+      });
+
+      setIsPlaying(true);
+      setIsPaused(false);
+
+      audio.onended = () => {
+        setIsPlaying(false);
+        setIsPaused(false);
+      };
+
+    } catch (error) {
+      console.error('Failed to play summary:', error);
+      toast.error('Failed to play audio. Please try again.');
+      setIsPlaying(false);
+      setIsPaused(false);
+    }
+  };
+
+  const handlePauseSummary = () => {
+    pauseCurrentAudio();
+    setIsPaused(true);
+    setIsPlaying(false);
+  };
+
+  const handleRestartSummary = () => {
+    restartCurrentAudio();
+    setIsPlaying(true);
+    setIsPaused(false);
+  };
+
+  const handleStopSummary = () => {
+    stopCurrentAudio();
+    setIsPlaying(false);
+    setIsPaused(false);
+  };
+  
   // Define the onViewSummary function
   const onViewSummary = async () => {
     if (state.summary) {
@@ -91,6 +159,12 @@ export const MeetingSummaryTool: React.FC = () => {
                   disabled={!hasTranscription}
                 >
                   Summary
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="history" 
+                  className="data-[state=active]:bg-wakti-navy/10"
+                >
+                  History
                 </TabsTrigger>
               </TabsList>
               
@@ -227,6 +301,16 @@ export const MeetingSummaryTool: React.FC = () => {
               {state.summary ? (
                 <div>
                   <div className="flex justify-end gap-2 mb-2">
+                    {/* Voice playback controls */}
+                    <VoiceControls
+                      isPlaying={isPlaying}
+                      isPaused={isPaused}
+                      onPlay={handlePlaySummary}
+                      onPause={handlePauseSummary}
+                      onRestart={handleRestartSummary}
+                      onStop={handleStopSummary}
+                    />
+                  
                     <Button
                       size="sm"
                       variant="outline"
@@ -249,6 +333,20 @@ export const MeetingSummaryTool: React.FC = () => {
                         <FileText className="h-3 w-3" />
                       )}
                       Export PDF
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 text-xs gap-1"
+                      onClick={downloadAudio}
+                      disabled={isDownloadingAudio}
+                    >
+                      {isDownloadingAudio ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <Download className="h-3 w-3" />
+                      )}
+                      Download Audio
                     </Button>
                   </div>
                   
@@ -288,6 +386,10 @@ export const MeetingSummaryTool: React.FC = () => {
                   )}
                 </div>
               )}
+            </TabsContent>
+
+            <TabsContent value="history" className="mt-0 pt-4">
+              <SavedRecordingsTab />
             </TabsContent>
           </div>
         </Tabs>

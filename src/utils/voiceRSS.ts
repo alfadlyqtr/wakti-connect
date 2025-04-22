@@ -1,8 +1,8 @@
 
 interface VoiceRSSOptions {
   text: string;
-  language?: 'en-us' | 'ar-sa';
-  voice?: 'John' | 'Linda' | 'Mike' | 'Mary' | 'Hareth';
+  language?: 'en-us' | 'ar-sa' | string;
+  voice?: 'John' | 'Linda' | 'Mike' | 'Mary' | 'Hareth' | string;
   speed?: number;
   quality?: number;
 }
@@ -45,6 +45,55 @@ export const playTextWithVoiceRSS = async ({
   quality = 8 
 }: VoiceRSSOptions) => {
   const API_KEY = 'ae8ae044c49f4afcbda7ac115f24c1c5';
+  
+  // Handle mixed language content by splitting and processing separately
+  if (text.length > 5000) {
+    console.log("Text is too long, splitting into chunks");
+    // Split text into chunks of 5000 characters
+    const chunks = [];
+    for (let i = 0; i < text.length; i += 5000) {
+      chunks.push(text.substring(i, i + 5000));
+    }
+    
+    // Play the first chunk and queue the rest
+    const firstChunk = chunks.shift();
+    if (!firstChunk) return null;
+    
+    const audio = await playTextWithVoiceRSS({
+      text: firstChunk,
+      language,
+      voice,
+      speed,
+      quality
+    });
+    
+    if (audio && chunks.length > 0) {
+      // Queue the next chunks
+      let currentChunkIndex = 0;
+      
+      audio.addEventListener('ended', async () => {
+        if (currentChunkIndex < chunks.length) {
+          const nextChunk = chunks[currentChunkIndex];
+          currentChunkIndex++;
+          
+          try {
+            await playTextWithVoiceRSS({
+              text: nextChunk,
+              language,
+              voice,
+              speed,
+              quality
+            });
+          } catch (error) {
+            console.error("Error playing next chunk:", error);
+          }
+        }
+      });
+    }
+    
+    return audio;
+  }
+  
   const url = `https://api.voicerss.org/?key=${API_KEY}&hl=${language}&v=${voice}&src=${encodeURIComponent(text)}&r=${speed}&c=MP3&f=16khz_16bit_stereo`;
 
   try {
@@ -63,5 +112,34 @@ export const playTextWithVoiceRSS = async ({
   } catch (error) {
     console.error('Error playing audio:', error);
     throw error;
+  }
+};
+
+// Helper function to determine proper voice and language based on text content
+export const getVoiceSettings = (text: string): { language: string, voice: string } => {
+  // Check if text contains Arabic characters
+  const hasArabic = /[\u0600-\u06FF]/.test(text);
+  const hasEnglish = /[a-zA-Z]/.test(text);
+  
+  if (hasArabic && !hasEnglish) {
+    // Pure Arabic
+    return { language: 'ar-sa', voice: 'Hareth' };
+  } else if (!hasArabic && hasEnglish) {
+    // Pure English
+    return { language: 'en-us', voice: 'John' };
+  } else if (hasArabic && hasEnglish) {
+    // Mixed - determine dominant language
+    // Count characters in each language
+    const arabicCount = (text.match(/[\u0600-\u06FF]/g) || []).length;
+    const englishCount = (text.match(/[a-zA-Z]/g) || []).length;
+    
+    if (arabicCount > englishCount) {
+      return { language: 'ar-sa', voice: 'Hareth' };
+    } else {
+      return { language: 'en-us', voice: 'John' };
+    }
+  } else {
+    // Default to English
+    return { language: 'en-us', voice: 'John' };
   }
 };
