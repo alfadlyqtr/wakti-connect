@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -161,8 +162,6 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
             transition={{ delay: 0.2 }}
           >
             <VoiceControls
-              selectedVoice={selectedVoice}
-              setSelectedVoice={setSelectedVoice}
               isPlaying={isPlaying}
               isPaused={isPaused}
               onPlay={handlePlaySummary}
