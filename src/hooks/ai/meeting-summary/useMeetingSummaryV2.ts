@@ -178,6 +178,13 @@ export function useMeetingSummaryV2() {
   const maxRecordingDuration = 3600; // 1 hour limit
   const warnBeforeEndSeconds = 30;   // Warn when 30s left
 
+  const updateTranscript = useCallback((newText: string) => {
+    setState(prev => ({
+      ...prev,
+      transcribedText: newText
+    }));
+  }, []);
+
   return {
     state,
     startRecording,
@@ -197,6 +204,7 @@ export function useMeetingSummaryV2() {
     isExporting,
     isDownloadingAudio,
     language: state.language,
-    setLanguage
+    setLanguage,
+    updateTranscript
   };
 }

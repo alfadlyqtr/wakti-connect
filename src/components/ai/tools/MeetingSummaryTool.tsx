@@ -54,7 +54,7 @@ export const MeetingSummaryTool: React.FC = () => {
   const isArabicSummary = state.summary ? containsArabic(state.summary) : false;
 
   return (
-    <div className="mx-auto w-full max-w-4xl bg-white rounded-lg overflow-hidden">
+    <div className="mx-auto w-full max-w-4xl bg-white">
       {showIntakeForm ? (
         <MeetingIntakeForm onSubmit={handleIntakeSubmit} onSkip={handleSkipIntake} />
       ) : (
@@ -190,51 +190,17 @@ export const MeetingSummaryTool: React.FC = () => {
             <TabsContent value="transcript" className="mt-0 pt-4">
               {hasTranscription ? (
                 <div>
-                  <div className="flex justify-end mb-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-8 gap-1 text-xs"
-                      onClick={() => {
-                        navigator.clipboard.writeText(state.transcribedText);
-                        const message = isArabicTranscript ? "تم نسخ النص" : "Transcript copied";
-                        const toastMessage = isArabicTranscript ? 
-                          <span lang="ar" dir="rtl">{message}</span> : message;
-                        toast.success(toastMessage);
-                      }}
-                    >
-                      <Copy className="h-3 w-3" />
-                      Copy Text
-                    </Button>
-                  </div>
-                  
-                  <div 
-                    className={`prose max-w-none prose-sm bg-slate-50 p-4 rounded-lg overflow-y-auto max-h-[60vh] ${
-                      isArabicTranscript ? 'prose-headings:font-arabic prose-p:font-arabic' : ''
-                    }`}
-                  >
-                    {formatTranscriptWithRTL(state.transcribedText)}
-                  </div>
-                  
-                  {!state.summary && (
-                    <Button 
-                      onClick={() => {
-                        generateSummary();
-                        setActiveTab("summary");
-                      }}
-                      className="w-full mt-4"
-                      disabled={state.isSummarizing}
-                    >
-                      {state.isSummarizing ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Generating Summary...
-                        </>
-                      ) : (
-                        <>Generate AI Summary</>
-                      )}
-                    </Button>
-                  )}
+                  <TranscriptionPanel
+                    transcribedText={state.transcribedText}
+                    isSummarizing={state.isSummarizing}
+                    isProcessing={state.isProcessing}
+                    generateSummary={generateSummary}
+                    onViewSummary={onViewSummary}
+                    onStartNewMeeting={resetSession}
+                    onUpdateTranscript={updateTranscript}
+                    audioBlobs={state.audioBlobs}
+                    onDownloadAudio={downloadAudio}
+                  />
                 </div>
               ) : (
                 <div className="text-center py-12 text-wakti-navy/60">
