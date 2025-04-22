@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -8,10 +7,11 @@ import {
 import { motion } from 'framer-motion';
 import SummaryDisplay from './SummaryDisplay';
 import { supabase } from "@/integrations/supabase/client";
-import { playTextWithVoiceRSS, stopCurrentAudio, pauseCurrentAudio, resumeCurrentAudio, restartCurrentAudio } from '@/utils/voiceRSS';
+import { playTextWithVoiceRSS, stopCurrentAudio, pauseCurrentAudio, resumeCurrentAudio, restartCurrentAudio, getVoiceSettings } from '@/utils/voiceRSS';
 import { VoiceControls } from './components/VoiceControls';
 import { DialogHeader as CustomDialogHeader } from './components/DialogHeader';
 import { ActionButtons } from './components/ActionButtons';
+import { toast } from 'sonner';
 
 interface MeetingPreviewDialogProps {
   isOpen: boolean;
@@ -101,9 +101,13 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
 
       stopCurrentAudio();
 
+      // Get voice settings based on text content
+      const { language, voice } = getVoiceSettings(meeting.summary);
+
       const audio = await playTextWithVoiceRSS({
         text: meeting.summary,
-        voice: selectedVoice as any,
+        language,
+        voice,
       });
 
       setIsPlaying(true);
@@ -116,6 +120,7 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
 
     } catch (error) {
       console.error('Failed to play summary:', error);
+      toast.error('Failed to play summary. Please try again.');
       setIsPlaying(false);
       setIsPaused(false);
     }
