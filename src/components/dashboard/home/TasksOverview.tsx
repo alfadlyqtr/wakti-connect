@@ -11,18 +11,20 @@ interface TasksOverviewProps {
 }
 
 const TasksOverview: React.FC<TasksOverviewProps> = ({ tasks }) => {
-  // Group tasks by status
-  const pendingTasks = tasks.filter(task => task.status === 'pending');
-  const inProgressTasks = tasks.filter(task => task.status === 'in-progress');
-  const completedTasks = tasks.filter(task => task.status === 'completed');
+  // Filter out archived tasks first
+  const activeTasks = tasks.filter(task => !task.archived_at);
   
-  // Calculate percentages
-  const totalTasks = tasks.length;
+  // Group tasks by status (using active tasks only)
+  const pendingTasks = activeTasks.filter(task => task.status === 'pending');
+  const inProgressTasks = activeTasks.filter(task => task.status === 'in-progress');
+  const completedTasks = activeTasks.filter(task => task.status === 'completed');
+  
+  // Calculate percentages based on active tasks
+  const totalTasks = activeTasks.length;
   const completionRate = totalTasks > 0 ? Math.round((completedTasks.length / totalTasks) * 100) : 0;
   
-  // Convert Task[] to CalendarEvent[] for TaskList
-  // Show all tasks, including archived ones
-  const taskEvents: CalendarEvent[] = tasks
+  // Convert active Task[] to CalendarEvent[] for TaskList
+  const taskEvents: CalendarEvent[] = activeTasks
     .slice(0, 5) // Limit to top 5 tasks for better UI
     .map(task => ({
       id: task.id,
@@ -38,7 +40,7 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ tasks }) => {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <div>
-          <p className="text-sm font-medium">Total Tasks: {totalTasks}</p>
+          <p className="text-sm font-medium">Active Tasks: {totalTasks}</p>
           <p className="text-sm text-muted-foreground">Completion Rate: {completionRate}%</p>
         </div>
         <div className="flex gap-2">
@@ -58,7 +60,7 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ tasks }) => {
           <TaskList tasks={taskEvents} />
         ) : (
           <div className="p-4 text-center text-muted-foreground">
-            No tasks found. Create a task to get started.
+            No active tasks found. Create a task to get started.
           </div>
         )}
       </div>
