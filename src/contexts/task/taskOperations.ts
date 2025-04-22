@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Task, TaskStatus, TaskPriority } from "@/types/task.types";
+import { toast } from "@/components/ui/use-toast";
 import { validateTaskStatus, validateTaskPriority } from "@/services/task/utils/statusValidator";
 import { mapDbTaskToTyped, checkTasksTableExists } from "./taskUtils";
 import { getMockTasks } from "./taskConstants";
