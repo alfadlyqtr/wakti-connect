@@ -1,8 +1,8 @@
-
 import React from 'react';
 import { RouteObject } from 'react-router-dom';
 import SuperAdminDashboard from '@/components/superadmin/dashboard/SuperAdminDashboard';
 import UsersPage from '@/components/superadmin/users/UsersPage';
+import FeatureControlsPage from '@/components/superadmin/feature-controls/FeatureControlsPage';
 
 // Changed the type to RouteObject to match what router.tsx expects
 export const superadminRoutes: RouteObject[] = [
@@ -15,7 +15,10 @@ export const superadminRoutes: RouteObject[] = [
     path: 'users',
     element: <UsersPage />
   },
-  // Placeholder routes that we'll implement later
+  {
+    path: 'feature-controls',
+    element: <FeatureControlsPage />
+  },
   {
     path: 'businesses',
     element: <div className="p-8 text-center text-white">Businesses Management Page - Coming Soon</div>

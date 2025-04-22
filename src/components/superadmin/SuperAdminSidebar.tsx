@@ -6,7 +6,7 @@ import {
   Settings, FileText, Bell, DollarSign, 
   Layout, Zap, ClipboardList, Bot, Wrench,
   AlertTriangle, BookOpen, ChevronRight, ChevronLeft,
-  LogOut
+  LogOut, Lock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -46,6 +46,14 @@ const SuperAdminSidebar: React.FC<SuperAdminSidebarProps> = ({
       ]
     },
     {
+      title: "System Controls",
+      items: [
+        { icon: Lock, label: "Feature Controls", path: "/gohabsgo/feature-controls" },
+        { icon: Settings, label: "Configuration", path: "/gohabsgo/system" },
+        { icon: AlertTriangle, label: "Emergency", path: "/gohabsgo/emergency" },
+      ]
+    },
+    {
       title: "Business",
       items: [
         { icon: Database, label: "Businesses", path: "/gohabsgo/businesses" },
@@ -56,7 +64,6 @@ const SuperAdminSidebar: React.FC<SuperAdminSidebarProps> = ({
       title: "Content & System",
       items: [
         { icon: FileText, label: "Content", path: "/gohabsgo/content" },
-        { icon: Settings, label: "Configuration", path: "/gohabsgo/system" },
         { icon: Layout, label: "Architecture", path: "/gohabsgo/architecture" },
       ]
     },
@@ -74,7 +81,6 @@ const SuperAdminSidebar: React.FC<SuperAdminSidebarProps> = ({
         { icon: BookOpen, label: "Compliance", path: "/gohabsgo/compliance" },
         { icon: Bell, label: "Inbox", path: "/gohabsgo/inbox" },
         { icon: Wrench, label: "Developer", path: "/gohabsgo/developer" },
-        { icon: AlertTriangle, label: "Emergency", path: "/gohabsgo/emergency" },
       ]
     }
   ];
