@@ -76,11 +76,10 @@ export const playTextWithVoiceRSS = async ({
   try {
     // Check if text contains Arabic characters
     const hasArabic = /[\u0600-\u06FF]/.test(text);
-    const hasEnglish = /[a-zA-Z]/.test(text);
     
-    // If text is Arabic or mixed, show "Coming Soon" toast and prevent playback
+    // If text is Arabic, show "Coming Soon" toast and prevent playback
     if (hasArabic) {
-      toast.info('Arabic Text-to-Speech is Coming Soon!');
+      toast.info('Arabic Text-to-Speech Coming Soon');
       return null;
     }
 
