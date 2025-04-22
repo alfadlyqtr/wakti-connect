@@ -1,8 +1,12 @@
 
 "use client";
 
-import VoiceTestPage from '@/components/ai/voice/VoiceTestPage';
+import SpeechifyTest from '@/components/ai/voice/SpeechifyTest';
 
-export default function VoiceTestRoute() {
-  return <VoiceTestPage />;
+export default function VoiceTestPage() {
+  return (
+    <div className="container mx-auto p-4">
+      <SpeechifyTest />
+    </div>
+  );
 }
