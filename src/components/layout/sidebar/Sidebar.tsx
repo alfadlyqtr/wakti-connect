@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,11 +5,11 @@ import { useQuery } from "@tanstack/react-query";
 import SidebarNavItems from "./SidebarNavItems";
 import SidebarUpgradeBanner from "./SidebarUpgradeBanner";
 import SidebarProfile from "./SidebarProfile";
-import CollapseToggle from "./sidebar/CollapseToggle";
-import SidebarContainer from "./sidebar/SidebarContainer";
+import CollapseToggle from "./CollapseToggle";
+import SidebarContainer from "./SidebarContainer";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { UserRole } from "@/types/user";
-import SidebarUpgradeButton from "./sidebar/SidebarUpgradeButton";
+import SidebarUpgradeButton from "./SidebarUpgradeButton";
 
 // Define profile type to ensure TypeScript knows about our new columns
 interface SidebarProfileData {

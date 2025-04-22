@@ -105,7 +105,9 @@ const DashboardHome: React.FC = () => {
                 account_type: (userRole === 'business' || userRole === 'super-admin') 
                   ? 'business' 
                   : 'individual',
-                business_name: profileData.business_name || undefined
+                business_name: typeof profileData === 'object' && 'business_name' in profileData
+                  ? profileData.business_name 
+                  : undefined
               }} 
             />
           </div>
