@@ -1,11 +1,10 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface VoiceRSSOptions {
   text: string;
   language?: 'en-us' | 'ar-sa' | string;
-  voice?: 'John' | 'Linda' | 'Mike' | 'Mary' | 'Hareth' | string;
+  voice?: 'John' | 'Linda' | 'Mike' | 'Mary' | 'Hamza' | string;
   speed?: number;
   quality?: number;
 }
@@ -40,6 +39,33 @@ export const restartCurrentAudio = () => {
   }
 };
 
+export const getVoiceSettings = (text: string): { language: string, voice: string } => {
+  // Check if text contains Arabic characters
+  const hasArabic = /[\u0600-\u06FF]/.test(text);
+  const hasEnglish = /[a-zA-Z]/.test(text);
+  
+  if (hasArabic && !hasEnglish) {
+    // Pure Arabic
+    return { language: 'ar-sa', voice: 'Hamza' };
+  } else if (!hasArabic && hasEnglish) {
+    // Pure English
+    return { language: 'en-us', voice: 'John' };
+  } else if (hasArabic && hasEnglish) {
+    // Mixed - determine dominant language
+    const arabicCount = (text.match(/[\u0600-\u06FF]/g) || []).length;
+    const englishCount = (text.match(/[a-zA-Z]/g) || []).length;
+    
+    if (arabicCount > englishCount) {
+      return { language: 'ar-sa', voice: 'Hamza' };
+    } else {
+      return { language: 'en-us', voice: 'John' };
+    }
+  } else {
+    // Default to English
+    return { language: 'en-us', voice: 'John' };
+  }
+};
+
 export const playTextWithVoiceRSS = async ({ 
   text, 
   language = 'en-us', 
@@ -59,6 +85,19 @@ export const playTextWithVoiceRSS = async ({
     }
 
     const API_KEY = secrets.VOICERSS_API_KEY;
+    
+    // Properly encode text for Arabic and English
+    const encodedText = encodeURIComponent(text);
+    
+    // Debug logging for Arabic text
+    if (language === 'ar-sa') {
+      console.log('Processing Arabic text:', {
+        originalText: text,
+        encodedText,
+        language,
+        voice
+      });
+    }
     
     // Handle mixed language content by splitting and processing separately
     if (text.length > 5000) {
@@ -117,7 +156,7 @@ export const playTextWithVoiceRSS = async ({
       return audio;
     }
     
-    const url = `https://api.voicerss.org/?key=${API_KEY}&hl=${language}&v=${voice}&src=${encodeURIComponent(text)}&r=${speed}&c=MP3&f=16khz_16bit_stereo`;
+    const url = `https://api.voicerss.org/?key=${API_KEY}&hl=${language}&v=${voice}&src=${encodedText}&r=${speed}&c=MP3&f=16khz_16bit_stereo`;
 
     // If there's already an audio playing and it's the same URL, just control that
     if (currentAudio && currentAudioUrl === url && !currentAudio.ended) {
@@ -129,7 +168,10 @@ export const playTextWithVoiceRSS = async ({
     const audio = new Audio(url);
     audio.onerror = (e) => {
       console.error("Audio playback error:", e);
-      toast.error("Failed to play audio. Please try again.");
+      const errorMessage = language === 'ar-sa' 
+        ? 'Failed to play Arabic audio. Please check your VoiceRSS subscription supports Arabic.'
+        : 'Failed to play audio. Please try again.';
+      toast.error(errorMessage);
     };
     
     currentAudio = audio;
@@ -150,34 +192,5 @@ export const playTextWithVoiceRSS = async ({
     console.error('Error playing audio:', error);
     toast.error('Failed to play audio. Please check your connection and try again.');
     throw error;
-  }
-};
-
-// Helper function to determine proper voice and language based on text content
-export const getVoiceSettings = (text: string): { language: string, voice: string } => {
-  // Check if text contains Arabic characters
-  const hasArabic = /[\u0600-\u06FF]/.test(text);
-  const hasEnglish = /[a-zA-Z]/.test(text);
-  
-  if (hasArabic && !hasEnglish) {
-    // Pure Arabic
-    return { language: 'ar-sa', voice: 'Hareth' };
-  } else if (!hasArabic && hasEnglish) {
-    // Pure English
-    return { language: 'en-us', voice: 'John' };
-  } else if (hasArabic && hasEnglish) {
-    // Mixed - determine dominant language
-    // Count characters in each language
-    const arabicCount = (text.match(/[\u0600-\u06FF]/g) || []).length;
-    const englishCount = (text.match(/[a-zA-Z]/g) || []).length;
-    
-    if (arabicCount > englishCount) {
-      return { language: 'ar-sa', voice: 'Hareth' };
-    } else {
-      return { language: 'en-us', voice: 'John' };
-    }
-  } else {
-    // Default to English
-    return { language: 'en-us', voice: 'John' };
   }
 };
