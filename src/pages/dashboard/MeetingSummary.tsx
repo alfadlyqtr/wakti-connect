@@ -15,14 +15,14 @@ const MeetingSummary = () => {
       >
         <div className="flex flex-col gap-2 max-w-4xl mx-auto">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-600 to-blue-500 flex items-center justify-center">
-              <Mic className="h-5 w-5 text-white" />
+            <div className="h-10 w-10 rounded-full bg-wakti-navy text-white flex items-center justify-center">
+              <Mic className="h-5 w-5" />
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-wakti-navy">
               Voice Recorder & Transcription
             </h1>
           </div>
-          <p className="text-muted-foreground">
+          <p className="text-wakti-navy/70">
             Record meetings, lectures, and more to get AI-powered transcripts with key points and summaries.
           </p>
         </div>
