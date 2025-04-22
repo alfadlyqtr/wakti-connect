@@ -10,7 +10,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { MapPin, ArrowRight } from 'lucide-react';
 import { toast } from "sonner";
 import { useEventLocation } from '@/hooks/events/useEventLocation';
-import { motion } from 'framer-motion';
 import MeetingFormLayout from './MeetingFormLayout';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -81,13 +80,13 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
 
   return (
     <MeetingFormLayout>
-      <div className="space-y-8">
+      <div className="p-6 space-y-6">
         <div className="flex items-center gap-4 pb-4 border-b border-wakti-navy/10">
-          <div className="h-12 w-12 rounded-full bg-wakti-navy/10 flex items-center justify-center">
-            <MapPin className="h-6 w-6 text-wakti-navy" />
+          <div className="h-10 w-10 rounded-lg bg-wakti-navy text-wakti-beige flex items-center justify-center">
+            <MapPin className="h-5 w-5" />
           </div>
           <div>
-            <h2 className="text-xl font-semibold text-wakti-navy">Meeting Details</h2>
+            <h2 className="text-lg font-semibold text-wakti-navy">Meeting Details</h2>
             <p className="text-sm text-wakti-navy/70">
               Let WAKTI AI know about your meeting context
             </p>
@@ -95,16 +94,16 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="language"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-base font-medium text-wakti-navy">Meeting Language</FormLabel>
+                  <FormLabel className="text-wakti-navy font-medium">Meeting Language</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger className="h-12 bg-white border-wakti-navy/20">
+                      <SelectTrigger className="h-10 bg-white border-wakti-navy/20">
                         <SelectValue placeholder="Select meeting language" />
                       </SelectTrigger>
                     </FormControl>
@@ -118,18 +117,18 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
               )}
             />
 
-            <div className="space-y-6">
+            <div className="grid gap-4">
               <FormField
                 control={form.control}
                 name="sessionType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium text-wakti-navy">Session Type</FormLabel>
+                    <FormLabel className="text-wakti-navy font-medium">Session Type</FormLabel>
                     <FormControl>
                       <Input 
                         placeholder="e.g., Staff meeting or English lecture" 
                         {...field}
-                        className="h-12 bg-white border-wakti-navy/20"
+                        className="h-10 bg-white border-wakti-navy/20"
                       />
                     </FormControl>
                   </FormItem>
@@ -141,24 +140,24 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
                 name="location"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium text-wakti-navy">Location</FormLabel>
+                    <FormLabel className="text-wakti-navy font-medium">Location</FormLabel>
                     <div className="flex gap-2">
                       <FormControl>
                         <Input 
                           placeholder="e.g., Oryx Tower, Doha College" 
                           {...field}
-                          className="h-12 bg-white border-wakti-navy/20"
+                          className="h-10 bg-white border-wakti-navy/20"
                         />
                       </FormControl>
                       <Button 
                         type="button"
                         variant="outline"
                         size="icon"
-                        className="h-12 w-12 shrink-0 border-wakti-navy/20 hover:bg-wakti-navy/5"
+                        className="h-10 w-10 shrink-0 border-wakti-navy/20 hover:bg-wakti-beige"
                         onClick={handleGetCurrentLocation}
                         disabled={isGettingLocation}
                       >
-                        <MapPin className="h-5 w-5" />
+                        <MapPin className="h-4 w-4" />
                       </Button>
                     </div>
                   </FormItem>
@@ -170,12 +169,12 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
                 name="hostedBy"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium text-wakti-navy">Hosted By</FormLabel>
+                    <FormLabel className="text-wakti-navy font-medium">Hosted By</FormLabel>
                     <FormControl>
                       <Input 
                         placeholder="e.g., Jabor Abdullah" 
                         {...field}
-                        className="h-12 bg-white border-wakti-navy/20"
+                        className="h-10 bg-white border-wakti-navy/20"
                       />
                     </FormControl>
                   </FormItem>
@@ -187,12 +186,12 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
                 name="attendees"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium text-wakti-navy">Attendees</FormLabel>
+                    <FormLabel className="text-wakti-navy font-medium">Attendees</FormLabel>
                     <FormControl>
-                      <Textarea 
+                      <Input 
                         placeholder="e.g., John, Alanoud, Mozah, Hassan" 
                         {...field}
-                        className="min-h-[80px] bg-white border-wakti-navy/20 resize-none"
+                        className="h-10 bg-white border-wakti-navy/20"
                       />
                     </FormControl>
                   </FormItem>
@@ -204,12 +203,12 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
                 name="agenda"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium text-wakti-navy">Agenda</FormLabel>
+                    <FormLabel className="text-wakti-navy font-medium">Agenda</FormLabel>
                     <FormControl>
                       <Textarea 
                         placeholder="e.g., Project deadline, Final exams" 
                         {...field}
-                        className="min-h-[80px] bg-white border-wakti-navy/20 resize-none"
+                        className="h-20 min-h-[80px] bg-white border-wakti-navy/20 resize-none"
                       />
                     </FormControl>
                   </FormItem>
@@ -217,20 +216,18 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
               />
             </div>
 
-            <div className="flex justify-between gap-4 pt-6">
+            <div className="flex justify-between gap-4 pt-4">
               <Button 
                 type="submit" 
-                size="lg"
-                className="flex-1 bg-wakti-navy text-wakti-beige hover:bg-wakti-navy/90 h-12"
+                className="flex-1 bg-wakti-navy text-white hover:bg-wakti-navy/90 h-10"
               >
                 Start Recording
               </Button>
               <Button 
                 type="button" 
                 variant="outline"
-                size="lg"
                 onClick={onSkip}
-                className="flex-1 border-wakti-navy/20 text-wakti-navy hover:bg-wakti-navy/5 h-12"
+                className="flex-1 border-wakti-navy/20 text-wakti-navy hover:bg-wakti-beige h-10"
               >
                 Skip
                 <ArrowRight className="ml-2 h-4 w-4" />
