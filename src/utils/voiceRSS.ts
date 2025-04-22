@@ -1,3 +1,6 @@
+
+import { supabase } from "@/integrations/supabase/client";
+
 interface VoiceRSSOptions {
   text: string;
   language?: 'en-us' | 'ar-sa' | string;
