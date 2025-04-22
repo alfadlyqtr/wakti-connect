@@ -7,6 +7,7 @@ import CalendarDayCell from "./CalendarDayCell";
 import { format, isSameDay } from "date-fns";
 import CalendarLegend from "./CalendarLegend";
 import { TaskList } from "./TaskList";
+import { Badge } from "@/components/ui/badge";
 
 interface DashboardCalendarProps {
   events: CalendarEvent[];
@@ -43,7 +44,7 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
         mode="single"
         selected={selectedDate}
         onSelect={(date) => date && setSelectedDate(date)}
-        className="rounded-md border"
+        className="rounded-md border bg-gradient-to-br from-white via-white to-[#E5DEFF]/20 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800"
         components={{
           Day: ({ date, ...props }) => (
             <CalendarDayCell
@@ -61,13 +62,21 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
       
       {selectedDateEvents.length > 0 ? (
         <div className="mt-4">
-          <h3 className="text-sm font-medium mb-2">
-            {format(selectedDate, "MMMM d, yyyy")}
-          </h3>
-          <TaskList tasks={selectedDateEvents} />
+          <div className="flex items-center gap-2 mb-2">
+            <h3 className="text-sm font-medium">
+              {format(selectedDate, "MMMM d, yyyy")}
+            </h3>
+            <Badge variant="outline" className="ml-2 bg-white/50 text-xs">
+              {selectedDateEvents.length} {selectedDateEvents.length === 1 ? 'event' : 'events'}
+            </Badge>
+          </div>
+          
+          <div className="bg-white/50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700 p-2">
+            <TaskList tasks={selectedDateEvents} />
+          </div>
         </div>
       ) : (
-        <div className="text-center py-4 text-muted-foreground text-sm">
+        <div className="text-center py-4 text-muted-foreground text-sm bg-white/50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700">
           No events for {format(selectedDate, "MMMM d, yyyy")}
         </div>
       )}

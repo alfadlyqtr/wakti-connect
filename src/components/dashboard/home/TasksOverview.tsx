@@ -1,3 +1,4 @@
+
 import React from "react";
 import { TaskList } from "./TaskList";
 import { Task, TaskStatus } from "@/types/task.types";
@@ -6,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { Clock, CheckCircle, BellRing } from "lucide-react";
 
 interface TasksOverviewProps {
   tasks: Task[];
@@ -39,25 +41,28 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ tasks }) => {
   
   return (
     <div className="space-y-4">
-      <Card className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-200/50 dark:border-gray-700/50">
+      <Card className="bg-gradient-to-br from-[#9b87f5]/10 via-white/80 to-[#D6BCFA]/10 dark:from-gray-900 dark:to-gray-800 shadow-lg hover:shadow-xl hover:translate-y-[-2px] transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
         <div className="p-6 space-y-4">
           <div className="flex justify-between items-center">
             <div>
-              <p className="text-sm font-medium">Active Tasks: {totalTasks}</p>
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-blue-500" />
+                Task Progress
+              </h3>
               <p className="text-sm text-muted-foreground">Completion Rate: {completionRate}%</p>
             </div>
-            <div className="flex gap-2">
-              <div className="flex items-center gap-1.5">
+            <div className="flex gap-3">
+              <div className="flex items-center gap-1.5 bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded-full">
                 <div className="h-3 w-3 rounded-full bg-amber-500/80 shadow-sm shadow-amber-500/50" />
-                <span className="text-xs">Pending: {pendingTasks.length}</span>
+                <span className="text-xs font-medium text-amber-700 dark:text-amber-300">{pendingTasks.length}</span>
               </div>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-full">
                 <div className="h-3 w-3 rounded-full bg-blue-500/80 shadow-sm shadow-blue-500/50" />
-                <span className="text-xs">In Progress: {inProgressTasks.length}</span>
+                <span className="text-xs font-medium text-blue-700 dark:text-blue-300">{inProgressTasks.length}</span>
               </div>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded-full">
                 <div className="h-3 w-3 rounded-full bg-green-500/80 shadow-sm shadow-green-500/50" />
-                <span className="text-xs">Completed: {completedTasks.length}</span>
+                <span className="text-xs font-medium text-green-700 dark:text-green-300">{completedTasks.length}</span>
               </div>
             </div>
           </div>
@@ -65,10 +70,10 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ tasks }) => {
           <Progress 
             value={completionRate} 
             className={cn(
-              "h-2 transition-all duration-500",
-              completionRate > 80 ? "bg-green-200" : 
-              completionRate > 50 ? "bg-blue-200" : 
-              "bg-amber-200"
+              "h-2 transition-all duration-500 glassmorphism-content",
+              completionRate > 80 ? "bg-green-200 dark:bg-green-900/30" : 
+              completionRate > 50 ? "bg-blue-200 dark:bg-blue-900/30" : 
+              "bg-amber-200 dark:bg-amber-900/30"
             )}
           />
           

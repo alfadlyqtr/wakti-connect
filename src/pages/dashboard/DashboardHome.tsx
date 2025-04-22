@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import TasksOverview from "@/components/dashboard/home/TasksOverview";
@@ -12,11 +13,14 @@ import { Task } from "@/types/task.types";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { useNavigate } from "react-router-dom";
-import { DashboardSummaryCards } from "@/components/dashboard/home/DashboardSummaryCards";
 import { ProfileData } from "@/components/dashboard/home/ProfileData";
 import { useBusinessAnalytics } from "@/hooks/useBusinessAnalytics";
 import { useDashboardData } from "@/hooks/useDashboardData";
-import { BarChart, Activity, Users, Calendar } from "lucide-react";
+import { Activity, Users, Calendar, CheckCircle, Clock, Bell } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import RemindersOverview from "@/components/dashboard/home/RemindersOverview";
+import DashboardBookingsPreview from "@/components/dashboard/home/DashboardBookingsPreview";
+import BusinessAnalyticsPreview from "@/components/dashboard/home/BusinessAnalyticsPreview";
 
 const DashboardHome = () => {
   const { tasks, isLoading: tasksLoading } = useTaskContext();
@@ -75,15 +79,15 @@ const DashboardHome = () => {
     return <LoadingSpinner />;
   }
 
-  // Determine if the user has a business account
+  // Determine the user's account type
   const isBusiness = profileData?.account_type === 'business';
   const isIndividual = profileData?.account_type === 'individual';
-  const isFree = profileData?.account_type === 'free';
+  const userRole = profileData?.account_type || 'individual';
 
-  // Determine features based on account type
-  const showBookings = profileData?.account_type === 'business' || profileData?.account_type === 'individual';
-  const showAnalytics = profileData?.account_type === 'business';
-  const showStaffManagement = profileData?.account_type === 'business';
+  // Show bookings for both business and individual accounts
+  const showBookings = isBusiness || isIndividual;
+  // Only business accounts get analytics
+  const showAnalytics = isBusiness;
 
   return (
     <div className="space-y-6">
@@ -91,202 +95,185 @@ const DashboardHome = () => {
         <ProfileData profileData={profileData} />
       )}
       
-      {/* Summary Cards Section */}
-      {profileData && todayTasks && unreadNotifications && (
-        <DashboardSummaryCards 
-          profileData={profileData}
-          todayTasks={todayTasks || []}
-          unreadNotifications={unreadNotifications || []}
-        />
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-        {/* Summary Cards with 3D effect */}
-        <Card className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-200/50 dark:border-gray-700/50">
-          <CardHeader>
+      {/* Summary Cards - Rich gradients and improved UI/UX */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <Card className="bg-gradient-to-br from-[#9b87f5]/10 via-white/80 to-[#D6BCFA]/10 dark:from-gray-900 dark:to-gray-800 shadow-lg hover:shadow-xl hover:translate-y-[-2px] transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50">
+          <CardHeader className="pb-2">
             <CardTitle className="text-lg font-semibold flex items-center gap-2">
-              <Users className="h-5 w-5 text-blue-500" />
+              <CheckCircle className="h-5 w-5 text-blue-500" />
               Today's Tasks
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">
-              {todayTasks?.length || 0}
-            </p>
+            <p className="text-3xl font-bold">{todayTasks?.length || 0}</p>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="mt-2 text-sm hover:bg-blue-50 dark:hover:bg-blue-900/20"
+              onClick={() => navigate('/dashboard/tasks')}
+            >
+              View All Tasks
+            </Button>
           </CardContent>
         </Card>
 
         {showBookings && (
-          <Card className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-200/50 dark:border-gray-700/50">
-            <CardHeader>
+          <Card className="bg-gradient-to-br from-[#1EAEDB]/10 via-white/80 to-[#33C3F0]/10 dark:from-gray-900 dark:to-gray-800 shadow-lg hover:shadow-xl hover:translate-y-[-2px] transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50">
+            <CardHeader className="pb-2">
               <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-green-500" />
+                <Calendar className="h-5 w-5 text-blue-500" />
                 Upcoming Bookings
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold">
+              <p className="text-3xl font-bold">
                 {unreadNotifications?.length || 0}
               </p>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="mt-2 text-sm hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                onClick={() => navigate('/dashboard/bookings')}
+              >
+                View All Bookings
+              </Button>
             </CardContent>
           </Card>
         )}
 
         {showAnalytics && (
-          <Card className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-200/50 dark:border-gray-700/50">
-            <CardHeader>
+          <Card className="bg-gradient-to-br from-[#8B5CF6]/10 via-white/80 to-[#9b87f5]/10 dark:from-gray-900 dark:to-gray-800 shadow-lg hover:shadow-xl hover:translate-y-[-2px] transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50">
+            <CardHeader className="pb-2">
               <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                <BarChart className="h-5 w-5 text-purple-500" />
-                Task Completion Rate
+                <Activity className="h-5 w-5 text-purple-500" />
+                Task Completion
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold">
+              <p className="text-3xl font-bold">
                 {analyticsData?.taskCompletionRate || 0}%
               </p>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="mt-2 text-sm hover:bg-purple-50 dark:hover:bg-purple-900/20"
+                onClick={() => navigate('/dashboard/analytics')}
+              >
+                View Analytics
+              </Button>
             </CardContent>
           </Card>
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <TasksOverview tasks={tasks} />
-        
-        <Card className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-200/50 dark:border-gray-700/50">
-          <CardHeader>
-            <CardTitle>Calendar</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <DashboardCalendar 
-              events={calendarEvents}
-              isCompact={isMobile}
-            />
-          </CardContent>
-        </Card>
-      </div>
-      
-      {/* Business Analytics (only for business accounts with data) */}
-      {isBusiness && analyticsData && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">
-                Subscribers
-              </CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{analyticsData.subscriberCount || "-"}</div>
-              <p className="text-xs text-muted-foreground">
-                Total Subscribers
-              </p>
-            </CardContent>
-          </Card>
+      {/* Main Content Grid - Reorganized for better layout */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* First column - Tasks */}
+        <div className="lg:col-span-1 space-y-6">
+          <TasksOverview tasks={tasks} />
           
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">
-                Staff
-              </CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{analyticsData.staffCount || "-"}</div>
-              <p className="text-xs text-muted-foreground">
-                Active Staff Members
-              </p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">
-                Completion Rate
-              </CardTitle>
-              <Activity className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {analyticsData.taskCompletionRate ? `${analyticsData.taskCompletionRate}%` : "-"}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Task completion rate this {analyticsData.timeRange}
-              </p>
-            </CardContent>
-          </Card>
+          {/* Only show reminders for non-staff users */}
+          {userRole !== 'staff' && (
+            <RemindersOverview userRole={userRole as any} />
+          )}
         </div>
-      )}
-      
-      {/* Individual Account Features */}
-      {isIndividual && (
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>Professional Features</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground mb-4">
-              Access to these professional features
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-4 border rounded-md">
-                <h3 className="font-medium mb-2">Unlimited Tasks</h3>
-                <p className="text-sm text-muted-foreground">Create and manage unlimited tasks</p>
-              </div>
-              <div className="p-4 border rounded-md">
-                <h3 className="font-medium mb-2">Event Management</h3>
-                <p className="text-sm text-muted-foreground">Create and share events</p>
-              </div>
-              <div className="p-4 border rounded-md">
-                <h3 className="font-medium mb-2">Premium Support</h3>
-                <p className="text-sm text-muted-foreground">Priority support access</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-      
-      {/* Free Account Upgrade Prompt */}
-      {isFree && (
-        <Card className="mt-6 border-2 border-dashed border-primary/40">
-          <CardHeader>
-            <CardTitle>Upgrade Your Experience</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground mb-4">
-              Upgrade to unlock premium features
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <div className="p-4 bg-muted/50 rounded-md">
-                <h3 className="font-medium mb-2">Individual Plan</h3>
-                <p className="text-sm text-muted-foreground mb-2">Perfect for personal productivity</p>
-                <ul className="text-sm space-y-1">
-                  <li>• Unlimited Tasks</li>
-                  <li>• Create and manage appointments</li>
-                  <li>• Message individual users</li>
-                </ul>
-              </div>
-              <div className="p-4 bg-muted/50 rounded-md">
-                <h3 className="font-medium mb-2">Business Plan</h3>
-                <p className="text-sm text-muted-foreground mb-2">For teams and businesses</p>
-                <ul className="text-sm space-y-1">
-                  <li>• Custom Business Profile</li>
-                  <li>• Staff Management</li>
-                  <li>• Booking System</li>
-                  <li>• AI Chatbot Integration</li>
-                </ul>
-              </div>
-            </div>
-            <div className="flex justify-center">
-              <button 
-                className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-                onClick={() => navigate('/dashboard/upgrade')}
-              >
-                View Plans
-              </button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+        
+        {/* Second column - Calendar and Bookings */}
+        <div className="lg:col-span-1 space-y-6">
+          <Card className="bg-gradient-to-br from-white/80 via-white/60 to-[#E5DEFF]/20 dark:from-gray-900 dark:to-gray-800 shadow-lg hover:shadow-xl hover:translate-y-[-2px] transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-blue-500" />
+                Calendar
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <DashboardCalendar 
+                events={calendarEvents}
+                isCompact={isMobile}
+              />
+            </CardContent>
+          </Card>
+          
+          {/* Show bookings for business and individual accounts */}
+          {showBookings && (
+            <DashboardBookingsPreview userRole={userRole as any} />
+          )}
+        </div>
+        
+        {/* Third column - Business features / Analytics */}
+        <div className="lg:col-span-1 space-y-6">
+          {/* Only show business analytics for business accounts */}
+          {isBusiness && (
+            <BusinessAnalyticsPreview profileData={profileData} />
+          )}
+          
+          {/* Show additional features based on account type */}
+          {isBusiness ? (
+            <Card className="bg-gradient-to-br from-white/80 via-white/60 to-[#E5DEFF]/20 dark:from-gray-900 dark:to-gray-800 shadow-lg hover:shadow-xl hover:translate-y-[-2px] transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                  <Users className="h-5 w-5 text-indigo-500" />
+                  Staff Management
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="p-4 bg-white/50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700">
+                    <h3 className="font-medium mb-2">Quick Access</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button variant="outline" size="sm" className="justify-start" onClick={() => navigate('/dashboard/staff')}>
+                        <Users className="h-4 w-4 mr-2" />
+                        Staff List
+                      </Button>
+                      <Button variant="outline" size="sm" className="justify-start" onClick={() => navigate('/dashboard/staff/schedule')}>
+                        <Calendar className="h-4 w-4 mr-2" />
+                        Schedule
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="p-4 bg-white/50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700">
+                    <h3 className="font-medium mb-2">Recent Activity</h3>
+                    <p className="text-sm text-muted-foreground">No recent staff activity to display</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : isIndividual ? (
+            <Card className="bg-gradient-to-br from-white/80 via-white/60 to-[#E5DEFF]/20 dark:from-gray-900 dark:to-gray-800 shadow-lg hover:shadow-xl hover:translate-y-[-2px] transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-green-500" />
+                  Personal Stats
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="p-4 bg-white/50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700">
+                    <h3 className="font-medium mb-2">Task Completion</h3>
+                    <div className="text-2xl font-bold">
+                      {tasks && tasks.length > 0 ? Math.round((tasks.filter(task => task.status === 'completed').length / tasks.length) * 100) : 0}%
+                    </div>
+                  </div>
+                  <div className="p-4 bg-white/50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700">
+                    <h3 className="font-medium mb-2">Quick Actions</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button variant="outline" size="sm" className="justify-start" onClick={() => navigate('/dashboard/tasks/new')}>
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        New Task
+                      </Button>
+                      <Button variant="outline" size="sm" className="justify-start" onClick={() => navigate('/dashboard/calendar')}>
+                        <Calendar className="h-4 w-4 mr-2" />
+                        Calendar
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : null}
+        </div>
+      </div>
     </div>
   );
 };
