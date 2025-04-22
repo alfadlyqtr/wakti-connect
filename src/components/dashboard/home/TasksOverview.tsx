@@ -1,10 +1,10 @@
-
 import React from "react";
 import { TaskList } from "./TaskList";
 import { Task, TaskStatus } from "@/types/task.types";
 import { CalendarEvent } from "@/types/calendar.types";
 import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface TasksOverviewProps {
   tasks: Task[];
@@ -55,7 +55,7 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ tasks }) => {
       
       <Progress value={completionRate} className="h-2" />
       
-      <div className="max-h-[300px] overflow-y-auto rounded-md border p-1">
+      <ScrollArea className="max-h-[300px] rounded-md border p-1">
         {taskEvents.length > 0 ? (
           <TaskList tasks={taskEvents} />
         ) : (
@@ -63,7 +63,7 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ tasks }) => {
             No active tasks found. Create a task to get started.
           </div>
         )}
-      </div>
+      </ScrollArea>
     </div>
   );
 };
