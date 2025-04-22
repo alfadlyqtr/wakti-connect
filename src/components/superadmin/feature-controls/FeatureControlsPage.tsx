@@ -89,12 +89,16 @@ const FeatureControlsPage = () => {
 
     setIsLoadingAction(true);
     try {
-      let functionToCall = actionType === "lock" ? "lock_feature" : "unlock_feature";
-      
-      const { data, error } = await supabase.rpc(functionToCall, {
-        feature_name_param: selectedFeature.feature_name,
-        password_attempt: password
-      });
+      // Using the direct function calls instead of string for RPC
+      const { data, error } = actionType === "lock"
+        ? await supabase.rpc("lock_feature", {
+            feature_name_param: selectedFeature.feature_name,
+            password_attempt: password
+          })
+        : await supabase.rpc("unlock_feature", {
+            feature_name_param: selectedFeature.feature_name,
+            password_attempt: password
+          });
 
       if (error) throw error;
 
