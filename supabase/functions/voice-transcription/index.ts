@@ -23,7 +23,7 @@ serve(async (req) => {
       throw new Error('No file URL provided');
     }
     
-    console.log(`Processing file from URL: ${fileUrl}`);
+    console.log(`Processing file from URL: ${fileUrl}, language: ${language}`);
     
     // Download the audio file
     const audioResponse = await fetch(fileUrl);
@@ -45,7 +45,7 @@ serve(async (req) => {
 
     // Try Whisper first
     try {
-      console.log("Attempting OpenAI Whisper transcription");
+      console.log(`Attempting OpenAI Whisper transcription with language: ${language}`);
       
       // Create form data for Whisper API
       const formData = new FormData();
@@ -53,11 +53,10 @@ serve(async (req) => {
       formData.append('model', 'whisper-1');
       
       // Set language based on the meeting settings
-      if (language === 'english') {
-        formData.append('language', 'en');
-      } else if (language === 'arabic') {
-        formData.append('language', 'ar');
-      } // For mixed, let Whisper auto-detect
+      if (language && language !== 'auto') {
+        console.log(`Setting explicit language to: ${language}`);
+        formData.append('language', language);
+      }
 
       const whisperResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
         method: 'POST',
@@ -68,7 +67,9 @@ serve(async (req) => {
       });
 
       if (!whisperResponse.ok) {
-        throw new Error(`OpenAI Whisper API error: ${await whisperResponse.text()}`);
+        const errorText = await whisperResponse.text();
+        console.error(`OpenAI Whisper API error: ${errorText}`);
+        throw new Error(`OpenAI Whisper API error: ${errorText}`);
       }
 
       const result = await whisperResponse.json();
@@ -78,9 +79,14 @@ serve(async (req) => {
       }
       
       console.log("Transcription received from OpenAI Whisper");
+      console.log("Transcript sample:", result.text.substring(0, 100));
       
       return new Response(
-        JSON.stringify({ text: result.text, source: 'whisper' }),
+        JSON.stringify({ 
+          text: result.text,
+          source: 'whisper',
+          language: language
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
 

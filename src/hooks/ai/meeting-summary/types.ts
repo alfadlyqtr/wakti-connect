@@ -1,8 +1,9 @@
-export interface IntakeData {
-  title?: string;
-  date?: string;
-  location?: string;
-  language?: 'english' | 'arabic' | 'mixed';
+
+export interface MeetingPart {
+  partNumber: number;
+  duration: number;
+  audioBlob: Blob;
+  isRTL?: boolean;
 }
 
 export interface MeetingSummaryState {
@@ -11,18 +12,21 @@ export interface MeetingSummaryState {
   recordingTime: number;
   transcribedText: string;
   isSummarizing: boolean;
-  summary: null | string;
+  summary: string | null;
   recordingError: string | null;
   detectedLocation: string | null;
   detectedAttendees: string[] | null;
-  meetingParts: {
-    partNumber: number;
-    duration: number;
-    audioBlob: Blob;
-  }[];
+  meetingParts: MeetingPart[];
   audioBlobs: Blob[] | null;
-  meetingTitle: string | undefined;
-  meetingDate: string | undefined;
-  meetingLocation: string | undefined;
-  language?: 'english' | 'arabic' | 'mixed';
+  meetingTitle?: string;
+  meetingDate?: string;
+  meetingLocation?: string;
+  language: string;
+}
+
+export interface IntakeData {
+  title?: string;
+  date?: string;
+  location?: string;
+  language?: string;
 }

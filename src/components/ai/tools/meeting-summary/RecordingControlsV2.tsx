@@ -1,28 +1,21 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Mic, Square, AlertCircle } from 'lucide-react';
+import { Mic, Square, AlertCircle, Languages } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Slider } from '@/components/ui/slider';
 import { formatRecordingDuration, calculateRecordingProgress } from '@/utils/audio/recordingUtils';
 
 interface RecordingControlsV2Props {
   isRecording: boolean;
   recordingTime: number;
   selectedLanguage: string;
-  autoSilenceDetection: boolean;
-  visualFeedback: boolean;
-  silenceThreshold: number;
   startRecording: () => void;
   stopRecording: () => void;
   startNextPart: () => void;
   setSelectedLanguage: (language: string) => void;
-  toggleAutoSilenceDetection: () => void;
-  toggleVisualFeedback: () => void;
-  setSilenceThreshold: (value: number) => void;
   recordingError: string | null;
   maxRecordingDuration: number;
   warnBeforeEndSeconds: number;
@@ -32,16 +25,10 @@ export default function RecordingControlsV2({
   isRecording,
   recordingTime,
   selectedLanguage,
-  autoSilenceDetection,
-  visualFeedback,
-  silenceThreshold,
   startRecording,
   stopRecording,
   startNextPart,
   setSelectedLanguage,
-  toggleAutoSilenceDetection,
-  toggleVisualFeedback,
-  setSilenceThreshold,
   recordingError,
   maxRecordingDuration,
   warnBeforeEndSeconds
@@ -102,7 +89,7 @@ export default function RecordingControlsV2({
                 variant="outline"
                 className="whitespace-nowrap"
               >
-                Start Part 2
+                Continue Recording
               </Button>
             </>
           ) : (
@@ -119,75 +106,32 @@ export default function RecordingControlsV2({
       </div>
       
       {!isRecording && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-          <div className="space-y-2">
-            <Label htmlFor="language">Transcription Language</Label>
+        <div className="flex items-center gap-4 pt-2">
+          <div className="flex-1">
+            <Label htmlFor="language" className="flex items-center gap-1 mb-2">
+              <Languages className="h-4 w-4" /> Language
+            </Label>
             <Select 
               value={selectedLanguage} 
               onValueChange={setSelectedLanguage}
             >
-              <SelectTrigger id="language">
+              <SelectTrigger id="language" className="h-10 bg-white border-wakti-navy/20">
                 <SelectValue placeholder="Select language" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="auto">Auto (Mixed Language)</SelectItem> {/* ✅ ADDED */}
+                <SelectItem value="auto">Auto-detect</SelectItem>
                 <SelectItem value="en">English</SelectItem>
-                <SelectItem value="es">Spanish</SelectItem>
-                <SelectItem value="fr">French</SelectItem>
-                <SelectItem value="de">German</SelectItem>
-                <SelectItem value="it">Italian</SelectItem>
-                <SelectItem value="pt">Portuguese</SelectItem>
-                <SelectItem value="hi">Hindi</SelectItem>
-                <SelectItem value="ja">Japanese</SelectItem>
-                <SelectItem value="zh">Chinese</SelectItem>
                 <SelectItem value="ar">Arabic</SelectItem>
-                <SelectItem value="ru">Russian</SelectItem>
+                <SelectItem value="mixed">Mixed (English & Arabic)</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-          
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="auto-silence-detection">
-                Auto-stop on silence
-              </Label>
-              <Switch
-                id="auto-silence-detection"
-                checked={autoSilenceDetection}
-                onCheckedChange={toggleAutoSilenceDetection}
-              />
-            </div>
             
-            <div className="flex items-center justify-between">
-              <Label htmlFor="visual-feedback">
-                Audio visualization
-              </Label>
-              <Switch
-                id="visual-feedback"
-                checked={visualFeedback}
-                onCheckedChange={toggleVisualFeedback}
-              />
-            </div>
-            
-            {autoSilenceDetection && (
-              <div className="pt-2">
-                <Label 
-                  htmlFor="silence-threshold" 
-                  className="flex justify-between text-sm"
-                >
-                  <span>Silence sensitivity</span>
-                  <span>{silenceThreshold}dB</span>
-                </Label>
-                <Slider
-                  id="silence-threshold"
-                  min={-60}
-                  max={-30}
-                  step={1}
-                  value={[silenceThreshold]}
-                  onValueChange={(value) => setSilenceThreshold(value[0])}
-                  className="py-4"
-                />
-              </div>
+            {selectedLanguage === 'ar' && (
+              <p className="text-xs text-muted-foreground mt-1">
+                <span lang="ar" dir="rtl" className="block">
+                  سيتم التعرف على النص باللغة العربية
+                </span>
+              </p>
             )}
           </div>
         </div>
@@ -199,7 +143,7 @@ export default function RecordingControlsV2({
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Start new recording part?</AlertDialogTitle>
+            <AlertDialogTitle>Continue recording?</AlertDialogTitle>
             <AlertDialogDescription>
               This will save your current recording and start a new part. All parts will be combined into a single meeting summary.
             </AlertDialogDescription>
@@ -213,7 +157,7 @@ export default function RecordingControlsV2({
                 startNextPart();
               }, 1000);
             }}>
-              Start Part 2
+              Continue Recording
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

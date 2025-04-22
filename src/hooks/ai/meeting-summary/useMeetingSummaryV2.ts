@@ -22,7 +22,7 @@ export function useMeetingSummaryV2() {
     meetingTitle: undefined,
     meetingDate: undefined,
     meetingLocation: undefined,
-    language: 'mixed'
+    language: 'auto'
   });
 
   const summaryRef = useRef<HTMLDivElement | null>(null);
@@ -42,9 +42,25 @@ export function useMeetingSummaryV2() {
   const { loadSavedMeetings, deleteMeeting } = useMeetingsHandlers();
 
   const startNextPart = useCallback(() => {
-    setState(prev => ({ ...prev, recordingTime: 0 }));
-    startRecording();
-  }, [startRecording]);
+    if (state.isProcessing) {
+      toast.error("Please wait for current processing to complete");
+      return;
+    }
+    
+    console.log("Starting next part of recording, maintaining previous transcriptions");
+    
+    setState(prev => ({ 
+      ...prev, 
+      recordingTime: 0,
+      recordingError: null,
+      isRecording: false,
+      isProcessing: false
+    }));
+    
+    setTimeout(() => {
+      startRecording();
+    }, 300);
+  }, [state.isProcessing, startRecording]);
 
   const resetSession = useCallback(() => {
     cleanup();
@@ -63,7 +79,7 @@ export function useMeetingSummaryV2() {
       meetingTitle: undefined,
       meetingDate: undefined,
       meetingLocation: undefined,
-      language: 'mixed'
+      language: 'auto'
     });
   }, [cleanup]);
 
@@ -115,7 +131,6 @@ export function useMeetingSummaryV2() {
     setIsExporting(true);
     
     try {
-      // Calculate total duration
       const totalDuration = state.meetingParts.reduce((sum, part) => 
         sum + part.duration, 0);
       
@@ -126,7 +141,8 @@ export function useMeetingSummaryV2() {
         state.detectedAttendees,
         {
           title: state.meetingTitle || 'Meeting Summary',
-          companyLogo: '/lovable-uploads/9b7d0693-89eb-4cc5-b90b-7834bfabda0e.png'
+          companyLogo: '/lovable-uploads/9b7d0693-89eb-4cc5-b90b-7834bfabda0e.png',
+          isRTL: /[\u0600-\u06FF]/.test(state.summary)
         }
       );
       
@@ -146,7 +162,14 @@ export function useMeetingSummaryV2() {
       meetingTitle: data.title,
       meetingDate: data.date,
       meetingLocation: data.location,
-      language: data.language || 'mixed'
+      language: data.language || 'auto'
+    }));
+  }, []);
+
+  const setLanguage = useCallback((language: string) => {
+    setState(prev => ({
+      ...prev,
+      language
     }));
   }, []);
 
@@ -171,6 +194,7 @@ export function useMeetingSummaryV2() {
     summaryRef,
     isExporting,
     isDownloadingAudio,
-    language: state.language
+    language: state.language,
+    setLanguage
   };
 }

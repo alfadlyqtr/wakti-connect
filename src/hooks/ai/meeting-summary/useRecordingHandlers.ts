@@ -131,13 +131,13 @@ export const useRecordingHandlers = (
         console.log("File uploaded, public URL:", publicUrl);
         
         // Send to transcription service
-        console.log("Starting transcription...");
+        console.log(`Starting transcription with language: ${state.language}...`);
         const { data: transcriptionData, error: transcriptionError } = await supabase.functions.invoke(
           'voice-transcription',
           { 
             body: { 
               fileUrl: publicUrl,
-              language: 'auto'
+              language: state.language || 'auto'
             } 
           }
         );
@@ -163,30 +163,44 @@ export const useRecordingHandlers = (
         setState(prev => ({ ...prev, isProcessing: false }));
       }
     }
-  }, [state.isRecording, state.meetingParts.length, setState, cleanup]);
+  }, [state.isRecording, state.meetingParts.length, state.language, setState, cleanup]);
 
   const processTranscription = (text: string, audioBlob: Blob, partNumber: number) => {
     console.log("Processing transcription for part", partNumber);
-    setState(prev => ({
-      ...prev,
-      isRecording: false,
-      isProcessing: false,
-      meetingParts: [
-        ...prev.meetingParts,
-        {
-          partNumber,
-          duration: prev.recordingTime,
-          audioBlob
-        }
-      ],
-      audioBlobs: [...(prev.audioBlobs || []), audioBlob],
-      transcribedText: prev.transcribedText 
-        ? `${prev.transcribedText}\n\nPart ${partNumber}:\n${text}`
-        : `Part ${partNumber}:\n${text}`
-    }));
+    
+    // Detect language and set text direction
+    const isArabic = /[\u0600-\u06FF]/.test(text);
+    console.log("Contains Arabic characters:", isArabic);
+    
+    setState(prev => {
+      // Determine whether to append or start a new transcript
+      let newTranscribedText;
+      if (prev.transcribedText) {
+        newTranscribedText = `${prev.transcribedText}\n\n${isArabic ? 'الجزء' : 'Part'} ${partNumber}:\n${text}`;
+      } else {
+        newTranscribedText = `${isArabic ? 'الجزء' : 'Part'} ${partNumber}:\n${text}`;
+      }
+      
+      return {
+        ...prev,
+        isRecording: false,
+        isProcessing: false,
+        meetingParts: [
+          ...prev.meetingParts,
+          {
+            partNumber,
+            duration: prev.recordingTime,
+            audioBlob,
+            isRTL: isArabic
+          }
+        ],
+        audioBlobs: [...(prev.audioBlobs || []), audioBlob],
+        transcribedText: newTranscribedText
+      };
+    });
     
     cleanup();
-    toast.success("Recording transcribed successfully!");
+    toast.success(isArabic ? "تم نسخ التسجيل بنجاح!" : "Recording transcribed successfully!");
   };
 
   return {

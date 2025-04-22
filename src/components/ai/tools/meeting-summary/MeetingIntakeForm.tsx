@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -37,7 +38,7 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
       location: '',
       attendees: '',
       agenda: '',
-      language: 'mixed',
+      language: 'auto',
     },
   });
 
@@ -108,8 +109,9 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="english">English</SelectItem>
-                      <SelectItem value="arabic">Arabic</SelectItem>
+                      <SelectItem value="auto">Auto-detect</SelectItem>
+                      <SelectItem value="en">English</SelectItem>
+                      <SelectItem value="ar">Arabic</SelectItem>
                       <SelectItem value="mixed">Mixed (English & Arabic)</SelectItem>
                     </SelectContent>
                   </Select>

@@ -9,6 +9,13 @@ const corsHeaders = {
 
 // Helper function to generate prompts based on language
 const generateSummaryPrompt = (text: string, language: string) => {
+  // Detect the language if set to auto
+  if (language === 'auto' || language === 'mixed') {
+    // Simple check for Arabic characters
+    const hasArabicChars = /[\u0600-\u06FF]/.test(text);
+    language = hasArabicChars ? 'ar' : 'en';
+  }
+  
   if (language === 'ar') {
     return `
       أنت مساعد ذكي متخصص في تلخيص الاجتماعات. يرجى تحليل النص التالي من اجتماع وإنشاء ملخص منظم بتنسيق مفيد.
@@ -19,6 +26,8 @@ const generateSummaryPrompt = (text: string, language: string) => {
       - النقاط الرئيسية التي تمت مناقشتها (نقاط)
       - عناصر العمل أو القرارات أو المهام (إذا وُجدت)
       - أي مواعيد نهائية أو تواريخ مهمة (إذا وُجدت)
+      
+      الرجاء الإجابة بالعربية الفصحى.
       
       نص الاجتماع:
       ${text}
@@ -63,12 +72,13 @@ serve(async (req) => {
     
     // Get request body
     const requestData = await req.json();
-    const { text, language = 'en' } = requestData;
+    const { text, language = 'auto' } = requestData;
     
     if (!text) {
       throw new Error('No transcript text provided');
     }
     
+    console.log(`Processing summary with language: ${language}`);
     const prompt = generateSummaryPrompt(text, language);
     let summary = '';
     
@@ -150,8 +160,15 @@ serve(async (req) => {
       throw new Error('Failed to generate summary with any available service');
     }
     
+    // Detect if the summary is in Arabic for front-end display purposes
+    const isArabic = /[\u0600-\u06FF]/.test(summary);
+    
     return new Response(
-      JSON.stringify({ summary, source: DEEPSEEK_API_KEY ? 'deepseek' : 'openai' }),
+      JSON.stringify({ 
+        summary, 
+        source: DEEPSEEK_API_KEY ? 'deepseek' : 'openai',
+        isRTL: isArabic
+      }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200

@@ -1,24 +1,16 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, Clock, X, Copy, FileDown, Download } from 'lucide-react';
+
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { MeetingIntakeForm } from './meeting-summary/MeetingIntakeForm';
 import { useMeetingSummaryV2 } from '@/hooks/ai/meeting-summary/useMeetingSummaryV2';
-import { MeetingIntakeDialog } from './meeting-summary/MeetingIntakeDialog';
 import RecordingControlsV2 from './meeting-summary/RecordingControlsV2';
-import TranscriptionPanel from './meeting-summary/TranscriptionPanel';
-import SummaryDisplay from './meeting-summary/SummaryDisplay';
-import SavedRecordingsTab from './meeting-summary/SavedRecordingsTab';
-import ProcessingSpinner from './meeting-summary/ProcessingSpinner';
+import { Loader2, Download, FileUp, Copy, FileText } from 'lucide-react';
+import { formatTranscriptWithRTL, containsArabic } from '@/utils/audio/recordingUtils';
 
-export const MeetingSummaryTool = () => {
-  const [activeTab, setActiveTab] = useState('record');
-  const [isIntakeDialogOpen, setIsIntakeDialogOpen] = useState(false);
-  const [isRecordingMode, setIsRecordingMode] = useState(false);
-  const [isSummaryMode, setIsSummaryMode] = useState(false);
-  const [showFeedbackPopup, setShowFeedbackPopup] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState('auto');
-  const summaryRef = useRef<HTMLDivElement>(null);
+export const MeetingSummaryTool: React.FC = () => {
+  const [activeTab, setActiveTab] = useState("record");
+  const [showIntakeForm, setShowIntakeForm] = useState(true);
   
   const {
     state,
@@ -26,315 +18,301 @@ export const MeetingSummaryTool = () => {
     stopRecording,
     startNextPart,
     generateSummary,
-    setIntakeData,
-    maxRecordingDuration,
-    warnBeforeEndSeconds,
     copySummary,
     downloadAudio,
+    exportAsPDF,
+    setIntakeData,
     resetSession,
+    summaryRef,
     isExporting,
     isDownloadingAudio,
-    exportAsPDF
+    maxRecordingDuration,
+    warnBeforeEndSeconds,
+    language,
+    setLanguage
   } = useMeetingSummaryV2();
 
-  useEffect(() => {
-    if (!state.isRecording && !state.isProcessing && state.transcribedText && !state.summary && !showFeedbackPopup && !isSummaryMode) {
-      setShowFeedbackPopup(true);
-    }
-    
-    if (state.summary && !isSummaryMode) {
-      setIsSummaryMode(true);
-      setShowFeedbackPopup(false);
-    }
-  }, [state.isRecording, state.isProcessing, state.transcribedText, state.summary, showFeedbackPopup, isSummaryMode]);
-
-  const handleStartRecordingFlow = () => {
-    setIsIntakeDialogOpen(true);
-  };
-
   const handleIntakeSubmit = (data: any) => {
-    setIntakeData(data);
-    setIsIntakeDialogOpen(false);
-    setIsRecordingMode(true);
-    setTimeout(() => {
-      startRecording();
-    }, 500);
+    const mappedData = {
+      title: data.sessionType,
+      location: data.location,
+      language: data.language
+    };
+    
+    setIntakeData(mappedData);
+    setShowIntakeForm(false);
   };
 
   const handleSkipIntake = () => {
-    setIsIntakeDialogOpen(false);
-    setIsRecordingMode(true);
-    setTimeout(() => {
-      startRecording();
-    }, 500);
+    setShowIntakeForm(false);
   };
 
-  const handleViewSummary = async (): Promise<void> => {
-    setShowFeedbackPopup(false);
-    setIsSummaryMode(true);
-    return Promise.resolve();
-  };
-
-  const handleStartNewMeeting = () => {
-    resetSession();
-    setIsRecordingMode(false);
-    setIsSummaryMode(false);
-  };
-
-  const extractTitleFromSummary = (summary: string) => {
-    const titleMatch = summary.match(/Meeting Title:\s*([^\n]+)/);
-    return titleMatch ? titleMatch[1].trim() : 'Untitled Meeting';
-  };
-
-  const displayTitle = state.meetingTitle || (state.summary ? extractTitleFromSummary(state.summary) : 'Untitled Meeting');
+  const hasTranscription = !!state.transcribedText;
+  const hasMeetingParts = state.meetingParts.length > 0;
+  
+  const isArabicTranscript = containsArabic(state.transcribedText);
+  const isArabicSummary = state.summary ? containsArabic(state.summary) : false;
 
   return (
-    <div className="max-w-4xl mx-auto bg-white rounded-lg overflow-hidden shadow-sm">
-      <ProcessingSpinner isVisible={state.isProcessing && !showFeedbackPopup} />
-      
-      <Tabs defaultValue="record" value={activeTab} onValueChange={setActiveTab}>
-        <div className="px-6 pt-6">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="record" className="flex items-center gap-2">
-              <Mic className="h-4 w-4" />
-              Record New
-            </TabsTrigger>
-            <TabsTrigger value="history" className="flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              History
-            </TabsTrigger>
-          </TabsList>
-        </div>
-
-        <TabsContent value="record">
-          {!isRecordingMode && !isSummaryMode && !state.summary && (
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="p-10 text-center space-y-6"
-            >
-              <div className="flex flex-col items-center justify-center space-y-4">
-                <div className="h-20 w-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-lg">
-                  <Mic className="h-10 w-10 text-white" />
-                </div>
-                <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Meeting Summary Tool</h1>
-                <p className="text-gray-500 max-w-xl mx-auto">
-                  Record your meetings and instantly get AI-powered summaries with key points, action items, and essential details.
-                </p>
-              </div>
+    <div className="mx-auto w-full max-w-4xl bg-white rounded-lg overflow-hidden">
+      {showIntakeForm ? (
+        <MeetingIntakeForm onSubmit={handleIntakeSubmit} onSkip={handleSkipIntake} />
+      ) : (
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <div className="border-b">
+            <div className="flex items-center justify-between px-4">
+              <TabsList className="h-12">
+                <TabsTrigger value="record" className="data-[state=active]:bg-wakti-navy/10">
+                  Record
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="transcript" 
+                  className="data-[state=active]:bg-wakti-navy/10"
+                  disabled={!hasTranscription}
+                >
+                  Transcript
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="summary" 
+                  className="data-[state=active]:bg-wakti-navy/10"
+                  disabled={!hasTranscription}
+                >
+                  Summary
+                </TabsTrigger>
+              </TabsList>
               
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.98 }}
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={resetSession}
+                className="text-xs"
+                disabled={state.isRecording || state.isProcessing}
               >
-                <Button 
-                  size="lg" 
-                  className="px-8 py-6 text-lg rounded-full shadow-md bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-                  onClick={handleStartRecordingFlow}
-                >
-                  <Mic className="mr-2 h-5 w-5" />
-                  Start Recording
-                </Button>
-              </motion.div>
-            </motion.div>
-          )}
+                Reset
+              </Button>
+            </div>
+          </div>
           
-          <AnimatePresence>
-            {isRecordingMode && (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="p-6 space-y-6"
-              >
-                <div className="mb-6">
-                  <h2 className="text-2xl font-bold tracking-tight mb-2">Recording your meeting</h2>
-                  <p className="text-gray-500">Speak clearly and WAKTI AI will capture everything for you.</p>
-                </div>
-                
-                <div className="bg-gray-50 p-6 rounded-lg">
-                  <RecordingControlsV2
-                    isRecording={state.isRecording}
-                    recordingTime={state.recordingTime}
-                    selectedLanguage={selectedLanguage}
-                    autoSilenceDetection={false}
-                    visualFeedback={true}
-                    silenceThreshold={-45}
-                    startRecording={startRecording}
-                    stopRecording={stopRecording}
-                    startNextPart={startNextPart}
-                    setSelectedLanguage={setSelectedLanguage}
-                    toggleAutoSilenceDetection={() => {}}
-                    toggleVisualFeedback={() => {}}
-                    setSilenceThreshold={() => {}}
-                    recordingError={state.recordingError}
-                    maxRecordingDuration={maxRecordingDuration}
-                    warnBeforeEndSeconds={warnBeforeEndSeconds}
-                  />
-                </div>
-                
-                {state.transcribedText && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                  >
-                    <TranscriptionPanel
-                      transcribedText={state.transcribedText}
-                      isSummarizing={state.isSummarizing}
-                      isProcessing={state.isProcessing}
-                      generateSummary={generateSummary}
-                      onViewSummary={handleViewSummary}
-                      onStartNewMeeting={handleStartNewMeeting}
-                    />
-                  </motion.div>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-          
-          <AnimatePresence>
-            {showFeedbackPopup && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                className="fixed inset-0 flex items-center justify-center z-50 bg-black/30 backdrop-blur-sm"
-              >
-                <motion.div 
-                  className="bg-white p-8 rounded-xl shadow-2xl max-w-md mx-auto border border-gray-100"
-                  initial={{ y: 20 }}
-                  animate={{ y: 0 }}
-                >
-                  <button 
-                    onClick={() => setShowFeedbackPopup(false)}
-                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-                  >
-                    <X className="h-6 w-6" />
-                  </button>
-                  
-                  <div className="text-center mb-6">
-                    <div className="inline-flex items-center justify-center h-14 w-14 rounded-full bg-green-100 text-green-600 mb-4">
-                      <Mic className="h-7 w-7" />
-                    </div>
-                    <h3 className="text-xl font-bold mb-2">Recording Complete!</h3>
-                    <p className="text-gray-500">Your recording has been processed. Ready to see the summary?</p>
+          <div className="p-4 sm:p-6">
+            <TabsContent value="record" className="mt-0 pt-4">
+              <RecordingControlsV2
+                isRecording={state.isRecording}
+                recordingTime={state.recordingTime}
+                selectedLanguage={language}
+                startRecording={startRecording}
+                stopRecording={stopRecording}
+                startNextPart={startNextPart}
+                setSelectedLanguage={setLanguage}
+                recordingError={state.recordingError}
+                maxRecordingDuration={maxRecordingDuration}
+                warnBeforeEndSeconds={warnBeforeEndSeconds}
+              />
+              
+              {state.isProcessing && (
+                <div className="flex items-center justify-center py-8">
+                  <div className="flex flex-col items-center gap-2">
+                    <Loader2 className="h-8 w-8 animate-spin text-wakti-navy" />
+                    <p className="text-sm text-wakti-navy">Processing audio...</p>
                   </div>
-                  
-                  <div className="flex flex-col gap-3">
-                    <Button 
-                      onClick={() => generateSummary()}
-                      size="lg"
-                      className="w-full"
-                      disabled={state.isSummarizing}
-                    >
-                      {state.isSummarizing ? "Creating Summary..." : "Generate Summary"}
-                    </Button>
+                </div>
+              )}
+              
+              {hasMeetingParts && !state.isRecording && !state.isProcessing && (
+                <div className="mt-6 border-t pt-6 border-wakti-navy/10">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-wakti-navy font-medium">Recording Summary</h3>
                     <Button
                       variant="outline"
-                      onClick={() => setShowFeedbackPopup(false)}
+                      size="sm"
+                      onClick={downloadAudio}
+                      disabled={isDownloadingAudio}
+                      className="h-8 text-xs gap-1"
                     >
-                      Continue Recording
+                      {isDownloadingAudio ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <Download className="h-3 w-3" />
+                      )}
+                      Download Audio
                     </Button>
                   </div>
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-          
-          <AnimatePresence>
-            {isSummaryMode && state.summary && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="p-6"
-              >
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold tracking-tight">{displayTitle}</h2>
-                  <Button 
-                    variant="outline" 
-                    onClick={handleStartNewMeeting}
-                  >
-                    Start New Meeting
-                  </Button>
-                </div>
-                
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  <div className="bg-white rounded-lg border shadow-sm">
-                    <div className="border-b p-4 flex justify-end space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={copySummary}
-                        className="flex items-center gap-1"
-                      >
-                        <Copy className="h-4 w-4" />
-                        <span>Copy</span>
-                      </Button>
-                      
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={exportAsPDF}
-                        disabled={isExporting}
-                        className="flex items-center gap-1"
-                      >
-                        <FileDown className="h-4 w-4" />
-                        <span>{isExporting ? "Exporting..." : "Export PDF"}</span>
-                      </Button>
-                      
-                      {state.audioBlobs && state.audioBlobs.length > 0 && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={downloadAudio}
-                          disabled={isDownloadingAudio}
-                          className="flex items-center gap-1"
-                        >
-                          <Download className="h-4 w-4" />
-                          <span>{isDownloadingAudio ? "Downloading..." : "Download Audio"}</span>
-                        </Button>
-                      )}
+                  
+                  <div className="grid gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm text-wakti-navy/70">
+                      <div>
+                        <span className="block font-medium">Parts</span>
+                        <span>{state.meetingParts.length}</span>
+                      </div>
+                      <div>
+                        <span className="block font-medium">Duration</span>
+                        <span>
+                          {Math.floor(state.meetingParts.reduce((sum, part) => sum + part.duration, 0) / 60)}m {state.meetingParts.reduce((sum, part) => sum + part.duration, 0) % 60}s
+                        </span>
+                      </div>
+                      <div>
+                        <span className="block font-medium">Language</span>
+                        <span>
+                          {language === 'auto' ? 'Auto-detected' : 
+                           language === 'en' ? 'English' : 
+                           language === 'ar' ? 'Arabic' : 'Mixed'}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="block font-medium">Type</span>
+                        <span>{state.meetingTitle || 'Meeting'}</span>
+                      </div>
                     </div>
                     
-                    <SummaryDisplay
-                      summary={state.summary}
-                      detectedLocation={state.detectedLocation}
-                      detectedAttendees={state.detectedAttendees}
-                      copied={false}
-                      copySummary={copySummary}
-                      exportAsPDF={exportAsPDF}
-                      downloadAudio={downloadAudio}
-                      isExporting={isExporting}
-                      isDownloadingAudio={isDownloadingAudio}
-                      audioData={state.audioBlobs}
-                      summaryRef={summaryRef}
-                    />
+                    {hasTranscription && !state.summary && (
+                      <Button 
+                        onClick={() => {
+                          generateSummary();
+                          setActiveTab("summary");
+                        }}
+                        className="w-full mt-2"
+                        disabled={state.isSummarizing}
+                      >
+                        {state.isSummarizing ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Generating Summary...
+                          </>
+                        ) : (
+                          <>Generate AI Summary</>
+                        )}
+                      </Button>
+                    )}
                   </div>
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </TabsContent>
-
-        <TabsContent value="history">
-          <div className="p-6">
-            <SavedRecordingsTab />
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="transcript" className="mt-0 pt-4">
+              {hasTranscription ? (
+                <div>
+                  <div className="flex justify-end mb-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 gap-1 text-xs"
+                      onClick={() => {
+                        navigator.clipboard.writeText(state.transcribedText);
+                        const message = isArabicTranscript ? "تم نسخ النص" : "Transcript copied";
+                        const toastMessage = isArabicTranscript ? 
+                          <span lang="ar" dir="rtl">{message}</span> : message;
+                        toast.success(toastMessage);
+                      }}
+                    >
+                      <Copy className="h-3 w-3" />
+                      Copy Text
+                    </Button>
+                  </div>
+                  
+                  <div 
+                    className={`prose max-w-none prose-sm bg-slate-50 p-4 rounded-lg overflow-y-auto max-h-[60vh] ${
+                      isArabicTranscript ? 'prose-headings:font-arabic prose-p:font-arabic' : ''
+                    }`}
+                  >
+                    {formatTranscriptWithRTL(state.transcribedText)}
+                  </div>
+                  
+                  {!state.summary && (
+                    <Button 
+                      onClick={() => {
+                        generateSummary();
+                        setActiveTab("summary");
+                      }}
+                      className="w-full mt-4"
+                      disabled={state.isSummarizing}
+                    >
+                      {state.isSummarizing ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Generating Summary...
+                        </>
+                      ) : (
+                        <>Generate AI Summary</>
+                      )}
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-12 text-wakti-navy/60">
+                  <p>No transcript available yet.</p>
+                  <p className="text-sm mt-2">Start recording to generate a transcript.</p>
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="summary" className="mt-0 pt-4">
+              {state.summary ? (
+                <div>
+                  <div className="flex justify-end gap-2 mb-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 text-xs gap-1"
+                      onClick={copySummary}
+                    >
+                      <Copy className="h-3 w-3" />
+                      Copy
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 text-xs gap-1"
+                      onClick={exportAsPDF}
+                      disabled={isExporting}
+                    >
+                      {isExporting ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <FileText className="h-3 w-3" />
+                      )}
+                      Export PDF
+                    </Button>
+                  </div>
+                  
+                  <div 
+                    ref={summaryRef}
+                    className={`prose max-w-none bg-slate-50 p-4 rounded-lg overflow-y-auto max-h-[60vh] ${
+                      isArabicSummary ? 'prose-headings:font-arabic prose-p:font-arabic text-right' : ''
+                    }`}
+                    dir={isArabicSummary ? "rtl" : "ltr"}
+                  >
+                    {formatTranscriptWithRTL(state.summary)}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  {state.isSummarizing ? (
+                    <div className="flex flex-col items-center space-y-4">
+                      <Loader2 className="h-8 w-8 animate-spin text-wakti-navy" />
+                      <div className="text-wakti-navy">
+                        <p className="font-medium">Generating summary</p>
+                        <p className="text-sm text-wakti-navy/70">
+                          Our AI is analyzing your meeting...
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-wakti-navy/60">No summary available yet.</p>
+                      <Button 
+                        onClick={generateSummary}
+                        className="mt-4"
+                        disabled={!hasTranscription}
+                      >
+                        Generate Summary
+                      </Button>
+                    </>
+                  )}
+                </div>
+              )}
+            </TabsContent>
           </div>
-        </TabsContent>
-      </Tabs>
-      
-      <MeetingIntakeDialog
-        isOpen={isIntakeDialogOpen}
-        onClose={() => setIsIntakeDialogOpen(false)}
-        onSubmit={handleIntakeSubmit}
-        onSkip={handleSkipIntake}
-      />
+        </Tabs>
+      )}
     </div>
   );
 };
