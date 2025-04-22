@@ -74,6 +74,16 @@ export const playTextWithVoiceRSS = async ({
   quality = 8 
 }: VoiceRSSOptions) => {
   try {
+    // Check if text contains Arabic characters
+    const hasArabic = /[\u0600-\u06FF]/.test(text);
+    const hasEnglish = /[a-zA-Z]/.test(text);
+    
+    // If text is Arabic or mixed, show "Coming Soon" toast and prevent playback
+    if (hasArabic) {
+      toast.info('Arabic Text-to-Speech is Coming Soon!');
+      return null;
+    }
+
     const { data: { secrets }, error: secretsError } = await supabase.functions.invoke('get-secrets', {
       body: { keys: ['VOICERSS_API_KEY'] }
     });
