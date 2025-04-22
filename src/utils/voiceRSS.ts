@@ -1,4 +1,3 @@
-
 interface VoiceRSSOptions {
   text: string;
   language?: 'en-us' | 'ar-sa' | string;
@@ -44,7 +43,16 @@ export const playTextWithVoiceRSS = async ({
   speed = 0,
   quality = 8 
 }: VoiceRSSOptions) => {
-  const API_KEY = 'ae8ae044c49f4afcbda7ac115f24c1c5';
+  const { data: { secrets }, error: secretsError } = await supabase.functions.invoke('get-secrets', {
+    body: { keys: ['VOICERSS_API_KEY'] }
+  });
+
+  if (secretsError || !secrets?.VOICERSS_API_KEY) {
+    console.error('Error getting VoiceRSS API key:', secretsError);
+    throw new Error('VoiceRSS API key not found. Please add it in the project settings.');
+  }
+
+  const API_KEY = secrets.VOICERSS_API_KEY;
   
   // Handle mixed language content by splitting and processing separately
   if (text.length > 5000) {
