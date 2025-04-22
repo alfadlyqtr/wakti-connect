@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { toast } from "sonner";
-import { MeetingSummaryState, IntakeData } from './types';
+import { MeetingSummaryState, IntakeData, MeetingSummaryPDFOptions } from './types';
 import { useRecordingHandlers } from './useRecordingHandlers';
 import { useSummaryHandlers } from './useSummaryHandlers';
 import { useMeetingsHandlers } from './useMeetingsHandlers';
@@ -22,7 +22,8 @@ export function useMeetingSummaryV2() {
     meetingTitle: undefined,
     meetingDate: undefined,
     meetingLocation: undefined,
-    language: 'auto'
+    language: 'auto',
+    isRTL: false
   });
 
   const summaryRef = useRef<HTMLDivElement | null>(null);
@@ -79,7 +80,8 @@ export function useMeetingSummaryV2() {
       meetingTitle: undefined,
       meetingDate: undefined,
       meetingLocation: undefined,
-      language: 'auto'
+      language: 'auto',
+      isRTL: false
     });
   }, [cleanup]);
 

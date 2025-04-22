@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -7,6 +6,7 @@ import { useMeetingSummaryV2 } from '@/hooks/ai/meeting-summary/useMeetingSummar
 import RecordingControlsV2 from './meeting-summary/RecordingControlsV2';
 import { Loader2, Download, FileUp, Copy, FileText } from 'lucide-react';
 import { formatTranscriptWithRTL, containsArabic } from '@/utils/audio/recordingUtils';
+import { toast } from "sonner";
 
 export const MeetingSummaryTool: React.FC = () => {
   const [activeTab, setActiveTab] = useState("record");

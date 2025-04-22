@@ -22,6 +22,7 @@ export interface MeetingSummaryState {
   meetingDate?: string;
   meetingLocation?: string;
   language: string;
+  isRTL?: boolean;
 }
 
 export interface IntakeData {
@@ -29,4 +30,10 @@ export interface IntakeData {
   date?: string;
   location?: string;
   language?: string;
+}
+
+export interface MeetingSummaryPDFOptions {
+  title: string;
+  companyLogo: string;
+  isRTL?: boolean;
 }
