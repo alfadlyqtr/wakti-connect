@@ -5,6 +5,7 @@ import { CalendarEvent } from "@/types/calendar.types";
 import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 interface TasksOverviewProps {
   tasks: Task[];
@@ -38,32 +39,52 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ tasks }) => {
   
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <div>
-          <p className="text-sm font-medium">Active Tasks: {totalTasks}</p>
-          <p className="text-sm text-muted-foreground">Completion Rate: {completionRate}%</p>
-        </div>
-        <div className="flex gap-2">
-          <div className="h-3 w-3 rounded-full bg-amber-500" />
-          <span className="text-xs">Pending: {pendingTasks.length}</span>
-          <div className="h-3 w-3 rounded-full bg-blue-500" />
-          <span className="text-xs">In Progress: {inProgressTasks.length}</span>
-          <div className="h-3 w-3 rounded-full bg-green-500" />
-          <span className="text-xs">Completed: {completedTasks.length}</span>
-        </div>
-      </div>
-      
-      <Progress value={completionRate} className="h-2" />
-      
-      <ScrollArea className="max-h-[300px] rounded-md border p-1">
-        {taskEvents.length > 0 ? (
-          <TaskList tasks={taskEvents} />
-        ) : (
-          <div className="p-4 text-center text-muted-foreground">
-            No active tasks found. Create a task to get started.
+      <Card className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-200/50 dark:border-gray-700/50">
+        <div className="p-6 space-y-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-sm font-medium">Active Tasks: {totalTasks}</p>
+              <p className="text-sm text-muted-foreground">Completion Rate: {completionRate}%</p>
+            </div>
+            <div className="flex gap-2">
+              <div className="flex items-center gap-1.5">
+                <div className="h-3 w-3 rounded-full bg-amber-500/80 shadow-sm shadow-amber-500/50" />
+                <span className="text-xs">Pending: {pendingTasks.length}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="h-3 w-3 rounded-full bg-blue-500/80 shadow-sm shadow-blue-500/50" />
+                <span className="text-xs">In Progress: {inProgressTasks.length}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="h-3 w-3 rounded-full bg-green-500/80 shadow-sm shadow-green-500/50" />
+                <span className="text-xs">Completed: {completedTasks.length}</span>
+              </div>
+            </div>
           </div>
-        )}
-      </ScrollArea>
+          
+          <Progress 
+            value={completionRate} 
+            className={cn(
+              "h-2 transition-all duration-500",
+              completionRate > 80 ? "bg-green-200" : 
+              completionRate > 50 ? "bg-blue-200" : 
+              "bg-amber-200"
+            )}
+          />
+          
+          <ScrollArea className="h-[300px] rounded-lg border border-gray-100 dark:border-gray-800 bg-white/50 dark:bg-gray-900/50 shadow-inner">
+            <div className="p-4">
+              {taskEvents.length > 0 ? (
+                <TaskList tasks={taskEvents} />
+              ) : (
+                <div className="text-center text-muted-foreground">
+                  No active tasks found. Create a task to get started.
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+        </div>
+      </Card>
     </div>
   );
 };

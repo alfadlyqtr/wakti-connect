@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import TasksOverview from "@/components/dashboard/home/TasksOverview";
@@ -17,7 +16,7 @@ import { DashboardSummaryCards } from "@/components/dashboard/home/DashboardSumm
 import { ProfileData } from "@/components/dashboard/home/ProfileData";
 import { useBusinessAnalytics } from "@/hooks/useBusinessAnalytics";
 import { useDashboardData } from "@/hooks/useDashboardData";
-import { BarChart, Activity, Users } from "lucide-react";
+import { BarChart, Activity, Users, Calendar } from "lucide-react";
 
 const DashboardHome = () => {
   const { tasks, isLoading: tasksLoading } = useTaskContext();
@@ -81,6 +80,11 @@ const DashboardHome = () => {
   const isIndividual = profileData?.account_type === 'individual';
   const isFree = profileData?.account_type === 'free';
 
+  // Determine features based on account type
+  const showBookings = profileData?.account_type === 'business' || profileData?.account_type === 'individual';
+  const showAnalytics = profileData?.account_type === 'business';
+  const showStaffManagement = profileData?.account_type === 'business';
+
   return (
     <div className="space-y-6">
       {profileData && (
@@ -96,24 +100,59 @@ const DashboardHome = () => {
         />
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="col-span-1">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+        {/* Summary Cards with 3D effect */}
+        <Card className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-200/50 dark:border-gray-700/50">
           <CardHeader>
-            <CardTitle>Tasks Overview</CardTitle>
+            <CardTitle className="text-lg font-semibold flex items-center gap-2">
+              <Users className="h-5 w-5 text-blue-500" />
+              Today's Tasks
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            {tasks && tasks.length > 0 ? (
-              <TasksOverview tasks={tasks} />
-            ) : (
-              <NoTasks 
-                message="You have no tasks yet. Create a new task to get started." 
-                onCreateTask={() => navigate('/dashboard/tasks')}
-              />
-            )}
+            <p className="text-2xl font-bold">
+              {todayTasks?.length || 0}
+            </p>
           </CardContent>
         </Card>
 
-        <Card className="col-span-1">
+        {showBookings && (
+          <Card className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-200/50 dark:border-gray-700/50">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-green-500" />
+                Upcoming Bookings
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">
+                {unreadNotifications?.length || 0}
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {showAnalytics && (
+          <Card className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-200/50 dark:border-gray-700/50">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                <BarChart className="h-5 w-5 text-purple-500" />
+                Task Completion Rate
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">
+                {analyticsData?.taskCompletionRate || 0}%
+              </p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <TasksOverview tasks={tasks} />
+        
+        <Card className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-200/50 dark:border-gray-700/50">
           <CardHeader>
             <CardTitle>Calendar</CardTitle>
           </CardHeader>
