@@ -37,6 +37,30 @@ export const useMeetingsHandlers = () => {
 
   const deleteMeeting = useCallback(async (meetingId: string) => {
     try {
+      // First get the meeting data to check if it has an audio file
+      const { data: meeting, error: fetchError } = await supabase
+        .from('meetings')
+        .select('*')
+        .eq('id', meetingId)
+        .single();
+      
+      if (fetchError) {
+        throw fetchError;
+      }
+      
+      // If there's an audio file in storage, delete it first
+      if (meeting.has_audio && meeting.audio_storage_path) {
+        const { error: storageError } = await supabase.storage
+          .from('meeting-recordings')
+          .remove([meeting.audio_storage_path]);
+          
+        if (storageError) {
+          console.warn("Could not delete audio file:", storageError);
+          // Continue with deletion even if storage removal fails
+        }
+      }
+      
+      // Now delete the meeting record
       const { error } = await supabase
         .from('meetings')
         .delete()

@@ -9,6 +9,7 @@ import MeetingPreviewDialog from './MeetingPreviewDialog';
 import { exportMeetingSummaryAsPDF } from './MeetingSummaryExporter';
 import { motion } from 'framer-motion';
 import { differenceInDays } from 'date-fns';
+import { supabase } from '@/integrations/supabase/client';
 
 const SavedRecordingsTab = () => {
   const { loadSavedMeetings, deleteMeeting } = useMeetingSummaryV2();
@@ -63,45 +64,84 @@ const SavedRecordingsTab = () => {
 
   const handleDownload = async (meeting: any) => {
     setIsDownloadingAudio(true);
+    
     try {
-      if (!meeting.audioUrl && !meeting.audioStoragePath) {
-        throw new Error('No audio available');
+      if (!meeting.has_audio) {
+        throw new Error('No audio available for this meeting');
       }
       
-      const audioUrl = meeting.audioUrl || meeting.audioStoragePath;
-      const response = await fetch(audioUrl);
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch audio: ${response.status}`);
-      }
-      
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      
-      // Extract title from summary for better filename
-      const titleMatch = meeting.summary.match(/Meeting Title:\s*([^\n]+)/i) || 
-                       meeting.summary.match(/Title:\s*([^\n]+)/i) ||
-                       meeting.summary.match(/^# ([^\n]+)/m) ||
-                       meeting.summary.match(/^## ([^\n]+)/m);
-                       
-      const safeTitle = titleMatch 
-        ? titleMatch[1].trim().replace(/[^a-z0-9]/gi, '_').toLowerCase()
-        : 'recording';
+      // Check if we have the storage path
+      if (meeting.audio_storage_path) {
+        console.log("Downloading audio from storage path:", meeting.audio_storage_path);
         
-      const filename = `${safeTitle}_${new Date(meeting.date).toISOString().split('T')[0]}.webm`;
-      
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-      
-      toast.success('Audio downloaded successfully');
+        // Get a downloadable URL from storage
+        const { data, error } = await supabase.storage
+          .from('meeting-recordings')
+          .download(meeting.audio_storage_path);
+        
+        if (error) {
+          console.error("Storage download error:", error);
+          throw new Error(`Error downloading from storage: ${error.message}`);
+        }
+        
+        if (!data) {
+          throw new Error('No audio file found in storage');
+        }
+        
+        // Create a download URL from the blob
+        const url = URL.createObjectURL(data);
+        
+        // Extract title from summary for better filename or use meeting.title
+        const title = meeting.title || extractTitleFromSummary(meeting.summary) || 'recording';
+        const safeTitle = title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        const filename = `${safeTitle}_${new Date(meeting.date).toISOString().split('T')[0]}.webm`;
+        
+        // Create a download link and trigger it
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        // Clean up the URL
+        setTimeout(() => URL.revokeObjectURL(url), 100);
+        
+        toast.success('Audio downloaded successfully');
+      } else if (meeting.audioUrl) {
+        // Legacy fallback if we have a direct URL
+        console.log("Using legacy audio URL for download:", meeting.audioUrl);
+        const response = await fetch(meeting.audioUrl);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch audio: ${response.status}`);
+        }
+        
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        
+        const safeTitle = meeting.title 
+          ? meeting.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()
+          : 'recording';
+          
+        const filename = `${safeTitle}_${new Date(meeting.date).toISOString().split('T')[0]}.webm`;
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        setTimeout(() => URL.revokeObjectURL(url), 100);
+        
+        toast.success('Audio downloaded successfully');
+      } else {
+        throw new Error('No audio storage path available');
+      }
     } catch (error) {
       console.error('Error downloading audio:', error);
-      toast.error('Failed to download audio');
+      toast.error(`Failed to download audio: ${error.message || 'Unknown error'}`);
     } finally {
       setIsDownloadingAudio(false);
     }
@@ -116,7 +156,7 @@ const SavedRecordingsTab = () => {
       date: meeting.date || new Date().toISOString(), // Ensure date exists
       detectedLocation: meeting.location || meeting.detectedLocation || null,
       detectedAttendees: meeting.attendees || meeting.detectedAttendees || extractAttendeesFromSummary(meeting.summary),
-      has_audio: meeting.has_audio || !!meeting.audioUrl || !!meeting.audioStoragePath
+      has_audio: meeting.has_audio || !!meeting.audioUrl || !!meeting.audio_storage_path
     };
     
     setSelectedMeeting(enhancedMeeting);

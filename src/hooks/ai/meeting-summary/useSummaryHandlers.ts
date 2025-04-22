@@ -96,7 +96,46 @@ const saveMeetingSummary = async ({
     }
     
     const meetingId = generateUUID();
+    let audioStoragePath = null;
+    let hasAudio = false;
     
+    // Try to upload audio if we have audio blobs
+    if (audioBlobs && audioBlobs.length > 0) {
+      try {
+        // Combine all audio blobs into one file
+        const combinedBlob = new Blob(audioBlobs, { type: 'audio/webm' });
+        
+        // Create a storage path that includes the user ID for RLS policies
+        const fileName = `${meetingId}_recording.webm`;
+        const storagePath = `${user.id}/${fileName}`;
+        
+        // Upload the audio file to Supabase Storage
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('meeting-recordings')
+          .upload(storagePath, combinedBlob, {
+            contentType: 'audio/webm',
+            cacheControl: '3600'
+          });
+        
+        if (uploadError) {
+          console.error("Error uploading audio:", uploadError);
+          toast.error("Could not upload audio recording");
+        } else {
+          audioStoragePath = storagePath;
+          hasAudio = true;
+          toast.success("Meeting audio saved successfully");
+        }
+      } catch (uploadError) {
+        console.error("Error processing audio:", uploadError);
+        // Continue with meeting data save even if audio upload fails
+      }
+    }
+    
+    // Set audio expiration date (10 days from now)
+    const audioExpiresAt = new Date();
+    audioExpiresAt.setDate(audioExpiresAt.getDate() + 10);
+    
+    // Save meeting data to database
     const { error } = await supabase.from('meetings').insert({
       id: meetingId,
       user_id: user.id,
@@ -105,9 +144,11 @@ const saveMeetingSummary = async ({
       location,
       summary,
       duration,
-      has_audio: audioBlobs.length > 0,
+      has_audio: hasAudio,
       language,
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      audio_storage_path: audioStoragePath,
+      audio_expires_at: hasAudio ? audioExpiresAt.toISOString() : null
     });
     
     if (error) {
