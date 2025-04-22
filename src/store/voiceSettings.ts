@@ -19,6 +19,10 @@ interface VoiceSettings {
     arabic: string;
   };
   setPreferredVoice: (language: 'english' | 'arabic', voice: string) => void;
+  
+  // Recording settings
+  maxRecordingDuration: number;
+  setMaxRecordingDuration: (duration: number) => void;
 }
 
 export const useVoiceSettings = create<VoiceSettings>()(
@@ -45,6 +49,10 @@ export const useVoiceSettings = create<VoiceSettings>()(
           [language]: voice,
         },
       })),
+      
+      // Recording settings
+      maxRecordingDuration: 300, // Default to 5 minutes (300 seconds)
+      setMaxRecordingDuration: (duration) => set({ maxRecordingDuration: duration }),
     }),
     {
       name: 'wakti-voice-settings',
