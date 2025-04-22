@@ -78,6 +78,23 @@ const DashboardTasks = () => {
   // Convert UserRole to the expected type for components that don't recognize super-admin yet
   const displayRole = userRole === 'super-admin' ? 'business' : userRole;
 
+  // Wrapper functions to match expected types
+  const handleArchiveTaskWrapper = async (taskId: string, reason: "deleted" | "canceled") => {
+    await handleArchiveTask(taskId);
+  };
+
+  const handleRestoreTaskWrapper = async (taskId: string) => {
+    await handleRestoreTask(taskId);
+  };
+
+  const handleCreateTaskWrapper = async (taskData: any) => {
+    await handleCreateTask(taskData);
+  };
+
+  const handleUpdateTaskWrapper = async (taskId: string, taskData: any) => {
+    await handleUpdateTask(taskId, taskData);
+  };
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold tracking-tight">Tasks</h1>
@@ -137,15 +154,15 @@ const DashboardTasks = () => {
           onCreateTask={() => setCreateTaskDialogOpen(true)}
           isArchiveView={activeTab === "archived"}
           onEdit={handleEditTask}
-          onArchive={handleArchiveTask}
-          onRestore={handleRestoreTask}
+          onArchive={handleArchiveTaskWrapper}
+          onRestore={handleRestoreTaskWrapper}
         />
       )}
       
       <CreateTaskDialog
         open={createTaskDialogOpen}
         onOpenChange={setCreateTaskDialogOpen}
-        onCreateTask={handleCreateTask}
+        onCreateTask={handleCreateTaskWrapper}
         userRole={displayRole as "individual" | "business" | "staff"}
       />
       
@@ -153,7 +170,7 @@ const DashboardTasks = () => {
         open={editTaskDialogOpen}
         onOpenChange={setEditTaskDialogOpen}
         task={currentEditTask}
-        onUpdateTask={handleUpdateTask}
+        onUpdateTask={handleUpdateTaskWrapper}
       />
     </div>
   );

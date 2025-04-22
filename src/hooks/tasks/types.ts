@@ -22,7 +22,7 @@ export interface UseTaskFiltersReturn {
   setFilterPriority: (priority: string | null) => void;
 }
 
-export type TaskTab = "my-tasks" | "shared" | "assigned" | "team" | "archived";
+export type TaskTab = "my-tasks" | "shared" | "assigned" | "team" | "archived" | "reminders";
 
 export interface UseTaskQueriesReturn {
   tasks: TaskWithSharedInfo[];

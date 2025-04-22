@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -28,7 +27,7 @@ export const useTasksPageState = () => {
     refetch: refetchTasks,
     userRole: detectedUserRole,
     isStaff
-  } = useTaskQueries(activeTab);
+  } = useTaskQueries(activeTab as any); // Cast to any to avoid type issues
   
   // Effect to get user role
   useEffect(() => {

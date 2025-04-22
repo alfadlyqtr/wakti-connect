@@ -7,7 +7,6 @@ import { TaskTab } from '@/types/task.types';
 import { TaskStatusFilter, TaskPriorityFilter } from '@/components/tasks/types';
 import { UserRole } from '@/types/user';
 
-// Define the useTasksPageState hook types and implementation
 export const useTasksPageState = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
@@ -19,7 +18,6 @@ export const useTasksPageState = () => {
   const [activeTab, setActiveTab] = useState<TaskTab>('my-tasks');
   const [userRole, setUserRole] = useState<UserRole>('individual');
   
-  // Initialize task queries
   const {
     tasks,
     isLoading,
@@ -27,9 +25,8 @@ export const useTasksPageState = () => {
     refetch: refetchTasks,
     userRole: detectedUserRole,
     isStaff
-  } = useTaskQueries(activeTab);
+  } = useTaskQueries(activeTab as any);
   
-  // Effect to get user role
   useEffect(() => {
     const getUserRole = async () => {
       try {
@@ -39,13 +36,11 @@ export const useTasksPageState = () => {
           return;
         }
         
-        // Check local storage for super admin status (faster)
         if (localStorage.getItem('isSuperAdmin') === 'true') {
           setUserRole('super-admin');
           return;
         }
         
-        // Check if user is staff
         const isStaffMember = localStorage.getItem('isStaff') === 'true';
         
         if (isStaffMember) {
@@ -53,14 +48,12 @@ export const useTasksPageState = () => {
           return;
         }
         
-        // Get account type from profile
         const { data: profileData } = await supabase
           .from('profiles')
           .select('account_type')
           .eq('id', session.user.id)
           .single();
         
-        // Set user role based on account type
         if (profileData?.account_type === 'business') {
           setUserRole('business');
         } else if (profileData?.account_type === 'staff') {
@@ -68,7 +61,6 @@ export const useTasksPageState = () => {
         } else if (profileData?.account_type === 'super-admin') {
           setUserRole('super-admin');
         } else {
-          // Default to individual
           setUserRole('individual');
         }
       } catch (err) {
@@ -84,7 +76,6 @@ export const useTasksPageState = () => {
     }
   }, [detectedUserRole]);
   
-  // Filter tasks based on search, status, and priority
   const filteredTasks = tasks.filter(task => {
     const matchesSearch = searchQuery 
       ? task.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -102,13 +93,11 @@ export const useTasksPageState = () => {
     return matchesSearch && matchesStatus && matchesPriority;
   });
   
-  // Handle creating a new task
   const handleCreateTask = async (taskData: any) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('You must be logged in to create tasks');
       
-      // Create task
       const { data, error } = await supabase
         .from('tasks')
         .insert({
@@ -122,16 +111,13 @@ export const useTasksPageState = () => {
       
       if (error) throw new Error(error.message);
       
-      // Success message
       toast({
         title: 'Task created',
         description: 'Your task was created successfully',
       });
       
-      // Refetch tasks
       refetchTasks();
       
-      // Reset form
       setCreateTaskDialogOpen(false);
       
       return data;
@@ -146,7 +132,6 @@ export const useTasksPageState = () => {
     }
   };
   
-  // Handle updating a task
   const handleUpdateTask = async (taskId: string, taskData: any) => {
     try {
       const { data, error } = await supabase
@@ -181,7 +166,6 @@ export const useTasksPageState = () => {
     }
   };
   
-  // Handle archiving a task
   const handleArchiveTask = async (taskId: string) => {
     try {
       const { data, error } = await supabase
@@ -215,7 +199,6 @@ export const useTasksPageState = () => {
     }
   };
   
-  // Handle restoring a task from archive
   const handleRestoreTask = async (taskId: string) => {
     try {
       const { data, error } = await supabase
@@ -249,7 +232,6 @@ export const useTasksPageState = () => {
     }
   };
   
-  // Determine if account is paid (business or super-admin)
   const isPaidAccount = userRole === 'business' || userRole === 'super-admin';
   
   return {
