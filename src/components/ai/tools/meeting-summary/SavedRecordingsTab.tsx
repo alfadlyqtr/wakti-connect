@@ -27,14 +27,15 @@ const SavedRecordingsTab = () => {
     setIsLoadingHistory(true);
     try {
       const loadedMeetings = await loadSavedMeetings();
-      // Ensure meetings have valid dates
+      // Log the raw data to help debug date issues
+      console.log("Raw meetings data from database:", loadedMeetings);
+      
+      // Process meetings ensuring created_at is used for date display
       const processedMeetings = loadedMeetings.map(meeting => ({
         ...meeting,
-        date: meeting.date || new Date().toISOString() // Provide fallback if date is missing
+        date: meeting.created_at // Use created_at instead of date field
       }));
       
-      // Add console logs to debug data
-      console.log("Loaded meetings data:", processedMeetings);
       setMeetings(processedMeetings);
     } catch (error) {
       console.error('Error loading meetings:', error);

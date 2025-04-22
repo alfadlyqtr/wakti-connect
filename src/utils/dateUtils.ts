@@ -1,6 +1,6 @@
 
 /**
- * Format a date/time string to display time in a readable format
+ * Format a time string to display time in a readable format
  */
 export const formatTime = (isoString: string): string => {
   try {
@@ -35,7 +35,16 @@ export const formatDateTime = (isoString: string): string => {
     if (!isoString) return "No date";
     const date = new Date(isoString);
     if (isNaN(date.getTime())) return "Invalid date";
-    return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    
+    return date.toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+      second: 'numeric',
+      hour12: true
+    });
   } catch (e) {
     console.error("Error formatting datetime:", e, "for string:", isoString);
     return "Invalid date";

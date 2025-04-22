@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Trash2, Download, MapPin, File, Map } from 'lucide-react';
@@ -10,6 +9,7 @@ export interface SavedMeeting {
   title: string;
   summary: string;
   date: string;
+  created_at?: string;
   duration: number;
   audioUrl?: string;
   audioStoragePath?: string;
@@ -26,7 +26,6 @@ interface SavedMeetingsListProps {
   onDownload?: (meeting: SavedMeeting) => void;
 }
 
-// Simple duration formatter: seconds -> MM:SS
 function formatDuration(durationSeconds: number): string {
   if (isNaN(durationSeconds)) return '';
   const minutes = Math.floor(durationSeconds / 60);
@@ -34,10 +33,8 @@ function formatDuration(durationSeconds: number): string {
   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 }
 
-// TomTom static map image for preview (center on given text string, fallback to marker on text location)
 const getTomTomMapThumbnailUrl = (location: string) => {
   const encodedLocation = encodeURIComponent(location);
-  // Note: center is location string; this may not be as accurate as coordinates, but typical for simple preview
   return `https://api.tomtom.com/map/1/staticimage?key=${import.meta.env.VITE_TOMTOM_API_KEY || ''}&center=${encodedLocation}&zoom=14&width=320&height=120&format=png&layer=basic&style=main&markers=color:red%7C${encodedLocation}`;
 };
 
@@ -61,7 +58,6 @@ const SavedMeetingsList: React.FC<SavedMeetingsListProps> = ({
     return null;
   }
 
-  // Extract real title from summary if no title was provided
   const getDisplayTitle = (meeting: SavedMeeting) => {
     if (meeting.title && meeting.title !== 'Untitled Meeting') {
       return meeting.title;
@@ -94,7 +90,7 @@ const SavedMeetingsList: React.FC<SavedMeetingsListProps> = ({
               <div className="flex flex-wrap items-center text-sm text-muted-foreground gap-2 mb-1">
                 <span>
                   <span className="font-medium">Created:</span>{' '}
-                  {formatDateTime(meeting.date)}
+                  {formatDateTime(meeting.created_at || meeting.date)}
                 </span>
                 {typeof meeting.duration === 'number' && meeting.duration > 0 && (
                   <>
@@ -112,7 +108,6 @@ const SavedMeetingsList: React.FC<SavedMeetingsListProps> = ({
                   <span className="truncate max-w-[250px]">{meeting.location}</span>
                 </div>
               )}
-              {/* Map preview, if location */}
               {meeting.location && import.meta.env.VITE_TOMTOM_API_KEY && (
                 <div className="mt-2 w-full md:max-w-xs rounded overflow-hidden border border-green-200 shadow-sm bg-white cursor-pointer"
                   onClick={e => {
