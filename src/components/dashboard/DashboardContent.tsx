@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useEffect } from 'react';
 import StaffDashboardHeader from './StaffDashboardHeader';
 import DashboardLoading from './DashboardLoading';
 import { useProfileSettings } from '@/hooks/useProfileSettings';
