@@ -2,8 +2,9 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { CalendarEvent } from "@/types/calendar.types";
-import { CheckCircle, Circle } from "lucide-react";
+import { CheckCircle, Circle, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { formatDistanceToNow } from "date-fns";
 
 interface TaskListProps {
   tasks: CalendarEvent[];
@@ -44,15 +45,16 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks }) => {
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-1">
       {tasks.map((task) => {
         // Ensure we have a valid priority key, defaulting to 'normal'
         const priorityKey = task.priority || 'normal';
+        const isOverdue = task.date && new Date(task.date) < new Date() && !task.isCompleted;
         
         return (
           <div 
             key={task.id}
-            className="flex items-center p-2 rounded-md hover:bg-muted cursor-pointer"
+            className="flex items-center p-2 rounded-md hover:bg-muted cursor-pointer transition-colors"
             onClick={() => handleTaskClick(task.id)}
           >
             <div className="mr-2">
@@ -62,7 +64,17 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks }) => {
                 <Circle className="h-5 w-5 text-muted-foreground" />
               )}
             </div>
-            <div className="flex-1 truncate text-sm">{task.title}</div>
+            <div className="flex-1 truncate">
+              <span className={`text-sm ${isOverdue ? 'text-red-500 font-medium' : ''}`}>
+                {task.title}
+              </span>
+              {task.date && (
+                <div className="flex items-center text-xs text-muted-foreground">
+                  <Clock className="h-3 w-3 mr-1" />
+                  {formatDistanceToNow(new Date(task.date), { addSuffix: true })}
+                </div>
+              )}
+            </div>
             <Badge className={`ml-2 ${getPriorityColorClass(task.priority)}`}>
               {getPriorityLabel(task.priority)}
             </Badge>

@@ -3,6 +3,8 @@ import React from "react";
 import { TaskList } from "./TaskList";
 import { Task, TaskStatus } from "@/types/task.types";
 import { CalendarEvent } from "@/types/calendar.types";
+import { Progress } from "@/components/ui/progress";
+import { Card } from "@/components/ui/card";
 
 interface TasksOverviewProps {
   tasks: Task[];
@@ -14,21 +16,27 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ tasks }) => {
   const inProgressTasks = tasks.filter(task => task.status === 'in-progress');
   const completedTasks = tasks.filter(task => task.status === 'completed');
   
+  // Filter out archived tasks for more accurate statistics
+  const activeTasks = tasks.filter(task => !task.archived_at);
+  
   // Calculate percentages
-  const totalTasks = tasks.length;
+  const totalTasks = activeTasks.length;
   const completionRate = totalTasks > 0 ? Math.round((completedTasks.length / totalTasks) * 100) : 0;
   
-  // Convert Task[] to CalendarEvent[] for TaskList which expects CalendarEvent[]
-  // Ensure priority is mapped correctly and consistently
-  const taskEvents: CalendarEvent[] = tasks.map(task => ({
-    id: task.id,
-    title: task.title,
-    date: new Date(task.due_date || Date.now()),
-    type: "task",
-    status: task.status,
-    isCompleted: task.status === "completed",
-    priority: task.priority // This ensures consistent priority type
-  }));
+  // Convert Task[] to CalendarEvent[] for TaskList
+  // Only show non-archived tasks in the list
+  const taskEvents: CalendarEvent[] = activeTasks
+    .filter(task => !task.archived_at)
+    .slice(0, 5) // Limit to top 5 tasks for better UI
+    .map(task => ({
+      id: task.id,
+      title: task.title,
+      date: new Date(task.due_date || Date.now()),
+      type: "task",
+      status: task.status,
+      isCompleted: task.status === "completed",
+      priority: task.priority
+    }));
   
   return (
     <div className="space-y-4">
@@ -47,8 +55,16 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ tasks }) => {
         </div>
       </div>
       
-      <div className="max-h-[300px] overflow-y-auto">
-        <TaskList tasks={taskEvents} />
+      <Progress value={completionRate} className="h-2" />
+      
+      <div className="max-h-[300px] overflow-y-auto rounded-md border p-1">
+        {taskEvents.length > 0 ? (
+          <TaskList tasks={taskEvents} />
+        ) : (
+          <div className="p-4 text-center text-muted-foreground">
+            No active tasks found. Create a task to get started.
+          </div>
+        )}
       </div>
     </div>
   );
