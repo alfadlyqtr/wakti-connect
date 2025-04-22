@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -107,7 +106,12 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
       // Get voice settings based on text content
       const { language, voice } = getVoiceSettings(meeting.summary);
 
-      toast.info(`Playing summary with ${voice} voice`);
+      // If language is Arabic, show a simple toast
+      if (language === 'ar-sa') {
+        toast.info('Arabic Text-to-Speech Coming Soon');
+        setIsLoading(false);
+        return;
+      }
       
       const audio = await playTextWithVoiceRSS({
         text: meeting.summary,
