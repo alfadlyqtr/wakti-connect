@@ -32,7 +32,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   userId,
   isMobile,
   currentPath = '',
-  userRole = 'free',
+  userRole = 'individual',
   sidebarCollapsed = true
 }) => {
   const navigate = useNavigate();
