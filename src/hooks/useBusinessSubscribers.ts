@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 
-export const useBusinessSubscribers = (businessId: string) => {
+export const useBusinessSubscribers = (businessId: string, options?: { enabled?: boolean }) => {
   const queryClient = useQueryClient();
   
   // Fetch subscribers for the business
@@ -33,7 +33,7 @@ export const useBusinessSubscribers = (businessId: string) => {
       
       return data;
     },
-    enabled: !!businessId
+    enabled: options?.enabled !== undefined ? options.enabled : !!businessId
   });
 
   // Check if current user is subscribed to this business
@@ -63,7 +63,7 @@ export const useBusinessSubscribers = (businessId: string) => {
         subscriptionId: data?.id
       };
     },
-    enabled: !!businessId
+    enabled: options?.enabled !== undefined ? options.enabled : !!businessId
   });
 
   // Subscribe to business
