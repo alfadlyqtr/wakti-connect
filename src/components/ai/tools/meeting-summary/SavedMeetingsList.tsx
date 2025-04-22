@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Trash2, Download, MapPin, File, Map } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { formatDateTime } from '@/utils/dateUtils';
+import { differenceInDays } from 'date-fns';
 
 export interface SavedMeeting {
   id: string;
@@ -36,6 +37,18 @@ function formatDuration(durationSeconds: number): string {
 const getTomTomMapThumbnailUrl = (location: string) => {
   const encodedLocation = encodeURIComponent(location);
   return `https://api.tomtom.com/map/1/staticimage?key=${import.meta.env.VITE_TOMTOM_API_KEY || ''}&center=${encodedLocation}&zoom=14&width=320&height=120&format=png&layer=basic&style=main&markers=color:red%7C${encodedLocation}`;
+};
+
+const getAutoDeleteDays = (expiresAt: string | undefined): number | null => {
+  if (!expiresAt) return null;
+  try {
+    const expiryDate = new Date(expiresAt);
+    if (isNaN(expiryDate.getTime())) return null;
+    return Math.max(0, differenceInDays(expiryDate, new Date()));
+  } catch (e) {
+    console.error("Error calculating days until deletion:", e);
+    return null;
+  }
 };
 
 const SavedMeetingsList: React.FC<SavedMeetingsListProps> = ({
@@ -136,40 +149,47 @@ const SavedMeetingsList: React.FC<SavedMeetingsListProps> = ({
               )}
             </div>
             
-            <div className="flex items-center gap-2 self-end sm:self-center">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 px-2 text-blue-600"
-                onClick={() => onSelect && onSelect(meeting)}
-              >
-                <File className="h-3.5 w-3.5 mr-1" />
-                <span className="text-xs">View</span>
-              </Button>
-              
-              {meeting.has_audio && (meeting.audioUrl || meeting.audioStoragePath) && onDownload && (
-                <Button 
-                  variant="ghost" 
+            <div className="flex flex-col items-end gap-2 self-end sm:self-center">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
                   size="sm"
-                  onClick={() => onDownload(meeting)}
-                  title="Download audio"
-                  className="h-8 px-2 bg-blue-50 text-blue-600 hover:bg-blue-100"
+                  className="h-8 px-2 text-blue-600"
+                  onClick={() => onSelect && onSelect(meeting)}
                 >
-                  <Download className="h-3.5 w-3.5 mr-1" />
-                  <span className="text-xs">Audio</span>
+                  <File className="h-3.5 w-3.5 mr-1" />
+                  <span className="text-xs">View</span>
                 </Button>
-              )}
-              
-              {onDelete && (
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  onClick={() => onDelete(meeting.id)}
-                  title="Delete meeting"
-                  className="h-8 w-8"
-                >
-                  <Trash2 className="h-4 w-4 text-red-500" />
-                </Button>
+                
+                {meeting.has_audio && (meeting.audioUrl || meeting.audioStoragePath) && onDownload && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => onDownload(meeting)}
+                    title="Download audio"
+                    className="h-8 px-2 bg-blue-50 text-blue-600 hover:bg-blue-100"
+                  >
+                    <Download className="h-3.5 w-3.5 mr-1" />
+                    <span className="text-xs">Audio</span>
+                  </Button>
+                )}
+                
+                {onDelete && (
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    onClick={() => onDelete(meeting.id)}
+                    title="Delete meeting"
+                    className="h-8 w-8"
+                  >
+                    <Trash2 className="h-4 w-4 text-red-500" />
+                  </Button>
+                )}
+              </div>
+              {meeting.audio_expires_at && (
+                <div className="text-xs text-gray-500">
+                  Auto-delete in {getAutoDeleteDays(meeting.audio_expires_at)} days
+                </div>
               )}
             </div>
           </motion.div>
