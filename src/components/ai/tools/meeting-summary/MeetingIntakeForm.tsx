@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -6,6 +5,7 @@ import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { MapPin, Users, GraduationCap, ArrowRight } from 'lucide-react';
 import { toast } from "sonner";
@@ -20,6 +20,7 @@ const formSchema = z.object({
   location: z.string().optional(),
   attendees: z.string().optional(),
   agenda: z.string().optional(),
+  language: z.string().min(1, 'Please select a language'),
 });
 
 interface MeetingIntakeFormProps {
@@ -38,6 +39,7 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
       location: '',
       attendees: '',
       agenda: '',
+      language: 'mixed',
     },
   });
 
@@ -60,7 +62,6 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
 
       const { latitude, longitude } = position.coords;
       
-      // Use TomTom reverse geocoding via our edge function
       const { data: geoData, error: geoError } = await supabase.functions.invoke('tomtom-geocode', {
         body: { query: `${latitude},${longitude}` }
       });
@@ -70,7 +71,6 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
         return;
       }
 
-      // Update form with location
       const locationStr = `Current Location (${latitude.toFixed(6)}, ${longitude.toFixed(6)})`;
       handleLocationChange(locationStr, 'manual');
       
@@ -97,6 +97,31 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <FormField
+              control={form.control}
+              name="language"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel className="text-base">Meeting Language</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select meeting language" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="english">English</SelectItem>
+                      <SelectItem value="arabic">Arabic</SelectItem>
+                      <SelectItem value="mixed">Mixed (English & Arabic)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="sessionType"

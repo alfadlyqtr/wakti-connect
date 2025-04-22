@@ -21,7 +21,8 @@ export function useMeetingSummaryV2() {
     audioBlobs: null,
     meetingTitle: undefined,
     meetingDate: undefined,
-    meetingLocation: undefined
+    meetingLocation: undefined,
+    language: 'mixed'
   });
 
   const summaryRef = useRef<HTMLDivElement | null>(null);
@@ -61,7 +62,8 @@ export function useMeetingSummaryV2() {
       audioBlobs: null,
       meetingTitle: undefined,
       meetingDate: undefined,
-      meetingLocation: undefined
+      meetingLocation: undefined,
+      language: 'mixed'
     });
   }, [cleanup]);
 
@@ -143,7 +145,8 @@ export function useMeetingSummaryV2() {
       ...prev,
       meetingTitle: data.title,
       meetingDate: data.date,
-      meetingLocation: data.location
+      meetingLocation: data.location,
+      language: data.language || 'mixed'
     }));
   }, []);
 
@@ -167,6 +170,7 @@ export function useMeetingSummaryV2() {
     warnBeforeEndSeconds,
     summaryRef,
     isExporting,
-    isDownloadingAudio
+    isDownloadingAudio,
+    language: state.language
   };
 }

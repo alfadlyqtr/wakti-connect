@@ -39,6 +39,10 @@ serve(async (req) => {
       throw new Error('Audio file is empty');
     }
 
+    if (audioBlob.size < 5000) { // Check if audio is too short (less than 5KB)
+      throw new Error('Recording is too short. Please record for at least a few seconds.');
+    }
+
     // Try Whisper first
     try {
       console.log("Attempting OpenAI Whisper transcription");
@@ -47,9 +51,13 @@ serve(async (req) => {
       const formData = new FormData();
       formData.append('file', audioBlob, 'audio.webm');
       formData.append('model', 'whisper-1');
-      if (language !== 'auto') {
-        formData.append('language', language);
-      }
+      
+      // Set language based on the meeting settings
+      if (language === 'english') {
+        formData.append('language', 'en');
+      } else if (language === 'arabic') {
+        formData.append('language', 'ar');
+      } // For mixed, let Whisper auto-detect
 
       const whisperResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
         method: 'POST',
@@ -64,6 +72,11 @@ serve(async (req) => {
       }
 
       const result = await whisperResponse.json();
+      
+      if (!result.text || result.text.trim().length === 0) {
+        throw new Error('No speech detected in the recording');
+      }
+      
       console.log("Transcription received from OpenAI Whisper");
       
       return new Response(
@@ -71,39 +84,10 @@ serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
 
-    } catch (whisperError) {
-      console.error("Whisper transcription failed:", whisperError);
-      console.log("Falling back to DeepSeek...");
-
-      // Try DeepSeek as fallback
-      try {
-        const deepseekResponse = await fetch('https://api.deepseek.com/v1/audio/transcriptions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${Deno.env.get('DEEPSEEK_API_KEY')}`,
-            'Content-Type': 'multipart/form-data',
-          },
-          body: formData
-        });
-
-        if (!deepseekResponse.ok) {
-          throw new Error(`DeepSeek API error: ${await deepseekResponse.text()}`);
-        }
-
-        const deepseekResult = await deepseekResponse.json();
-        console.log("Transcription received from DeepSeek");
-
-        return new Response(
-          JSON.stringify({ text: deepseekResult.text, source: 'deepseek' }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-
-      } catch (deepseekError) {
-        console.error("DeepSeek transcription also failed:", deepseekError);
-        throw new Error("All transcription services failed");
-      }
+    } catch (error) {
+      console.error("Whisper transcription failed:", error);
+      throw error;
     }
-
   } catch (error) {
     console.error("Error in voice transcription function:", error);
     
@@ -111,7 +95,7 @@ serve(async (req) => {
       JSON.stringify({ 
         error: error.message,
         fallback: true,
-        message: "Voice transcription error. Using browser fallback."
+        message: error.message || "Voice transcription error"
       }),
       {
         status: 500,
