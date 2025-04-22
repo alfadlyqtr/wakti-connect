@@ -17,7 +17,8 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const loadTasks = async () => {
       try {
         setIsLoading(true);
-        const loadedTasks = await fetchTasks();
+        // Pass false to explicitly exclude archived tasks
+        const loadedTasks = await fetchTasks(false);
         setTasks(loadedTasks);
       } catch (err) {
         console.error("Failed to fetch tasks:", err);

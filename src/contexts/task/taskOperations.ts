@@ -1,13 +1,12 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Task, TaskStatus, TaskPriority } from "@/types/task.types";
-import { toast } from "@/components/ui/use-toast";
 import { validateTaskStatus, validateTaskPriority } from "@/services/task/utils/statusValidator";
 import { mapDbTaskToTyped, checkTasksTableExists } from "./taskUtils";
 import { getMockTasks } from "./taskConstants";
 
 // Fetch tasks from Supabase
-export const fetchTasks = async (): Promise<Task[]> => {
+export const fetchTasks = async (includeArchived: boolean = false): Promise<Task[]> => {
   const { data: { session } } = await supabase.auth.getSession();
   
   if (!session?.user) {
@@ -23,11 +22,18 @@ export const fetchTasks = async (): Promise<Task[]> => {
   }
   
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from('tasks')
       .select('*')
       .eq('user_id', session.user.id)
       .order('created_at', { ascending: false });
+
+    // Only include non-archived tasks by default
+    if (!includeArchived) {
+      query = query.is('archived_at', null);
+    }
+    
+    const { data, error } = await query;
     
     if (error) {
       console.error("Error fetching tasks:", error);
