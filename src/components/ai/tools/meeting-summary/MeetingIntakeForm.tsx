@@ -30,7 +30,6 @@ interface MeetingIntakeFormProps {
 
 export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, onSkip }) => {
   const { handleLocationChange, location, isGettingLocation } = useEventLocation();
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -81,9 +80,9 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
   };
 
   return (
-    <MeetingFormLayout>
+    <div className="max-w-4xl mx-auto p-6">
       <div className="space-y-6">
-        <div className="flex items-center gap-3 pb-6 border-b">
+        <div className="flex items-center gap-3 pb-6">
           <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
             <GraduationCap className="h-6 w-6 text-primary" />
           </div>
@@ -96,19 +95,19 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
               control={form.control}
               name="language"
               render={({ field }) => (
                 <FormItem className="space-y-3">
-                  <FormLabel className="text-base">Meeting Language</FormLabel>
+                  <FormLabel className="text-base font-medium">Meeting Language</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
                   >
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="h-11">
                         <SelectValue placeholder="Select meeting language" />
                       </SelectTrigger>
                     </FormControl>
@@ -122,141 +121,127 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="sessionType"
-              render={({ field }) => (
-                <FormItem className="space-y-3">
-                  <FormLabel className="text-base flex items-center gap-2">
-                    <GraduationCap className="h-4 w-4" />
-                    Session Type
-                  </FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="e.g., Staff meeting or English lecture" 
-                      {...field} 
-                      className="h-11"
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="location"
-              render={({ field }) => (
-                <FormItem className="space-y-3">
-                  <FormLabel className="text-base flex items-center gap-2">
-                    <MapPin className="h-4 w-4" />
-                    Location
-                  </FormLabel>
-                  <div className="flex gap-2">
+            <div className="space-y-6">
+              <FormField
+                control={form.control}
+                name="sessionType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base font-medium">Session Type</FormLabel>
                     <FormControl>
                       <Input 
-                        placeholder="e.g., Oryx Tower, Doha College" 
-                        {...field} 
+                        placeholder="e.g., Staff meeting or English lecture" 
+                        {...field}
                         className="h-11"
                       />
                     </FormControl>
-                    <Button 
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className="h-11 w-11 shrink-0"
-                      onClick={handleGetCurrentLocation}
-                      disabled={isGettingLocation}
-                    >
-                      <MapPin className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </FormItem>
-              )}
-            />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="hostedBy"
-              render={({ field }) => (
-                <FormItem className="space-y-3">
-                  <FormLabel className="text-base flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    Hosted By
-                  </FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="e.g., Jabor Abdullah" 
-                      {...field} 
-                      className="h-11"
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="location"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base font-medium">Location</FormLabel>
+                    <div className="flex gap-2">
+                      <FormControl>
+                        <Input 
+                          placeholder="e.g., Oryx Tower, Doha College" 
+                          {...field}
+                          className="h-11"
+                        />
+                      </FormControl>
+                      <Button 
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="h-11 w-11 shrink-0"
+                        onClick={handleGetCurrentLocation}
+                        disabled={isGettingLocation}
+                      >
+                        <MapPin className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="attendees"
-              render={({ field }) => (
-                <FormItem className="space-y-3">
-                  <FormLabel className="text-base flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    Attendees
-                  </FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="e.g., John, Alanoud, Mozah, Hassan" 
-                      {...field} 
-                      className="min-h-[100px] resize-none"
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="hostedBy"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base font-medium">Hosted By</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="e.g., Jabor Abdullah" 
+                        {...field}
+                        className="h-11"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="agenda"
-              render={({ field }) => (
-                <FormItem className="space-y-3">
-                  <FormLabel className="text-base">Agenda</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="e.g., Project deadline, Final exams" 
-                      {...field} 
-                      className="min-h-[100px] resize-none"
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="attendees"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base font-medium">Attendees</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="e.g., John, Alanoud, Mozah, Hassan" 
+                        {...field}
+                        className="min-h-[80px] resize-none"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
 
-            <div className="flex justify-between gap-4 pt-4">
+              <FormField
+                control={form.control}
+                name="agenda"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base font-medium">Agenda</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="e.g., Project deadline, Final exams" 
+                        {...field}
+                        className="min-h-[80px] resize-none"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="flex justify-between gap-4 pt-6">
               <Button 
                 type="submit" 
-                className="flex-1 h-11"
-              >
-                Submit
-              </Button>
-              <motion.div 
+                size="lg"
                 className="flex-1"
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
               >
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={onSkip} 
-                  className="w-full h-11 bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200 hover:border-purple-300 hover:from-purple-100 hover:to-blue-100"
-                >
-                  Skip
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </motion.div>
+                Start Recording
+              </Button>
+              <Button 
+                type="button" 
+                variant="outline"
+                size="lg"
+                onClick={onSkip}
+                className="flex-1"
+              >
+                Skip
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
             </div>
           </form>
         </Form>
       </div>
-    </MeetingFormLayout>
+    </div>
   );
 };

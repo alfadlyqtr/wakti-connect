@@ -1,12 +1,9 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Volume2, Play, Pause, RefreshCcw, StopCircle } from 'lucide-react';
 
 interface VoiceControlsProps {
-  selectedVoice: string;
-  setSelectedVoice: (voice: string) => void;
   isPlaying: boolean;
   isPaused: boolean;
   onPlay: () => void;
@@ -16,8 +13,6 @@ interface VoiceControlsProps {
 }
 
 export const VoiceControls: React.FC<VoiceControlsProps> = ({
-  selectedVoice,
-  setSelectedVoice,
   isPlaying,
   isPaused,
   onPlay,
@@ -27,19 +22,6 @@ export const VoiceControls: React.FC<VoiceControlsProps> = ({
 }) => {
   return (
     <>
-      <Select value={selectedVoice} onValueChange={setSelectedVoice}>
-        <SelectTrigger className="w-[140px]">
-          <SelectValue placeholder="Select voice" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="John">John (EN)</SelectItem>
-          <SelectItem value="Linda">Linda (EN)</SelectItem>
-          <SelectItem value="Mike">Mike (EN)</SelectItem>
-          <SelectItem value="Mary">Mary (EN)</SelectItem>
-          <SelectItem value="Hareth">Hareth (AR)</SelectItem>
-        </SelectContent>
-      </Select>
-
       {!isPlaying && !isPaused && (
         <Button
           variant="outline"
