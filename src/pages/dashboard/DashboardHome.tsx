@@ -61,11 +61,12 @@ const DashboardHome: React.FC = () => {
   const [layout, setLayout] = useState(defaultLayout);
   const [isLoading, setIsLoading] = useState(true);
   
-  const { subscriberCount, isLoading: subscribersLoading } = 
-    (userRole === 'business' || userRole === 'super-admin') && userId
-      ? useBusinessSubscribers(userId)
-      : { subscriberCount: 0, isLoading: false };
-      
+  const isBusinessOrAdmin = userRole === 'business' || userRole === 'super-admin';
+  
+  const { subscriberCount, isLoading: subscribersLoading } = useBusinessSubscribers(userId || '', {
+    enabled: !!userId && isBusinessOrAdmin
+  });
+  
   const eventCounts = {
     total: sampleEvents.length,
     tasks: sampleEvents.filter(event => event.type === "task").length,
@@ -189,10 +190,6 @@ const DashboardHome: React.FC = () => {
     );
   }
   
-  const isBusinessAccount = userRole === 'business' || userRole === 'super-admin';
-  
-  const isStaffAccount = userRole === 'staff';
-  
   const getOrderedWidgets = () => {
     const widgets = [
       {
@@ -237,7 +234,7 @@ const DashboardHome: React.FC = () => {
       }
     ];
     
-    if (isBusinessAccount) {
+    if (isBusinessOrAdmin) {
       widgets.push({
         id: "subscribers",
         content: (
@@ -270,9 +267,7 @@ const DashboardHome: React.FC = () => {
         content: (
           <BusinessAnalyticsPreview 
             profileData={{
-              account_type: (userRole === 'business' || userRole === 'super-admin') 
-                ? 'business' 
-                : 'individual',
+              account_type: isBusinessOrAdmin ? 'business' : 'individual',
               business_name: typeof profileData === 'object' && 'business_name' in profileData
                 ? profileData.business_name 
                 : undefined
@@ -283,12 +278,11 @@ const DashboardHome: React.FC = () => {
       });
     }
     
-    return widgets
-      .sort((a, b) => {
-        const aIndex = layout.findIndex(item => item.id === a.id);
-        const bIndex = layout.findIndex(item => item.id === b.id);
-        return aIndex - bIndex;
-      });
+    return widgets.sort((a, b) => {
+      const aIndex = layout.findIndex(item => item.id === a.id);
+      const bIndex = layout.findIndex(item => item.id === b.id);
+      return aIndex - bIndex;
+    });
   };
   
   const orderedWidgets = getOrderedWidgets();
