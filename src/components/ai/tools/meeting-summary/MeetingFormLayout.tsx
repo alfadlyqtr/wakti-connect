@@ -10,8 +10,10 @@ interface MeetingFormLayoutProps {
 const MeetingFormLayout: React.FC<MeetingFormLayoutProps> = ({ children, className }) => {
   return (
     <div className={cn(
-      "w-full mx-auto bg-card rounded-xl shadow-lg border",
-      "p-6 space-y-8",
+      "max-w-2xl mx-auto",
+      "bg-wakti-beige rounded-xl shadow-lg",
+      "p-8",
+      "border border-wakti-navy/10",
       className
     )}>
       {children}

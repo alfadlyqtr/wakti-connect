@@ -7,7 +7,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { MapPin, Users, GraduationCap, ArrowRight } from 'lucide-react';
+import { MapPin, ArrowRight } from 'lucide-react';
 import { toast } from "sonner";
 import { useEventLocation } from '@/hooks/events/useEventLocation';
 import { motion } from 'framer-motion';
@@ -80,15 +80,15 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="space-y-6">
-        <div className="flex items-center gap-3 pb-6">
-          <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-            <GraduationCap className="h-6 w-6 text-primary" />
+    <MeetingFormLayout>
+      <div className="space-y-8">
+        <div className="flex items-center gap-4 pb-4 border-b border-wakti-navy/10">
+          <div className="h-12 w-12 rounded-full bg-wakti-navy/10 flex items-center justify-center">
+            <MapPin className="h-6 w-6 text-wakti-navy" />
           </div>
           <div>
-            <h2 className="text-xl font-semibold">Meeting Details</h2>
-            <p className="text-sm text-muted-foreground">
+            <h2 className="text-xl font-semibold text-wakti-navy">Meeting Details</h2>
+            <p className="text-sm text-wakti-navy/70">
               Let WAKTI AI know about your meeting context
             </p>
           </div>
@@ -100,14 +100,11 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
               control={form.control}
               name="language"
               render={({ field }) => (
-                <FormItem className="space-y-3">
-                  <FormLabel className="text-base font-medium">Meeting Language</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
+                <FormItem>
+                  <FormLabel className="text-base font-medium text-wakti-navy">Meeting Language</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger className="h-11">
+                      <SelectTrigger className="h-12 bg-white border-wakti-navy/20">
                         <SelectValue placeholder="Select meeting language" />
                       </SelectTrigger>
                     </FormControl>
@@ -127,12 +124,12 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
                 name="sessionType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium">Session Type</FormLabel>
+                    <FormLabel className="text-base font-medium text-wakti-navy">Session Type</FormLabel>
                     <FormControl>
                       <Input 
                         placeholder="e.g., Staff meeting or English lecture" 
                         {...field}
-                        className="h-11"
+                        className="h-12 bg-white border-wakti-navy/20"
                       />
                     </FormControl>
                   </FormItem>
@@ -144,24 +141,24 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
                 name="location"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium">Location</FormLabel>
+                    <FormLabel className="text-base font-medium text-wakti-navy">Location</FormLabel>
                     <div className="flex gap-2">
                       <FormControl>
                         <Input 
                           placeholder="e.g., Oryx Tower, Doha College" 
                           {...field}
-                          className="h-11"
+                          className="h-12 bg-white border-wakti-navy/20"
                         />
                       </FormControl>
                       <Button 
                         type="button"
                         variant="outline"
                         size="icon"
-                        className="h-11 w-11 shrink-0"
+                        className="h-12 w-12 shrink-0 border-wakti-navy/20 hover:bg-wakti-navy/5"
                         onClick={handleGetCurrentLocation}
                         disabled={isGettingLocation}
                       >
-                        <MapPin className="h-4 w-4" />
+                        <MapPin className="h-5 w-5" />
                       </Button>
                     </div>
                   </FormItem>
@@ -173,12 +170,12 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
                 name="hostedBy"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium">Hosted By</FormLabel>
+                    <FormLabel className="text-base font-medium text-wakti-navy">Hosted By</FormLabel>
                     <FormControl>
                       <Input 
                         placeholder="e.g., Jabor Abdullah" 
                         {...field}
-                        className="h-11"
+                        className="h-12 bg-white border-wakti-navy/20"
                       />
                     </FormControl>
                   </FormItem>
@@ -190,12 +187,12 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
                 name="attendees"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium">Attendees</FormLabel>
+                    <FormLabel className="text-base font-medium text-wakti-navy">Attendees</FormLabel>
                     <FormControl>
                       <Textarea 
                         placeholder="e.g., John, Alanoud, Mozah, Hassan" 
                         {...field}
-                        className="min-h-[80px] resize-none"
+                        className="min-h-[80px] bg-white border-wakti-navy/20 resize-none"
                       />
                     </FormControl>
                   </FormItem>
@@ -207,12 +204,12 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
                 name="agenda"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium">Agenda</FormLabel>
+                    <FormLabel className="text-base font-medium text-wakti-navy">Agenda</FormLabel>
                     <FormControl>
                       <Textarea 
                         placeholder="e.g., Project deadline, Final exams" 
                         {...field}
-                        className="min-h-[80px] resize-none"
+                        className="min-h-[80px] bg-white border-wakti-navy/20 resize-none"
                       />
                     </FormControl>
                   </FormItem>
@@ -224,7 +221,7 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
               <Button 
                 type="submit" 
                 size="lg"
-                className="flex-1"
+                className="flex-1 bg-wakti-navy text-wakti-beige hover:bg-wakti-navy/90 h-12"
               >
                 Start Recording
               </Button>
@@ -233,7 +230,7 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
                 variant="outline"
                 size="lg"
                 onClick={onSkip}
-                className="flex-1"
+                className="flex-1 border-wakti-navy/20 text-wakti-navy hover:bg-wakti-navy/5 h-12"
               >
                 Skip
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -242,6 +239,6 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
           </form>
         </Form>
       </div>
-    </div>
+    </MeetingFormLayout>
   );
 };
