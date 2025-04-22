@@ -102,7 +102,18 @@ const DashboardHome: React.FC = () => {
         }
         
         if (data?.dashboard_layout) {
-          setLayout(JSON.parse(data.dashboard_layout));
+          let layoutData;
+          try {
+            if (typeof data.dashboard_layout === 'string') {
+              layoutData = JSON.parse(data.dashboard_layout);
+            } else {
+              layoutData = data.dashboard_layout;
+            }
+            setLayout(layoutData);
+          } catch (parseError) {
+            console.error('Failed to parse dashboard layout:', parseError);
+            setLayout(defaultLayout);
+          }
         }
         
         setIsLoading(false);
@@ -119,11 +130,13 @@ const DashboardHome: React.FC = () => {
     if (!userId) return;
     
     try {
+      const layoutString = JSON.stringify(newLayout);
+      
       const { error } = await supabase
         .from('user_preferences')
         .upsert({
           user_id: userId,
-          dashboard_layout: JSON.stringify(newLayout),
+          dashboard_layout: layoutString,
           updated_at: new Date().toISOString()
         })
         .select();
