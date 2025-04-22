@@ -3,34 +3,51 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 interface VoiceSettings {
+  // Voice capabilities
   autoSilenceDetection: boolean;
-  visualFeedback: boolean;
-  silenceThreshold: number;
-  maxRecordingDuration: number;
   toggleAutoSilenceDetection: () => void;
+  visualFeedback: boolean;
   toggleVisualFeedback: () => void;
-  setSilenceThreshold: (value: number) => void;
+  
+  // Language preferences
   language: string;
-  setLanguage: (lang: string) => void;
+  setLanguage: (language: string) => void;
+  
+  // Voice preferences
+  preferredVoice: {
+    english: string;
+    arabic: string;
+  };
+  setPreferredVoice: (language: 'english' | 'arabic', voice: string) => void;
 }
 
 export const useVoiceSettings = create<VoiceSettings>()(
   persist(
     (set) => ({
+      // Voice capabilities
       autoSilenceDetection: true,
+      toggleAutoSilenceDetection: () => set((state) => ({ autoSilenceDetection: !state.autoSilenceDetection })),
       visualFeedback: true,
-      silenceThreshold: -45,
-      maxRecordingDuration: 2100, // 35 minutes in seconds
-      language: 'en-US',
-      toggleAutoSilenceDetection: () =>
-        set((state) => ({ autoSilenceDetection: !state.autoSilenceDetection })),
-      toggleVisualFeedback: () =>
-        set((state) => ({ visualFeedback: !state.visualFeedback })),
-      setSilenceThreshold: (value: number) => set({ silenceThreshold: value }),
-      setLanguage: (lang: string) => set({ language: lang }),
+      toggleVisualFeedback: () => set((state) => ({ visualFeedback: !state.visualFeedback })),
+      
+      // Language preferences
+      language: 'en',
+      setLanguage: (language) => set({ language }),
+      
+      // Voice preferences
+      preferredVoice: {
+        english: 'John',
+        arabic: 'Hareth',
+      },
+      setPreferredVoice: (language, voice) => set((state) => ({
+        preferredVoice: {
+          ...state.preferredVoice,
+          [language]: voice,
+        },
+      })),
     }),
     {
-      name: 'voice-settings',
+      name: 'wakti-voice-settings',
     }
   )
 );

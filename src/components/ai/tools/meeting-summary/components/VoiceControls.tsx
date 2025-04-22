@@ -1,11 +1,12 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Volume2, Play, Pause, RefreshCcw, StopCircle } from 'lucide-react';
+import { Volume2, Play, Pause, RefreshCcw, StopCircle, Loader2 } from 'lucide-react';
 
 interface VoiceControlsProps {
   isPlaying: boolean;
   isPaused: boolean;
+  isLoading?: boolean;
   onPlay: () => void;
   onPause: () => void;
   onRestart: () => void;
@@ -15,6 +16,7 @@ interface VoiceControlsProps {
 export const VoiceControls: React.FC<VoiceControlsProps> = ({
   isPlaying,
   isPaused,
+  isLoading = false,
   onPlay,
   onPause,
   onRestart,
@@ -22,7 +24,7 @@ export const VoiceControls: React.FC<VoiceControlsProps> = ({
 }) => {
   return (
     <>
-      {!isPlaying && !isPaused && (
+      {!isPlaying && !isPaused && !isLoading && (
         <Button
           variant="outline"
           size="sm"
@@ -31,6 +33,18 @@ export const VoiceControls: React.FC<VoiceControlsProps> = ({
         >
           <Volume2 className="h-4 w-4" />
           <span>Play Summary</span>
+        </Button>
+      )}
+
+      {isLoading && (
+        <Button
+          variant="outline"
+          size="sm"
+          disabled
+          className="flex items-center gap-1"
+        >
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <span>Loading Audio...</span>
         </Button>
       )}
 

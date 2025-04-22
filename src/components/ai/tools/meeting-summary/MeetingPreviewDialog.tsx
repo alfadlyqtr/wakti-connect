@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -46,6 +47,7 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [selectedVoice, setSelectedVoice] = useState<string>('John');
   const [locationName, setLocationName] = useState<string | null>(null);
 
@@ -99,11 +101,14 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
         return;
       }
 
+      setIsLoading(true);
       stopCurrentAudio();
 
       // Get voice settings based on text content
       const { language, voice } = getVoiceSettings(meeting.summary);
 
+      toast.info(`Playing summary with ${voice} voice`);
+      
       const audio = await playTextWithVoiceRSS({
         text: meeting.summary,
         language,
@@ -112,6 +117,7 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
 
       setIsPlaying(true);
       setIsPaused(false);
+      setIsLoading(false);
 
       audio.onended = () => {
         setIsPlaying(false);
@@ -123,6 +129,7 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
       toast.error('Failed to play summary. Please try again.');
       setIsPlaying(false);
       setIsPaused(false);
+      setIsLoading(false);
     }
   };
 
@@ -169,6 +176,7 @@ const MeetingPreviewDialog: React.FC<MeetingPreviewDialogProps> = ({
             <VoiceControls
               isPlaying={isPlaying}
               isPaused={isPaused}
+              isLoading={isLoading}
               onPlay={handlePlaySummary}
               onPause={handlePauseSummary}
               onRestart={handleRestartSummary}
