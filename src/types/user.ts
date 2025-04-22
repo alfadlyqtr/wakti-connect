@@ -1,5 +1,4 @@
-
-export type UserRole = 'free' | 'individual' | 'business' | 'staff' | 'super-admin';
+export type UserRole = 'individual' | 'business' | 'staff' | 'super-admin';
 
 /**
  * Checks if a user role has access to a feature based on allowed roles
@@ -13,7 +12,7 @@ export function hasRoleAccess(userRole: UserRole, allowedRoles: UserRole[]): boo
 
 /**
  * Determines the effective user role with proper prioritization
- * Super-admin > Business > Staff > Individual > Free
+ * Super-admin > Business > Staff > Individual
  * @param accountType The account type from the profile
  * @param isStaff Whether the user is a staff member
  * @param isSuperAdmin Whether the user is a super admin
@@ -33,6 +32,6 @@ export function getEffectiveRole(
   // If user is staff (but not a business owner), that's next priority
   if (isStaff) return 'staff';
   
-  // Otherwise, use their account type or default to free
-  return (accountType as UserRole) || 'free';
+  // Otherwise, they are an individual user
+  return 'individual';
 }

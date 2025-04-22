@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDashboardUserProfile } from "@/hooks/useDashboardUserProfile";
@@ -102,10 +101,10 @@ const DashboardHome: React.FC = () => {
           <div className="col-span-1 md:col-span-2 lg:col-span-1">
             <BusinessAnalyticsPreview 
               profileData={{
-                account_type: (profileData.account_type === 'business' || profileData.account_type === 'super-admin') 
+                account_type: (userRole === 'business' || userRole === 'super-admin') 
                   ? 'business' 
                   : 'individual',
-                business_name: 'business_name' in profileData ? profileData.business_name as string : undefined
+                business_name: profileData.business_name || undefined
               }} 
             />
           </div>
