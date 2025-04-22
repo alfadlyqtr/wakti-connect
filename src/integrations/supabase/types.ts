@@ -1209,66 +1209,6 @@ export type Database = {
         }
         Relationships: []
       }
-      feature_lock_audits: {
-        Row: {
-          action: string
-          created_at: string
-          feature_name: string
-          id: string
-          ip_address: string | null
-          success: boolean
-          user_id: string | null
-        }
-        Insert: {
-          action: string
-          created_at?: string
-          feature_name: string
-          id?: string
-          ip_address?: string | null
-          success: boolean
-          user_id?: string | null
-        }
-        Update: {
-          action?: string
-          created_at?: string
-          feature_name?: string
-          id?: string
-          ip_address?: string | null
-          success?: boolean
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      feature_locks: {
-        Row: {
-          created_at: string
-          feature_name: string
-          id: string
-          locked_at: string | null
-          locked_by: string | null
-          status: Database["public"]["Enums"]["feature_lock_status"]
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          feature_name: string
-          id?: string
-          locked_at?: string | null
-          locked_by?: string | null
-          status?: Database["public"]["Enums"]["feature_lock_status"]
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          feature_name?: string
-          id?: string
-          locked_at?: string | null
-          locked_by?: string | null
-          status?: Database["public"]["Enums"]["feature_lock_status"]
-          updated_at?: string
-        }
-        Relationships: []
-      }
       job_cards: {
         Row: {
           created_at: string
@@ -1355,27 +1295,6 @@ export type Database = {
           duration?: number | null
           id?: string
           name?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      master_lock_password: {
-        Row: {
-          created_at: string
-          id: string
-          password_hash: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          password_hash: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          password_hash?: string
           updated_at?: string
         }
         Relationships: []
@@ -2174,10 +2093,6 @@ export type Database = {
         Args: { business_id_param: string }
         Returns: boolean
       }
-      is_feature_locked: {
-        Args: { feature_name_param: string }
-        Returns: boolean
-      }
       is_own_staff_record: {
         Args: { record_id: string }
         Returns: boolean
@@ -2196,10 +2111,6 @@ export type Database = {
       }
       is_super_admin: {
         Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      lock_feature: {
-        Args: { feature_name_param: string; password_attempt: string }
         Returns: boolean
       }
       mark_booking_no_show: {
@@ -2238,10 +2149,6 @@ export type Database = {
         Args: { todo_item_id: string }
         Returns: boolean
       }
-      unlock_feature: {
-        Args: { feature_name_param: string; password_attempt: string }
-        Returns: boolean
-      }
       update_existing_staff_contacts: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -2252,10 +2159,6 @@ export type Database = {
       }
       user_owns_staff: {
         Args: { staff_id: string }
-        Returns: boolean
-      }
-      validate_master_password: {
-        Args: { password_attempt: string }
         Returns: boolean
       }
       validate_user_role: {
@@ -2280,7 +2183,6 @@ export type Database = {
         | "no_show"
         | "in_progress"
       event_status: "draft" | "sent" | "accepted" | "declined" | "recalled"
-      feature_lock_status: "locked" | "unlocked"
       invitation_status: "pending" | "accepted" | "declined"
       reminder_repeat_type: "none" | "daily" | "weekly"
     }
@@ -2416,7 +2318,6 @@ export const Constants = {
         "in_progress",
       ],
       event_status: ["draft", "sent", "accepted", "declined", "recalled"],
-      feature_lock_status: ["locked", "unlocked"],
       invitation_status: ["pending", "accepted", "declined"],
       reminder_repeat_type: ["none", "daily", "weekly"],
     },
