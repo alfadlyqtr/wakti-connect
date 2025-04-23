@@ -1,6 +1,7 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Task, TaskFormData } from '@/types/task.types';
+import { Task, TaskFormData, TaskStatus, TaskPriority } from '@/types/task.types';
 import { toast } from "@/components/ui/use-toast";
 import { UseTaskOperationsReturn } from './types';
 
@@ -154,7 +155,7 @@ export function useTaskOperations(
     }
   };
 
-  // Archive a task instead of deleting it
+  // Delete a task permanently
   const deleteTask = async (taskId: string): Promise<void> => {
     setIsProcessing(true);
     try {
