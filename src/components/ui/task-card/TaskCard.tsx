@@ -70,7 +70,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   const isPaidAccount = userRole === "individual" || userRole === "business";
   const isCompleted = status === "completed";
   const isOverdue = !isCompleted && 
-    status !== "completed" && 
+    (status !== "completed") && 
     status !== "snoozed" &&
     status !== "archived" &&
     isPast(dueDate) &&
@@ -95,9 +95,9 @@ const TaskCard: React.FC<TaskCardProps> = ({
     }
   };
 
-  const handleSubtaskToggle = (subtaskIndex: number, isCompleted: boolean) => {
+  const handleSubtaskToggle = async (subtaskIndex: number, isCompleted: boolean) => {
     if (onSubtaskToggle) {
-      onSubtaskToggle(id, subtaskIndex, isCompleted);
+      await onSubtaskToggle(id, subtaskIndex, isCompleted);
     }
   };
 
