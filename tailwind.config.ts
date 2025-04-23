@@ -47,34 +47,30 @@ const config = {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
         },
-        accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
         },
         muted: {
           DEFAULT: "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",
         },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        /* Pastel and artful custom colors extracted from src/index.css */
-        "light-pink": "#FFECF5",
-        "light-purple": "#EEEAFE",
-        "light-blue": "#EAF1FE",
-        "off-white": "#F5F7FA",
-        "dark-purple": "#2e204b",
-        "deep-blue": "#263145",
-        "sidebar-dark": "#231935"
-      },
-      backgroundImage: {
-        "dash-gradient": "linear-gradient(120deg, #FFECF5 0%, #EAF1FE 100%)",
-        "dash-gradient-dark": "linear-gradient(120deg, #2e204b 0%, #2d3753 100%)",
-        "card-gradient-light": "linear-gradient(135deg, #FFECF5 0%, #EEEAFE 50%, #E9F3FE 100%)",
-        "card-gradient-dark": "linear-gradient(135deg, #2e204b 0%, #462d58 45%, #263145 100%)",
-        "sidebar-gradient-light": "linear-gradient(120deg, #FDEFFC 40%, #EAF1FE 100%)",
-        "sidebar-gradient-dark": "linear-gradient(120deg, #231935 40%, #2d3753 100%)"
+        "wakti-blue": "#0053c3",
+        "wakti-gold": "#ffc529",
+        "wakti-navy": "#000080",
+        "wakti-beige": "#F5E6D3",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -108,5 +104,6 @@ const config = {
     },
   },
   plugins: [tailwindcssAnimate, headlessui],
-}
+} satisfies Config;
+
 export default config;

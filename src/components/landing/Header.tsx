@@ -1,111 +1,135 @@
 
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Moon, Sun, User, Menu } from "lucide-react";
+import { Moon, Sun, User, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/use-theme";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import LanguageSwitcher from "@/components/ui/language-switcher";
 
-const NAV_LINKS = [
-  { path: "/features", label: "Features" },
-  { path: "/pricing", label: "Pricing" },
-  { path: "/contact", label: "Contact" },
-];
-
 const Header = () => {
   const { theme, setTheme } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const isMobile = useMediaQuery("(max-width: 768px)");
-
-  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
-
+  
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+  
   return (
-    <header className="sticky top-0 z-50 bg-white bg-opacity-90 backdrop-blur-lg border-b border-gray-200 shadow-sm">
-      <nav className="container mx-auto px-4 py-4 flex items-center justify-between">
-        {/* Logo and Name */}
-        <Link to="/" className="flex items-center gap-2">
-          <img
-            src="/lovable-uploads/9b7d0693-89eb-4cc5-b90b-7834bfabda0e.png"
-            alt="WAKTI"
-            className="w-9 h-9 rounded-md object-cover"
-          />
-          <span className="font-bold text-2xl text-[#0A1172]">WAKTI</span>
-        </Link>
-        {/* Desktop Nav */}
-        <div className="hidden md:flex gap-6 items-center">
-          {NAV_LINKS.map(link => (
-            <Link
-              key={link.path}
-              to={link.path}
-              className="text-base font-medium text-[#0A1172] hover:text-blue-600 transition-colors"
-            >
-              {link.label}
-            </Link>
-          ))}
+    <header className="bg-white backdrop-blur-md border-b border-wakti-navy/20 sticky top-0 z-50">
+      <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2">
+            <img 
+              src="/lovable-uploads/9b7d0693-89eb-4cc5-b90b-7834bfabda0e.png" 
+              alt="WAKTI" 
+              className="w-10 h-10 rounded-md object-cover"
+            />
+            <span className="font-bold text-xl text-wakti-navy">WAKTI</span>
+          </Link>
+        </div>
+        
+        {/* Desktop navigation */}
+        <div className="hidden md:flex items-center space-x-4">
+          <Link to="/pricing" className="text-sm font-medium text-wakti-navy hover:text-wakti-navy/80 transition-colors">
+            Pricing
+          </Link>
+          <Link to="/features" className="text-sm font-medium text-wakti-navy hover:text-wakti-navy/80 transition-colors">
+            Features
+          </Link>
+          <Link to="/contact" className="text-sm font-medium text-wakti-navy hover:text-wakti-navy/80 transition-colors">
+            Contact
+          </Link>
           <LanguageSwitcher />
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="ml-2"
-            aria-label="Toggle theme"
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")} 
+            className="text-wakti-navy hover:text-wakti-navy/80"
           >
-            {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            {theme === "dark" ? <Sun className="h-[1.2rem] w-[1.2rem]" /> : <Moon className="h-[1.2rem] w-[1.2rem]" />}
           </Button>
-          <Button
-            asChild
-            size="sm"
-            className="ml-1 bg-[#0A1172] text-white hover:bg-[#232D4B]"
-          >
-            <Link to="/auth/login">
-              <User className="h-4 w-4 mr-1" />
-              Sign In / Register
-            </Link>
+          <Button asChild size="sm" className="bg-wakti-navy text-white hover:bg-wakti-navy/90">
+            <Link to="/auth/login">Sign In / Create Account</Link>
           </Button>
         </div>
-        {/* Mobile Menu Button */}
+        
+        {/* Mobile navigation button */}
         <div className="md:hidden flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            aria-label="Toggle theme"
+          <LanguageSwitcher />
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")} 
+            aria-label={theme === "dark" ? "Light Mode" : "Dark Mode"} 
+            title={theme === "dark" ? "Light Mode" : "Dark Mode"} 
+            className="text-wakti-navy hover:text-wakti-navy/80"
           >
-            {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            {theme === "dark" ? <Sun className="h-[1.2rem] w-[1.2rem]" /> : <Moon className="h-[1.2rem] w-[1.2rem]" />}
           </Button>
+          {/* Beige box with navy highlighted "Menu" text, navy border */}
           <button
-            className="p-2 border border-[#0A1172] rounded-md bg-[#E8DCC4] text-[#0A1172] font-semibold flex items-center gap-2"
+            className={`flex items-center gap-1 px-4 py-2 rounded-md border-2 border-wakti-navy bg-wakti-beige text-wakti-navy ${
+              isMenuOpen ? "ring-2 ring-wakti-navy" : ""
+            }`}
+            style={{ fontWeight: 600 }}
             onClick={toggleMenu}
-            aria-label="Toggle menu"
           >
-            <Menu className="h-5 w-5" />
             <span>Menu</span>
+            {isMenuOpen ? 
+              <ChevronUp className="h-4 w-4" /> : 
+              <ChevronDown className="h-4 w-4" />
+            }
           </button>
         </div>
-      </nav>
-      {/* Mobile Dropdown */}
+      </div>
+      
+      {/* Mobile menu dropdown */}
       {isMobile && isMenuOpen && (
-        <div className="md:hidden absolute left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-[60] animate-fade-in">
-          <div className="container mx-auto px-4 py-3 flex flex-col gap-2">
-            {NAV_LINKS.map(link => (
-              <Link
-                key={link.path}
-                to={link.path}
-                className="py-2 text-[#0A1172] text-base font-semibold rounded-md hover:bg-[#E8DCC4]/70 transition"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {link.label}
-              </Link>
-            ))}
-            <Link
-              to="/auth/login"
-              className="py-2 flex items-center gap-2 text-[#0A1172] font-semibold rounded-md hover:bg-[#E8DCC4]/70 transition"
+        <div className="md:hidden bg-wakti-beige border-t border-wakti-navy/20 animate-fade-in z-[60] shadow-lg">
+          <div className="container py-3 flex flex-col space-y-3">
+            <Link 
+              to="/pricing" 
+              className="flex items-center px-4 py-3 rounded-md transition-colors text-wakti-navy hover:bg-wakti-navy/10 font-semibold"
               onClick={() => setIsMenuOpen(false)}
+              style={{ background: "transparent" }}
             >
-              <User className="h-4 w-4" />
-              Sign In / Register
+              <span>Pricing</span>
             </Link>
+            <Link 
+              to="/features" 
+              className="flex items-center px-4 py-3 rounded-md transition-colors text-wakti-navy hover:bg-wakti-navy/10 font-semibold"
+              onClick={() => setIsMenuOpen(false)}
+              style={{ background: "transparent" }}
+            >
+              <span>Features</span>
+            </Link>
+            <Link 
+              to="/contact" 
+              className="flex items-center px-4 py-3 rounded-md transition-colors text-wakti-navy hover:bg-wakti-navy/10 font-semibold"
+              onClick={() => setIsMenuOpen(false)}
+              style={{ background: "transparent" }}
+            >
+              <span>Contact</span>
+            </Link>
+            <Link 
+              to="/auth/login" 
+              className="flex items-center px-4 py-3 rounded-md transition-colors text-wakti-navy hover:bg-wakti-navy/10 font-semibold"
+              onClick={() => setIsMenuOpen(false)}
+              style={{ background: "transparent" }}
+            >
+              <User className="h-4 w-4 mr-2 text-wakti-navy" />
+              <span>Sign In / Create Account</span>
+            </Link>
+            <div className="pt-2 px-4">
+              <Button asChild size="sm" className="w-full bg-wakti-navy text-white hover:bg-wakti-navy/90">
+                <Link 
+                  to="/auth/login"
+                  onClick={() => setIsMenuOpen(false)}
+                >Sign In / Create Account</Link>
+              </Button>
+            </div>
           </div>
         </div>
       )}
@@ -114,3 +138,4 @@ const Header = () => {
 };
 
 export default Header;
+

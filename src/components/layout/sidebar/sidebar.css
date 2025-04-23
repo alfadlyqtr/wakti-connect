@@ -7,9 +7,10 @@
 }
 
 .sidebar-item.active {
-  /* Removed blue highlight for dashboard page */
-  /* No background or text color changes for .active */
-  @apply font-bold;
+  @apply bg-wakti-blue text-white shadow-sm;
+  @apply relative after:absolute after:inset-0 after:rounded-md after:shadow-sm 
+         after:bg-gradient-to-br after:from-wakti-blue/50 after:to-transparent 
+         after:opacity-100;
   transform: translateZ(0);
 }
 
@@ -18,8 +19,7 @@
 }
 
 .sidebar-item.active svg {
-  /* No color change */
-  @apply text-muted-foreground;
+  @apply text-white;
 }
 
 /* Mobile sidebar open/closed classes */
@@ -61,4 +61,3 @@
     @apply translate-x-0;
   }
 }
-
