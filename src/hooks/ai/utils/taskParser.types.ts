@@ -5,7 +5,7 @@ export interface ParsedTaskInfo {
   title: string;
   description?: string;
   priority: TaskPriority;
-  subtasks: (SubTask | NestedSubtask | string)[];  // Add string type to support both types
+  subtasks: (SubTask | NestedSubtask | string)[];
   due_date?: string | Date | null;
   dueTime?: string | null;
   location?: string | null;

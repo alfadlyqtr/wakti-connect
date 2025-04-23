@@ -1,23 +1,16 @@
 
 import { supabase } from "@/lib/supabase";
 import { toast } from "@/components/ui/use-toast";
-import { SubTask } from "@/types/task.types";
+import { SubTask, NestedSubtask } from "@/types/task.types";
 import { v4 as uuidv4 } from "uuid";
 import { mapNestedStructureToFlatSubtasks } from "./subtaskStructureUtils";
-
-export interface NestedSubtask {
-  title?: string;
-  content?: string;
-  subtasks?: (NestedSubtask | string)[];
-  is_completed?: boolean;
-}
 
 export interface ParsedTask {
   title: string;
   due_date: string | null;
   due_time: string | null;
   priority: 'urgent' | 'high' | 'medium' | 'normal';
-  subtasks: (string | NestedSubtask)[]; // Support both flat and nested structures
+  subtasks: (string | NestedSubtask)[]; // Use the NestedSubtask from types
   location: string | null;
 }
 
@@ -123,7 +116,7 @@ export const convertNestedSubtasksToSubTasks = (
       const subtask: SubTask = {
         id: tempId,
         task_id: 'pending',
-        content: title,
+        content: item.content,
         title: title, // Store title separately for clarity
         is_completed: item.is_completed || false,
         is_group: isGroup,

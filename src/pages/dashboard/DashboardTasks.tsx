@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import TaskControls from "@/components/tasks/TaskControls";
 import TasksLoading from "@/components/tasks/TasksLoading";
@@ -11,7 +12,7 @@ import { Archive } from "lucide-react";
 import { Navigate } from "react-router-dom";
 import { UserRole } from "@/types/user";
 import TasksContainer from "@/components/tasks/TasksContainer";
-import { TaskTab } from "@/types/task.types";
+import { TaskTab, Task, TaskFormData } from "@/types/task.types";
 import RemindersContainer from "@/components/reminders/RemindersContainer";
 import { useReminders } from "@/hooks/useReminders";
 

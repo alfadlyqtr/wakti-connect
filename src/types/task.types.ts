@@ -74,7 +74,7 @@ export interface TaskFormData {
   
   // Fields for AI components
   preserveNestedStructure?: boolean;
-  originalSubtasks?: SubTask[];
+  originalSubtasks?: (SubTask | NestedSubtask | string)[];
   
   // Fields needed for task management
   snooze_count?: number;

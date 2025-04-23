@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Task } from "@/types/task.types";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -102,7 +103,7 @@ export function TaskGrid({
       );
     }
     
-    // Fix the comparison by checking current task status isn't 'completed'
+    // Fix the comparison by checking current task status against string literal, not type
     if (task.due_date && isPast(new Date(task.due_date)) && task.status !== "completed") {
       return (
         <Badge className="bg-red-500/10 text-red-600 border-red-600/20 rounded-md" variant="outline">
@@ -310,6 +311,36 @@ const renderSnoozedUntil = (task: Task): React.ReactNode => {
     );
   }
   return null;
+};
+
+const renderTaskBadges = (task: Task): React.ReactNode => {
+  const badges = [];
+  
+  // Special features badges
+  if (task?.isRecurring || task?.is_recurring) {
+    badges.push(
+      <Badge key="recurring" className="bg-indigo-500/10 text-indigo-600 border-indigo-600/20 rounded-md" variant="outline">
+        Recurring
+      </Badge>
+    );
+  }
+  
+  if (task?.is_recurring_instance) {
+    badges.push(
+      <Badge key="instance" className="bg-violet-500/10 text-violet-600 border-violet-600/20 rounded-md" variant="outline">
+        Instance
+      </Badge>
+    );
+  }
+  
+  // Only show if we have badges
+  if (badges.length === 0) return null;
+  
+  return (
+    <div className="flex flex-wrap gap-2 mt-2">
+      {badges}
+    </div>
+  );
 };
 
 // Export both as named export and default export for compatibility
