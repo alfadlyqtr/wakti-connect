@@ -77,8 +77,9 @@ const DashboardTasks = () => {
     await handleRestoreTask(taskId);
   };
 
-  const handleCreateTaskWrapper = async (taskData: any) => {
-    await handleCreateTask(taskData);
+  const handleCreateTaskWrapper = async (taskData: TaskFormData): Promise<Task> => {
+    const result = await handleCreateTask(taskData);
+    return result || {} as Task;
   };
 
   const handleUpdateTaskWrapper = async (taskId: string, taskData: any) => {

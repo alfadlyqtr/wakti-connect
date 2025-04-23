@@ -21,7 +21,7 @@ export async function createTask(taskData: TaskFormData, recurringData?: Recurri
   // Create a clean task data object, removing properties that don't belong in the tasks table
   const cleanTaskData = sanitizeTaskData(taskData);
   
-  // Add the is_recurring flag from recurring data
+  // Add the isRecurring flag from recurring data
   if (recurringData) {
     cleanTaskData.isRecurring = true;
   }

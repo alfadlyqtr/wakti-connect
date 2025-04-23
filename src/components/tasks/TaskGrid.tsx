@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Task } from "@/types/task.types";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -103,6 +102,7 @@ export function TaskGrid({
       );
     }
     
+    // Fix the comparison by checking current task status isn't 'completed'
     if (task.due_date && isPast(new Date(task.due_date)) && task.status !== "completed") {
       return (
         <Badge className="bg-red-500/10 text-red-600 border-red-600/20 rounded-md" variant="outline">

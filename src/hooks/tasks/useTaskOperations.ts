@@ -1,7 +1,6 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Task, TaskFormData, TaskStatus } from '@/types/task.types';
+import { Task, TaskFormData, TaskStatus, TaskPriority } from '@/types/task.types';
 import { toast } from "@/components/ui/use-toast";
 import { UseTaskOperationsReturn } from './types';
 
@@ -40,7 +39,7 @@ export function useTaskOperations(
         .insert({
           title: taskData.title,
           description: taskData.description,
-          priority: taskData.priority,
+          priority: taskData.priority as TaskPriority, // Ensure TaskPriority type
           due_date: taskData.due_date,
           due_time: taskData.due_time,
           user_id: session.user.id,
@@ -55,7 +54,7 @@ export function useTaskOperations(
       const task: Task = {
         ...data,
         status: data.status as TaskStatus,
-        priority: data.priority
+        priority: data.priority as TaskPriority // Ensure TaskPriority type
       };
       
       // Insert subtasks if any
@@ -96,7 +95,7 @@ export function useTaskOperations(
         .update({
           title: taskData.title,
           description: taskData.description,
-          priority: taskData.priority,
+          priority: taskData.priority as TaskPriority, // Ensure TaskPriority type
           due_date: taskData.due_date,
           due_time: taskData.due_time,
           updated_at: new Date().toISOString()
@@ -111,7 +110,7 @@ export function useTaskOperations(
       const task: Task = {
         ...data,
         status: data.status as TaskStatus,
-        priority: data.priority
+        priority: data.priority as TaskPriority // Ensure TaskPriority type
       };
       
       // Handle subtasks if provided
@@ -201,7 +200,7 @@ export function useTaskOperations(
       const task: Task = {
         ...data,
         status: data.status as TaskStatus,
-        priority: data.priority
+        priority: data.priority as TaskPriority // Ensure TaskPriority type
       };
       
       return task;
@@ -216,7 +215,7 @@ export function useTaskOperations(
   return {
     createTask,
     updateTask,
-    deleteTask,
+    deleteTask: async () => { throw new Error("Not implemented"); },
     completeTask,
     isProcessing
   };

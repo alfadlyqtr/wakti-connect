@@ -27,7 +27,7 @@ export interface NestedSubtask {
   content: string;
   title?: string;
   is_completed?: boolean;
-  subtasks?: NestedSubtask[];
+  subtasks?: (string | NestedSubtask)[];
 }
 
 // Main task interface

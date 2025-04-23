@@ -12,10 +12,10 @@ const SubtaskSchema = z.object({
   is_group: z.boolean().optional(),
 });
 
-// Define the recurring settings schema
+// Define the recurring settings schema - making fields required
 const RecurringSchema = z.object({
-  frequency: z.enum(["daily", "weekly", "monthly"]).default("weekly"),
-  interval: z.number().int().positive().default(1)
+  frequency: z.enum(["daily", "weekly", "monthly"]),
+  interval: z.number().int().positive()
 });
 
 // Define the main form schema
@@ -35,7 +35,7 @@ export const taskFormSchema = z.object({
   // Subtasks
   subtasks: z.array(SubtaskSchema).default([]),
   
-  // Recurring task settings
+  // Recurring task settings - now optional at the top level
   recurring: RecurringSchema.optional(),
   
   // Fields for AI components

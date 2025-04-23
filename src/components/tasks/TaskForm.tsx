@@ -1,159 +1,97 @@
 
 import React from "react";
+import { Form } from "@/components/ui/form";
+import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { taskFormSchema, TaskFormValues } from "./TaskFormSchema";
-import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { format } from "date-fns";
-import { SubtasksList } from "./SubtasksList";
-import { Loader2 } from "lucide-react";
+import TaskFormFields from "./form-fields/TaskFormFields";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RecurringTab } from "./tabs/RecurringTab";
+import { Task } from "@/types/task.types";
 
-interface TaskFormProps {
-  onSubmit: (data: TaskFormValues) => Promise<void>;
+export interface TaskFormProps {
+  onSubmit: (values: TaskFormValues) => Promise<void>;
   defaultValues?: Partial<TaskFormValues>;
-  isSubmitting?: boolean;
-  submitLabel?: string;
+  isCreate?: boolean;
+  task?: Task;
+  isPaidUser: boolean; // Add this prop to match usage in CreateTaskDialog
 }
 
-export function TaskForm({
+export const TaskForm: React.FC<TaskFormProps> = ({
   onSubmit,
   defaultValues,
-  isSubmitting = false,
-  submitLabel = "Create Task"
-}: TaskFormProps) {
+  isCreate = false,
+  task,
+  isPaidUser = false
+}) => {
+  const [activeTab, setActiveTab] = React.useState("basic");
+  
+  // Initialize the form with default values
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: {
       title: "",
       description: "",
       priority: "normal",
-      due_date: format(new Date(), "yyyy-MM-dd"),
+      due_date: new Date().toISOString().split("T")[0],
       due_time: "",
       subtasks: [],
+      enableSubtasks: false,
+      isRecurring: false,
+      recurring: {
+        frequency: "weekly",
+        interval: 1
+      },
       ...defaultValues
     }
   });
+  
+  // Watch isRecurring field to conditionally show recurring tab
+  const isRecurring = form.watch("isRecurring");
 
-  const handleSubmit = async (data: TaskFormValues) => {
+  // Handle form submission
+  const handleSubmit = async (values: TaskFormValues) => {
     try {
-      await onSubmit(data);
-      if (!defaultValues) {
-        form.reset();
+      await onSubmit(values);
+      if (isCreate) {
+        form.reset(); // Reset the form after successful creation
       }
     } catch (error) {
-      console.error("Error submitting task:", error);
+      console.error("Error submitting form:", error);
     }
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="title"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Task Title</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter task title" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Textarea 
-                  placeholder="Enter task description"
-                  className="min-h-[100px]"
-                  {...field}
-                  value={field.value || ""}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <FormField
-            control={form.control}
-            name="priority"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Priority</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select priority" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="normal">Normal</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                    <SelectItem value="urgent">Urgent</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="due_date"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Due Date</FormLabel>
-                <FormControl>
-                  <Input type="date" {...field} value={field.value || ""} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="due_time"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Due Time</FormLabel>
-                <FormControl>
-                  <Input type="time" {...field} value={field.value || ""} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <SubtasksList form={form} />
-
-        <div className="flex justify-end pt-4">
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {submitLabel}
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="basic">Basic Info</TabsTrigger>
+            <TabsTrigger value="recurring" disabled={!isPaidUser}>
+              Recurring
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="basic" className="space-y-4 pt-4">
+            <TaskFormFields form={form} />
+          </TabsContent>
+          
+          <TabsContent value="recurring">
+            <RecurringTab 
+              form={form} 
+              isPaidAccount={isPaidUser} 
+              isRecurring={isRecurring} 
+            />
+          </TabsContent>
+        </Tabs>
+        
+        <div className="flex justify-end">
+          <Button type="submit">
+            {isCreate ? "Create Task" : "Update Task"}
           </Button>
         </div>
       </form>
     </Form>
   );
-}
+};

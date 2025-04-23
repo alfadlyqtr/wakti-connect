@@ -33,6 +33,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
           priority: values.priority,
           due_date: values.due_date,
           due_time: values.due_time || null,
+          location: values.location || null,
           subtasks: values.subtasks.map(subtask => ({
             content: subtask.content,
             is_completed: subtask.is_completed || false,
@@ -41,10 +42,13 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
           }))
         };
         
-        // Add recurring data if enabled
+        // Add recurring data if enabled and properly configured
         if (values.isRecurring && values.recurring) {
           taskData.isRecurring = true;
-          taskData.recurring = values.recurring;
+          taskData.recurring = {
+            frequency: values.recurring.frequency,
+            interval: values.recurring.interval
+          };
         }
         
         // Call the onCreateTask callback
@@ -64,7 +68,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
         </DialogHeader>
         <TaskForm 
           onSubmit={handleSubmit}
-          isPaidAccount={userRole !== "free"}
+          isPaidUser={userRole !== "free"}
           isCreate={true}
         />
       </DialogContent>

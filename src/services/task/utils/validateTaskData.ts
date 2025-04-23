@@ -13,7 +13,8 @@ export function sanitizeTaskData(taskData: TaskFormData): Partial<TaskFormData> 
     status: validateTaskStatus(taskData.status),
     priority: taskData.priority || "normal",
     due_date: taskData.due_date,
-    due_time: taskData.due_time
+    due_time: taskData.due_time,
+    location: taskData.location
   };
   
   // Add optional fields when present in the input
