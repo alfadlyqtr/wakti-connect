@@ -1,9 +1,10 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import { useTaskQueries } from './useTaskQueries';
-import { TaskTab } from '@/types/task.types';
+import { TaskTab, Task, TaskFormData, TaskStatus } from '@/types/task.types';
 import { TaskStatusFilter, TaskPriorityFilter } from '@/components/tasks/types';
 import { UserRole } from '@/types/user';
 
@@ -93,7 +94,7 @@ export const useTasksPageState = () => {
     return matchesSearch && matchesStatus && matchesPriority;
   });
   
-  const handleCreateTask = async (taskData: any) => {
+  const handleCreateTask = async (taskData: TaskFormData): Promise<Task> => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('You must be logged in to create tasks');
@@ -105,6 +106,7 @@ export const useTasksPageState = () => {
           user_id: session.user.id,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
+          status: taskData.status || 'pending' as TaskStatus
         })
         .select()
         .single();
@@ -120,7 +122,7 @@ export const useTasksPageState = () => {
       
       setCreateTaskDialogOpen(false);
       
-      return data;
+      return data as Task;
     } catch (err) {
       console.error('Error creating task:', err);
       toast({
@@ -128,21 +130,19 @@ export const useTasksPageState = () => {
         title: 'Failed to create task',
         description: err instanceof Error ? err.message : 'An unknown error occurred',
       });
-      return null;
+      throw err;
     }
   };
   
-  const handleUpdateTask = async (taskId: string, taskData: any) => {
+  const handleUpdateTask = async (taskId: string, taskData: any): Promise<void> => {
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('tasks')
         .update({
           ...taskData,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', taskId)
-        .select()
-        .single();
+        .eq('id', taskId);
       
       if (error) throw new Error(error.message);
       
@@ -153,8 +153,6 @@ export const useTasksPageState = () => {
       
       refetchTasks();
       setEditTaskDialogOpen(false);
-      
-      return data;
     } catch (err) {
       console.error('Error updating task:', err);
       toast({
@@ -162,11 +160,11 @@ export const useTasksPageState = () => {
         title: 'Failed to update task',
         description: err instanceof Error ? err.message : 'An unknown error occurred',
       });
-      return null;
+      throw err;
     }
   };
   
-  const deleteTask = async (taskId: string) => {
+  const deleteTask = async (taskId: string): Promise<boolean> => {
     try {
       const { error } = await supabase
         .from('tasks')

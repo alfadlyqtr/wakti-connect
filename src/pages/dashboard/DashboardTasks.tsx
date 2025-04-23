@@ -117,7 +117,9 @@ const DashboardTasks = () => {
       <CreateTaskDialog
         open={createTaskDialogOpen}
         onOpenChange={setCreateTaskDialogOpen}
-        onCreateTask={handleCreateTask}
+        onCreateTask={(taskData: TaskFormData): Promise<Task> => {
+          return handleCreateTask(taskData) as Promise<Task>;
+        }}
         userRole={displayRole as "individual" | "business" | "staff"}
       />
       
@@ -125,7 +127,9 @@ const DashboardTasks = () => {
         open={editTaskDialogOpen}
         onOpenChange={setEditTaskDialogOpen}
         task={currentEditTask}
-        onUpdateTask={handleUpdateTask}
+        onUpdateTask={(taskId: string, taskData: any): Promise<void> => {
+          return handleUpdateTask(taskId, taskData).then(() => {});
+        }}
       />
     </div>
   );
