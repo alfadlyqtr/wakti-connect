@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Reminder, ReminderFormData, ReminderNotification } from "@/types/reminder.types";
 
@@ -20,26 +19,23 @@ export async function fetchReminders(): Promise<Reminder[]> {
 
 export async function createReminder(reminderData: ReminderFormData): Promise<Reminder> {
   try {
-    // Get the current authenticated user
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session) {
       throw new Error("You must be logged in to create reminders");
     }
     
-    // Ensure reminder_time is properly formatted as ISO string
-    const reminder_time = reminderData.reminder_time instanceof Date 
+    // Convert the Date object to ISO string, preserving timezone information
+    const reminderTime = reminderData.reminder_time instanceof Date 
       ? reminderData.reminder_time.toISOString()
       : new Date(reminderData.reminder_time).toISOString();
     
     const newReminder = {
       user_id: session.user.id,
       message: reminderData.message,
-      reminder_time: reminder_time,
+      reminder_time: reminderTime,
       repeat_type: reminderData.repeat_type
     };
-    
-    console.log("Creating reminder with data:", newReminder);
     
     const { data, error } = await supabase
       .from('reminders')

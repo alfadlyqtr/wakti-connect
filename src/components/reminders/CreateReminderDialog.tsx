@@ -43,21 +43,21 @@ export const CreateReminderDialog: React.FC<CreateReminderDialogProps> = ({
   const form = useForm<ReminderFormData>({
     defaultValues: {
       message: '',
-      reminder_time: new Date(Date.now() + 5 * 60 * 1000), // Default to 5 minutes in the future
+      reminder_time: new Date(Date.now() + 5 * 60 * 1000),
       repeat_type: 'none' as RepeatType
     }
   });
   
   const handleSubmit = async (data: ReminderFormData) => {
     try {
-      // Ensure the reminder time is at least 1 minute in the future
+      // Get current time and add 1 minute for minimum validation
       const minTime = new Date();
       minTime.setMinutes(minTime.getMinutes() + 1);
       
-      // Get the form's reminder time
-      const reminderTime = data.reminder_time;
+      // Create a Date object from the form data, ensuring it uses local timezone
+      const selectedDateTime = new Date(data.reminder_time);
       
-      if (reminderTime < minTime) {
+      if (selectedDateTime < minTime) {
         toast({
           title: "Invalid time",
           description: "Please set a reminder time at least 1 minute in the future.",
@@ -66,11 +66,14 @@ export const CreateReminderDialog: React.FC<CreateReminderDialogProps> = ({
         return;
       }
       
-      await createReminder(data);
+      const result = await createReminder({
+        ...data,
+        reminder_time: selectedDateTime
+      });
       
       toast({
         title: "Reminder created",
-        description: "Your reminder has been created successfully.",
+        description: "Your reminder has been set successfully.",
         variant: "success"
       });
       
@@ -81,7 +84,7 @@ export const CreateReminderDialog: React.FC<CreateReminderDialogProps> = ({
       console.error("Error creating reminder:", error);
       toast({
         title: "Error creating reminder",
-        description: "Failed to create reminder. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to create reminder. Please try again.",
         variant: "destructive"
       });
     }
@@ -125,12 +128,13 @@ export const CreateReminderDialog: React.FC<CreateReminderDialogProps> = ({
                       type="datetime-local" 
                       value={field.value instanceof Date ? field.value.toISOString().slice(0, 16) : ''}
                       onChange={(e) => {
-                        // Parse the datetime-local input value to a Date object
                         if (e.target.value) {
+                          // Create a new Date object in the local timezone
                           const selectedDate = new Date(e.target.value);
                           field.onChange(selectedDate);
                         }
                       }}
+                      min={new Date().toISOString().slice(0, 16)}
                       required
                     />
                   </FormControl>

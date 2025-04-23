@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Reminder, ReminderNotification } from "@/types/reminder.types";
@@ -69,7 +68,7 @@ export function useReminders() {
       // Check for reminders that are due (within the last minute to now)
       const dueReminders = activeReminders.filter(reminder => {
         const reminderTime = new Date(reminder.reminder_time);
-        const diffInMinutes = (now.getTime() - reminderTime.getTime()) / (1000 * 60);
+        const diffInMinutes = Math.abs(now.getTime() - reminderTime.getTime()) / (1000 * 60);
         
         // Consider reminders due if they're within the last minute
         return diffInMinutes >= 0 && diffInMinutes <= 1;
@@ -78,17 +77,12 @@ export function useReminders() {
       // Show notifications for due reminders
       for (const reminder of dueReminders) {
         try {
-          // Create notification in database (this also handles repeat)
+          // Create notification in database
           const notification = await createReminderNotification(reminder.id);
           
-          // Play sound notification if permission granted
-          if (audioPermissionGranted) {
-            // Get the audio setting from localStorage
-            const audioEnabled = localStorage.getItem('reminderAudioEnabled') !== 'false';
-            
-            if (audioEnabled) {
-              playNotificationSound();
-            }
+          // Play sound if enabled and permission granted
+          if (audioPermissionGranted && localStorage.getItem('reminderAudioEnabled') !== 'false') {
+            playNotificationSound();
           }
           
           // Show notification toast
@@ -103,9 +97,9 @@ export function useReminders() {
             duration: Infinity, // Don't auto-dismiss
           });
           
-          // Also show browser notification if supported and permission granted
+          // Show browser notification if supported and permission granted
           if (Notification && Notification.permission === 'granted') {
-            new Notification('WAKTI Reminder', {
+            new Notification('Reminder', {
               body: reminder.message
             });
           }
