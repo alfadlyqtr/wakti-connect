@@ -28,4 +28,3 @@ export const getLocationPreviewStyles = () => ({
   borderRadius: '4px',
   border: '1px solid #e2e8f0'
 });
-

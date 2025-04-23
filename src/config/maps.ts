@@ -3,7 +3,7 @@
  * Maps configuration and utilities
  */
 
-const MAPS_API_KEY = 'AlzaSyA4j92W_YgT4LdU5pzw6a0kzHNAtdz3i2E';
+const MAPS_API_KEY = 'AIzaSyA4j92W_YgT4LdU5pzw6a0kzHNAtdz3i2E';
 
 // Validate that we have a valid API key
 if (!MAPS_API_KEY) {
@@ -80,4 +80,3 @@ export const waitForGoogleMapsToLoad = (): Promise<void> => {
     }, 10000);
   });
 };
-
