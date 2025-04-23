@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -84,8 +83,6 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
     setLoading(true);
 
     try {
-      console.log("Form values before sending to API:", values);
-      
       const taskData = {
         title: values.title,
         description: values.description || "",
@@ -96,7 +93,6 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
         subtasks: values.enableSubtasks ? values.subtasks : []
       };
 
-      console.log("Updating task with data:", taskData);
       await onUpdateTask(task.id, taskData);
       
       onOpenChange(false);
