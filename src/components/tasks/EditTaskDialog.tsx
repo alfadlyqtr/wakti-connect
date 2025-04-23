@@ -29,6 +29,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { SubtasksSection } from "./form-fields/SubtasksSection";
 import { format } from "date-fns";
 import { Loader2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
@@ -57,6 +59,8 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
       priority: "normal",
       due_date: format(new Date(), "yyyy-MM-dd"),
       due_time: "",
+      enableSubtasks: false,
+      subtasks: []
     },
   });
 
@@ -69,6 +73,8 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
         priority: task.priority,
         due_date: task.due_date ? format(new Date(task.due_date), "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd"),
         due_time: task.due_time || "",
+        enableSubtasks: task.subtasks && task.subtasks.length > 0,
+        subtasks: task.subtasks || []
       });
     }
   }, [task, form]);
@@ -87,6 +93,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
         status: task.status,
         due_date: values.due_date,
         due_time: values.due_time || null,
+        subtasks: values.enableSubtasks ? values.subtasks : []
       };
 
       console.log("Updating task with data:", taskData);
@@ -111,21 +118,6 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
     }
   };
 
-  const getPriorityLabel = (priority: string): string => {
-    switch (priority) {
-      case "urgent": return "Urgent";
-      case "high": return "High";
-      case "medium": return "Medium";
-      case "normal": return "Normal";
-      default: return "Select Priority";
-    }
-  };
-
-  const isFormValid = () => {
-    const values = form.getValues();
-    return !!values.title && !!values.due_date;
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
@@ -141,6 +133,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
             onSubmit={form.handleSubmit(handleUpdateTask)}
             className="space-y-6"
           >
+            {/* Basic Task Fields */}
             <FormField
               control={form.control}
               name="title"
@@ -177,6 +170,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
               )}
             />
 
+            {/* Priority Section */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -190,9 +184,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue>
-                            {field.value ? getPriorityLabel(field.value) : "Select Priority"}
-                          </SelectValue>
+                          <SelectValue placeholder="Select Priority" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -208,6 +200,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
               />
             </div>
 
+            {/* Due Date and Time Section */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -246,6 +239,33 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
               />
             </div>
 
+            {/* Subtasks Toggle */}
+            <FormField
+              control={form.control}
+              name="enableSubtasks"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                  <div className="space-y-0.5">
+                    <FormLabel>Enable Subtasks</FormLabel>
+                    <div className="text-sm text-muted-foreground">
+                      Add and manage subtasks for this task
+                    </div>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            {/* Subtasks Section */}
+            {form.watch("enableSubtasks") && (
+              <SubtasksSection form={form} />
+            )}
+
             <DialogFooter>
               <Button
                 type="button"
@@ -256,7 +276,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
               </Button>
               <Button 
                 type="submit" 
-                disabled={loading || !isFormValid()}
+                disabled={loading}
               >
                 {loading ? (
                   <>
@@ -273,4 +293,4 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
       </DialogContent>
     </Dialog>
   );
-}
+};
