@@ -94,7 +94,8 @@ const TaskCard: React.FC<TaskCardProps> = ({
     }
   };
 
-  const handleSubtaskToggle = async (subtaskIndex: number, isCompleted: boolean) => {
+  // Updated function to match expected signature
+  const handleSubtaskToggle = async (taskId: string, subtaskIndex: number, isCompleted: boolean) => {
     if (onSubtaskToggle) {
       await onSubtaskToggle(id, subtaskIndex, isCompleted);
     }
