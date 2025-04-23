@@ -10,8 +10,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Calendar, Clock } from "lucide-react";
-import { TimePickerField } from "../form-fields/TimePickerField";
+import { Plus, Trash2 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 
 interface SubtasksTabProps {
   form: UseFormReturn<any>;
@@ -37,13 +37,31 @@ export function SubtasksTab({ form, enableSubtasks }: SubtasksTabProps) {
 
   return (
     <div className="space-y-4 pt-4">
+      {/* Group Title Field */}
+      <FormField
+        control={form.control}
+        name="subtaskGroupTitle"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Subtask Group Title</FormLabel>
+            <FormControl>
+              <Input 
+                placeholder="e.g. Lulu Grocery Store" 
+                {...field} 
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-medium">Manage Subtasks</h3>
         <Button
           type="button"
           variant="outline"
           size="sm"
-          onClick={() => append({ content: "", isCompleted: false, dueDate: null, dueTime: null })}
+          onClick={() => append({ content: "", isCompleted: false })}
         >
           <Plus className="h-4 w-4 mr-1" /> Add Subtask
         </Button>
@@ -64,42 +82,12 @@ export function SubtasksTab({ form, enableSubtasks }: SubtasksTabProps) {
               <FormItem>
                 <FormLabel>Subtask {index + 1}</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter subtask..." {...field} />
+                  <Input placeholder="Enter subtask content..." {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name={`subtasks.${index}.dueDate`}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center gap-1">
-                    <Calendar className="h-4 w-4" />
-                    Due Date
-                  </FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="date" 
-                      {...field} 
-                      value={field.value || ""}
-                      max={form.watch("dueDate")} // Can't exceed main task due date
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <TimePickerField
-              form={form}
-              name={`subtasks.${index}.dueTime`}
-              label="Due Time"
-            />
-          </div>
           
           <Button
             type="button"
