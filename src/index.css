@@ -5,121 +5,120 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
+    --background: 255 100% 99%;            /* soft blue-white */
+    --foreground: 257 30% 19%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
- 
+    --card-foreground: 257 30% 18%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
- 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
- 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
- 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
- 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
- 
-    --destructive: 0 84.2% 60.2%;
+    --popover-foreground: 257 30% 18%;
+
+    /* Main theme colors: */
+    --primary: 260 84% 93%;      /* Light pastel purple from pic 1 */
+    --primary-foreground: 260 40% 35%; 
+    --secondary: 201 100% 97%;   /* Very light blue from pic 1 */
+    --secondary-foreground: 240 30% 30%;
+    --accent: 329 100% 97%;      /* Very light pastel pink */
+    --accent-foreground: 330 30% 35%;
+    --muted: 260 40% 97%;        /* pale lavender */
+    --muted-foreground: 260 18% 46%;
+
+    --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
- 
-    --radius: 0.5rem;
+    --border: 260 60% 87%;
+    --input: 260 60% 86%;
+    --ring: 259 70% 90%;
+
+    --radius: 0.75rem;
     
-    --wakti-blue: 217 91% 60%;
-    --wakti-orange: 32 100% 50%;
-    --wakti-green: 142 71% 45%;
-    
-    --sand-light: 39 70% 95%;
-    --sand: 41 65% 90%;
-    --sand-dark: 35 60% 85%;
-    
-    --wakti-navy: 0 0 50%;
-    --wakti-beige: 30 50% 90%;
+    /* Artful custom colors from pic 1: */
+    --light-pink: 329 98% 96%;
+    --light-purple: 260 85% 92%;
+    --light-blue: 201 100% 97%;
+    --off-white: 254 48% 98%;
+
+    /* Gradients */
+    --card-gradient: linear-gradient(135deg, #FFECF5 0%, #EEEAFE 50%, #E9F3FE 100%); /* soft pink → purple → blue */
+    --sidebar-gradient: linear-gradient(120deg, #FDEFFC 40%, #EAF1FE 100%);
+
+    /* For glass backgrounds */
+    --glass-bg: rgba(255,255,255,0.5);
+    --glass-border: rgba(200, 180, 255, 0.15);
   }
- 
+
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
- 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
- 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
- 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
- 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
- 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
- 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
- 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
- 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    /* Based on pic 2, rich and dark, but still soft: */
+    --background: 258 63% 6%;        /* deep dark purple */
+    --foreground: 255 49% 91%;  
+    --card: 261 60% 12%;
+    --card-foreground: 255 50% 95%;
+    --popover: 259 36% 17%;
+    --popover-foreground: 255 39% 96%;  
+
+    --primary: 259 64% 38%;       /* muted royal blue-light purple */
+    --primary-foreground: 270 70% 83%;
+    --secondary: 239 41% 19%;     /* navy-teal */
+    --secondary-foreground: 246 70% 88%; 
+
+    --accent: 282 24% 20%;        /* dark muted purple */
+    --accent-foreground: 282 47% 90%;
+
+    --muted: 258 30% 20%;
+    --muted-foreground: 260 20% 75%;
+
+    --destructive: 352 60% 45%;
+    --destructive-foreground: 352 65% 92%;
+
+    --border: 260 40% 14%;
+    --input: 258 35% 16%;
+    --ring: 264 64% 38%;
+
+    /* Custom colors from pic 2: */
+    --dark-purple: 259 68% 14%;
+    --teal-blue: 199 55% 23%;
+    --deep-blue: 239 61% 18%;
+    --black: 260 100% 4%;
+
+    /* Gradients */
+    --card-gradient: linear-gradient(135deg, #2e204b 0%, #462d58 45%, #263145 100%);
+    --sidebar-gradient: linear-gradient(120deg, #231935 40%, #2d3753 100%);
+    --glass-bg: rgba(30,24,42,0.6);
+    --glass-border: rgba(100,100,140,0.15);
   }
 }
- 
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-  
-  /* RTL Support */
-  html[dir="rtl"] .flip-in-rtl {
-    transform: scaleX(-1);
-  }
-  
-  /* Arabic Font Support */
-  @font-face {
-    font-family: 'Tajawal';
-    font-style: normal;
-    font-weight: 400;
-    src: url('https://fonts.gstatic.com/s/tajawal/v9/Iura6YBj_oCad4k1nzGBC5xLhLFw4Q.woff2') format('woff2');
-    unicode-range: U+0600-06FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE80-FEFC;
-  }
-  
-  @font-face {
-    font-family: 'Tajawal';
-    font-style: normal;
-    font-weight: 700;
-    src: url('https://fonts.gstatic.com/s/tajawal/v9/Iurf6YBj_oCad4k1l4QZfHFrLH6zkXWf.woff2') format('woff2');
-    unicode-range: U+0600-06FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE80-FEFC;
-  }
-  
-  .font-arabic {
-    font-family: 'Tajawal', system-ui, sans-serif;
-  }
-  
-  html[dir="rtl"] body {
-    font-family: 'Tajawal', system-ui, sans-serif;
-  }
-  
-  /* Enhance RTL layout */
-  html[dir="rtl"] .rtl-mirror {
-    transform: scaleX(-1);
-  }
+
+/* Artful subtle gradient backgrounds */
+.bg-dash-gradient {
+  background: linear-gradient(120deg, #FFECF5 0%, #EAF1FE 100%);
+}
+.dark .bg-dash-gradient {
+  background: linear-gradient(120deg, #2e204b 0%, #2d3753 100%);
+}
+
+/* Card background */
+.card-gradient {
+  background: var(--card-gradient);
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 32px rgba(114, 106, 171, 0.10);
+  backdrop-filter: blur(10px);
+}
+.dark .card-gradient {
+  background: var(--card-gradient);
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 32px rgba(44, 33, 98, 0.13);
+  backdrop-filter: blur(10px);
+}
+
+.sidebar-gradient {
+  background: var(--sidebar-gradient);
+  border-right: 1px solid var(--border);
+  backdrop-filter: blur(10px);
+}
+
+.glass-bg {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(14px);
 }
 
 /* Fix for RTL text in form inputs */
