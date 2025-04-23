@@ -1,75 +1,73 @@
 
-import React, { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import React from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { TaskForm } from "./TaskForm";
 import { TaskFormValues } from "./TaskFormSchema";
-import { useTaskOperations } from "@/hooks/tasks/useTaskOperations";
-import { toast } from "@/components/ui/use-toast";
+import { Task, TaskFormData } from "@/types/task.types";
 
-interface CreateTaskDialogProps {
+export interface CreateTaskDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   userRole: "free" | "individual" | "business" | "staff";
+  onCreateTask?: (taskData: TaskFormData) => Promise<Task>;
 }
 
-export function CreateTaskDialog({
+export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   open,
   onOpenChange,
-  userRole
-}: CreateTaskDialogProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { createTask } = useTaskOperations(userRole);
-
-  const handleCreateTask = async (data: TaskFormValues) => {
+  userRole,
+  onCreateTask
+}) => {
+  const handleSubmit = async (values: TaskFormValues) => {
     try {
-      setIsSubmitting(true);
-      
-      // Create a task with required fields
-      await createTask({
-        title: data.title,
-        description: data.description,
-        priority: data.priority,
-        due_date: data.due_date,
-        due_time: data.due_time,
-        location: data.location,
-        subtasks: data.subtasks?.map(subtask => ({
-          content: subtask.content || "",
-          is_completed: subtask.is_completed || false,
-          due_date: subtask.due_date,
-          due_time: subtask.due_time
-        }))
-      });
-      
-      toast({
-        title: "Success",
-        description: "Task created successfully",
-        variant: "success"
-      });
-      onOpenChange(false);
+      if (onCreateTask) {
+        // Convert form values to the TaskFormData format
+        const taskData: TaskFormData = {
+          title: values.title,
+          description: values.description || null,
+          priority: values.priority,
+          due_date: values.due_date,
+          due_time: values.due_time || null,
+          subtasks: values.subtasks.map(subtask => ({
+            content: subtask.content,
+            is_completed: subtask.is_completed || false,
+            due_date: subtask.due_date || null,
+            due_time: subtask.due_time || null
+          }))
+        };
+        
+        // Add recurring data if enabled
+        if (values.isRecurring && values.recurring) {
+          taskData.isRecurring = true;
+          taskData.recurring = values.recurring;
+        }
+        
+        // Call the onCreateTask callback
+        await onCreateTask(taskData);
+        onOpenChange(false);
+      }
     } catch (error) {
-      console.error("Error creating task:", error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to create task",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSubmitting(false);
+      console.error("Failed to create task:", error);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create Task</DialogTitle>
+          <DialogTitle>Create New Task</DialogTitle>
         </DialogHeader>
         <TaskForm 
-          onSubmit={handleCreateTask} 
-          isSubmitting={isSubmitting} 
-          submitLabel="Create Task"
+          onSubmit={handleSubmit}
+          isPaidAccount={userRole !== "free"}
+          isCreate={true}
         />
       </DialogContent>
     </Dialog>
   );
-}
+};

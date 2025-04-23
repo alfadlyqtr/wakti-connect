@@ -1,16 +1,9 @@
 
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Task, TaskFormData } from '@/types/task.types';
+import { Task, TaskFormData, TaskStatus } from '@/types/task.types';
 import { toast } from "@/components/ui/use-toast";
-
-interface UseTaskOperationsReturn {
-  createTask: (taskData: TaskFormData) => Promise<Task>;
-  updateTask: (taskId: string, taskData: Partial<TaskFormData>) => Promise<Task>;
-  deleteTask: (taskId: string) => Promise<void>;
-  completeTask: (taskId: string) => Promise<Task>;
-  isProcessing: boolean;
-}
+import { UseTaskOperationsReturn } from './types';
 
 export function useTaskOperations(
   userRole: "free" | "individual" | "business" | "staff" | null
@@ -42,7 +35,7 @@ export function useTaskOperations(
       }
       
       // Insert the new task
-      const { data: task, error } = await supabase
+      const { data, error } = await supabase
         .from('tasks')
         .insert({
           title: taskData.title,
@@ -51,12 +44,19 @@ export function useTaskOperations(
           due_date: taskData.due_date,
           due_time: taskData.due_time,
           user_id: session.user.id,
-          status: 'pending'
+          status: 'pending' as TaskStatus
         })
         .select()
         .single();
       
       if (error) throw error;
+      
+      // Ensure data conforms to the Task type
+      const task: Task = {
+        ...data,
+        status: data.status as TaskStatus,
+        priority: data.priority
+      };
       
       // Insert subtasks if any
       if (taskData.subtasks && taskData.subtasks.length > 0) {
@@ -91,7 +91,7 @@ export function useTaskOperations(
   const updateTask = async (taskId: string, taskData: Partial<TaskFormData>): Promise<Task> => {
     setIsProcessing(true);
     try {
-      const { data: task, error } = await supabase
+      const { data, error } = await supabase
         .from('tasks')
         .update({
           title: taskData.title,
@@ -106,6 +106,13 @@ export function useTaskOperations(
         .single();
       
       if (error) throw error;
+
+      // Ensure data conforms to the Task type
+      const task: Task = {
+        ...data,
+        status: data.status as TaskStatus,
+        priority: data.priority
+      };
       
       // Handle subtasks if provided
       if (taskData.subtasks) {
@@ -177,10 +184,10 @@ export function useTaskOperations(
   const completeTask = async (taskId: string): Promise<Task> => {
     setIsProcessing(true);
     try {
-      const { data: task, error } = await supabase
+      const { data, error } = await supabase
         .from('tasks')
         .update({
-          status: 'completed',
+          status: 'completed' as TaskStatus,
           completed_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
@@ -189,6 +196,13 @@ export function useTaskOperations(
         .single();
       
       if (error) throw error;
+      
+      // Ensure data conforms to the Task type
+      const task: Task = {
+        ...data,
+        status: data.status as TaskStatus,
+        priority: data.priority
+      };
       
       return task;
     } catch (error) {

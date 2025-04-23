@@ -7,19 +7,37 @@ import { TaskFormData, TaskStatus, ArchiveReason } from "@/types/task.types";
  */
 export function sanitizeTaskData(taskData: TaskFormData): Partial<TaskFormData> {
   // Create a clean object with only the fields that belong in the tasks table
-  return {
+  const sanitized: Partial<TaskFormData> = {
     title: taskData.title,
     description: taskData.description,
     status: validateTaskStatus(taskData.status),
     priority: taskData.priority || "normal",
     due_date: taskData.due_date,
-    due_time: taskData.due_time,
-    snooze_count: taskData.snooze_count || 0,
-    snoozed_until: taskData.snoozed_until || null,
-    is_recurring: taskData.is_recurring || false,
-    archived_at: taskData.archived_at || null,
-    archive_reason: validateArchiveReason(taskData.archive_reason)
+    due_time: taskData.due_time
   };
+  
+  // Add optional fields when present in the input
+  if ('snooze_count' in taskData) {
+    sanitized.snooze_count = taskData.snooze_count || 0;
+  }
+  
+  if ('snoozed_until' in taskData) {
+    sanitized.snoozed_until = taskData.snoozed_until || null;
+  }
+  
+  if ('isRecurring' in taskData) {
+    sanitized.isRecurring = taskData.isRecurring || false;
+  }
+  
+  if ('archived_at' in taskData) {
+    sanitized.archived_at = taskData.archived_at || null;
+  }
+  
+  if ('archive_reason' in taskData) {
+    sanitized.archive_reason = validateArchiveReason(taskData.archive_reason);
+  }
+  
+  return sanitized;
 }
 
 function validateTaskStatus(status?: TaskStatus): TaskStatus {

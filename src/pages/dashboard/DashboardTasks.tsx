@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import TaskControls from "@/components/tasks/TaskControls";
 import TasksLoading from "@/components/tasks/TasksLoading";
@@ -43,21 +42,16 @@ const DashboardTasks = () => {
     setActiveTab
   } = useTasksPageState();
   
-  // Initialize the reminders hook
   const { requestNotificationPermission } = useReminders();
 
-  // Redirect staff users away from tasks page
-  // Super-admin users have full access to everything
   if (userRole === "staff") {
     return <Navigate to="/dashboard" replace />;
   }
 
-  // Set default filters to "all" on component mount
   useEffect(() => {
     setFilterStatus("all");
     setFilterPriority("all");
     
-    // Request notification permissions for reminders
     requestNotificationPermission();
   }, [setFilterStatus, setFilterPriority, requestNotificationPermission]);
 
@@ -65,20 +59,16 @@ const DashboardTasks = () => {
     return <TasksLoading />;
   }
 
-  // Cast the filter values to their appropriate types
   const statusFilter = (filterStatus || "all") as TaskStatusFilter;
   const priorityFilter = (filterPriority || "all") as TaskPriorityFilter;
   
-  // When a task is selected for editing
   const handleEditTask = (task: any) => {
     setCurrentEditTask(task);
     setEditTaskDialogOpen(true);
   };
 
-  // Convert UserRole to the expected type for components that don't recognize super-admin yet
   const displayRole = userRole === 'super-admin' ? 'business' : userRole;
 
-  // Wrapper functions to match expected types
   const handleArchiveTaskWrapper = async (taskId: string, reason: "deleted" | "canceled") => {
     await handleArchiveTask(taskId);
   };

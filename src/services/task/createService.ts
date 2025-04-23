@@ -23,7 +23,7 @@ export async function createTask(taskData: TaskFormData, recurringData?: Recurri
   
   // Add the is_recurring flag from recurring data
   if (recurringData) {
-    cleanTaskData.is_recurring = true;
+    cleanTaskData.isRecurring = true;
   }
   
   console.log("Clean task data being sent to database:", cleanTaskData);

@@ -126,7 +126,7 @@ export function TaskGrid({
     const badges = [];
     
     // Special features badges
-    if (task?.is_recurring) {
+    if (task?.isRecurring || task?.is_recurring) {
       badges.push(
         <Badge key="recurring" className="bg-indigo-500/10 text-indigo-600 border-indigo-600/20 rounded-md" variant="outline">
           Recurring
@@ -285,6 +285,32 @@ export function TaskGrid({
     </div>
   );
 }
+
+// Helper function to format date/time
+const getFormattedDateTime = (task: Task): string => {
+  if (!task.due_date) return "No due date";
+  
+  const dueDate = new Date(task.due_date);
+  const dateFormatted = format(dueDate, "MMM d, yyyy");
+  
+  if (task.due_time) {
+    return `${dateFormatted} at ${task.due_time}`;
+  }
+  
+  return dateFormatted;
+};
+
+// Only show snoozed until if the property exists
+const renderSnoozedUntil = (task: Task): React.ReactNode => {
+  if (task?.snoozed_until) {
+    return (
+      <div className="text-sm text-muted-foreground mt-1">
+        Snoozed until: {format(new Date(task.snoozed_until), "MMM d, yyyy")}
+      </div>
+    );
+  }
+  return null;
+};
 
 // Export both as named export and default export for compatibility
 export default TaskGrid;

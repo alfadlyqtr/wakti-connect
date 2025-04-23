@@ -7,8 +7,8 @@ export type ArchiveReason = "deleted" | "canceled" | string;
 
 // Subtask interface
 export interface SubTask {
-  id: string;
-  task_id: string;
+  id?: string;
+  task_id?: string;
   content: string;
   is_completed: boolean;
   due_date?: string | null;
@@ -49,6 +49,7 @@ export interface Task {
   location?: string | null;
   
   // Additional properties needed by components
+  isRecurring?: boolean;
   is_recurring?: boolean;
   is_recurring_instance?: boolean;
   snooze_count?: number;
@@ -69,20 +70,19 @@ export interface TaskFormData {
   // Additional fields for TaskFormSchema
   enableSubtasks?: boolean;
   isRecurring?: boolean;
+  is_recurring?: boolean;
   
   // Fields for AI components
   preserveNestedStructure?: boolean;
   originalSubtasks?: SubTask[];
   
-  subtasks?: {
-    content: string;
-    is_completed?: boolean;
-    due_date?: string | null;
-    due_time?: string | null;
-    title?: string;
-    parent_id?: string;
-    is_group?: boolean;
-  }[];
+  // Fields needed for task management
+  snooze_count?: number;
+  snoozed_until?: string | null;
+  archived_at?: string | null;
+  archive_reason?: ArchiveReason | null;
+  
+  subtasks?: SubTask[];
   
   // Recurring task settings
   recurring?: {
