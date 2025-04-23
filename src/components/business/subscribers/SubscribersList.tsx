@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useBusinessSubscribers } from "@/hooks/useBusinessSubscribers";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -9,7 +8,7 @@ interface SubscribersListProps {
   businessId: string;
 }
 
-const SubscribersList = ({ businessId }: SubscribersListProps) => {
+const SubscribersList = ({ businessId }: { businessId: string }) => {
   const { 
     subscribers, 
     isLoading, 
@@ -36,10 +35,8 @@ const SubscribersList = ({ businessId }: SubscribersListProps) => {
       {(subscribers && subscribers.length > 0) ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {subscribers.map((subscriber) => {
-            // Handle profile as potentially undefined or having different types
             const profile = subscriber.profile || {};
             
-            // Define fallback values and safely access properties
             const avatarUrl = typeof profile === 'object' && 'avatar_url' in profile 
               ? String(profile.avatar_url || '') 
               : '';

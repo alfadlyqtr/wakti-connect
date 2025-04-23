@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { SectionHeading } from "@/components/ui/section-heading";
@@ -8,7 +7,7 @@ import { Users, ShoppingBag, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const BusinessDashboardStats = () => {
-  // Get subscribers count
+  // Get subscribers count, staff count, and services count from live Supabase queries
   const { data: subscribersData, isLoading: isLoadingSubscribers } = useQuery({
     queryKey: ['dashboardSubscribersCount'],
     queryFn: async () => {
@@ -29,7 +28,6 @@ export const BusinessDashboardStats = () => {
     }
   });
   
-  // Get staff count
   const { data: staffData, isLoading: isLoadingStaff } = useQuery({
     queryKey: ['dashboardStaffCount'],
     queryFn: async () => {
@@ -51,7 +49,6 @@ export const BusinessDashboardStats = () => {
     }
   });
   
-  // Get services count
   const { data: servicesData, isLoading: isLoadingServices } = useQuery({
     queryKey: ['dashboardServicesCount'],
     queryFn: async () => {
