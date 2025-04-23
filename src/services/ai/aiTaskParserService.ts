@@ -1,17 +1,17 @@
 
 import { supabase } from "@/lib/supabase";
 import { toast } from "@/components/ui/use-toast";
-import { SubTask, NestedSubtask } from "@/types/task.types";
+import { SubTask, NestedSubtask as TypedNestedSubtask } from "@/types/task.types";
 import { v4 as uuidv4 } from "uuid";
 import { mapNestedStructureToFlatSubtasks } from "./subtaskStructureUtils";
 
-export interface ParsedTask {
-  title: string;
-  due_date: string | null;
-  due_time: string | null;
-  priority: 'urgent' | 'high' | 'medium' | 'normal';
-  subtasks: (string | NestedSubtask)[]; // Use the NestedSubtask from types
-  location: string | null;
+// Export NestedSubtask to resolve import issues
+export interface NestedSubtask {
+  id?: string;
+  content: string;
+  title?: string;
+  is_completed?: boolean;
+  subtasks?: (string | NestedSubtask)[];
 }
 
 /**
