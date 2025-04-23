@@ -20,7 +20,6 @@ export const SubtasksSection: React.FC<SubtasksSectionProps> = ({ form, enableSu
   });
 
   // "Group Title" lives in its own form field, not inside subtasks
-  // But for simplicity, let's just use "subtaskGroupTitle" extra field
   return enableSubtasks ? (
     <div className="space-y-4 border rounded-lg p-4 bg-[#F1F0FB] dark:bg-[#1A1F2C] mt-1">
       <FormField
@@ -81,4 +80,3 @@ export const SubtasksSection: React.FC<SubtasksSectionProps> = ({ form, enableSu
     </div>
   ) : null;
 };
-

@@ -43,7 +43,10 @@ export const taskFormSchema = z.object({
   subtasks: z.array(SubtaskSchema).default([]),
   
   // Flag to preserve nested structure
-  preserveNestedStructure: z.boolean().optional()
+  preserveNestedStructure: z.boolean().optional(),
+  
+  // Add the subtask group title field
+  subtaskGroupTitle: z.string().optional().default(""),
 });
 
 // Export the TypeScript type
