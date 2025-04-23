@@ -65,23 +65,30 @@ export function useReminders() {
   useEffect(() => {
     const checkDueReminders = async () => {
       const now = new Date();
+      
       // Check for reminders that are due (within the last minute to now)
       const dueReminders = activeReminders.filter(reminder => {
         const reminderTime = new Date(reminder.reminder_time);
         const diffInMinutes = (now.getTime() - reminderTime.getTime()) / (1000 * 60);
+        
         // Consider reminders due if they're within the last minute
         return diffInMinutes >= 0 && diffInMinutes <= 1;
       });
       
       // Show notifications for due reminders
       for (const reminder of dueReminders) {
-        // Create notification in database (this also handles repeat)
         try {
+          // Create notification in database (this also handles repeat)
           const notification = await createReminderNotification(reminder.id);
           
           // Play sound notification if permission granted
           if (audioPermissionGranted) {
-            playNotificationSound();
+            // Get the audio setting from localStorage
+            const audioEnabled = localStorage.getItem('reminderAudioEnabled') !== 'false';
+            
+            if (audioEnabled) {
+              playNotificationSound();
+            }
           }
           
           // Show notification toast

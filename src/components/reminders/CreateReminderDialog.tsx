@@ -43,7 +43,7 @@ export const CreateReminderDialog: React.FC<CreateReminderDialogProps> = ({
   const form = useForm<ReminderFormData>({
     defaultValues: {
       message: '',
-      reminder_time: new Date(),
+      reminder_time: new Date(Date.now() + 5 * 60 * 1000), // Default to 5 minutes in the future
       repeat_type: 'none' as RepeatType
     }
   });
@@ -54,7 +54,10 @@ export const CreateReminderDialog: React.FC<CreateReminderDialogProps> = ({
       const minTime = new Date();
       minTime.setMinutes(minTime.getMinutes() + 1);
       
-      if (data.reminder_time < minTime) {
+      // Get the form's reminder time
+      const reminderTime = data.reminder_time;
+      
+      if (reminderTime < minTime) {
         toast({
           title: "Invalid time",
           description: "Please set a reminder time at least 1 minute in the future.",
@@ -120,9 +123,14 @@ export const CreateReminderDialog: React.FC<CreateReminderDialogProps> = ({
                   <FormControl>
                     <Input 
                       type="datetime-local" 
-                      {...field}
                       value={field.value instanceof Date ? field.value.toISOString().slice(0, 16) : ''}
-                      onChange={(e) => field.onChange(new Date(e.target.value))}
+                      onChange={(e) => {
+                        // Parse the datetime-local input value to a Date object
+                        if (e.target.value) {
+                          const selectedDate = new Date(e.target.value);
+                          field.onChange(selectedDate);
+                        }
+                      }}
                       required
                     />
                   </FormControl>

@@ -27,12 +27,19 @@ export async function createReminder(reminderData: ReminderFormData): Promise<Re
       throw new Error("You must be logged in to create reminders");
     }
     
+    // Ensure reminder_time is properly formatted as ISO string
+    const reminder_time = reminderData.reminder_time instanceof Date 
+      ? reminderData.reminder_time.toISOString()
+      : new Date(reminderData.reminder_time).toISOString();
+    
     const newReminder = {
       user_id: session.user.id,
       message: reminderData.message,
-      reminder_time: reminderData.reminder_time.toISOString(),
+      reminder_time: reminder_time,
       repeat_type: reminderData.repeat_type
     };
+    
+    console.log("Creating reminder with data:", newReminder);
     
     const { data, error } = await supabase
       .from('reminders')
