@@ -2,6 +2,8 @@
 import React from "react";
 import { SubTask } from "@/types/task.types";
 import { Checkbox } from "@/components/ui/checkbox";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/use-toast";
 
 interface TaskSubtasksProps {
   taskId: string;
@@ -16,9 +18,32 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({
   onSubtaskToggle,
   refetch
 }) => {
-  const handleToggle = (index: number, checked: boolean) => {
-    if (onSubtaskToggle) {
-      onSubtaskToggle(index, checked);
+  const handleToggle = async (subtask: SubTask, index: number, checked: boolean) => {
+    try {
+      // Update the subtask completion status
+      const { error } = await supabase
+        .from('todo_items')
+        .update({ is_completed: checked })
+        .eq('id', subtask.id);
+
+      if (error) throw error;
+
+      // Call the parent component's handler if provided
+      if (onSubtaskToggle) {
+        onSubtaskToggle(index, checked);
+      }
+
+      // Refresh the task data
+      if (refetch) {
+        refetch();
+      }
+    } catch (err) {
+      console.error("Error toggling subtask:", err);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update subtask status"
+      });
     }
   };
 
@@ -31,11 +56,11 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({
             <Checkbox 
               id={`subtask-${index}`}
               checked={subtask.is_completed}
-              onCheckedChange={(checked) => handleToggle(index, Boolean(checked))}
+              onCheckedChange={(checked) => handleToggle(subtask, index, Boolean(checked))}
               className="mt-0.5"
             />
             <label 
-              htmlFor={`subtask-${index}`}
+              htmlFor={`subtask-${index}`}  
               className={`text-sm leading-tight ${subtask.is_completed ? 'line-through text-muted-foreground' : ''}`}
             >
               {subtask.content}
