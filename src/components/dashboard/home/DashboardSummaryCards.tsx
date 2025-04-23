@@ -1,11 +1,10 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, BellRing, Users } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDashboardNotifications } from "@/hooks/useDashboardNotifications";
+import { Bell } from 'lucide-react';
 
-// Props and types retained for live data, not static
 interface ProfileDataType {
   account_type: "free" | "individual" | "business";
   display_name?: string | null;
@@ -21,7 +20,6 @@ interface DashboardSummaryCardsProps {
   subscribersCount?: number;
 }
 
-// Style for compact, uniform card appearance—matches Reminders
 const CARD_COMMON =
   "rounded-lg border bg-card text-card-foreground shadow-sm group transition-all duration-300 hover:shadow-lg hover:scale-[1.025]";
 const CARD_HEADER = "flex flex-row items-center justify-between space-y-0 pb-2 px-3 py-2";
@@ -34,12 +32,10 @@ export const DashboardSummaryCards = ({
   isLoading = false,
   subscribersCount = 0
 }: DashboardSummaryCardsProps) => {
-  // Live counts from props only (no dummy data)
   const tasks = todayTasks || [];
   const completedTasksCount = tasks.filter((task: any) => task.status === "completed").length;
   const { unreadCount, isLoading: notifLoading } = useDashboardNotifications();
 
-  // Loading skeletons - always show same number and size as actual cards
   if (isLoading) {
     return (
       <div className="grid gap-2 grid-cols-2 md:grid-cols-4">
@@ -63,7 +59,6 @@ export const DashboardSummaryCards = ({
 
   return (
     <div className="grid gap-2 grid-cols-2 md:grid-cols-4">
-      {/* Today's Tasks */}
       <Card className={CARD_COMMON}>
         <CardHeader className={CARD_HEADER}>
           <CardTitle className="text-xs font-semibold text-wakti-blue">Today's Tasks</CardTitle>
@@ -79,11 +74,10 @@ export const DashboardSummaryCards = ({
         </CardContent>
       </Card>
 
-      {/* Notifications (new card, live count) */}
       <Card className={CARD_COMMON}>
         <CardHeader className={CARD_HEADER}>
           <CardTitle className="text-xs font-semibold text-wakti-gold">Notifications</CardTitle>
-          <BellRing className="h-5 w-5 text-wakti-gold group-hover:scale-110 transition-transform" />
+          <Bell className="h-5 w-5 text-wakti-gold group-hover:scale-110 transition-transform" />
         </CardHeader>
         <CardContent className={CARD_CONTENT}>
           <div className="text-xl md:text-2xl font-bold">
@@ -95,7 +89,6 @@ export const DashboardSummaryCards = ({
         </CardContent>
       </Card>
 
-      {/* Subscribers (always live, never static) */}
       <Card className={CARD_COMMON}>
         <CardHeader className={CARD_HEADER}>
           <CardTitle className="text-xs font-semibold text-blue-500">Subscribers</CardTitle>
@@ -109,7 +102,6 @@ export const DashboardSummaryCards = ({
         </CardContent>
       </Card>
 
-      {/* Account Activity */}
       <Card className={CARD_COMMON}>
         <CardHeader className={CARD_HEADER}>
           <CardTitle className="text-xs font-semibold text-wakti-navy">
