@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { TaskPriority, TaskStatus, SubTask, Task } from "@/types/task.types";
@@ -36,6 +37,8 @@ interface TaskCardProps {
   onDelete: (id: string) => void;
   onStatusChange: (id: string, status: string) => void;
   onSnooze?: (id: string, days: number) => void;
+  onRestore?: (id: string) => void;
+  isArchived?: boolean;
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({
@@ -58,11 +61,12 @@ const TaskCard: React.FC<TaskCardProps> = ({
   onDelete,
   onStatusChange,
   onSnooze,
+  onRestore,
+  isArchived = false,
 }) => {
   const [detailOpen, setDetailOpen] = useState(false);
   const isPaidAccount = userRole === "individual" || userRole === "business";
   const isCompleted = status === "completed";
-  const isArchived = status === "archived";
   const isOverdue = !isCompleted && 
     status !== "completed" && 
     status !== "snoozed" &&
@@ -113,10 +117,12 @@ const TaskCard: React.FC<TaskCardProps> = ({
               <TaskCardMenu
                 id={id}
                 status={status}
+                isArchived={isArchived}
                 onDelete={onDelete}
                 onEdit={() => onEdit(id)}
                 onStatusChange={onStatusChange}
                 onSnooze={onSnooze}
+                onRestore={onRestore}
                 userRole={userRole}
                 isPaidAccount={isPaidAccount}
               />

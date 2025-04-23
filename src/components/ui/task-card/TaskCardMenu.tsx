@@ -15,6 +15,7 @@ import {
   AlarmClock,
   CheckCircle,
   Clock,
+  ArrowUpRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TaskStatus } from "@/types/task.types";
@@ -22,10 +23,12 @@ import { TaskStatus } from "@/types/task.types";
 interface TaskCardMenuProps {
   id: string;
   status: TaskStatus;
+  isArchived?: boolean;
   onDelete: (id: string) => void;
   onEdit: (id: string) => void;
   onStatusChange: (id: string, status: string) => void;
   onSnooze?: (id: string, days: number) => void;
+  onRestore?: (id: string) => void;
   userRole: "free" | "individual" | "business" | "staff" | null;
   isPaidAccount: boolean;
 }
@@ -33,15 +36,19 @@ interface TaskCardMenuProps {
 export const TaskCardMenu: React.FC<TaskCardMenuProps> = ({
   id,
   status,
+  isArchived = false,
   onDelete,
   onEdit,
   onStatusChange,
   onSnooze,
+  onRestore,
   userRole,
   isPaidAccount,
 }) => {
-  const showMarkComplete = status !== "completed" && status !== "archived";
-  const showSnooze = status !== "completed" && status !== "archived" && isPaidAccount;
+  const showMarkComplete = status !== "completed" && status !== "archived" && !isArchived;
+  const showSnooze = status !== "completed" && status !== "archived" && !isArchived && isPaidAccount;
+  const showDelete = !isArchived;
+  const showRestore = isArchived && onRestore;
 
   const handleDelete = () => {
     if (window.confirm("Are you sure you want to delete this task? It will be archived for 10 days before being permanently deleted.")) {
@@ -87,18 +94,29 @@ export const TaskCardMenu: React.FC<TaskCardMenuProps> = ({
         
         <DropdownMenuSeparator />
         
-        <DropdownMenuItem onClick={() => onEdit(id)}>
-          <Pencil className="mr-2 h-4 w-4" />
-          Edit
-        </DropdownMenuItem>
+        {!isArchived && (
+          <DropdownMenuItem onClick={() => onEdit(id)}>
+            <Pencil className="mr-2 h-4 w-4" />
+            Edit
+          </DropdownMenuItem>
+        )}
         
-        <DropdownMenuItem 
-          onClick={handleDelete}
-          className="text-red-600 hover:bg-red-50 hover:text-red-700"
-        >
-          <Trash2 className="mr-2 h-4 w-4" />
-          Delete
-        </DropdownMenuItem>
+        {showDelete && (
+          <DropdownMenuItem 
+            onClick={handleDelete}
+            className="text-red-600 hover:bg-red-50 hover:text-red-700"
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete
+          </DropdownMenuItem>
+        )}
+        
+        {showRestore && (
+          <DropdownMenuItem onClick={() => onRestore!(id)}>
+            <ArrowUpRight className="mr-2 h-4 w-4 text-green-500" />
+            Restore
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
