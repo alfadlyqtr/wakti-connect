@@ -1,3 +1,4 @@
+
 import React from "react";
 import { UseFormReturn, useFieldArray } from "react-hook-form";
 import { TaskFormValues } from "../TaskFormSchema";
@@ -11,30 +12,19 @@ interface SubtasksSectionProps {
   enableSubtasks: boolean;
 }
 
-// New: subtask group title and list of subtasks as simple strings
 export const SubtasksSection: React.FC<SubtasksSectionProps> = ({ form, enableSubtasks }) => {
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "subtasks"
   });
 
-  // "Group Title" lives in its own form field, not inside subtasks
-  return enableSubtasks ? (
-    <div className="space-y-4 border rounded-lg p-4 bg-[#F1F0FB] dark:bg-[#1A1F2C] mt-1">
-      <FormField
-        control={form.control}
-        name="subtaskGroupTitle"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Subtask Group Title</FormLabel>
-            <FormControl>
-              <Input placeholder="e.g. Lulu Grocery Store" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+  // Only render if subtasks are enabled
+  if (!enableSubtasks) {
+    return null;
+  }
 
+  return (
+    <div className="space-y-4 border rounded-lg p-4 bg-[#F1F0FB] dark:bg-[#1A1F2C] mt-1">
       <div>
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium">Subtasks</span>
@@ -46,7 +36,7 @@ export const SubtasksSection: React.FC<SubtasksSectionProps> = ({ form, enableSu
         </div>
         {fields.length === 0 && (
           <div className="text-sm text-muted-foreground py-2 px-2">
-            No subtasks yet.
+            No subtasks yet. Add your first subtask.
           </div>
         )}
         <div className="space-y-2">
@@ -58,7 +48,7 @@ export const SubtasksSection: React.FC<SubtasksSectionProps> = ({ form, enableSu
                 render={({ field }) => (
                   <FormItem className="w-full">
                     <FormControl>
-                      <Input placeholder={`e.g. Milk`} {...field} />
+                      <Input placeholder={`Subtask ${idx + 1}`} {...field} />
                     </FormControl>
                   </FormItem>
                 )}
@@ -77,5 +67,5 @@ export const SubtasksSection: React.FC<SubtasksSectionProps> = ({ form, enableSu
         </div>
       </div>
     </div>
-  ) : null;
+  );
 };

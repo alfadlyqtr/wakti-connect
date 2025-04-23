@@ -1,3 +1,4 @@
+
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import { TaskFormValues } from "../TaskFormSchema";
@@ -8,14 +9,7 @@ import {
   FormControl, 
   FormMessage 
 } from "@/components/ui/form";
-import { cn } from "@/lib/utils";
-import { format } from "date-fns";
-import { Calendar as CalendarIcon } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import { Switch } from "@/components/ui/switch";
-import { TimePickerField } from "./TimePickerField";
 
 interface DateTimeFieldsProps {
   form: UseFormReturn<TaskFormValues>;
@@ -23,6 +17,28 @@ interface DateTimeFieldsProps {
 
 export const DateTimeFields: React.FC<DateTimeFieldsProps> = ({ form }) => {
   const isRecurring = form.watch("isRecurring");
+  
+  // Generate time options for the select dropdown
+  const getTimeOptions = () => {
+    const options = [];
+    
+    // Generate time options in 15-minute intervals (12-hour format)
+    for (let hour = 0; hour < 24; hour++) {
+      const ampm = hour < 12 ? 'AM' : 'PM';
+      const hour12 = hour % 12 || 12; // Convert 0 to 12 for 12 AM
+      
+      for (let minute = 0; minute < 60; minute += 15) {
+        const timeValue = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        const displayText = `${hour12}:${minute.toString().padStart(2, '0')} ${ampm}`;
+        options.push({ value: timeValue, label: displayText });
+      }
+    }
+    
+    return options;
+  };
+  
+  const timeOptions = getTimeOptions();
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -45,7 +61,8 @@ export const DateTimeFields: React.FC<DateTimeFieldsProps> = ({ form }) => {
             </FormItem>
           )}
         />
-        {/* SIMPLIFIED DUE TIME FIELD */}
+        
+        {/* Simple Time Dropdown */}
         <FormField
           control={form.control}
           name="dueTime"
@@ -53,18 +70,25 @@ export const DateTimeFields: React.FC<DateTimeFieldsProps> = ({ form }) => {
             <FormItem className="flex flex-col">
               <FormLabel>Due Time</FormLabel>
               <FormControl>
-                <input
-                  type="time"
+                <select 
                   className="w-full h-9 border rounded px-3 py-1 text-sm"
                   value={field.value || ""}
                   onChange={field.onChange}
-                />
+                >
+                  <option value="">Select time</option>
+                  {timeOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
       </div>
+      
       {/* Recurring Task Switch */}
       <FormField
         control={form.control}
@@ -84,6 +108,7 @@ export const DateTimeFields: React.FC<DateTimeFieldsProps> = ({ form }) => {
           </FormItem>
         )}
       />
+      
       {/* Recurring Options */}
       {isRecurring && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 border rounded-lg p-4 bg-muted/20">

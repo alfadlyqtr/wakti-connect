@@ -7,7 +7,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { taskFormSchema } from "./TaskFormSchema";
 import { DialogHeader } from "../ui/dialog";
-import { X } from "lucide-react";
 import { format } from "date-fns";
 
 interface CreateTaskDialogProps {
@@ -69,13 +68,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle className="flex justify-between items-center">
-            <span>Create New Task</span>
-            <X 
-              className="h-4 w-4 cursor-pointer text-muted-foreground hover:text-foreground" 
-              onClick={() => onOpenChange(false)}
-            />
-          </DialogTitle>
+          <DialogTitle>Create New Task</DialogTitle>
           <DialogDescription>
             Create a new task with details and optional subtasks.
           </DialogDescription>

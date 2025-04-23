@@ -1,3 +1,4 @@
+
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import { TaskFormValues } from "../TaskFormSchema";
@@ -31,7 +32,7 @@ const TaskFormFields: React.FC<TaskFormFieldsProps> = ({ form }) => {
             <div className="space-y-0.5">
               <FormLabel className="text-base">Enable Subtasks</FormLabel>
               <div className="text-sm text-muted-foreground">
-                Add a list of subtasks to this task
+                Add subtasks to break down this task
               </div>
             </div>
             <Switch
@@ -42,7 +43,7 @@ const TaskFormFields: React.FC<TaskFormFieldsProps> = ({ form }) => {
         )}
       />
       
-      {/* Subtasks Section - ONLY if enabled, shows basic inline quick subtasks, no "group title" */}
+      {/* Subtasks Section - ONLY if enabled */}
       <SubtasksSection
         form={form}
         enableSubtasks={enableSubtasks}
