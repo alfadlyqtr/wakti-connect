@@ -70,7 +70,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
   const isPaidAccount = userRole === "individual" || userRole === "business";
   const isCompleted = status === "completed";
   const isOverdue = !isCompleted && 
-    (status !== "completed") && 
     status !== "snoozed" &&
     status !== "archived" &&
     isPast(dueDate) &&
