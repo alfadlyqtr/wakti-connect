@@ -8,7 +8,7 @@ export function validateTaskStatus(status?: any): TaskStatus {
   if (!status) return "pending";
   
   const validStatuses: TaskStatus[] = [
-    "pending", "in-progress", "completed", "snoozed", "archived", "late"
+    "pending", "in-progress", "completed", "snoozed", "late", "archived"
   ];
   
   if (validStatuses.includes(status as TaskStatus)) {

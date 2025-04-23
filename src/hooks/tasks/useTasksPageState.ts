@@ -166,69 +166,29 @@ export const useTasksPageState = () => {
     }
   };
   
-  const handleArchiveTask = async (taskId: string) => {
+  const deleteTask = async (taskId: string) => {
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('tasks')
-        .update({
-          is_archived: true,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', taskId)
-        .select()
-        .single();
+        .delete()
+        .eq('id', taskId);
       
       if (error) throw new Error(error.message);
       
       toast({
-        title: 'Task archived',
-        description: 'Your task was archived successfully',
+        title: 'Task deleted',
+        description: 'Your task was deleted successfully',
       });
       
-      refetchTasks();
-      
-      return data;
+      return true;
     } catch (err) {
-      console.error('Error archiving task:', err);
+      console.error('Error deleting task:', err);
       toast({
         variant: 'destructive',
-        title: 'Failed to archive task',
+        title: 'Failed to delete task',
         description: err instanceof Error ? err.message : 'An unknown error occurred',
       });
-      return null;
-    }
-  };
-  
-  const handleRestoreTask = async (taskId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('tasks')
-        .update({
-          is_archived: false,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', taskId)
-        .select()
-        .single();
-      
-      if (error) throw new Error(error.message);
-      
-      toast({
-        title: 'Task restored',
-        description: 'Your task was restored from the archive',
-      });
-      
-      refetchTasks();
-      
-      return data;
-    } catch (err) {
-      console.error('Error restoring task:', err);
-      toast({
-        variant: 'destructive',
-        title: 'Failed to restore task',
-        description: err instanceof Error ? err.message : 'An unknown error occurred',
-      });
-      return null;
+      return false;
     }
   };
   
@@ -252,8 +212,7 @@ export const useTasksPageState = () => {
     setCurrentEditTask,
     handleCreateTask,
     handleUpdateTask,
-    handleArchiveTask,
-    handleRestoreTask,
+    deleteTask,
     refetchTasks,
     filteredTasks,
     isPaidAccount,

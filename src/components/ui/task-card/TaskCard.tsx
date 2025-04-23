@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { TaskPriority, TaskStatus, SubTask, Task } from "@/types/task.types";
@@ -71,11 +70,11 @@ const TaskCard: React.FC<TaskCardProps> = ({
   const isCompleted = status === "completed";
   const isOverdue = !isCompleted && 
     status !== "snoozed" &&
-    status !== "archived" &&
+    !isArchived &&
     isPast(dueDate) &&
     (dueTime ? true : new Date().getHours() >= 23);
 
-  const priorityClass = PRIORITY_COLORS[isArchived ? 'archived' : priority] || PRIORITY_COLORS.normal;
+  const priorityClass = isArchived ? PRIORITY_COLORS['archived'] : (PRIORITY_COLORS[priority] || PRIORITY_COLORS.normal);
 
   const handleCardClick = (e: React.MouseEvent) => {
     if (!(e.target as HTMLElement).closest('.task-action-button')) {
@@ -94,7 +93,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
     }
   };
 
-  // Updated function to match expected signature
   const handleSubtaskToggle = async (taskId: string, subtaskIndex: number, isCompleted: boolean) => {
     if (onSubtaskToggle) {
       await onSubtaskToggle(id, subtaskIndex, isCompleted);

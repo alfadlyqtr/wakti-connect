@@ -45,13 +45,13 @@ export const TaskCardMenu: React.FC<TaskCardMenuProps> = ({
   userRole,
   isPaidAccount,
 }) => {
-  const showMarkComplete = status !== "completed" && status !== "archived" && !isArchived;
-  const showSnooze = status !== "completed" && status !== "archived" && !isArchived && isPaidAccount;
-  const showDelete = !isArchived;
+  const showMarkComplete = status !== "completed" && !isArchived;
+  const showSnooze = status !== "completed" && !isArchived && isPaidAccount;
+  const showDelete = true;
   const showRestore = isArchived && onRestore;
 
   const handleDelete = () => {
-    if (window.confirm("Are you sure you want to delete this task? It will be archived for 10 days before being permanently deleted.")) {
+    if (window.confirm("Are you sure you want to delete this task? It will be permanently deleted.")) {
       onDelete(id);
     }
   };

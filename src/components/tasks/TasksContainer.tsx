@@ -1,4 +1,11 @@
 
+import React, { useState } from "react";
+import { Task } from "@/types/task.types";
+import { Button } from "@/components/ui/button";
+import { PlusCircle } from "lucide-react";
+import { TaskGrid } from "@/components/tasks/TaskGrid";
+import { useTaskOperations } from "@/hooks/tasks/useTaskOperations";
+
 interface TasksContainerProps {
   tasks: Task[];
   userRole: "free" | "individual" | "business" | "staff";

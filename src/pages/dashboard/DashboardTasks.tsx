@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import TaskControls from "@/components/tasks/TaskControls";
 import TasksLoading from "@/components/tasks/TasksLoading";
@@ -32,12 +33,12 @@ const DashboardTasks = () => {
     setCurrentEditTask,
     handleCreateTask,
     handleUpdateTask,
-    handleDelete,
     refetchTasks,
     filteredTasks,
     isPaidAccount,
     activeTab,
-    setActiveTab
+    setActiveTab,
+    deleteTask
   } = useTasksPageState();
   
   const { requestNotificationPermission } = useReminders();
@@ -68,7 +69,7 @@ const DashboardTasks = () => {
   const displayRole = userRole === 'super-admin' ? 'business' : userRole;
 
   const handleDeleteTask = async (taskId: string) => {
-    await handleDelete(taskId);
+    await deleteTask(taskId);
     await refetchTasks();
   };
 
