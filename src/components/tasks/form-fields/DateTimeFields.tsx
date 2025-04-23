@@ -17,27 +17,6 @@ interface DateTimeFieldsProps {
 
 export const DateTimeFields: React.FC<DateTimeFieldsProps> = ({ form }) => {
   const isRecurring = form.watch("isRecurring");
-  
-  // Generate time options for the select dropdown
-  const getTimeOptions = () => {
-    const options = [];
-    
-    // Generate time options in 15-minute intervals (12-hour format)
-    for (let hour = 0; hour < 24; hour++) {
-      const ampm = hour < 12 ? 'AM' : 'PM';
-      const hour12 = hour % 12 || 12; // Convert 0 to 12 for 12 AM
-      
-      for (let minute = 0; minute < 60; minute += 15) {
-        const timeValue = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-        const displayText = `${hour12}:${minute.toString().padStart(2, '0')} ${ampm}`;
-        options.push({ value: timeValue, label: displayText });
-      }
-    }
-    
-    return options;
-  };
-  
-  const timeOptions = getTimeOptions();
 
   return (
     <div className="space-y-4">
@@ -62,7 +41,7 @@ export const DateTimeFields: React.FC<DateTimeFieldsProps> = ({ form }) => {
           )}
         />
         
-        {/* Simple Time Dropdown */}
+        {/* Native Time Input */}
         <FormField
           control={form.control}
           name="dueTime"
@@ -70,18 +49,12 @@ export const DateTimeFields: React.FC<DateTimeFieldsProps> = ({ form }) => {
             <FormItem className="flex flex-col">
               <FormLabel>Due Time</FormLabel>
               <FormControl>
-                <select 
+                <input
+                  type="time"
                   className="w-full h-9 border rounded px-3 py-1 text-sm"
+                  {...field}
                   value={field.value || ""}
-                  onChange={field.onChange}
-                >
-                  <option value="">Select time</option>
-                  {timeOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

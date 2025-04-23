@@ -18,8 +18,7 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Calendar, Clock } from "lucide-react";
-import { TimePickerField } from "../form-fields/TimePickerField";
+import { Calendar } from "lucide-react";
 
 interface TaskDetailsTabProps {
   form: UseFormReturn<any>;
@@ -34,9 +33,8 @@ export function TaskDetailsTab({
   setIsRecurring,
   isPaidAccount
 }: TaskDetailsTabProps) {
-  // Watch enableSubtasks value
   const enableSubtasks = form.watch("enableSubtasks");
-  
+
   // Explicitly hardcode English values
   const getPriorityLabel = (priority: string): string => {
     switch (priority) {
@@ -63,7 +61,7 @@ export function TaskDetailsTab({
           </FormItem>
         )}
       />
-      
+
       <FormField
         control={form.control}
         name="description"
@@ -82,7 +80,7 @@ export function TaskDetailsTab({
           </FormItem>
         )}
       />
-      
+
       <FormField
         control={form.control}
         name="priority"
@@ -111,7 +109,7 @@ export function TaskDetailsTab({
           </FormItem>
         )}
       />
-      
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <FormField
           control={form.control}
@@ -129,14 +127,28 @@ export function TaskDetailsTab({
             </FormItem>
           )}
         />
-        
-        <TimePickerField 
-          form={form} 
+
+        {/* Native Time Picker replaces TimePickerField */}
+        <FormField 
+          control={form.control}
           name="dueTime"
-          label="Due Time"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Due Time</FormLabel>
+              <FormControl>
+                <input
+                  type="time"
+                  className="w-full h-9 border rounded px-3 py-1 text-sm"
+                  {...field}
+                  value={field.value || ""}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
       </div>
-      
+
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 pt-2">
         {isPaidAccount && (
           <FormItem className="flex flex-row items-center space-x-2 space-y-0">

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -116,7 +115,6 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
     }
   };
 
-  // Helper function to get priority label - hardcoded to English
   const getPriorityLabel = (priority: string): string => {
     switch (priority) {
       case "urgent": return "Urgent";
@@ -221,45 +219,12 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Due Date</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value ? (
-                              format(new Date(field.value), "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={
-                            field.value
-                              ? new Date(field.value)
-                              : new Date()
-                          }
-                          onSelect={(date) =>
-                            field.onChange(
-                              date
-                                ? format(date, "yyyy-MM-dd")
-                                : format(new Date(), "yyyy-MM-dd")
-                            )
-                          }
-                          disabled={(date) => date < new Date("1900-01-01")}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
+                    <FormControl>
+                      <Input
+                        type="date"
+                        {...field}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -272,10 +237,11 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
                   <FormItem>
                     <FormLabel>Due Time</FormLabel>
                     <FormControl>
-                      <Input
+                      <input
                         type="time"
-                        placeholder="Select time"
+                        className="w-full h-9 border rounded px-3 py-1 text-sm"
                         {...field}
+                        value={field.value || ""}
                       />
                     </FormControl>
                     <FormMessage />
