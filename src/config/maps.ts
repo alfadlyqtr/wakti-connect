@@ -2,9 +2,8 @@
 /**
  * Maps configuration and utilities
  */
-import { supabase } from "@/integrations/supabase/client";
 
-const MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+const MAPS_API_KEY = 'AlzaSyA4j92W_YgT4LdU5pzw6a0kzHNAtdz3i2E';
 
 // Validate that we have a valid API key
 if (!MAPS_API_KEY) {
@@ -48,5 +47,37 @@ export const handleMapsError = (error: any): string => {
   } else {
     return "An error occurred while accessing Google Maps services.";
   }
+};
+
+/**
+ * Check if Google Maps API is loaded
+ */
+export const isGoogleMapsLoaded = (): boolean => {
+  return typeof window.google !== 'undefined' && typeof window.google.maps !== 'undefined';
+};
+
+/**
+ * Wait for Google Maps API to load
+ */
+export const waitForGoogleMapsToLoad = (): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    if (isGoogleMapsLoaded()) {
+      resolve();
+      return;
+    }
+
+    const checkInterval = setInterval(() => {
+      if (isGoogleMapsLoaded()) {
+        clearInterval(checkInterval);
+        resolve();
+      }
+    }, 100);
+
+    // Timeout after 10 seconds
+    setTimeout(() => {
+      clearInterval(checkInterval);
+      reject(new Error('Google Maps failed to load'));
+    }, 10000);
+  });
 };
 

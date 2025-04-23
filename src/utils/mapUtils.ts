@@ -1,5 +1,4 @@
 
-import { supabase } from '@/integrations/supabase/client';
 import { GOOGLE_MAPS_API_KEY } from '@/config/maps';
 
 const validateMapsKey = () => {
@@ -14,7 +13,7 @@ export const getMapThumbnailUrl = async (location: string): Promise<string> => {
   if (!location || !validateMapsKey()) return '';
   
   try {
-    // Create Static Maps URL directly (no need for geocoding first)
+    // Create Static Maps URL
     return `https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(location)}&zoom=14&size=400x200&key=${GOOGLE_MAPS_API_KEY}&markers=${encodeURIComponent(location)}`;
   } catch (error) {
     console.error('Error generating map thumbnail URL:', error);
