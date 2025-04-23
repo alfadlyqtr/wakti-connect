@@ -61,6 +61,12 @@ export const TaskCardMenu: React.FC<TaskCardMenuProps> = ({
   const showDelete = !isArchived;
   const showRestore = isArchived && onRestore;
 
+  const handleDelete = () => {
+    if (window.confirm("Are you sure you want to delete this task? It will be archived for 10 days before being permanently deleted.")) {
+      onDelete(id);
+    }
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -126,7 +132,7 @@ export const TaskCardMenu: React.FC<TaskCardMenuProps> = ({
         
         {/* Delete option */}
         {showDelete && (
-          <DropdownMenuItem onClick={() => onDelete(id)}>
+          <DropdownMenuItem onClick={handleDelete}>
             <Trash2 className="mr-2 h-4 w-4 text-red-500" />
             Delete
           </DropdownMenuItem>

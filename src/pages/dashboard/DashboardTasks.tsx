@@ -70,7 +70,7 @@ const DashboardTasks = () => {
 
   const displayRole = userRole === 'super-admin' ? 'business' : userRole;
 
-  const handleArchiveTaskWrapper = async (taskId: string, reason: "deleted" | "canceled") => {
+  const handleArchiveTaskWrapper = async (taskId: string, reason: "deleted" | "canceled" = "deleted") => {
     await handleArchiveTask(taskId);
   };
 
