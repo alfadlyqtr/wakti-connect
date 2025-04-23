@@ -9,14 +9,14 @@ interface SidebarContainerProps {
   onCollapseChange?: (collapsed: boolean) => void;
 }
 
-const SidebarContainer: React.FC<SidebarContainerProps> = ({ 
-  children, 
-  isOpen, 
+const SidebarContainer: React.FC<SidebarContainerProps> = ({
+  children,
+  isOpen,
   collapsed,
   onCollapseChange
 }) => {
   const location = useLocation();
-  
+
   // Close sidebar on route change for mobile
   useEffect(() => {
     const handleRouteChange = () => {
@@ -26,7 +26,6 @@ const SidebarContainer: React.FC<SidebarContainerProps> = ({
         sidebar.classList.remove('sidebar-open');
       }
     };
-    
     handleRouteChange();
   }, [location.pathname]);
 
@@ -38,11 +37,16 @@ const SidebarContainer: React.FC<SidebarContainerProps> = ({
   }, [collapsed, onCollapseChange]);
 
   return (
-    <aside 
+    <aside
       id="sidebar"
-      className={`fixed top-[70px] left-0 h-[calc(100vh-70px)] bg-card/95 backdrop-blur-sm border-r shadow-sm pt-5 transition-all duration-300 lg:translate-x-0 ${
-        isOpen ? 'sidebar-open shadow-lg' : 'sidebar-closed'
-      } ${collapsed ? 'w-[70px]' : 'w-52'}`}
+      className={`
+        fixed top-[70px] left-0 h-[calc(100vh-70px)] bg-card/95 backdrop-blur-sm border-r shadow-sm pt-5 transition-all duration-300
+        lg:translate-x-0
+        ${isOpen ? 'sidebar-open shadow-lg' : 'sidebar-closed'}
+        ${collapsed ? 'w-[70px]' : 'w-52'}
+        z-50
+      `}
+      style={{ position: "sticky", top: 0, height: "100vh" }}
     >
       <div className="h-full flex flex-col relative">
         {children}
