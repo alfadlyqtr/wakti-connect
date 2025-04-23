@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -14,6 +14,7 @@ import { Reminder, ReminderNotification } from "@/types/reminder.types";
 import { Button } from "@/components/ui/button";
 import { snoozeReminder, dismissReminderNotification } from "@/services/reminder/reminderService";
 import { BellRing } from "lucide-react";
+import { playNotificationSound } from "@/utils/audioUtils";
 
 interface ReminderToastProps {
   reminder: Reminder;
@@ -27,6 +28,13 @@ const ReminderToast: React.FC<ReminderToastProps> = ({
   onClose
 }) => {
   const [isOpen, setIsOpen] = React.useState(true);
+  const [customSnoozeMinutes, setCustomSnoozeMinutes] = React.useState<number | "">("");
+  const [showCustomSnooze, setShowCustomSnooze] = React.useState(false);
+  
+  // Play sound when reminder toast appears
+  useEffect(() => {
+    playNotificationSound();
+  }, []);
   
   const handleSnooze = async (minutes: number) => {
     try {
@@ -36,6 +44,13 @@ const ReminderToast: React.FC<ReminderToastProps> = ({
     } catch (error) {
       console.error("Error snoozing reminder:", error);
     }
+  };
+  
+  const handleCustomSnooze = async () => {
+    const minutes = Number(customSnoozeMinutes);
+    if (isNaN(minutes) || minutes <= 0) return;
+    
+    await handleSnooze(minutes);
   };
   
   const handleDismiss = async () => {
@@ -60,22 +75,67 @@ const ReminderToast: React.FC<ReminderToastProps> = ({
         </AlertDialogHeader>
         
         <AlertDialogFooter className="flex-col space-y-2 sm:space-y-0">
-          <div className="flex space-x-2 w-full">
-            <Button 
-              variant="outline" 
-              className="flex-1"
-              onClick={() => handleSnooze(5)}
-            >
-              Snooze 5m
-            </Button>
-            <Button 
-              variant="outline"
-              className="flex-1"
-              onClick={() => handleSnooze(10)}
-            >
-              Snooze 10m
-            </Button>
-          </div>
+          {!showCustomSnooze ? (
+            <>
+              <div className="flex space-x-2 w-full">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => handleSnooze(5)}
+                >
+                  Snooze 5m
+                </Button>
+                <Button 
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => handleSnooze(10)}
+                >
+                  Snooze 10m
+                </Button>
+              </div>
+              <div className="flex space-x-2 w-full">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => handleSnooze(30)}
+                >
+                  Snooze 30m
+                </Button>
+                <Button 
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setShowCustomSnooze(true)}
+                >
+                  Custom
+                </Button>
+              </div>
+            </>
+          ) : (
+            <div className="flex space-x-2 w-full items-center">
+              <input
+                type="number"
+                className="flex-1 h-10 rounded border px-3"
+                placeholder="Minutes"
+                value={customSnoozeMinutes}
+                onChange={(e) => setCustomSnoozeMinutes(e.target.value === "" ? "" : Number(e.target.value))}
+                min="1"
+              />
+              <Button 
+                variant="outline"
+                onClick={handleCustomSnooze}
+                disabled={!customSnoozeMinutes || Number(customSnoozeMinutes) <= 0}
+              >
+                Snooze
+              </Button>
+              <Button 
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowCustomSnooze(false)}
+              >
+                Cancel
+              </Button>
+            </div>
+          )}
           
           <AlertDialogAction 
             className="w-full sm:w-auto"

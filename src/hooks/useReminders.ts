@@ -4,10 +4,22 @@ import { supabase } from "@/integrations/supabase/client";
 import { Reminder, ReminderNotification } from "@/types/reminder.types";
 import { fetchReminders, createReminderNotification } from "@/services/reminder/reminderService";
 import { toast } from "@/components/ui/use-toast";
+import { requestAudioPermission, playNotificationSound } from "@/utils/audioUtils";
 
 export function useReminders() {
   const [activeReminders, setActiveReminders] = useState<Reminder[]>([]);
   const [loading, setLoading] = useState(true);
+  const [audioPermissionGranted, setAudioPermissionGranted] = useState(false);
+  
+  // Request audio permission
+  useEffect(() => {
+    const setupAudioPermission = async () => {
+      const granted = await requestAudioPermission();
+      setAudioPermissionGranted(granted);
+    };
+    
+    setupAudioPermission();
+  }, []);
   
   // Load initial reminders
   useEffect(() => {
@@ -67,17 +79,18 @@ export function useReminders() {
         try {
           const notification = await createReminderNotification(reminder.id);
           
-          // Show notification toast - using a function to render ReminderToast component
-          // instead of directly using JSX in a .ts file
+          // Play sound notification if permission granted
+          if (audioPermissionGranted) {
+            playNotificationSound();
+          }
+          
+          // Show notification toast
           toast({
             title: "Reminder",
             description: {
-              // Using an object to pass data that will be rendered as a React component
-              // by the toast system
               reminder,
               notification,
               onClose: () => {},
-              // This identifies this as a reminder toast type
               type: 'reminder-toast'
             },
             duration: Infinity, // Don't auto-dismiss
@@ -101,7 +114,7 @@ export function useReminders() {
     checkDueReminders();
     
     return () => clearInterval(interval);
-  }, [activeReminders]);
+  }, [activeReminders, audioPermissionGranted]);
   
   // Utility function to request notification permissions
   const requestNotificationPermission = useCallback(async () => {
@@ -120,6 +133,8 @@ export function useReminders() {
   return {
     loading,
     activeReminders,
-    requestNotificationPermission
+    requestNotificationPermission,
+    requestAudioPermission,
+    audioPermissionGranted
   };
 }

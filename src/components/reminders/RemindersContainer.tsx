@@ -4,10 +4,11 @@ import { Reminder } from "@/types/reminder.types";
 import { fetchReminders } from "@/services/reminder/reminderService";
 import RemindersList from "./RemindersList";
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Volume2, VolumeX } from "lucide-react";
 import { CreateReminderDialog } from "./CreateReminderDialog";
 import { toast } from "@/components/ui/use-toast";
 import { UserRole } from "@/types/user";
+import { requestAudioPermission } from "@/utils/audioUtils";
 
 interface RemindersContainerProps {
   userRole: UserRole;
@@ -21,10 +22,18 @@ const RemindersContainer: React.FC<RemindersContainerProps> = ({
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [audioEnabled, setAudioEnabled] = useState(false);
   
   useEffect(() => {
     loadReminders();
+    checkAudioStatus();
   }, []);
+  
+  const checkAudioStatus = async () => {
+    // Check if audio has been previously enabled
+    const audioStatus = localStorage.getItem('reminderAudioEnabled');
+    setAudioEnabled(audioStatus === 'true');
+  };
   
   const loadReminders = async () => {
     try {
@@ -44,17 +53,39 @@ const RemindersContainer: React.FC<RemindersContainerProps> = ({
   };
   
   const handleCreateReminder = () => {
-    // Check if free user has reached limit
-    if (!isPaidAccount && reminders.length >= 3) {
-      toast({
-        title: "Reminder limit reached",
-        description: "Free accounts are limited to 3 active reminders. Please upgrade to create more.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
     setCreateDialogOpen(true);
+  };
+
+  const toggleAudio = async () => {
+    if (!audioEnabled) {
+      // Request permission when enabling
+      const granted = await requestAudioPermission();
+      if (granted) {
+        setAudioEnabled(true);
+        localStorage.setItem('reminderAudioEnabled', 'true');
+        toast({
+          title: "Audio notifications enabled",
+          description: "You'll now hear sounds when reminders are triggered.",
+          duration: 3000
+        });
+      } else {
+        toast({
+          title: "Could not enable audio",
+          description: "Your browser may not support audio notifications.",
+          variant: "destructive",
+          duration: 3000
+        });
+      }
+    } else {
+      // Just disable if already enabled
+      setAudioEnabled(false);
+      localStorage.setItem('reminderAudioEnabled', 'false');
+      toast({
+        title: "Audio notifications disabled",
+        description: "You won't hear sounds when reminders are triggered.",
+        duration: 3000
+      });
+    }
   };
   
   if (isLoading) {
@@ -96,13 +127,27 @@ const RemindersContainer: React.FC<RemindersContainerProps> = ({
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Active Reminders</h2>
-        <Button 
-          onClick={handleCreateReminder}
-          size="sm"
-        >
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Add Reminder
-        </Button>
+        <div className="flex space-x-2">
+          <Button 
+            onClick={toggleAudio} 
+            size="sm"
+            variant="outline"
+            title={audioEnabled ? "Disable sound alerts" : "Enable sound alerts"}
+          >
+            {audioEnabled ? (
+              <><Volume2 className="h-4 w-4 mr-2" /> Sound On</>
+            ) : (
+              <><VolumeX className="h-4 w-4 mr-2" /> Sound Off</>
+            )}
+          </Button>
+          <Button 
+            onClick={handleCreateReminder}
+            size="sm"
+          >
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add Reminder
+          </Button>
+        </div>
       </div>
       
       <RemindersList 
