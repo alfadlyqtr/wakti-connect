@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from "react";
 import { Reminder } from "@/types/reminder.types";
 import { fetchReminders } from "@/services/reminder/reminderService";
 import RemindersList from "./RemindersList";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Volume2, VolumeX } from "lucide-react";
+import { PlusCircle, Volume2, VolumeX, Bell, ClipboardCheck } from "lucide-react";
 import { CreateReminderDialog } from "./CreateReminderDialog";
 import { toast } from "@/components/ui/use-toast";
 import { UserRole } from "@/types/user";
@@ -22,15 +23,30 @@ const RemindersContainer: React.FC<RemindersContainerProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(false);
+  const [notificationEnabled, setNotificationEnabled] = useState(false);
+  const [lastCheckTime, setLastCheckTime] = useState<Date>(new Date());
   
   useEffect(() => {
     loadReminders();
     checkAudioStatus();
+    checkNotificationStatus();
+    
+    // Set up periodic status updates
+    const interval = setInterval(() => {
+      setLastCheckTime(new Date());
+    }, 5000);
+    
+    return () => clearInterval(interval);
   }, []);
   
   const checkAudioStatus = async () => {
     const audioStatus = localStorage.getItem('reminderAudioEnabled');
     setAudioEnabled(audioStatus === 'true');
+  };
+  
+  const checkNotificationStatus = () => {
+    const hasPermission = Notification && Notification.permission === 'granted';
+    setNotificationEnabled(hasPermission);
   };
   
   const loadReminders = async () => {
@@ -84,12 +100,57 @@ const RemindersContainer: React.FC<RemindersContainerProps> = ({
     }
   };
   
+  const requestNotifications = async () => {
+    if (Notification) {
+      try {
+        const permission = await Notification.requestPermission();
+        setNotificationEnabled(permission === 'granted');
+        
+        if (permission === 'granted') {
+          toast({
+            title: "Browser notifications enabled",
+            description: "You'll now receive browser notifications for reminders.",
+            duration: 3000
+          });
+        } else {
+          toast({
+            title: "Browser notifications denied",
+            description: "Please enable notifications in your browser settings to receive reminder alerts.",
+            variant: "destructive",
+            duration: 5000
+          });
+        }
+      } catch (error) {
+        console.error("Error requesting notification permission:", error);
+        toast({
+          title: "Notification error",
+          description: "Failed to request notification permissions.",
+          variant: "destructive",
+          duration: 3000
+        });
+      }
+    } else {
+      toast({
+        title: "Notifications not supported",
+        description: "Your browser does not support notifications.",
+        variant: "destructive",
+        duration: 3000
+      });
+    }
+  };
+  
   const getRelativeTime = (reminderTime: string) => {
     const now = new Date();
     const reminder = new Date(reminderTime);
     const diffInSeconds = Math.floor((reminder.getTime() - now.getTime()) / 1000);
     
-    if (diffInSeconds < 0) return "Due now";
+    if (diffInSeconds < 0) {
+      const passedSeconds = Math.abs(diffInSeconds);
+      if (passedSeconds < 60) return `Due ${passedSeconds} seconds ago`;
+      if (passedSeconds < 3600) return `Due ${Math.floor(passedSeconds / 60)} minutes ago`;
+      return `Due ${Math.floor(passedSeconds / 3600)} hours ago`;
+    }
+    
     if (diffInSeconds < 60) return `Due in ${diffInSeconds} seconds`;
     if (diffInSeconds < 3600) return `Due in ${Math.floor(diffInSeconds / 60)} minutes`;
     return `Due in ${Math.floor(diffInSeconds / 3600)} hours`;
@@ -136,10 +197,22 @@ const RemindersContainer: React.FC<RemindersContainerProps> = ({
         <h2 className="text-xl font-semibold">Active Reminders</h2>
         <div className="flex space-x-2">
           <Button 
+            onClick={requestNotifications} 
+            size="sm"
+            variant={notificationEnabled ? "default" : "outline"}
+            title={notificationEnabled ? "Browser notifications enabled" : "Enable browser notifications"}
+            className={notificationEnabled ? "bg-green-600 hover:bg-green-700" : ""}
+          >
+            <Bell className="h-4 w-4 mr-2" />
+            {notificationEnabled ? "Notifications On" : "Enable Notifications"}
+          </Button>
+          
+          <Button 
             onClick={toggleAudio} 
             size="sm"
             variant="outline"
             title={audioEnabled ? "Disable sound alerts" : "Enable sound alerts"}
+            className={audioEnabled ? "bg-blue-50" : ""}
           >
             {audioEnabled ? (
               <><Volume2 className="h-4 w-4 mr-2" /> Sound On</>
@@ -147,6 +220,7 @@ const RemindersContainer: React.FC<RemindersContainerProps> = ({
               <><VolumeX className="h-4 w-4 mr-2" /> Sound Off</>
             )}
           </Button>
+          
           <Button 
             onClick={handleCreateReminder}
             size="sm"
@@ -155,6 +229,13 @@ const RemindersContainer: React.FC<RemindersContainerProps> = ({
             Add Reminder
           </Button>
         </div>
+      </div>
+      
+      <div className="p-2 bg-blue-50 text-blue-700 rounded-md flex items-center text-sm">
+        <ClipboardCheck className="h-4 w-4 mr-2 text-blue-500" />
+        <span>
+          Reminders are checked every 5 seconds. Last check: {lastCheckTime.toLocaleTimeString()}
+        </span>
       </div>
       
       <RemindersList 
