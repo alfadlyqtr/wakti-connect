@@ -2,9 +2,6 @@
 import React from "react";
 import LandingPage from "@/pages/public/LandingPage";
 
-const Index = () => {
-  console.log("Index component rendering");
-  return <LandingPage />;
-};
+const Index = () => <LandingPage />;
 
 export default Index;
