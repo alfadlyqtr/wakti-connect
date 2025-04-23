@@ -7,9 +7,12 @@ import { formatTimeString } from "@/utils/dateTimeFormatter";
 interface TaskDueDateProps {
   dueDate: Date;
   dueTime?: string | null;
-  status: string;
+  status?: string;
+  isOverdue?: boolean; // Added this prop
   snoozedUntil?: Date | null;
   snoozeCount?: number;
+  isCompleted?: boolean; // Added this prop
+  completedDate?: Date | null; // Added this prop
 }
 
 export const TaskDueDate: React.FC<TaskDueDateProps> = ({
@@ -17,7 +20,8 @@ export const TaskDueDate: React.FC<TaskDueDateProps> = ({
   dueTime,
   status,
   snoozedUntil,
-  snoozeCount = 0
+  snoozeCount = 0,
+  isOverdue, // Use the provided isOverdue prop
 }) => {
   const formatDueDate = () => {
     if (!dueDate || isNaN(dueDate.getTime())) return "Invalid date";
@@ -25,7 +29,12 @@ export const TaskDueDate: React.FC<TaskDueDateProps> = ({
     // For tasks without specific time, treat the due date as end of day
     const effectiveDueDate = dueTime ? dueDate : endOfDay(dueDate);
     
-    if (isPast(effectiveDueDate) && status !== 'completed' && status !== 'archived') {
+    // Use provided isOverdue prop if available, otherwise calculate it
+    const taskIsOverdue = isOverdue !== undefined ? 
+      isOverdue : 
+      (isPast(effectiveDueDate) && status !== 'completed' && status !== 'archived');
+    
+    if (taskIsOverdue) {
       return `Overdue: ${formatDistanceToNow(effectiveDueDate, { addSuffix: true })}`;
     }
     

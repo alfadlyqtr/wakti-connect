@@ -5,12 +5,15 @@ import { TaskStatus } from "@/types/task.types";
 import { CheckCircle, CircleSlash } from "lucide-react";
  
 interface TaskCardFooterProps {
-  id: string;
-  status: TaskStatus;
+  id?: string;
+  status?: TaskStatus;
   completedDate?: Date | null;
-  dueDate: Date;
-  onStatusChange: (id: string, status: string) => void;
-  onEdit: (id: string) => void;
+  dueDate?: Date;
+  onStatusChange?: (id: string, status: string) => void;
+  onEdit?: (id: string) => void;
+  subtaskCount?: number; // Added this prop
+  completedSubtaskCount?: number; // Added this prop
+  isCompleted: boolean;
 }
 
 export const TaskCardFooter: React.FC<TaskCardFooterProps> = ({
@@ -19,32 +22,40 @@ export const TaskCardFooter: React.FC<TaskCardFooterProps> = ({
   completedDate,
   dueDate,
   onStatusChange,
-  onEdit
+  onEdit,
+  subtaskCount = 0,
+  completedSubtaskCount = 0,
+  isCompleted
 }) => {
-  const isCompleted = status === "completed";
-  
   const handleMarkComplete = () => {
-    onStatusChange(id, isCompleted ? "pending" : "completed");
+    if (id && onStatusChange) {
+      onStatusChange(id, isCompleted ? "pending" : "completed");
+    }
   };
 
   return (
-    <div className="px-4 py-2 border-t flex items-center justify-between text-xs text-muted-foreground">
-      <div>
-        {completedDate && (
-          <span>
-            Completed on {format(new Date(completedDate), "MMM d, yyyy")}
-          </span>
-        )}
-      </div>
-      <div className="flex gap-2">
+    <div className="text-xs text-muted-foreground flex items-center justify-between">
+      {subtaskCount > 0 && (
+        <div>
+          {completedSubtaskCount}/{subtaskCount} subtasks
+        </div>
+      )}
+      
+      {completedDate && (
+        <div>
+          Completed on {format(new Date(completedDate), "MMM d, yyyy")}
+        </div>
+      )}
+      
+      {onStatusChange && id && (
         <button
-          className="flex items-center gap-1 hover:text-foreground transition-colors"
+          className="flex items-center gap-1 hover:text-foreground transition-colors ml-auto"
           onClick={handleMarkComplete}
         >
           {isCompleted ? <CircleSlash className="h-3 w-3" /> : <CheckCircle className="h-3 w-3" />}
           {isCompleted ? "Mark Pending" : "Mark Completed"}
         </button>
-      </div>
+      )}
     </div>
   );
 };

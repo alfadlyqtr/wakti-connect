@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { TaskPriority, TaskStatus, SubTask } from "@/types/task.types";
+import { TaskPriority, TaskStatus, SubTask, Task } from "@/types/task.types";
 import { isPast } from "date-fns";
 import { TaskCardHeader } from "./TaskCardHeader";
 import { TaskCardMenu } from "./TaskCardMenu";
@@ -102,12 +102,10 @@ const TaskCard: React.FC<TaskCardProps> = ({
           <div className="flex justify-between items-start">
             <TaskCardHeader 
               title={title}
-              status={status}
-              isCompleted={isCompleted}
               priority={priority}
+              isCompleted={isCompleted}
               isArchived={isArchived}
               isRecurring={isRecurring}
-              isRecurringInstance={isRecurringInstance}
             />
             <div className="flex items-start" onClick={(e) => e.stopPropagation()}>
               <TaskCardMenu
@@ -136,6 +134,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
             <TaskDueDate
               dueDate={dueDate}
               dueTime={dueTime}
+              status={status}
               isOverdue={isOverdue}
               snoozedUntil={snoozedUntil}
               snoozeCount={snoozeCount}
@@ -145,9 +144,9 @@ const TaskCard: React.FC<TaskCardProps> = ({
           </CardContent>
           
           <TaskCardFooter 
+            isCompleted={isCompleted}
             subtaskCount={subtasks?.length || 0}
             completedSubtaskCount={subtasks?.filter(st => st.is_completed)?.length || 0}
-            isCompleted={isCompleted}
           />
         </div>
       </Card>
@@ -168,7 +167,10 @@ const TaskCard: React.FC<TaskCardProps> = ({
           is_recurring: isRecurring,
           is_recurring_instance: isRecurringInstance,
           snooze_count: snoozeCount,
-          snoozed_until: snoozedUntil?.toISOString()
+          snoozed_until: snoozedUntil?.toISOString(),
+          // Add required properties for Task type
+          user_id: '', // Add a default empty string for user_id
+          created_at: new Date().toISOString() // Add current date for created_at
         }}
         onEdit={() => {
           setDetailOpen(false);
@@ -183,8 +185,9 @@ const TaskCard: React.FC<TaskCardProps> = ({
           if (status === "completed") setDetailOpen(false);
         }}
         onSubtaskToggle={onSubtaskToggle ? 
-          (subtaskIndex, isCompleted) => onSubtaskToggle(id, subtaskIndex, isCompleted) 
-          : undefined
+          (subtaskIndex, isCompleted) => {
+            if (onSubtaskToggle) onSubtaskToggle(id, subtaskIndex, isCompleted);
+          } : undefined
         }
         refetch={refetch}
       />

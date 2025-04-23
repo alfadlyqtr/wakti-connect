@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   AlertTriangle,
@@ -7,13 +6,15 @@ import {
   RepeatIcon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { TaskPriority } from "@/types/task.types";
+import { TaskPriority, TaskStatus } from "@/types/task.types";
 
 interface TaskCardHeaderProps {
   title: string;
   priority: TaskPriority;
+  status?: TaskStatus;
   isRecurring?: boolean;
   isCompleted: boolean;
+  isArchived?: boolean;
 }
 
 export const TaskCardHeader: React.FC<TaskCardHeaderProps> = ({
@@ -22,7 +23,6 @@ export const TaskCardHeader: React.FC<TaskCardHeaderProps> = ({
   isRecurring,
   isCompleted,
 }) => {
-  // Hardcoded English values for priority labels
   const getPriorityLabel = (priority: TaskPriority): string => {
     switch (priority) {
       case "urgent": return "Urgent";
