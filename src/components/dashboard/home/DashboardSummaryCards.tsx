@@ -1,9 +1,11 @@
+
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, BellRing, Users } from "lucide-react";
+import { CheckCircle, Bell, Users } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDashboardNotifications } from "@/hooks/useDashboardNotifications";
-import { Bell } from 'lucide-react';
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ProfileDataType {
   account_type: "free" | "individual" | "business";
@@ -34,9 +36,32 @@ export const DashboardSummaryCards = ({
 }: DashboardSummaryCardsProps) => {
   const tasks = todayTasks || [];
   const completedTasksCount = tasks.filter((task: any) => task.status === "completed").length;
-  const { unreadCount, isLoading: notifLoading } = useDashboardNotifications();
+  const { unreadCount, isLoading: notificationsLoading } = useDashboardNotifications();
 
-  if (isLoading) {
+  // Fetch actual subscribers count from Supabase
+  const { data: subscribersData, isLoading: subscribersLoading } = useQuery({
+    queryKey: ['dashboardSubscribersCount'],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return { subscribersCount: 0 };
+      
+      const { count, error } = await supabase
+        .from('business_subscribers')
+        .select('*', { count: 'exact', head: true })
+        .eq('business_id', session.user.id);
+        
+      if (error) {
+        console.error("Error fetching subscribers count:", error);
+        return { subscribersCount: 0 };
+      }
+      
+      return { subscribersCount: count || 0 };
+    }
+  });
+  
+  const actualSubscribersCount = subscribersData?.subscribersCount || 0;
+
+  if (isLoading || subscribersLoading) {
     return (
       <div className="grid gap-2 grid-cols-2 md:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
@@ -81,7 +106,7 @@ export const DashboardSummaryCards = ({
         </CardHeader>
         <CardContent className={CARD_CONTENT}>
           <div className="text-xl md:text-2xl font-bold">
-            {notifLoading ? <Skeleton className="h-6 w-12" /> : unreadCount}
+            {notificationsLoading ? <Skeleton className="h-6 w-12" /> : unreadCount}
           </div>
           <p className="text-xs text-muted-foreground">
             {unreadCount > 0 ? "Unread notifications" : "No new notifications"}
@@ -95,7 +120,7 @@ export const DashboardSummaryCards = ({
           <Users className="h-5 w-5 text-blue-500 group-hover:scale-110 transition-transform" />
         </CardHeader>
         <CardContent className={CARD_CONTENT}>
-          <div className="text-xl md:text-2xl font-bold">{subscribersCount}</div>
+          <div className="text-xl md:text-2xl font-bold">{actualSubscribersCount}</div>
           <p className="text-xs text-muted-foreground">
             Total subscribers
           </p>
