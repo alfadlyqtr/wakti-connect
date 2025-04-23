@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -28,12 +27,8 @@ export function TaskFormTabs({
   userRole,
   submitLabel
 }: TaskFormTabsProps) {
-  // Check if the user has a paid account
   const isPaidAccount = userRole === "individual" || userRole === "business" || userRole === "staff";
-  
-  // Watch enableSubtasks value to know if we should show subtasks tab
   const enableSubtasks = form.watch("enableSubtasks");
-  
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -49,7 +44,6 @@ export function TaskFormTabs({
               {!isPaidAccount && <span className="ml-1 text-xs">(Pro)</span>}
             </TabsTrigger>
           </TabsList>
-          
           <TabsContent value="details">
             <TaskDetailsTab 
               form={form}
@@ -58,14 +52,21 @@ export function TaskFormTabs({
               isPaidAccount={isPaidAccount}
             />
           </TabsContent>
-          
           <TabsContent value="subtasks">
-            <SubtasksTab 
-              form={form}
-              enableSubtasks={enableSubtasks}
-            />
+            {enableSubtasks && (
+              <SubtasksTab 
+                form={form}
+                enableSubtasks={enableSubtasks}
+              />
+            )}
+            {!enableSubtasks && (
+              <div className="flex flex-col items-center justify-center py-6 text-center">
+                <p className="text-muted-foreground mb-2">
+                  Enable subtasks on the Details tab to use this feature.
+                </p>
+              </div>
+            )}
           </TabsContent>
-          
           <TabsContent value="recurring">
             <RecurringTab 
               form={form}
@@ -74,7 +75,6 @@ export function TaskFormTabs({
             />
           </TabsContent>
         </Tabs>
-        
         <div className="flex justify-end pt-4">
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

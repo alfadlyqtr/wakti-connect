@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useFieldArray, UseFormReturn } from "react-hook-form";
 import {
@@ -19,7 +18,6 @@ interface SubtasksTabProps {
 }
 
 export function SubtasksTab({ form, enableSubtasks }: SubtasksTabProps) {
-  // Setup field array for subtasks
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "subtasks"
@@ -29,7 +27,7 @@ export function SubtasksTab({ form, enableSubtasks }: SubtasksTabProps) {
     return (
       <div className="flex flex-col items-center justify-center py-6 text-center">
         <p className="text-muted-foreground mb-2">
-          Enable subtasks on the Details tab first.
+          Enable subtasks first on the Details tab to access this section.
         </p>
       </div>
     );
@@ -37,24 +35,6 @@ export function SubtasksTab({ form, enableSubtasks }: SubtasksTabProps) {
 
   return (
     <div className="space-y-4 pt-4">
-      {/* Group Title Field */}
-      <FormField
-        control={form.control}
-        name="subtaskGroupTitle"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Subtask Group Title</FormLabel>
-            <FormControl>
-              <Input 
-                placeholder="e.g. Lulu Grocery Store" 
-                {...field} 
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-medium">Manage Subtasks</h3>
         <Button
@@ -66,13 +46,11 @@ export function SubtasksTab({ form, enableSubtasks }: SubtasksTabProps) {
           <Plus className="h-4 w-4 mr-1" /> Add Subtask
         </Button>
       </div>
-      
       {fields.length === 0 && (
         <div className="text-sm text-muted-foreground p-4 border border-dashed rounded-md text-center">
           No subtasks added yet. Click the button above to add one.
         </div>
       )}
-      
       {fields.map((field, index) => (
         <div key={field.id} className="border rounded-md p-4 space-y-3">
           <FormField
@@ -88,7 +66,6 @@ export function SubtasksTab({ form, enableSubtasks }: SubtasksTabProps) {
               </FormItem>
             )}
           />
-          
           <Button
             type="button"
             variant="destructive"

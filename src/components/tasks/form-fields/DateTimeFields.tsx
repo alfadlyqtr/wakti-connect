@@ -1,4 +1,3 @@
-
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import { TaskFormValues } from "../TaskFormSchema";
@@ -24,7 +23,6 @@ interface DateTimeFieldsProps {
 
 export const DateTimeFields: React.FC<DateTimeFieldsProps> = ({ form }) => {
   const isRecurring = form.watch("isRecurring");
-  
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -35,43 +33,38 @@ export const DateTimeFields: React.FC<DateTimeFieldsProps> = ({ form }) => {
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Due Date</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-full pl-3 text-left font-normal",
-                        !field.value && "text-muted-foreground"
-                      )}
-                    >
-                      {field.value ? (
-                        format(new Date(field.value), "PPP")
-                      ) : (
-                        <span>Pick a date</span>
-                      )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 z-50" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={field.value ? new Date(field.value) : undefined}
-                    onSelect={(date) => field.onChange(date?.toISOString().split('T')[0] || "")}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+              <FormControl>
+                <input
+                  type="date"
+                  className="w-full h-9 border rounded px-3 py-1 text-sm"
+                  {...field}
+                  value={field.value || ""}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        
-        {/* Due Time Field */}
-        <TimePickerField form={form} name="dueTime" label="Due Time" />
+        {/* SIMPLIFIED DUE TIME FIELD */}
+        <FormField
+          control={form.control}
+          name="dueTime"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>Due Time</FormLabel>
+              <FormControl>
+                <input
+                  type="time"
+                  className="w-full h-9 border rounded px-3 py-1 text-sm"
+                  value={field.value || ""}
+                  onChange={field.onChange}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </div>
-      
       {/* Recurring Task Switch */}
       <FormField
         control={form.control}
@@ -91,8 +84,7 @@ export const DateTimeFields: React.FC<DateTimeFieldsProps> = ({ form }) => {
           </FormItem>
         )}
       />
-      
-      {/* Recurring Options - shown only if isRecurring is true */}
+      {/* Recurring Options */}
       {isRecurring && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 border rounded-lg p-4 bg-muted/20">
           <FormField
@@ -103,7 +95,7 @@ export const DateTimeFields: React.FC<DateTimeFieldsProps> = ({ form }) => {
                 <FormLabel>Frequency</FormLabel>
                 <FormControl>
                   <select 
-                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
                     {...field}
                   >
                     <option value="daily">Daily</option>
@@ -115,7 +107,6 @@ export const DateTimeFields: React.FC<DateTimeFieldsProps> = ({ form }) => {
               </FormItem>
             )}
           />
-          
           <FormField
             control={form.control}
             name="recurring.interval"
@@ -124,10 +115,10 @@ export const DateTimeFields: React.FC<DateTimeFieldsProps> = ({ form }) => {
                 <FormLabel>Every</FormLabel>
                 <FormControl>
                   <select 
-                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
                     {...field}
                     value={field.value || "1"}
-                    onChange={(e) => field.onChange(Number(e.target.value))}
+                    onChange={e => field.onChange(Number(e.target.value))}
                   >
                     {[1, 2, 3, 4, 5, 6, 7, 14, 21, 28].map((num) => (
                       <option key={num} value={num}>{num}</option>

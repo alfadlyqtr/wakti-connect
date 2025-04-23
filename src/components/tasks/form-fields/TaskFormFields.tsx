@@ -1,4 +1,3 @@
-
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import { TaskFormValues } from "../TaskFormSchema";
@@ -43,7 +42,7 @@ const TaskFormFields: React.FC<TaskFormFieldsProps> = ({ form }) => {
         )}
       />
       
-      {/* Subtasks Section - group style */}
+      {/* Subtasks Section - ONLY if enabled, shows basic inline quick subtasks, no "group title" */}
       <SubtasksSection
         form={form}
         enableSubtasks={enableSubtasks}
