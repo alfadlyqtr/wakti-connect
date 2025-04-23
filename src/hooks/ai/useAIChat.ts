@@ -2,7 +2,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useAIChatOperations } from "./operations/useAIChatOperations";
 import { AIMessage } from "@/types/ai-assistant.types";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
 import { TaskFormData } from "@/types/task.types";
 
@@ -12,7 +12,7 @@ import { TaskFormData } from "@/types/task.types";
 export const useAIChat = () => {
   const {
     messages,
-    sendMessage: sendOperationsMessage,
+    sendMessage,
     clearMessages,
     isLoading,
     detectedTask,
@@ -66,7 +66,7 @@ export const useAIChat = () => {
       }
       
       // Send the message (context will be added in the backend)
-      return await sendOperationsMessage.mutateAsync(enhancedMessage);
+      return await sendMessage.mutateAsync(enhancedMessage);
     } catch (error) {
       console.error("Error sending enhanced message:", error);
       
@@ -78,13 +78,13 @@ export const useAIChat = () => {
       
       throw error;
     }
-  }, [sendOperationsMessage, getApplicationContext, toast]);
+  }, [sendMessage.mutateAsync, getApplicationContext, toast]);
   
   return {
     messages,
     sendMessage: sendEnhancedMessage,
     clearMessages,
-    isLoading: isLoading || sendOperationsMessage.isPending,
+    isLoading: isLoading || sendMessage.isPending,
     detectedTask,
     confirmCreateTask,
     cancelCreateTask,

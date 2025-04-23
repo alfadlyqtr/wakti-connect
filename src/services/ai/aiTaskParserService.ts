@@ -14,6 +14,16 @@ export interface NestedSubtask {
   subtasks?: (string | NestedSubtask)[];
 }
 
+// Export ParsedTask interface to resolve import issues
+export interface ParsedTask {
+  title: string;
+  due_date?: string;
+  due_time?: string;
+  priority?: string;
+  subtasks: (string | NestedSubtask)[];
+  location?: string;
+}
+
 /**
  * Parses a text input into a structured task using AI
  */
@@ -173,7 +183,7 @@ export const convertParsedTaskToFormData = (parsedTask: ParsedTask) => {
     due_date: parsedTask.due_date || '',
     due_time: parsedTask.due_time,
     subtasks: hierarchicalSubtasks,
-    status: 'pending',
+    status: 'pending' as const,
     location: parsedTask.location,
     enableSubtasks: parsedTask.subtasks.length > 0,
     is_recurring: false,
