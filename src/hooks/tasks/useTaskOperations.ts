@@ -168,7 +168,7 @@ export function useTaskOperations(
       
       toast({
         title: "Task deleted",
-        description: "Task has been permanently deleted",
+        description: "Task has been deleted permanently",
       });
 
     } catch (error) {

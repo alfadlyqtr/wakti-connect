@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import TaskControls from "@/components/tasks/TaskControls";
 import TasksLoading from "@/components/tasks/TasksLoading";
@@ -8,7 +7,6 @@ import { EditTaskDialog } from "@/components/tasks/EditTaskDialog";
 import { useTasksPageState } from "@/hooks/tasks/useTasksPageState";
 import { TaskStatusFilter, TaskPriorityFilter } from "@/components/tasks/types";
 import TaskTabs from "@/components/tasks/TaskTabs";
-import { Archive } from "lucide-react";
 import { Navigate } from "react-router-dom";
 import { UserRole } from "@/types/user";
 import TasksContainer from "@/components/tasks/TasksContainer";
@@ -34,8 +32,7 @@ const DashboardTasks = () => {
     setCurrentEditTask,
     handleCreateTask,
     handleUpdateTask,
-    handleArchiveTask,
-    handleRestoreTask,
+    handleDelete,
     refetchTasks,
     filteredTasks,
     isPaidAccount,
@@ -70,29 +67,9 @@ const DashboardTasks = () => {
 
   const displayRole = userRole === 'super-admin' ? 'business' : userRole;
 
-  const handleArchiveTaskWrapper = async (taskId: string, reason: "deleted" | "canceled" = "deleted") => {
-    await handleArchiveTask(taskId);
-  };
-
-  const handleRestoreTaskWrapper = async (taskId: string) => {
-    await handleRestoreTask(taskId);
-  };
-
-  const handleCreateTaskWrapper = async (taskData: TaskFormData): Promise<Task> => {
-    const result = await handleCreateTask(taskData);
-    // Ensure result is cast as Task type with correct property types
-    if (result) {
-      return {
-        ...result,
-        status: result.status as TaskStatus,
-        priority: result.priority as TaskPriority
-      } as Task;
-    }
-    return {} as Task;
-  };
-
-  const handleUpdateTaskWrapper = async (taskId: string, taskData: any) => {
-    await handleUpdateTask(taskId, taskData);
+  const handleDeleteTask = async (taskId: string) => {
+    await handleDelete(taskId);
+    await refetchTasks();
   };
 
   return (
@@ -101,38 +78,17 @@ const DashboardTasks = () => {
       
       <TaskTabs 
         activeTab={activeTab}
-        onTabChange={(tab) => {
-          console.log(`Changing to tab: ${tab}`);
-          setActiveTab(tab as TaskTab);
-        }}
+        onTabChange={setActiveTab}
       />
-      
-      {activeTab === "archived" && (
-        <div className="bg-muted/50 rounded-lg p-4 flex items-center">
-          <Archive className="h-5 w-5 mr-2 text-muted-foreground" />
-          <div>
-            <h3 className="font-medium">Archived Tasks</h3>
-            <p className="text-sm text-muted-foreground">
-              These tasks have been archived and are no longer active.
-            </p>
-          </div>
-        </div>
-      )}
       
       {activeTab !== "reminders" && (
         <TaskControls
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           filterStatus={statusFilter}
-          onStatusChange={(status) => {
-            console.log(`Setting status filter to: ${status}`);
-            setFilterStatus(status as string | null);
-          }}
+          onStatusChange={setFilterStatus}
           filterPriority={priorityFilter}
-          onPriorityChange={(priority) => {
-            console.log(`Setting priority filter to: ${priority}`);
-            setFilterPriority(priority as string | null);
-          }}
+          onPriorityChange={setFilterPriority}
           onCreateTask={() => setCreateTaskDialogOpen(true)}
           isPaidAccount={isPaidAccount}
           userRole={displayRole as "individual" | "business" | "staff"}
@@ -152,17 +108,15 @@ const DashboardTasks = () => {
           refetch={refetchTasks}
           isPaidAccount={isPaidAccount}
           onCreateTask={() => setCreateTaskDialogOpen(true)}
-          isArchiveView={activeTab === "archived"}
           onEdit={handleEditTask}
-          onArchive={handleArchiveTaskWrapper}
-          onRestore={handleRestoreTaskWrapper}
+          onDelete={handleDeleteTask}
         />
       )}
       
       <CreateTaskDialog
         open={createTaskDialogOpen}
         onOpenChange={setCreateTaskDialogOpen}
-        onCreateTask={handleCreateTaskWrapper}
+        onCreateTask={handleCreateTask}
         userRole={displayRole as "individual" | "business" | "staff"}
       />
       
@@ -170,7 +124,7 @@ const DashboardTasks = () => {
         open={editTaskDialogOpen}
         onOpenChange={setEditTaskDialogOpen}
         task={currentEditTask}
-        onUpdateTask={handleUpdateTaskWrapper}
+        onUpdateTask={handleUpdateTask}
       />
     </div>
   );
