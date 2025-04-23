@@ -23,7 +23,18 @@ export function CreateTaskDialog({
   const handleCreateTask = async (data: TaskFormValues) => {
     try {
       setIsSubmitting(true);
-      await createTask(data);
+      
+      // Create a task with required fields
+      await createTask({
+        title: data.title,
+        description: data.description,
+        priority: data.priority,
+        due_date: data.due_date,
+        due_time: data.due_time,
+        location: data.location,
+        subtasks: data.subtasks
+      });
+      
       toast({
         title: "Success",
         description: "Task created successfully",

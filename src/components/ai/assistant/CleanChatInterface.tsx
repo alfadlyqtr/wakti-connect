@@ -1,270 +1,275 @@
-
-import React, { useState, useRef, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { AIMessage, AIAssistantRole, RoleContexts } from "@/types/ai-assistant.types";
-import { AnimatePresence, motion } from "framer-motion";
-import { Loader2, Send, PaperclipIcon, Trash2, Bot } from "lucide-react";
-import { cn } from "@/lib/utils";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import { MessageAvatar } from "@/components/ai/message";
-import { TaskConfirmationCard } from "@/components/ai/task/TaskConfirmationCard";
-import { TaskFormData } from "@/types/task.types";
-import { parseTaskFromMessage } from "@/hooks/ai/utils/taskParser";
-import { ChatMessageInput } from "./ChatMessageInput";
-import { ConfirmationModal } from "@/components/ui/confirmation-modal";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Send, Loader2, Paperclip, X, Copy, Check } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { useUser } from "@/hooks/useUser";
+import { useChat } from 'ai/react';
+import { AIAssistantRole } from "@/types/ai-assistant.types";
+import { EnhancedToolsTab } from "@/components/ai/tools/EnhancedToolsTab";
+import { useSubscription } from "@/hooks/useSubscription";
+import { useDebounce } from "@/hooks/useDebounce";
+import { useAICredits } from "@/hooks/useAICredits";
+import { useAIChat } from "@/hooks/useAIChat";
+import { useAIChatContext } from "@/contexts/AIChatContext";
+import { useTasks } from "@/hooks/tasks";
 
 interface CleanChatInterfaceProps {
-  messages: AIMessage[];
-  isLoading: boolean;
-  inputMessage: string;
-  setInputMessage: (value: string) => void;
-  handleSendMessage: (e: React.FormEvent) => Promise<void>;
   selectedRole: AIAssistantRole;
-  userName?: string;
-  canAccess: boolean;
-  onFileUpload?: (file: File) => void;
-  onCameraCapture?: () => void;
-  showSuggestions?: boolean;
-  detectedTask?: TaskFormData | null;
-  onConfirmTask?: (task: TaskFormData) => void;
-  onCancelTask?: () => void;
-  isCreatingTask?: boolean;
-  pendingTaskConfirmation?: boolean;
-  isListening?: boolean;
-  audioLevel?: number;
-  processingVoice?: boolean;
-  temporaryTranscript?: string;
-  onStartVoiceInput?: () => void;
-  onStopVoiceInput?: () => void;
-  onConfirmTranscript?: () => void;
-  clearMessages?: () => void;
-  handleConfirmClear?: () => void;
-  showClearConfirmation?: boolean;
-  setShowClearConfirmation?: (show: boolean) => void;
 }
 
-export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
-  messages,
-  isLoading,
-  inputMessage,
-  setInputMessage,
-  handleSendMessage,
-  selectedRole,
-  userName,
-  canAccess,
-  onFileUpload,
-  onCameraCapture,
-  showSuggestions = true,
-  detectedTask = null,
-  onConfirmTask,
-  onCancelTask,
-  isCreatingTask = false,
-  pendingTaskConfirmation = false,
-  isListening = false,
-  audioLevel = 0,
-  processingVoice = false,
-  temporaryTranscript,
-  onStartVoiceInput,
-  onStopVoiceInput,
-  onConfirmTranscript,
-  clearMessages,
-  handleConfirmClear,
-  showClearConfirmation = false,
-  setShowClearConfirmation
-}) => {
-  const [showWelcome, setShowWelcome] = useState(messages.length === 0);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [parsedMessage, setParsedMessage] = useState<string | null>(null);
+const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({ selectedRole }) => {
+  const [input, setInput] = useState('');
+  const [isLoadingCredits, setIsLoadingCredits] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
+  const [isToolsTabOpen, setIsToolsTabOpen] = useState(false);
+  const [isCreatingTask, setIsCreatingTask] = useState(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
+  const { user } = useUser();
+  const { isPro } = useSubscription();
+  const { addCredits } = useAICredits();
+  const { addChat } = useAIChat();
+  const { setChats } = useAIChatContext();
+  const { createTask } = useTasks();
 
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages, isLoading, detectedTask]);
-
-  useEffect(() => {
-    if (inputMessage.length > 15 && !pendingTaskConfirmation) {
-      const parsedTask = parseTaskFromMessage(inputMessage);
-      if (parsedTask && parsedTask.title) {
-        let previewText = `Creating task: "${parsedTask.title}"`;
-        if (parsedTask.location) {
-          previewText += ` at ${parsedTask.location}`;
-        }
-        setParsedMessage(previewText);
-      } else {
-        setParsedMessage(null);
+  const {
+    messages,
+    input: chatInput,
+    setInput: setChatInput,
+    handleInputChange,
+    handleSubmit,
+    isLoading,
+    setMessages,
+  } = useChat({
+    api: '/api/ai/chat',
+    initialMessages: [],
+    onFinish: (message) => {
+      if (message.role === 'assistant') {
+        addCredits(-1);
       }
-    } else {
-      setParsedMessage(null);
-    }
-  }, [inputMessage, pendingTaskConfirmation]);
+    },
+  });
+
+  const debouncedInput = useDebounce(input, 500);
 
   useEffect(() => {
-    if (pendingTaskConfirmation) {
-      setParsedMessage("Quick confirmation: Type 'Go', 'Yes', 'Do it', or 'Sure'");
+    setChatInput(debouncedInput);
+  }, [debouncedInput, setChatInput]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const canAccessEnhancedTools = isPro;
+
+  const handleCopyClick = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setIsCopied(true);
+      toast({
+        title: "Copied!",
+        description: "Content copied to clipboard.",
+      });
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to copy content.",
+        variant: "destructive",
+      });
     }
-  }, [pendingTaskConfirmation]);
+  };
+
+  const handleUseContent = (content: string) => {
+    setInput(content);
+    setIsToolsTabOpen(false);
+  };
+
+  const handleCreateTask = async () => {
+    setIsCreatingTask(true);
+    try {
+      const lines = input.split('\n');
+      const title = lines[0].replace(/^#\s*/, '');
+      const description = lines.slice(1).join('\n');
+
+      // Extract date and time from the input using regex
+      const dateTimeRegex = /(\d{4}-\d{2}-\d{2})\s(\d{2}:\d{2})/;
+      const dateTimeMatch = input.match(dateTimeRegex);
+
+      let due_date = null;
+      let due_time = null;
+
+      if (dateTimeMatch) {
+        due_date = dateTimeMatch[1];
+        due_time = dateTimeMatch[2];
+      } else {
+        // If no date and time are found, extract only the date
+        const dateRegex = /(\d{4}-\d{2}-\d{2})/;
+        const dateMatch = input.match(dateRegex);
+        if (dateMatch) {
+          due_date = dateMatch[1];
+        }
+      }
+
+      if (!title) {
+        toast({
+          title: "Error",
+          description: "Please provide a title for the task.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const taskData = { title, description, due_date, due_time, priority: "normal" };
+
+      await createTask(taskData);
+
+      toast({
+        title: "Success",
+        description: "Task created successfully!",
+      });
+      setInput('');
+    } catch (error: any) {
+      console.error("Error creating task:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create task.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCreatingTask(false);
+    }
+  };
+
+  const handleSubmitWrapper = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "Please sign in to send messages.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isLoadingCredits) {
+      toast({
+        title: "Please wait",
+        description: "We are checking your credits...",
+      });
+      return;
+    }
+
+    if (messages.length === 0) {
+      setIsLoadingCredits(true);
+      try {
+        await addChat(selectedRole.id);
+        const updatedChats = await setChats();
+        if (!updatedChats || updatedChats.length === 0) {
+          toast({
+            title: "No credits",
+            description: "You don't have enough credits to start a new chat. Please upgrade your plan.",
+            variant: "destructive",
+          });
+          return;
+        }
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to start new chat.",
+          variant: "destructive",
+        });
+        return;
+      } finally {
+        setIsLoadingCredits(false);
+      }
+    }
+
+    handleSubmit(e);
+    setInput('');
+  };
 
   return (
-    <Card className="w-full overflow-hidden flex flex-col h-[650px] md:h-[700px] bg-gradient-to-b from-background to-background/95 shadow-none border-x-0">
-      <div className="flex-1 overflow-auto p-2 md:p-4 space-y-2 md:space-y-4">
-        {messages.length > 0 && clearMessages && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute top-2 right-2 h-7 w-7 opacity-70 hover:opacity-100 hover:bg-red-50 hover:text-red-500 transition-colors z-10"
-            onClick={() => setShowClearConfirmation?.(true)}
-            title="Clear chat history"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
-        )}
-        
-        {showWelcome && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center py-4 md:py-8 px-2"
-          >
-            <div className="h-14 w-14 rounded-full bg-wakti-blue mx-auto mb-3 flex items-center justify-center">
-              <Bot className="h-7 w-7 text-white" />
+    <div className="flex flex-col h-full">
+      <div className="flex-grow p-4 overflow-y-auto">
+        <div className="space-y-4">
+          {messages.map((message) => (
+            <div key={message.id} className="flex flex-col">
+              <div className="text-sm text-muted-foreground">
+                {message.role === 'user' ? 'You' : selectedRole.name}
+              </div>
+              <Card className="w-full">
+                <CardContent className="prose prose-sm sm:prose-base">
+                  <p>{message.content}</p>
+                </CardContent>
+              </Card>
+              {message.role === 'assistant' && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="self-end -mt-2 hover:bg-secondary/50"
+                  onClick={() => handleCopyClick(message.content)}
+                  disabled={isCopied}
+                >
+                  {isCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                </Button>
+              )}
             </div>
-            <h2 className="text-lg md:text-xl font-bold mb-2">
-              Hello{userName ? ` ${userName}` : ''}, I'm your WAKTI AI Assistant
-            </h2>
-            <p className="text-muted-foreground mb-3 max-w-md mx-auto text-sm">
-              I'm here to help you manage tasks, schedule events, and answer questions about your WAKTI experience.
-            </p>
-            
-            {showSuggestions && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-lg mx-auto px-1">
-                {RoleContexts[selectedRole]?.suggestedPrompts.map((prompt, index) => (
-                  <Button
-                    key={index}
-                    variant="outline"
-                    className="text-sm h-auto py-2 justify-start text-left"
-                    onClick={() => setInputMessage(prompt)}
-                  >
-                    {prompt}
-                  </Button>
-                ))}
-              </div>
-            )}
-          </motion.div>
-        )}
-        
-        <AnimatePresence>
-          {messages.map((msg, index) => (
-            <motion.div
-              key={msg.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, x: -10 }}
-              transition={{ duration: 0.3 }}
-              className={cn(
-                "flex items-start gap-2 mb-2.5 md:mb-3.5 mx-0.5",
-                msg.role === "user" ? "flex-row-reverse" : ""
-              )}
-            >
-              {msg.role === "assistant" ? (
-                <MessageAvatar isUser={false} className="h-7 w-7 md:h-8 md:w-8 shrink-0" />
-              ) : (
-                <MessageAvatar isUser={true} className="h-7 w-7 md:h-8 md:w-8 shrink-0" />
-              )}
-
-              <div className={cn(
-                "rounded-lg py-2 px-3 max-w-[90%] md:max-w-[80%]",
-                msg.role === "assistant" ? "bg-background border" : 
-                "bg-primary text-primary-foreground"
-              )}>
-                <div className="prose dark:prose-invert max-w-none text-sm prose-p:my-1 prose-headings:mb-2 prose-headings:mt-4">
-                  <ReactMarkdown 
-                    remarkPlugins={[remarkGfm]}
-                  >
-                    {msg.content}
-                  </ReactMarkdown>
-                </div>
-              </div>
-            </motion.div>
           ))}
-
           {isLoading && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex items-start gap-2 mb-3 mx-0.5"
-            >
-              <MessageAvatar isUser={false} className="h-7 w-7 md:h-8 md:w-8 shrink-0" />
-              <div className="bg-background rounded-lg py-2.5 px-3.5 border">
-                <Loader2 className="h-5 w-5 animate-spin" />
-              </div>
-            </motion.div>
+            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Thinking...</span>
+            </div>
           )}
-          
-          {detectedTask && onConfirmTask && onCancelTask && !pendingTaskConfirmation && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mx-auto my-2 w-full max-w-md"
-            >
-              <TaskConfirmationCard 
-                taskInfo={parseTaskFromMessage(detectedTask.title || '') || {
-                  title: detectedTask.title || '',
-                  description: detectedTask.description || '',
-                  priority: detectedTask.priority || 'normal',
-                  subtasks: detectedTask.subtasks?.map(s => s.content) || [],
-                  due_date: detectedTask.due_date,
-                  dueTime: detectedTask.due_time,
-                  location: detectedTask.location,
-                }}
-                onConfirm={() => onConfirmTask(detectedTask)}
-                onCancel={onCancelTask}
-                isLoading={isCreatingTask}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-        <div ref={messagesEndRef} />
-      </div>
-      
-      <div className="relative">
-        {parsedMessage && (
-          <div className={cn(
-            "absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs bg-background/80 backdrop-blur-sm border border-dashed px-2 py-1 rounded-full whitespace-nowrap",
-            pendingTaskConfirmation ? "text-green-600 border-green-300" : "text-muted-foreground"
-          )}>
-            {parsedMessage}
-          </div>
-        )}
-        
-        <ChatMessageInput 
-          message={inputMessage}
-          setMessage={setInputMessage}
-          onSendMessage={handleSendMessage}
-          isLoading={isLoading}
-          disabled={!canAccess || isCreatingTask}
-          onFileUpload={onFileUpload}
-          onCameraCapture={onCameraCapture}
-          supportsPendingConfirmation={true}
-          pendingConfirmation={pendingTaskConfirmation}
-          confirmationHint="Confirm task creation"
-        />
+        </div>
+        <div ref={bottomRef} />
       </div>
 
-      {setShowClearConfirmation && handleConfirmClear && (
-        <ConfirmationModal
-          open={showClearConfirmation}
-          onOpenChange={setShowClearConfirmation}
-          title="Clear Messages"
-          description="Are you sure you want to clear all messages in this conversation? This action cannot be undone."
-          onConfirm={handleConfirmClear}
-          confirmLabel="Clear"
-          cancelLabel="Cancel"
-          isDestructive={true}
-        />
+      {isToolsTabOpen ? (
+        <div className="border-t p-4">
+          <EnhancedToolsTab
+            selectedRole={selectedRole}
+            onUseContent={handleUseContent}
+            canAccess={canAccessEnhancedTools}
+          />
+          <Button variant="secondary" onClick={() => setIsToolsTabOpen(false)} className="mt-4 w-full">
+            Close Tools
+          </Button>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmitWrapper} className="border-t p-4">
+          <div className="flex items-center space-x-2">
+            <Input
+              placeholder="Ask me anything..."
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              className="flex-grow"
+            />
+            <Button type="button" variant="secondary" onClick={() => setIsToolsTabOpen(true)}>
+              <Paperclip className="h-4 w-4 mr-2" />
+              Tools
+            </Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
+              Send
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleCreateTask}
+              disabled={isCreatingTask}
+            >
+              {isCreatingTask ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <X className="h-4 w-4 mr-2" />}
+              Create Task
+            </Button>
+          </div>
+        </form>
       )}
-    </Card>
+    </div>
   );
 };
+
+export default CleanChatInterface;

@@ -9,19 +9,13 @@ import { Plus, Trash2 } from "lucide-react";
 
 interface SubtasksSectionProps {
   form: UseFormReturn<TaskFormValues>;
-  enableSubtasks: boolean;
 }
 
-export const SubtasksSection: React.FC<SubtasksSectionProps> = ({ form, enableSubtasks }) => {
+export const SubtasksSection: React.FC<SubtasksSectionProps> = ({ form }) => {
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "subtasks"
   });
-
-  // Only render if subtasks are enabled
-  if (!enableSubtasks) {
-    return null;
-  }
 
   return (
     <div className="space-y-4 border rounded-lg p-4 bg-[#F1F0FB] dark:bg-[#1A1F2C] mt-1">
@@ -29,7 +23,7 @@ export const SubtasksSection: React.FC<SubtasksSectionProps> = ({ form, enableSu
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium">Subtasks</span>
           <Button variant="outline" size="sm" type="button"
-            onClick={() => append({ content: "", isCompleted: false })}
+            onClick={() => append({ content: "", is_completed: false })}
           >
             <Plus className="w-4 h-4 mr-1" /> Add Subtask
           </Button>

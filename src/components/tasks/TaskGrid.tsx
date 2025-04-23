@@ -1,468 +1,265 @@
 
-import React, { useState, useCallback, useRef } from "react";
-import { Task, TaskStatus } from "@/types/task.types";
-import TaskCard from "@/components/ui/task-card/TaskCard";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/use-toast";
-import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
-import { useDebouncedRefresh } from "@/hooks/useDebouncedRefresh";
+import React from "react";
+import { Task } from "@/types/task.types";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { 
+  Calendar, 
+  CheckCircle2, 
+  Clock, 
+  Edit, 
+  Trash, 
+  AlertCircle,
+  ArrowUpCircle
+} from "lucide-react";
+import { format, isToday, isPast } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface TaskGridProps {
   tasks: Task[];
-  userRole: "free" | "individual" | "business" | "staff" | null;
-  refetch: () => Promise<void>;
-  isArchiveView?: boolean;
   onEdit: (task: Task) => void;
-  onArchive: (taskId: string, reason: "deleted" | "canceled") => Promise<void>;
-  onRestore?: (taskId: string) => Promise<void>;
+  onDelete: (taskId: string) => void;
+  onComplete: (taskId: string) => void;
+  isLoading?: boolean;
+  pendingTaskId?: string | null;
 }
 
-const TaskGrid: React.FC<TaskGridProps> = ({ 
-  tasks, 
-  userRole, 
-  refetch,
-  isArchiveView = false,
+export function TaskGrid({
+  tasks,
   onEdit,
-  onArchive,
-  onRestore
-}) => {
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
-  const [deleteReason, setDeleteReason] = useState<"deleted" | "canceled">("deleted");
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  
-  // Operation lock ref to prevent concurrent operations
-  const operationLockRef = useRef(false);
-  
-  // Local task state for optimistic updates
-  const [localTasks, setLocalTasks] = useState<Task[]>(tasks);
-  
-  // Update local tasks when the props tasks change
-  React.useEffect(() => {
-    setLocalTasks(tasks);
-  }, [tasks]);
-  
-  // Debounced refresh with error handling
-  const { refresh: debouncedRefetch, isRefreshing } = useDebouncedRefresh(
-    async () => {
-      try {
-        await refetch();
-        return true;
-      } catch (error) {
-        console.error("Error in debounced refresh:", error);
-        return false;
-      }
-    }, 
-    500
-  );
-  
-  // Operation lock utility functions
-  const acquireLock = useCallback(() => {
-    if (operationLockRef.current) {
-      return false;
-    }
-    operationLockRef.current = true;
-    return true;
-  }, []);
-  
-  const releaseLock = useCallback(() => {
-    operationLockRef.current = false;
-  }, []);
-  
-  // Handler for editing a task
-  const handleEditTask = useCallback((taskId: string) => {
-    if (!acquireLock()) return;
-    
-    try {
-      const taskToEdit = localTasks.find(task => task.id === taskId);
-      if (taskToEdit) {
-        onEdit(taskToEdit);
-      }
-    } finally {
-      releaseLock();
-    }
-  }, [localTasks, onEdit, acquireLock, releaseLock]);
-
-  // Handler for deleting/canceling a task
-  const handleDeleteTask = useCallback((taskId: string) => {
-    if (!acquireLock()) return;
-    
-    try {
-      setTaskToDelete(taskId);
-      setDeleteReason("deleted");
-      setShowDeleteDialog(true);
-    } finally {
-      releaseLock();
-    }
-  }, [acquireLock, releaseLock]);
-  
-  // Handler for canceling a task
-  const handleCancelTask = useCallback((taskId: string) => {
-    if (!acquireLock()) return;
-    
-    try {
-      setTaskToDelete(taskId);
-      setDeleteReason("canceled");
-      setShowDeleteDialog(true);
-    } finally {
-      releaseLock();
-    }
-  }, [acquireLock, releaseLock]);
-
-  // Confirming task deletion/cancellation with optimistic UI update
-  const confirmDeleteTask = useCallback(async () => {
-    if (!taskToDelete || !acquireLock()) return;
-    
-    try {
-      setIsDeleting(true);
-      console.log(`Confirming deletion of task ${taskToDelete} with reason ${deleteReason}`);
-      
-      // Close the dialog early for better UX
-      setShowDeleteDialog(false);
-      
-      // Optimistic UI update - remove the task from local state immediately
-      setLocalTasks(prevTasks => prevTasks.filter(task => task.id !== taskToDelete));
-      
-      if (isArchiveView) {
-        // Permanently delete from archive
-        const { error } = await supabase
-          .from('tasks')
-          .delete()
-          .eq('id', taskToDelete);
-          
-        if (error) throw error;
-        
-        toast({
-          title: "Task permanently deleted",
-          description: "The task has been permanently removed",
-          variant: "success",
-        });
-      } else {
-        // Move to archive
-        await onArchive(taskToDelete, deleteReason);
-      }
-      
-      // Refresh in the background without freezing the UI
-      await debouncedRefetch();
-      
-    } catch (error) {
-      console.error("Error deleting/archiving task:", error);
-      
-      // Revert the optimistic update on error
-      if (!isArchiveView) {
-        await debouncedRefetch();
-      }
-      
-      toast({
-        title: "Operation failed",
-        description: error instanceof Error ? error.message : "Failed to process task",
-        variant: "destructive",
-      });
-    } finally {
-      setIsDeleting(false);
-      setTaskToDelete(null);
-      releaseLock();
-    }
-  }, [taskToDelete, deleteReason, isArchiveView, onArchive, debouncedRefetch, acquireLock, releaseLock]);
-
-  // Handler for changing task status with optimistic UI update
-  const handleStatusChange = useCallback(async (taskId: string, newStatus: string) => {
-    if (!acquireLock()) return;
-    
-    try {
-      console.log(`Changing status of task ${taskId} to ${newStatus}`);
-      
-      // Validate the new status is a valid TaskStatus before updating
-      const validatedStatus = newStatus as TaskStatus;
-      
-      // Skip animation for completed tasks if they're being archived
-      const skipAnimation = validatedStatus === 'archived' && localTasks.find(task => task.id === taskId)?.status === 'completed';
-      
-      // Optimistic UI update
-      setLocalTasks(prev => 
-        prev.map(task => {
-          if (task.id === taskId) {
-            return { 
-              ...task, 
-              status: validatedStatus,
-              updated_at: new Date().toISOString(),
-              completed_at: newStatus === 'completed' ? new Date().toISOString() : task.completed_at
-            };
-          }
-          return task;
-        })
-      );
-      
-      let updates: any = {
-        status: newStatus,
-        updated_at: new Date().toISOString()
-      };
-      
-      // If marking as completed, set the completed_at timestamp
-      if (newStatus === 'completed') {
-        updates.completed_at = new Date().toISOString();
-      }
-      
-      const { error } = await supabase
-        .from('tasks')
-        .update(updates)
-        .eq('id', taskId);
-        
-      if (error) throw error;
-      
-      const statusMessages = {
-        'completed': 'Task completed! Great job!',
-        'in-progress': 'Task marked as in progress',
-        'snoozed': 'Task snoozed',
-        'pending': 'Task marked as pending',
-      };
-      
-      if (!skipAnimation) {
-        toast({
-          title: "Status updated",
-          description: statusMessages[newStatus as keyof typeof statusMessages] || `Task marked as ${newStatus}`,
-          variant: "success",
-        });
-      }
-      
-      // Refresh in the background without freezing the UI
-      await debouncedRefetch();
-      
-    } catch (error) {
-      console.error("Error updating task status:", error);
-      
-      // Revert the optimistic update on error
-      await debouncedRefetch();
-      
-      toast({
-        title: "Status update failed",
-        description: error instanceof Error ? error.message : "Failed to update task status",
-        variant: "destructive",
-      });
-    } finally {
-      releaseLock();
-    }
-  }, [localTasks, debouncedRefetch, acquireLock, releaseLock]);
-
-  // Handler for snoozing a task with optimistic UI update
-  const handleSnoozeTask = useCallback(async (taskId: string, days: number) => {
-    if (!acquireLock()) return;
-    
-    try {
-      console.log(`Snoozing task ${taskId} for ${days} days`);
-      
-      // Calculate the snooze date
-      const snoozedUntil = new Date();
-      snoozedUntil.setDate(snoozedUntil.getDate() + days);
-      
-      // Get the current snooze count from local state
-      const task = localTasks.find(t => t.id === taskId);
-      if (!task) throw new Error("Task not found");
-      
-      const currentSnoozeCount = task.snooze_count || 0;
-      
-      // Optimistic UI update
-      setLocalTasks(prev => 
-        prev.map(task => {
-          if (task.id === taskId) {
-            return {
-              ...task,
-              status: 'snoozed' as TaskStatus,
-              snoozed_until: snoozedUntil.toISOString(),
-              snooze_count: currentSnoozeCount + 1,
-              updated_at: new Date().toISOString()
-            };
-          }
-          return task;
-        })
-      );
-      
-      const { error } = await supabase
-        .from('tasks')
-        .update({
-          status: 'snoozed',
-          snoozed_until: snoozedUntil.toISOString(),
-          snooze_count: currentSnoozeCount + 1,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', taskId);
-        
-      if (error) throw error;
-      
-      toast({
-        title: "Task snoozed",
-        description: `Task snoozed for ${days} day${days > 1 ? 's' : ''}`,
-        variant: "success",
-      });
-      
-      // Refresh in the background without freezing the UI
-      await debouncedRefetch();
-      
-    } catch (error) {
-      console.error("Error snoozing task:", error);
-      
-      // Revert the optimistic update on error
-      await debouncedRefetch();
-      
-      toast({
-        title: "Snooze failed",
-        description: error instanceof Error ? error.message : "Failed to snooze task",
-        variant: "destructive",
-      });
-    } finally {
-      releaseLock();
-    }
-  }, [localTasks, debouncedRefetch, acquireLock, releaseLock]);
-
-  // Handler for toggling a subtask with optimistic UI update
-  const handleSubtaskToggle = useCallback(async (taskId: string, subtaskIndex: number, isCompleted: boolean) => {
-    if (!acquireLock()) return;
-    
-    try {
-      console.log(`Toggling subtask ${subtaskIndex} of task ${taskId} to ${isCompleted}`);
-      
-      const subtask = localTasks.find(t => t.id === taskId)?.subtasks?.[subtaskIndex];
-      
-      if (subtask && subtask.id) {
-        // Optimistic UI update
-        setLocalTasks(prev => 
-          prev.map(task => {
-            if (task.id === taskId && task.subtasks) {
-              const updatedSubtasks = [...task.subtasks];
-              if (updatedSubtasks[subtaskIndex]) {
-                updatedSubtasks[subtaskIndex] = {
-                  ...updatedSubtasks[subtaskIndex],
-                  is_completed: isCompleted
-                };
-              }
-              return {
-                ...task,
-                subtasks: updatedSubtasks
-              };
-            }
-            return task;
-          })
-        );
-        
-        const { error } = await supabase
-          .from('todo_items')
-          .update({ is_completed: isCompleted })
-          .eq('id', subtask.id);
-          
-        if (error) throw error;
-        
-        toast({
-          title: "Subtask updated",
-          description: `Subtask ${isCompleted ? 'completed' : 'uncompleted'}`,
-          variant: "success",
-        });
-        
-        // Refresh in the background without freezing the UI
-        await debouncedRefetch();
-      }
-    } catch (error) {
-      console.error("Error toggling subtask:", error);
-      
-      // Revert the optimistic update on error
-      await debouncedRefetch();
-      
-      toast({
-        title: "Failed to update subtask",
-        description: error instanceof Error ? error.message : "An error occurred",
-        variant: "destructive",
-      });
-    } finally {
-      releaseLock();
-    }
-  }, [localTasks, debouncedRefetch, acquireLock, releaseLock]);
-  
-  // Handle restoring a task from archive with optimistic UI update
-  const handleRestoreTask = useCallback(async (taskId: string) => {
-    if (!onRestore || !acquireLock()) return;
-    
-    try {
-      console.log(`Restoring task ${taskId} from archive`);
-      
-      // Optimistic UI update - remove from local display immediately
-      setLocalTasks(prev => prev.filter(task => task.id !== taskId));
-      
-      await onRestore(taskId);
-      
-      toast({
-        title: "Task restored",
-        description: "Task has been restored from archive",
-        variant: "success",
-      });
-      
-      // Refresh in the background without freezing the UI
-      await debouncedRefetch();
-      
-    } catch (error) {
-      console.error("Error restoring task:", error);
-      
-      // Revert optimistic update on error
-      await debouncedRefetch();
-      
-      toast({
-        title: "Restore failed",
-        description: error instanceof Error ? error.message : "Failed to restore task",
-        variant: "destructive",
-      });
-    } finally {
-      releaseLock();
-    }
-  }, [onRestore, debouncedRefetch, acquireLock, releaseLock]);
-  
-  return (
-    <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {localTasks.map((task) => (
-          <TaskCard
-            key={task.id}
-            id={task.id}
-            title={task.title}
-            description={task.description || ""}
-            dueDate={task.due_date ? new Date(task.due_date) : undefined}
-            dueTime={task.due_time}
-            status={task.status}
-            priority={task.priority}
-            userRole={userRole}
-            isArchived={isArchiveView}
-            subtasks={task.subtasks || []}
-            completedDate={task.completed_at ? new Date(task.completed_at) : null}
-            isRecurring={task.is_recurring}
-            isRecurringInstance={task.is_recurring_instance}
-            snoozeCount={task.snooze_count}
-            snoozedUntil={task.snoozed_until ? new Date(task.snoozed_until) : null}
-            refetch={debouncedRefetch}
-            onEdit={handleEditTask}
-            onDelete={handleDeleteTask}
-            onCancel={handleCancelTask}
-            onStatusChange={handleStatusChange}
-            onSnooze={handleSnoozeTask}
-            onRestore={handleRestoreTask}
-            onSubtaskToggle={handleSubtaskToggle}
-          />
-        ))}
+  onDelete,
+  onComplete,
+  isLoading = false,
+  pendingTaskId = null
+}: TaskGridProps) {
+  if (tasks.length === 0) {
+    return (
+      <div className="text-center p-8">
+        <p className="text-muted-foreground">No tasks found.</p>
       </div>
-      
-      {/* Delete/Cancel Confirmation Dialog */}
-      <ConfirmationDialog
-        title={isArchiveView ? "Permanently Delete Task" : (deleteReason === "deleted" ? "Delete Task" : "Cancel Task")}
-        description={isArchiveView 
-          ? "Are you sure you want to permanently delete this task? This action cannot be undone."
-          : (deleteReason === "deleted" 
-              ? "Are you sure you want to delete this task? It will be moved to the archive."
-              : "Are you sure you want to cancel this task? It will be moved to the archive."
-            )
-        }
-        open={showDeleteDialog}
-        onOpenChange={setShowDeleteDialog}
-        onConfirm={confirmDeleteTask}
-        isLoading={isDeleting}
-      />
-    </>
-  );
-};
+    );
+  }
 
-export default TaskGrid;
+  const getPriorityColor = (priority: string): string => {
+    switch (priority) {
+      case "urgent": return "bg-red-500 hover:bg-red-600";
+      case "high": return "bg-orange-500 hover:bg-orange-600";
+      case "medium": return "bg-yellow-500 hover:bg-yellow-600";
+      case "normal": return "bg-blue-500 hover:bg-blue-600";
+      default: return "bg-blue-500 hover:bg-blue-600";
+    }
+  };
+
+  const getPriorityBadge = (priority: string): JSX.Element => {
+    const colorClass = {
+      urgent: "bg-red-500/10 text-red-600 border-red-600/20",
+      high: "bg-orange-500/10 text-orange-600 border-orange-600/20",
+      medium: "bg-yellow-500/10 text-yellow-600 border-yellow-600/20",
+      normal: "bg-blue-500/10 text-blue-600 border-blue-600/20",
+    }[priority] || "bg-blue-500/10 text-blue-600 border-blue-600/20";
+
+    return (
+      <Badge className={`${colorClass} rounded-md`} variant="outline">
+        {priority.charAt(0).toUpperCase() + priority.slice(1)}
+      </Badge>
+    );
+  };
+
+  const getStatusBadge = (task: Task): JSX.Element | null => {
+    if (task.status === "completed") {
+      return (
+        <Badge className="bg-green-500/10 text-green-600 border-green-600/20 rounded-md" variant="outline">
+          Completed
+        </Badge>
+      );
+    }
+    
+    if (task.status === "in-progress") {
+      return (
+        <Badge className="bg-sky-500/10 text-sky-600 border-sky-600/20 rounded-md" variant="outline">
+          In Progress
+        </Badge>
+      );
+    }
+    
+    if (task.status === "snoozed") {
+      // Handle snoozed tasks - only if the property exists
+      const snoozeCount = task.snooze_count || 0;
+      return (
+        <Badge className="bg-purple-500/10 text-purple-600 border-purple-600/20 rounded-md" variant="outline">
+          Snoozed {snoozeCount > 0 ? `(${snoozeCount})` : ""}
+        </Badge>
+      );
+    }
+    
+    if (task.due_date && isPast(new Date(task.due_date)) && task.status !== "completed") {
+      return (
+        <Badge className="bg-red-500/10 text-red-600 border-red-600/20 rounded-md" variant="outline">
+          Late
+        </Badge>
+      );
+    }
+    
+    if (task.due_date && isToday(new Date(task.due_date))) {
+      return (
+        <Badge className="bg-amber-500/10 text-amber-600 border-amber-600/20 rounded-md" variant="outline">
+          Today
+        </Badge>
+      );
+    }
+    
+    return null;
+  };
+
+  const renderTaskBadges = (task: Task): React.ReactNode => {
+    const badges = [];
+    
+    // Special features badges - don't render if property doesn't exist
+    if (task.is_recurring) {
+      badges.push(
+        <Badge key="recurring" className="bg-indigo-500/10 text-indigo-600 border-indigo-600/20 rounded-md" variant="outline">
+          Recurring
+        </Badge>
+      );
+    }
+    
+    if (task.is_recurring_instance) {
+      badges.push(
+        <Badge key="instance" className="bg-violet-500/10 text-violet-600 border-violet-600/20 rounded-md" variant="outline">
+          Instance
+        </Badge>
+      );
+    }
+    
+    // Only show if we have badges
+    if (badges.length === 0) return null;
+    
+    return (
+      <div className="flex flex-wrap gap-2 mt-2">
+        {badges}
+      </div>
+    );
+  };
+
+  const getFormattedDateTime = (task: Task): string => {
+    if (!task.due_date) return "No due date";
+    
+    const dueDate = new Date(task.due_date);
+    const dateFormatted = format(dueDate, "MMM d, yyyy");
+    
+    if (task.due_time) {
+      return `${dateFormatted} at ${task.due_time}`;
+    }
+    
+    return dateFormatted;
+  };
+
+  // Only show snoozed until if the property exists
+  const renderSnoozedUntil = (task: Task): React.ReactNode => {
+    if (task.status === "snoozed" && task.snoozed_until) {
+      return (
+        <div className="text-sm text-muted-foreground mt-1">
+          Snoozed until: {format(new Date(task.snoozed_until), "MMM d, yyyy")}
+        </div>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {tasks.map((task) => (
+        <Card key={task.id} className="overflow-hidden">
+          <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+            <div className="space-y-1">
+              <h3 className="font-semibold leading-tight text-lg line-clamp-2">
+                {task.title}
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {getPriorityBadge(task.priority)}
+                {getStatusBadge(task)}
+              </div>
+              {renderTaskBadges(task)}
+            </div>
+          </CardHeader>
+          
+          <CardContent className="pb-6">
+            {task.description && (
+              <div className="mt-2 text-sm text-muted-foreground line-clamp-3">
+                {task.description}
+              </div>
+            )}
+            
+            <div className="flex items-center mt-3 text-sm">
+              <Calendar className="h-4 w-4 mr-1 text-muted-foreground" />
+              <span>{getFormattedDateTime(task)}</span>
+            </div>
+            
+            {renderSnoozedUntil(task)}
+            
+            {task.subtasks && task.subtasks.length > 0 && (
+              <div className="mt-4">
+                <div className="text-sm font-medium mb-1">Subtasks</div>
+                <div className="space-y-1">
+                  {task.subtasks.slice(0, 3).map((subtask, index) => (
+                    <div key={index} className="flex items-center text-sm">
+                      <div className={cn(
+                        "w-4 h-4 mr-2 rounded-full border",
+                        subtask.is_completed ? "bg-green-500 border-green-500" : "border-gray-400"
+                      )} />
+                      <span className={cn(
+                        "line-clamp-1",
+                        subtask.is_completed ? "line-through text-muted-foreground" : ""
+                      )}>
+                        {subtask.content}
+                      </span>
+                    </div>
+                  ))}
+                  
+                  {task.subtasks.length > 3 && (
+                    <div className="text-xs text-muted-foreground mt-1">
+                      +{task.subtasks.length - 3} more subtasks
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            <div className="flex justify-end space-x-2 mt-4">
+              {task.status !== "completed" && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => onComplete(task.id)}
+                  disabled={isLoading && pendingTaskId === task.id}
+                >
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                  Complete
+                </Button>
+              )}
+              
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => onEdit(task)}
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Edit
+              </Button>
+              
+              <Button 
+                variant="destructive" 
+                size="sm"
+                onClick={() => onDelete(task.id)}
+                disabled={isLoading && pendingTaskId === task.id}
+              >
+                <Trash className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}

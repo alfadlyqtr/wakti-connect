@@ -6,14 +6,15 @@ import { BasicFields } from "./BasicFields";
 import { DateTimeFields } from "./DateTimeFields";
 import { SubtasksSection } from "./SubtasksSection";
 import { Switch } from "@/components/ui/switch";
-import { FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
 
 interface TaskFormFieldsProps {
   form: UseFormReturn<TaskFormValues>;
 }
 
 const TaskFormFields: React.FC<TaskFormFieldsProps> = ({ form }) => {
-  const enableSubtasks = form.watch("enableSubtasks");
+  // Since enableSubtasks is now part of our schema, we can access it directly
+  const enableSubtasks = form.watch("enableSubtasks") || false;
 
   return (
     <div className="space-y-4">
@@ -35,19 +36,20 @@ const TaskFormFields: React.FC<TaskFormFieldsProps> = ({ form }) => {
                 Add subtasks to break down this task
               </div>
             </div>
-            <Switch
-              checked={field.value}
-              onCheckedChange={field.onChange}
-            />
+            <FormControl>
+              <Switch
+                checked={field.value || false}
+                onCheckedChange={field.onChange}
+              />
+            </FormControl>
           </FormItem>
         )}
       />
       
       {/* Subtasks Section - ONLY if enabled */}
-      <SubtasksSection
-        form={form}
-        enableSubtasks={enableSubtasks}
-      />
+      {enableSubtasks && (
+        <SubtasksSection form={form} />
+      )}
     </div>
   );
 };

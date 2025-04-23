@@ -31,15 +31,22 @@ export interface Task {
   subtasks?: SubTask[];
   archived_at?: string | null;
   archive_reason?: ArchiveReason | null;
+  location?: string | null;
+  is_recurring?: boolean;
+  is_recurring_instance?: boolean;
+  snooze_count?: number;
+  snoozed_until?: string | null;
+  parent_recurring_id?: string | null;
 }
 
 // Form data for creating/editing tasks
 export interface TaskFormData {
   title: string;
-  description?: string;
+  description?: string | null;
   priority: TaskPriority;
-  due_date?: string | null;
+  due_date: string;
   due_time?: string | null;
+  location?: string | null;
   subtasks?: {
     content: string;
     is_completed?: boolean;
