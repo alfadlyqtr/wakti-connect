@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Task, TaskFormData, TaskStatus, TaskPriority } from '@/types/task.types';
+import { Task, TaskFormData } from '@/types/task.types';
 import { toast } from "@/components/ui/use-toast";
 import { UseTaskOperationsReturn } from './types';
 
@@ -158,38 +158,23 @@ export function useTaskOperations(
   const deleteTask = async (taskId: string): Promise<void> => {
     setIsProcessing(true);
     try {
-      // Archive the task instead of deleting it
       const { error } = await supabase
         .from('tasks')
-        .update({
-          status: 'archived' as TaskStatus,
-          archived_at: new Date().toISOString(),
-          archive_reason: 'deleted'
-        })
+        .delete()
         .eq('id', taskId);
       
-      if (error) {
-        console.error("Error archiving task:", error);
-        throw error;
-      }
+      if (error) throw error;
       
-      // Show a success toast
       toast({
-        title: "Task archived",
-        description: "The task has been archived and will be permanently deleted after 10 days",
+        title: "Task deleted",
+        description: "Task has been permanently deleted",
       });
-
-      // Also delete all subtasks if the task is archived
-      await supabase
-        .from('todo_items')
-        .delete()
-        .eq('task_id', taskId);
 
     } catch (error) {
       console.error("Error in deleteTask:", error);
       toast({
-        title: "Archive failed",
-        description: "There was a problem archiving the task",
+        title: "Delete failed",
+        description: "Failed to delete task",
         variant: "destructive"
       });
       throw error;

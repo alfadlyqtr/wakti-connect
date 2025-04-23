@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   DropdownMenu,
@@ -48,12 +47,6 @@ export const TaskCardMenu: React.FC<TaskCardMenuProps> = ({
   userRole,
   isPaidAccount,
 }) => {
-  // Handle status change
-  const startTask = () => {
-    onStatusChange(id, "in-progress");
-  };
-
-  // Determine which menu items to show based on status
   const showMarkComplete = status !== "completed" && status !== "archived";
   const showSnooze = status !== "completed" && status !== "archived" && isPaidAccount;
   const showStartTask = status === "snoozed" || status === "late";
@@ -62,7 +55,7 @@ export const TaskCardMenu: React.FC<TaskCardMenuProps> = ({
   const showRestore = isArchived && onRestore;
 
   const handleDelete = () => {
-    if (window.confirm("Are you sure you want to delete this task? It will be archived for 10 days before being permanently deleted.")) {
+    if (window.confirm("Are you sure you want to delete this task? This cannot be undone.")) {
       onDelete(id);
     }
   };
@@ -78,7 +71,6 @@ export const TaskCardMenu: React.FC<TaskCardMenuProps> = ({
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
         
-        {/* Status actions */}
         {showMarkComplete && (
           <DropdownMenuItem onClick={() => onStatusChange(id, "completed")}>
             <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
@@ -87,13 +79,12 @@ export const TaskCardMenu: React.FC<TaskCardMenuProps> = ({
         )}
         
         {showStartTask && (
-          <DropdownMenuItem onClick={startTask}>
+          <DropdownMenuItem onClick={() => onStatusChange(id, "in-progress")}>
             <Clock className="mr-2 h-4 w-4 text-blue-500" />
             Start Task
           </DropdownMenuItem>
         )}
         
-        {/* Snooze options for paid accounts */}
         {showSnooze && onSnooze && (
           <>
             <DropdownMenuLabel>Snooze</DropdownMenuLabel>
@@ -114,7 +105,6 @@ export const TaskCardMenu: React.FC<TaskCardMenuProps> = ({
         
         <DropdownMenuSeparator />
         
-        {/* Edit option */}
         {!isArchived && (
           <DropdownMenuItem onClick={() => onEdit(id)}>
             <Pencil className="mr-2 h-4 w-4" />
@@ -122,7 +112,6 @@ export const TaskCardMenu: React.FC<TaskCardMenuProps> = ({
           </DropdownMenuItem>
         )}
         
-        {/* Cancel option */}
         {showCancel && onCancel && (
           <DropdownMenuItem onClick={() => onCancel(id)}>
             <XCircle className="mr-2 h-4 w-4 text-orange-500" />
@@ -130,7 +119,6 @@ export const TaskCardMenu: React.FC<TaskCardMenuProps> = ({
           </DropdownMenuItem>
         )}
         
-        {/* Delete option */}
         {showDelete && (
           <DropdownMenuItem onClick={handleDelete}>
             <Trash2 className="mr-2 h-4 w-4 text-red-500" />
@@ -138,7 +126,6 @@ export const TaskCardMenu: React.FC<TaskCardMenuProps> = ({
           </DropdownMenuItem>
         )}
         
-        {/* Restore option for archived tasks */}
         {showRestore && (
           <DropdownMenuItem onClick={() => onRestore(id)}>
             <ArrowUpRight className="mr-2 h-4 w-4 text-green-500" />

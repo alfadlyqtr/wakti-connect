@@ -156,31 +156,28 @@ export const updateTask = async (id: string, updates: Partial<Task>): Promise<Ta
   }
 };
 
-// Archive a task instead of deleting
+// Delete a task immediately
 export const deleteTask = async (id: string): Promise<void> => {
   try {
     const { error } = await supabase
       .from('tasks')
-      .update({
-        status: 'archived' as TaskStatus,
-        archived_at: new Date().toISOString(),
-        archive_reason: 'deleted'
-      })
+      .delete()
       .eq('id', id);
       
     if (error) throw error;
     
     toast({
-      title: "Task archived",
-      description: "Your task has been archived and will be permanently deleted after 10 days.",
+      title: "Task deleted",
+      description: "Task has been permanently deleted",
     });
     
   } catch (error) {
-    console.error("Error archiving task in Supabase:", error);
+    console.error("Error deleting task:", error);
     
     toast({
-      title: "Task archiving failed",
-      description: "Failed to archive task. Please try again.",
+      title: "Delete failed",
+      description: "Failed to delete task. Please try again.",
+      variant: "destructive"
     });
     
     throw error;
