@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Task, TaskStatus, TaskPriority } from "@/types/task.types";
 import { toast } from "@/components/ui/use-toast";
@@ -90,8 +89,8 @@ export const addTask = async (task: Omit<Task, "id">): Promise<Task> => {
     
     return typedTask;
     
-  } catch (error) {
-    console.error("Error adding task to Supabase:", error);
+  } catch (err) {
+    console.error("Error adding task to Supabase:", err);
     
     // Create a mock task with generated ID for local mode
     const mockTask: Task = {
@@ -157,28 +156,34 @@ export const updateTask = async (id: string, updates: Partial<Task>): Promise<Ta
   }
 };
 
-// Delete a task
+// Archive a task instead of deleting
 export const deleteTask = async (id: string): Promise<void> => {
   try {
     const { error } = await supabase
       .from('tasks')
-      .delete()
+      .update({
+        status: 'archived' as TaskStatus,
+        archived_at: new Date().toISOString(),
+        archive_reason: 'deleted'
+      })
       .eq('id', id);
       
     if (error) throw error;
     
     toast({
-      title: "Task deleted",
-      description: "Your task has been deleted successfully.",
+      title: "Task archived",
+      description: "Your task has been archived and will be permanently deleted after 10 days.",
     });
     
   } catch (error) {
-    console.error("Error deleting task from Supabase:", error);
+    console.error("Error archiving task in Supabase:", error);
     
     toast({
-      title: "Task deleted (local only)",
-      description: "Your task has been deleted in local mode.",
+      title: "Task archiving failed",
+      description: "Failed to archive task. Please try again.",
     });
+    
+    throw error;
   }
 };
 
