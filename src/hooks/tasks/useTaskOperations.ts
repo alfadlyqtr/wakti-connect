@@ -171,9 +171,23 @@ export function useTaskOperations(
         .delete()
         .eq('id', taskId);
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error deleting task:", error);
+        throw error;
+      }
+      
+      // Show a success toast
+      toast({
+        title: "Task deleted",
+        description: "The task has been successfully deleted",
+      });
     } catch (error) {
       console.error("Error in deleteTask:", error);
+      toast({
+        title: "Delete failed",
+        description: "There was a problem deleting the task",
+        variant: "destructive"
+      });
       throw error;
     } finally {
       setIsProcessing(false);

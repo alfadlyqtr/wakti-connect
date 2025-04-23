@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { TaskPriority, TaskStatus, SubTask } from "@/types/task.types";
 import { isPast } from "date-fns";
@@ -7,6 +8,7 @@ import { TaskCardMenu } from "./TaskCardMenu";
 import { TaskCardFooter } from "./TaskCardFooter";
 import { TaskDueDate } from "../task-card/TaskDueDate";
 import { TaskSubtasks } from "../task-card/TaskSubtasks";
+import { TaskDetailDialog } from "./TaskDetailDialog";
 
 // Palette for dynamic colors
 const PRIORITY_COLORS: Record<string, string> = {
@@ -77,107 +79,116 @@ const TaskCard: React.FC<TaskCardProps> = ({
     dueDate.getTime() < new Date().getTime() &&
     (dueTime ? true : new Date().getHours() >= 23);
 
-  // Updated card background to be more pastel and soft (matching dashboard palette)
-  let cardColor =
-    isArchived
-      ? "border-l border-gray-300 bg-[#F1F0FB] dark:bg-[#212229]" // dashboard soft gray
-      : isOverdue
-        ? "border-l-2 border-l-red-400 bg-[#FFDEE2] dark:bg-[#2a1515]"
-        : priority === "urgent"
-          ? "border-l-2 border-l-red-400 bg-[#FFDEE2] dark:bg-[#2a1515]"
-          : priority === "high"
-            ? "border-l-2 border-l-orange-300 bg-[#FEC6A1] dark:bg-[#282113]"
-            : priority === "medium"
-              ? "border-l-2 border-l-yellow-300 bg-[#FEF7CD] dark:bg-[#25210f]"
-              : "border-l-2 border-l-green-400 bg-[#F2FCE2] dark:bg-[#18281b]";
+  const [detailOpen, setDetailOpen] = useState(false);
+  
+  const handleCardClick = () => {
+    setDetailOpen(true);
+  };
 
-  if (isCompleted) {
-    cardColor += " border-l-green-500 opacity-90";
-  }
-
-  // Dashboard look with more "surface" feel and less shadow
-  const cardClassNames = [
-    "overflow-hidden",
-    "rounded-2xl",
-    "border",
-    "shadow",
-    "hover:shadow-lg",
-    "transition-all",
-    "duration-300",
-    "group",
-    "p-0",
-    cardColor,
-    isCompleted ? "opacity-80" : "",
-    "relative",
-    "cursor-pointer",
-    "animate-fade-in"
-  ].join(" ");
+  const priorityClass = PRIORITY_COLORS[isArchived ? 'archived' : priority] || PRIORITY_COLORS.normal;
 
   return (
-    <Card className={cardClassNames}>
-      <div className="flex flex-row justify-between items-start px-4 pt-4 pb-2">
-        <TaskCardHeader
-          title={title}
-          priority={priority}
-          isRecurring={isRecurring}
-          isCompleted={isCompleted}
-        />
-        <TaskCardMenu
-          id={id}
-          status={status}
-          isArchived={isArchived}
-          onDelete={onDelete}
-          onEdit={onEdit}
-          onCancel={onCancel}
-          onSnooze={onSnooze}
-          onRestore={onRestore}
-          onStatusChange={onStatusChange}
-          userRole={userRole}
-          isPaidAccount={isPaidAccount}
-        />
-      </div>
-      <CardContent className="px-4 pb-4 pt-0">
-        {description && (
-          <p className={`text-[15px] mb-3 ${
-            isCompleted ? "text-muted-foreground line-through" : "text-muted-foreground"
-          }`}>
-            {description}
-          </p>
-        )}
-        <div className="mb-2">
-          <TaskDueDate
-            dueDate={dueDate}
-            dueTime={dueTime}
-            status={status}
-            snoozedUntil={snoozedUntil}
-            snoozeCount={snoozeCount}
-          />
-        </div>
-        {subtasks && subtasks.length > 0 && (
-          <div className="mt-1">
-            <TaskSubtasks
-              taskId={id}
-              subtasks={subtasks}
-              onSubtaskToggle={onSubtaskToggle}
-              refetch={refetch}
+    <>
+      <Card 
+        className={`overflow-hidden border-l-4 hover:shadow-md transition-all 
+          ${priorityClass} 
+          ${isOverdue ? 'ring-1 ring-red-400' : ''}
+          ${isCompleted ? 'opacity-75' : ''}
+          cursor-pointer
+        `}
+        onClick={handleCardClick}
+      >
+        <div className="p-3 flex flex-col h-full">
+          <div className="flex justify-between items-start">
+            <TaskCardHeader 
+              title={title}
+              status={status}
+              isCompleted={isCompleted}
+              priority={priority}
+              isArchived={isArchived}
+              isRecurring={isRecurring}
+              isRecurringInstance={isRecurringInstance}
             />
+            <div className="flex items-start" onClick={(e) => e.stopPropagation()}>
+              <TaskCardMenu
+                id={id}
+                status={status}
+                isArchived={isArchived}
+                onDelete={onDelete}
+                onEdit={() => onEdit(id)}
+                onCancel={onCancel}
+                onSnooze={onSnooze}
+                onRestore={onRestore}
+                onStatusChange={onStatusChange}
+                userRole={userRole}
+                isPaidAccount={isPaidAccount}
+              />
+            </div>
           </div>
-        )}
-      </CardContent>
-      {!isArchived && (
-        <div className="px-4 pb-3">
-          <TaskCardFooter
-            id={id}
-            status={status}
-            completedDate={completedDate}
-            dueDate={dueDate}
-            onStatusChange={onStatusChange}
-            onEdit={onEdit}
+          
+          <CardContent className="px-0 py-2 flex-grow">
+            {description && (
+              <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                {description}
+              </p>
+            )}
+
+            <TaskDueDate
+              dueDate={dueDate}
+              dueTime={dueTime}
+              isOverdue={isOverdue}
+              snoozedUntil={snoozedUntil}
+              snoozeCount={snoozeCount}
+              isCompleted={isCompleted}
+              completedDate={completedDate}
+            />
+          </CardContent>
+          
+          <TaskCardFooter 
+            subtaskCount={subtasks?.length || 0}
+            completedSubtaskCount={subtasks?.filter(st => st.is_completed)?.length || 0}
+            isCompleted={isCompleted}
           />
         </div>
-      )}
-      <div className="absolute inset-0 rounded-2xl pointer-events-none group-hover:ring-2 group-hover:ring-wakti-blue group-hover:opacity-60 transition-all duration-200" />
-    </Card>
+      </Card>
+
+      <TaskDetailDialog
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+        task={{
+          id,
+          title,
+          description,
+          due_date: dueDate.toISOString(),
+          due_time: dueTime,
+          status,
+          priority,
+          subtasks,
+          completed_at: completedDate?.toISOString(),
+          is_recurring: isRecurring,
+          is_recurring_instance: isRecurringInstance,
+          snooze_count: snoozeCount,
+          snoozed_until: snoozedUntil?.toISOString()
+        }}
+        onEdit={() => {
+          setDetailOpen(false);
+          onEdit(id);
+        }}
+        onDelete={() => {
+          setDetailOpen(false);
+          onDelete(id);
+        }}
+        onStatusChange={(status) => {
+          onStatusChange(id, status);
+          if (status === "completed") setDetailOpen(false);
+        }}
+        onSubtaskToggle={onSubtaskToggle ? 
+          (subtaskIndex, isCompleted) => onSubtaskToggle(id, subtaskIndex, isCompleted) 
+          : undefined
+        }
+        refetch={refetch}
+      />
+    </>
   );
 };
 

@@ -45,6 +45,12 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
     }
   };
   
+  const handleDelete = (taskId: string) => {
+    if (!isArchiveView) {
+      onArchive(taskId, "deleted");
+    }
+  };
+  
   if (tasks.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 border border-dashed rounded-lg bg-muted/30">
@@ -71,7 +77,7 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
     <TaskGrid 
       tasks={tasks}
       onEdit={onEdit}
-      onDelete={!isArchiveView ? (taskId) => onArchive(taskId, "deleted") : undefined}
+      onDelete={!isArchiveView ? handleDelete : undefined}
       onComplete={!isArchiveView ? handleCompleteTask : undefined}
       onRestore={isArchiveView ? onRestore : undefined}
       isLoading={isProcessing}

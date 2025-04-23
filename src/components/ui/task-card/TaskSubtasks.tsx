@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { SubTask } from "@/types/task.types";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -23,6 +24,7 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({
   refetch
 }) => {
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  const [pendingSubtasks, setPendingSubtasks] = useState<Set<string>>(new Set());
 
   if (!subtasks || subtasks.length === 0) return null;
 
@@ -43,6 +45,9 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({
       
       try {
         if (subtaskId) {
+          // Add to pending set to show loading state
+          setPendingSubtasks(prev => new Set(prev).add(subtaskId));
+          
           const { error } = await supabase
             .from('todo_items')
             .update({ 
@@ -68,6 +73,14 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({
           description: error instanceof Error ? error.message : "An unknown error occurred",
           variant: "destructive"
         });
+      } finally {
+        if (subtaskId) {
+          setPendingSubtasks(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(subtaskId);
+            return newSet;
+          });
+        }
       }
     }
   };
@@ -167,19 +180,27 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({
     }
     
     // This is a regular subtask (not a group and not a string)
+    const subtaskId = (item as SubTask).id;
+    const isSubtaskPending = subtaskId ? pendingSubtasks.has(subtaskId) : false;
+    
     return (
       <li key={`${parentPath}-${index}`} className="flex items-start gap-2">
         <Checkbox 
           id={`subtask-${taskId}-${parentPath}-${index}`}
           checked={(item as SubTask).is_completed}
           onCheckedChange={() => handleSubtaskToggle(index, (item as SubTask).id)}
-          className="mt-0.5"
+          className={cn(
+            "mt-0.5",
+            isSubtaskPending && "opacity-50"
+          )}
+          disabled={isSubtaskPending}
         />
         <label 
           htmlFor={`subtask-${taskId}-${parentPath}-${index}`}
           className={cn(
             "text-sm",
-            (item as SubTask).is_completed && "line-through text-muted-foreground"
+            (item as SubTask).is_completed && "line-through text-muted-foreground",
+            isSubtaskPending && "opacity-50"
           )}
         >
           {(item as SubTask).content || (item as NestedSubtask).content}
@@ -196,25 +217,31 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({
           Subtasks ({(subtasks as SubTask[]).filter(st => st.is_completed).length}/{subtasks.length})
         </h4>
         <ul className="space-y-1.5">
-          {(subtasks as SubTask[]).map((subtask, index) => (
-            <li key={subtask.id || index} className="flex items-start gap-2">
-              <Checkbox 
-                id={`subtask-${taskId}-${index}`}
-                checked={subtask.is_completed}
-                onCheckedChange={() => handleSubtaskToggle(index, subtask.id)}
-                className="mt-0.5"
-              />
-              <label 
-                htmlFor={`subtask-${taskId}-${index}`}
-                className={cn(
-                  "text-sm",
-                  subtask.is_completed && "line-through text-muted-foreground"
-                )}
-              >
-                {subtask.content}
-              </label>
-            </li>
-          ))}
+          {(subtasks as SubTask[]).map((subtask, index) => {
+            const isSubtaskPending = subtask.id ? pendingSubtasks.has(subtask.id) : false;
+            
+            return (
+              <li key={subtask.id || index} className="flex items-start gap-2">
+                <Checkbox 
+                  id={`subtask-${taskId}-${index}`}
+                  checked={subtask.is_completed}
+                  onCheckedChange={() => handleSubtaskToggle(index, subtask.id)}
+                  className={cn("mt-0.5", isSubtaskPending && "opacity-50")}
+                  disabled={isSubtaskPending}
+                />
+                <label 
+                  htmlFor={`subtask-${taskId}-${index}`}
+                  className={cn(
+                    "text-sm",
+                    subtask.is_completed && "line-through text-muted-foreground",
+                    isSubtaskPending && "opacity-50"
+                  )}
+                >
+                  {subtask.content}
+                </label>
+              </li>
+            );
+          })}
         </ul>
       </div>
     );

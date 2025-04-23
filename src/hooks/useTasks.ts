@@ -7,9 +7,12 @@ import { useUserRole } from './useUserRole';
 export const useTasks = () => {
   const { userRole } = useUserRole();
   
+  // Map super-admin to business role for task operations
+  const effectiveRole = userRole === "super-admin" ? "business" : userRole;
+  
   // Make sure we pass a valid role or default to 'free'
-  const sanitizedRole = (userRole && ['individual', 'business', 'staff', 'free'].includes(userRole)) 
-    ? userRole as 'individual' | 'business' | 'staff' | 'free'
+  const sanitizedRole = (effectiveRole && ['individual', 'business', 'staff', 'free'].includes(effectiveRole)) 
+    ? effectiveRole as 'individual' | 'business' | 'staff' | 'free'
     : 'free';
   
   const { createTask } = useTaskOperations(sanitizedRole);

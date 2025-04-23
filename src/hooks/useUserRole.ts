@@ -20,6 +20,19 @@ export const useUserRole = () => {
           return;
         }
         
+        // First check if user is a super-admin
+        const { data: superAdminData, error: superAdminError } = await supabase
+          .from('super_admins')
+          .select('id')
+          .eq('id', session.user.id)
+          .single();
+          
+        if (superAdminData && !superAdminError) {
+          setUserRole('super-admin');
+          setIsLoading(false);
+          return;
+        }
+        
         const { data: userData, error } = await supabase
           .from('user_profiles')
           .select('role')
@@ -30,7 +43,7 @@ export const useUserRole = () => {
           console.error("Error fetching user role:", error);
           setUserRole(null);
         } else {
-          // Cast to UserRole type for safety
+          // Cast to UserRole type for safety, defaulting to 'free' if null
           const role = userData?.role as UserRole || 'free';
           setUserRole(role);
         }
