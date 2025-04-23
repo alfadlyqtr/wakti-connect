@@ -17,12 +17,10 @@ const TaskFormFields: React.FC<TaskFormFieldsProps> = ({ form }) => {
     <>
       {/* Basic task information */}
       <BasicFields form={form} />
-      
       {/* Date and time fields */}
       <DateTimeFields form={form} />
-      
-      {/* Subtasks Section */}
-      <SubtasksSection 
+      {/* Subtasks Section - group style */}
+      <SubtasksSection
         form={form}
         enableSubtasks={enableSubtasks}
       />
@@ -31,3 +29,4 @@ const TaskFormFields: React.FC<TaskFormFieldsProps> = ({ form }) => {
 };
 
 export default TaskFormFields;
+

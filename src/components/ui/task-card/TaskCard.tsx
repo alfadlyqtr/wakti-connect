@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { TaskPriority, TaskStatus, SubTask } from "@/types/task.types";
@@ -78,24 +77,30 @@ const TaskCard: React.FC<TaskCardProps> = ({
     dueDate.getTime() < new Date().getTime() &&
     (dueTime ? true : new Date().getHours() >= 23);
 
-  // Card coloring and shadow logic
+  // Updated card background to be more pastel and soft (matching dashboard palette)
   let cardColor =
     isArchived
-      ? PRIORITY_COLORS["archived"]
+      ? "border-l border-gray-300 bg-[#F1F0FB] dark:bg-[#212229]" // dashboard soft gray
       : isOverdue
-        ? "border-l-red-500 bg-red-50/70 dark:bg-[#2a1515]"
-        : PRIORITY_COLORS[priority];
+        ? "border-l-2 border-l-red-400 bg-[#FFDEE2] dark:bg-[#2a1515]"
+        : priority === "urgent"
+          ? "border-l-2 border-l-red-400 bg-[#FFDEE2] dark:bg-[#2a1515]"
+          : priority === "high"
+            ? "border-l-2 border-l-orange-300 bg-[#FEC6A1] dark:bg-[#282113]"
+            : priority === "medium"
+              ? "border-l-2 border-l-yellow-300 bg-[#FEF7CD] dark:bg-[#25210f]"
+              : "border-l-2 border-l-green-400 bg-[#F2FCE2] dark:bg-[#18281b]";
 
   if (isCompleted) {
-    cardColor += " border-l-green-600"; // Extra green bar for completed
+    cardColor += " border-l-green-500 opacity-90";
   }
 
-  // Enhanced style for dashboard look
+  // Dashboard look with more "surface" feel and less shadow
   const cardClassNames = [
     "overflow-hidden",
-    "rounded-xl",
+    "rounded-2xl",
     "border",
-    "shadow-md",
+    "shadow",
     "hover:shadow-lg",
     "transition-all",
     "duration-300",
@@ -104,13 +109,13 @@ const TaskCard: React.FC<TaskCardProps> = ({
     cardColor,
     isCompleted ? "opacity-80" : "",
     "relative",
-    "cursor-pointer"
+    "cursor-pointer",
+    "animate-fade-in"
   ].join(" ");
 
   return (
     <Card className={cardClassNames}>
-      {/* Card content padding/spacing */}
-      <div className="flex flex-row justify-between items-start px-5 pt-4 pb-2">
+      <div className="flex flex-row justify-between items-start px-4 pt-4 pb-2">
         <TaskCardHeader
           title={title}
           priority={priority}
@@ -131,15 +136,14 @@ const TaskCard: React.FC<TaskCardProps> = ({
           isPaidAccount={isPaidAccount}
         />
       </div>
-      <CardContent className="px-5 pb-4 pt-0">
+      <CardContent className="px-4 pb-4 pt-0">
         {description && (
-          <p className={`text-sm mb-3 ${
+          <p className={`text-[15px] mb-3 ${
             isCompleted ? "text-muted-foreground line-through" : "text-muted-foreground"
           }`}>
             {description}
           </p>
         )}
-
         <div className="mb-2">
           <TaskDueDate
             dueDate={dueDate}
@@ -149,19 +153,19 @@ const TaskCard: React.FC<TaskCardProps> = ({
             snoozeCount={snoozeCount}
           />
         </div>
-
         {subtasks && subtasks.length > 0 && (
-          <TaskSubtasks
-            taskId={id}
-            subtasks={subtasks}
-            onSubtaskToggle={onSubtaskToggle}
-            refetch={refetch}
-          />
+          <div className="mt-1">
+            <TaskSubtasks
+              taskId={id}
+              subtasks={subtasks}
+              onSubtaskToggle={onSubtaskToggle}
+              refetch={refetch}
+            />
+          </div>
         )}
       </CardContent>
-      {/* Use new dashboard look for the footer */}
       {!isArchived && (
-        <div className="px-5 pb-4">
+        <div className="px-4 pb-3">
           <TaskCardFooter
             id={id}
             status={status}
@@ -172,8 +176,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
           />
         </div>
       )}
-      {/* Hover visual border for summary-card effect */}
-      <div className="absolute inset-0 rounded-xl pointer-events-none group-hover:ring-2 group-hover:ring-wakti-blue group-hover:opacity-70 transition-all duration-200" />
+      <div className="absolute inset-0 rounded-2xl pointer-events-none group-hover:ring-2 group-hover:ring-wakti-blue group-hover:opacity-60 transition-all duration-200" />
     </Card>
   );
 };
