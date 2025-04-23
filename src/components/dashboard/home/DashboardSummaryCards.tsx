@@ -32,33 +32,29 @@ export const DashboardSummaryCards = ({
   todayTasks = [],
   unreadNotifications = [],
   isLoading = false,
-  subscribersCount = 0
+  subscribersCount = 0,
 }: DashboardSummaryCardsProps) => {
   const tasks = todayTasks || [];
   const completedTasksCount = tasks.filter((task: any) => task.status === "completed").length;
   const { unreadCount, isLoading: notificationsLoading } = useDashboardNotifications();
 
-  // Fetch actual subscribers count from Supabase
   const { data: subscribersData, isLoading: subscribersLoading } = useQuery({
     queryKey: ['dashboardSubscribersCount'],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) return { subscribersCount: 0 };
-      
       const { count, error } = await supabase
         .from('business_subscribers')
         .select('*', { count: 'exact', head: true })
         .eq('business_id', session.user.id);
-        
       if (error) {
         console.error("Error fetching subscribers count:", error);
         return { subscribersCount: 0 };
       }
-      
       return { subscribersCount: count || 0 };
     }
   });
-  
+
   const actualSubscribersCount = subscribersData?.subscribersCount || 0;
 
   if (isLoading || subscribersLoading) {
@@ -84,6 +80,7 @@ export const DashboardSummaryCards = ({
 
   return (
     <div className="grid gap-2 grid-cols-2 md:grid-cols-4">
+      {/* Today's Tasks */}
       <Card className={CARD_COMMON}>
         <CardHeader className={CARD_HEADER}>
           <CardTitle className="text-xs font-semibold text-wakti-blue">Today's Tasks</CardTitle>
@@ -99,6 +96,7 @@ export const DashboardSummaryCards = ({
         </CardContent>
       </Card>
 
+      {/* Notifications Summary Card - Always rendered */}
       <Card className={CARD_COMMON}>
         <CardHeader className={CARD_HEADER}>
           <CardTitle className="text-xs font-semibold text-wakti-gold">Notifications</CardTitle>
@@ -114,6 +112,7 @@ export const DashboardSummaryCards = ({
         </CardContent>
       </Card>
 
+      {/* Subscribers Card */}
       <Card className={CARD_COMMON}>
         <CardHeader className={CARD_HEADER}>
           <CardTitle className="text-xs font-semibold text-blue-500">Subscribers</CardTitle>
@@ -127,6 +126,7 @@ export const DashboardSummaryCards = ({
         </CardContent>
       </Card>
 
+      {/* Account Type */}
       <Card className={CARD_COMMON}>
         <CardHeader className={CARD_HEADER}>
           <CardTitle className="text-xs font-semibold text-wakti-navy">

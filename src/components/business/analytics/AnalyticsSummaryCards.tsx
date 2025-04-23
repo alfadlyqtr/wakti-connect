@@ -3,7 +3,6 @@ import React from "react";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { UsersRound, TrendingUp, Bell } from "lucide-react";
 import { BusinessAnalyticsData } from "@/hooks/useBusinessAnalytics";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatNumber } from "@/utils/businessReportsUtils";
 import { useDashboardNotifications } from "@/hooks/useDashboardNotifications";
@@ -13,8 +12,10 @@ interface AnalyticsSummaryCardsProps {
   data: BusinessAnalyticsData;
 }
 
-export const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({ isLoading, data }) => {
-  const isMobile = useIsMobile();
+export const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({
+  isLoading,
+  data,
+}) => {
   const { unreadCount, isLoading: notificationsLoading } = useDashboardNotifications();
 
   if (isLoading) {
@@ -56,7 +57,6 @@ export const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({ is
           </p>
         </CardContent>
       </Card>
-      
       <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:scale-[1.025]">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 md:p-4 pb-2">
           <CardTitle className="text-xs sm:text-sm font-medium">
@@ -65,19 +65,14 @@ export const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({ is
           <UsersRound className="h-4 w-4 text-blue-500" />
         </CardHeader>
         <CardContent className="p-3 md:p-4 pt-2">
-          <div className="text-lg sm:text-xl md:text-2xl font-bold">{formatNumber(data.subscriberCount)}</div>
-          {data.subscriberChangeText ? (
-            <p className="text-xs text-muted-foreground">
-              {data.subscriberChangeText}
-            </p>
-          ) : (
-            <p className="text-xs text-muted-foreground">
-              Total subscribers
-            </p>
-          )}
+          <div className="text-lg sm:text-xl md:text-2xl font-bold">
+            {formatNumber(data.subscriberCount)}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {data.subscriberChangeText ?? "Total subscribers"}
+          </p>
         </CardContent>
       </Card>
-      
       <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:scale-[1.025]">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 md:p-4 pb-2">
           <CardTitle className="text-xs sm:text-sm font-medium">
@@ -86,19 +81,14 @@ export const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({ is
           <UsersRound className="h-4 w-4 text-indigo-500" />
         </CardHeader>
         <CardContent className="p-3 md:p-4 pt-2">
-          <div className="text-lg sm:text-xl md:text-2xl font-bold">{formatNumber(data.staffCount)}</div>
-          {data.staffChangeText ? (
-            <p className="text-xs text-muted-foreground">
-              {data.staffChangeText}
-            </p>
-          ) : (
-            <p className="text-xs text-muted-foreground">
-              Active staff members
-            </p>
-          )}
+          <div className="text-lg sm:text-xl md:text-2xl font-bold">
+            {formatNumber(data.staffCount)}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {data.staffChangeText ?? "Active staff members"}
+          </p>
         </CardContent>
       </Card>
-      
       <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:scale-[1.025]">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 md:p-4 pb-2">
           <CardTitle className="text-xs sm:text-sm font-medium">
@@ -110,15 +100,9 @@ export const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({ is
           <div className="text-lg sm:text-xl md:text-2xl font-bold">
             {data.taskCompletionRate !== null ? `${data.taskCompletionRate}%` : "—"}
           </div>
-          {data.completionRateChangeText ? (
-            <p className="text-xs text-muted-foreground">
-              {data.completionRateChangeText}
-            </p>
-          ) : (
-            <p className="text-xs text-muted-foreground">
-              No tasks found
-            </p>
-          )}
+          <p className="text-xs text-muted-foreground">
+            {data.completionRateChangeText ?? "No tasks found"}
+          </p>
         </CardContent>
       </Card>
     </div>
