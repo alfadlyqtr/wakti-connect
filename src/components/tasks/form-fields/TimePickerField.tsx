@@ -13,7 +13,7 @@ import { TimePicker } from "@/components/ui/time-picker";
 
 interface TimePickerFieldProps {
   form: UseFormReturn<TaskFormValues>;
-  name: "dueTime" | `subtasks.${number}.dueTime`;
+  name: "due_time" | `subtasks.${number}.due_time`;
   label?: string;
 }
 
