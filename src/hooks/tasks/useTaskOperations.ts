@@ -59,29 +59,16 @@ export const useTaskOperations = (
         isRecurring
       });
       
-      // Convert field names to match database schema
+      // Fields already have the correct names, no need to transform them
       let formattedTaskData = { ...taskDataWithoutRecurring };
-      
-      // Handle date and time conversions
-      if (formattedTaskData.dueDate) {
-        formattedTaskData.due_date = formattedTaskData.dueDate;
-        delete formattedTaskData.dueDate;
-        console.log("Formatted due_date:", formattedTaskData.due_date);
-      }
-      
-      if (formattedTaskData.dueTime) {
-        formattedTaskData.due_time = formattedTaskData.dueTime;
-        delete formattedTaskData.dueTime;
-        console.log("Formatted due_time:", formattedTaskData.due_time);
-      }
       
       // Format subtasks if they exist
       if (formattedTaskData.subtasks && formattedTaskData.enableSubtasks) {
         formattedTaskData.subtasks = formattedTaskData.subtasks.map((subtask: any) => ({
           content: subtask.content,
           is_completed: subtask.isCompleted || false,
-          due_date: subtask.dueDate || null,
-          due_time: subtask.dueTime || null,
+          due_date: subtask.due_date || null,
+          due_time: subtask.due_time || null,
         }));
         console.log("Formatted subtasks:", formattedTaskData.subtasks);
       } else {

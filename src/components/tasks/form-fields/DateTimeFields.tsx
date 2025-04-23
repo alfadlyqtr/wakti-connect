@@ -24,7 +24,7 @@ export const DateTimeFields: React.FC<DateTimeFieldsProps> = ({ form }) => {
         {/* Due Date Field */}
         <FormField
           control={form.control}
-          name="dueDate"
+          name="due_date" // Changed from dueDate to due_date to match backend
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Due Date</FormLabel>
@@ -44,7 +44,7 @@ export const DateTimeFields: React.FC<DateTimeFieldsProps> = ({ form }) => {
         {/* Native Time Input */}
         <FormField
           control={form.control}
-          name="dueTime"
+          name="due_time" // Changed from dueTime to due_time to match backend
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Due Time</FormLabel>

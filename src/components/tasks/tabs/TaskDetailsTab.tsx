@@ -113,7 +113,7 @@ export function TaskDetailsTab({
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <FormField
           control={form.control}
-          name="dueDate"
+          name="due_date"
           render={({ field }) => (
             <FormItem>
               <FormLabel className="flex items-center gap-1">
@@ -128,10 +128,10 @@ export function TaskDetailsTab({
           )}
         />
 
-        {/* Native Time Picker replaces TimePickerField */}
+        {/* Native Time Picker */}
         <FormField 
           control={form.control}
-          name="dueTime"
+          name="due_time"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Due Time</FormLabel>

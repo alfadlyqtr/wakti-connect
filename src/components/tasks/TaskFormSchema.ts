@@ -17,8 +17,8 @@ const SubtaskSchema = z.object({
   id: z.string().optional(),
   content: z.string().min(1, "Subtask content is required"),
   isCompleted: z.boolean().default(false),
-  dueDate: z.string().optional(),
-  dueTime: z.string().optional(),
+  due_date: z.string().optional(),
+  due_time: z.string().optional(),
   // New fields for hierarchical subtasks
   is_group: z.boolean().optional(),
   parent_id: z.string().optional(),
@@ -31,8 +31,8 @@ export const taskFormSchema = z.object({
   title: z.string().min(1, "Title is required").max(100, "Title is too long"),
   description: z.string().optional(),
   priority: z.enum(["urgent", "high", "medium", "normal"] as const).default("normal"),
-  dueDate: z.string().min(1, "Due date is required"),
-  dueTime: z.string().optional(),
+  due_date: z.string().min(1, "Due date is required"),
+  due_time: z.string().optional(),
   
   // Recurring task settings
   isRecurring: z.boolean().default(false),

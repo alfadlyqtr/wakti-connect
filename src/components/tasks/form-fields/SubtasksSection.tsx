@@ -29,7 +29,7 @@ export const SubtasksSection: React.FC<SubtasksSectionProps> = ({ form, enableSu
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium">Subtasks</span>
           <Button variant="outline" size="sm" type="button"
-            onClick={() => append({ content: "" })}
+            onClick={() => append({ content: "", isCompleted: false })}
           >
             <Plus className="w-4 h-4 mr-1" /> Add Subtask
           </Button>

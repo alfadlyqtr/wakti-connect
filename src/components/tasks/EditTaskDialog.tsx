@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -32,14 +33,6 @@ import { format } from "date-fns";
 import { Loader2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { Task } from "@/types/task.types";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
-import { CalendarIcon } from "lucide-react";
 
 interface EditTaskDialogProps {
   open: boolean;
@@ -62,19 +55,20 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
       title: "",
       description: "",
       priority: "normal",
-      dueDate: format(new Date(), "yyyy-MM-dd"),
-      dueTime: "",
+      due_date: format(new Date(), "yyyy-MM-dd"),
+      due_time: "",
     },
   });
 
   useEffect(() => {
     if (task) {
+      console.log("Setting form values for task:", task);
       form.reset({
         title: task.title,
         description: task.description || "",
         priority: task.priority,
-        dueDate: task.due_date ? format(new Date(task.due_date), "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd"),
-        dueTime: task.due_time || "",
+        due_date: task.due_date ? format(new Date(task.due_date), "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd"),
+        due_time: task.due_time || "",
       });
     }
   }, [task, form]);
@@ -84,13 +78,15 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
     setLoading(true);
 
     try {
+      console.log("Form values before sending to API:", values);
+      
       const taskData = {
         title: values.title,
         description: values.description || "",
         priority: values.priority,
         status: task.status,
-        due_date: values.dueDate,
-        due_time: values.dueTime || null,
+        due_date: values.due_date,
+        due_time: values.due_time || null,
       };
 
       console.log("Updating task with data:", taskData);
@@ -99,7 +95,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
       onOpenChange(false);
       
       toast({
-        title: "Update Task",
+        title: "Task Updated",
         description: "Task has been updated successfully.",
         variant: "success"
       });
@@ -127,7 +123,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
 
   const isFormValid = () => {
     const values = form.getValues();
-    return !!values.title && !!values.dueDate;
+    return !!values.title && !!values.due_date;
   };
 
   return (
@@ -215,7 +211,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="dueDate"
+                name="due_date"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Due Date</FormLabel>
@@ -232,7 +228,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
 
               <FormField
                 control={form.control}
-                name="dueTime"
+                name="due_time"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Due Time</FormLabel>
@@ -277,4 +273,4 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
       </DialogContent>
     </Dialog>
   );
-};
+}

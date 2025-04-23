@@ -32,8 +32,8 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       title: "",
       description: "",
       priority: "normal",
-      dueDate: format(new Date(), "yyyy-MM-dd"),
-      dueTime: "",
+      due_date: format(new Date(), "yyyy-MM-dd"),
+      due_time: "",
       isRecurring: false,
       enableSubtasks: false,
       subtasks: [],
@@ -44,14 +44,12 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   const handleSubmit = async (data: any) => {
     try {
       setIsSubmitting(true);
-      // Process data as needed
+      console.log("Creating task with data:", data);
       
-      // Handle the subtaskGroupTitle and subtasks formatting
-      if (data.enableSubtasks && data.subtaskGroupTitle) {
-        // Process subtasks with group title if needed
-        console.log("Task with subtasks group:", data.subtaskGroupTitle);
-      }
+      // Add isRecurring from the state
+      data.isRecurring = isRecurring;
       
+      // Process data for API submission - no need to transform field names as they're already correct
       await onCreateTask(data);
       
       // Reset form and close dialog on success
