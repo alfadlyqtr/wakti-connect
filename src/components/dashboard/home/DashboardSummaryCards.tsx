@@ -79,7 +79,7 @@ export const DashboardSummaryCards = ({
         </CardContent>
       </Card>
 
-      {/* Notifications (new card) */}
+      {/* Notifications (new card, live count) */}
       <Card className={CARD_COMMON}>
         <CardHeader className={CARD_HEADER}>
           <CardTitle className="text-xs font-semibold text-wakti-gold">Notifications</CardTitle>
@@ -95,7 +95,7 @@ export const DashboardSummaryCards = ({
         </CardContent>
       </Card>
 
-      {/* Subscribers */}
+      {/* Subscribers (always live, never static) */}
       <Card className={CARD_COMMON}>
         <CardHeader className={CARD_HEADER}>
           <CardTitle className="text-xs font-semibold text-blue-500">Subscribers</CardTitle>
