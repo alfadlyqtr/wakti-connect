@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { TaskPriority, TaskStatus, SubTask, Task } from "@/types/task.types";
@@ -78,6 +77,8 @@ const TaskCard: React.FC<TaskCardProps> = ({
     status !== 'archived' &&
     isPast(dueDate) &&
     (dueTime ? true : new Date().getHours() >= 23);
+
+  const priorityClass = PRIORITY_COLORS[isArchived ? 'archived' : priority] || PRIORITY_COLORS.normal;
 
   const handleCardClick = (e: React.MouseEvent) => {
     // Don't open detail dialog if clicking on menu or buttons
