@@ -12,7 +12,7 @@ import { Archive } from "lucide-react";
 import { Navigate } from "react-router-dom";
 import { UserRole } from "@/types/user";
 import TasksContainer from "@/components/tasks/TasksContainer";
-import { TaskTab, Task, TaskFormData } from "@/types/task.types";
+import { TaskTab, Task, TaskFormData, TaskStatus, TaskPriority } from "@/types/task.types";
 import RemindersContainer from "@/components/reminders/RemindersContainer";
 import { useReminders } from "@/hooks/useReminders";
 
@@ -80,7 +80,15 @@ const DashboardTasks = () => {
 
   const handleCreateTaskWrapper = async (taskData: TaskFormData): Promise<Task> => {
     const result = await handleCreateTask(taskData);
-    return result || {} as Task;
+    // Ensure result is cast as Task type with correct property types
+    if (result) {
+      return {
+        ...result,
+        status: result.status as TaskStatus,
+        priority: result.priority as TaskPriority
+      } as Task;
+    }
+    return {} as Task;
   };
 
   const handleUpdateTaskWrapper = async (taskId: string, taskData: any) => {

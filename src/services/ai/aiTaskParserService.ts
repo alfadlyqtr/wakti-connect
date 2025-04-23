@@ -116,7 +116,7 @@ export const convertNestedSubtasksToSubTasks = (
       const subtask: SubTask = {
         id: tempId,
         task_id: 'pending',
-        content: item.content,
+        content: item.content || title,
         title: title, // Store title separately for clarity
         is_completed: item.is_completed || false,
         is_group: isGroup,
@@ -170,13 +170,14 @@ export const convertParsedTaskToFormData = (parsedTask: ParsedTask) => {
       ? `Location: ${parsedTask.location}` 
       : '',
     priority,
-    due_date: parsedTask.due_date,
+    due_date: parsedTask.due_date || '',
     due_time: parsedTask.due_time,
     subtasks: hierarchicalSubtasks,
     status: 'pending',
     location: parsedTask.location,
     enableSubtasks: parsedTask.subtasks.length > 0,
     is_recurring: false,
+    isRecurring: false,
     // Store the original nested subtask structure for display in TaskCard
     originalSubtasks: parsedTask.subtasks,
     preserveNestedStructure: true

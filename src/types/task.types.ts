@@ -5,6 +5,15 @@ export type TaskPriority = "urgent" | "high" | "medium" | "normal";
 export type TaskTab = "my-tasks" | "archived" | "reminders";
 export type ArchiveReason = "deleted" | "canceled" | string;
 
+// Interface for nested subtasks used by AI parsing
+export interface NestedSubtask {
+  id?: string;
+  content: string;
+  title?: string;
+  is_completed?: boolean;
+  subtasks?: (string | NestedSubtask)[];
+}
+
 // Subtask interface
 export interface SubTask {
   id?: string;
@@ -19,15 +28,6 @@ export interface SubTask {
   parent_id?: string;
   is_group?: boolean;
   subtasks?: SubTask[];
-}
-
-// Interface for nested subtasks used by AI parsing
-export interface NestedSubtask {
-  id?: string;
-  content: string;
-  title?: string;
-  is_completed?: boolean;
-  subtasks?: (string | NestedSubtask)[];
 }
 
 // Main task interface
@@ -74,7 +74,7 @@ export interface TaskFormData {
   
   // Fields for AI components
   preserveNestedStructure?: boolean;
-  originalSubtasks?: (SubTask | NestedSubtask | string)[];
+  originalSubtasks?: (string | SubTask | NestedSubtask)[];
   
   // Fields needed for task management
   snooze_count?: number;

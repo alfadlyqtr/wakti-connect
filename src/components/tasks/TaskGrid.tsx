@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Task } from "@/types/task.types";
+import { Task, TaskStatus } from "@/types/task.types";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -103,8 +103,8 @@ export function TaskGrid({
       );
     }
     
-    // Fix the comparison by checking current task status against string literal, not type
-    if (task.due_date && isPast(new Date(task.due_date)) && task.status !== "completed") {
+    // Fix the comparison by checking current task status as string
+    if (task.due_date && isPast(new Date(task.due_date)) && task.status !== "completed" as TaskStatus) {
       return (
         <Badge className="bg-red-500/10 text-red-600 border-red-600/20 rounded-md" variant="outline">
           Late

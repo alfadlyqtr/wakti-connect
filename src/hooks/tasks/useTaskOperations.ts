@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Task, TaskFormData, TaskStatus, TaskPriority } from '@/types/task.types';
@@ -39,7 +40,7 @@ export function useTaskOperations(
         .insert({
           title: taskData.title,
           description: taskData.description,
-          priority: taskData.priority as TaskPriority, // Ensure TaskPriority type
+          priority: taskData.priority,
           due_date: taskData.due_date,
           due_time: taskData.due_time,
           user_id: session.user.id,
@@ -50,11 +51,11 @@ export function useTaskOperations(
       
       if (error) throw error;
       
-      // Ensure data conforms to the Task type
+      // Cast data to the Task type with appropriate type assertions
       const task: Task = {
         ...data,
         status: data.status as TaskStatus,
-        priority: data.priority as TaskPriority // Ensure TaskPriority type
+        priority: data.priority as TaskPriority
       };
       
       // Insert subtasks if any
@@ -95,7 +96,7 @@ export function useTaskOperations(
         .update({
           title: taskData.title,
           description: taskData.description,
-          priority: taskData.priority as TaskPriority, // Ensure TaskPriority type
+          priority: taskData.priority,
           due_date: taskData.due_date,
           due_time: taskData.due_time,
           updated_at: new Date().toISOString()
@@ -106,11 +107,11 @@ export function useTaskOperations(
       
       if (error) throw error;
 
-      // Ensure data conforms to the Task type
+      // Cast to Task with proper types
       const task: Task = {
         ...data,
         status: data.status as TaskStatus,
-        priority: data.priority as TaskPriority // Ensure TaskPriority type
+        priority: data.priority as TaskPriority
       };
       
       // Handle subtasks if provided
@@ -196,11 +197,11 @@ export function useTaskOperations(
       
       if (error) throw error;
       
-      // Ensure data conforms to the Task type
+      // Cast to Task with proper types
       const task: Task = {
         ...data,
         status: data.status as TaskStatus,
-        priority: data.priority as TaskPriority // Ensure TaskPriority type
+        priority: data.priority as TaskPriority
       };
       
       return task;
@@ -215,7 +216,7 @@ export function useTaskOperations(
   return {
     createTask,
     updateTask,
-    deleteTask: async () => { throw new Error("Not implemented"); },
+    deleteTask,
     completeTask,
     isProcessing
   };

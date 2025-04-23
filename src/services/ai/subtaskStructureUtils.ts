@@ -3,8 +3,7 @@
  * Utilities for handling nested subtask structures
  */
 
-import { NestedSubtask } from "./aiTaskParserService";
-import { SubTask } from "@/types/task.types";
+import { NestedSubtask, SubTask } from "@/types/task.types";
 import { v4 as uuidv4 } from "uuid";
 
 /**
