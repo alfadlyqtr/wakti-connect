@@ -9,6 +9,15 @@ import { TaskCardFooter } from "./TaskCardFooter";
 import { TaskDueDate } from "../task-card/TaskDueDate";
 import { TaskSubtasks } from "../task-card/TaskSubtasks";
 
+// Palette for dynamic colors
+const PRIORITY_COLORS: Record<string, string> = {
+  urgent: "border-l-red-500 bg-red-50/70 dark:bg-[#2a1515]",
+  high: "border-l-orange-400 bg-orange-50/70 dark:bg-[#282113]",
+  medium: "border-l-amber-400 bg-yellow-50/70 dark:bg-[#25210f]",
+  normal: "border-l-green-500 bg-green-50/60 dark:bg-[#18281b]",
+  archived: "border-l-gray-300 bg-[#f6f6f7] dark:bg-[#212229]",
+};
+
 interface TaskCardProps {
   id: string;
   title: string;
@@ -19,7 +28,7 @@ interface TaskCardProps {
   priority: TaskPriority;
   userRole: "free" | "individual" | "business" | "staff" | null;
   isArchived?: boolean;
-  subtasks?: SubTask[] | any[]; // Allow nested subtask structure
+  subtasks?: SubTask[] | any[];
   completedDate?: Date | null;
   isRecurring?: boolean;
   isRecurringInstance?: boolean;
@@ -61,42 +70,54 @@ const TaskCard: React.FC<TaskCardProps> = ({
   onSubtaskToggle
 }) => {
   const isPaidAccount = userRole === "individual" || userRole === "business";
-  
-  // Show or hide certain features based on the task status
   const isCompleted = status === "completed";
-  const isSnoozed = status === "snoozed";
-  
-  // For tasks without specific time, treat the due date as end of day
-  const isOverdue = status !== 'completed' && 
-                    status !== 'snoozed' && 
-                    status !== 'archived' &&
-                    isPast(dueDate) && 
-                    dueDate.getTime() < new Date().getTime() &&
-                    (dueTime ? true : new Date().getHours() >= 23);
+  const isOverdue = status !== 'completed' &&
+    status !== 'snoozed' &&
+    status !== 'archived' &&
+    isPast(dueDate) &&
+    dueDate.getTime() < new Date().getTime() &&
+    (dueTime ? true : new Date().getHours() >= 23);
 
-  // Check if subtasks have a nested structure
-  const hasNestedSubtasks = subtasks.some(st => 
-    typeof st === 'object' && (st.subtasks || st.title || st.content)
-  );
+  // Card coloring and shadow logic
+  let cardColor =
+    isArchived
+      ? PRIORITY_COLORS["archived"]
+      : isOverdue
+        ? "border-l-red-500 bg-red-50/70 dark:bg-[#2a1515]"
+        : PRIORITY_COLORS[priority];
+
+  if (isCompleted) {
+    cardColor += " border-l-green-600"; // Extra green bar for completed
+  }
+
+  // Enhanced style for dashboard look
+  const cardClassNames = [
+    "overflow-hidden",
+    "rounded-xl",
+    "border",
+    "shadow-md",
+    "hover:shadow-lg",
+    "transition-all",
+    "duration-300",
+    "group",
+    "p-0",
+    cardColor,
+    isCompleted ? "opacity-80" : "",
+    "relative",
+    "cursor-pointer"
+  ].join(" ");
 
   return (
-    <Card className={`overflow-hidden border-l-4 ${
-      status === 'archived' ? 'border-l-gray-400' :
-      isOverdue ? 'border-l-red-500' : 
-      priority === 'urgent' ? 'border-l-red-500' : 
-      priority === 'high' ? 'border-l-orange-500' : 
-      priority === 'medium' ? 'border-l-amber-500' : 
-      'border-l-green-500'
-    } ${isCompleted ? 'bg-green-50/30 dark:bg-green-950/10' : ''}`}>
-      <div className="p-4 pb-2 flex items-start justify-between">
-        <TaskCardHeader 
+    <Card className={cardClassNames}>
+      {/* Card content padding/spacing */}
+      <div className="flex flex-row justify-between items-start px-5 pt-4 pb-2">
+        <TaskCardHeader
           title={title}
           priority={priority}
           isRecurring={isRecurring}
           isCompleted={isCompleted}
         />
-        
-        <TaskCardMenu 
+        <TaskCardMenu
           id={id}
           status={status}
           isArchived={isArchived}
@@ -110,24 +131,27 @@ const TaskCard: React.FC<TaskCardProps> = ({
           isPaidAccount={isPaidAccount}
         />
       </div>
-      
-      <CardContent className="p-4 pt-2">
+      <CardContent className="px-5 pb-4 pt-0">
         {description && (
-          <p className={`text-sm mb-3 ${isCompleted ? 'text-muted-foreground line-through' : ''}`}>
+          <p className={`text-sm mb-3 ${
+            isCompleted ? "text-muted-foreground line-through" : "text-muted-foreground"
+          }`}>
             {description}
           </p>
         )}
-        
-        <TaskDueDate 
-          dueDate={dueDate}
-          dueTime={dueTime}
-          status={status}
-          snoozedUntil={snoozedUntil}
-          snoozeCount={snoozeCount}
-        />
-        
+
+        <div className="mb-2">
+          <TaskDueDate
+            dueDate={dueDate}
+            dueTime={dueTime}
+            status={status}
+            snoozedUntil={snoozedUntil}
+            snoozeCount={snoozeCount}
+          />
+        </div>
+
         {subtasks && subtasks.length > 0 && (
-          <TaskSubtasks 
+          <TaskSubtasks
             taskId={id}
             subtasks={subtasks}
             onSubtaskToggle={onSubtaskToggle}
@@ -135,17 +159,21 @@ const TaskCard: React.FC<TaskCardProps> = ({
           />
         )}
       </CardContent>
-      
+      {/* Use new dashboard look for the footer */}
       {!isArchived && (
-        <TaskCardFooter 
-          id={id}
-          status={status}
-          completedDate={completedDate}
-          dueDate={dueDate}
-          onStatusChange={onStatusChange}
-          onEdit={onEdit}
-        />
+        <div className="px-5 pb-4">
+          <TaskCardFooter
+            id={id}
+            status={status}
+            completedDate={completedDate}
+            dueDate={dueDate}
+            onStatusChange={onStatusChange}
+            onEdit={onEdit}
+          />
+        </div>
       )}
+      {/* Hover visual border for summary-card effect */}
+      <div className="absolute inset-0 rounded-xl pointer-events-none group-hover:ring-2 group-hover:ring-wakti-blue group-hover:opacity-70 transition-all duration-200" />
     </Card>
   );
 };
