@@ -1,7 +1,9 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { UserRole } from '@/types/user';
+
+// Define a more specific type for UserRole
+export type UserRole = 'individual' | 'business' | 'staff' | 'free' | 'super-admin';
 
 export const useUserRole = () => {
   const [userRole, setUserRole] = useState<UserRole | null>(null);
@@ -28,7 +30,9 @@ export const useUserRole = () => {
           console.error("Error fetching user role:", error);
           setUserRole(null);
         } else {
-          setUserRole(userData?.role || 'free');
+          // Cast to UserRole type for safety
+          const role = userData?.role as UserRole || 'free';
+          setUserRole(role);
         }
       } catch (error) {
         console.error("Error in getUserRole:", error);

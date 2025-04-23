@@ -6,7 +6,13 @@ import { useUserRole } from './useUserRole';
 
 export const useTasks = () => {
   const { userRole } = useUserRole();
-  const { createTask } = useTaskOperations(userRole);
+  
+  // Make sure we pass a valid role or default to 'free'
+  const sanitizedRole = (userRole && ['individual', 'business', 'staff', 'free'].includes(userRole)) 
+    ? userRole as 'individual' | 'business' | 'staff' | 'free'
+    : 'free';
+  
+  const { createTask } = useTaskOperations(sanitizedRole);
   
   const handleCreateTask = useCallback(async (taskData: TaskFormData): Promise<Task | null> => {
     try {

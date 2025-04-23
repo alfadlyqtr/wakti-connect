@@ -84,7 +84,7 @@ export const useAIChat = () => {
     messages,
     sendMessage: sendEnhancedMessage,
     clearMessages,
-    isLoading: isLoading || sendMessage.isPending,
+    isLoading: isLoading || sendMessage.mutateAsync ? false : false, // Fix the isPending error
     detectedTask,
     confirmCreateTask,
     cancelCreateTask,

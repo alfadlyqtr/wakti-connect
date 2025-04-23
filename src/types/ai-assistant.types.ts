@@ -14,6 +14,8 @@ export interface RoleContext {
   welcomeMessage: string;
   suggestedPrompts: string[];
   color: string;
+  commandSuggestions?: string[]; // Add this property to fix the errors
+  quickTools?: Array<{ id: string; name: string; description: string; icon: string }>; // Add this property
 }
 
 export const RoleContexts: Record<AIAssistantRole, RoleContext> = {
@@ -27,7 +29,12 @@ export const RoleContexts: Record<AIAssistantRole, RoleContext> = {
       "Summarize my tasks for this week",
       "How do I use the calendar feature?"
     ],
-    color: "bg-blue-600"
+    color: "bg-blue-600",
+    commandSuggestions: [
+      "Create a task for tomorrow",
+      "Show my appointments for this week",
+      "Help me organize my day"
+    ]
   },
   student: {
     title: "Student Assistant",
@@ -39,7 +46,12 @@ export const RoleContexts: Record<AIAssistantRole, RoleContext> = {
       "Explain this concept to me",
       "Create flashcards for these terms"
     ],
-    color: "bg-green-600"
+    color: "bg-green-600",
+    commandSuggestions: [
+      "Plan my study schedule",
+      "Create notes on this topic",
+      "Help me understand this assignment"
+    ]
   },
   employee: {
     title: "Work Assistant",
@@ -51,7 +63,12 @@ export const RoleContexts: Record<AIAssistantRole, RoleContext> = {
       "Prepare talking points for my meeting",
       "Help me prioritize my workload"
     ],
-    color: "bg-purple-600"
+    color: "bg-purple-600",
+    commandSuggestions: [
+      "Schedule a new meeting",
+      "Create a project timeline",
+      "Prepare a work report"
+    ]
   },
   writer: {
     title: "Creative Assistant",
@@ -63,7 +80,12 @@ export const RoleContexts: Record<AIAssistantRole, RoleContext> = {
       "Give me feedback on this paragraph",
       "Suggest a catchy title for my post"
     ],
-    color: "bg-pink-600"
+    color: "bg-pink-600",
+    commandSuggestions: [
+      "Generate content ideas",
+      "Help me with writer's block",
+      "Create an outline for my story"
+    ]
   },
   business_owner: {
     title: "Business Assistant",
@@ -75,8 +97,80 @@ export const RoleContexts: Record<AIAssistantRole, RoleContext> = {
       "Help me organize my client meetings",
       "Prepare a simple marketing campaign outline"
     ],
-    color: "bg-amber-600"
+    color: "bg-amber-600",
+    commandSuggestions: [
+      "Analyze business performance",
+      "Plan a marketing strategy",
+      "Manage customer relationships"
+    ]
   }
 };
 
+// Adding missing interfaces that are needed for various components
 export type WAKTIAIMode = 'general' | 'student' | 'productivity' | 'creative';
+
+// AISettings interface for the AI settings components
+export interface AISettings {
+  id?: string;
+  user_id: string;
+  assistant_name: string;
+  role: AIAssistantRole;
+  tone: string;
+  response_length: string;
+  proactiveness: boolean;
+  suggestion_frequency: string;
+  enabled_features: Record<string, boolean>;
+  knowledge_profile?: { role: string };
+}
+
+// AIKnowledgeUpload interface for knowledge management
+export interface AIKnowledgeUpload {
+  id: string;
+  user_id: string;
+  title: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+  role?: AIAssistantRole;
+}
+
+// Define AIMode interface for AIModeSwitcher
+export interface AIMode {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  color: string;
+}
+
+// Define WAKTIAIModes as an array of AIMode
+export const WAKTIAIModes: AIMode[] = [
+  {
+    id: 'general',
+    title: 'General',
+    description: 'Ask me anything and get helpful responses',
+    icon: 'bot',
+    color: 'blue'
+  },
+  {
+    id: 'student',
+    title: 'Student',
+    description: 'Help with studying, homework, and learning',
+    icon: 'graduationCap',
+    color: 'green'
+  },
+  {
+    id: 'productivity',
+    title: 'Productivity',
+    description: 'Manage tasks, plan your day, and stay organized',
+    icon: 'list',
+    color: 'purple'
+  },
+  {
+    id: 'creative',
+    title: 'Creative',
+    description: 'Generate ideas, content, and creative writing',
+    icon: 'paintbrush',
+    color: 'pink'
+  }
+];
