@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, MapPin, Navigation } from 'lucide-react';
-import { GOOGLE_MAPS_API_KEY, generateGoogleMapsUrl, waitForGoogleMapsToLoad } from '@/config/maps';
+import { Search, Navigation } from 'lucide-react';
+import { GOOGLE_MAPS_API_KEY, generateGoogleMapsUrl } from '@/config/maps';
+import { waitForGoogleMapsToLoad } from '@/utils/googleMapsLoader';
 import { useTranslation } from 'react-i18next';
 import { toast } from '@/components/ui/use-toast';
 
-// Add TypeScript types for Google Maps
 declare global {
   interface Window {
     google: {
