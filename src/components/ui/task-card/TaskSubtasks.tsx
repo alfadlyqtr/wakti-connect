@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 interface TaskSubtasksProps {
   taskId: string;
   subtasks: SubTask[];
-  onSubtaskToggle?: (subtaskIndex: number, isCompleted: boolean) => void; // Changed parameter order
+  onSubtaskToggle?: (subtaskIndex: number, isCompleted: boolean) => void;
   refetch?: () => void;
 }
 

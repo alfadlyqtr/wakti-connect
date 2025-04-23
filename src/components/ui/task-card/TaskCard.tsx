@@ -70,22 +70,33 @@ const TaskCard: React.FC<TaskCardProps> = ({
   onRestore,
   onSubtaskToggle
 }) => {
+  const [detailOpen, setDetailOpen] = useState(false);
   const isPaidAccount = userRole === "individual" || userRole === "business";
   const isCompleted = status === "completed";
   const isOverdue = status !== 'completed' &&
     status !== 'snoozed' &&
     status !== 'archived' &&
     isPast(dueDate) &&
-    dueDate.getTime() < new Date().getTime() &&
     (dueTime ? true : new Date().getHours() >= 23);
 
-  const [detailOpen, setDetailOpen] = useState(false);
-  
-  const handleCardClick = () => {
-    setDetailOpen(true);
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't open detail dialog if clicking on menu or buttons
+    if (!(e.target as HTMLElement).closest('.task-action-button')) {
+      setDetailOpen(true);
+    }
   };
 
-  const priorityClass = PRIORITY_COLORS[isArchived ? 'archived' : priority] || PRIORITY_COLORS.normal;
+  const handleDelete = async () => {
+    if (onDelete) {
+      onDelete(id);
+    }
+  };
+
+  const handleSubtaskToggle = (subtaskIndex: number, isCompleted: boolean) => {
+    if (onSubtaskToggle) {
+      onSubtaskToggle(id, subtaskIndex, isCompleted);
+    }
+  };
 
   return (
     <>
@@ -168,9 +179,8 @@ const TaskCard: React.FC<TaskCardProps> = ({
           is_recurring_instance: isRecurringInstance,
           snooze_count: snoozeCount,
           snoozed_until: snoozedUntil?.toISOString(),
-          // Add required properties for Task type
-          user_id: '', // Add a default empty string for user_id
-          created_at: new Date().toISOString() // Add current date for created_at
+          user_id: '', // Required by Task type
+          created_at: new Date().toISOString() // Required by Task type
         }}
         onEdit={() => {
           setDetailOpen(false);
@@ -178,17 +188,15 @@ const TaskCard: React.FC<TaskCardProps> = ({
         }}
         onDelete={() => {
           setDetailOpen(false);
-          onDelete(id);
+          handleDelete();
         }}
         onStatusChange={(status) => {
-          onStatusChange(id, status);
+          if (onStatusChange) {
+            onStatusChange(id, status);
+          }
           if (status === "completed") setDetailOpen(false);
         }}
-        onSubtaskToggle={onSubtaskToggle ? 
-          (subtaskIndex, isCompleted) => {
-            if (onSubtaskToggle) onSubtaskToggle(id, subtaskIndex, isCompleted);
-          } : undefined
-        }
+        onSubtaskToggle={handleSubtaskToggle}
         refetch={refetch}
       />
     </>

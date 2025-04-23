@@ -11,8 +11,8 @@ interface TaskCardFooterProps {
   dueDate?: Date;
   onStatusChange?: (id: string, status: string) => void;
   onEdit?: (id: string) => void;
-  subtaskCount?: number; // Added this prop
-  completedSubtaskCount?: number; // Added this prop
+  subtaskCount?: number;
+  completedSubtaskCount?: number;
   isCompleted: boolean;
 }
 
@@ -53,7 +53,7 @@ export const TaskCardFooter: React.FC<TaskCardFooterProps> = ({
           onClick={handleMarkComplete}
         >
           {isCompleted ? <CircleSlash className="h-3 w-3" /> : <CheckCircle className="h-3 w-3" />}
-          {isCompleted ? "Mark Pending" : "Mark Completed"}
+          {isCompleted ? "Mark Pending" : "Mark Complete"}
         </button>
       )}
     </div>
