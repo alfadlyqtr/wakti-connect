@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Task } from "@/types/task.types";
-import TaskGrid from "./TaskGrid";
+import { TaskGrid } from "./TaskGrid";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { useDebouncedRefresh } from "@/hooks/useDebouncedRefresh";
@@ -64,7 +64,7 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
       refetch={debouncedRefetch}
       isArchiveView={isArchiveView}
       onEdit={onEdit}
-      onArchive={onArchive}
+      onDelete={taskId => onArchive(taskId, "deleted")}
       onRestore={onRestore}
     />
   );

@@ -32,7 +32,12 @@ export function CreateTaskDialog({
         due_date: data.due_date,
         due_time: data.due_time,
         location: data.location,
-        subtasks: data.subtasks
+        subtasks: data.subtasks?.map(subtask => ({
+          content: subtask.content || "",
+          is_completed: subtask.is_completed || false,
+          due_date: subtask.due_date,
+          due_time: subtask.due_time
+        }))
       });
       
       toast({

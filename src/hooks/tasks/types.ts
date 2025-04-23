@@ -4,6 +4,9 @@ import { UserRole } from "@/types/user";
 
 export interface UseTaskOperationsReturn {
   createTask: (taskData: TaskFormData) => Promise<Task>;
+  updateTask: (taskId: string, taskData: Partial<TaskFormData>) => Promise<Task>;
+  deleteTask: (taskId: string) => Promise<void>;
+  completeTask: (taskId: string) => Promise<Task>;
   isProcessing: boolean;
 }
 
@@ -43,8 +46,7 @@ export interface UseTasksReturn {
   filterStatus: string | null;
   setFilterStatus: (status: string | null) => void;
   filterPriority: string | null;
-  setFilterPriority: (priority: string | null) => void;
-  createTask: (taskData: TaskFormData) => Promise<Task>;
+  setPriorityFilter: (priority: string | null) => void;
   userRole: UserRole | null;
   isStaff: boolean;
   refetch: () => Promise<void>;

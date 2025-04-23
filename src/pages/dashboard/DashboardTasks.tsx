@@ -2,7 +2,7 @@
 import React, { useEffect } from "react";
 import TaskControls from "@/components/tasks/TaskControls";
 import TasksLoading from "@/components/tasks/TasksLoading";
-import TaskGrid from "@/components/tasks/TaskGrid";
+import { TaskGrid } from "@/components/tasks/TaskGrid";
 import { CreateTaskDialog } from "@/components/tasks/CreateTaskDialog";
 import { EditTaskDialog } from "@/components/tasks/EditTaskDialog";
 import { useTasksPageState } from "@/hooks/tasks/useTasksPageState";

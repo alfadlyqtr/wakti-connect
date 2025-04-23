@@ -14,7 +14,7 @@ interface TaskFormFieldsProps {
 
 const TaskFormFields: React.FC<TaskFormFieldsProps> = ({ form }) => {
   // Since enableSubtasks is now part of our schema, we can access it directly
-  const enableSubtasks = form.watch("enableSubtasks") || false;
+  const enableSubtasks = form.watch("enableSubtasks");
 
   return (
     <div className="space-y-4">
@@ -38,7 +38,7 @@ const TaskFormFields: React.FC<TaskFormFieldsProps> = ({ form }) => {
             </div>
             <FormControl>
               <Switch
-                checked={field.value || false}
+                checked={!!field.value}
                 onCheckedChange={field.onChange}
               />
             </FormControl>

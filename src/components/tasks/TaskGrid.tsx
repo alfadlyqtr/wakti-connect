@@ -19,10 +19,15 @@ import { cn } from "@/lib/utils";
 interface TaskGridProps {
   tasks: Task[];
   onEdit: (task: Task) => void;
-  onDelete: (taskId: string) => void;
-  onComplete: (taskId: string) => void;
+  onDelete?: (taskId: string) => void;
+  onComplete?: (taskId: string) => void;
+  onArchive?: (taskId: string, reason: string) => void;
+  onRestore?: (taskId: string) => void;
   isLoading?: boolean;
   pendingTaskId?: string | null;
+  userRole?: "free" | "individual" | "business" | "staff" | null;
+  refetch?: () => void;
+  isArchiveView?: boolean;
 }
 
 export function TaskGrid({
@@ -30,8 +35,13 @@ export function TaskGrid({
   onEdit,
   onDelete,
   onComplete,
+  onArchive,
+  onRestore,
   isLoading = false,
-  pendingTaskId = null
+  pendingTaskId = null,
+  userRole,
+  refetch,
+  isArchiveView = false
 }: TaskGridProps) {
   if (tasks.length === 0) {
     return (
@@ -115,8 +125,8 @@ export function TaskGrid({
   const renderTaskBadges = (task: Task): React.ReactNode => {
     const badges = [];
     
-    // Special features badges - don't render if property doesn't exist
-    if (task.is_recurring) {
+    // Special features badges
+    if (task?.is_recurring) {
       badges.push(
         <Badge key="recurring" className="bg-indigo-500/10 text-indigo-600 border-indigo-600/20 rounded-md" variant="outline">
           Recurring
@@ -124,7 +134,7 @@ export function TaskGrid({
       );
     }
     
-    if (task.is_recurring_instance) {
+    if (task?.is_recurring_instance) {
       badges.push(
         <Badge key="instance" className="bg-violet-500/10 text-violet-600 border-violet-600/20 rounded-md" variant="outline">
           Instance
@@ -157,7 +167,7 @@ export function TaskGrid({
 
   // Only show snoozed until if the property exists
   const renderSnoozedUntil = (task: Task): React.ReactNode => {
-    if (task.status === "snoozed" && task.snoozed_until) {
+    if (task?.snoozed_until) {
       return (
         <div className="text-sm text-muted-foreground mt-1">
           Snoozed until: {format(new Date(task.snoozed_until), "MMM d, yyyy")}
@@ -227,7 +237,7 @@ export function TaskGrid({
             )}
             
             <div className="flex justify-end space-x-2 mt-4">
-              {task.status !== "completed" && (
+              {task.status !== "completed" && onComplete && (
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -248,14 +258,26 @@ export function TaskGrid({
                 Edit
               </Button>
               
-              <Button 
-                variant="destructive" 
-                size="sm"
-                onClick={() => onDelete(task.id)}
-                disabled={isLoading && pendingTaskId === task.id}
-              >
-                <Trash className="h-4 w-4" />
-              </Button>
+              {isArchiveView && onRestore ? (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => onRestore(task.id)}
+                  disabled={isLoading && pendingTaskId === task.id}
+                >
+                  <ArrowUpCircle className="h-4 w-4 mr-2" />
+                  Restore
+                </Button>
+              ) : onDelete && (
+                <Button 
+                  variant="destructive" 
+                  size="sm"
+                  onClick={() => onDelete(task.id)}
+                  disabled={isLoading && pendingTaskId === task.id}
+                >
+                  <Trash className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -263,3 +285,6 @@ export function TaskGrid({
     </div>
   );
 }
+
+// Export both as named export and default export for compatibility
+export default TaskGrid;

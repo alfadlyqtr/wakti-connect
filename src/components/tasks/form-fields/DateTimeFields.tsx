@@ -1,3 +1,4 @@
+
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import { TaskFormValues } from "../TaskFormSchema";
@@ -15,6 +16,7 @@ interface DateTimeFieldsProps {
 }
 
 export const DateTimeFields: React.FC<DateTimeFieldsProps> = ({ form }) => {
+  // Since isRecurring is now part of our schema, we can access it properly
   const isRecurring = form.watch("isRecurring");
 
   return (
@@ -23,7 +25,7 @@ export const DateTimeFields: React.FC<DateTimeFieldsProps> = ({ form }) => {
         {/* Due Date Field */}
         <FormField
           control={form.control}
-          name="due_date" // Changed from dueDate to due_date to match backend
+          name="due_date"
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Due Date</FormLabel>
@@ -43,7 +45,7 @@ export const DateTimeFields: React.FC<DateTimeFieldsProps> = ({ form }) => {
         {/* Native Time Input */}
         <FormField
           control={form.control}
-          name="due_time" // Changed from dueTime to due_time to match backend
+          name="due_time"
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Due Time</FormLabel>
@@ -73,7 +75,7 @@ export const DateTimeFields: React.FC<DateTimeFieldsProps> = ({ form }) => {
             </div>
             <FormControl>
               <Switch
-                checked={field.value}
+                checked={!!field.value}
                 onCheckedChange={field.onChange}
               />
             </FormControl>
@@ -114,7 +116,7 @@ export const DateTimeFields: React.FC<DateTimeFieldsProps> = ({ form }) => {
                   <select 
                     className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
                     {...field}
-                    value={field.value || "1"}
+                    value={field.value?.toString() || "1"}
                     onChange={e => field.onChange(Number(e.target.value))}
                   >
                     {[1, 2, 3, 4, 5, 6, 7, 14, 21, 28].map((num) => (
