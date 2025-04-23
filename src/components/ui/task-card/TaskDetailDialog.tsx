@@ -1,43 +1,26 @@
-import React from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Task, TaskStatus, SubTask } from "@/types/task.types";
-import { Badge } from "@/components/ui/badge";
+
+import React, { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Task, TaskStatus } from "@/types/task.types";
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { 
-  Calendar, 
-  Clock, 
-  CheckCircle, 
-  Trash2, 
-  Edit, 
-  AlertCircle, 
-  AlarmClock,
-} from "lucide-react";
-import { format, formatDistance } from "date-fns";
+import { Calendar, Clock, MapPin, Tag, CheckCircle, CircleSlash } from "lucide-react";
 import { TaskSubtasks } from "./TaskSubtasks";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { DialogDescription } from "@radix-ui/react-dialog";
+import { Badge } from "@/components/ui/badge";
 
 interface TaskDetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   task: Task;
-  onEdit?: () => void;
-  onDelete?: () => void;
-  onStatusChange?: (status: TaskStatus) => void;
-  onSubtaskToggle?: (subtaskIndex: number, isCompleted: boolean) => void;
+  onEdit: () => void;
+  onDelete: () => void;
+  onStatusChange: (id: string, status: string) => void;
+  onSubtaskToggle?: (taskId: string, subtaskIndex: number, isCompleted: boolean) => Promise<void> | void;
   refetch?: () => void;
 }
 
-export function TaskDetailDialog({
+export const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
   open,
   onOpenChange,
   task,
@@ -46,194 +29,161 @@ export function TaskDetailDialog({
   onStatusChange,
   onSubtaskToggle,
   refetch
-}: TaskDetailDialogProps) {
+}) => {
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+  
   const isCompleted = task.status === "completed";
-  const isOverdue = !isCompleted && 
-    task.due_date && 
-    new Date(task.due_date) < new Date() && 
-    task.status !== "archived" &&
-    task.status !== "snoozed";
-
-  // Get priority color and label
-  const getPriorityColor = () => {
-    switch (task.priority) {
-      case "urgent": return "bg-red-100 text-red-800 border-red-300";
-      case "high": return "bg-orange-100 text-orange-800 border-orange-300";
-      case "medium": return "bg-blue-100 text-blue-800 border-blue-300";
-      default: return "bg-green-100 text-green-800 border-green-300";
-    }
-  };
-
-  const getPriorityLabel = () => {
-    return task.priority.charAt(0).toUpperCase() + task.priority.slice(1);
-  };
-
-  // Get status color and label
-  const getStatusColor = () => {
-    switch (task.status) {
-      case "completed": return "bg-green-500 text-white";
-      case "in-progress": return "bg-blue-500 text-white";
-      case "pending": return "bg-yellow-500 text-white";
-      case "snoozed": return "bg-purple-500 text-white";
-      case "archived": return "bg-gray-500 text-white";
-      case "late": return "bg-red-500 text-white";
-      default: return "bg-slate-500 text-white";
-    }
-  };
-  
-  const getStatusLabel = () => {
-    return task.status === "in-progress" ? "In Progress" : 
-      task.status.charAt(0).toUpperCase() + task.status.slice(1);
-  };
-  
-  // Format date for display
-  const formattedDueDate = task.due_date 
-    ? format(new Date(task.due_date), "MMMM d, yyyy")
+  const formattedDate = task.due_date 
+    ? format(new Date(task.due_date), "MMM d, yyyy")
     : null;
-    
+
   const handleSubtaskToggle = (subtaskIndex: number, isCompleted: boolean) => {
     if (onSubtaskToggle) {
-      onSubtaskToggle(subtaskIndex, isCompleted);
+      onSubtaskToggle(task.id, subtaskIndex, isCompleted);
+      if (refetch) refetch();
+    }
+  };
+
+  const handleStatusToggle = () => {
+    const newStatus = isCompleted ? "pending" : "completed";
+    onStatusChange(task.id, newStatus);
+    if (refetch) refetch();
+  };
+
+  const getPriorityColor = () => {
+    switch (task.priority) {
+      case "urgent": return "bg-red-100 text-red-800 border-red-200";
+      case "high": return "bg-orange-100 text-orange-800 border-orange-200";
+      case "medium": return "bg-amber-100 text-amber-800 border-amber-200";
+      case "normal": return "bg-green-100 text-green-800 border-green-200";
+      default: return "bg-slate-100 text-slate-800 border-slate-200";
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">{task.title}</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">{task.title}</DialogTitle>
+          <DialogDescription>
+            <div className="flex flex-wrap gap-2 mt-2">
+              <Badge variant="outline" className={getPriorityColor()}>
+                {task.priority}
+              </Badge>
+              <Badge variant={isCompleted ? "default" : "outline"} 
+                className={isCompleted ? "bg-green-500" : ""}>
+                {isCompleted ? "Completed" : "Pending"}
+              </Badge>
+            </div>
+          </DialogDescription>
         </DialogHeader>
-        
-        <div className="mt-4 space-y-6">
-          {/* Status and Priority */}
-          <div className="flex flex-wrap gap-2">
-            <Badge className={getStatusColor()}>{getStatusLabel()}</Badge>
-            <Badge variant="outline" className={getPriorityColor()}>
-              {getPriorityLabel()} Priority
-            </Badge>
-            {isOverdue && (
-              <Badge variant="destructive" className="flex items-center gap-1">
-                <AlertCircle className="h-3.5 w-3.5" />
-                Overdue
-              </Badge>
-            )}
-            {task.is_recurring && (
-              <Badge variant="outline" className="bg-indigo-100 text-indigo-800 border-indigo-300">
-                <AlarmClock className="h-3.5 w-3.5 mr-1" /> Recurring
-              </Badge>
-            )}
-          </div>
 
-          {/* Description */}
+        <div className="space-y-4">
           {task.description && (
             <div>
-              <h3 className="font-medium mb-1">Description</h3>
-              <p className="text-muted-foreground whitespace-pre-line text-sm">
+              <p className="text-muted-foreground whitespace-pre-line">
                 {task.description}
               </p>
             </div>
           )}
-
-          {/* Due Date & Time */}
-          {task.due_date && (
-            <div>
-              <h3 className="font-medium mb-1">Due Date</h3>
-              <div className="flex items-center gap-2 text-sm">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span className={isOverdue ? "text-red-500 font-medium" : ""}>
-                  {formattedDueDate}
-                </span>
+          
+          <div className="space-y-2">
+            {formattedDate && (
+              <div className="flex items-center text-sm">
+                <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                <span>Due: {formattedDate}</span>
                 {task.due_time && (
                   <>
-                    <Clock className="h-4 w-4 text-muted-foreground ml-2" />
-                    <span>{task.due_time}</span>
+                    <Clock className="h-4 w-4 ml-3 mr-2 text-muted-foreground" />
+                    <span>At: {task.due_time}</span>
                   </>
                 )}
               </div>
-              {isOverdue && (
-                <p className="text-xs text-red-500 mt-1">
-                  Overdue by {formatDistance(new Date(), new Date(task.due_date))}
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* Subtasks Section */}
-          {task.subtasks && task.subtasks.length > 0 && (
-            <div>
-              <TaskSubtasks
-                taskId={task.id}
-                subtasks={task.subtasks}
-                onSubtaskToggle={handleSubtaskToggle}
-                refetch={refetch}
-              />
-            </div>
-          )}
-
-          {/* Status Information */}
-          {task.completed_at && (
-            <div className="text-sm text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <CheckCircle className="h-4 w-4 text-green-500" />
-                Completed {formatDistance(new Date(task.completed_at), new Date(), { addSuffix: true })}
-              </span>
-            </div>
-          )}
-          {task.snoozed_until && (
-            <div className="text-sm text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <AlarmClock className="h-4 w-4 text-purple-500" />
-                Snoozed until {format(new Date(task.snoozed_until), "MMM d, yyyy")}
-              </span>
-            </div>
-          )}
-
-          {/* Action Buttons */}
-          <div className="flex justify-between pt-4 border-t">
-            <div className="space-x-2">
-              {!isCompleted && onStatusChange && (
-                <Button 
-                  variant="outline" 
-                  className="border-green-500 text-green-600 hover:bg-green-50 hover:text-green-700"
-                  onClick={() => onStatusChange("completed")}
-                >
-                  <CheckCircle className="h-4 w-4 mr-1" /> 
-                  Mark Complete
-                </Button>
-              )}
-              {onEdit && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="outline" onClick={onEdit}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Edit task</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-            </div>
+            )}
             
-            {onDelete && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="outline" 
-                      className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
-                      onClick={onDelete}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Delete task</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+            {task.location && (
+              <div className="flex items-center text-sm">
+                <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
+                <span>{task.location}</span>
+              </div>
             )}
           </div>
+          
+          {task.subtasks && task.subtasks.length > 0 && (
+            <TaskSubtasks 
+              taskId={task.id} 
+              subtasks={task.subtasks}
+              onSubtaskToggle={handleSubtaskToggle}
+              refetch={refetch}
+            />
+          )}
         </div>
+        
+        <div className="flex justify-between mt-4 pt-4 border-t">
+          <div className="flex gap-2">
+            <Button onClick={onEdit} variant="outline" size="sm">
+              Edit
+            </Button>
+            <Button 
+              onClick={handleStatusToggle} 
+              variant="outline" 
+              size="sm"
+              className={isCompleted ? "text-amber-600" : "text-green-600"}
+            >
+              {isCompleted ? (
+                <>
+                  <CircleSlash className="mr-1 h-4 w-4" />
+                  Mark Pending
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="mr-1 h-4 w-4" />
+                  Complete
+                </>
+              )}
+            </Button>
+          </div>
+          
+          <Button 
+            onClick={() => setShowConfirmDelete(true)}
+            variant="ghost" 
+            size="sm"
+            className="text-red-600 hover:bg-red-50 hover:text-red-700"
+          >
+            Delete
+          </Button>
+        </div>
+        
+        {showConfirmDelete && (
+          <div className="absolute inset-0 bg-background/90 flex items-center justify-center">
+            <div className="bg-card p-6 rounded-lg shadow-lg max-w-sm w-full">
+              <h3 className="font-medium text-lg">Confirm Deletion</h3>
+              <p className="text-muted-foreground my-3">
+                Are you sure you want to delete this task? This action will archive the task for 10 days before permanent deletion.
+              </p>
+              <div className="flex justify-end gap-2 mt-4">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setShowConfirmDelete(false)}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  variant="destructive" 
+                  size="sm"
+                  onClick={() => {
+                    onDelete();
+                    setShowConfirmDelete(false);
+                  }}
+                >
+                  Delete
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
-}
+};

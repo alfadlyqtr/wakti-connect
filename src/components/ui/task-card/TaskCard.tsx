@@ -39,6 +39,7 @@ interface TaskCardProps {
   onSnooze?: (id: string, days: number) => void;
   onRestore?: (id: string) => void;
   isArchived?: boolean;
+  onSubtaskToggle?: (taskId: string, subtaskIndex: number, isCompleted: boolean) => Promise<void> | void;
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({
@@ -63,6 +64,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   onSnooze,
   onRestore,
   isArchived = false,
+  onSubtaskToggle
 }) => {
   const [detailOpen, setDetailOpen] = useState(false);
   const isPaidAccount = userRole === "individual" || userRole === "business";
@@ -90,6 +92,12 @@ const TaskCard: React.FC<TaskCardProps> = ({
       } catch (error) {
         console.error('Error deleting task:', error);
       }
+    }
+  };
+
+  const handleSubtaskToggle = (subtaskIndex: number, isCompleted: boolean) => {
+    if (onSubtaskToggle) {
+      onSubtaskToggle(id, subtaskIndex, isCompleted);
     }
   };
 
@@ -185,6 +193,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
           handleDelete();
         }}
         onStatusChange={onStatusChange}
+        onSubtaskToggle={handleSubtaskToggle}
         refetch={refetch}
       />
     </>
