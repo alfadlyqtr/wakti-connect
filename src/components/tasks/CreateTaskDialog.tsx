@@ -1,87 +1,59 @@
 
-import React from "react";
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { TaskFormTabs } from "./TaskFormTabs";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { taskFormSchema } from "./TaskFormSchema";
-import { DialogHeader } from "../ui/dialog";
-import { format } from "date-fns";
+import React, { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { TaskForm } from "./TaskForm";
+import { TaskFormValues } from "./TaskFormSchema";
+import { useTaskOperations } from "@/hooks/tasks/useTaskOperations";
+import { toast } from "@/components/ui/use-toast";
 
 interface CreateTaskDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreateTask: (taskData: any) => Promise<void>;
   userRole: "free" | "individual" | "business" | "staff";
 }
 
-export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
+export function CreateTaskDialog({
   open,
   onOpenChange,
-  onCreateTask,
   userRole
-}) => {
+}: CreateTaskDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isRecurring, setIsRecurring] = useState(false);
-  
-  // Initialize the form with default values including empty subtasks array
-  const form = useForm({
-    resolver: zodResolver(taskFormSchema),
-    defaultValues: {
-      title: "",
-      description: "",
-      priority: "normal",
-      due_date: format(new Date(), "yyyy-MM-dd"),
-      due_time: "",
-      isRecurring: false,
-      enableSubtasks: false,
-      subtasks: [],
-      subtaskGroupTitle: "", // Add default for subtaskGroupTitle
-    }
-  });
-  
-  const handleSubmit = async (data: any) => {
+  const { createTask } = useTaskOperations(userRole);
+
+  const handleCreateTask = async (data: TaskFormValues) => {
     try {
       setIsSubmitting(true);
-      console.log("Creating task with data:", data);
-      
-      // Add isRecurring from the state
-      data.isRecurring = isRecurring;
-      
-      // Process data for API submission - no need to transform field names as they're already correct
-      await onCreateTask(data);
-      
-      // Reset form and close dialog on success
-      form.reset();
+      await createTask(data);
+      toast({
+        title: "Success",
+        description: "Task created successfully",
+        variant: "success"
+      });
       onOpenChange(false);
     } catch (error) {
       console.error("Error creating task:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to create task",
+        variant: "destructive"
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
-  
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Create New Task</DialogTitle>
-          <DialogDescription>
-            Create a new task with details and optional subtasks.
-          </DialogDescription>
+          <DialogTitle>Create Task</DialogTitle>
         </DialogHeader>
-        
-        <TaskFormTabs
-          form={form}
-          onSubmit={handleSubmit}
-          isSubmitting={isSubmitting}
-          isRecurring={isRecurring}
-          setIsRecurring={setIsRecurring}
-          userRole={userRole}
+        <TaskForm 
+          onSubmit={handleCreateTask} 
+          isSubmitting={isSubmitting} 
           submitLabel="Create Task"
         />
       </DialogContent>
     </Dialog>
   );
-};
+}

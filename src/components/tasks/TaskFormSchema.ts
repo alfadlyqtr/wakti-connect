@@ -1,52 +1,24 @@
 
 import { z } from "zod";
 
-// Define the recurring settings schema
-const RecurringSettingsSchema = z.object({
-  frequency: z.enum(["daily", "weekly", "monthly"]).default("weekly"),
-  interval: z.number().min(1).max(30).default(1),
-  // Optional fields for more complex recurrence patterns
-  daysOfWeek: z.array(z.number().min(0).max(6)).optional(),
-  dayOfMonth: z.number().min(1).max(31).optional(),
-  endDate: z.string().optional(),
-  maxOccurrences: z.number().optional(),
-});
-
-// Define the subtask schema including due date and time and hierarchical fields
+// Define the subtask schema
 const SubtaskSchema = z.object({
-  id: z.string().optional(),
   content: z.string().min(1, "Subtask content is required"),
-  isCompleted: z.boolean().default(false),
-  due_date: z.string().optional(),
-  due_time: z.string().optional(),
-  // New fields for hierarchical subtasks
-  is_group: z.boolean().optional(),
-  parent_id: z.string().optional(),
-  subtasks: z.array(z.any()).optional(), // Recursive subtasks
-  title: z.string().optional() // Explicitly add title field for group subtasks
+  is_completed: z.boolean().default(false),
+  due_date: z.string().optional().nullable(),
+  due_time: z.string().optional().nullable(),
 });
 
-// Define the main form schema - simplified for personal tasks only
+// Define the main form schema
 export const taskFormSchema = z.object({
   title: z.string().min(1, "Title is required").max(100, "Title is too long"),
-  description: z.string().optional(),
+  description: z.string().optional().nullable(),
   priority: z.enum(["urgent", "high", "medium", "normal"] as const).default("normal"),
   due_date: z.string().min(1, "Due date is required"),
-  due_time: z.string().optional(),
-  
-  // Recurring task settings
-  isRecurring: z.boolean().default(false),
-  recurring: RecurringSettingsSchema.optional(),
+  due_time: z.string().optional().nullable(),
   
   // Subtasks
-  enableSubtasks: z.boolean().default(false),
   subtasks: z.array(SubtaskSchema).default([]),
-  
-  // Flag to preserve nested structure
-  preserveNestedStructure: z.boolean().optional(),
-  
-  // Add the subtask group title field
-  subtaskGroupTitle: z.string().optional().default(""),
 });
 
 // Export the TypeScript type

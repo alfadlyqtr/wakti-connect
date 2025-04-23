@@ -1,10 +1,11 @@
 
-// Add or verify TaskTab type is exported from this file
+// Basic task status and priority types
 export type TaskStatus = "pending" | "in-progress" | "completed" | "snoozed" | "archived" | "late";
 export type TaskPriority = "urgent" | "high" | "medium" | "normal";
 export type TaskTab = "my-tasks" | "archived" | "reminders";
 export type ArchiveReason = "deleted" | "canceled";
 
+// Subtask interface
 export interface SubTask {
   id: string;
   task_id: string;
@@ -12,12 +13,9 @@ export interface SubTask {
   is_completed: boolean;
   due_date?: string | null;
   due_time?: string | null;
-  is_group?: boolean;
-  parent_id?: string | null;
-  subtasks?: SubTask[];  // Recursive structure for nested subtasks
-  title?: string;  // Title specifically for group subtasks
 }
 
+// Main task interface
 export interface Task {
   id: string;
   title: string;
@@ -30,33 +28,22 @@ export interface Task {
   created_at: string;
   updated_at?: string | null;
   completed_at?: string | null;
-  is_recurring?: boolean;
-  is_recurring_instance?: boolean;
-  parent_recurring_id?: string | null;
   subtasks?: SubTask[];
-  snooze_count?: number;
-  snoozed_until?: string | null;
   archived_at?: string | null;
   archive_reason?: ArchiveReason | null;
-  location?: string | null;
-  originalSubtasks?: any[];  // Keep this as any[] for backward compatibility
 }
 
+// Form data for creating/editing tasks
 export interface TaskFormData {
   title: string;
   description?: string;
-  status?: TaskStatus;
-  priority?: TaskPriority;
+  priority: TaskPriority;
   due_date?: string | null;
   due_time?: string | null;
-  subtasks?: SubTask[];
-  snooze_count?: number;
-  snoozed_until?: string | null;
-  is_recurring?: boolean;
-  archived_at?: string | null;
-  archive_reason?: ArchiveReason | null;
-  location?: string | null;
-  originalSubtasks?: any[];
-  preserveNestedStructure?: boolean;
+  subtasks?: {
+    content: string;
+    is_completed?: boolean;
+    due_date?: string | null;
+    due_time?: string | null;
+  }[];
 }
-

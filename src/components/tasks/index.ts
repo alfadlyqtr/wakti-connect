@@ -1,8 +1,7 @@
 
-export { TaskFormFields, BasicFields, DateTimeFields, SubtasksSection, PriorityField } from "./form-fields";
-export { TaskFormTabs } from "./TaskFormTabs";
+export { TaskForm } from "./TaskForm";
+export { TaskCard } from "./TaskCard";
+export { TaskList } from "./TaskList";
+export { TaskFilters } from "./TaskFilters";
 export { CreateTaskDialog } from "./CreateTaskDialog";
-export { default as TaskGrid } from "./TaskGrid";
-export { TaskDetailsTab } from "./tabs/TaskDetailsTab";
-export { SubtasksTab } from "./tabs/SubtasksTab";
-export { RecurringTab } from "./tabs/RecurringTab";
+export { TasksPage } from "./TasksPage";
