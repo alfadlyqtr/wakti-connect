@@ -1,475 +1,376 @@
 
-import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
-import { AIAssistantRole } from "@/types/ai-assistant.types";
-import { useAISettings } from "@/components/settings/ai/context/AISettingsContext";
-import { Loader2, Save, X } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useAISettings } from '@/hooks/ai/settings';
+import { AIAssistantRole, KnowledgeProfile } from '@/types/ai-assistant.types';
 
 interface RoleProfileDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  role: AIAssistantRole;
+  selectedRole: AIAssistantRole;
+  existingProfile?: KnowledgeProfile;
+  onSave: (profile: KnowledgeProfile) => void;
 }
 
-export const RoleProfileDialog: React.FC<RoleProfileDialogProps> = ({
+const RoleProfileDialog: React.FC<RoleProfileDialogProps> = ({
   open,
   onOpenChange,
-  role,
+  selectedRole,
+  existingProfile,
+  onSave
 }) => {
-  const { settings, updateSettings } = useAISettings();
-  const [isUpdating, setIsUpdating] = useState(false);
-  const { toast } = useToast();
-  
-  // Form state for different role-specific fields
-  const [studentProfile, setStudentProfile] = useState({
-    grade: "",
-    schoolType: "high-school",
-    subjects: "",
-    learningStyle: "",
-    goals: ""
+  // Create an initial profile with the role and default empty values
+  const [profile, setProfile] = useState<KnowledgeProfile>({
+    role: selectedRole,
+    // Student fields
+    grade: '',
+    schoolType: '',
+    subjects: [],
+    learningStyle: '',
+    goals: [],
+    // Business owner fields
+    industry: '',
+    businessType: '',
+    employeeCount: '',
+    targetAudience: '',
+    challenges: [],
+    // Employee fields
+    field: '',
+    experienceLevel: '',
+    skills: [],
+    currentProjects: [],
+    workStyle: '',
+    // Writer fields
+    genre: '',
+    audience: '',
+    style: ''
   });
-  
-  const [businessProfile, setBusinessProfile] = useState({
-    industry: "",
-    businessType: "service",
-    employeeCount: "1-10",
-    targetAudience: "",
-    challenges: ""
-  });
-  
-  const [employeeProfile, setEmployeeProfile] = useState({
-    field: "",
-    experienceLevel: "mid-level",
-    skills: "",
-    currentProjects: "",
-    workStyle: ""
-  });
-  
-  const [writerProfile, setWriterProfile] = useState({
-    genre: "",
-    audience: "",
-    style: "",
-    currentProjects: "",
-    goals: ""
-  });
-  
-  // Load existing profile data when dialog opens
-  useEffect(() => {
-    if (open && settings?.knowledge_profile) {
-      const profile = settings.knowledge_profile;
-      
-      switch (role) {
-        case "student":
-          setStudentProfile({
-            grade: profile.grade || "",
-            schoolType: profile.schoolType || "high-school",
-            subjects: profile.subjects || "",
-            learningStyle: profile.learningStyle || "",
-            goals: profile.goals || ""
-          });
-          break;
-        case "business_owner":
-          setBusinessProfile({
-            industry: profile.industry || "",
-            businessType: profile.businessType || "service",
-            employeeCount: profile.employeeCount || "1-10",
-            targetAudience: profile.targetAudience || "",
-            challenges: profile.challenges || ""
-          });
-          break;
-        case "employee":
-          setEmployeeProfile({
-            field: profile.field || "",
-            experienceLevel: profile.experienceLevel || "mid-level",
-            skills: profile.skills || "",
-            currentProjects: profile.currentProjects || "",
-            workStyle: profile.workStyle || ""
-          });
-          break;
-        case "writer":
-          setWriterProfile({
-            genre: profile.genre || "",
-            audience: profile.audience || "",
-            style: profile.style || "",
-            currentProjects: profile.currentProjects || "",
-            goals: profile.goals || ""
-          });
-          break;
-        default:
-          break;
-      }
-    }
-  }, [open, settings, role]);
 
-  const handleSaveProfile = async () => {
-    if (!settings) return;
-    
-    setIsUpdating(true);
-    try {
-      let knowledgeProfile = {};
-      
-      switch (role) {
-        case "student":
-          knowledgeProfile = studentProfile;
-          break;
-        case "business_owner":
-          knowledgeProfile = businessProfile;
-          break;
-        case "employee":
-          knowledgeProfile = employeeProfile;
-          break;
-        case "writer":
-          knowledgeProfile = writerProfile;
-          break;
-        default:
-          knowledgeProfile = {}; 
-      }
-      
-      const updatedSettings = {
-        ...settings,
-        knowledge_profile: knowledgeProfile
-      };
-      
-      const success = await updateSettings(updatedSettings);
-      
-      if (success) {
-        toast({
-          title: "Profile Updated",
-          description: "Your knowledge profile has been successfully updated.",
-        });
-        onOpenChange(false);
-      }
-    } catch (error) {
-      console.error("Error updating knowledge profile:", error);
-      toast({
-        title: "Update Failed",
-        description: "There was an error updating your knowledge profile.",
-        variant: "destructive",
+  const [isSaving, setIsSaving] = useState(false);
+  const { updateSettings, aiSettings } = useAISettings();
+
+  // Update profile when selected role changes or existing profile is loaded
+  useEffect(() => {
+    if (existingProfile) {
+      setProfile({ ...existingProfile, role: selectedRole });
+    } else {
+      setProfile({
+        role: selectedRole,
+        // Reset with empty values for the new role
+        grade: '',
+        schoolType: '',
+        subjects: [],
+        learningStyle: '',
+        goals: [],
+        industry: '',
+        businessType: '',
+        employeeCount: '',
+        targetAudience: '',
+        challenges: [],
+        field: '',
+        experienceLevel: '',
+        skills: [],
+        currentProjects: [],
+        workStyle: '',
+        genre: '',
+        audience: '',
+        style: ''
       });
-    } finally {
-      setIsUpdating(false);
     }
+  }, [selectedRole, existingProfile]);
+
+  // Handle input changes
+  const handleChange = (name: string, value: any) => {
+    setProfile((prev) => ({ ...prev, [name]: value }));
   };
-  
-  const getRoleTitle = () => {
-    switch (role) {
-      case "student": return "Student";
-      case "business_owner": return "Business";
-      case "employee": return "Work";
-      case "writer": return "Writer";
-      default: return "General";
-    }
-  };
-  
-  const renderProfileForm = () => {
-    switch (role) {
-      case "student":
+
+  // Render fields based on the selected role
+  const renderRoleFields = () => {
+    switch (selectedRole) {
+      case 'student':
         return (
           <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="grade">Grade/Year</Label>
+                <Input
+                  id="grade"
+                  value={profile.grade || ''}
+                  onChange={(e) => handleChange('grade', e.target.value)}
+                  placeholder="e.g., 10th Grade, Sophomore"
+                />
+              </div>
+              <div>
+                <Label htmlFor="schoolType">School Type</Label>
+                <Input
+                  id="schoolType"
+                  value={profile.schoolType || ''}
+                  onChange={(e) => handleChange('schoolType', e.target.value)}
+                  placeholder="e.g., High School, University"
+                />
+              </div>
+            </div>
             <div>
-              <Label htmlFor="grade">Grade/Year</Label>
-              <Input 
-                id="grade" 
-                placeholder="e.g., 10th grade, Freshman" 
-                value={studentProfile.grade}
-                onChange={(e) => setStudentProfile({...studentProfile, grade: e.target.value})}
+              <Label htmlFor="subjects">Subjects</Label>
+              <Textarea
+                id="subjects"
+                value={Array.isArray(profile.subjects) ? profile.subjects.join(', ') : ''}
+                onChange={(e) => handleChange('subjects', e.target.value.split(',').map(s => s.trim()))}
+                placeholder="Math, Science, History, etc."
               />
             </div>
-            
-            <div>
-              <Label htmlFor="schoolType">Education Level</Label>
-              <Select 
-                value={studentProfile.schoolType}
-                onValueChange={(value) => setStudentProfile({...studentProfile, schoolType: value})}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select education level" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="elementary">Elementary School</SelectItem>
-                  <SelectItem value="middle-school">Middle School</SelectItem>
-                  <SelectItem value="high-school">High School</SelectItem>
-                  <SelectItem value="college">College/University</SelectItem>
-                  <SelectItem value="graduate">Graduate School</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <Label htmlFor="subjects">Primary Subjects</Label>
-              <Input 
-                id="subjects" 
-                placeholder="e.g., Math, History, Science" 
-                value={studentProfile.subjects}
-                onChange={(e) => setStudentProfile({...studentProfile, subjects: e.target.value})}
-              />
-            </div>
-            
             <div>
               <Label htmlFor="learningStyle">Learning Style</Label>
-              <Input 
-                id="learningStyle" 
-                placeholder="e.g., Visual, Auditory, Hands-on" 
-                value={studentProfile.learningStyle}
-                onChange={(e) => setStudentProfile({...studentProfile, learningStyle: e.target.value})}
+              <Input
+                id="learningStyle"
+                value={profile.learningStyle || ''}
+                onChange={(e) => handleChange('learningStyle', e.target.value)}
+                placeholder="e.g., Visual, Hands-on, etc."
               />
             </div>
-            
             <div>
               <Label htmlFor="goals">Academic Goals</Label>
-              <Textarea 
-                id="goals" 
-                placeholder="What are your learning objectives?" 
-                value={studentProfile.goals}
-                onChange={(e) => setStudentProfile({...studentProfile, goals: e.target.value})}
-                className="min-h-[80px]"
+              <Textarea
+                id="goals"
+                value={Array.isArray(profile.goals) ? profile.goals.join(', ') : ''}
+                onChange={(e) => handleChange('goals', e.target.value.split(',').map(s => s.trim()))}
+                placeholder="Study for SAT, Improve grades, etc."
               />
             </div>
           </div>
         );
-        
-      case "business_owner":
+
+      case 'business_owner':
         return (
           <div className="space-y-4">
             <div>
               <Label htmlFor="industry">Industry</Label>
-              <Input 
-                id="industry" 
-                placeholder="e.g., Technology, Retail, Healthcare" 
-                value={businessProfile.industry}
-                onChange={(e) => setBusinessProfile({...businessProfile, industry: e.target.value})}
+              <Input
+                id="industry"
+                value={profile.industry || ''}
+                onChange={(e) => handleChange('industry', e.target.value)}
+                placeholder="e.g., Retail, Technology, Healthcare"
               />
             </div>
-            
             <div>
               <Label htmlFor="businessType">Business Type</Label>
-              <Select 
-                value={businessProfile.businessType}
-                onValueChange={(value) => setBusinessProfile({...businessProfile, businessType: value})}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select business type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="service">Service-based</SelectItem>
-                  <SelectItem value="product">Product-based</SelectItem>
-                  <SelectItem value="retail">Retail</SelectItem>
-                  <SelectItem value="online">Online/E-commerce</SelectItem>
-                  <SelectItem value="consulting">Consulting</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <Label htmlFor="employeeCount">Company Size</Label>
-              <Select 
-                value={businessProfile.employeeCount}
-                onValueChange={(value) => setBusinessProfile({...businessProfile, employeeCount: value})}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select company size" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1-10">1-10 employees</SelectItem>
-                  <SelectItem value="11-50">11-50 employees</SelectItem>
-                  <SelectItem value="51-200">51-200 employees</SelectItem>
-                  <SelectItem value="201-500">201-500 employees</SelectItem>
-                  <SelectItem value="501+">501+ employees</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <Label htmlFor="targetAudience">Target Audience</Label>
-              <Input 
-                id="targetAudience" 
-                placeholder="Who are your customers?" 
-                value={businessProfile.targetAudience}
-                onChange={(e) => setBusinessProfile({...businessProfile, targetAudience: e.target.value})}
+              <Input
+                id="businessType"
+                value={profile.businessType || ''}
+                onChange={(e) => handleChange('businessType', e.target.value)}
+                placeholder="e.g., Local Store, Online Service"
               />
             </div>
-            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="employeeCount">Employee Count</Label>
+                <Input
+                  id="employeeCount"
+                  value={profile.employeeCount || ''}
+                  onChange={(e) => handleChange('employeeCount', e.target.value)}
+                  placeholder="e.g., 1-10, 11-50"
+                />
+              </div>
+              <div>
+                <Label htmlFor="targetAudience">Target Audience</Label>
+                <Input
+                  id="targetAudience"
+                  value={profile.targetAudience || ''}
+                  onChange={(e) => handleChange('targetAudience', e.target.value)}
+                  placeholder="e.g., Millennials, Parents"
+                />
+              </div>
+            </div>
             <div>
-              <Label htmlFor="challenges">Current Challenges</Label>
-              <Textarea 
-                id="challenges" 
-                placeholder="What business challenges are you facing?" 
-                value={businessProfile.challenges}
-                onChange={(e) => setBusinessProfile({...businessProfile, challenges: e.target.value})}
-                className="min-h-[80px]"
+              <Label htmlFor="challenges">Business Challenges</Label>
+              <Textarea
+                id="challenges"
+                value={Array.isArray(profile.challenges) ? profile.challenges.join(', ') : ''}
+                onChange={(e) => handleChange('challenges', e.target.value.split(',').map(s => s.trim()))}
+                placeholder="Marketing, Growth, Operations, etc."
               />
             </div>
           </div>
         );
-        
-      case "employee":
+
+      case 'employee':
         return (
           <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="field">Field/Industry</Label>
+                <Input
+                  id="field"
+                  value={profile.field || ''}
+                  onChange={(e) => handleChange('field', e.target.value)}
+                  placeholder="e.g., Marketing, Engineering"
+                />
+              </div>
+              <div>
+                <Label htmlFor="experienceLevel">Experience Level</Label>
+                <Input
+                  id="experienceLevel"
+                  value={profile.experienceLevel || ''}
+                  onChange={(e) => handleChange('experienceLevel', e.target.value)}
+                  placeholder="e.g., Entry-level, Senior"
+                />
+              </div>
+            </div>
             <div>
-              <Label htmlFor="field">Professional Field</Label>
-              <Input 
-                id="field" 
-                placeholder="e.g., Marketing, Engineering, Finance" 
-                value={employeeProfile.field}
-                onChange={(e) => setEmployeeProfile({...employeeProfile, field: e.target.value})}
+              <Label htmlFor="skills">Skills</Label>
+              <Textarea
+                id="skills"
+                value={Array.isArray(profile.skills) ? profile.skills.join(', ') : ''}
+                onChange={(e) => handleChange('skills', e.target.value.split(',').map(s => s.trim()))}
+                placeholder="Project management, Coding, etc."
               />
             </div>
-            
-            <div>
-              <Label htmlFor="experienceLevel">Experience Level</Label>
-              <Select 
-                value={employeeProfile.experienceLevel}
-                onValueChange={(value) => setEmployeeProfile({...employeeProfile, experienceLevel: value})}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select experience level" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="entry-level">Entry Level</SelectItem>
-                  <SelectItem value="mid-level">Mid Level</SelectItem>
-                  <SelectItem value="senior">Senior</SelectItem>
-                  <SelectItem value="manager">Manager</SelectItem>
-                  <SelectItem value="executive">Executive</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <Label htmlFor="skills">Key Skills</Label>
-              <Input 
-                id="skills" 
-                placeholder="e.g., Project Management, Data Analysis" 
-                value={employeeProfile.skills}
-                onChange={(e) => setEmployeeProfile({...employeeProfile, skills: e.target.value})}
-              />
-            </div>
-            
             <div>
               <Label htmlFor="currentProjects">Current Projects</Label>
-              <Input 
-                id="currentProjects" 
-                placeholder="What are you working on?" 
-                value={employeeProfile.currentProjects}
-                onChange={(e) => setEmployeeProfile({...employeeProfile, currentProjects: e.target.value})}
+              <Textarea
+                id="currentProjects"
+                value={Array.isArray(profile.currentProjects) ? profile.currentProjects.join(', ') : ''}
+                onChange={(e) => handleChange('currentProjects', e.target.value.split(',').map(s => s.trim()))}
+                placeholder="Website redesign, Product launch, etc."
               />
             </div>
-            
             <div>
               <Label htmlFor="workStyle">Work Style</Label>
-              <Textarea 
-                id="workStyle" 
-                placeholder="How do you prefer to work?" 
-                value={employeeProfile.workStyle}
-                onChange={(e) => setEmployeeProfile({...employeeProfile, workStyle: e.target.value})}
-                className="min-h-[80px]"
+              <Input
+                id="workStyle"
+                value={profile.workStyle || ''}
+                onChange={(e) => handleChange('workStyle', e.target.value)}
+                placeholder="e.g., Remote, Collaborative"
               />
             </div>
           </div>
         );
-      
-      case "writer":
+
+      case 'writer':
         return (
           <div className="space-y-4">
-            <div>
-              <Label htmlFor="genre">Primary Genre</Label>
-              <Input 
-                id="genre" 
-                placeholder="e.g., Fiction, Technical, Content Marketing" 
-                value={writerProfile.genre}
-                onChange={(e) => setWriterProfile({...writerProfile, genre: e.target.value})}
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="genre">Genre</Label>
+                <Input
+                  id="genre"
+                  value={profile.genre || ''}
+                  onChange={(e) => handleChange('genre', e.target.value)}
+                  placeholder="e.g., Fiction, Technical"
+                />
+              </div>
+              <div>
+                <Label htmlFor="audience">Target Audience</Label>
+                <Input
+                  id="audience"
+                  value={profile.audience || ''}
+                  onChange={(e) => handleChange('audience', e.target.value)}
+                  placeholder="e.g., Young Adults, Professionals"
+                />
+              </div>
             </div>
-            
-            <div>
-              <Label htmlFor="audience">Target Audience</Label>
-              <Input 
-                id="audience" 
-                placeholder="Who do you write for?" 
-                value={writerProfile.audience}
-                onChange={(e) => setWriterProfile({...writerProfile, audience: e.target.value})}
-              />
-            </div>
-            
             <div>
               <Label htmlFor="style">Writing Style</Label>
-              <Input 
-                id="style" 
-                placeholder="e.g., Conversational, Academic, Technical" 
-                value={writerProfile.style}
-                onChange={(e) => setWriterProfile({...writerProfile, style: e.target.value})}
+              <Input
+                id="style"
+                value={profile.style || ''}
+                onChange={(e) => handleChange('style', e.target.value)}
+                placeholder="e.g., Formal, Conversational"
               />
             </div>
-            
             <div>
               <Label htmlFor="currentProjects">Current Projects</Label>
-              <Input 
-                id="currentProjects" 
-                placeholder="What are you writing now?" 
-                value={writerProfile.currentProjects}
-                onChange={(e) => setWriterProfile({...writerProfile, currentProjects: e.target.value})}
+              <Textarea
+                id="currentProjects"
+                value={Array.isArray(profile.currentProjects) ? profile.currentProjects.join(', ') : ''}
+                onChange={(e) => handleChange('currentProjects', e.target.value.split(',').map(s => s.trim()))}
+                placeholder="Novel, Blog series, etc."
               />
             </div>
-            
             <div>
               <Label htmlFor="goals">Writing Goals</Label>
-              <Textarea 
-                id="goals" 
-                placeholder="What are you trying to achieve with your writing?" 
-                value={writerProfile.goals}
-                onChange={(e) => setWriterProfile({...writerProfile, goals: e.target.value})}
-                className="min-h-[80px]"
+              <Textarea
+                id="goals"
+                value={Array.isArray(profile.goals) ? profile.goals.join(', ') : ''}
+                onChange={(e) => handleChange('goals', e.target.value.split(',').map(s => s.trim()))}
+                placeholder="Publish book, Improve skills, etc."
               />
             </div>
           </div>
         );
-        
+
       default:
         return (
-          <div className="text-center py-2">
-            <p className="text-muted-foreground">
-              General profile settings are not available.
+          <div className="py-4">
+            <p className="text-center text-muted-foreground">
+              Basic profile options are available for this role.
             </p>
           </div>
         );
     }
   };
-  
+
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+      
+      // Make sure we're passing a valid profile with at least the role property
+      onSave({
+        ...profile,
+        role: selectedRole // Ensure role is always set
+      });
+      
+      // Update AI settings if available
+      if (aiSettings) {
+        await updateSettings.mutateAsync({
+          ...aiSettings,
+          knowledge_profile: {
+            ...profile,
+            role: selectedRole // Ensure role is always set
+          }
+        });
+      }
+      
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Error saving profile:", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{getRoleTitle()} Profile</DialogTitle>
+          <DialogTitle>Customize Your AI Assistant</DialogTitle>
+          <DialogDescription>
+            Provide details about your needs to make your assistant more helpful.
+          </DialogDescription>
         </DialogHeader>
-        
-        {renderProfileForm()}
-        
+
+        <div className="max-h-[60vh] overflow-y-auto py-4">
+          {renderRoleFields()}
+        </div>
+
         <DialogFooter>
-          <Button 
-            variant="outline" 
-            onClick={() => onOpenChange(false)}
-            disabled={isUpdating}
-            className="mr-2"
-          >
-            <X className="h-4 w-4 mr-1" /> Cancel
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>
+            Cancel
           </Button>
-          <Button 
-            onClick={handleSaveProfile} 
-            disabled={isUpdating}
-          >
-            {isUpdating ? (
+          <Button onClick={handleSave} disabled={isSaving}>
+            {isSaving ? (
               <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Saving...
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving...
               </>
             ) : (
-              <>
-                <Save className="h-4 w-4 mr-2" /> Save Profile
-              </>
+              'Save Profile'
             )}
           </Button>
         </DialogFooter>
@@ -477,3 +378,5 @@ export const RoleProfileDialog: React.FC<RoleProfileDialogProps> = ({
     </Dialog>
   );
 };
+
+export default RoleProfileDialog;

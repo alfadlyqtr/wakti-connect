@@ -8,14 +8,43 @@ export interface AIMessage {
 
 export type AIAssistantRole = 'general' | 'student' | 'employee' | 'writer' | 'business_owner';
 
+// Enhanced KnowledgeProfile interface with all required fields
+export interface KnowledgeProfile {
+  role: string;
+  // Student-specific fields
+  grade?: string;
+  schoolType?: string;
+  subjects?: string[];
+  learningStyle?: string;
+  goals?: string[];
+  // Business owner-specific fields
+  industry?: string;
+  businessType?: string;
+  employeeCount?: string;
+  targetAudience?: string;
+  challenges?: string[];
+  // Employee-specific fields
+  field?: string;
+  experienceLevel?: string;
+  skills?: string[];
+  currentProjects?: string[];
+  workStyle?: string;
+  // Writer-specific fields
+  genre?: string;
+  audience?: string;
+  style?: string;
+  // Could be shared between roles
+  goals?: string[];
+}
+
 export interface RoleContext {
   title: string;
   description: string;
   welcomeMessage: string;
   suggestedPrompts: string[];
   color: string;
-  commandSuggestions?: string[]; // Add this property to fix the errors
-  quickTools?: Array<{ id: string; name: string; description: string; icon: string }>; // Add this property
+  commandSuggestions?: string[]; 
+  quickTools?: Array<{ id: string; name: string; description: string; icon: string }>;
 }
 
 export const RoleContexts: Record<AIAssistantRole, RoleContext> = {
@@ -120,7 +149,7 @@ export interface AISettings {
   proactiveness: boolean;
   suggestion_frequency: string;
   enabled_features: Record<string, boolean>;
-  knowledge_profile?: { role: string };
+  knowledge_profile?: KnowledgeProfile;
 }
 
 // AIKnowledgeUpload interface for knowledge management
