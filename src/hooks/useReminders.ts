@@ -48,10 +48,10 @@ export function useReminders() {
         event: '*', 
         schema: 'public', 
         table: 'reminders'
-      }, async () => {
+      }, async (payload) => {
         // Refetch reminders when changes occur
         try {
-          console.log("Detected changes in reminders table, reloading...");
+          console.log("Detected changes in reminders table:", payload);
           const reminders = await fetchReminders();
           setActiveReminders(reminders);
         } catch (error) {
@@ -65,14 +65,14 @@ export function useReminders() {
     };
   }, []);
   
-  // Check for due reminders every 5 seconds
+  // Check for due reminders every 3 seconds (increased frequency for reliability)
   useEffect(() => {
     const checkDueReminders = async () => {
       const now = new Date();
       setLastCheckTime(now);
       setCheckCount(prev => prev + 1);
       
-      if (checkCount % 12 === 0) { // Log every minute (12 * 5 seconds)
+      if (checkCount % 20 === 0) { // Log every minute (20 * 3 seconds)
         console.log(`Checking reminders at ${now.toLocaleTimeString()}`);
       }
       
@@ -88,9 +88,9 @@ export function useReminders() {
         const reminderTotalSeconds = reminderMinutes * 60 + reminderTime.getSeconds();
         const nowTotalSeconds = nowMinutes * 60 + now.getSeconds();
         
-        // Consider reminders due if they're within 5 seconds of now (either just past or just coming)
+        // Consider reminders due if they're within 8 seconds of now (increased window)
         const diffInSeconds = Math.abs(nowTotalSeconds - reminderTotalSeconds);
-        return diffInSeconds <= 5;
+        return diffInSeconds <= 8;
       });
       
       // Show notifications for due reminders
@@ -124,10 +124,33 @@ export function useReminders() {
             duration: Infinity, // Don't auto-dismiss
           });
           
-          // Show browser notification if supported and permission granted
-          if (Notification && Notification.permission === 'granted') {
-            new Notification('Reminder: ' + reminder.message, {
-              body: `Time: ${new Date(reminder.reminder_time).toLocaleTimeString()}`
+          // Create and show browser notification with retry logic
+          let notificationSuccess = false;
+          const maxRetries = 5; // Increased retries
+          
+          for (let attempt = 0; attempt < maxRetries && !notificationSuccess; attempt++) {
+            try {
+              if (Notification && Notification.permission === 'granted') {
+                new Notification('Reminder: ' + reminder.message, {
+                  body: `Time: ${new Date(reminder.reminder_time).toLocaleTimeString()}`,
+                  tag: `reminder-${reminder.id}-${attempt}`, // Add attempt to tag to avoid duplicate filtering
+                  icon: '/favicon.ico' // Added icon for better visibility
+                });
+                notificationSuccess = true;
+                console.log(`Browser notification shown successfully on attempt ${attempt + 1}`);
+              }
+            } catch (error) {
+              console.warn(`Notification attempt ${attempt + 1} failed:`, error);
+              await new Promise(resolve => setTimeout(resolve, 500)); // Wait before retry
+            }
+          }
+          
+          if (!notificationSuccess) {
+            // Final fallback - show another toast if browser notification failed
+            toast({
+              title: "Reminder Alert",
+              description: reminder.message,
+              duration: 10000, // 10 seconds
             });
           }
           
@@ -135,36 +158,29 @@ export function useReminders() {
             reminderId: reminder.id,
             notificationId: notification.id
           });
-          
-          // Attempt to trigger browser notification 3 times in case of failure
-          let notificationSuccess = false;
-          const maxRetries = 3;
-          
-          for (let attempt = 0; attempt < maxRetries && !notificationSuccess; attempt++) {
-            try {
-              if (Notification && Notification.permission === 'granted') {
-                new Notification('Reminder', {
-                  body: reminder.message,
-                  tag: `reminder-${reminder.id}` // Prevent duplicate notifications
-                });
-                notificationSuccess = true;
-              }
-            } catch (error) {
-              console.warn(`Notification attempt ${attempt + 1} failed:`, error);
-              await new Promise(resolve => setTimeout(resolve, 500)); // Wait before retry
-            }
-          }
         } catch (error) {
           console.error("Error processing due reminder:", {
             reminderId: reminder.id,
             error: error instanceof Error ? error.message : 'Unknown error'
           });
+          
+          // Try again if there was an error creating the notification
+          try {
+            toast({
+              title: "Reminder",
+              description: reminder.message,
+              variant: "destructive",
+              duration: 10000,
+            });
+          } catch (e) {
+            console.error("Even fallback toast failed:", e);
+          }
         }
       }
     };
     
-    // Check every 5 seconds
-    const interval = setInterval(checkDueReminders, 5000);
+    // Check every 3 seconds
+    const interval = setInterval(checkDueReminders, 3000);
     
     // Initial check
     checkDueReminders();
@@ -191,6 +207,7 @@ export function useReminders() {
     activeReminders,
     requestNotificationPermission,
     requestAudioPermission,
-    audioPermissionGranted
+    audioPermissionGranted,
+    lastCheckTime
   };
 }

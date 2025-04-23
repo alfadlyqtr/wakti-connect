@@ -4,11 +4,12 @@ import { Reminder } from "@/types/reminder.types";
 import { fetchReminders } from "@/services/reminder/reminderService";
 import RemindersList from "./RemindersList";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Volume2, VolumeX, Bell, ClipboardCheck } from "lucide-react";
+import { PlusCircle, Volume2, VolumeX, Bell, ClipboardCheck, RefreshCw } from "lucide-react";
 import { CreateReminderDialog } from "./CreateReminderDialog";
 import { toast } from "@/components/ui/use-toast";
 import { UserRole } from "@/types/user";
 import { requestAudioPermission } from "@/utils/audioUtils";
+import { useReminders } from "@/hooks/useReminders";
 
 interface RemindersContainerProps {
   userRole: UserRole;
@@ -24,19 +25,14 @@ const RemindersContainer: React.FC<RemindersContainerProps> = ({
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [notificationEnabled, setNotificationEnabled] = useState(false);
-  const [lastCheckTime, setLastCheckTime] = useState<Date>(new Date());
+  
+  // Use our enhanced hook
+  const { lastCheckTime, requestNotificationPermission } = useReminders();
   
   useEffect(() => {
     loadReminders();
     checkAudioStatus();
     checkNotificationStatus();
-    
-    // Set up periodic status updates
-    const interval = setInterval(() => {
-      setLastCheckTime(new Date());
-    }, 5000);
-    
-    return () => clearInterval(interval);
   }, []);
   
   const checkAudioStatus = async () => {
@@ -100,41 +96,22 @@ const RemindersContainer: React.FC<RemindersContainerProps> = ({
     }
   };
   
-  const requestNotifications = async () => {
-    if (Notification) {
-      try {
-        const permission = await Notification.requestPermission();
-        setNotificationEnabled(permission === 'granted');
-        
-        if (permission === 'granted') {
-          toast({
-            title: "Browser notifications enabled",
-            description: "You'll now receive browser notifications for reminders.",
-            duration: 3000
-          });
-        } else {
-          toast({
-            title: "Browser notifications denied",
-            description: "Please enable notifications in your browser settings to receive reminder alerts.",
-            variant: "destructive",
-            duration: 5000
-          });
-        }
-      } catch (error) {
-        console.error("Error requesting notification permission:", error);
-        toast({
-          title: "Notification error",
-          description: "Failed to request notification permissions.",
-          variant: "destructive",
-          duration: 3000
-        });
-      }
+  const handleRequestNotifications = async () => {
+    const granted = await requestNotificationPermission();
+    setNotificationEnabled(granted);
+    
+    if (granted) {
+      toast({
+        title: "Browser notifications enabled",
+        description: "You'll now receive browser notifications for reminders.",
+        duration: 3000
+      });
     } else {
       toast({
-        title: "Notifications not supported",
-        description: "Your browser does not support notifications.",
+        title: "Browser notifications denied",
+        description: "Please enable notifications in your browser settings to receive reminder alerts.",
         variant: "destructive",
-        duration: 3000
+        duration: 5000
       });
     }
   };
@@ -154,6 +131,14 @@ const RemindersContainer: React.FC<RemindersContainerProps> = ({
     if (diffInSeconds < 60) return `Due in ${diffInSeconds} seconds`;
     if (diffInSeconds < 3600) return `Due in ${Math.floor(diffInSeconds / 60)} minutes`;
     return `Due in ${Math.floor(diffInSeconds / 3600)} hours`;
+  };
+  
+  const formatLastCheckTime = (time: Date) => {
+    return time.toLocaleTimeString(undefined, { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      second: '2-digit'
+    });
   };
 
   if (isLoading) {
@@ -197,7 +182,7 @@ const RemindersContainer: React.FC<RemindersContainerProps> = ({
         <h2 className="text-xl font-semibold">Active Reminders</h2>
         <div className="flex space-x-2">
           <Button 
-            onClick={requestNotifications} 
+            onClick={handleRequestNotifications} 
             size="sm"
             variant={notificationEnabled ? "default" : "outline"}
             title={notificationEnabled ? "Browser notifications enabled" : "Enable browser notifications"}
@@ -231,11 +216,21 @@ const RemindersContainer: React.FC<RemindersContainerProps> = ({
         </div>
       </div>
       
-      <div className="p-2 bg-blue-50 text-blue-700 rounded-md flex items-center text-sm">
-        <ClipboardCheck className="h-4 w-4 mr-2 text-blue-500" />
-        <span>
-          Reminders are checked every 5 seconds. Last check: {lastCheckTime.toLocaleTimeString()}
-        </span>
+      <div className="p-3 bg-blue-50 text-blue-700 rounded-md flex items-center justify-between text-sm">
+        <div className="flex items-center">
+          <ClipboardCheck className="h-4 w-4 mr-2 text-blue-500" />
+          <span>
+            Reminders are checked every 3 seconds. Last check: {formatLastCheckTime(lastCheckTime)}
+          </span>
+        </div>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="text-blue-600 hover:text-blue-800 p-1 h-auto"
+          onClick={loadReminders}
+        >
+          <RefreshCw className="h-4 w-4" />
+        </Button>
       </div>
       
       <RemindersList 
