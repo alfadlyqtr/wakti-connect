@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Reminder } from "@/types/reminder.types";
 import { fetchReminders } from "@/services/reminder/reminderService";
@@ -30,7 +29,6 @@ const RemindersContainer: React.FC<RemindersContainerProps> = ({
   }, []);
   
   const checkAudioStatus = async () => {
-    // Check if audio has been previously enabled
     const audioStatus = localStorage.getItem('reminderAudioEnabled');
     setAudioEnabled(audioStatus === 'true');
   };
@@ -58,7 +56,6 @@ const RemindersContainer: React.FC<RemindersContainerProps> = ({
 
   const toggleAudio = async () => {
     if (!audioEnabled) {
-      // Request permission when enabling
       const granted = await requestAudioPermission();
       if (granted) {
         setAudioEnabled(true);
@@ -77,7 +74,6 @@ const RemindersContainer: React.FC<RemindersContainerProps> = ({
         });
       }
     } else {
-      // Just disable if already enabled
       setAudioEnabled(false);
       localStorage.setItem('reminderAudioEnabled', 'false');
       toast({
@@ -88,6 +84,17 @@ const RemindersContainer: React.FC<RemindersContainerProps> = ({
     }
   };
   
+  const getRelativeTime = (reminderTime: string) => {
+    const now = new Date();
+    const reminder = new Date(reminderTime);
+    const diffInSeconds = Math.floor((reminder.getTime() - now.getTime()) / 1000);
+    
+    if (diffInSeconds < 0) return "Due now";
+    if (diffInSeconds < 60) return `Due in ${diffInSeconds} seconds`;
+    if (diffInSeconds < 3600) return `Due in ${Math.floor(diffInSeconds / 60)} minutes`;
+    return `Due in ${Math.floor(diffInSeconds / 3600)} hours`;
+  };
+
   if (isLoading) {
     return (
       <div className="w-full py-8 text-center">
@@ -153,6 +160,7 @@ const RemindersContainer: React.FC<RemindersContainerProps> = ({
       <RemindersList 
         reminders={reminders} 
         onReminderUpdate={loadReminders}
+        getRelativeTime={getRelativeTime}
       />
       
       <CreateReminderDialog

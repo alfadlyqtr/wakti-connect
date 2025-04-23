@@ -15,11 +15,13 @@ import { format } from "date-fns";
 interface RemindersListProps {
   reminders: Reminder[];
   onReminderUpdate: () => void;
+  getRelativeTime: (reminderTime: string) => string;
 }
 
 const RemindersList: React.FC<RemindersListProps> = ({ 
   reminders,
-  onReminderUpdate
+  onReminderUpdate,
+  getRelativeTime
 }) => {
   const handleDelete = async (id: string) => {
     try {
@@ -72,11 +74,15 @@ const RemindersList: React.FC<RemindersListProps> = ({
             
             <div className="flex items-center text-muted-foreground mb-2">
               <Clock className="h-4 w-4 mr-2" />
-              <span>{formatReminderTime(reminder.reminder_time)}</span>
+              <span>{format(new Date(reminder.reminder_time), 'MMM d, yyyy h:mm a')}</span>
+            </div>
+            
+            <div className="text-sm font-medium text-primary">
+              {getRelativeTime(reminder.reminder_time)}
             </div>
             
             {reminder.repeat_type !== 'none' && (
-              <div className="flex items-center text-muted-foreground">
+              <div className="flex items-center text-muted-foreground mt-2">
                 <Repeat className="h-4 w-4 mr-2" />
                 <span>{getRepeatLabel(reminder.repeat_type)}</span>
               </div>

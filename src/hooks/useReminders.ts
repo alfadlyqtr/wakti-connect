@@ -9,6 +9,7 @@ export function useReminders() {
   const [activeReminders, setActiveReminders] = useState<Reminder[]>([]);
   const [loading, setLoading] = useState(true);
   const [audioPermissionGranted, setAudioPermissionGranted] = useState(false);
+  const [lastCheckTime, setLastCheckTime] = useState<Date>(new Date());
   
   // Request audio permission
   useEffect(() => {
@@ -60,23 +61,30 @@ export function useReminders() {
     };
   }, []);
   
-  // Check for due reminders every minute
+  // Check for due reminders every 10 seconds
   useEffect(() => {
     const checkDueReminders = async () => {
       const now = new Date();
+      setLastCheckTime(now);
       
-      // Check for reminders that are due (within the last minute to now)
+      // Check for reminders that are due
       const dueReminders = activeReminders.filter(reminder => {
         const reminderTime = new Date(reminder.reminder_time);
-        const diffInMinutes = Math.abs(now.getTime() - reminderTime.getTime()) / (1000 * 60);
+        const diffInSeconds = Math.abs(now.getTime() - reminderTime.getTime()) / 1000;
         
-        // Consider reminders due if they're within the last minute
-        return diffInMinutes >= 0 && diffInMinutes <= 1;
+        // Consider reminders due if they're within the last 10 seconds to now
+        return diffInSeconds >= 0 && diffInSeconds <= 10;
       });
       
       // Show notifications for due reminders
       for (const reminder of dueReminders) {
         try {
+          console.log('Processing due reminder:', {
+            reminderId: reminder.id,
+            reminderTime: reminder.reminder_time,
+            currentTime: now.toISOString(),
+          });
+          
           // Create notification in database
           const notification = await createReminderNotification(reminder.id);
           
@@ -103,13 +111,22 @@ export function useReminders() {
               body: reminder.message
             });
           }
+          
+          console.log('Successfully triggered reminder notification:', {
+            reminderId: reminder.id,
+            notificationId: notification.id
+          });
         } catch (error) {
-          console.error("Error processing due reminder:", error);
+          console.error("Error processing due reminder:", {
+            reminderId: reminder.id,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          });
         }
       }
     };
     
-    const interval = setInterval(checkDueReminders, 60000); // Check every minute
+    // Check every 10 seconds
+    const interval = setInterval(checkDueReminders, 10000);
     
     // Initial check
     checkDueReminders();
