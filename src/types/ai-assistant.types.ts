@@ -1,4 +1,3 @@
-
 export interface AIMessage {
   id: string;
   role: 'user' | 'assistant' | 'system';
@@ -16,7 +15,7 @@ export interface KnowledgeProfile {
   schoolType?: string;
   subjects?: string[];
   learningStyle?: string;
-  goals?: string[];
+  studentGoals?: string[]; // Changed from goals to studentGoals for students
   // Business owner-specific fields
   industry?: string;
   businessType?: string;
@@ -33,7 +32,7 @@ export interface KnowledgeProfile {
   genre?: string;
   audience?: string;
   style?: string;
-  // Could be shared between roles
+  // Shared goals field
   goals?: string[];
 }
 
