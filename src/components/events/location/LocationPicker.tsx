@@ -1,44 +1,25 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, MapPin, Navigation } from 'lucide-react';
-import { TOMTOM_API_KEY, generateTomTomMapsUrl } from '@/config/maps';
+import { GOOGLE_MAPS_API_KEY, generateGoogleMapsUrl } from '@/config/maps';
 import { useTranslation } from 'react-i18next';
 import { toast } from '@/components/ui/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 
-// Add TypeScript types for TomTom Maps
+// Add TypeScript types for Google Maps
 declare global {
   interface Window {
-    tomtom: {
+    google: {
       maps: {
         places: {
           Autocomplete: new (
             input: HTMLInputElement,
-            options?: any
-          ) => tomtom.maps.places.Autocomplete;
+            options?: google.maps.places.AutocompleteOptions
+          ) => google.maps.places.Autocomplete;
         };
         Map: any;
       };
-    };
-  }
-}
-
-// Define the minimal TomTom Maps types we need
-namespace tomtom.maps.places {
-  export interface Autocomplete {
-    addListener: (event: string, callback: () => void) => void;
-    getPlace: () => {
-      formatted_address?: string;
-      geometry?: {
-        location?: {
-          lat: () => number;
-          lng: () => number;
-        };
-      };
-      name?: string;
-      place_id?: string;
-      url?: string;
     };
   }
 }
@@ -68,64 +49,46 @@ const LocationPickerComponent: React.FC<LocationPickerProps> = ({
     url?: string;
   } | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  // Simplify the component to not depend on Google Maps JS API
-  // Instead, use TomTom Geocoding via our edge function
-  
-  const handleSearch = async () => {
-    if (!inputValue) return;
-    
-    setIsSearching(true);
-    try {
-      // Call our TomTom geocode edge function
-      const { data, error } = await supabase.functions.invoke('tomtom-geocode', {
-        body: { query: inputValue }
-      });
-      
-      if (error) {
-        throw new Error(`Geocoding error: ${error.message}`);
-      }
-      
-      if (data?.coordinates) {
-        const { lat, lon } = data.coordinates;
+  useEffect(() => {
+    if (!window.google || !inputRef.current) return;
+
+    const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
+      fields: ['formatted_address', 'geometry', 'name', 'place_id'],
+    });
+
+    autocomplete.addListener('place_changed', () => {
+      const place = autocomplete.getPlace();
+      if (place.geometry?.location) {
+        const lat = place.geometry.location.lat();
+        const lng = place.geometry.location.lng();
         
-        // Create place details object
+        // Update with place details
         const placeData = {
-          name: inputValue,
-          address: inputValue,
-          lat: lat,
-          lng: lon,
-          url: `https://www.tomtom.com/en_gb/maps/view?lat=${lat}&lon=${lon}`
+          name: place.name || '',
+          address: place.formatted_address || '',
+          lat,
+          lng,
+          url: generateGoogleMapsUrl(place.formatted_address || '')
         };
         
         setPlaceDetails(placeData);
+        setInputValue(place.formatted_address || '');
         
         // Pass back location and coordinates
-        onChange(inputValue, lat, lon);
+        onChange(place.formatted_address || '', lat, lng);
         
-        // Generate a TomTom maps URL and pass it back if handler provided
+        // Generate a Google Maps URL and pass it back if handler provided
         if (onMapUrlChange) {
-          const mapsUrl = `https://www.tomtom.com/en_gb/maps/view?lat=${lat}&lon=${lon}`;
-          onMapUrlChange(mapsUrl);
+          onMapUrlChange(placeData.url);
         }
-      } else {
-        toast({
-          title: "Location Error",
-          description: "Could not find coordinates for this location",
-          variant: "destructive"
-        });
       }
-    } catch (error) {
-      console.error('Error searching location:', error);
-      toast({
-        title: "Location Error",
-        description: error instanceof Error ? error.message : "Failed to search location",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSearching(false);
-    }
-  };
+    });
+
+    autocompleteRef.current = autocomplete;
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
@@ -135,13 +98,6 @@ const LocationPickerComponent: React.FC<LocationPickerProps> = ({
       if (onMapUrlChange) {
         onMapUrlChange('');
       }
-    }
-  };
-  
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleSearch();
     }
   };
 
@@ -155,34 +111,56 @@ const LocationPickerComponent: React.FC<LocationPickerProps> = ({
       return;
     }
     
+    setIsSearching(true);
+    
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      async (position) => {
         const { latitude, longitude } = position.coords;
         
-        // Create a location string with coordinates
-        const locationStr = `Current Location (${latitude.toFixed(6)}, ${longitude.toFixed(6)})`;
-        
-        // Update the state
-        setInputValue(locationStr);
-        setPlaceDetails({
-          name: locationStr,
-          lat: latitude,
-          lng: longitude
-        });
-        
-        // Generate a maps URL if handler provided
-        if (onMapUrlChange) {
-          const mapsUrl = `https://www.tomtom.com/en_gb/maps/view?lat=${latitude}&lon=${longitude}`;
-          onMapUrlChange(mapsUrl);
+        try {
+          // Use Google's Geocoding service to get address from coordinates
+          const response = await fetch(
+            `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${GOOGLE_MAPS_API_KEY}`
+          );
+          
+          const data = await response.json();
+          
+          if (data.results && data.results[0]) {
+            const address = data.results[0].formatted_address;
+            setInputValue(address);
+            
+            // Update place details
+            setPlaceDetails({
+              name: address,
+              address,
+              lat: latitude,
+              lng: longitude,
+              url: generateGoogleMapsUrl(address)
+            });
+            
+            // Pass back location and coordinates
+            onChange(address, latitude, longitude);
+            
+            // Generate maps URL if handler provided
+            if (onMapUrlChange) {
+              onMapUrlChange(generateGoogleMapsUrl(address));
+            }
+            
+            toast({
+              title: "Location Found",
+              description: "Your current location has been added"
+            });
+          }
+        } catch (error) {
+          console.error('Error getting address from coordinates:', error);
+          toast({
+            title: "Error",
+            description: "Could not get your current location address",
+            variant: "destructive"
+          });
         }
         
-        // Update with coordinates
-        onChange(locationStr, latitude, longitude);
-        
-        toast({
-          title: "Location Found",
-          description: "Your current location has been added"
-        });
+        setIsSearching(false);
       },
       (error) => {
         console.error('Error getting location:', error);
@@ -205,6 +183,8 @@ const LocationPickerComponent: React.FC<LocationPickerProps> = ({
           description: errorMessage,
           variant: "destructive"
         });
+        
+        setIsSearching(false);
       },
       { 
         enableHighAccuracy: true,
@@ -222,20 +202,10 @@ const LocationPickerComponent: React.FC<LocationPickerProps> = ({
           type="text"
           value={inputValue}
           onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
+          ref={inputRef}
           placeholder={placeholder || t('location.searchPlaceholder')}
           className="pl-8 pr-10"
         />
-        <Button 
-          type="button" 
-          variant="ghost" 
-          size="sm"
-          className="absolute right-1 top-1/2 -translate-y-1/2 h-7"
-          onClick={handleSearch}
-          disabled={isSearching || !inputValue}
-        >
-          {isSearching ? "..." : "Search"}
-        </Button>
       </div>
       
       <Button 
@@ -244,12 +214,14 @@ const LocationPickerComponent: React.FC<LocationPickerProps> = ({
         size="sm"
         className="w-full flex items-center justify-center gap-2 text-xs"
         onClick={getCurrentLocation}
+        disabled={isSearching}
       >
         <Navigation className="h-3.5 w-3.5" />
-        {t('location.currentLocation')}
+        {isSearching ? t('location.gettingLocation') : t('location.currentLocation')}
       </Button>
     </div>
   );
 };
 
 export default LocationPickerComponent;
+
