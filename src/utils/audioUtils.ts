@@ -9,6 +9,10 @@ const TASK_COMPLETION_SOUND = '/sounds/wakto task completed sound.mp3';
 // Audio context for better control
 let audioContext: AudioContext | null = null;
 
+// Track currently playing audio to prevent multiple instances
+let currentAudio: HTMLAudioElement | null = null;
+let currentSource: AudioBufferSourceNode | null = null;
+
 /**
  * Initialize the audio context (must be called on user interaction)
  */
@@ -18,6 +22,31 @@ export const initializeAudio = (): void => {
       audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     } catch (error) {
       console.error("Web Audio API is not supported in this browser", error);
+    }
+  }
+};
+
+/**
+ * Stop any currently playing audio
+ */
+const stopCurrentAudio = () => {
+  if (currentSource) {
+    try {
+      currentSource.stop();
+      currentSource.disconnect();
+      currentSource = null;
+    } catch (e) {
+      // Ignore errors if already stopped
+    }
+  }
+  
+  if (currentAudio) {
+    try {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+      currentAudio = null;
+    } catch (e) {
+      // Ignore errors if already paused
     }
   }
 };
@@ -35,6 +64,9 @@ export const playNotificationSound = async (options: {
     volume = 0.7,
     duration = 3000 // Default 3 seconds
   } = options;
+  
+  // Stop any currently playing audio
+  stopCurrentAudio();
   
   try {
     // Try to use the Web Audio API for better control
@@ -58,6 +90,9 @@ export const playNotificationSound = async (options: {
       source.connect(gainNode);
       gainNode.connect(audioContext.destination);
       
+      // Store current source
+      currentSource = source;
+      
       // Start the sound
       source.start(0);
       
@@ -67,7 +102,17 @@ export const playNotificationSound = async (options: {
       gainNode.gain.linearRampToValueAtTime(0, fadeOutStart + 0.5);
       
       // Stop after duration
-      source.stop(audioContext.currentTime + (duration / 1000));
+      const stopTime = audioContext.currentTime + (duration / 1000);
+      source.stop(stopTime);
+      
+      // Clean up after playing
+      source.onended = () => {
+        source.disconnect();
+        gainNode.disconnect();
+        if (currentSource === source) {
+          currentSource = null;
+        }
+      };
       
       return;
     }
@@ -77,12 +122,18 @@ export const playNotificationSound = async (options: {
     audio.volume = volume;
     audio.loop = false;
     
+    // Store current audio
+    currentAudio = audio;
+    
     await audio.play();
     
     // Stop after duration
     setTimeout(() => {
-      audio.pause();
-      audio.currentTime = 0;
+      if (currentAudio === audio) {
+        audio.pause();
+        audio.currentTime = 0;
+        currentAudio = null;
+      }
     }, duration);
   } catch (error) {
     console.error("Failed to play notification sound:", error);
