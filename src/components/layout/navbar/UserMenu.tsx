@@ -15,17 +15,17 @@ import { fetchUnreadNotificationsCount } from "@/services/notifications/notifica
 import { useStaffWorkingStatus } from "@/hooks/staff/useStaffWorkingStatus";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
-import { UserRole } from "@/types/user";
+import { useEffectiveRole } from "@/hooks/useEffectiveRole";
 import { dropdownNavItems } from "../sidebar/sidebarNavConfig";
 
 interface UserMenuProps {
   isAuthenticated: boolean;
   unreadMessages: any[];
   unreadNotifications: any[];
-  userRole?: UserRole | null;
 }
 
-const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications, userRole }: UserMenuProps) => {
+const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications }: UserMenuProps) => {
+  const { effectiveRole } = useEffectiveRole();
   const { data: staffStatus } = useStaffWorkingStatus();
   const isWorking = staffStatus?.isWorking || false;
   
@@ -46,15 +46,9 @@ const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications, userRo
     enabled: isAuthenticated,
   });
   
-  const { data: notificationCount = 0 } = useQuery({
-    queryKey: ['unreadNotificationsCount'],
-    queryFn: fetchUnreadNotificationsCount,
-    enabled: isAuthenticated,
-  });
-  
   const shouldPulse = 
     unreadMessages.length > 0 || 
-    notificationCount > 0;
+    unreadNotifications.length > 0;
   
   const getDisplayName = () => {
     if (!profileData) return 'Account';
@@ -69,57 +63,11 @@ const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications, userRo
       return 'Account';
     }
   };
-  
-  type NavItem = {
-    icon: React.ElementType;
-    label: string;
-    path: string;
-    badge: number | null;
-    showForRoles: UserRole[];
-  };
-  
-  const coreNavItems: NavItem[] = [
-    { 
-      icon: Bell, 
-      label: 'Notifications', 
-      path: '/dashboard/notifications', 
-      badge: notificationCount > 0 ? notificationCount : null,
-      showForRoles: ['individual', 'business', 'staff']
-    },
-    { 
-      icon: Users, 
-      label: 'Contacts', 
-      path: '/dashboard/contacts', 
-      badge: null,
-      showForRoles: ['individual', 'business', 'staff']
-    },
-    {
-      icon: HeartHandshake,
-      label: 'Subscribers',
-      path: '/dashboard/subscribers',
-      badge: null,
-      showForRoles: ['business']
-    }
-  ];
-  
-  const configNavItems: NavItem[] = dropdownNavItems.map(item => ({
-    icon: item.icon,
-    label: item.label,
-    path: `/dashboard/${item.path}`,
-    badge: item.badge || null,
-    showForRoles: item.showFor as UserRole[]
-  }));
-  
-  const messagesItem = configNavItems.find(item => item.label === 'Messages');
-  if (messagesItem) {
-    messagesItem.badge = unreadMessages.length > 0 ? unreadMessages.length : null;
-  }
-  
-  const allNavItems = [...coreNavItems, ...configNavItems];
-  const filteredNavItems = allNavItems.filter(item => {
-    if (!userRole) return false;
-    
-    return item.showForRoles.includes(userRole);
+
+  // Filter navigation items based on user role
+  const filteredNavItems = dropdownNavItems.filter(item => {
+    if (!effectiveRole) return false;
+    return item.showFor.includes(effectiveRole);
   });
 
   return (
@@ -156,12 +104,12 @@ const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications, userRo
           {filteredNavItems.map((item, index) => (
             <Link 
               key={index}
-              to={item.path}
+              to={`/dashboard/${item.path}`}
               className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
             >
               <div className="relative">
                 <item.icon className="h-4 w-4" />
-                {item.badge && (
+                {item.badge && item.badge > 0 && (
                   <span className="absolute -top-1 -right-1 h-3 w-3 bg-destructive rounded-full flex items-center justify-center text-[8px] text-white font-bold">
                     {item.badge > 9 ? '9+' : item.badge}
                   </span>
@@ -173,7 +121,6 @@ const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications, userRo
         </div>
         
         <DropdownMenuSeparator />
-        
         <AccountMenuItems isAuthenticated={isAuthenticated} />
       </DropdownMenuContent>
     </DropdownMenu>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Menu, X, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -169,8 +168,7 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
           <UserMenu 
             isAuthenticated={isAuthenticated} 
             unreadMessages={unreadMessages} 
-            unreadNotifications={unreadNotifications} 
-            userRole={userRole}
+            unreadNotifications={unreadNotifications}
           />
         </div>
       </div>
