@@ -43,7 +43,7 @@ describe('useStaffListOperations', () => {
         <QueryClientProvider client={queryClient}>
           {children}
         </QueryClientProvider>
-      ),
+      )
     });
 
     expect(result.current.deleteStaff).toBeDefined();
@@ -64,7 +64,7 @@ describe('useStaffListOperations', () => {
         <QueryClientProvider client={queryClient}>
           {children}
         </QueryClientProvider>
-      ),
+      )
     });
 
     const deletePromise = result.current.deleteStaff.mutateAsync('123');
@@ -86,7 +86,7 @@ describe('useStaffListOperations', () => {
         <QueryClientProvider client={queryClient}>
           {children}
         </QueryClientProvider>
-      ),
+      )
     });
 
     const togglePromise = result.current.toggleStaffStatus.mutateAsync({ 

@@ -17,6 +17,47 @@ vi.mock('../StaffListContent', () => ({
   )
 }));
 
+vi.mock('../useStaffListOperations', () => ({
+  useStaffListOperations: () => ({
+    deleteStaff: { mutateAsync: vi.fn() },
+    toggleStaffStatus: { mutateAsync: vi.fn() },
+    isSyncing: false,
+    syncStaffRecords: vi.fn()
+  })
+}));
+
+vi.mock('../../staff-list/StaffMembersLoading', () => ({
+  default: () => <div>Loading staff members...</div>
+}));
+
+vi.mock('../../staff-list/StaffMembersError', () => ({
+  default: ({ errorMessage, onRetry, onSync }) => (
+    <div>
+      Error: {errorMessage}
+      <button onClick={onRetry}>Retry</button>
+      <button onClick={onSync}>Sync</button>
+    </div>
+  )
+}));
+
+vi.mock('../../staff-list/EmptyStaffState', () => ({
+  default: ({ onAddStaffClick, onSyncStaffClick }) => (
+    <div>
+      No staff members found
+      <button onClick={onAddStaffClick}>Add Staff</button>
+      <button onClick={onSyncStaffClick}>Sync</button>
+    </div>
+  )
+}));
+
+vi.mock('../../staff-list/DeleteStaffDialog', () => ({
+  default: () => <div>Delete Staff Dialog</div>
+}));
+
+vi.mock('../../staff-list/ToggleStatusDialog', () => ({
+  default: () => <div>Toggle Status Dialog</div>
+}));
+
 describe('StaffList', () => {
   let queryClient: QueryClient;
 
@@ -81,7 +122,7 @@ describe('StaffList', () => {
       </QueryClientProvider>
     );
 
-    expect(screen.getByText(/loading/i)).toBeInTheDocument();
+    expect(screen.getByText(/loading staff members/i)).toBeInTheDocument();
   });
 
   it('displays error state', () => {
@@ -115,6 +156,6 @@ describe('StaffList', () => {
       </QueryClientProvider>
     );
 
-    expect(screen.getByText(/no staff members/i)).toBeInTheDocument();
+    expect(screen.getByText(/no staff members found/i)).toBeInTheDocument();
   });
 });

@@ -41,7 +41,7 @@ describe('useStaffStatus', () => {
         <QueryClientProvider client={queryClient}>
           {children}
         </QueryClientProvider>
-      ),
+      )
     });
 
     expect(result.current.isLoading).toBe(true);
@@ -67,7 +67,7 @@ describe('useStaffStatus', () => {
         <QueryClientProvider client={queryClient}>
           {children}
         </QueryClientProvider>
-      ),
+      )
     });
 
     await waitFor(() => {
@@ -92,7 +92,7 @@ describe('useStaffStatus', () => {
         <QueryClientProvider client={queryClient}>
           {children}
         </QueryClientProvider>
-      ),
+      )
     });
 
     await waitFor(() => {

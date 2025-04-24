@@ -1,90 +1,57 @@
 
-import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
-import { syncStaffBusinessContacts } from "@/services/contacts/contactSync";
+import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/components/ui/use-toast';
 
-interface UseStaffSyncOptions {
+interface UseStaffSyncProps {
   onSuccess?: () => void;
 }
 
-export const useStaffSync = ({ onSuccess }: UseStaffSyncOptions = {}) => {
+export const useStaffSync = ({ onSuccess }: UseStaffSyncProps = {}) => {
   const [isSyncing, setIsSyncing] = useState(false);
+  const queryClient = useQueryClient();
   const { toast } = useToast();
 
   const syncStaffRecords = async () => {
+    setIsSyncing(true);
     try {
-      setIsSyncing(true);
-      
-      // First try the direct DB function approach
-      const syncResult = await syncStaffBusinessContacts();
-      
-      if (syncResult.success) {
-        toast({
-          title: "Staff Contacts Synced",
-          description: "Staff contacts have been successfully synchronized.",
-          variant: "default"
-        });
-        
-        if (onSuccess) {
-          onSuccess();
-        }
-        return;
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        throw new Error('Not authenticated');
       }
-      
-      // If the direct approach failed, fall back to the edge function
-      const { data: session } = await supabase.auth.getSession();
-      if (!session?.session) {
-        toast({
-          title: "Error",
-          description: "You must be signed in to sync staff records",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      const { data, error } = await supabase.functions.invoke("sync-staff-records", {
+
+      const response = await fetch('/api/sync-staff-records', {
+        method: 'POST',
         headers: {
-          Authorization: `Bearer ${session.session.access_token}`
+          'Authorization': `Bearer ${sessionData.session.access_token}`,
+          'Content-Type': 'application/json'
         }
       });
-      
-      if (error) {
-        console.error("Error syncing staff records:", error);
-        toast({
-          title: "Sync Failed",
-          description: error.message || "Failed to sync staff records",
-          variant: "destructive"
-        });
-        return;
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to sync staff records');
       }
+
+      const result = await response.json();
       
-      if (data.success) {
-        console.log("Sync successful:", data);
-        const syncedCount = data.data?.synced?.length || 0;
-        const errorCount = data.data?.errors?.length || 0;
-        
-        toast({
-          title: "Staff Records Synced",
-          description: `Successfully synced ${syncedCount} staff records${errorCount > 0 ? `, with ${errorCount} errors` : ''}.`,
-          variant: "default"
-        });
-        
-        if (onSuccess) {
-          onSuccess();
-        }
-      } else {
-        toast({
-          title: "Sync Failed",
-          description: data.error || "Failed to sync staff records",
-          variant: "destructive"
-        });
-      }
-    } catch (err) {
-      console.error("Error in sync operation:", err);
       toast({
-        title: "Sync Error",
-        description: "An unexpected error occurred during sync",
+        title: "Staff Synchronized",
+        description: `Successfully synchronized ${result.data?.synced?.length || 0} staff records.`
+      });
+      
+      // Refresh staff list
+      queryClient.invalidateQueries({ queryKey: ['staffMembers'] });
+      
+      // Call onSuccess callback if provided
+      if (onSuccess) {
+        onSuccess();
+      }
+    } catch (error: any) {
+      toast({
+        title: "Sync Failed",
+        description: error.message || "Failed to sync staff records",
         variant: "destructive"
       });
     } finally {
