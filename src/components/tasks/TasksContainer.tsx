@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Task } from "@/types/task.types";
 import { Button } from "@/components/ui/button";
@@ -28,6 +27,10 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
   const [pendingTaskId, setPendingTaskId] = useState<string | null>(null);
   const { completeTask, isProcessing } = useTaskOperations(userRole);
   
+  // Filter tasks based on completion status
+  const activeTasks = tasks.filter(task => task.status !== 'completed');
+  const completedTasks = tasks.filter(task => task.status === 'completed');
+  
   const handleCompleteTask = async (taskId: string) => {
     try {
       setPendingTaskId(taskId);
@@ -46,12 +49,17 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
         <div className="text-center space-y-3">
           <h3 className="text-lg font-medium">No tasks found</h3>
           <p className="text-muted-foreground max-w-md">
-            You don't have any tasks yet. Create your first task to get started.
+            You don't have any {activeTab === 'completed' ? 'completed ' : ''}tasks yet.
+            {activeTab !== 'completed' && (
+              <>Create your first task to get started.</>
+            )}
           </p>
-          <Button onClick={onCreateTask} className="mt-4">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Create Task
-          </Button>
+          {activeTab !== 'completed' && (
+            <Button onClick={onCreateTask} className="mt-4">
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Create Task
+            </Button>
+          )}
         </div>
       </div>
     );
@@ -59,7 +67,7 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
   
   return (
     <TaskGrid 
-      tasks={tasks}
+      tasks={activeTab === 'completed' ? completedTasks : activeTasks}
       onEdit={onEdit}
       onDelete={onDelete}
       onComplete={handleCompleteTask}

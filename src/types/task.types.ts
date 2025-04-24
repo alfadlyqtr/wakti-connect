@@ -1,8 +1,7 @@
-
 // Basic task status and priority types
 export type TaskStatus = "pending" | "in-progress" | "completed" | "snoozed" | "late" | "archived";
 export type TaskPriority = "urgent" | "high" | "medium" | "normal";
-export type TaskTab = "my-tasks" | "reminders";
+export type TaskTab = "my-tasks" | "completed" | "reminders";
 export type ArchiveReason = "deleted" | "canceled" | string;
 
 // Interface for nested subtasks used by AI parsing

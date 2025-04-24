@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { TaskPriority, TaskStatus, SubTask, Task } from "@/types/task.types";
@@ -12,11 +11,11 @@ import { Stamp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const PRIORITY_COLORS: Record<string, string> = {
-  urgent: "border-l-wakti-gold bg-wakti-gold/5 hover:bg-wakti-gold/10 dark:bg-[#282113]",
-  high: "border-l-wakti-navy bg-wakti-navy/5 hover:bg-wakti-navy/10 dark:bg-[#25210f]",
-  medium: "border-l-wakti-blue bg-wakti-blue/5 hover:bg-wakti-blue/10 dark:bg-[#18281b]",
-  normal: "border-l-green-500 bg-green-50/60 hover:bg-green-100/80 dark:bg-[#212229]",
-  archived: "border-l-gray-300 bg-[#f6f6f7] hover:bg-gray-100 dark:bg-[#212229]",
+  urgent: "border-l-wakti-gold bg-gradient-to-br from-wakti-gold/10 via-white/95 to-wakti-gold/5 hover:from-wakti-gold/15 hover:to-wakti-gold/10 dark:from-[#282113] dark:to-[#1a1608]",
+  high: "border-l-wakti-navy bg-gradient-to-br from-wakti-navy/10 via-white/95 to-wakti-navy/5 hover:from-wakti-navy/15 hover:to-wakti-navy/10 dark:from-[#25210f] dark:to-[#1a1608]",
+  medium: "border-l-wakti-blue bg-gradient-to-br from-wakti-blue/10 via-white/95 to-wakti-blue/5 hover:from-wakti-blue/15 hover:to-wakti-blue/10 dark:from-[#18281b] dark:to-[#121b13]",
+  normal: "border-l-green-500 bg-gradient-to-br from-green-100/80 via-white/95 to-green-50/60 hover:from-green-100 hover:to-green-50/80 dark:from-[#212229] dark:to-[#1a1b21]",
+  archived: "border-l-gray-300 bg-gradient-to-br from-gray-100/80 via-white/95 to-gray-50/60 hover:from-gray-100 hover:to-gray-50/80 dark:from-[#212229] dark:to-[#1a1b21]",
 };
 
 interface TaskCardProps {
@@ -111,22 +110,25 @@ const TaskCard: React.FC<TaskCardProps> = ({
       <Card 
         className={cn(
           "group relative overflow-hidden border-l-4 transition-all duration-300",
-          "hover:shadow-lg dark:hover:shadow-gray-800/30",
+          "hover:shadow-xl dark:hover:shadow-black/30",
           "hover:-translate-y-1",
-          "hover:ring-1 hover:ring-primary/20",
+          "hover:ring-2 hover:ring-primary/20",
           priorityClass,
-          isOverdue ? 'ring-1 ring-red-400 dark:ring-red-500/50' : '',
-          isCompleted ? 'opacity-75 hover:opacity-90' : ''
+          isOverdue ? 'ring-2 ring-red-400 dark:ring-red-500/50' : '',
+          isCompleted ? 'opacity-85 hover:opacity-95' : ''
         )}
         onClick={handleCardClick}
       >
         {isCompleted && (
           <div className="absolute -right-8 top-6 rotate-45 transform">
-            <Stamp className="h-24 w-24 text-green-500/20" strokeWidth={0.5} />
+            <Stamp 
+              className="h-24 w-24 text-primary/30 dark:text-primary/20" 
+              strokeWidth={1}
+            />
           </div>
         )}
         
-        <div className="p-3 flex flex-col h-full relative z-10">
+        <div className="p-4 flex flex-col h-full relative z-10">
           <div className="flex justify-between items-start">
             <TaskCardHeader 
               title={title}

@@ -14,8 +14,9 @@ const TaskTabs = ({ activeTab, onTabChange }: TaskTabsProps) => {
   
   return (
     <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-      <TabsList className="grid grid-cols-2 w-full sm:w-[400px]">
-        <TabsTrigger value="my-tasks">My Tasks</TabsTrigger>
+      <TabsList className="grid grid-cols-3 w-full sm:w-[600px]">
+        <TabsTrigger value="my-tasks">Active Tasks</TabsTrigger>
+        <TabsTrigger value="completed">Completed</TabsTrigger>
         <TabsTrigger value="reminders">Reminders</TabsTrigger>
       </TabsList>
     </Tabs>
