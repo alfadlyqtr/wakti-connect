@@ -25,13 +25,6 @@ const DeleteStaffDialog: React.FC<DeleteStaffDialogProps> = ({
   selectedStaff,
   onSuccess
 }) => {
-  const handleConfirmDelete = () => {
-    // This would be where you call an API to delete the staff member
-    onOpenChange(false);
-    // After successful deletion, call onSuccess to refresh the staff list
-    onSuccess();
-  };
-
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
@@ -44,7 +37,7 @@ const DeleteStaffDialog: React.FC<DeleteStaffDialogProps> = ({
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction
-            onClick={handleConfirmDelete}
+            onClick={onSuccess}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
             Delete

@@ -2,9 +2,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
+import { useState } from "react";
 
 export const useStaffListOperations = () => {
   const queryClient = useQueryClient();
+  const [isSyncing, setIsSyncing] = useState(false);
   
   // Delete staff mutation
   const deleteStaff = useMutation({
@@ -59,9 +61,53 @@ export const useStaffListOperations = () => {
       });
     }
   });
+
+  // Sync staff records function
+  const syncStaffRecords = async () => {
+    setIsSyncing(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        throw new Error('Not authenticated');
+      }
+
+      const response = await fetch('/api/sync-staff-records', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${sessionData.session.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to sync staff records');
+      }
+
+      const result = await response.json();
+      
+      toast({
+        title: "Staff Synchronized",
+        description: `Successfully synchronized ${result.data?.synced?.length || 0} staff records.`
+      });
+      
+      // Refresh staff list
+      queryClient.invalidateQueries({ queryKey: ['staffMembers'] });
+    } catch (error: any) {
+      toast({
+        title: "Sync Failed",
+        description: error.message || "Failed to sync staff records",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
   
   return {
     deleteStaff,
-    toggleStaffStatus
+    toggleStaffStatus,
+    isSyncing,
+    syncStaffRecords
   };
 };

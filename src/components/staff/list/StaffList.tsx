@@ -3,9 +3,10 @@ import React, { useState } from "react";
 import { StaffMember } from "@/types/staff";
 import StaffListHeader from "./StaffListHeader";
 import StaffListContent from "./StaffListContent";
-import DeleteStaffDialog from "./DeleteStaffDialog";
-import ToggleStatusDialog from "./ToggleStatusDialog";
+import DeleteStaffDialog from "../staff-list/DeleteStaffDialog";
+import ToggleStatusDialog from "../staff-list/ToggleStatusDialog";
 import { useStaffListOperations } from "./useStaffListOperations";
+import { useStaffDialogs } from "./hooks/useStaffDialogs";
 
 interface StaffListProps {
   staffMembers: StaffMember[];
@@ -22,21 +23,25 @@ export const StaffList: React.FC<StaffListProps> = ({
   onEdit,
   onRefresh
 }) => {
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [toggleStatusConfirmOpen, setToggleStatusConfirmOpen] = useState(false);
-  const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
+  // Use the custom hook for dialogs management
+  const { 
+    deleteConfirmOpen, 
+    toggleStatusConfirmOpen, 
+    selectedStaff, 
+    openDeleteDialog, 
+    openToggleStatusDialog, 
+    closeDialogs, 
+    setDeleteConfirmOpen, 
+    setToggleStatusConfirmOpen 
+  } = useStaffDialogs();
   
-  const { isSyncing, syncStaffRecords } = useStaffListOperations();
-
-  const handleDeleteClick = (staff: StaffMember) => {
-    setSelectedStaff(staff);
-    setDeleteConfirmOpen(true);
-  };
-
-  const handleToggleStatusClick = (staff: StaffMember) => {
-    setSelectedStaff(staff);
-    setToggleStatusConfirmOpen(true);
-  };
+  // Use the operations hook for staff operations
+  const { 
+    isSyncing, 
+    syncStaffRecords, 
+    deleteStaff, 
+    toggleStaffStatus 
+  } = useStaffListOperations();
 
   return (
     <div className="space-y-4">
@@ -52,31 +57,31 @@ export const StaffList: React.FC<StaffListProps> = ({
         error={error}
         onAddStaff={() => onEdit("")}
         onEdit={onEdit}
-        onDelete={handleDeleteClick}
-        onToggleStatus={handleToggleStatusClick}
+        onDelete={openDeleteDialog}
+        onToggleStatus={openToggleStatusDialog}
         onRefresh={onRefresh}
       />
 
       <DeleteStaffDialog
-        staffToDelete={selectedStaff}
-        onOpenChange={() => setDeleteConfirmOpen(false)}
-        onConfirmDelete={() => {
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        selectedStaff={selectedStaff}
+        onSuccess={() => {
           if (selectedStaff) {
-            // Handle delete
-            setDeleteConfirmOpen(false);
-            setSelectedStaff(null);
+            deleteStaff.mutate(selectedStaff.id);
+            closeDialogs();
             onRefresh();
           }
         }}
       />
 
       <ToggleStatusDialog
-        staffToToggle={selectedStaff}
-        onOpenChange={() => setToggleStatusConfirmOpen(false)}
-        onConfirmToggle={(staffId, newStatus) => {
-          // Handle status toggle
-          setToggleStatusConfirmOpen(false);
-          setSelectedStaff(null);
+        open={toggleStatusConfirmOpen}
+        onOpenChange={setToggleStatusConfirmOpen}
+        selectedStaff={selectedStaff}
+        onSuccess={(staffId, newStatus) => {
+          toggleStaffStatus.mutate({ staffId, newStatus });
+          closeDialogs();
           onRefresh();
         }}
       />

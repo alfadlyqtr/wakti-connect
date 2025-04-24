@@ -16,7 +16,7 @@ interface ToggleStatusDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   selectedStaff: StaffMember | null;
-  onSuccess: () => void;
+  onSuccess: (staffId: string, newStatus: string) => void;
 }
 
 const ToggleStatusDialog: React.FC<ToggleStatusDialogProps> = ({
@@ -25,11 +25,12 @@ const ToggleStatusDialog: React.FC<ToggleStatusDialogProps> = ({
   selectedStaff,
   onSuccess
 }) => {
+  const newStatus = selectedStaff?.status === 'active' ? 'suspended' : 'active';
+  
   const handleConfirmToggle = () => {
-    // This would be where you call an API to toggle the staff member's status
-    onOpenChange(false);
-    // After successful status toggle, call onSuccess to refresh the staff list
-    onSuccess();
+    if (selectedStaff) {
+      onSuccess(selectedStaff.id, newStatus);
+    }
   };
 
   return (
