@@ -1,3 +1,4 @@
+
 import React from "react";
 import { createBrowserRouter, RouteObject } from "react-router-dom";
 import { publicRoutes } from "./routes/publicRoutes";
@@ -195,7 +196,7 @@ export const router = createBrowserRouter([
     children: businessRoutes,
   },
   
-  // Dashboard routes - now properly protected and with children defined inline
+  // Dashboard routes with role-based protection
   {
     path: "/dashboard",
     element: (
@@ -216,7 +217,7 @@ export const router = createBrowserRouter([
     children: dashboardRoutes,
   },
   
-  // Super Admin Dashboard routes - kept untouched
+  // Super Admin Dashboard routes
   {
     path: "/gohabsgo",
     element: (
@@ -229,7 +230,6 @@ export const router = createBrowserRouter([
               <Toaster />
               <Sonner />
               <SuperAdminLayout>
-                {/* This fixes the children prop error by explicitly passing an outlet placeholder */}
                 <></>
               </SuperAdminLayout>
             </TaskProvider>
