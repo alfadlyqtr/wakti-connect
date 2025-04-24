@@ -3,6 +3,7 @@ import React from "react";
 import { format } from "date-fns";
 import { TaskStatus } from "@/types/task.types";
 import { CheckCircle, CircleSlash } from "lucide-react";
+import { cn } from "@/lib/utils";
  
 interface TaskCardFooterProps {
   id?: string;
@@ -20,9 +21,7 @@ export const TaskCardFooter: React.FC<TaskCardFooterProps> = ({
   id,
   status,
   completedDate,
-  dueDate,
   onStatusChange,
-  onEdit,
   subtaskCount = 0,
   completedSubtaskCount = 0,
   isCompleted
@@ -34,25 +33,40 @@ export const TaskCardFooter: React.FC<TaskCardFooterProps> = ({
   };
 
   return (
-    <div className="text-xs text-muted-foreground flex items-center justify-between">
+    <div className={cn(
+      "text-xs text-muted-foreground flex items-center justify-between",
+      "transition-colors duration-200"
+    )}>
       {subtaskCount > 0 && (
-        <div>
+        <div className={cn(
+          "px-2 py-0.5 rounded-full",
+          "bg-muted/50 transition-colors duration-200",
+          "group-hover:bg-muted"
+        )}>
           {completedSubtaskCount}/{subtaskCount} subtasks
         </div>
       )}
       
       {completedDate && (
-        <div>
+        <div className="text-muted-foreground/70">
           Completed on {format(new Date(completedDate), "MMM d, yyyy")}
         </div>
       )}
       
       {onStatusChange && id && (
         <button
-          className="flex items-center gap-1 hover:text-foreground transition-colors ml-auto"
+          className={cn(
+            "flex items-center gap-1 transition-colors duration-200",
+            "hover:text-foreground ml-auto",
+            "group-hover:text-primary"
+          )}
           onClick={handleMarkComplete}
         >
-          {isCompleted ? <CircleSlash className="h-3 w-3" /> : <CheckCircle className="h-3 w-3" />}
+          {isCompleted ? (
+            <CircleSlash className="h-3 w-3" />
+          ) : (
+            <CheckCircle className="h-3 w-3" />
+          )}
           {isCompleted ? "Mark Pending" : "Mark Complete"}
         </button>
       )}

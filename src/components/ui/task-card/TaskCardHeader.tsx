@@ -1,3 +1,4 @@
+
 import React from "react";
 import {
   AlertTriangle,
@@ -53,14 +54,18 @@ export const TaskCardHeader: React.FC<TaskCardHeaderProps> = ({
       <div className="flex-1">
         <h3
           className={cn(
-            "text-base font-medium line-clamp-2",
-            isCompleted && "line-through text-muted-foreground"
+            "text-base font-medium line-clamp-2 transition-colors duration-200",
+            isCompleted && "line-through text-muted-foreground/70"
           )}
         >
           {title}
         </h3>
         <div className="flex items-center mt-1 gap-2">
-          <span className="flex items-center gap-1 text-xs">
+          <span className={cn(
+            "flex items-center gap-1 text-xs px-2 py-0.5 rounded-full",
+            "bg-muted/50 transition-colors duration-200",
+            "group-hover:bg-muted"
+          )}>
             {getPriorityIcon()}
             <span className="capitalize">{getPriorityLabel(priority)}</span>
           </span>

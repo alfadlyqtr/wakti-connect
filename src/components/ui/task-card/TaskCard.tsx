@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { TaskPriority, TaskStatus, SubTask, Task } from "@/types/task.types";
@@ -7,9 +8,11 @@ import { TaskCardMenu } from "./TaskCardMenu";
 import { TaskCardFooter } from "./TaskCardFooter";
 import { TaskDueDate } from "./TaskDueDate";
 import { TaskDetailDialog } from "./TaskDetailDialog";
+import { Stamp } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const PRIORITY_COLORS: Record<string, string> = {
-  urgent: "border-l-wakti-gold bg-wakti-gold/10 hover:bg-wakti-gold/20 dark:bg-[#282113]",
+  urgent: "border-l-wakti-gold bg-wakti-gold/5 hover:bg-wakti-gold/10 dark:bg-[#282113]",
   high: "border-l-wakti-navy bg-wakti-navy/5 hover:bg-wakti-navy/10 dark:bg-[#25210f]",
   medium: "border-l-wakti-blue bg-wakti-blue/5 hover:bg-wakti-blue/10 dark:bg-[#18281b]",
   normal: "border-l-green-500 bg-green-50/60 hover:bg-green-100/80 dark:bg-[#212229]",
@@ -106,19 +109,24 @@ const TaskCard: React.FC<TaskCardProps> = ({
   return (
     <>
       <Card 
-        className={`group overflow-hidden border-l-4 hover:shadow-lg dark:hover:shadow-gray-800/30 transition-all duration-300
-          ${priorityClass} 
-          ${isOverdue ? 'ring-1 ring-red-400 dark:ring-red-500/50' : ''}
-          ${isCompleted ? 'opacity-75 hover:opacity-90' : ''}
-          cursor-pointer
-          hover:-translate-y-1
-          hover:border-wakti-blue/20
-          hover:shadow-[0_8px_16px_-6px_rgba(0,83,195,0.1)]
-          dark:hover:shadow-[0_8px_16px_-6px_rgba(0,0,0,0.2)]
-        `}
+        className={cn(
+          "group relative overflow-hidden border-l-4 transition-all duration-300",
+          "hover:shadow-lg dark:hover:shadow-gray-800/30",
+          "hover:-translate-y-1",
+          "hover:ring-1 hover:ring-primary/20",
+          priorityClass,
+          isOverdue ? 'ring-1 ring-red-400 dark:ring-red-500/50' : '',
+          isCompleted ? 'opacity-75 hover:opacity-90' : ''
+        )}
         onClick={handleCardClick}
       >
-        <div className="p-3 flex flex-col h-full">
+        {isCompleted && (
+          <div className="absolute -right-8 top-6 rotate-45 transform">
+            <Stamp className="h-24 w-24 text-green-500/20" strokeWidth={0.5} />
+          </div>
+        )}
+        
+        <div className="p-3 flex flex-col h-full relative z-10">
           <div className="flex justify-between items-start">
             <TaskCardHeader 
               title={title}
@@ -145,9 +153,11 @@ const TaskCard: React.FC<TaskCardProps> = ({
           
           <CardContent className="px-0 py-2 flex-grow">
             {description && (
-              <p className={`text-sm text-muted-foreground line-clamp-2 mb-3 group-hover:text-muted-foreground/80 transition-colors
-                ${isCompleted ? 'text-muted-foreground/70' : ''}`}
-              >
+              <p className={cn(
+                "text-sm text-muted-foreground line-clamp-2 mb-3",
+                "group-hover:text-muted-foreground/80 transition-colors",
+                isCompleted ? 'text-muted-foreground/70' : ''
+              )}>
                 {description}
               </p>
             )}
