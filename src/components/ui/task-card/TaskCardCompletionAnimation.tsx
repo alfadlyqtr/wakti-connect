@@ -29,16 +29,17 @@ export const TaskCardCompletionAnimation: React.FC<TaskCardCompletionAnimationPr
       
       // Single burst of confetti with reduced particles
       confetti({
-        particleCount: 50,
+        particleCount: 15,
         spread: 70,
         origin: { y: 0.6 },
         colors: ['#0053c3', '#ffc529', '#000080', '#F5E6D3'],
         disableForReducedMotion: true,
         scalar: 1,
-        gravity: 1.5 // Faster fall
+        gravity: 1.5, // Faster fall
+        ticks: 300 // Control animation duration more precisely
       });
       
-      // Play completion sound
+      // Play completion sound once
       playTaskCompletionSound(0.7);
       
       // Auto close after 5 seconds
@@ -51,7 +52,7 @@ export const TaskCardCompletionAnimation: React.FC<TaskCardCompletionAnimationPr
     <AnimatePresence>
       {showAnimation && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-[2px]"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/20"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -63,25 +64,21 @@ export const TaskCardCompletionAnimation: React.FC<TaskCardCompletionAnimationPr
             initial={{ scale: 0.8, y: 20, opacity: 0 }}
             animate={{ scale: 1, y: 0, opacity: 1 }}
             exit={{ scale: 0.8, y: 20, opacity: 0 }}
-            transition={{ type: "spring", damping: 20, stiffness: 300 }}
+            transition={{ type: "spring", damping: 25, stiffness: 400 }}
             style={{ willChange: 'transform' }}
           >
             {isAheadOfTime ? (
               <>
                 <motion.div
                   animate={{ scale: [1, 1.1, 1] }}
-                  transition={{ duration: 0.5 }}
+                  transition={{ duration: 0.4 }}
                   className="text-yellow-500 mb-4"
                 >
                   <Award size={60} className="text-wakti-gold" />
                 </motion.div>
-                <motion.h2 
-                  className="text-xl font-bold mb-2 text-center"
-                  animate={{ y: [10, 0] }}
-                  transition={{ duration: 0.3 }}
-                >
+                <h2 className="text-xl font-bold mb-2 text-center">
                   Amazing Work!
-                </motion.h2>
+                </h2>
                 <p className="text-center text-muted-foreground">
                   Task completed ahead of schedule!
                 </p>
@@ -90,18 +87,14 @@ export const TaskCardCompletionAnimation: React.FC<TaskCardCompletionAnimationPr
               <>
                 <motion.div
                   animate={{ scale: [1, 1.1, 1] }}
-                  transition={{ duration: 0.5 }}
+                  transition={{ duration: 0.4 }}
                   className="text-green-500 mb-4"
                 >
                   <CheckCircle2 size={60} />
                 </motion.div>
-                <motion.h2 
-                  className="text-xl font-bold mb-2"
-                  animate={{ y: [10, 0] }}
-                  transition={{ duration: 0.3 }}
-                >
+                <h2 className="text-xl font-bold mb-2">
                   Task Completed!
-                </motion.h2>
+                </h2>
                 <p className="text-center text-muted-foreground">
                   Well done on completing your task
                 </p>

@@ -1,6 +1,7 @@
+
 // Audio utilities for playing reminder sounds
 
-// Default audio URLs - we use the correct notification sounds
+// Default audio URLs
 const DEFAULT_NOTIFICATION_SOUND = '/sounds/wakti reminder sound.mp3';
 const DEFAULT_REMINDER_SOUND = '/sounds/wakti reminder sound.mp3';
 const TASK_COMPLETION_SOUND = '/sounds/wakto task completed sound.mp3';
@@ -47,6 +48,7 @@ export const playNotificationSound = async (options: {
       // Create source node
       const source = audioContext.createBufferSource();
       source.buffer = audioBuffer;
+      source.loop = false; // Ensure no looping
       
       // Create gain node for volume control
       const gainNode = audioContext.createGain();
@@ -59,14 +61,13 @@ export const playNotificationSound = async (options: {
       // Start the sound
       source.start(0);
       
-      // Fade out and stop after duration
-      gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
-      gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + (duration / 1000));
+      // Fade out starting at 2.5 seconds
+      const fadeOutStart = audioContext.currentTime + 2.5;
+      gainNode.gain.setValueAtTime(volume, fadeOutStart);
+      gainNode.gain.linearRampToValueAtTime(0, fadeOutStart + 0.5);
       
-      // Stop the source after duration
-      setTimeout(() => {
-        source.stop();
-      }, duration);
+      // Stop after duration
+      source.stop(audioContext.currentTime + (duration / 1000));
       
       return;
     }
@@ -74,8 +75,8 @@ export const playNotificationSound = async (options: {
     // Fallback to HTML5 Audio if Web Audio API isn't available
     const audio = new Audio(soundUrl);
     audio.volume = volume;
+    audio.loop = false;
     
-    // Play the sound
     await audio.play();
     
     // Stop after duration
@@ -89,6 +90,7 @@ export const playNotificationSound = async (options: {
     // Special handling for browser autoplay policy
     if (error instanceof DOMException && error.name === "NotAllowedError") {
       console.warn("Audio playback was prevented due to browser autoplay policy. User interaction is required.");
+      initializeAudio(); // Try to initialize audio context on user interaction
     }
   }
 };
@@ -99,7 +101,8 @@ export const playNotificationSound = async (options: {
 export const playTaskCompletionSound = async (volume: number = 0.7): Promise<void> => {
   return playNotificationSound({
     soundUrl: TASK_COMPLETION_SOUND,
-    volume
+    volume,
+    duration: 3000 // Fixed 3-second duration for completion sound
   });
 };
 
