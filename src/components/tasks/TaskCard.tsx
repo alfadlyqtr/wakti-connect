@@ -11,7 +11,8 @@ import {
   AlertCircle, 
   Edit, 
   Trash2,
-  MessageCircle
+  MessageCircle,
+  Stamp
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -23,72 +24,66 @@ interface TaskCardProps {
 }
 
 export function TaskCard({ task, onEdit, onDelete, onComplete }: TaskCardProps) {
-  // Format the due date if available
   const formattedDueDate = task.due_date 
     ? format(new Date(task.due_date), "MMM d, yyyy")
     : null;
   
-  // Determine if task is overdue
   const isOverdue = task.due_date && task.status !== "completed" && 
     new Date(task.due_date) < new Date() && task.status !== "archived";
-  
-  // Get status color
-  const getStatusColor = (status: TaskStatus) => {
-    switch (status) {
-      case "completed":
-        return "bg-green-500 text-white";
-      case "in-progress":
-        return "bg-blue-500 text-white";
-      case "late":
-        return "bg-red-500 text-white";
-      case "snoozed":
-        return "bg-amber-500 text-white";
-      case "archived":
-        return "bg-gray-500 text-white";
-      default:
-        return "bg-slate-500 text-white";
-    }
-  };
-  
-  // Get priority color
-  const getPriorityColor = () => {
-    switch (task.priority) {
-      case "urgent":
-        return "bg-red-100 text-red-800 border-red-300";
-      case "high":
-        return "bg-orange-100 text-orange-800 border-orange-300";
-      case "medium":
-        return "bg-blue-100 text-blue-800 border-blue-300";
-      case "normal":
-      default:
-        return "bg-green-100 text-green-800 border-green-300";
-    }
-  };
 
   return (
-    <Card className={`overflow-hidden ${isOverdue ? "border-red-500" : ""}`}>
-      <CardHeader className="p-3 pb-0 flex flex-row justify-between items-start">
-        <div>
-          <div className="font-medium line-clamp-1">{task.title}</div>
-          <div className="flex flex-wrap gap-2 mt-1">
-            <Badge variant="secondary" className={getStatusColor(task.status)}>
-              {task.status === "in-progress" ? "In Progress" : task.status}
-            </Badge>
-            <Badge variant="outline" className={getPriorityColor()}>
-              {task.priority}
-            </Badge>
+    <Card 
+      className={`group relative overflow-hidden transition-all duration-200 
+        hover:shadow-lg hover:-translate-y-1 
+        ${isOverdue ? "border-red-500" : ""}
+        ${task.status === "completed" ? "bg-gray-50/50 dark:bg-gray-900/50" : ""}
+      `}
+    >
+      {task.status === "completed" && (
+        <div className="absolute -right-8 -top-8 z-10">
+          <div className="relative h-20 w-20">
+            <div className="absolute inset-0 flex items-center justify-center transform rotate-45">
+              <Stamp className="h-12 w-12 text-green-500/20" strokeWidth={1} />
+            </div>
+          </div>
+        </div>
+      )}
+      
+      <CardHeader className="p-4 pb-0">
+        <div className="flex items-start justify-between">
+          <div className="space-y-1">
+            <h3 className={`font-medium line-clamp-1 pr-6 ${task.status === "completed" ? "text-muted-foreground" : ""}`}>
+              {task.title}
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="secondary" className={`
+                ${task.status === "completed" ? "bg-green-500" : 
+                  task.status === "in-progress" ? "bg-blue-500" : 
+                  "bg-slate-500"} text-white
+              `}>
+                {task.status === "in-progress" ? "In Progress" : task.status}
+              </Badge>
+              <Badge variant="outline" className={`
+                ${task.priority === "urgent" ? "border-red-500 text-red-600 bg-red-50 dark:bg-red-900/10" :
+                  task.priority === "high" ? "border-orange-500 text-orange-600 bg-orange-50 dark:bg-orange-900/10" :
+                  task.priority === "medium" ? "border-blue-500 text-blue-600 bg-blue-50 dark:bg-blue-900/10" :
+                  "border-green-500 text-green-600 bg-green-50 dark:bg-green-900/10"}
+              `}>
+                {task.priority}
+              </Badge>
+            </div>
           </div>
         </div>
       </CardHeader>
       
-      <CardContent className="p-3">
+      <CardContent className="p-4">
         {task.description && (
-          <p className="text-sm text-muted-foreground line-clamp-2">
+          <p className={`text-sm line-clamp-2 mb-3 ${task.status === "completed" ? "text-muted-foreground" : "text-muted-foreground"}`}>
             {task.description}
           </p>
         )}
         
-        <div className="mt-2 text-xs text-muted-foreground">
+        <div className="text-xs text-muted-foreground">
           {formattedDueDate && (
             <div className="flex items-center gap-1 mb-1">
               <Calendar className="w-3 h-3" />
@@ -110,12 +105,13 @@ export function TaskCard({ task, onEdit, onDelete, onComplete }: TaskCardProps) 
         </div>
       </CardContent>
       
-      <CardFooter className="p-3 pt-0 flex justify-between">
+      <CardFooter className="p-4 pt-0">
         <div className="flex gap-2">
           <Button 
             variant="outline" 
             size="sm"
             onClick={() => onEdit(task)}
+            className="transition-colors"
           >
             <Edit className="w-4 h-4 mr-1" /> Edit
           </Button>
@@ -124,7 +120,7 @@ export function TaskCard({ task, onEdit, onDelete, onComplete }: TaskCardProps) 
             <Button 
               variant="outline" 
               size="sm"
-              className="text-green-600 border-green-600 hover:bg-green-50"
+              className="text-green-600 border-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
               onClick={() => onComplete(task.id)}
             >
               <CheckCircle className="w-4 h-4 mr-1" /> Complete
@@ -135,7 +131,7 @@ export function TaskCard({ task, onEdit, onDelete, onComplete }: TaskCardProps) 
         <Button 
           variant="ghost" 
           size="sm"
-          className="text-red-600 hover:bg-red-50 hover:text-red-700"
+          className="text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900/20 ml-auto"
           onClick={() => onDelete(task.id)}
         >
           <Trash2 className="w-4 h-4" />
