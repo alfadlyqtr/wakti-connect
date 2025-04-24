@@ -1,6 +1,7 @@
 
-export { default as StaffInfoFields } from './StaffInfoFields';
-export { default as RoleIdentityFields } from './RoleIdentityFields';
-export { default as PermissionGroups } from './PermissionGroups';
-export { default as AvatarUpload } from './AvatarUpload';
-export { default as PermissionToggle } from './PermissionToggle';
+// Re-export from the original location while we migrate
+export { default as StaffInfoFields } from '@/components/staff/dialog/fields/StaffInfoFields';
+export { default as RoleIdentityFields } from '@/components/staff/dialog/fields/RoleIdentityFields';
+export { default as PermissionGroups } from '@/components/staff/dialog/fields/PermissionGroups';
+export { default as AvatarUpload } from '@/components/staff/dialog/fields/AvatarUpload';
+export { default as PermissionToggle } from '@/components/staff/dialog/fields/PermissionToggle';

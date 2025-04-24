@@ -1,7 +1,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { taskService } from '@/services/api/taskService';
-import { Task, TaskFormData } from '../types';
+import { Task, TaskFormData } from '@/types/task.types';
 import { toast } from '@/components/ui/use-toast';
 
 export const TASKS_QUERY_KEY = ['tasks'] as const;
@@ -24,7 +24,7 @@ export function useTasksQuery() {
   });
 
   const createTask = useMutation({
-    mutationFn: (taskData: TaskFormData) => taskService.createTask(taskData),
+    mutationFn: (taskData: TaskFormData) => taskService.createTask(taskData as any),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: TASKS_QUERY_KEY });
       toast({
@@ -43,7 +43,7 @@ export function useTasksQuery() {
 
   const updateTask = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<Task> }) =>
-      taskService.updateTask(id, data),
+      taskService.updateTask(id, data as any),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: TASKS_QUERY_KEY });
       toast({
