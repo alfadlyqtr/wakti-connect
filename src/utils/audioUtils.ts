@@ -1,4 +1,3 @@
-
 // Audio utilities for playing reminder sounds
 
 // Default audio URLs - we use the correct notification sounds
@@ -28,10 +27,12 @@ export const initializeAudio = (): void => {
 export const playNotificationSound = async (options: {
   soundUrl?: string;
   volume?: number;
+  duration?: number;
 } = {}): Promise<void> => {
   const { 
     soundUrl = DEFAULT_REMINDER_SOUND, 
-    volume = 0.7
+    volume = 0.7,
+    duration = 3000 // Default 3 seconds
   } = options;
   
   try {
@@ -55,8 +56,18 @@ export const playNotificationSound = async (options: {
       source.connect(gainNode);
       gainNode.connect(audioContext.destination);
       
-      // Play the sound
+      // Start the sound
       source.start(0);
+      
+      // Fade out and stop after duration
+      gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + (duration / 1000));
+      
+      // Stop the source after duration
+      setTimeout(() => {
+        source.stop();
+      }, duration);
+      
       return;
     }
     
@@ -66,6 +77,12 @@ export const playNotificationSound = async (options: {
     
     // Play the sound
     await audio.play();
+    
+    // Stop after duration
+    setTimeout(() => {
+      audio.pause();
+      audio.currentTime = 0;
+    }, duration);
   } catch (error) {
     console.error("Failed to play notification sound:", error);
     
