@@ -7,9 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 // Mock toast
 vi.mock('@/components/ui/use-toast', () => ({
-  useToast: () => ({
-    toast: vi.fn()
-  })
+  toast: vi.fn()
 }));
 
 // Mock Supabase client
