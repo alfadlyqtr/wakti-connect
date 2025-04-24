@@ -36,13 +36,13 @@ describe('useStaffListOperations', () => {
   });
 
   it('provides staff operations functions', () => {
-    const { result } = renderHook(() => useStaffListOperations(), {
-      wrapper: ({ children }) => (
-        <QueryClientProvider client={queryClient}>
-          {children}
-        </QueryClientProvider>
-      )
-    });
+    const wrapper = ({ children }) => (
+      <QueryClientProvider client={queryClient}>
+        {children}
+      </QueryClientProvider>
+    );
+
+    const { result } = renderHook(() => useStaffListOperations(), { wrapper });
 
     expect(result.current.deleteStaff).toBeDefined();
     expect(result.current.toggleStaffStatus).toBeDefined();
@@ -57,13 +57,13 @@ describe('useStaffListOperations', () => {
       select: vi.fn().mockResolvedValue({ data: { id: '123' }, error: null })
     }));
 
-    const { result } = renderHook(() => useStaffListOperations(), {
-      wrapper: ({ children }) => (
-        <QueryClientProvider client={queryClient}>
-          {children}
-        </QueryClientProvider>
-      )
-    });
+    const wrapper = ({ children }) => (
+      <QueryClientProvider client={queryClient}>
+        {children}
+      </QueryClientProvider>
+    );
+
+    const { result } = renderHook(() => useStaffListOperations(), { wrapper });
 
     const deletePromise = result.current.deleteStaff.mutateAsync('123');
     await expect(deletePromise).resolves.not.toThrow();
@@ -79,13 +79,13 @@ describe('useStaffListOperations', () => {
       })
     }));
 
-    const { result } = renderHook(() => useStaffListOperations(), {
-      wrapper: ({ children }) => (
-        <QueryClientProvider client={queryClient}>
-          {children}
-        </QueryClientProvider>
-      )
-    });
+    const wrapper = ({ children }) => (
+      <QueryClientProvider client={queryClient}>
+        {children}
+      </QueryClientProvider>
+    );
+
+    const { result } = renderHook(() => useStaffListOperations(), { wrapper });
 
     const togglePromise = result.current.toggleStaffStatus.mutateAsync({ 
       staffId: '123', 

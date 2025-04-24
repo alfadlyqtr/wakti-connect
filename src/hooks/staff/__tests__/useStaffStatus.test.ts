@@ -36,13 +36,13 @@ describe('useStaffStatus', () => {
   });
 
   it('returns loading state initially', () => {
-    const { result } = renderHook(() => useStaffStatus(), {
-      wrapper: ({ children }) => (
-        <QueryClientProvider client={queryClient}>
-          {children}
-        </QueryClientProvider>
-      )
-    });
+    const wrapper = ({ children }) => (
+      <QueryClientProvider client={queryClient}>
+        {children}
+      </QueryClientProvider>
+    );
+
+    const { result } = renderHook(() => useStaffStatus(), { wrapper });
 
     expect(result.current.isLoading).toBe(true);
   });
@@ -62,13 +62,13 @@ describe('useStaffStatus', () => {
       maybeSingle: vi.fn().mockResolvedValue({ data: mockData, error: null })
     }));
 
-    const { result } = renderHook(() => useStaffStatus(), {
-      wrapper: ({ children }) => (
-        <QueryClientProvider client={queryClient}>
-          {children}
-        </QueryClientProvider>
-      )
-    });
+    const wrapper = ({ children }) => (
+      <QueryClientProvider client={queryClient}>
+        {children}
+      </QueryClientProvider>
+    );
+
+    const { result } = renderHook(() => useStaffStatus(), { wrapper });
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -87,13 +87,13 @@ describe('useStaffStatus', () => {
       maybeSingle: vi.fn().mockRejectedValue(mockError)
     }));
 
-    const { result } = renderHook(() => useStaffStatus(), {
-      wrapper: ({ children }) => (
-        <QueryClientProvider client={queryClient}>
-          {children}
-        </QueryClientProvider>
-      )
-    });
+    const wrapper = ({ children }) => (
+      <QueryClientProvider client={queryClient}>
+        {children}
+      </QueryClientProvider>
+    );
+
+    const { result } = renderHook(() => useStaffStatus(), { wrapper });
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
