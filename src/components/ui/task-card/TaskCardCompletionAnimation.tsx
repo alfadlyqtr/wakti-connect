@@ -50,6 +50,14 @@ export const TaskCardCompletionAnimation: React.FC<TaskCardCompletionAnimationPr
       
       launchConfetti();
       
+      // Play completion sound if available
+      try {
+        const audio = new Audio('/sounds/task-complete.mp3');
+        audio.play().catch(e => console.log('Audio playback failed:', e));
+      } catch (error) {
+        console.log('Sound playback not supported');
+      }
+      
       // Auto close after 3 seconds
       const timer = setTimeout(handleClose, 3000);
       return () => clearTimeout(timer);
