@@ -10,8 +10,9 @@ export class BaseService {
     query?: Record<string, any>
   ): Promise<ApiResponse<T>> {
     try {
-      // Use type assertion to handle dynamic table names
-      let request = supabase.from(path as keyof Database['public']['Tables']).select('*');
+      // Use a more direct approach to avoid deep type instantiation
+      const from = supabase.from(path as string);
+      let request = from.select('*');
       
       if (query) {
         Object.entries(query).forEach(([key, value]) => {
@@ -42,7 +43,7 @@ export class BaseService {
   ): Promise<ApiResponse<T>> {
     try {
       const { data: responseData, error } = await supabase
-        .from(path as keyof Database['public']['Tables'])
+        .from(path as string)
         .insert(data)
         .select()
         .single();
@@ -69,7 +70,7 @@ export class BaseService {
   ): Promise<ApiResponse<T>> {
     try {
       const { data: responseData, error } = await supabase
-        .from(path as keyof Database['public']['Tables'])
+        .from(path as string)
         .update(data)
         .eq('id', id)
         .select()
@@ -96,7 +97,7 @@ export class BaseService {
   ): Promise<ApiResponse<null>> {
     try {
       const { error } = await supabase
-        .from(path as keyof Database['public']['Tables'])
+        .from(path as string)
         .delete()
         .eq('id', id);
         
