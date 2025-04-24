@@ -17,22 +17,29 @@ export const TaskCardCompletionAnimation: React.FC<TaskCardCompletionAnimationPr
 }) => {
   const [showAnimation, setShowAnimation] = useState(false);
 
+  // Use clean callback to ensure proper closure
   const handleClose = useCallback(() => {
     setShowAnimation(false);
     onAnimationComplete();
   }, [onAnimationComplete]);
 
   useEffect(() => {
+    let timer: NodeJS.Timeout | null = null;
+    
     if (show) {
       setShowAnimation(true);
       
-      // Play completion sound once
+      // Play completion sound once - no looping
       playTaskCompletionSound(0.7);
       
-      // Auto close after 5 seconds
-      const timer = setTimeout(handleClose, 5000);
-      return () => clearTimeout(timer);
+      // Auto close after 3 seconds (reduced from 5)
+      timer = setTimeout(handleClose, 3000);
     }
+    
+    // Clean up timer when unmounting or when show changes
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
   }, [show, handleClose]);
 
   return (
@@ -44,7 +51,6 @@ export const TaskCardCompletionAnimation: React.FC<TaskCardCompletionAnimationPr
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
-          style={{ willChange: 'transform' }}
         >
           <motion.div
             className="relative flex flex-col items-center p-8 bg-card rounded-xl shadow-xl"
@@ -52,13 +58,10 @@ export const TaskCardCompletionAnimation: React.FC<TaskCardCompletionAnimationPr
             animate={{ scale: 1, y: 0, opacity: 1 }}
             exit={{ scale: 0.8, y: 20, opacity: 0 }}
             transition={{ type: "spring", damping: 25, stiffness: 400 }}
-            style={{ willChange: 'transform' }}
           >
             {isAheadOfTime ? (
               <>
                 <motion.div
-                  animate={{ scale: [1, 1.1, 1] }}
-                  transition={{ duration: 0.4 }}
                   className="text-yellow-500 mb-4"
                 >
                   <Award size={60} className="text-wakti-gold" />
@@ -73,8 +76,6 @@ export const TaskCardCompletionAnimation: React.FC<TaskCardCompletionAnimationPr
             ) : (
               <>
                 <motion.div
-                  animate={{ scale: [1, 1.1, 1] }}
-                  transition={{ duration: 0.4 }}
                   className="text-green-500 mb-4"
                 >
                   <CheckCircle2 size={60} />

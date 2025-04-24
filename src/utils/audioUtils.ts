@@ -69,63 +69,19 @@ export const playNotificationSound = async (options: {
   stopCurrentAudio();
   
   try {
-    // Try to use the Web Audio API for better control
-    if (audioContext) {
-      const response = await fetch(soundUrl);
-      const arrayBuffer = await response.arrayBuffer();
-      
-      // Decode the audio data
-      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-      
-      // Create source node
-      const source = audioContext.createBufferSource();
-      source.buffer = audioBuffer;
-      source.loop = false; // Ensure no looping
-      
-      // Create gain node for volume control
-      const gainNode = audioContext.createGain();
-      gainNode.gain.value = volume;
-      
-      // Connect nodes
-      source.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      // Store current source
-      currentSource = source;
-      
-      // Start the sound
-      source.start(0);
-      
-      // Fade out starting at 2.5 seconds
-      const fadeOutStart = audioContext.currentTime + 2.5;
-      gainNode.gain.setValueAtTime(volume, fadeOutStart);
-      gainNode.gain.linearRampToValueAtTime(0, fadeOutStart + 0.5);
-      
-      // Stop after duration
-      const stopTime = audioContext.currentTime + (duration / 1000);
-      source.stop(stopTime);
-      
-      // Clean up after playing
-      source.onended = () => {
-        source.disconnect();
-        gainNode.disconnect();
-        if (currentSource === source) {
-          currentSource = null;
-        }
-      };
-      
-      return;
-    }
-    
-    // Fallback to HTML5 Audio if Web Audio API isn't available
+    // Create and play a simple audio element - simpler approach
     const audio = new Audio(soundUrl);
     audio.volume = volume;
-    audio.loop = false;
+    audio.loop = false; // Ensure no looping
     
     // Store current audio
     currentAudio = audio;
     
+    // Play the audio once
     await audio.play();
+    
+    // Auto-stop after 2 seconds for task completion sounds or after duration for other sounds
+    const soundDuration = soundUrl === TASK_COMPLETION_SOUND ? 2000 : duration;
     
     // Stop after duration
     setTimeout(() => {
@@ -134,7 +90,7 @@ export const playNotificationSound = async (options: {
         audio.currentTime = 0;
         currentAudio = null;
       }
-    }, duration);
+    }, soundDuration);
   } catch (error) {
     console.error("Failed to play notification sound:", error);
     
@@ -153,7 +109,7 @@ export const playTaskCompletionSound = async (volume: number = 0.7): Promise<voi
   return playNotificationSound({
     soundUrl: TASK_COMPLETION_SOUND,
     volume,
-    duration: 3000 // Fixed 3-second duration for completion sound
+    duration: 2000 // Fixed 2-second duration for completion sound
   });
 };
 
