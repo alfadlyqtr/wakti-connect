@@ -10,7 +10,7 @@ export class BaseService {
     query?: Record<string, any>
   ): Promise<ApiResponse<T>> {
     try {
-      // Use a more direct approach to avoid deep type instantiation
+      // Use a more direct, type-safe approach
       const from = supabase.from(path as string);
       let request = from.select('*');
       
@@ -42,11 +42,14 @@ export class BaseService {
     data: Record<string, any>
   ): Promise<ApiResponse<T>> {
     try {
-      const { data: responseData, error } = await supabase
+      // Use type casting to avoid deep type instantiation issues
+      const response = await supabase
         .from(path as string)
         .insert(data)
         .select()
         .single();
+      
+      const { data: responseData, error } = response;
         
       if (error) throw error;
       
@@ -69,12 +72,15 @@ export class BaseService {
     data: Partial<T>
   ): Promise<ApiResponse<T>> {
     try {
-      const { data: responseData, error } = await supabase
+      // Use type casting to avoid deep type instantiation issues  
+      const response = await supabase
         .from(path as string)
         .update(data)
         .eq('id', id)
         .select()
         .single();
+      
+      const { data: responseData, error } = response;
         
       if (error) throw error;
       
@@ -96,6 +102,7 @@ export class BaseService {
     id: string
   ): Promise<ApiResponse<null>> {
     try {
+      // Use type casting to avoid deep type instantiation issues
       const { error } = await supabase
         .from(path as string)
         .delete()
