@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { TaskPriority, TaskStatus, SubTask, Task } from "@/types/task.types";
@@ -5,14 +6,15 @@ import { isPast } from "date-fns";
 import { TaskCardHeader } from "./TaskCardHeader";
 import { TaskCardMenu } from "./TaskCardMenu";
 import { TaskCardFooter } from "./TaskCardFooter";
-import { TaskDueDate } from "../task-card/TaskDueDate";
+import { TaskDueDate } from "./TaskDueDate";
 import { TaskDetailDialog } from "./TaskDetailDialog";
+import { TaskCardCompletionAnimation } from "./TaskCardCompletionAnimation";
 
 const PRIORITY_COLORS: Record<string, string> = {
-  urgent: "border-l-red-500 bg-red-50/70 dark:bg-[#2a1515]",
-  high: "border-l-orange-400 bg-orange-50/70 dark:bg-[#282113]",
-  medium: "border-l-amber-400 bg-yellow-50/70 dark:bg-[#25210f]",
-  normal: "border-l-green-500 bg-green-50/60 dark:bg-[#18281b]",
+  urgent: "border-l-wakti-gold bg-wakti-gold/10 dark:bg-[#282113]",
+  high: "border-l-wakti-navy bg-wakti-navy/5 dark:bg-[#25210f]",
+  medium: "border-l-wakti-blue bg-wakti-blue/5 dark:bg-[#18281b]",
+  normal: "border-l-green-500 bg-green-50/60 dark:bg-[#212229]",
   archived: "border-l-gray-300 bg-[#f6f6f7] dark:bg-[#212229]",
 };
 
@@ -66,6 +68,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   onSubtaskToggle
 }) => {
   const [detailOpen, setDetailOpen] = useState(false);
+  const [showCompletion, setShowCompletion] = useState(false);
   const isPaidAccount = userRole === "individual" || userRole === "business";
   const isCompleted = status === "completed";
   const isOverdue = !isCompleted && 
@@ -80,6 +83,13 @@ const TaskCard: React.FC<TaskCardProps> = ({
     if (!(e.target as HTMLElement).closest('.task-action-button')) {
       setDetailOpen(true);
     }
+  };
+
+  const handleStatusChange = async (taskId: string, newStatus: string) => {
+    if (newStatus === "completed" && !isCompleted) {
+      setShowCompletion(true);
+    }
+    await onStatusChange(taskId, newStatus);
   };
 
   const handleDelete = async () => {
@@ -102,11 +112,14 @@ const TaskCard: React.FC<TaskCardProps> = ({
   return (
     <>
       <Card 
-        className={`overflow-hidden border-l-4 hover:shadow-md transition-all 
+        className={`overflow-hidden border-l-4 hover:shadow-md transition-all duration-200
           ${priorityClass} 
           ${isOverdue ? 'ring-1 ring-red-400' : ''}
-          ${isCompleted || isArchived ? 'opacity-75' : ''}
+          ${isCompleted ? 'opacity-75' : ''}
           cursor-pointer
+          hover:-translate-y-0.5
+          hover:border-wakti-blue/20
+          hover:shadow-[0_8px_16px_-6px_rgba(0,83,195,0.1)]
         `}
         onClick={handleCardClick}
       >
@@ -124,9 +137,9 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 id={id}
                 status={status}
                 isArchived={isArchived}
-                onDelete={onDelete}
+                onDelete={handleDelete}
                 onEdit={() => onEdit(id)}
-                onStatusChange={onStatusChange}
+                onStatusChange={handleStatusChange}
                 onSnooze={onSnooze}
                 onRestore={onRestore}
                 userRole={userRole}
@@ -137,7 +150,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
           
           <CardContent className="px-0 py-2 flex-grow">
             {description && (
-              <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+              <p className={`text-sm text-muted-foreground line-clamp-2 mb-3 ${isCompleted ? 'text-muted-foreground/70' : ''}`}>
                 {description}
               </p>
             )}
@@ -158,6 +171,10 @@ const TaskCard: React.FC<TaskCardProps> = ({
             isCompleted={isCompleted}
             subtaskCount={subtasks?.length || 0}
             completedSubtaskCount={subtasks?.filter(st => st.is_completed)?.length || 0}
+            id={id}
+            status={status}
+            completedDate={completedDate}
+            onStatusChange={handleStatusChange}
           />
         </div>
       </Card>
@@ -190,9 +207,15 @@ const TaskCard: React.FC<TaskCardProps> = ({
           setDetailOpen(false);
           handleDelete();
         }}
-        onStatusChange={onStatusChange}
+        onStatusChange={handleStatusChange}
         onSubtaskToggle={handleSubtaskToggle}
         refetch={refetch}
+      />
+
+      <TaskCardCompletionAnimation
+        show={showCompletion}
+        isAheadOfTime={dueDate > new Date()}
+        onAnimationComplete={() => setShowCompletion(false)}
       />
     </>
   );
