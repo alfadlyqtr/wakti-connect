@@ -15,12 +15,12 @@ interface StaffDialogProps {
   onSuccess: () => void;
 }
 
-export function StaffDialog({
+export const StaffDialog = ({
   staffId,
   open,
   onOpenChange,
   onSuccess
-}: StaffDialogProps) {
+}: StaffDialogProps) => {
   const [activeTab, setActiveTab] = useState("create");
   const {
     form,
@@ -53,4 +53,6 @@ export function StaffDialog({
       </DialogContent>
     </Dialog>
   );
-}
+};
+
+export default StaffDialog;
