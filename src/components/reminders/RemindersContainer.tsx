@@ -1,14 +1,12 @@
-
 import React, { useState, useEffect } from "react";
 import { Reminder } from "@/types/reminder.types";
 import { fetchReminders } from "@/services/reminder/reminderService";
 import RemindersList from "./RemindersList";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Volume2, VolumeX, Bell, ClipboardCheck, RefreshCw } from "lucide-react";
+import { PlusCircle, Bell, ClipboardCheck, RefreshCw } from "lucide-react";
 import { CreateReminderDialog } from "./CreateReminderDialog";
 import { toast } from "@/components/ui/use-toast";
 import { UserRole } from "@/types/user";
-import { requestAudioPermission } from "@/utils/audioUtils";
 import { useReminders } from "@/hooks/useReminders";
 
 interface RemindersContainerProps {
@@ -23,7 +21,6 @@ const RemindersContainer: React.FC<RemindersContainerProps> = ({
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [audioEnabled, setAudioEnabled] = useState(false);
   const [notificationEnabled, setNotificationEnabled] = useState(false);
   
   // Use our enhanced hook
@@ -31,19 +28,8 @@ const RemindersContainer: React.FC<RemindersContainerProps> = ({
   
   useEffect(() => {
     loadReminders();
-    checkAudioStatus();
     checkNotificationStatus();
   }, []);
-  
-  const checkAudioStatus = async () => {
-    const audioStatus = localStorage.getItem('reminderAudioEnabled');
-    setAudioEnabled(audioStatus === 'true');
-  };
-  
-  const checkNotificationStatus = () => {
-    const hasPermission = Notification && Notification.permission === 'granted';
-    setNotificationEnabled(hasPermission);
-  };
   
   const loadReminders = async () => {
     try {
@@ -66,34 +52,9 @@ const RemindersContainer: React.FC<RemindersContainerProps> = ({
     setCreateDialogOpen(true);
   };
 
-  const toggleAudio = async () => {
-    if (!audioEnabled) {
-      const granted = await requestAudioPermission();
-      if (granted) {
-        setAudioEnabled(true);
-        localStorage.setItem('reminderAudioEnabled', 'true');
-        toast({
-          title: "Audio notifications enabled",
-          description: "You'll now hear sounds when reminders are triggered.",
-          duration: 3000
-        });
-      } else {
-        toast({
-          title: "Could not enable audio",
-          description: "Your browser may not support audio notifications.",
-          variant: "destructive",
-          duration: 3000
-        });
-      }
-    } else {
-      setAudioEnabled(false);
-      localStorage.setItem('reminderAudioEnabled', 'false');
-      toast({
-        title: "Audio notifications disabled",
-        description: "You won't hear sounds when reminders are triggered.",
-        duration: 3000
-      });
-    }
+  const checkNotificationStatus = () => {
+    const hasPermission = Notification && Notification.permission === 'granted';
+    setNotificationEnabled(hasPermission);
   };
   
   const handleRequestNotifications = async () => {
@@ -190,20 +151,6 @@ const RemindersContainer: React.FC<RemindersContainerProps> = ({
           >
             <Bell className="h-4 w-4 mr-2" />
             {notificationEnabled ? "Notifications On" : "Enable Notifications"}
-          </Button>
-          
-          <Button 
-            onClick={toggleAudio} 
-            size="sm"
-            variant="outline"
-            title={audioEnabled ? "Disable sound alerts" : "Enable sound alerts"}
-            className={audioEnabled ? "bg-blue-50" : ""}
-          >
-            {audioEnabled ? (
-              <><Volume2 className="h-4 w-4 mr-2" /> Sound On</>
-            ) : (
-              <><VolumeX className="h-4 w-4 mr-2" /> Sound Off</>
-            )}
           </Button>
           
           <Button 

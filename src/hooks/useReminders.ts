@@ -1,27 +1,14 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Reminder, ReminderNotification } from "@/types/reminder.types";
 import { fetchReminders, createReminderNotification } from "@/services/reminder/reminderService";
 import { toast } from "@/components/ui/use-toast";
-import { requestAudioPermission, playNotificationSound } from "@/utils/audioUtils";
 
 export function useReminders() {
   const [activeReminders, setActiveReminders] = useState<Reminder[]>([]);
   const [loading, setLoading] = useState(true);
-  const [audioPermissionGranted, setAudioPermissionGranted] = useState(false);
   const [lastCheckTime, setLastCheckTime] = useState<Date>(new Date());
   const [checkCount, setCheckCount] = useState(0);
-  
-  // Request audio permission
-  useEffect(() => {
-    const setupAudioPermission = async () => {
-      const granted = await requestAudioPermission();
-      setAudioPermissionGranted(granted);
-    };
-    
-    setupAudioPermission();
-  }, []);
   
   // Load initial reminders
   useEffect(() => {
@@ -65,30 +52,24 @@ export function useReminders() {
     };
   }, []);
   
-  // Check for due reminders every 3 seconds (increased frequency for reliability)
+  // Check for due reminders every 3 seconds
   useEffect(() => {
     const checkDueReminders = async () => {
       const now = new Date();
       setLastCheckTime(now);
       setCheckCount(prev => prev + 1);
       
-      if (checkCount % 20 === 0) { // Log every minute (20 * 3 seconds)
+      if (checkCount % 20 === 0) {
         console.log(`Checking reminders at ${now.toLocaleTimeString()}`);
       }
       
       // Check for reminders that are due
       const dueReminders = activeReminders.filter(reminder => {
         const reminderTime = new Date(reminder.reminder_time);
-        
-        // Get time values for precise comparison
         const reminderMinutes = reminderTime.getHours() * 60 + reminderTime.getMinutes();
         const nowMinutes = now.getHours() * 60 + now.getMinutes();
-        
-        // Get seconds for even more precise comparison
         const reminderTotalSeconds = reminderMinutes * 60 + reminderTime.getSeconds();
         const nowTotalSeconds = nowMinutes * 60 + now.getSeconds();
-        
-        // Consider reminders due if they're within 8 seconds of now (increased window)
         const diffInSeconds = Math.abs(nowTotalSeconds - reminderTotalSeconds);
         return diffInSeconds <= 8;
       });
@@ -107,11 +88,6 @@ export function useReminders() {
           // Create notification in database
           const notification = await createReminderNotification(reminder.id);
           
-          // Play sound if enabled and permission granted
-          if (audioPermissionGranted && localStorage.getItem('reminderAudioEnabled') !== 'false') {
-            playNotificationSound();
-          }
-          
           // Show notification toast
           toast({
             title: "Reminder",
@@ -121,36 +97,15 @@ export function useReminders() {
               onClose: () => {},
               type: 'reminder-toast'
             },
-            duration: Infinity, // Don't auto-dismiss
+            duration: Infinity,
           });
           
-          // Create and show browser notification with retry logic
-          let notificationSuccess = false;
-          const maxRetries = 5; // Increased retries
-          
-          for (let attempt = 0; attempt < maxRetries && !notificationSuccess; attempt++) {
-            try {
-              if (Notification && Notification.permission === 'granted') {
-                new Notification('Reminder: ' + reminder.message, {
-                  body: `Time: ${new Date(reminder.reminder_time).toLocaleTimeString()}`,
-                  tag: `reminder-${reminder.id}-${attempt}`, // Add attempt to tag to avoid duplicate filtering
-                  icon: '/favicon.ico' // Added icon for better visibility
-                });
-                notificationSuccess = true;
-                console.log(`Browser notification shown successfully on attempt ${attempt + 1}`);
-              }
-            } catch (error) {
-              console.warn(`Notification attempt ${attempt + 1} failed:`, error);
-              await new Promise(resolve => setTimeout(resolve, 500)); // Wait before retry
-            }
-          }
-          
-          if (!notificationSuccess) {
-            // Final fallback - show another toast if browser notification failed
-            toast({
-              title: "Reminder Alert",
-              description: reminder.message,
-              duration: 10000, // 10 seconds
+          // Create browser notification
+          if (Notification && Notification.permission === 'granted') {
+            new Notification('Reminder: ' + reminder.message, {
+              body: `Time: ${new Date(reminder.reminder_time).toLocaleTimeString()}`,
+              tag: `reminder-${reminder.id}`,
+              icon: '/favicon.ico'
             });
           }
           
@@ -164,29 +119,21 @@ export function useReminders() {
             error: error instanceof Error ? error.message : 'Unknown error'
           });
           
-          // Try again if there was an error creating the notification
-          try {
-            toast({
-              title: "Reminder",
-              description: reminder.message,
-              variant: "destructive",
-              duration: 10000,
-            });
-          } catch (e) {
-            console.error("Even fallback toast failed:", e);
-          }
+          // Fallback toast if notification failed
+          toast({
+            title: "Reminder",
+            description: reminder.message,
+            variant: "destructive",
+            duration: 10000,
+          });
         }
       }
     };
     
-    // Check every 3 seconds
     const interval = setInterval(checkDueReminders, 3000);
-    
-    // Initial check
     checkDueReminders();
-    
     return () => clearInterval(interval);
-  }, [activeReminders, audioPermissionGranted, checkCount]);
+  }, [activeReminders, checkCount]);
   
   // Utility function to request notification permissions
   const requestNotificationPermission = useCallback(async () => {
@@ -206,8 +153,6 @@ export function useReminders() {
     loading,
     activeReminders,
     requestNotificationPermission,
-    requestAudioPermission,
-    audioPermissionGranted,
     lastCheckTime
   };
 }

@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { 
   AlertDialog,
@@ -14,7 +13,6 @@ import { Reminder, ReminderNotification } from "@/types/reminder.types";
 import { Button } from "@/components/ui/button";
 import { snoozeReminder, dismissReminderNotification } from "@/services/reminder/reminderService";
 import { BellRing } from "lucide-react";
-import { playNotificationSound } from "@/utils/audioUtils";
 
 interface ReminderToastProps {
   reminder: Reminder;
@@ -30,15 +28,6 @@ const ReminderToast: React.FC<ReminderToastProps> = ({
   const [isOpen, setIsOpen] = React.useState(true);
   const [customSnoozeMinutes, setCustomSnoozeMinutes] = React.useState<number | "">("");
   const [showCustomSnooze, setShowCustomSnooze] = React.useState(false);
-  
-  // Play sound when reminder toast appears
-  useEffect(() => {
-    // Use the generic notification sound for reminders
-    playNotificationSound({ 
-      soundUrl: '/sounds/wakti reminder sound.mp3',
-      volume: 0.7
-    });
-  }, []);
   
   const handleSnooze = async (minutes: number) => {
     try {
