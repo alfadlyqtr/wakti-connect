@@ -1,10 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import { StaffMember } from "@/types/staff";
-import { StaffMembersList } from "@/components/staff/StaffMembersList";
-import EmptyStaffState from "./EmptyStaffState";
-import StaffMembersLoading from "./StaffMembersLoading";
-import StaffMembersError from "./StaffMembersError";
+import StaffListHeader from "./StaffListHeader";
+import StaffListContent from "./StaffListContent";
+import DeleteStaffDialog from "./DeleteStaffDialog";
+import ToggleStatusDialog from "./ToggleStatusDialog";
 import { useStaffListOperations } from "./useStaffListOperations";
 
 interface StaffListProps {
@@ -22,43 +22,65 @@ export const StaffList: React.FC<StaffListProps> = ({
   onEdit,
   onRefresh
 }) => {
-  // Initialize state for confirm dialogs
-  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
-  const [confirmToggleOpen, setConfirmToggleOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [toggleStatusConfirmOpen, setToggleStatusConfirmOpen] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
   
-  // Get staff operations from custom hook
-  const { deleteStaff, toggleStaffStatus } = useStaffListOperations();
+  const { isSyncing, syncStaffRecords } = useStaffListOperations();
 
-  // Handler for toggling staff status
-  const handleToggleStatus = (staffId: string, status: string) => {
-    toggleStaffStatus.mutate({ staffId, newStatus: status });
+  const handleDeleteClick = (staff: StaffMember) => {
+    setSelectedStaff(staff);
+    setDeleteConfirmOpen(true);
   };
 
-  // Show loading state
-  if (isLoading) {
-    return <StaffMembersLoading />;
-  }
+  const handleToggleStatusClick = (staff: StaffMember) => {
+    setSelectedStaff(staff);
+    setToggleStatusConfirmOpen(true);
+  };
 
-  // Show error state
-  if (error) {
-    return <StaffMembersError errorMessage={error.message} onRetry={onRefresh} />;
-  }
-
-  // Show empty state
-  if (!staffMembers || staffMembers.length === 0) {
-    return <EmptyStaffState onAddStaffClick={() => onEdit("")} />;
-  }
-
-  // Render staff list
   return (
-    <StaffMembersList
-      staffMembers={staffMembers}
-      isLoading={isLoading}
-      error={error}
-      onEdit={onEdit}
-      onUpdateStatus={handleToggleStatus}
-    />
+    <div className="space-y-4">
+      <StaffListHeader
+        onAddStaff={() => onEdit("")}
+        onSync={syncStaffRecords}
+        isSyncing={isSyncing}
+      />
+      
+      <StaffListContent
+        staffMembers={staffMembers}
+        isLoading={isLoading}
+        error={error}
+        onAddStaff={() => onEdit("")}
+        onEdit={onEdit}
+        onDelete={handleDeleteClick}
+        onToggleStatus={handleToggleStatusClick}
+        onRefresh={onRefresh}
+      />
+
+      <DeleteStaffDialog
+        staffToDelete={selectedStaff}
+        onOpenChange={() => setDeleteConfirmOpen(false)}
+        onConfirmDelete={() => {
+          if (selectedStaff) {
+            // Handle delete
+            setDeleteConfirmOpen(false);
+            setSelectedStaff(null);
+            onRefresh();
+          }
+        }}
+      />
+
+      <ToggleStatusDialog
+        staffToToggle={selectedStaff}
+        onOpenChange={() => setToggleStatusConfirmOpen(false)}
+        onConfirmToggle={(staffId, newStatus) => {
+          // Handle status toggle
+          setToggleStatusConfirmOpen(false);
+          setSelectedStaff(null);
+          onRefresh();
+        }}
+      />
+    </div>
   );
 };
 
