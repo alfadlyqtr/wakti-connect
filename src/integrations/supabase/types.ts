@@ -366,6 +366,39 @@ export type Database = {
         }
         Relationships: []
       }
+      biometric_credentials: {
+        Row: {
+          counter: number
+          created_at: string | null
+          credential_id: string
+          id: string
+          last_used_at: string | null
+          nickname: string | null
+          public_key: string
+          user_id: string
+        }
+        Insert: {
+          counter?: number
+          created_at?: string | null
+          credential_id: string
+          id?: string
+          last_used_at?: string | null
+          nickname?: string | null
+          public_key: string
+          user_id: string
+        }
+        Update: {
+          counter?: number
+          created_at?: string | null
+          credential_id?: string
+          id?: string
+          last_used_at?: string | null
+          nickname?: string | null
+          public_key?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       booking_template_availability: {
         Row: {
           created_at: string
@@ -2185,6 +2218,10 @@ export type Database = {
       get_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      has_biometric_credentials: {
+        Args: { user_id_param: string }
+        Returns: boolean
       }
       is_business_owner: {
         Args: { business_id: string }

@@ -1,11 +1,13 @@
 
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Fingerprint } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
+import { verifyBiometricLogin } from "@/lib/webauthn";
+import { toast } from "@/components/ui/use-toast";
 
 interface LoginFormProps {
   setError: (error: string) => void;
@@ -16,6 +18,7 @@ const LoginForm = ({ setError }: LoginFormProps) => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [isBiometricLoading, setIsBiometricLoading] = useState(false);
   
   const location = useLocation();
   const { login } = useAuth();
@@ -35,13 +38,39 @@ const LoginForm = ({ setError }: LoginFormProps) => {
       if (result.error) {
         throw result.error;
       }
-      
-      // Successful login is handled by the auth state change in AuthProvider
     } catch (error: any) {
       console.error("Login error:", error);
       setError(error.message || "Failed to log in. Please check your credentials and try again.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleBiometricLogin = async () => {
+    if (!email) {
+      toast({
+        title: "Email Required",
+        description: "Please enter your email address to use biometric login",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsBiometricLoading(true);
+    try {
+      const result = await verifyBiometricLogin(email);
+      if (!result) {
+        throw new Error("Biometric authentication failed");
+      }
+    } catch (error: any) {
+      console.error("Biometric login error:", error);
+      toast({
+        title: "Authentication Failed",
+        description: error.message || "Biometric login failed. Please try again or use password.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsBiometricLoading(false);
     }
   };
   
@@ -97,17 +126,30 @@ const LoginForm = ({ setError }: LoginFormProps) => {
           Forgot Password?
         </Link>
       </div>
-      
-      <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? (
-          <div className="flex items-center gap-2">
-            <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-            <span>Logging in...</span>
-          </div>
-        ) : (
-          <span>Login</span>
-        )}
-      </Button>
+
+      <div className="flex flex-col gap-2">
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? (
+            <div className="flex items-center gap-2">
+              <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+              <span>Logging in...</span>
+            </div>
+          ) : (
+            <span>Login</span>
+          )}
+        </Button>
+
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full"
+          onClick={handleBiometricLogin}
+          disabled={isBiometricLoading}
+        >
+          <Fingerprint className="mr-2 h-4 w-4" />
+          {isBiometricLoading ? "Authenticating..." : "Login with Biometrics"}
+        </Button>
+      </div>
     </form>
   );
 };
