@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -8,7 +7,6 @@ import { waitForGoogleMapsToLoad } from '@/utils/googleMapsLoader';
 import { useTranslation } from 'react-i18next';
 import { toast } from '@/components/ui/use-toast';
 
-// Define global types for TypeScript
 interface LocationPickerProps {
   value: string;
   onChange: (value: string, lat?: number, lng?: number) => void;
@@ -83,6 +81,44 @@ const LocationPickerComponent: React.FC<LocationPickerProps> = ({
     setInputValue(e.target.value);
   };
 
+  const handleGetCurrentLocation = async () => {
+    if (!navigator.geolocation) {
+      toast({
+        title: "Error",
+        description: "Geolocation is not supported by your browser",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsSearching(true);
+    
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject);
+      });
+
+      const { latitude, longitude } = position.coords;
+      const formattedAddress = await getFormattedAddress(latitude, longitude);
+      
+      setInputValue(formattedAddress);
+      onChange(formattedAddress, latitude, longitude);
+      
+      if (onMapUrlChange) {
+        onMapUrlChange(generateGoogleMapsUrl(formattedAddress));
+      }
+    } catch (error: any) {
+      console.error('Error getting location:', error);
+      toast({
+        title: "Error",
+        description: "Could not get your location",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
   return (
     <div className={`space-y-2 ${className}`}>
       <div className="relative flex items-center">
@@ -102,42 +138,7 @@ const LocationPickerComponent: React.FC<LocationPickerProps> = ({
         variant="outline" 
         size="sm"
         className="w-full flex items-center justify-center gap-2 text-xs"
-        onClick={() => {
-          if (!navigator.geolocation) {
-            toast({
-              title: "Error",
-              description: "Geolocation is not supported by your browser",
-              variant: "destructive"
-            });
-            return;
-          }
-          
-          setIsSearching(true);
-          
-          navigator.geolocation.getCurrentPosition(
-            (position) => {
-              const { latitude, longitude } = position.coords;
-              const locationStr = `${latitude}, ${longitude}`;
-              setInputValue(locationStr);
-              onChange(locationStr, latitude, longitude);
-              
-              if (onMapUrlChange) {
-                onMapUrlChange(generateGoogleMapsUrl(locationStr));
-              }
-              
-              setIsSearching(false);
-            },
-            (error) => {
-              console.error('Error getting location:', error);
-              toast({
-                title: "Error",
-                description: "Could not get your current location",
-                variant: "destructive"
-              });
-              setIsSearching(false);
-            }
-          );
-        }}
+        onClick={handleGetCurrentLocation}
         disabled={isSearching}
       >
         <Navigation className="h-3.5 w-3.5" />

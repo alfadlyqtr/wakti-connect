@@ -33,3 +33,18 @@ export const getFormattedAddress = async (latitude: number, longitude: number): 
   }
 };
 
+/**
+ * Get an address preview for the location
+ */
+export const getAddressPreview = (location: string): string => {
+  if (!location) return '';
+  
+  // If it's coordinates, try to format them nicely
+  const coordsMatch = location.match(/^(-?\d+\.\d+),\s*(-?\d+\.\d+)$/);
+  if (coordsMatch) {
+    const [_, lat, lng] = coordsMatch;
+    return `Location found (${parseFloat(lat).toFixed(4)}, ${parseFloat(lng).toFixed(4)})`;
+  }
+  
+  return location;
+};

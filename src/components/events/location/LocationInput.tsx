@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -45,20 +44,23 @@ const LocationInput: React.FC<LocationInputProps> = ({
     }
   };
 
-  const handleLocationPickerChange = (value: string, lat?: number, lng?: number) => {
+  const handleLocationPickerChange = async (value: string, lat?: number, lng?: number) => {
     if (locationType === 'manual') {
       onLocationChange(value, 'manual');
     } else {
-      const newMapsUrl = lat && lng 
-        ? generateGoogleMapsUrl(`${lat},${lng}`)
-        : generateGoogleMapsUrl(value);
+      let formattedAddress = value;
       
+      if (lat && lng) {
+        formattedAddress = await getFormattedAddress(lat, lng);
+      }
+      
+      const newMapsUrl = generateGoogleMapsUrl(formattedAddress);
       setMapUrl(newMapsUrl);
-      onLocationChange(value, 'google_maps', newMapsUrl);
+      onLocationChange(formattedAddress, 'google_maps', newMapsUrl);
     }
   };
   
-  const getCurrentLocation = () => {
+  const getCurrentLocation = async () => {
     if (!navigator.geolocation) {
       toast({
         title: "Error",
@@ -70,26 +72,27 @@ const LocationInput: React.FC<LocationInputProps> = ({
     
     setIsLocating(true);
     
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        const locationStr = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
-        const mapsUrl = generateGoogleMapsUrl(locationStr);
-        
-        setMapUrl(mapsUrl);
-        onLocationChange(locationStr, 'google_maps', mapsUrl);
-        
-        toast({
-          title: "Location Found",
-          description: "Your current location has been added"
-        });
-        
-        setIsLocating(false);
-      },
-      (error) => {
-        console.error('Error getting location:', error);
-        
-        let errorMessage = "Failed to get your location";
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject);
+      });
+      
+      const { latitude, longitude } = position.coords;
+      const formattedAddress = await getFormattedAddress(latitude, longitude);
+      const mapsUrl = generateGoogleMapsUrl(formattedAddress);
+      
+      setMapUrl(mapsUrl);
+      onLocationChange(formattedAddress, 'google_maps', mapsUrl);
+      
+      toast({
+        title: "Location Found",
+        description: "Your current location has been added"
+      });
+    } catch (error: any) {
+      console.error('Error getting location:', error);
+      
+      let errorMessage = "Failed to get your location";
+      if (error instanceof GeolocationPositionError) {
         switch(error.code) {
           case error.PERMISSION_DENIED:
             errorMessage = "Location permission denied. Please allow location access in your browser settings.";
@@ -101,21 +104,16 @@ const LocationInput: React.FC<LocationInputProps> = ({
             errorMessage = "Location request timed out.";
             break;
         }
-        
-        toast({
-          title: "Error",
-          description: errorMessage,
-          variant: "destructive"
-        });
-        
-        setIsLocating(false);
-      },
-      { 
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
       }
-    );
+      
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive"
+      });
+    } finally {
+      setIsLocating(false);
+    }
   };
 
   return (
