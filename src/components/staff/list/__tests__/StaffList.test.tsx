@@ -26,14 +26,18 @@ describe('StaffList', () => {
       name: 'John Doe',
       email: 'john@example.com',
       status: 'active',
-      role: 'staff'
+      role: 'staff',
+      staff_id: 'staff1',
+      business_id: 'business1'
     },
     {
       id: '2',
       name: 'Jane Smith',
       email: 'jane@example.com',
       status: 'active',
-      role: 'staff'
+      role: 'staff',
+      staff_id: 'staff2',
+      business_id: 'business1'
     }
   ];
 
