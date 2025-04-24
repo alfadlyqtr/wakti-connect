@@ -95,23 +95,22 @@ export async function verifyBiometricLogin(email: string): Promise<{ user: any; 
     // Create assertion options
     const challenge = Array.from(crypto.getRandomValues(new Uint8Array(32))).map(b => b.toString(16)).join('');
     
-    const assertionOptions = {
-      challenge,
+    // Fix for TS type issue: Correctly type the assertion options
+    // Note the proper typing of authenticatorTransport
+    const assertionOptions: PublicKeyCredentialRequestOptions = {
+      challenge: Uint8Array.from(challenge, c => c.charCodeAt(0)),
       allowCredentials: [{
         type: 'public-key',
         id: Uint8Array.from(atob(credentials.credential_id), c => c.charCodeAt(0)),
-        transports: ['internal']
+        transports: ['internal'] as AuthenticatorTransport[]
       }],
       timeout: 60000,
-      userVerification: 'preferred' as UserVerificationRequirement
+      userVerification: 'preferred'
     };
 
     // Get assertion
     const assertion = await navigator.credentials.get({
-      publicKey: {
-        ...assertionOptions,
-        challenge: Uint8Array.from(assertionOptions.challenge, c => c.charCodeAt(0))
-      }
+      publicKey: assertionOptions
     });
 
     if (!assertion) {
