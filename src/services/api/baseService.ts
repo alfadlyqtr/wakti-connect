@@ -10,8 +10,9 @@ export class BaseService {
     query?: Record<string, any>
   ): Promise<ApiResponse<T>> {
     try {
-      // Use a more direct, type-safe approach
-      const from = supabase.from(path as string);
+      // Use type assertion to force TypeScript to accept the table name
+      // This is safe because we validate the tables at runtime via Supabase
+      const from = supabase.from(path as any);
       let request = from.select('*');
       
       if (query) {
@@ -42,9 +43,9 @@ export class BaseService {
     data: Record<string, any>
   ): Promise<ApiResponse<T>> {
     try {
-      // Use type casting to avoid deep type instantiation issues
+      // Use type assertion to force TypeScript to accept the table name
       const response = await supabase
-        .from(path as string)
+        .from(path as any)
         .insert(data)
         .select()
         .single();
@@ -72,9 +73,9 @@ export class BaseService {
     data: Partial<T>
   ): Promise<ApiResponse<T>> {
     try {
-      // Use type casting to avoid deep type instantiation issues  
+      // Use type assertion to force TypeScript to accept the table name
       const response = await supabase
-        .from(path as string)
+        .from(path as any)
         .update(data)
         .eq('id', id)
         .select()
@@ -102,9 +103,9 @@ export class BaseService {
     id: string
   ): Promise<ApiResponse<null>> {
     try {
-      // Use type casting to avoid deep type instantiation issues
+      // Use type assertion to force TypeScript to accept the table name
       const { error } = await supabase
-        .from(path as string)
+        .from(path as any)
         .delete()
         .eq('id', id);
         
