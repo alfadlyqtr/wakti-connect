@@ -1,5 +1,6 @@
+
 import React, { useState } from "react";
-import { Task } from "@/types/task.types";
+import { Task, TaskTab } from "@/types/task.types";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { TaskGrid } from "@/components/tasks/TaskGrid";
@@ -13,6 +14,7 @@ interface TasksContainerProps {
   onCreateTask: () => void;
   onEdit: (task: Task) => void;
   onDelete: (taskId: string) => void;
+  activeTab: TaskTab; // Added this prop
 }
 
 const TasksContainer: React.FC<TasksContainerProps> = ({
@@ -22,7 +24,8 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
   isPaidAccount,
   onCreateTask,
   onEdit,
-  onDelete
+  onDelete,
+  activeTab // Added this prop
 }) => {
   const [pendingTaskId, setPendingTaskId] = useState<string | null>(null);
   const { completeTask, isProcessing } = useTaskOperations(userRole);

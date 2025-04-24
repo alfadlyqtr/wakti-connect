@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import TaskControls from "@/components/tasks/TaskControls";
 import TasksLoading from "@/components/tasks/TasksLoading";
@@ -111,6 +110,7 @@ const DashboardTasks = () => {
           onCreateTask={() => setCreateTaskDialogOpen(true)}
           onEdit={handleEditTask}
           onDelete={handleDeleteTask}
+          activeTab={activeTab}
         />
       )}
       
