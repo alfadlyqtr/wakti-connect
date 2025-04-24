@@ -1,11 +1,11 @@
 
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { PermissionGuard } from '@/features/auth';
 import UpgradeHeader from "@/components/billing/UpgradeHeader";
 import BillingCycleToggle from "@/components/billing/BillingCycleToggle";
 import PlanCardsGrid from "@/components/billing/PlanCardsGrid";
 import PlanActions from "@/components/billing/PlanActions";
-import StaffRoleGuard from "@/components/auth/StaffRoleGuard";
 
 const DashboardUpgrade = () => {
   const [selectedPlan, setSelectedPlan] = useState<"individual" | "business" | null>(null);
@@ -18,10 +18,13 @@ const DashboardUpgrade = () => {
   };
 
   return (
-    <StaffRoleGuard 
-      disallowStaff={true}
-      messageTitle="Upgrade Not Available"
-      messageDescription="Staff accounts cannot upgrade plans. Please contact your business administrator."
+    <PermissionGuard 
+      feature="can_upgrade"
+      fallback={
+        <div className="text-center p-8">
+          Staff accounts cannot upgrade plans. Please contact your business administrator.
+        </div>
+      }
     >
       <div className="space-y-6 max-w-5xl mx-auto">
         <UpgradeHeader />
@@ -42,7 +45,7 @@ const DashboardUpgrade = () => {
           handleContinue={handleContinue}
         />
       </div>
-    </StaffRoleGuard>
+    </PermissionGuard>
   );
 };
 
