@@ -7,7 +7,6 @@ import { TaskCardMenu } from "./TaskCardMenu";
 import { TaskCardFooter } from "./TaskCardFooter";
 import { TaskDueDate } from "./TaskDueDate";
 import { TaskDetailDialog } from "./TaskDetailDialog";
-import { TaskCardCompletionAnimation } from "./TaskCardCompletionAnimation";
 
 const PRIORITY_COLORS: Record<string, string> = {
   urgent: "border-l-wakti-gold bg-wakti-gold/10 hover:bg-wakti-gold/20 dark:bg-[#282113]",
@@ -67,7 +66,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
   onSubtaskToggle
 }) => {
   const [detailOpen, setDetailOpen] = useState(false);
-  const [showCompletion, setShowCompletion] = useState(false);
   const isPaidAccount = userRole === "individual" || userRole === "business";
   const isCompleted = status === "completed";
   const isOverdue = !isCompleted && 
@@ -85,9 +83,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
   };
 
   const handleStatusChange = async (taskId: string, newStatus: string) => {
-    if (newStatus === "completed" && !isCompleted) {
-      setShowCompletion(true);
-    }
     await onStatusChange(taskId, newStatus);
   };
 
@@ -212,12 +207,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
         onStatusChange={handleStatusChange}
         onSubtaskToggle={handleSubtaskToggle}
         refetch={refetch}
-      />
-
-      <TaskCardCompletionAnimation
-        show={showCompletion}
-        isAheadOfTime={dueDate > new Date()}
-        onAnimationComplete={() => setShowCompletion(false)}
       />
     </>
   );
