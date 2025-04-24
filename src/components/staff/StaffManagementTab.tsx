@@ -11,7 +11,7 @@ const StaffManagementTab: React.FC = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const { data: queryStaffMembers, isLoading, error, refetch } = useStaffQuery();
 
-  // Convert the StaffQueryResult[] to StaffMember[]
+  // Safely convert the StaffQueryResult[] to StaffMember[] with a default empty array fallback
   const staffMembers: StaffMember[] = (queryStaffMembers || []).map(staff => ({
     id: staff.id,
     staff_id: staff.staff_id,

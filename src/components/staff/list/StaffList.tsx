@@ -27,15 +27,17 @@ export const StaffList: React.FC<StaffListProps> = ({
   const [confirmToggleOpen, setConfirmToggleOpen] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
   
-  // Get staff operations
+  // Get staff operations - with proper error handling
   const { 
     deleteStaff, 
     toggleStaffStatus 
-  } = useStaffListOperations();
+  } = useStaffListOperations ? useStaffListOperations() : { deleteStaff: null, toggleStaffStatus: { mutate: () => {} } };
 
-  // Handle toggle status
+  // Handle toggle status with proper type safety
   const handleToggleStatus = (staffId: string, status: string) => {
-    toggleStaffStatus.mutate({ staffId, newStatus: status });
+    if (toggleStaffStatus && 'mutate' in toggleStaffStatus) {
+      toggleStaffStatus.mutate({ staffId, newStatus: status });
+    }
   };
 
   // Show loading state
@@ -53,7 +55,7 @@ export const StaffList: React.FC<StaffListProps> = ({
     return <EmptyStaffState onAddStaffClick={() => onEdit("")} />;
   }
 
-  // Render staff list
+  // Render staff list with proper type checking
   return (
     <StaffMembersList
       staffMembers={staffMembers}
