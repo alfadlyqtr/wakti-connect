@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle2, Award } from 'lucide-react';
-import confetti from 'canvas-confetti';
 import { playTaskCompletionSound } from '@/utils/audioUtils';
 
 interface TaskCardCompletionAnimationProps {
@@ -26,18 +25,6 @@ export const TaskCardCompletionAnimation: React.FC<TaskCardCompletionAnimationPr
   useEffect(() => {
     if (show) {
       setShowAnimation(true);
-      
-      // Single burst of confetti with reduced particles
-      confetti({
-        particleCount: 15,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ['#0053c3', '#ffc529', '#000080', '#F5E6D3'],
-        disableForReducedMotion: true,
-        scalar: 1,
-        gravity: 1.5, // Faster fall
-        ticks: 300 // Control animation duration more precisely
-      });
       
       // Play completion sound once
       playTaskCompletionSound(0.7);
