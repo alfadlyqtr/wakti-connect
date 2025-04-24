@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, ThumbsUp, Award } from 'lucide-react';
+import { CheckCircle2, Award } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 interface TaskCardCompletionAnimationProps {
@@ -17,41 +17,56 @@ export const TaskCardCompletionAnimation: React.FC<TaskCardCompletionAnimationPr
 }) => {
   const [showAnimation, setShowAnimation] = useState(false);
 
+  const handleClose = useCallback(() => {
+    setShowAnimation(false);
+    onAnimationComplete();
+  }, [onAnimationComplete]);
+
   useEffect(() => {
     if (show) {
       setShowAnimation(true);
       
-      // Run confetti when completing a task ahead of time
-      if (isAheadOfTime) {
-        const duration = 2 * 1000;
-        const end = Date.now() + duration;
+      // Launch confetti with brand colors when completing a task
+      const duration = 2000;
+      const end = Date.now() + duration;
+      const colors = ['#0053c3', '#ffc529', '#000080', '#F5E6D3'];
 
-        const launchConfetti = () => {
-          confetti({
-            particleCount: 50,
-            spread: 70,
-            origin: { y: 0.6 },
-            colors: ['#4CAF50', '#2196F3', '#FFEB3B'],
-            disableForReducedMotion: true
-          });
-          
-          if (Date.now() < end) {
-            requestAnimationFrame(launchConfetti);
-          }
-        };
+      const launchConfetti = () => {
+        confetti({
+          particleCount: 100,
+          spread: 90,
+          origin: { y: 0.6, x: 0.5 },
+          colors,
+          shapes: ['circle', 'square'],
+          gravity: 1.2,
+          scalar: 1.2,
+          disableForReducedMotion: true
+        });
         
-        launchConfetti();
-      }
+        if (Date.now() < end) {
+          requestAnimationFrame(launchConfetti);
+        }
+      };
       
-      // Hide animation after delay
-      const timer = setTimeout(() => {
-        setShowAnimation(false);
-        onAnimationComplete();
-      }, 2000);
+      launchConfetti();
       
+      // Auto close after 3 seconds
+      const timer = setTimeout(handleClose, 3000);
       return () => clearTimeout(timer);
     }
-  }, [show, isAheadOfTime, onAnimationComplete]);
+  }, [show, handleClose]);
+
+  // Handle ESC key
+  useEffect(() => {
+    const handleEscKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showAnimation) {
+        handleClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleEscKey);
+    return () => window.removeEventListener('keydown', handleEscKey);
+  }, [showAnimation, handleClose]);
 
   return (
     <AnimatePresence>
@@ -61,14 +76,28 @@ export const TaskCardCompletionAnimation: React.FC<TaskCardCompletionAnimationPr
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          onClick={handleClose}
         >
           <motion.div
-            className="flex flex-col items-center p-8 bg-card rounded-xl shadow-xl"
+            className="relative flex flex-col items-center p-8 bg-card rounded-xl shadow-xl"
             initial={{ scale: 0.8, y: 20, opacity: 0 }}
             animate={{ scale: 1, y: 0, opacity: 1 }}
             exit={{ scale: 0.8, y: 20, opacity: 0 }}
             transition={{ type: "spring", damping: 15 }}
+            onClick={(e) => e.stopPropagation()}
           >
+            {/* Stamp-like overlay */}
+            <motion.div
+              className="absolute inset-0 flex items-center justify-center"
+              initial={{ rotate: -15, scale: 2, opacity: 0 }}
+              animate={{ rotate: 0, scale: 1, opacity: 0.1 }}
+              transition={{ duration: 0.5 }}
+            >
+              <div className="border-4 border-green-500 rounded-full p-12 rotate-12">
+                <CheckCircle2 size={80} className="text-green-500" />
+              </div>
+            </motion.div>
+
             {isAheadOfTime ? (
               <>
                 <motion.div
@@ -77,18 +106,18 @@ export const TaskCardCompletionAnimation: React.FC<TaskCardCompletionAnimationPr
                     scale: [1, 1.2, 1]
                   }}
                   transition={{ duration: 1, repeat: 1 }}
-                  className="text-yellow-500 mb-4"
+                  className="text-yellow-500 mb-4 relative z-10"
                 >
-                  <Award size={60} className="text-yellow-500" />
+                  <Award size={60} className="text-wakti-gold" />
                 </motion.div>
                 <motion.h2 
-                  className="text-xl font-bold mb-2 text-center"
+                  className="text-xl font-bold mb-2 text-center relative z-10"
                   animate={{ scale: [1, 1.1, 1] }}
                   transition={{ duration: 0.5, repeat: 1 }}
                 >
                   Amazing Work! 
                 </motion.h2>
-                <p className="text-center text-muted-foreground">
+                <p className="text-center text-muted-foreground relative z-10">
                   Task completed ahead of schedule!
                 </p>
               </>
@@ -97,18 +126,18 @@ export const TaskCardCompletionAnimation: React.FC<TaskCardCompletionAnimationPr
                 <motion.div
                   animate={{ scale: [1, 1.2, 1] }}
                   transition={{ duration: 0.5, repeat: 1 }}
-                  className="text-green-500 mb-4"
+                  className="text-green-500 mb-4 relative z-10"
                 >
                   <CheckCircle2 size={60} />
                 </motion.div>
                 <motion.h2 
-                  className="text-xl font-bold mb-2"
+                  className="text-xl font-bold mb-2 relative z-10"
                   animate={{ y: [0, -10, 0] }}
                   transition={{ duration: 0.5 }}
                 >
                   Task Completed!
                 </motion.h2>
-                <p className="text-center text-muted-foreground">
+                <p className="text-center text-muted-foreground relative z-10">
                   Well done on completing your task
                 </p>
               </>
