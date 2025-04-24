@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle2, Award } from 'lucide-react';
 import { playTaskCompletionSound } from '@/utils/audioUtils';
@@ -15,36 +15,20 @@ export const TaskCardCompletionAnimation: React.FC<TaskCardCompletionAnimationPr
   isAheadOfTime,
   onAnimationComplete
 }) => {
-  const [showAnimation, setShowAnimation] = useState(false);
-
-  // Use clean callback to ensure proper closure
-  const handleClose = useCallback(() => {
-    setShowAnimation(false);
-    onAnimationComplete();
-  }, [onAnimationComplete]);
-
   useEffect(() => {
-    let timer: NodeJS.Timeout | null = null;
-    
     if (show) {
-      setShowAnimation(true);
-      
-      // Play completion sound once - no looping
+      // Play sound once when showing
       playTaskCompletionSound(0.7);
       
-      // Auto close after 3 seconds (reduced from 5)
-      timer = setTimeout(handleClose, 3000);
+      // Auto close after 3 seconds
+      const timer = setTimeout(onAnimationComplete, 3000);
+      return () => clearTimeout(timer);
     }
-    
-    // Clean up timer when unmounting or when show changes
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
-  }, [show, handleClose]);
+  }, [show, onAnimationComplete]);
 
   return (
     <AnimatePresence>
-      {showAnimation && (
+      {show && (
         <motion.div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/20"
           initial={{ opacity: 0 }}
@@ -61,9 +45,7 @@ export const TaskCardCompletionAnimation: React.FC<TaskCardCompletionAnimationPr
           >
             {isAheadOfTime ? (
               <>
-                <motion.div
-                  className="text-yellow-500 mb-4"
-                >
+                <motion.div className="text-yellow-500 mb-4">
                   <Award size={60} className="text-wakti-gold" />
                 </motion.div>
                 <h2 className="text-xl font-bold mb-2 text-center">
@@ -75,9 +57,7 @@ export const TaskCardCompletionAnimation: React.FC<TaskCardCompletionAnimationPr
               </>
             ) : (
               <>
-                <motion.div
-                  className="text-green-500 mb-4"
-                >
+                <motion.div className="text-green-500 mb-4">
                   <CheckCircle2 size={60} />
                 </motion.div>
                 <h2 className="text-xl font-bold mb-2">
