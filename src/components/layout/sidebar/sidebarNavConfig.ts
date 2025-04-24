@@ -113,11 +113,29 @@ export const navItems: NavItem[] = [
 
 export const dropdownNavItems: NavItem[] = [
   {
+    icon: Bell,
+    label: 'Notifications',
+    path: 'notifications',
+    showFor: ['individual', 'business', 'staff'],
+    badge: 0
+  },
+  {
+    icon: Users,
+    label: 'Contacts',
+    path: 'contacts',
+    showFor: ['individual', 'business', 'staff']
+  },
+  {
+    icon: HeartHandshake,
+    label: 'Subscribers',
+    path: 'subscribers',
+    showFor: ['business']
+  },
+  {
     icon: MessageSquare,
     label: 'Messages',
     path: 'messages',
-    showFor: ['individual', 'business', 'staff'],
-    badge: 0
+    showFor: ['individual', 'business', 'staff']
   },
   {
     icon: Calendar,
