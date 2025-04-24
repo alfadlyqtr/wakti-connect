@@ -99,7 +99,7 @@ const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications, userRo
       path: '/dashboard/subscribers',
       badge: null,
       showForRoles: ['business']
-    },
+    }
   ];
   
   const configNavItems: NavItem[] = dropdownNavItems.map(item => ({
