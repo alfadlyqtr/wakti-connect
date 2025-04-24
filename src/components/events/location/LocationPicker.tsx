@@ -3,6 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, Navigation } from 'lucide-react';
 import { GOOGLE_MAPS_API_KEY, generateGoogleMapsUrl } from '@/config/maps';
+import { getFormattedAddress } from '@/components/ai/tools/maps-helpers';
 import { waitForGoogleMapsToLoad } from '@/utils/googleMapsLoader';
 import { useTranslation } from 'react-i18next';
 import { toast } from '@/components/ui/use-toast';

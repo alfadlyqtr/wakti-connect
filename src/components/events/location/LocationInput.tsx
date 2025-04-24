@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import LocationPicker from './LocationPicker';
 import { generateGoogleMapsUrl, isValidMapsUrl } from '@/config/maps';
+import { getFormattedAddress } from '@/components/ai/tools/maps-helpers';
 import { toast } from '@/components/ui/use-toast';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
