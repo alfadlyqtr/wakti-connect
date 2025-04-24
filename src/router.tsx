@@ -40,6 +40,7 @@ const StaffDashboard = lazy(() => import("@/pages/dashboard/StaffDashboard"));
 const DashboardJobs = lazy(() => import("@/pages/dashboard/DashboardJobs"));
 const DashboardJobCards = lazy(() => import("@/pages/dashboard/DashboardJobCards"));
 const DashboardMeetingSummary = lazy(() => import("@/pages/dashboard/MeetingSummary"));
+const DashboardSubscribers = lazy(() => import("@/pages/dashboard/DashboardSubscribers"));
 
 // Wrap components with Suspense for lazy loading
 const withSuspense = (Component: React.ComponentType) => (
@@ -113,6 +114,10 @@ const dashboardRoutes: RouteObject[] = [
   {
     path: "meeting-summary",
     element: withSuspense(DashboardMeetingSummary),
+  },
+  {
+    path: "subscribers",
+    element: withSuspense(DashboardSubscribers),
   },
 ];
 
