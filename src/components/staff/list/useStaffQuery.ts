@@ -23,6 +23,7 @@ export const useStaffQuery = () => {
   return useQuery<StaffQueryResult[], Error>({
     queryKey: ['staffMembers'],
     queryFn: async () => {
+      // Get current session
       const { data: sessionData } = await supabase.auth.getSession();
       const userId = sessionData.session?.user?.id;
       
@@ -30,6 +31,7 @@ export const useStaffQuery = () => {
         throw new Error('User not authenticated');
       }
       
+      // Fetch staff data
       const { data, error } = await supabase
         .from('business_staff')
         .select('*')
@@ -40,13 +42,15 @@ export const useStaffQuery = () => {
         throw new Error(error.message);
       }
       
-      // Transform the data to ensure permissions is a proper Record<string, boolean>
+      // Transform the data to ensure permissions is properly typed
       return (data || []).map(staff => ({
         ...staff,
         permissions: typeof staff.permissions === 'string' 
           ? JSON.parse(staff.permissions as string)
           : (staff.permissions as Record<string, boolean> | null)
       })) as StaffQueryResult[];
-    }
+    },
+    staleTime: 60000, // Consider data fresh for 1 minute
+    refetchOnWindowFocus: true // Automatically refetch when window regains focus
   });
 };

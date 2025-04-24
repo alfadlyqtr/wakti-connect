@@ -9,26 +9,28 @@ import { useStaffQuery, StaffQueryResult } from "./list/useStaffQuery";
 
 const StaffManagementTab: React.FC = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const { data: queryStaffMembers, isLoading, error, refetch } = useStaffQuery();
+  const { data: staffData, isLoading, error, refetch } = useStaffQuery();
 
-  // Safely convert the StaffQueryResult[] to StaffMember[] with a default empty array fallback
-  const staffMembers: StaffMember[] = (queryStaffMembers || []).map(staff => ({
-    id: staff.id,
-    staff_id: staff.staff_id,
-    business_id: staff.business_id,
-    name: staff.name,
-    email: staff.email || '',
-    position: staff.position || '',
-    role: staff.role || 'staff',
-    status: staff.status || 'active',
-    is_service_provider: staff.is_service_provider || false,
-    permissions: typeof staff.permissions === 'string' 
-      ? JSON.parse(staff.permissions as string)
-      : staff.permissions || {},
-    staff_number: staff.staff_number || '',
-    profile_image_url: staff.profile_image_url,
-    created_at: staff.created_at
-  }));
+  // Transform the API data to our application StaffMember type
+  const staffMembers: StaffMember[] = React.useMemo(() => {
+    if (!staffData) return [];
+    
+    return staffData.map(staff => ({
+      id: staff.id,
+      staff_id: staff.staff_id,
+      business_id: staff.business_id,
+      name: staff.name,
+      email: staff.email || '',
+      position: staff.position || '',
+      role: staff.role || 'staff',
+      status: staff.status || 'active',
+      is_service_provider: staff.is_service_provider || false,
+      permissions: staff.permissions || {},
+      staff_number: staff.staff_number || '',
+      profile_image_url: staff.profile_image_url,
+      created_at: staff.created_at
+    }));
+  }, [staffData]);
 
   const handleViewDetails = (staffId: string) => {
     console.log("View details for staff member:", staffId);

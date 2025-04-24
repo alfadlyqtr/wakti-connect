@@ -1,8 +1,7 @@
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
-import { StaffMember } from "@/types/staff";
 
 export const useStaffListOperations = () => {
   const queryClient = useQueryClient();
@@ -24,7 +23,6 @@ export const useStaffListOperations = () => {
         description: "Staff member has been deleted successfully."
       });
       queryClient.invalidateQueries({ queryKey: ['staffMembers'] });
-      queryClient.invalidateQueries({ queryKey: ['businessStaff'] });
     },
     onError: (error: any) => {
       toast({
@@ -52,7 +50,6 @@ export const useStaffListOperations = () => {
         description: `Staff member has been ${data.newStatus === 'active' ? 'activated' : 'suspended'} successfully.`
       });
       queryClient.invalidateQueries({ queryKey: ['staffMembers'] });
-      queryClient.invalidateQueries({ queryKey: ['businessStaff'] });
     },
     onError: (error: any) => {
       toast({
