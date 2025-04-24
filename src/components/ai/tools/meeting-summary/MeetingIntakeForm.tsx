@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,7 +11,8 @@ import { MapPin, ArrowRight } from 'lucide-react';
 import { toast } from "sonner";
 import { useEventLocation } from '@/hooks/events/useEventLocation';
 import MeetingFormLayout from './MeetingFormLayout';
-import { supabase } from '@/integrations/supabase/client';
+import { getFormattedAddress } from '../maps-helpers';
+import { waitForGoogleMapsToLoad } from '@/utils/googleMapsLoader';
 
 const formSchema = z.object({
   sessionType: z.string().optional(),
@@ -30,6 +30,10 @@ interface MeetingIntakeFormProps {
 
 export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, onSkip }) => {
   const { handleLocationChange, location, isGettingLocation } = useEventLocation();
+  const [mapPreviewUrl, setMapPreviewUrl] = React.useState<string>('');
+  const locationInputRef = useRef<HTMLInputElement>(null);
+  const autoCompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -41,6 +45,34 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
       language: 'auto',
     },
   });
+
+  React.useEffect(() => {
+    const initAutocomplete = async () => {
+      try {
+        await waitForGoogleMapsToLoad();
+        
+        if (!locationInputRef.current) return;
+
+        const autocomplete = new window.google.maps.places.Autocomplete(locationInputRef.current, {
+          fields: ['formatted_address', 'geometry']
+        });
+
+        autocomplete.addListener('place_changed', () => {
+          const place = autocomplete.getPlace();
+          if (place.formatted_address) {
+            form.setValue('location', place.formatted_address);
+            handleLocationChange(place.formatted_address, 'manual');
+          }
+        });
+
+        autoCompleteRef.current = autocomplete;
+      } catch (error) {
+        console.error('Error initializing Google Maps:', error);
+      }
+    };
+
+    initAutocomplete();
+  }, [handleLocationChange]);
 
   React.useEffect(() => {
     if (location) {
@@ -60,18 +92,10 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
       });
 
       const { latitude, longitude } = position.coords;
+      const formattedAddress = await getFormattedAddress(latitude, longitude);
       
-      const { data: geoData, error: geoError } = await supabase.functions.invoke('tomtom-geocode', {
-        body: { query: `${latitude},${longitude}` }
-      });
-
-      if (geoError) {
-        toast.error("Could not get location details");
-        return;
-      }
-
-      const locationStr = `Current Location (${latitude.toFixed(6)}, ${longitude.toFixed(6)})`;
-      handleLocationChange(locationStr, 'manual');
+      handleLocationChange(formattedAddress, 'manual');
+      form.setValue('location', formattedAddress);
       
     } catch (error: any) {
       console.error("Error getting location:", error);
@@ -146,8 +170,12 @@ export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, 
                     <div className="flex gap-2">
                       <FormControl>
                         <Input 
-                          placeholder="e.g., Oryx Tower, Doha College" 
+                          placeholder="Search for a location..." 
                           {...field}
+                          ref={(e) => {
+                            locationInputRef.current = e;
+                            field.ref(e);
+                          }}
                           className="h-10 bg-white border-wakti-navy/20"
                         />
                       </FormControl>

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Map, Users, ExternalLink } from 'lucide-react';
@@ -38,7 +37,6 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
     return null;
   }
 
-  // Extract title from summary if present
   const extractTitle = () => {
     const titleMatch = summary.match(/Meeting Title:\s*([^\n]+)/i) || 
                       summary.match(/Title:\s*([^\n]+)/i) ||
@@ -49,10 +47,14 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
 
   const meetingTitle = extractTitle();
 
-  // Get a thumbnail map URL for the location
   const getMapThumbnailUrl = (location: string): string => {
     const encodedLocation = encodeURIComponent(location);
     return `https://maps.googleapis.com/maps/api/staticmap?center=${encodedLocation}&zoom=14&size=400x200&key=${GOOGLE_MAPS_API_KEY}&markers=${encodedLocation}`;
+  };
+
+  const generateMapEmbedUrl = (location: string): string => {
+    const encodedLocation = encodeURIComponent(location);
+    return `https://www.google.com/maps/embed/v1/place?key=${GOOGLE_MAPS_API_KEY}&q=${encodedLocation}`;
   };
 
   return (
@@ -114,7 +116,7 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Map className="h-5 w-5 text-green-500" />
-                <h4 className="font-medium text-green-700">Detected Location</h4>
+                <h4 className="font-medium text-green-700">Meeting Location</h4>
               </div>
               <Button
                 variant="link"
@@ -126,18 +128,22 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
                 <ExternalLink className="h-3 w-3" />
               </Button>
             </div>
+            
             <p className="text-sm mb-3 bg-white p-2 rounded border border-green-100">
               {detectedLocation}
             </p>
             
-            {/* Map thumbnail */}
             <div className="overflow-hidden rounded-md border border-green-200">
-              <img 
-                src={getMapThumbnailUrl(detectedLocation)} 
-                alt="Location Map" 
-                className="w-full h-[120px] object-cover hover:scale-105 transition-transform duration-300"
-                onClick={() => window.open(generateGoogleMapsUrl(detectedLocation), '_blank')}
-                style={{ cursor: 'pointer' }}
+              <iframe
+                src={generateMapEmbedUrl(detectedLocation)}
+                width="100%"
+                height="150"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                className="w-full hover:scale-105 transition-transform duration-300"
+                title="Meeting Location"
               />
             </div>
           </motion.div>
