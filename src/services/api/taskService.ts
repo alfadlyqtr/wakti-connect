@@ -5,6 +5,7 @@ import { ApiResponse } from './types';
 
 export class TaskService extends BaseService {
   private static instance: TaskService;
+  // Define this as a string literal type that matches a known table name
   private readonly path = 'tasks';
 
   private constructor() {

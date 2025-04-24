@@ -1,14 +1,17 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { ApiResponse } from './types';
+import { PostgrestQueryBuilder } from '@supabase/postgrest-js';
+import { Database } from '@/integrations/supabase/types';
 
 export class BaseService {
   protected async get<T>(
-    path: string,
+    path: keyof Database['public']['Tables'] | string,
     query?: Record<string, any>
   ): Promise<ApiResponse<T>> {
     try {
-      let request = supabase.from(path).select('*');
+      // Use type assertion to handle dynamic table names
+      let request = supabase.from(path as keyof Database['public']['Tables']).select('*');
       
       if (query) {
         Object.entries(query).forEach(([key, value]) => {
@@ -34,12 +37,12 @@ export class BaseService {
   }
 
   protected async post<T>(
-    path: string,
+    path: keyof Database['public']['Tables'] | string,
     data: Record<string, any>
   ): Promise<ApiResponse<T>> {
     try {
       const { data: responseData, error } = await supabase
-        .from(path)
+        .from(path as keyof Database['public']['Tables'])
         .insert(data)
         .select()
         .single();
@@ -60,13 +63,13 @@ export class BaseService {
   }
 
   protected async update<T>(
-    path: string,
+    path: keyof Database['public']['Tables'] | string,
     id: string,
     data: Partial<T>
   ): Promise<ApiResponse<T>> {
     try {
       const { data: responseData, error } = await supabase
-        .from(path)
+        .from(path as keyof Database['public']['Tables'])
         .update(data)
         .eq('id', id)
         .select()
@@ -88,12 +91,12 @@ export class BaseService {
   }
 
   protected async delete(
-    path: string,
+    path: keyof Database['public']['Tables'] | string,
     id: string
   ): Promise<ApiResponse<null>> {
     try {
       const { error } = await supabase
-        .from(path)
+        .from(path as keyof Database['public']['Tables'])
         .delete()
         .eq('id', id);
         
