@@ -1,9 +1,10 @@
 
 // Audio utilities for playing reminder sounds
 
-// Default audio URLs - we use standard notification sounds
-const DEFAULT_NOTIFICATION_SOUND = '/sounds/notification.mp3';
-const DEFAULT_REMINDER_SOUND = '/sounds/reminder-alert.mp3';
+// Default audio URLs - we use the correct notification sounds
+const DEFAULT_NOTIFICATION_SOUND = '/sounds/wakti reminder sound.mp3';
+const DEFAULT_REMINDER_SOUND = '/sounds/wakti reminder sound.mp3';
+const TASK_COMPLETION_SOUND = '/sounds/wakto task completed sound.mp3';
 
 // Audio context for better control
 let audioContext: AudioContext | null = null;
@@ -73,6 +74,16 @@ export const playNotificationSound = async (options: {
       console.warn("Audio playback was prevented due to browser autoplay policy. User interaction is required.");
     }
   }
+};
+
+/**
+ * Play task completion sound
+ */
+export const playTaskCompletionSound = async (volume: number = 0.7): Promise<void> => {
+  return playNotificationSound({
+    soundUrl: TASK_COMPLETION_SOUND,
+    volume
+  });
 };
 
 /**

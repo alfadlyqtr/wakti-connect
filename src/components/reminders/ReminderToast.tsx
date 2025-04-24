@@ -33,7 +33,11 @@ const ReminderToast: React.FC<ReminderToastProps> = ({
   
   // Play sound when reminder toast appears
   useEffect(() => {
-    playNotificationSound();
+    // Use the generic notification sound for reminders
+    playNotificationSound({ 
+      soundUrl: '/sounds/wakti reminder sound.mp3',
+      volume: 0.7
+    });
   }, []);
   
   const handleSnooze = async (minutes: number) => {

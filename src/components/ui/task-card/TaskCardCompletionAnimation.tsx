@@ -52,7 +52,7 @@ export const TaskCardCompletionAnimation: React.FC<TaskCardCompletionAnimationPr
       
       // Play completion sound if available
       try {
-        const audio = new Audio('/sounds/task-complete.mp3');
+        const audio = new Audio('/sounds/wakto task completed sound.mp3');
         audio.play().catch(e => console.log('Audio playback failed:', e));
       } catch (error) {
         console.log('Sound playback not supported');
