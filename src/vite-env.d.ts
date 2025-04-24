@@ -5,6 +5,14 @@
 declare namespace google {
   namespace maps {
     namespace places {
+      interface AutocompleteOptions {
+        fields?: string[];
+        types?: string[];
+        componentRestrictions?: {
+          country: string | string[];
+        };
+      }
+      
       interface Autocomplete {
         addListener: (event: string, callback: () => void) => void;
         getPlace: () => {
@@ -16,6 +24,7 @@ declare namespace google {
             };
           };
           name?: string;
+          place_id?: string;
         };
       }
     }

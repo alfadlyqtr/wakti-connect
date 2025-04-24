@@ -8,22 +8,7 @@ import { waitForGoogleMapsToLoad } from '@/utils/googleMapsLoader';
 import { useTranslation } from 'react-i18next';
 import { toast } from '@/components/ui/use-toast';
 
-declare global {
-  interface Window {
-    google: {
-      maps: {
-        places: {
-          Autocomplete: new (
-            input: HTMLInputElement,
-            options?: google.maps.places.AutocompleteOptions
-          ) => google.maps.places.Autocomplete;
-        };
-        Map: any;
-      };
-    };
-  }
-}
-
+// Define global types for TypeScript
 interface LocationPickerProps {
   value: string;
   onChange: (value: string, lat?: number, lng?: number) => void;

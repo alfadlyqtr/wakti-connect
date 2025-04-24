@@ -1,7 +1,7 @@
 
 import { useState, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
+import { generateGoogleMapsUrl } from "@/config/maps";
 
 export const useEventLocation = () => {
   const [location, setLocation] = useState<string>('');
@@ -21,36 +21,15 @@ export const useEventLocation = () => {
     if (url) {
       setMapsUrl(url);
     } else if (newLocation && type === 'google_maps') {
-      try {
-        const { data, error } = await supabase.functions.invoke('tomtom-geocode', {
-          body: { query: newLocation }
-        });
-
-        if (error) {
-          console.error('Error getting coordinates:', error);
-          toast({
-            title: "Location Error",
-            description: "Could not get location coordinates. Using text only.",
-            variant: "destructive"
-          });
-          return;
-        }
-
-        if (data?.coordinates) {
-          const { lat, lon } = data.coordinates;
-          setCoordinates({ lat, lng: lon });
-          const newMapsUrl = `https://www.tomtom.com/en_gb/maps/view?lat=${lat}&lon=${lon}`;
-          setMapsUrl(newMapsUrl);
-        }
-      } catch (error) {
-        console.error('Error generating maps URL:', error);
-      }
+      // Try to generate a maps URL from the location
+      const newMapsUrl = generateGoogleMapsUrl(newLocation);
+      setMapsUrl(newMapsUrl);
     }
   }, []);
 
   const handleCoordinatesChange = useCallback((lat: number, lng: number) => {
     setCoordinates({ lat, lng });
-    const newMapsUrl = `https://www.tomtom.com/en_gb/maps/view?lat=${lat}&lon=${lng}`;
+    const newMapsUrl = generateGoogleMapsUrl(`${lat},${lng}`);
     setMapsUrl(newMapsUrl);
   }, []);
 
@@ -78,7 +57,7 @@ export const useEventLocation = () => {
         setLocation(locationStr);
         
         // Generate a maps URL
-        const mapsUrl = `https://www.tomtom.com/en_gb/maps/view?lat=${latitude}&lon=${longitude}`;
+        const mapsUrl = generateGoogleMapsUrl(`${latitude},${longitude}`);
         setMapsUrl(mapsUrl);
         
         setIsGettingLocation(false);

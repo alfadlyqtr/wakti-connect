@@ -27,7 +27,7 @@ export const waitForGoogleMapsToLoad = (timeoutMs: number = 10000): Promise<void
     }
     
     // Set up a listener for when the API loads
-    let timeoutId: number | undefined;
+    let timeoutId: ReturnType<typeof setTimeout>;
     const checkInterval = setInterval(() => {
       if (isGoogleMapsLoaded()) {
         console.log('Google Maps API loaded successfully');

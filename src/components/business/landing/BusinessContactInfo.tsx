@@ -4,6 +4,7 @@ import { BusinessPageSection } from "@/types/business.types";
 import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, Phone, Mail, Globe, Navigation } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { generateGoogleMapsUrl } from "@/config/maps";
 
 interface BusinessContactInfoProps {
   section: BusinessPageSection;

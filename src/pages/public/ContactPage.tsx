@@ -6,6 +6,7 @@ import ContactForm from "@/components/ContactForm";
 import ContactFaq from "@/components/contact/ContactFaq";
 import SocialLinks from "@/components/contact/SocialLinks";
 import { MapPin } from "lucide-react";
+import { GOOGLE_MAPS_API_KEY } from "@/config/maps";
 
 const ContactPage = () => {
   return (
@@ -28,18 +29,29 @@ const ContactPage = () => {
         </div>
 
         {/* Map Section */}
-        <div className="mb-20 rounded-lg overflow-hidden border h-[400px] relative bg-muted flex items-center justify-center">
-          <div className="absolute inset-0 opacity-20">
-            {/* Google Maps would be embedded here in production */}
-            <div className="w-full h-full bg-slate-200"></div>
-          </div>
-          <div className="relative z-10 text-center">
-            <MapPin className="h-12 w-12 text-wakti-blue mx-auto mb-4" />
-            <h3 className="text-xl font-bold mb-2">Visit Our Office</h3>
-            <p className="text-muted-foreground">
-              West Bay, Doha, Qatar
-            </p>
-          </div>
+        <div className="mb-20 rounded-lg overflow-hidden border h-[400px] relative">
+          {GOOGLE_MAPS_API_KEY ? (
+            <iframe 
+              src={`https://www.google.com/maps/embed/v1/place?key=${GOOGLE_MAPS_API_KEY}&q=West+Bay,+Doha,+Qatar`}
+              width="100%" 
+              height="100%" 
+              style={{ border: 0 }} 
+              allowFullScreen 
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              title="WAKTI Office Location"
+            />
+          ) : (
+            <div className="w-full h-full bg-slate-200 flex items-center justify-center">
+              <div className="text-center">
+                <MapPin className="h-12 w-12 text-wakti-blue mx-auto mb-4" />
+                <h3 className="text-xl font-bold mb-2">Visit Our Office</h3>
+                <p className="text-muted-foreground">
+                  West Bay, Doha, Qatar
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* FAQ Section */}

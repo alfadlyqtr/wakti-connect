@@ -3,7 +3,7 @@ import React from 'react';
 import { Map, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DialogTitle } from '@/components/ui/dialog';
-import { generateTomTomMapsUrl } from '@/config/maps';
+import { generateGoogleMapsUrl } from '@/config/maps';
 
 interface DialogHeaderProps {
   title: string;
@@ -24,7 +24,7 @@ export const DialogHeader: React.FC<DialogHeaderProps> = ({ title, location }) =
             variant="link"
             size="sm"
             className="p-0 h-auto text-green-600 flex items-center gap-1"
-            onClick={() => location && window.open(generateTomTomMapsUrl(location), '_blank')}
+            onClick={() => location && window.open(generateGoogleMapsUrl(location), '_blank')}
           >
             <span className="text-xs">View on Map</span>
             <ExternalLink className="h-3 w-3" />

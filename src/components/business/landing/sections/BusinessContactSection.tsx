@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import { Mail, MapPin, Phone } from "lucide-react";
-import { generateTomTomMapsUrl, TOMTOM_API_KEY } from "@/config/maps";
+import { generateGoogleMapsUrl, GOOGLE_MAPS_API_KEY } from "@/config/maps";
 
 export interface BusinessContactSectionProps {
   businessName: string;
@@ -29,7 +29,7 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
 
   React.useEffect(() => {
     if (businessAddress) {
-      setMapUrl(generateTomTomMapsUrl(businessAddress));
+      setMapUrl(generateGoogleMapsUrl(businessAddress));
     }
   }, [businessAddress]);
 
