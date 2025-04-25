@@ -1,5 +1,5 @@
 import React from "react";
-import { createBrowserRouter, RouteObject } from "react-router-dom";
+import { createBrowserRouter, RouteObject, Outlet } from "react-router-dom";
 import { publicRoutes } from "./routes/publicRoutes";
 import { authRoutes } from "./routes/authRoutes";
 import { businessRoutes, bookingRoutes } from "./routes/businessRoutes";
