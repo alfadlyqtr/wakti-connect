@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { UserRole } from '@/types/roles';
 
 export interface UserProfile {
   id: string;
@@ -7,14 +8,11 @@ export interface UserProfile {
   full_name?: string;
   display_name?: string;
   avatar_url?: string;
-  account_type: 'free' | 'individual' | 'business';
+  account_type: UserRole;
   created_at: string;
   updated_at: string;
 }
 
-/**
- * Fetches the current user's profile
- */
 export const getUserProfile = async (): Promise<UserProfile | null> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
@@ -36,15 +34,15 @@ export const getUserProfile = async (): Promise<UserProfile | null> => {
     }
     
     // Map the data to match UserProfile interface
-    // Convert 'staff' and 'super-admin' to 'free' for compatibility
-    const accountType = 
+    const accountType: UserRole = 
       data.account_type === 'business' ? 'business' :
-      data.account_type === 'individual' ? 'individual' :
-      'free';
+      data.account_type === 'staff' ? 'staff' :
+      data.account_type === 'superadmin' ? 'superadmin' :
+      'individual';
     
     const profile: UserProfile = {
       id: data.id,
-      user_id: user.id, // Set user_id from the auth user
+      user_id: user.id,
       full_name: data.full_name || null,
       display_name: data.display_name || null,
       avatar_url: data.avatar_url || null,
@@ -60,22 +58,16 @@ export const getUserProfile = async (): Promise<UserProfile | null> => {
   }
 };
 
-/**
- * Gets the current user's role ('free', 'individual', or 'business')
- */
-export const getUserRole = async (): Promise<'free' | 'individual' | 'business'> => {
+export const getUserRole = async (): Promise<UserRole> => {
   try {
     const profile = await getUserProfile();
-    return profile?.account_type || 'free';
+    return profile?.account_type || 'individual';
   } catch (error) {
     console.error("Error getting user role:", error);
-    return 'free';
+    return 'individual';
   }
 };
 
-/**
- * Checks if the current user has permission to create events
- */
 export const canUserCreateEvents = async (): Promise<boolean> => {
   const role = await getUserRole();
   return role === 'individual' || role === 'business';
