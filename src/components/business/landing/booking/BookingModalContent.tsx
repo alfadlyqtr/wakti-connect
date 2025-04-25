@@ -70,7 +70,7 @@ const BookingModalContent: React.FC<BookingModalContentProps> = ({
           start_time: bookingDate.toISOString(),
           end_time: new Date(bookingDate.getTime() + (template.duration || 60) * 60000).toISOString(),
           status: 'pending',
-          created_by: user?.id || null
+          customer_id: user?.id || null // Use customer_id to associate with the user account
         })
         .select()
         .single();
