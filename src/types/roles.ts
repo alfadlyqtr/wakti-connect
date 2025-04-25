@@ -1,3 +1,4 @@
+
 // Define the standard user role types for the entire application
 export type UserRole = 'superadmin' | 'business' | 'staff' | 'individual';
 
@@ -18,42 +19,18 @@ export function hasRoleAccess(userRole: UserRole | null, allowedRoles: UserRole[
 }
 
 /**
- * Determine if one role has equal or higher privileges than another role
- * @param role The role to check
- * @param thanRole The role to compare against
- * @returns boolean indicating if role is equal or higher than thanRole
+ * Maps database account_type to UserRole
  */
-export function hasEqualOrHigherRole(role: UserRole | null, thanRole: UserRole): boolean {
-  if (!role) return false;
-  
-  const hierarchy: Record<UserRole, number> = {
-    'superadmin': 4,
-    'business': 3,
-    'staff': 2,
-    'individual': 1
-  };
-  
-  return hierarchy[role] >= hierarchy[thanRole];
+export function mapDatabaseRoleToUserRole(dbRole: string): UserRole {
+  switch (dbRole) {
+    case 'superadmin':
+      return 'superadmin';
+    case 'business':
+      return 'business';
+    case 'staff':
+      return 'staff';
+    default:
+      return 'individual';
+  }
 }
 
-/**
- * Determines the effective user role with proper prioritization
- * Superadmin > Business > Staff > Individual
- */
-export function getEffectiveRole(
-  accountType: string | undefined | null, 
-  isStaff: boolean, 
-  isSuperAdmin: boolean = false
-): UserRole {
-  // Superadmin has highest priority
-  if (isSuperAdmin) return 'superadmin';
-  
-  // If user is a business owner, that takes next highest priority
-  if (accountType === 'business') return 'business';
-  
-  // If user is staff (but not a business owner), that's next priority
-  if (isStaff) return 'staff';
-  
-  // Otherwise, they are an individual user
-  return 'individual';
-}

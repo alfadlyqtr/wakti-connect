@@ -3,13 +3,13 @@ import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { UserRole, mapDatabaseRoleToUserRole } from "@/types/roles";
 import SidebarNavItems from "./SidebarNavItems";
 import SidebarUpgradeBanner from "./SidebarUpgradeBanner";
 import SidebarProfile from "./SidebarProfile";
 import CollapseToggle from "./CollapseToggle";
 import SidebarContainer from "./SidebarContainer";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { UserRole } from "@/types/roles";
 import SidebarUpgradeButton from "./SidebarUpgradeButton";
 
 interface SidebarProfileData {
@@ -79,18 +79,9 @@ const Sidebar = ({
         return null;
       }
       
-      let effectiveRole: UserRole = 'individual';
-      if (data.account_type === 'business') {
-        effectiveRole = 'business';
-      } else if (data.account_type === 'staff') {
-        effectiveRole = 'staff';
-      } else if (data.account_type === 'superadmin') {
-        effectiveRole = 'superadmin';
-      }
-      
       return {
         ...data,
-        account_type: effectiveRole
+        account_type: data.account_type
       } as SidebarProfileData;
     },
   });
@@ -109,7 +100,13 @@ const Sidebar = ({
     >
       <CollapseToggle collapsed={collapsed} toggleCollapse={toggleCollapse} />
       
-      <SidebarProfile profileData={profileData} collapsed={collapsed} />
+      <SidebarProfile 
+        profileData={profileData && {
+          ...profileData,
+          account_type: mapDatabaseRoleToUserRole(profileData.account_type)
+        }} 
+        collapsed={collapsed} 
+      />
       
       <ScrollArea className="flex-grow">
         <SidebarNavItems 
@@ -123,7 +120,7 @@ const Sidebar = ({
         )}
       </ScrollArea>
       
-      {userRole === "individual" && !collapsed && (
+      {userRole === 'individual' && !collapsed && (
         <div className="mt-auto px-3 pb-5">
           <SidebarUpgradeBanner />
         </div>
@@ -133,3 +130,4 @@ const Sidebar = ({
 };
 
 export default Sidebar;
+

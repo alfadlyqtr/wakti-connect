@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { UserRole } from '@/types/roles';
+import { UserRole, mapDatabaseRoleToUserRole } from '@/types/roles';
 
 export interface UserProfile {
   id: string;
@@ -33,12 +33,8 @@ export const getUserProfile = async (): Promise<UserProfile | null> => {
       throw error;
     }
     
-    // Map the data to match UserProfile interface with correct role conversion
-    const accountType: UserRole = 
-      data.account_type === 'business' ? 'business' :
-      data.account_type === 'staff' ? 'staff' :
-      data.account_type === 'superadmin' ? 'superadmin' :
-      'individual';
+    // Map the database account_type to our UserRole type
+    const accountType: UserRole = mapDatabaseRoleToUserRole(data.account_type);
     
     const profile: UserProfile = {
       id: data.id,
@@ -72,3 +68,4 @@ export const canUserCreateEvents = async (): Promise<boolean> => {
   const role = await getUserRole();
   return role === 'individual' || role === 'business';
 };
+
