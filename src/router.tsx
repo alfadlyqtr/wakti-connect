@@ -1,4 +1,3 @@
-
 import React from "react";
 import { createBrowserRouter, RouteObject } from "react-router-dom";
 import { publicRoutes } from "./routes/publicRoutes";
@@ -18,7 +17,6 @@ import ScrollToTop from "./components/ui/scroll-to-top";
 import { TaskProvider } from "@/contexts/TaskContext";
 import NotificationListener from "./components/notifications/NotificationListener";
 import ErrorBoundary from "./components/ui/ErrorBoundary";
-import AuthShell from "@/components/auth/AuthShell";
 
 // Lazy load dashboard pages
 import { lazy, Suspense } from "react";
@@ -123,18 +121,16 @@ const dashboardRoutes: RouteObject[] = [
 ];
 
 export const router = createBrowserRouter([
-  // Auth routes with AuthShell wrapper
+  // Auth routes
   {
-    path: "/auth/*",
+    path: "/auth",
     element: (
       <ErrorBoundary>
         <TooltipProvider>
           <ScrollToTop />
           <Toaster />
           <Sonner />
-          <AuthShell>
-            <></>
-          </AuthShell>
+          <Outlet />
         </TooltipProvider>
       </ErrorBoundary>
     ),

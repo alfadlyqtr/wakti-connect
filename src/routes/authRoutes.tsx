@@ -10,6 +10,7 @@ import VerifySuccess from "@/pages/auth/VerifySuccessPage";
 import PlanSelection from "@/pages/auth/PlanSelectionPage";
 import WelcomeSetup from "@/pages/auth/WelcomeSetupPage";
 import PaymentSuccess from "@/pages/auth/PaymentSuccessPage";
+import AuthShell from "@/components/auth/AuthShell";
 
 export const authRoutes: RouteObject[] = [
   {
@@ -18,39 +19,39 @@ export const authRoutes: RouteObject[] = [
   },
   {
     path: "login",
-    element: <LoginPage />
+    element: <AuthShell><LoginPage /></AuthShell>
   },
   {
     path: "register",
-    element: <RegisterPage />
+    element: <AuthShell><RegisterPage /></AuthShell>
   },
   {
     path: "forgot-password",
-    element: <ForgotPasswordPage />
+    element: <AuthShell><ForgotPasswordPage /></AuthShell>
   },
   {
     path: "reset-password",
-    element: <ResetPasswordPage />
+    element: <AuthShell><ResetPasswordPage /></AuthShell>
   },
   {
     path: "verify-email",
-    element: <EmailVerification />
+    element: <AuthShell><EmailVerification /></AuthShell>
   },
   {
     path: "verify-success",
-    element: <VerifySuccess />
+    element: <AuthShell><VerifySuccess /></AuthShell>
   },
   {
     path: "plans",
-    element: <PlanSelection />
+    element: <AuthShell><PlanSelection /></AuthShell>
   },
   {
     path: "welcome-setup",
-    element: <WelcomeSetup />
+    element: <AuthShell><WelcomeSetup /></AuthShell>
   },
   {
     path: "payment-success",
-    element: <PaymentSuccess />
+    element: <AuthShell><PaymentSuccess /></AuthShell>
   }
 ];
 
