@@ -1739,6 +1739,27 @@ export type Database = {
         }
         Relationships: []
       }
+      role_permissions: {
+        Row: {
+          action: string
+          allowed: boolean
+          id: string
+          role: string
+        }
+        Insert: {
+          action: string
+          allowed?: boolean
+          id?: string
+          role: string
+        }
+        Update: {
+          action?: string
+          allowed?: boolean
+          id?: string
+          role?: string
+        }
+        Relationships: []
+      }
       staff_service_assignments: {
         Row: {
           created_at: string
