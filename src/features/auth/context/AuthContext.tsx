@@ -3,24 +3,22 @@ import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
 import { UserRole, getEffectiveRole } from "@/types/roles";
 import { toast } from "@/components/ui/use-toast";
-import { AuthContextType, User as ExtendedUser } from "../types";
+import { AuthContextType, User as ExtendedUser, AppUser } from "../types";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [effectiveRole, setEffectiveRole] = useState<UserRole | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [authError, setAuthError] = useState<Error | null>(null);
 
-  // Initialize auth state
   useEffect(() => {
     console.log("Initializing auth state...");
     let mounted = true;
     let authListenerSubscription: { subscription: { unsubscribe: () => void } } | null = null;
     
-    // Add a timeout to prevent infinite loading
     const loadingTimeout = setTimeout(() => {
       if (mounted && isLoading) {
         console.warn("Auth state loading timed out after 5 seconds");
@@ -30,18 +28,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     const setupAuth = async () => {
       try {
-        // First set up the auth state listener
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           (event, newSession) => {
             console.log("Auth state changed:", event, newSession?.user?.id);
             
             if (!mounted) return;
             
-            // Update session and user synchronously first
             setSession(newSession);
             setUser(newSession?.user ?? null);
             
-            // Then fetch profile data asynchronously
             if (newSession?.user) {
               setTimeout(async () => {
                 if (!mounted) return;
@@ -72,20 +67,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         authListenerSubscription = { subscription };
         
-        // Then check for existing session
         const { data: { session: currentSession }, error } = await supabase.auth.getSession();
         
         if (error) {
           throw error;
         }
         
-        // Update session and user synchronously first
         if (mounted) {
           setSession(currentSession);
           setUser(currentSession?.user ?? null);
         }
         
-        // Then fetch profile data asynchronously
         if (currentSession?.user && mounted) {
           try {
             const { data: profile } = await supabase
@@ -103,7 +95,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
         
-        // Finally, mark loading as complete
         if (mounted) {
           setIsLoading(false);
         }
@@ -130,7 +121,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  // Authentication operations
   const login = async (email: string, password: string) => {
     try {
       setIsLoading(true);
@@ -155,7 +145,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
-      // Clear the user and session state immediately
       setUser(null);
       setSession(null);
       setEffectiveRole(null);
@@ -210,7 +199,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Role management
   const refreshUserRole = async () => {
     if (user) {
       const { data: profile } = await supabase
@@ -233,7 +221,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return requiredRoles.includes(effectiveRole);
   }, [effectiveRole]);
 
-  const value = {
+  const value: AuthContextType = {
     user,
     session,
     effectiveRole,
@@ -261,3 +249,5 @@ export const useAuth = (): AuthContextType => {
   }
   return context;
 };
+
+export type { AuthContextType };

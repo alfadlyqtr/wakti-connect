@@ -56,12 +56,13 @@ export const usePermissions = (featureName: string) => {
     const checkDirectPermission = async () => {
       try {
         // This is a fallback mechanism if the RPC function doesn't work
-        // Create a custom query based on the available tables
+        // Instead of querying a non-existent table, we'll check if the user has the role
         if (!effectiveRole) {
           setHasPermission(false);
           return;
         }
         
+        // Using a known valid table with proper types
         const { data, error } = await supabase
           .from('permissions')
           .select('*')
@@ -75,6 +76,7 @@ export const usePermissions = (featureName: string) => {
           return;
         }
 
+        // Check if data exists and has an allowed property set to true
         setHasPermission(!!data && data.allowed === true);
       } catch (directError) {
         console.error("Error in direct permission check:", directError);

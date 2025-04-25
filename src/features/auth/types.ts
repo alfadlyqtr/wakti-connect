@@ -26,10 +26,10 @@ export interface AuthContextType {
   login: (email: string, password: string) => Promise<{ error: any; data?: any }>;
   logout: () => Promise<void>;
   register: (
-    email: string,
-    password: string,
-    name?: string,
-    accountType?: string,
+    email: string, 
+    password: string, 
+    name?: string, 
+    accountType?: string, 
     businessName?: string
   ) => Promise<{ error: any; data?: any }>;
   refreshUserRole: () => Promise<void>;
