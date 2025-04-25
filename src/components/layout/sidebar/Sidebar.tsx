@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,7 +11,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { UserRole } from "@/types/user";
 import SidebarUpgradeButton from "./SidebarUpgradeButton";
 
-// Define profile type to ensure TypeScript knows about our new columns
 interface SidebarProfileData {
   id: string;
   full_name: string | null;
@@ -39,32 +37,27 @@ const Sidebar = ({
   openCommandSearch,
   showUpgradeButton = false
 }: SidebarProps) => {
-  const [collapsed, setCollapsed] = useState(true); // Default to collapsed
-  
-  // Check local storage for saved sidebar state
+  const [collapsed, setCollapsed] = useState(true);
+
   useEffect(() => {
     const savedState = localStorage.getItem('sidebarCollapsed');
     if (savedState !== null) {
       setCollapsed(savedState === 'true');
-      // Notify parent about initial collapsed state
       if (onCollapseChange) {
         onCollapseChange(savedState === 'true');
       }
     }
   }, [onCollapseChange]);
-  
-  // Save sidebar state to local storage
+
   const toggleCollapse = () => {
     const newState = !collapsed;
     setCollapsed(newState);
     localStorage.setItem('sidebarCollapsed', String(newState));
-    // Notify parent about changed collapsed state
     if (onCollapseChange) {
       onCollapseChange(newState);
     }
   };
-  
-  // Fetch user profile for sidebar
+
   const { data: profileData } = useQuery({
     queryKey: ['sidebarProfile'],
     queryFn: async () => {
@@ -85,7 +78,6 @@ const Sidebar = ({
         return null;
       }
       
-      // Ensure account_type is a valid UserRole
       let effectiveRole: UserRole = 'individual';
       if (data.account_type === 'business') {
         effectiveRole = 'business';
@@ -102,7 +94,6 @@ const Sidebar = ({
     },
   });
 
-  // Handle navigation click to close sidebar on mobile
   const handleNavClick = () => {
     if (closeSidebar) {
       closeSidebar();
@@ -115,13 +106,10 @@ const Sidebar = ({
       collapsed={collapsed} 
       onCollapseChange={onCollapseChange}
     >
-      {/* Toggle collapse button - Only visible on desktop */}
       <CollapseToggle collapsed={collapsed} toggleCollapse={toggleCollapse} />
       
-      {/* User Profile Section */}
       <SidebarProfile profileData={profileData} collapsed={collapsed} />
       
-      {/* Navigation Items - Wrap in ScrollArea for proper scrolling */}
       <ScrollArea className="flex-grow">
         <SidebarNavItems 
           onNavClick={handleNavClick} 
@@ -129,13 +117,11 @@ const Sidebar = ({
           openCommandSearch={openCommandSearch}
         />
         
-        {/* Upgrade Button - Only shown for accounts that need to upgrade */}
         {showUpgradeButton && (
           <SidebarUpgradeButton collapsed={collapsed} />
         )}
       </ScrollArea>
       
-      {/* Upgrade Banner - Only show for individual users with limited features and when not collapsed */}
       {userRole === "individual" && !collapsed && (
         <div className="mt-auto px-3 pb-5">
           <SidebarUpgradeBanner />

@@ -1,4 +1,3 @@
-
 import { useAIChatEnhanced } from "./ai/chat";
 import { useAISettings } from "./ai/settings";
 import { useAIKnowledge } from "./ai/useAIKnowledge";
@@ -30,7 +29,7 @@ export const useAIAssistant = () => {
   
   // Get AI settings and knowledge hooks with correct destructuring
   // No longer access isLoading from useAISettings as it doesn't exist
-  const { aiSettings, updateSettings, canUseAI } = useAISettings();
+  const { settings, updateSettings } = useAISettings();
   
   // Get knowledge related functions, using correct property names
   const { 
@@ -191,9 +190,8 @@ export const useAIAssistant = () => {
     pendingTaskConfirmation,
     
     // Settings features
-    aiSettings,
+    settings,
     updateSettings,
-    canUseAI,
     
     // Knowledge features
     addKnowledge,

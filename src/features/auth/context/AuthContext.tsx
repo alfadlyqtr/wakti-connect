@@ -1,11 +1,10 @@
-
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { UserRole } from "@/types/roles";
 
-export interface User extends Omit<SupabaseUser, 'app_metadata' | 'user_metadata'> {
+export interface User extends SupabaseUser {
   name?: string;
   displayName?: string;
   role?: UserRole;
@@ -54,7 +53,7 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-	const [userRole, setUserRole] = useState<UserRole>('individual');
+  const [userRole, setUserRole] = useState<UserRole>('individual');
   const [effectiveRole, setEffectiveRole] = useState<UserRole>('individual');
   const [isStaff, setIsStaff] = useState<boolean>(false);
   const [isSuperAdmin, setIsSuperAdmin] = useState<boolean>(false);
@@ -127,18 +126,7 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           throw profileError;
         }
 
-        // Create a custom User object without directly accessing user_metadata
-        const customUser: User = {
-          ...session.user,
-          id: session.user.id,
-          email: session.user.email,
-          displayName: profile?.display_name || profile?.full_name || null,
-          full_name: profile?.full_name || null,
-          account_type: profile?.account_type || 'individual',
-          avatar_url: profile?.avatar_url || null,
-          theme_preference: profile?.theme_preference || 'light',
-          created_at: profile?.created_at || null,
-        };
+        const customUser: User = mapProfile(profile);
         
         setUser(customUser);
         setBusinessName(profile?.business_name || null);
@@ -335,3 +323,12 @@ const useAuth = () => {
 };
 
 export { AuthProvider, useAuth };
+
+const mapProfile = (profile: any): User => {
+  return {
+    ...profile,
+    role: profile.account_type === 'superadmin' ? 'superadmin' : 
+          profile.account_type === 'business' ? 'business' :
+          profile.account_type === 'staff' ? 'staff' : 'individual',
+  };
+};

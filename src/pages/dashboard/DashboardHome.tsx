@@ -1,15 +1,9 @@
 
 import React from 'react';
 import { useAuth } from '@/features/auth/context/AuthContext';
-import StatsCards from '@/components/dashboard/home/StatsCards';
-import DashboardTasksPreview from '@/components/dashboard/home/DashboardTasksPreview';
-import DashboardEventsPreview from '@/components/dashboard/home/DashboardEventsPreview';
-import DashboardBookingsPreview from '@/components/dashboard/home/DashboardBookingsPreview';
-import DashboardServicesPreview from '@/components/dashboard/home/DashboardServicesPreview';
-import DashboardUpcomingBookingsPreview from '@/components/dashboard/home/DashboardUpcomingBookingsPreview';
-import DashboardStaffPreview from '@/components/dashboard/home/DashboardStaffPreview';
-import DashboardActivityStreamPreview from '@/components/dashboard/home/DashboardActivityStreamPreview';
 import { UserRole } from '@/types/user';
+import { Card } from '@/components/ui/card';
+import { Loader2 } from 'lucide-react';
 
 const DashboardHome: React.FC = () => {
   const { userRole, isLoading } = useAuth();
@@ -22,59 +16,29 @@ const DashboardHome: React.FC = () => {
     // Business dashboard
     if (role === 'business' || role === 'superadmin') {
       return (
-        <>
-          <StatsCards variant="business" />
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-            <DashboardTasksPreview userRole={role} />
-            <DashboardEventsPreview userRole={role} />
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-            <DashboardBookingsPreview userRole={role} />
-            <DashboardServicesPreview />
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-            <DashboardStaffPreview />
-            <DashboardActivityStreamPreview />
-          </div>
-        </>
+        <Card className="p-4">
+          <h2>Business Dashboard</h2>
+          <p>Business dashboard content coming soon...</p>
+        </Card>
       );
     }
     
     // Staff dashboard
     if (role === 'staff') {
       return (
-        <>
-          <StatsCards variant="staff" />
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-            <DashboardTasksPreview userRole={role} />
-            <DashboardEventsPreview userRole={role} />
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-1 gap-6 mt-6">
-            <DashboardUpcomingBookingsPreview />
-          </div>
-        </>
+        <Card className="p-4">
+          <h2>Staff Dashboard</h2>
+          <p>Staff dashboard content coming soon...</p>
+        </Card>
       );
     }
     
     // Individual dashboard (default)
     return (
-      <>
-        <StatsCards variant="individual" />
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-          <DashboardTasksPreview userRole={role} />
-          <DashboardEventsPreview userRole={role} />
-        </div>
-        
-        <div className="grid grid-cols-1 mt-6">
-          <DashboardActivityStreamPreview />
-        </div>
-      </>
+      <Card className="p-4">
+        <h2>Individual Dashboard</h2>
+        <p>Individual dashboard content coming soon...</p>
+      </Card>
     );
   };
 
