@@ -5,7 +5,7 @@ import { NestedSubtask } from "@/services/ai/aiTaskParserService";
 import { toast } from "@/components/ui/use-toast";
 import { TaskFormData } from "@/types/task.types";
 import { convertParsedTaskToFormData } from "@/services/ai/aiTaskParserService";
-import { useTasks } from "@/hooks/useTasks";
+import { createTask } from "@/services/tasks/taskService";
 import { AIMessage } from "@/types/ai-assistant.types";
 
 interface UseAIChatOperationsResult {
@@ -29,7 +29,6 @@ interface UseAIChatOperationsResult {
 }
 
 export const useAIChatOperations = (): UseAIChatOperationsResult => {
-  const { handleCreateTask } = useTasks();
   const [messages, setMessages] = useState<AIMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [detectedTask, setDetectedTask] = useState<ParsedTask | null>(null);
@@ -50,6 +49,10 @@ export const useAIChatOperations = (): UseAIChatOperationsResult => {
       return null;
     }
   }, []);
+  
+  const handleCreateTask = async (taskData: TaskFormData) => {
+    return await createTask(taskData);
+  };
   
   const createTaskFromParsedResult = useCallback(
     async (
@@ -92,7 +95,7 @@ export const useAIChatOperations = (): UseAIChatOperationsResult => {
         }
       }
     },
-    [handleCreateTask]
+    []
   );
   
   const extractTaskFromMessage = useCallback(async (message: AIMessage) => {

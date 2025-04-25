@@ -11,7 +11,8 @@ export const getStaffPermissions = async () => {
         isStaff: true,
         canEditProfile: false,
         canEditTheme: true,
-        canEditBasicInfo: false
+        canEditBasicInfo: false,
+        loading: false
       };
     }
     
@@ -19,7 +20,8 @@ export const getStaffPermissions = async () => {
       isStaff: false,
       canEditProfile: true,
       canEditTheme: true,
-      canEditBasicInfo: true
+      canEditBasicInfo: true,
+      loading: false
     };
   } catch (error) {
     console.error("Error checking staff permissions:", error);
@@ -27,7 +29,8 @@ export const getStaffPermissions = async () => {
       isStaff: false,
       canEditProfile: false,
       canEditTheme: true,
-      canEditBasicInfo: false
+      canEditBasicInfo: false,
+      loading: false
     };
   }
 };

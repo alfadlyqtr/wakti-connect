@@ -30,8 +30,17 @@ export const getDashboardUserProfile = async () => {
     
     if (isSuperAdminResult) {
       return {
-        account_type: 'super-admin',
+        profileData: {
+          account_type: 'super-admin',
+          display_name: 'System Administrator',
+          business_name: 'WAKTI Administration',
+          full_name: 'System Administrator',
+          theme_preference: 'dark'
+        },
+        isLoading: false,
+        userId: session.user.id,
         isStaff: false,
+        userRole: 'super-admin',
         isSuperAdmin: true
       };
     }
@@ -53,12 +62,24 @@ export const getDashboardUserProfile = async () => {
       .single();
 
     return {
-      ...profileData,
+      profileData: {
+        ...profileData,
+      },
+      isLoading: false,
+      userId: session.user.id,
       isStaff: !!staffData,
+      userRole: staffData ? 'staff' : profileData.account_type,
       isSuperAdmin: false
     };
   } catch (error) {
     console.error('Error fetching dashboard profile:', error);
-    return null;
+    return {
+      profileData: null,
+      isLoading: false,
+      userId: null,
+      isStaff: false,
+      userRole: 'free',
+      isSuperAdmin: false
+    };
   }
 };

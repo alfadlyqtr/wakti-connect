@@ -8,6 +8,21 @@ export { hasRoleAccess, getEffectiveRole };
 // For legacy components that still reference 'free'
 export type LegacyUserRole = UserRole | 'free';
 
+// Define UserProfile type needed by services
+export interface UserProfile {
+  id: string;
+  full_name: string | null;
+  display_name: string | null;
+  business_name: string | null;
+  occupation: string | null;
+  account_type: "free" | "individual" | "business";
+  avatar_url: string | null;
+  created_at: string;
+  updated_at: string;
+  is_searchable: boolean | null;
+  theme_preference: string | null;
+}
+
 // Deprecated re-exports with type exports
 export type { hasRoleAccess as deprecatedHasRoleAccess };
 export type { getEffectiveRole as deprecatedGetEffectiveRole };

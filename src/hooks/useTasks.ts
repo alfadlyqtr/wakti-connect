@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
-import { fetchUserTasks, searchTasks } from "@/services/tasks/taskService";
-import { Task } from "@/types/task.types";
+import { fetchUserTasks, searchTasks, createTask } from "@/services/tasks/taskService";
+import { Task, TaskFormData } from "@/types/task.types";
 
 export const useTasks = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -24,5 +24,18 @@ export const useTasks = () => {
     loadTasks();
   }, []);
 
-  return { tasks, isLoading, error };
+  const handleCreateTask = async (taskData: TaskFormData): Promise<Task | null> => {
+    try {
+      const newTask = await createTask(taskData);
+      if (newTask) {
+        setTasks(prev => [newTask, ...prev]);
+      }
+      return newTask;
+    } catch (error) {
+      console.error('Error in handleCreateTask:', error);
+      return null;
+    }
+  };
+
+  return { tasks, isLoading, error, handleCreateTask };
 };
