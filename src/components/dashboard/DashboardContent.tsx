@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import StaffDashboardHeader from './StaffDashboardHeader';
 import DashboardLoading from './DashboardLoading';
@@ -21,7 +20,7 @@ interface DashboardContentProps {
 const getDashboardTypeHeading = (role: UserRole | undefined, isStaff: boolean): string => {
   if (role === 'business') return 'Business Dashboard';
   if (role === 'staff' || isStaff) return 'Staff Dashboard';
-  if (role === 'super-admin') return 'Business Dashboard';
+  if (role === 'superadmin') return 'Business Dashboard';
   return 'Individual Dashboard';
 };
 

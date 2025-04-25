@@ -1,4 +1,3 @@
-
 import { Home, MessageSquare, Calendar, Users, Bell, Clock, Settings, HeartHandshake, 
   LayoutDashboard, ListChecks, KanbanSquare, HelpCircle, Building2, Store,
   UserPlus, PartyPopper, BarChart2, FileText, Bot, Headphones, Mic } from "lucide-react";
@@ -17,99 +16,102 @@ export const navItems: NavItem[] = [
     label: "Dashboard",
     path: "",
     icon: LayoutDashboard,
-    showFor: ['individual', 'business', 'staff', 'super-admin'],
+    showFor: ['individual', 'business', 'staff', 'superadmin'],
   },
   {
     label: "Tasks",
     path: "tasks",
     icon: ListChecks,
-    showFor: ['individual', 'business', 'staff', 'super-admin'],
+    showFor: ['individual', 'business', 'staff', 'superadmin'],
   },
   {
     label: "Events",
     path: "events",
     icon: PartyPopper,
-    showFor: ['individual', 'business', 'staff', 'super-admin'],
+    showFor: ['individual', 'business', 'staff', 'superadmin'],
   },
   {
     label: "Bookings",
     path: "bookings",
     icon: Calendar,
-    showFor: ['business', 'staff', 'super-admin'],
+    showFor: ['business', 'staff', 'superadmin'],
   },
   {
     label: "Jobs",
     path: "jobs",
     icon: KanbanSquare,
-    showFor: ['business', 'super-admin'],
+    showFor: ['business', 'superadmin'],
   },
   {
     label: "Job Cards",
     path: "job-cards",
     icon: FileText,
-    showFor: ['staff', 'super-admin'],
+    showFor: ['staff', 'superadmin'],
   },
   {
     label: "Services",
     path: "services",
     icon: Store,
-    showFor: ['business', 'super-admin'],
+    showFor: ['business', 'superadmin'],
   },
   {
     label: "Staff",
     path: "staff",
     icon: UserPlus,
-    showFor: ['business', 'super-admin'],
+    showFor: ['business', 'superadmin'],
   },
   {
     label: "Business Page",
     path: "business-page",
     icon: Building2,
-    showFor: ['business', 'super-admin'],
+    showFor: ['business', 'superadmin'],
   },
   {
     label: "Analytics",
     path: "analytics",
     icon: BarChart2,
-    showFor: ['business', 'super-admin'],
+    showFor: ['business', 'superadmin'],
   },
   {
     label: "Reports",
     path: "reports",
     icon: FileText,
-    showFor: ['business', 'super-admin'],
+    showFor: ['business', 'superadmin'],
   },
   {
     label: "WAKTI AI",
     path: "ai-assistant",
     icon: Bot,
-    showFor: ['individual', 'business', 'staff', 'super-admin'],
+    showFor: ['individual', 'business', 'staff', 'superadmin'],
   },
   {
     label: "Settings",
     path: "settings",
     icon: Settings,
-    showFor: ['individual', 'business', 'staff', 'super-admin'],
+    showFor: ['individual', 'business', 'staff', 'superadmin'],
   },
   {
     label: "Help",
     path: "help",
     icon: HelpCircle,
-    showFor: ['individual', 'business', 'staff', 'super-admin'],
+    showFor: ['individual', 'business', 'staff', 'superadmin'],
   },
   {
     label: "Staff Communication",
     path: "staff-communication",
     icon: Headphones,
-    showFor: ['staff', 'super-admin'],
+    showFor: ['staff', 'superadmin'],
   },
   {
     label: "Voice Recorder & Transcription",
     path: "meeting-summary",
     icon: Mic,
-    showFor: ['individual', 'business', 'staff', 'super-admin'],
+    showFor: ['individual', 'business', 'staff', 'superadmin'],
   },
-];
+].map(item => ({
+  ...item,
+  showFor: item.showFor.map(role => role === 'super-admin' ? 'superadmin' : role)
+}));
 
 export const dropdownNavItems: NavItem[] = [
   {
@@ -155,4 +157,7 @@ export const dropdownNavItems: NavItem[] = [
     path: 'settings',
     showFor: ['individual', 'business', 'staff']
   },
-];
+].map(item => ({
+  ...item,
+  showFor: item.showFor.map(role => role === 'super-admin' ? 'superadmin' : role)
+}));

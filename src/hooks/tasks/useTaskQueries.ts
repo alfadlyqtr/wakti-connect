@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -31,14 +30,12 @@ export const useTaskQueries = (tab: TaskTab = "my-tasks"): UseTaskQueriesReturn 
         
         if (!session?.user) return;
         
-        // First check localStorage for super admin status (faster)
         if (localStorage.getItem('isSuperAdmin') === 'true') {
-          setUserRole("super-admin");
-          console.log("User role set to super-admin from localStorage");
+          setUserRole("superadmin");
+          console.log("User role set to superadmin from localStorage");
           return;
         }
         
-        // Check if user is super admin
         const { data: superAdminData } = await supabase
           .from('super_admins')
           .select('id')
@@ -46,9 +43,9 @@ export const useTaskQueries = (tab: TaskTab = "my-tasks"): UseTaskQueriesReturn 
           .maybeSingle();
         
         if (superAdminData) {
-          setUserRole("super-admin");
+          setUserRole("superadmin");
           localStorage.setItem('isSuperAdmin', 'true');
-          console.log("User role set to super-admin");
+          console.log("User role set to superadmin");
           return;
         } else {
           localStorage.setItem('isSuperAdmin', 'false');
@@ -67,7 +64,6 @@ export const useTaskQueries = (tab: TaskTab = "my-tasks"): UseTaskQueriesReturn 
             .eq('id', session.user.id)
             .single();
           
-          // Default to individual if account_type is not a valid UserRole
           const accountType = profileData?.account_type as string;
           if (accountType === 'business') {
             setUserRole('business');

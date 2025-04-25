@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -38,7 +37,7 @@ export const useTasksPageState = () => {
         }
         
         if (localStorage.getItem('isSuperAdmin') === 'true') {
-          setUserRole('super-admin');
+          setUserRole('superadmin');
           return;
         }
         
@@ -59,8 +58,8 @@ export const useTasksPageState = () => {
           setUserRole('business');
         } else if (profileData?.account_type === 'staff') {
           setUserRole('staff');
-        } else if (profileData?.account_type === 'super-admin') {
-          setUserRole('super-admin');
+        } else if (profileData?.account_type === 'superadmin') {
+          setUserRole('superadmin');
         } else {
           setUserRole('individual');
         }
@@ -190,7 +189,7 @@ export const useTasksPageState = () => {
     }
   };
   
-  const isPaidAccount = userRole === 'business' || userRole === 'super-admin';
+  const isPaidAccount = userRole === 'business' || userRole === 'superadmin';
   
   return {
     isLoading,

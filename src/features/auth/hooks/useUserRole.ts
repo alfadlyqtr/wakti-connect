@@ -1,6 +1,6 @@
 
 import { useAuth } from "../context/AuthContext";
-import { UserRole } from "@/types/roles";
+import { UserRole } from "@/types/user";
 
 export const useUserRole = () => {
   const { effectiveRole } = useAuth();
@@ -10,7 +10,7 @@ export const useUserRole = () => {
     isIndividual: effectiveRole === 'individual',
     isBusiness: effectiveRole === 'business',
     isStaff: effectiveRole === 'staff',
-    isSuperAdmin: effectiveRole === 'super-admin',
+    isSuperAdmin: effectiveRole === 'superadmin', // Updated from 'super-admin'
     // Handle legacy 'free' comparison with type safety
     isFree: effectiveRole === null || effectiveRole === (('free' as unknown) as UserRole),
   };
