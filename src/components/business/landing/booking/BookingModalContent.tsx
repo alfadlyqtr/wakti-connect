@@ -63,6 +63,7 @@ const BookingModalContent: React.FC<BookingModalContentProps> = ({
         .insert({
           business_id: businessId,
           template_id: template.id,
+          title: template.name || "Booking", // Add title field which is required
           customer_name: name || (user as User)?.name || 'Guest',
           customer_email: email || user?.email,
           customer_phone: phone,
