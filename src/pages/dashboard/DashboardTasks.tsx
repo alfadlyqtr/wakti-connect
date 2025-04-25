@@ -69,7 +69,7 @@ const DashboardTasks = () => {
   const displayRole = userRole === 'superadmin' ? 'business' : userRole;
 
   const deleteTask = async (taskId: string) => {
-    await handleDeleteTask(taskId);
+    await handleDeleteTask.mutateAsync(taskId);
     await refetchTasks();
   };
 
