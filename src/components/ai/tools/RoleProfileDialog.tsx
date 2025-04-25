@@ -23,20 +23,22 @@ interface RoleProfileDialogProps {
 
 const RoleProfileDialog: React.FC<RoleProfileDialogProps> = ({ open, onOpenChange }) => {
   const { settings, updateSettings } = useAISettings();
-  // Using optional chaining to safely access the profile property
-  const [profile, setProfile] = useState(settings?.profile || "");
+  // Profile doesn't exist directly on settings, so we'll set it to an empty string if not present
+  const [profile, setProfile] = useState(settings?.assistant_name || "");
   const [isSaving, setIsSaving] = useState(false);
   
   const handleProfileChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setProfile(e.target.value);
   }, []);
   
-  const updatedSettings = {
+  const updatedSettings = settings ? {
     ...settings,
-    profile: profile,
-  };
+    assistant_name: profile,
+  } : null;
   
   const handleSave = async () => {
+    if (!updatedSettings) return;
+    
     setIsSaving(true);
     try {
       await updateSettings(updatedSettings);

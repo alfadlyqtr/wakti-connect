@@ -38,7 +38,7 @@ const DashboardTasks = () => {
     isPaidAccount,
     activeTab,
     setActiveTab,
-    deleteTask
+    deleteTask: handleDeleteTask
   } = useTasksPageState();
   
   const { requestNotificationPermission } = useReminders();
@@ -68,8 +68,8 @@ const DashboardTasks = () => {
 
   const displayRole = userRole === 'superadmin' ? 'business' : userRole;
 
-  const handleDeleteTask = async (taskId: string) => {
-    await deleteTask(taskId);
+  const deleteTask = async (taskId: string) => {
+    await handleDeleteTask(taskId);
     await refetchTasks();
   };
 
@@ -106,11 +106,11 @@ const DashboardTasks = () => {
         <TasksContainer
           tasks={filteredTasks}
           userRole={displayRole as "individual" | "business" | "staff"}
-          refetch={refetchTasks}
+          refetch={async () => { await refetchTasks() }}
           isPaidAccount={isPaidAccount}
           onCreateTask={() => setCreateTaskDialogOpen(true)}
           onEdit={handleEditTask}
-          onDelete={handleDeleteTask}
+          onDelete={deleteTask}
           activeTab={activeTab}
         />
       )}
