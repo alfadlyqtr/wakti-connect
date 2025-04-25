@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,7 +8,7 @@ import SidebarProfile from "./SidebarProfile";
 import CollapseToggle from "./CollapseToggle";
 import SidebarContainer from "./SidebarContainer";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { UserRole } from "@/types/user";
+import { UserRole } from "@/types/roles";
 import SidebarUpgradeButton from "./SidebarUpgradeButton";
 
 interface SidebarProfileData {
