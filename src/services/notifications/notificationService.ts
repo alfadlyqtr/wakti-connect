@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { fromTable } from "@/integrations/supabase/helper";
@@ -87,7 +86,6 @@ export const markAllNotificationsAsRead = async () => {
     return { success: false, error: new Error("No authenticated user") };
   }
 
-  // Instead of using RPC, use direct SQL update via helper
   const { error } = await supabase
     .from('notifications')
     .update({ is_read: true })
@@ -120,7 +118,6 @@ export const createNotification = async (
   relatedEntityId?: string,
   relatedEntityType?: string
 ) => {
-  // Instead of using RPC, insert directly
   const { data, error } = await supabase
     .from('notifications')
     .insert({
@@ -139,17 +136,32 @@ export const createNotification = async (
 };
 
 /**
+ * Show a browser notification
+ */
+const showBrowserNotification = (title: string, content: string) => {
+  if (!("Notification" in window)) return;
+  
+  const browserNotificationsEnabled = localStorage.getItem("browserNotificationsEnabled");
+  if (browserNotificationsEnabled !== "true") return;
+  
+  if (Notification.permission === "granted") {
+    new Notification(title, {
+      body: content,
+      icon: "/favicon.ico"
+    });
+  }
+};
+
+/**
  * Subscribe to notification updates for the current user
  */
 export const subscribeToNotifications = (
   onNewNotification: (notification: Notification) => void
 ) => {
-  // Unsubscribe from any existing channel
   if (notificationChannel) {
     supabase.removeChannel(notificationChannel);
   }
 
-  // Get the current user
   supabase.auth.getSession().then(({ data: { session } }) => {
     if (!session?.user) return;
 
@@ -164,11 +176,11 @@ export const subscribeToNotifications = (
           filter: `user_id=eq.${session.user.id}`
         },
         (payload) => {
-          // Call the callback with the new notification
           const notification = payload.new as Notification;
           onNewNotification(notification);
 
-          // Show a toast notification
+          showBrowserNotification(notification.title, notification.content);
+          
           toast({
             title: notification.title,
             description: notification.content,
@@ -179,7 +191,6 @@ export const subscribeToNotifications = (
       .subscribe();
   });
 
-  // Return function to unsubscribe
   return () => {
     if (notificationChannel) {
       supabase.removeChannel(notificationChannel);

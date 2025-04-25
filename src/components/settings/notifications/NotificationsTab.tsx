@@ -2,11 +2,19 @@
 import React from "react";
 import NotificationSettingsCard from "./NotificationSettingsCard";
 import { useNotificationSettings } from "./useNotificationSettings";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const NotificationsTab: React.FC = () => {
   const { settings, loading, handleToggle, saveNotificationSettings } = useNotificationSettings();
   
   const notificationSettings = [
+    {
+      key: "browser_notifications",
+      title: "Browser Notifications",
+      description: "Get real-time notifications in your browser",
+      checked: settings.browser_notifications
+    },
     {
       key: "email_notifications",
       title: "Email Notifications",
@@ -59,6 +67,15 @@ const NotificationsTab: React.FC = () => {
   
   return (
     <div className="space-y-4">
+      {!settings.browser_notifications && Notification?.permission === "denied" && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Browser notifications are blocked. Please enable them in your browser settings to receive notifications.
+          </AlertDescription>
+        </Alert>
+      )}
+      
       <NotificationSettingsCard
         title="Notification Preferences"
         description="Manage how and when you receive notifications."

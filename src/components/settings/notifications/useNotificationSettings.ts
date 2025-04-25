@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 
 export interface NotificationSettings {
   email_notifications: boolean;
@@ -11,6 +12,7 @@ export interface NotificationSettings {
   dark_mode: boolean;
   compact_view: boolean;
   auto_approve_contacts: boolean;
+  browser_notifications: boolean;
 }
 
 export const useNotificationSettings = () => {
@@ -21,11 +23,54 @@ export const useNotificationSettings = () => {
     message_notifications: true,
     dark_mode: false,
     compact_view: false,
-    auto_approve_contacts: false
+    auto_approve_contacts: false,
+    browser_notifications: false
   });
   
   const [loading, setLoading] = useState(false);
+  const [browserNotificationsEnabled, setBrowserNotificationsEnabled] = useLocalStorage<boolean>("browserNotificationsEnabled", false);
   
+  // Check notification permission on mount
+  useEffect(() => {
+    if ("Notification" in window) {
+      const permission = Notification.permission;
+      if (permission === "granted") {
+        setBrowserNotificationsEnabled(true);
+        setSettings(prev => ({ ...prev, browser_notifications: true }));
+      }
+    }
+  }, []);
+  
+  const requestNotificationPermission = async () => {
+    if (!("Notification" in window)) {
+      toast({
+        title: "Browser notifications not supported",
+        description: "Your browser doesn't support notifications.",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission === "granted") {
+        setBrowserNotificationsEnabled(true);
+        return true;
+      } else {
+        setBrowserNotificationsEnabled(false);
+        toast({
+          title: "Notification permission denied",
+          description: "Please enable notifications in your browser settings to receive alerts.",
+          variant: "destructive"
+        });
+        return false;
+      }
+    } catch (error) {
+      console.error("Error requesting notification permission:", error);
+      return false;
+    }
+  };
+
   // Fetch the user's current settings when the component mounts
   useEffect(() => {
     const fetchSettings = async () => {
@@ -60,11 +105,27 @@ export const useNotificationSettings = () => {
     fetchSettings();
   }, []);
   
-  const handleToggle = (key: keyof NotificationSettings) => {
-    setSettings(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
+  const handleToggle = async (key: keyof NotificationSettings) => {
+    if (key === 'browser_notifications') {
+      if (!settings.browser_notifications) {
+        const granted = await requestNotificationPermission();
+        setSettings(prev => ({
+          ...prev,
+          browser_notifications: granted
+        }));
+      } else {
+        setSettings(prev => ({
+          ...prev,
+          browser_notifications: false
+        }));
+        setBrowserNotificationsEnabled(false);
+      }
+    } else {
+      setSettings(prev => ({
+        ...prev,
+        [key]: !prev[key]
+      }));
+    }
   };
   
   const saveNotificationSettings = async () => {
@@ -107,6 +168,7 @@ export const useNotificationSettings = () => {
     settings,
     loading,
     handleToggle,
-    saveNotificationSettings
+    saveNotificationSettings,
+    browserNotificationsEnabled
   };
 };
