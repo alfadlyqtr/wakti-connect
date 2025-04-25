@@ -5,7 +5,6 @@ import { User, Session } from "@supabase/supabase-js";
 import { UserRole, getEffectiveRole } from "@/types/roles";
 import { toast } from "@/components/ui/use-toast";
 
-// Make sure we export the interface
 export interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -39,120 +38,80 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [effectiveRole, setEffectiveRole] = useState<UserRole | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isStaff, setIsStaff] = useState(false);
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
-
-  // Unified method to determine user role
-  const determineUserRole = useCallback(async (userId: string) => {
-    try {
-      // Check if user is a super admin
-      const { data: superAdminData } = await supabase
-        .from('super_admins')
-        .select('id')
-        .eq('id', userId)
-        .single();
-      
-      const isSuperAdmin = !!superAdminData;
-      setIsSuperAdmin(isSuperAdmin);
-
-      // Check if user is staff
-      const { data: staffData } = await supabase
-        .from('business_staff')
-        .select('id')
-        .eq('staff_id', userId)
-        .single();
-      
-      const isStaff = !!staffData;
-      setIsStaff(isStaff);
-
-      // Get account type
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('account_type')
-        .eq('id', userId)
-        .single();
-
-      // Calculate effective role
-      const role = getEffectiveRole(
-        profile?.account_type, 
-        isStaff, 
-        isSuperAdmin
-      );
-      
-      // Cache role in localStorage for quicker access
-      localStorage.setItem('userRole', role);
-      localStorage.setItem('isStaff', isStaff ? 'true' : 'false');
-      localStorage.setItem('isSuperAdmin', isSuperAdmin ? 'true' : 'false');
-      
-      return role;
-    } catch (error) {
-      console.error("Error determining user role:", error);
-      // Default to most restrictive role
-      return 'individual';
-    }
-  }, []);
-
-  // Refresh user role (useful after account type changes)
-  const refreshUserRole = useCallback(async () => {
-    if (user) {
-      const role = await determineUserRole(user.id);
-      setEffectiveRole(role);
-    }
-  }, [user, determineUserRole]);
 
   // Initialize auth state
   useEffect(() => {
-    const initializeAuth = async () => {
+    console.log("Initializing auth state...");
+    let mounted = true;
+    
+    const setupAuth = async () => {
       try {
-        setIsLoading(true);
-        
-        // Set up auth state change listener
+        // First set up the auth state listener
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, newSession) => {
-            console.log("Auth state changed:", event);
+            console.log("Auth state changed:", event, newSession?.user?.id);
+            if (!mounted) return;
+            
             setSession(newSession);
+            setUser(newSession?.user ?? null);
             
             if (newSession?.user) {
-              setUser(newSession.user);
-              const role = await determineUserRole(newSession.user.id);
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('account_type')
+                .eq('id', newSession.user.id)
+                .maybeSingle();
+                
+              const role = profile?.account_type as UserRole || 'individual';
               setEffectiveRole(role);
             } else {
-              setUser(null);
               setEffectiveRole(null);
-              localStorage.removeItem('userRole');
-              localStorage.removeItem('isStaff');
-              localStorage.removeItem('isSuperAdmin');
             }
+            
+            setIsLoading(false);
           }
         );
         
-        // Get the current session
+        // Then check for existing session
         const { data: { session: currentSession } } = await supabase.auth.getSession();
-        setSession(currentSession);
-        
-        if (currentSession?.user) {
-          setUser(currentSession.user);
-          const role = await determineUserRole(currentSession.user.id);
-          setEffectiveRole(role);
-        } else {
-          setUser(null);
-          setEffectiveRole(null);
+        if (mounted) {
+          setSession(currentSession);
+          setUser(currentSession?.user ?? null);
+          
+          if (currentSession?.user) {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('account_type')
+              .eq('id', currentSession.user.id)
+              .maybeSingle();
+              
+            const role = profile?.account_type as UserRole || 'individual';
+            setEffectiveRole(role);
+          }
+          
+          setIsLoading(false);
         }
         
         return () => {
+          mounted = false;
           subscription.unsubscribe();
         };
       } catch (error) {
         console.error("Error initializing auth:", error);
-      } finally {
-        setIsLoading(false);
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
     };
+    
+    setupAuth();
+    
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
-    initializeAuth();
-  }, [determineUserRole]);
-
-  // Login function
+  // Authentication operations
   const login = async (email: string, password: string) => {
     try {
       setIsLoading(true);
@@ -171,17 +130,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Logout function
   const logout = async () => {
     try {
       setIsLoading(true);
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      
-      // Clear role data from localStorage
-      localStorage.removeItem('userRole');
-      localStorage.removeItem('isStaff');
-      localStorage.removeItem('isSuperAdmin');
     } catch (error) {
       console.error('Logout error:', error);
       toast({
@@ -194,7 +147,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Register function
   const register = async (
     email: string, 
     password: string, 
@@ -205,15 +157,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setIsLoading(true);
       
-      // Calculate trial end date (3 days from now)
-      const trialEndDate = new Date();
-      trialEndDate.setDate(trialEndDate.getDate() + 3);
-      
-      // Prepare metadata
       const metadata: Record<string, any> = {
         full_name: name || '',
-        account_type: accountType,
-        trial_ends_at: trialEndDate.toISOString()
+        account_type: accountType
       };
       
       if (businessName && accountType === 'business') {
@@ -230,7 +176,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) throw error;
-      
       return { error: null, data };
     } catch (error: any) {
       console.error('Registration error:', error);
@@ -240,29 +185,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Role checking utilities
+  // Role management
+  const refreshUserRole = async () => {
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('account_type')
+        .eq('id', user.id)
+        .maybeSingle();
+        
+      const role = profile?.account_type as UserRole || 'individual';
+      setEffectiveRole(role);
+    }
+  };
+
   const hasRole = useCallback((role: UserRole): boolean => {
-    if (!effectiveRole) return false;
-    
-    // When checking roles, consider the role hierarchy
-    if (effectiveRole === 'super-admin') return true;
-    if (effectiveRole === 'business' && role !== 'super-admin') return true;
-    if (effectiveRole === 'staff' && (role === 'staff' || role === 'individual')) return true;
-    if (effectiveRole === 'individual' && role === 'individual') return true;
-    
     return effectiveRole === role;
   }, [effectiveRole]);
 
   const hasAccess = useCallback((requiredRoles: UserRole[]): boolean => {
     if (!effectiveRole) return false;
-    if (requiredRoles.length === 0) return true;
-    
-    // Check if effectiveRole is in the allowed roles
-    return requiredRoles.some(role => hasRole(role));
-  }, [effectiveRole, hasRole]);
+    return requiredRoles.includes(effectiveRole);
+  }, [effectiveRole]);
 
-  // Provide the auth context value
-  const value: AuthContextType = {
+  const value = {
     user,
     session,
     effectiveRole,
@@ -283,33 +229,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-// Custom hook to use the auth context
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
-};
-
-// Role-specific hook for easier checking
-export const useRole = () => {
-  const { effectiveRole, hasRole, hasAccess } = useAuth();
-  return { userRole: effectiveRole, hasRole, hasAccess };
-};
-
-// Helper hooks for common role checks
-export const useIsBusinessOwner = () => {
-  const { hasRole } = useAuth();
-  return hasRole('business');
-};
-
-export const useIsStaff = () => {
-  const { hasRole } = useAuth();
-  return hasRole('staff');
-};
-
-export const useIsSuperAdmin = () => {
-  const { hasRole } = useAuth();
-  return hasRole('super-admin');
 };
