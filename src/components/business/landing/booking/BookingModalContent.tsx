@@ -5,9 +5,9 @@ import { Calendar } from '@/components/ui/calendar';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
-import { User } from '@/hooks/auth/types'; // Update the User type import to use our extended version
+import { User } from '@/hooks/auth/types'; // Using our extended User type
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { Loader2 } from 'lucide-react';
@@ -28,7 +28,7 @@ const BookingModalContent: React.FC<BookingModalContentProps> = ({
   
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedTime, setSelectedTime] = useState<string>('');
-  const [name, setName] = useState<string>(user?.name || '');
+  const [name, setName] = useState<string>((user as User)?.name || '');
   const [email, setEmail] = useState<string>(user?.email || '');
   const [phone, setPhone] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
@@ -61,13 +61,14 @@ const BookingModalContent: React.FC<BookingModalContentProps> = ({
       const { data, error } = await supabase
         .from('bookings')
         .insert({
-          template_id: template.id,
           business_id: businessId,
-          customer_name: name || user?.name || 'Guest',
+          template_id: template.id,
+          customer_name: name || (user as User)?.name || 'Guest',
           customer_email: email || user?.email,
           customer_phone: phone,
-          notes: notes,
-          booking_date: bookingDate.toISOString(),
+          description: notes, // Use description field instead of notes
+          start_time: bookingDate.toISOString(),
+          end_time: new Date(bookingDate.getTime() + (template.duration || 60) * 60000).toISOString(),
           status: 'pending',
           created_by: user?.id || null
         })

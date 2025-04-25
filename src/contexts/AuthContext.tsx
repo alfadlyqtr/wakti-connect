@@ -38,67 +38,106 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [effectiveRole, setEffectiveRole] = useState<UserRole | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [authError, setAuthError] = useState<Error | null>(null);
 
   // Initialize auth state
   useEffect(() => {
     console.log("Initializing auth state...");
     let mounted = true;
+    let authListenerSubscription: { subscription: { unsubscribe: () => void } } | null = null;
+    
+    // Add a timeout to prevent infinite loading
+    const loadingTimeout = setTimeout(() => {
+      if (mounted && isLoading) {
+        console.warn("Auth state loading timed out after 5 seconds");
+        setIsLoading(false);
+      }
+    }, 5000);
     
     const setupAuth = async () => {
       try {
         // First set up the auth state listener
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event, newSession) => {
+          (event, newSession) => {
             console.log("Auth state changed:", event, newSession?.user?.id);
+            
             if (!mounted) return;
             
+            // Update session and user synchronously first
             setSession(newSession);
             setUser(newSession?.user ?? null);
             
+            // Then fetch profile data asynchronously
             if (newSession?.user) {
-              const { data: profile } = await supabase
-                .from('profiles')
-                .select('account_type')
-                .eq('id', newSession.user.id)
-                .maybeSingle();
+              setTimeout(async () => {
+                if (!mounted) return;
                 
-              const role = profile?.account_type as UserRole || 'individual';
-              setEffectiveRole(role);
+                try {
+                  const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('account_type')
+                    .eq('id', newSession.user.id)
+                    .maybeSingle();
+                    
+                  if (mounted) {
+                    const role = profile?.account_type as UserRole || 'individual';
+                    setEffectiveRole(role);
+                    setIsLoading(false);
+                  }
+                } catch (error) {
+                  console.error("Error fetching profile after auth state change:", error);
+                  if (mounted) setIsLoading(false);
+                }
+              }, 0);
             } else {
               setEffectiveRole(null);
+              setIsLoading(false);
             }
-            
-            setIsLoading(false);
           }
         );
         
+        authListenerSubscription = { subscription };
+        
         // Then check for existing session
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          throw error;
+        }
+        
+        // Update session and user synchronously first
         if (mounted) {
           setSession(currentSession);
           setUser(currentSession?.user ?? null);
-          
-          if (currentSession?.user) {
+        }
+        
+        // Then fetch profile data asynchronously
+        if (currentSession?.user && mounted) {
+          try {
             const { data: profile } = await supabase
               .from('profiles')
               .select('account_type')
               .eq('id', currentSession.user.id)
               .maybeSingle();
               
-            const role = profile?.account_type as UserRole || 'individual';
-            setEffectiveRole(role);
+            if (mounted) {
+              const role = profile?.account_type as UserRole || 'individual';
+              setEffectiveRole(role);
+            }
+          } catch (profileError) {
+            console.error("Error fetching profile:", profileError);
           }
-          
+        }
+        
+        // Finally, mark loading as complete
+        if (mounted) {
           setIsLoading(false);
         }
         
-        return () => {
-          mounted = false;
-          subscription.unsubscribe();
-        };
       } catch (error) {
         console.error("Error initializing auth:", error);
         if (mounted) {
+          setAuthError(error as Error);
           setIsLoading(false);
         }
       }
@@ -108,6 +147,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     return () => {
       mounted = false;
+      clearTimeout(loadingTimeout);
+      
+      if (authListenerSubscription?.subscription) {
+        console.log("Cleaning up auth listener subscription");
+        authListenerSubscription.subscription.unsubscribe();
+      }
     };
   }, []);
 
@@ -135,6 +180,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(true);
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+      
+      // Clear the user and session state immediately
+      setUser(null);
+      setSession(null);
+      setEffectiveRole(null);
+      
     } catch (error) {
       console.error('Logout error:', error);
       toast({

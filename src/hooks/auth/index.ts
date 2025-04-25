@@ -1,4 +1,4 @@
 
 export { useAuth } from "@/contexts/AuthContext";
 export type { AuthContextType } from "@/contexts/AuthContext";
-export type { User } from '@supabase/supabase-js';
+export type { User } from './types';

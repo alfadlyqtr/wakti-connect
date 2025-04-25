@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,11 +12,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
 import LoginForm from "./LoginForm";
 import SignupForm from "./SignupForm";
 import SocialAuth from "./SocialAuth";
 import LanguageSwitcher from "@/components/ui/language-switcher";
+import { useAuth } from "@/hooks/useAuth";
 
 interface AuthFormProps {
   defaultTab?: 'login' | 'register';
@@ -24,39 +24,22 @@ interface AuthFormProps {
 
 const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const returnUrl = searchParams.get('returnUrl') || '/dashboard';
   const [error, setError] = useState("");
+  const { isAuthenticated, isLoading } = useAuth();
 
   useEffect(() => {
     console.log("AuthForm mounted with defaultTab:", defaultTab);
-    
-    const checkSession = async () => {
-      console.log("Checking for existing session");
-      const { data, error } = await supabase.auth.getSession();
-      if (data?.session) {
-        console.log("Session found, redirecting to dashboard");
-        navigate("/dashboard");
-      } else {
-        console.log("No active session found");
-      }
-    };
+  }, [defaultTab]);
 
-    checkSession();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log("Auth state changed:", event);
-        if (event === "SIGNED_IN" && session) {
-          console.log("User signed in, redirecting to dashboard");
-          navigate("/dashboard");
-        }
-      }
-    );
-
-    return () => {
-      console.log("AuthForm unmounting, cleaning up listener");
-      authListener?.subscription.unsubscribe();
-    };
-  }, [navigate]);
+  // If authenticated and not loading, redirect to returnUrl
+  useEffect(() => {
+    if (isAuthenticated && !isLoading) {
+      console.log("User is authenticated, redirecting to:", returnUrl);
+      navigate(returnUrl);
+    }
+  }, [isAuthenticated, isLoading, navigate, returnUrl]);
 
   return (
     <Card className="w-full max-w-sm mx-auto border-border/50 shadow-xl animate-in">

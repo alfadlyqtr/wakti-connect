@@ -12,8 +12,12 @@ export interface User extends SupabaseUser {
 // Complete AuthContextType with all required methods
 export interface AuthContextType {
   user: User | null;
+  session: any | null;
+  effectiveRole: UserRole | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  hasRole: (role: UserRole) => boolean;
+  hasAccess: (requiredRoles: UserRole[]) => boolean;
   login: (email: string, password: string) => Promise<{
     error: Error | null;
     data?: any;
@@ -29,4 +33,5 @@ export interface AuthContextType {
     error: Error | null;
     data?: any;
   }>;
+  refreshUserRole: () => Promise<void>;
 }
