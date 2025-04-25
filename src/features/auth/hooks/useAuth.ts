@@ -1,3 +1,3 @@
 
-// Re-export from the existing hook while we migrate
-export { useAuth } from '@/hooks/auth';
+// Re-export from the contexts
+export { useAuth } from '@/contexts/AuthContext';

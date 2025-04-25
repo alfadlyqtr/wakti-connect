@@ -4,7 +4,7 @@ import { RouterProvider } from 'react-router-dom';
 import { router } from './router';
 import './index.css';
 import './App.css';
-import { AuthProvider } from './hooks/auth';
+import { AuthProvider } from './contexts/AuthContext';
 import { CurrencyProvider } from './contexts/CurrencyContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from "@/components/theme-provider";
@@ -25,13 +25,13 @@ const root = createRoot(rootElement!);
 
 // Render the app with proper provider hierarchy
 root.render(
-  <ThemeProvider defaultTheme="system" storageKey="ui-theme">
-    <AuthProvider>
-      <QueryClientProvider client={queryClient}>
+  <QueryClientProvider client={queryClient}>
+    <ThemeProvider defaultTheme="system" storageKey="ui-theme">
+      <AuthProvider>
         <CurrencyProvider>
           <RouterProvider router={router} />
         </CurrencyProvider>
-      </QueryClientProvider>
-    </AuthProvider>
-  </ThemeProvider>
+      </AuthProvider>
+    </ThemeProvider>
+  </QueryClientProvider>
 );
