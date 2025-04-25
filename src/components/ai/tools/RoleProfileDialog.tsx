@@ -23,7 +23,8 @@ interface RoleProfileDialogProps {
 
 const RoleProfileDialog: React.FC<RoleProfileDialogProps> = ({ open, onOpenChange }) => {
   const { settings, updateSettings } = useAISettings();
-  const [profile, setProfile] = useState(settings?.roleProfile || "");
+  // Using optional chaining to safely access the profile property
+  const [profile, setProfile] = useState(settings?.profile || "");
   const [isSaving, setIsSaving] = useState(false);
   
   const handleProfileChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -32,7 +33,7 @@ const RoleProfileDialog: React.FC<RoleProfileDialogProps> = ({ open, onOpenChang
   
   const updatedSettings = {
     ...settings,
-    roleProfile: profile,
+    profile: profile,
   };
   
   const handleSave = async () => {

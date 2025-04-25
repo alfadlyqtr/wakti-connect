@@ -1,3 +1,4 @@
+
 import React from "react";
 import { createBrowserRouter, RouteObject, Outlet } from "react-router-dom";
 import { publicRoutes } from "./routes/publicRoutes";
@@ -17,6 +18,7 @@ import ScrollToTop from "./components/ui/scroll-to-top";
 import { TaskProvider } from "@/contexts/TaskContext";
 import NotificationListener from "./components/notifications/NotificationListener";
 import ErrorBoundary from "./components/ui/ErrorBoundary";
+import { AuthProvider } from "@/features/auth";
 
 // Lazy load dashboard pages
 import { lazy, Suspense } from "react";
@@ -120,131 +122,145 @@ const dashboardRoutes: RouteObject[] = [
   },
 ];
 
+// Root wrapper component to provide auth context across all routes
+const RootLayout = () => {
+  return (
+    <AuthProvider>
+      <Outlet />
+    </AuthProvider>
+  );
+};
+
 export const router = createBrowserRouter([
-  // Auth routes
   {
-    path: "/auth",
-    element: (
-      <ErrorBoundary>
-        <TooltipProvider>
-          <ScrollToTop />
-          <Toaster />
-          <Sonner />
-          <Outlet />
-        </TooltipProvider>
-      </ErrorBoundary>
-    ),
-    children: authRoutes,
-  },
-  
-  // Public routes wrapped in PublicLayout
-  {
-    path: "/",
-    element: (
-      <ErrorBoundary>
-        <TooltipProvider>
-          <TaskProvider>
-            <ScrollToTop />
-            <NotificationListener />
-            <Toaster />
-            <Sonner />
-            <PublicLayout />
-          </TaskProvider>
-        </TooltipProvider>
-      </ErrorBoundary>
-    ),
-    children: publicRoutes,
-  },
-  
-  // Booking routes
-  {
-    path: "/booking",
-    element: (
-      <ErrorBoundary>
-        <TooltipProvider>
-          <TaskProvider>
-            <ScrollToTop />
-            <NotificationListener />
-            <Toaster />
-            <Sonner />
-          </TaskProvider>
-        </TooltipProvider>
-      </ErrorBoundary>
-    ),
-    children: bookingRoutes,
-  },
-  
-  // Business routes
-  {
-    path: "/business",
-    element: (
-      <ErrorBoundary>
-        <TooltipProvider>
-          <TaskProvider>
-            <ScrollToTop />
-            <NotificationListener />
-            <Toaster />
-            <Sonner />
-          </TaskProvider>
-        </TooltipProvider>
-      </ErrorBoundary>
-    ),
-    children: businessRoutes,
-  },
-  
-  // Dashboard routes with role-based protection
-  {
-    path: "/dashboard",
-    element: (
-      <ProtectedRoute>
-        <ErrorBoundary>
-          <TooltipProvider>
-            <TaskProvider>
+    element: <RootLayout />,
+    children: [
+      // Auth routes
+      {
+        path: "/auth",
+        element: (
+          <ErrorBoundary>
+            <TooltipProvider>
               <ScrollToTop />
-              <NotificationListener />
               <Toaster />
               <Sonner />
-              <DashboardLayout />
-            </TaskProvider>
-          </TooltipProvider>
-        </ErrorBoundary>
-      </ProtectedRoute>
-    ),
-    children: dashboardRoutes,
-  },
-  
-  // Super Admin Dashboard routes
-  {
-    path: "/gohabsgo",
-    element: (
-      <SuperAdminGuard>
-        <ErrorBoundary>
-          <TooltipProvider>
-            <TaskProvider>
-              <ScrollToTop />
-              <NotificationListener />
-              <Toaster />
-              <Sonner />
-              <SuperAdminLayout>
-                <></>
-              </SuperAdminLayout>
-            </TaskProvider>
-          </TooltipProvider>
-        </ErrorBoundary>
-      </SuperAdminGuard>
-    ),
-    children: superadminRoutes as RouteObject[],
-  },
-  
-  // 404 page
-  {
-    path: "*",
-    element: (
-      <ErrorBoundary>
-        <TooltipProvider>
-          <NotFound />
-        </TooltipProvider>
-      </ErrorBoundary>
-    ),
+              <Outlet />
+            </TooltipProvider>
+          </ErrorBoundary>
+        ),
+        children: authRoutes,
+      },
+      
+      // Public routes wrapped in PublicLayout
+      {
+        path: "/",
+        element: (
+          <ErrorBoundary>
+            <TooltipProvider>
+              <TaskProvider>
+                <ScrollToTop />
+                <NotificationListener />
+                <Toaster />
+                <Sonner />
+                <PublicLayout />
+              </TaskProvider>
+            </TooltipProvider>
+          </ErrorBoundary>
+        ),
+        children: publicRoutes,
+      },
+      
+      // Booking routes
+      {
+        path: "/booking",
+        element: (
+          <ErrorBoundary>
+            <TooltipProvider>
+              <TaskProvider>
+                <ScrollToTop />
+                <NotificationListener />
+                <Toaster />
+                <Sonner />
+              </TaskProvider>
+            </TooltipProvider>
+          </ErrorBoundary>
+        ),
+        children: bookingRoutes,
+      },
+      
+      // Business routes
+      {
+        path: "/business",
+        element: (
+          <ErrorBoundary>
+            <TooltipProvider>
+              <TaskProvider>
+                <ScrollToTop />
+                <NotificationListener />
+                <Toaster />
+                <Sonner />
+              </TaskProvider>
+            </TooltipProvider>
+          </ErrorBoundary>
+        ),
+        children: businessRoutes,
+      },
+      
+      // Dashboard routes with role-based protection
+      {
+        path: "/dashboard",
+        element: (
+          <ProtectedRoute>
+            <ErrorBoundary>
+              <TooltipProvider>
+                <TaskProvider>
+                  <ScrollToTop />
+                  <NotificationListener />
+                  <Toaster />
+                  <Sonner />
+                  <DashboardLayout />
+                </TaskProvider>
+              </TooltipProvider>
+            </ErrorBoundary>
+          </ProtectedRoute>
+        ),
+        children: dashboardRoutes,
+      },
+      
+      // Super Admin Dashboard routes
+      {
+        path: "/gohabsgo",
+        element: (
+          <SuperAdminGuard>
+            <ErrorBoundary>
+              <TooltipProvider>
+                <TaskProvider>
+                  <ScrollToTop />
+                  <NotificationListener />
+                  <Toaster />
+                  <Sonner />
+                  <SuperAdminLayout>
+                    <></>
+                  </SuperAdminLayout>
+                </TaskProvider>
+              </TooltipProvider>
+            </ErrorBoundary>
+          </SuperAdminGuard>
+        ),
+        children: superadminRoutes as RouteObject[],
+      },
+      
+      // 404 page
+      {
+        path: "*",
+        element: (
+          <ErrorBoundary>
+            <TooltipProvider>
+              <NotFound />
+            </TooltipProvider>
+          </ErrorBoundary>
+        ),
+      }
+    ]
   },
 ]);
