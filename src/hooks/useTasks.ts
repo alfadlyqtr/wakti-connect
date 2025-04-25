@@ -1,32 +1,28 @@
-import { useState, useCallback } from 'react';
-import { TaskFormData, Task } from "@/types/task.types";
-import { useTaskOperations } from './tasks/useTaskOperations';
-import { useUserRole } from "@/features/auth/hooks/useUserRole";
+
+import { useState, useEffect } from "react";
+import { fetchUserTasks, searchTasks } from "@/services/tasks/taskService";
+import { Task } from "@/types/task.types";
 
 export const useTasks = () => {
-  const { userRole } = useUserRole();
-  
-  // Map super-admin to business role for task operations
-  const effectiveRole = userRole === "super-admin" ? "business" : userRole;
-  
-  // Make sure we pass a valid role or default to 'free'
-  const sanitizedRole = (effectiveRole && ['individual', 'business', 'staff', 'free'].includes(effectiveRole)) 
-    ? effectiveRole as 'individual' | 'business' | 'staff' | 'free'
-    : 'free';
-  
-  const { createTask } = useTaskOperations(sanitizedRole);
-  
-  const handleCreateTask = useCallback(async (taskData: TaskFormData): Promise<Task | null> => {
-    try {
-      const newTask = await createTask(taskData);
-      return newTask;
-    } catch (error) {
-      console.error("Error creating task:", error);
-      return null;
-    }
-  }, [createTask]);
-  
-  return {
-    handleCreateTask
-  };
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    const loadTasks = async () => {
+      try {
+        setIsLoading(true);
+        const data = await fetchUserTasks();
+        setTasks(data);
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error('Failed to fetch tasks'));
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadTasks();
+  }, []);
+
+  return { tasks, isLoading, error };
 };
