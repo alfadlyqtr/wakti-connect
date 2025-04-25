@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
@@ -35,9 +36,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (!mounted) return;
             
             setSession(newSession);
-            setUser(newSession?.user ?? null);
             
             if (newSession?.user) {
+              const supabaseUser = newSession.user;
+              const role = supabaseUser.user_metadata?.account_type as UserRole || 'individual';
+              
+              const appUser: AppUser = {
+                ...supabaseUser,
+                name: supabaseUser.user_metadata?.full_name || '',
+                displayName: supabaseUser.user_metadata?.display_name || supabaseUser.user_metadata?.full_name,
+                role: role,
+                effectiveRole: role,
+                account_type: supabaseUser.user_metadata?.account_type,
+                full_name: supabaseUser.user_metadata?.full_name,
+                avatar_url: supabaseUser.user_metadata?.avatar_url,
+                plan: role
+              };
+              
+              setUser(appUser);
+              
               setTimeout(async () => {
                 if (!mounted) return;
                 
@@ -59,6 +76,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 }
               }, 0);
             } else {
+              setUser(null);
               setEffectiveRole(null);
               setIsLoading(false);
             }
@@ -75,7 +93,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (mounted) {
           setSession(currentSession);
-          setUser(currentSession?.user ?? null);
+          
+          if (currentSession?.user) {
+            const supabaseUser = currentSession.user;
+            const role = supabaseUser.user_metadata?.account_type as UserRole || 'individual';
+            
+            const appUser: AppUser = {
+              ...supabaseUser,
+              name: supabaseUser.user_metadata?.full_name || '',
+              displayName: supabaseUser.user_metadata?.display_name || supabaseUser.user_metadata?.full_name,
+              role: role,
+              effectiveRole: role,
+              account_type: supabaseUser.user_metadata?.account_type,
+              full_name: supabaseUser.user_metadata?.full_name,
+              avatar_url: supabaseUser.user_metadata?.avatar_url,
+              plan: role
+            };
+            
+            setUser(appUser);
+          }
         }
         
         if (currentSession?.user && mounted) {
