@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
@@ -50,6 +49,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 account_type: supabaseUser.user_metadata?.account_type,
                 full_name: supabaseUser.user_metadata?.full_name,
                 avatar_url: supabaseUser.user_metadata?.avatar_url,
+                business_name: supabaseUser.user_metadata?.business_name,
+                theme_preference: supabaseUser.user_metadata?.theme_preference,
                 plan: role
               };
               
@@ -61,13 +62,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 try {
                   const { data: profile } = await supabase
                     .from('profiles')
-                    .select('account_type')
+                    .select('account_type, business_name, theme_preference')
                     .eq('id', newSession.user.id)
                     .maybeSingle();
                     
                   if (mounted) {
                     const role = profile?.account_type as UserRole || 'individual';
                     setEffectiveRole(role);
+                    
+                    if (profile) {
+                      setUser(prev => prev ? {
+                        ...prev,
+                        business_name: profile.business_name || prev.business_name,
+                        theme_preference: profile.theme_preference || prev.theme_preference
+                      } : null);
+                    }
+                    
                     setIsLoading(false);
                   }
                 } catch (error) {
@@ -107,6 +117,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               account_type: supabaseUser.user_metadata?.account_type,
               full_name: supabaseUser.user_metadata?.full_name,
               avatar_url: supabaseUser.user_metadata?.avatar_url,
+              business_name: supabaseUser.user_metadata?.business_name,
+              theme_preference: supabaseUser.user_metadata?.theme_preference,
               plan: role
             };
             
@@ -118,13 +130,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           try {
             const { data: profile } = await supabase
               .from('profiles')
-              .select('account_type')
+              .select('account_type, business_name, theme_preference')
               .eq('id', currentSession.user.id)
               .maybeSingle();
               
             if (mounted) {
               const role = profile?.account_type as UserRole || 'individual';
               setEffectiveRole(role);
+              
+              if (profile) {
+                setUser(prev => prev ? {
+                  ...prev,
+                  business_name: profile.business_name || prev.business_name,
+                  theme_preference: profile.theme_preference || prev.theme_preference
+                } : null);
+              }
             }
           } catch (profileError) {
             console.error("Error fetching profile:", profileError);
@@ -257,12 +277,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return requiredRoles.includes(effectiveRole);
   }, [effectiveRole]);
 
+  const isStaff = effectiveRole === 'staff';
+  
+  const isSuperAdmin = effectiveRole === 'super-admin';
+  
+  const userRole = effectiveRole || 'individual';
+  
+  const userId = user?.id || null;
+  
+  const business_name = user?.business_name;
+  const theme_preference = user?.theme_preference;
+
   const value: AuthContextType = {
     user,
     session,
     effectiveRole,
     isAuthenticated: !!user,
     isLoading,
+    userId,
+    userRole,
+    isStaff,
+    isSuperAdmin,
+    business_name,
+    theme_preference,
     hasRole,
     hasAccess,
     login,

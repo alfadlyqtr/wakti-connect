@@ -15,15 +15,17 @@ export function useDashboardUserProfile() {
     isSuperAdmin,
     isAuthenticated,
     isLoading,
+    business_name,
+    theme_preference
   } = useAuth();
   
   // Get profile data from the authenticated user
   const profileData = user ? {
     account_type: user.account_type || 'individual',
     display_name: user.displayName || null,
-    business_name: user.business_name || null,
+    business_name: business_name || null,
     full_name: user.full_name || null,
-    theme_preference: user.theme_preference || null
+    theme_preference: theme_preference || null
   } : null;
 
   // Setup auth listener for sign out

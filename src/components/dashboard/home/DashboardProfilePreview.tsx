@@ -16,7 +16,7 @@ const ACCOUNT_TYPE_COLORS: Record<string, string> = {
 
 const DashboardProfilePreview = () => {
   // Use auth system for core user data
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, business_name } = useAuth();
   
   // Use profile settings for additional profile data
   const { data: profile, isLoading: profileLoading, error } = useProfileSettings();
@@ -27,7 +27,7 @@ const DashboardProfilePreview = () => {
   // Get initials
   const getInitials = () => {
     const displayName = user?.displayName || profile?.display_name;
-    const businessName = user?.business_name || profile?.business_name;
+    const businessName = business_name || profile?.business_name;
     const fullName = user?.full_name || profile?.full_name;
     const name = displayName || businessName || fullName || "";
     
@@ -56,7 +56,7 @@ const DashboardProfilePreview = () => {
   const getName = () => {
     return user?.displayName || 
            profile?.display_name ||
-           user?.business_name || 
+           business_name || 
            profile?.business_name ||
            user?.full_name || 
            profile?.full_name ||

@@ -32,29 +32,31 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
     user,
     userId,
     isStaff, 
-    userRole: authUserRole, 
+    userRole, 
     isSuperAdmin,
     isAuthenticated,
-    isLoading: authLoading
+    isLoading,
+    business_name,
+    theme_preference
   } = useAuth();
   
   // Use the profile data from the authenticated user
   const profileData = user ? {
     account_type: user.account_type || 'individual',
     display_name: user.displayName || null,
-    business_name: user.business_name || null,
+    business_name: business_name || null,
     full_name: user.full_name || null,
-    theme_preference: user.theme_preference || 'light'
+    theme_preference: theme_preference || 'light'
   } : null;
 
   // Use provided role or detected role
-  const accountType = profileData?.account_type || propUserRole || authUserRole || "individual";
+  const accountType = profileData?.account_type || propUserRole || userRole || "individual";
   
   // Determine if the banner should be shown (only for individual users)
   const showUpgradeBanner = (
-    !authLoading &&
+    !isLoading &&
     !isStaff &&
-    authUserRole === 'individual'
+    userRole === 'individual'
   );
 
   // Handle sidebar collapse state
