@@ -1,6 +1,5 @@
-
-import { User } from "./types";
-import { loginOperation, logoutOperation, registerOperation } from "./operations";
+import { User } from "../types";
+import { loginOperation, logoutOperation, registerOperation } from "../operations";
 
 export function useAuthOperations(
   setUser: React.Dispatch<React.SetStateAction<User | null>>,

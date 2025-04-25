@@ -1,35 +1,9 @@
-
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
 import { UserRole, getEffectiveRole } from "@/types/roles";
 import { toast } from "@/components/ui/use-toast";
-
-export interface AuthContextType {
-  user: User | null;
-  session: Session | null;
-  effectiveRole: UserRole | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  hasRole: (role: UserRole) => boolean;
-  hasAccess: (requiredRoles: UserRole[]) => boolean;
-  login: (email: string, password: string) => Promise<{
-    error: Error | null;
-    data?: any;
-  }>;
-  logout: () => Promise<void>;
-  register: (
-    email: string,
-    password: string,
-    name?: string,
-    accountType?: string,
-    businessName?: string
-  ) => Promise<{
-    error: Error | null;
-    data?: any;
-  }>;
-  refreshUserRole: () => Promise<void>;
-}
+import { AuthContextType, User as ExtendedUser } from "../types";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 

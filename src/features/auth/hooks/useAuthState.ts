@@ -1,8 +1,8 @@
-
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { User } from "./types";
+// Direct import from new location
+import { User } from "../types";
 import { UserRole } from "@/types/user";
+import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect } from "react";
 
 const SUPER_ADMIN_ID = "28e863b3-0a91-4220-8330-fbee7ecd3f96";
 
