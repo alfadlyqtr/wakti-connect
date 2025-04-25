@@ -1,9 +1,9 @@
 
 import { renderHook } from '@testing-library/react';
 import { useStaffListOperations } from '../useStaffListOperations';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { expect, vi, describe, it, beforeEach } from 'vitest';
+import { vi, describe, it, beforeEach, expect } from 'vitest';
 import { supabase } from '@/integrations/supabase/client';
+import { createWrapper } from '@/test-utils/test-wrapper';
 
 // Mock toast
 vi.mock('@/components/ui/use-toast', () => ({
@@ -22,26 +22,13 @@ vi.mock('@/integrations/supabase/client', () => ({
 }));
 
 describe('useStaffListOperations', () => {
-  let queryClient: QueryClient;
+  const wrapper = createWrapper();
 
   beforeEach(() => {
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: {
-          retry: false,
-        },
-      },
-    });
     vi.clearAllMocks();
   });
 
   it('provides staff operations functions', () => {
-    const wrapper = ({ children }) => (
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
-    );
-
     const { result } = renderHook(() => useStaffListOperations(), { wrapper });
 
     expect(result.current.deleteStaff).toBeDefined();
@@ -56,12 +43,6 @@ describe('useStaffListOperations', () => {
       eq: vi.fn().mockReturnThis(),
       select: vi.fn().mockResolvedValue({ data: { id: '123' }, error: null })
     }));
-
-    const wrapper = ({ children }) => (
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
-    );
 
     const { result } = renderHook(() => useStaffListOperations(), { wrapper });
 
@@ -79,12 +60,6 @@ describe('useStaffListOperations', () => {
       })
     }));
 
-    const wrapper = ({ children }) => (
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
-    );
-
     const { result } = renderHook(() => useStaffListOperations(), { wrapper });
 
     const togglePromise = result.current.toggleStaffStatus.mutateAsync({ 
@@ -94,3 +69,4 @@ describe('useStaffListOperations', () => {
     await expect(togglePromise).resolves.not.toThrow();
   });
 });
+

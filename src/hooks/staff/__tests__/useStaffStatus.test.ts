@@ -2,8 +2,8 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { useStaffStatus } from '../useStaffStatus';
 import { supabase } from '@/integrations/supabase/client';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { expect, vi, describe, it, beforeEach } from 'vitest';
+import { vi, describe, it, beforeEach, expect } from 'vitest';
+import { createWrapper } from '@/test-utils/test-wrapper';
 
 // Mock Supabase client
 vi.mock('@/integrations/supabase/client', () => ({
@@ -22,26 +22,13 @@ vi.mock('@/integrations/supabase/client', () => ({
 }));
 
 describe('useStaffStatus', () => {
-  let queryClient: QueryClient;
+  const wrapper = createWrapper();
 
   beforeEach(() => {
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: {
-          retry: false,
-        },
-      },
-    });
     vi.clearAllMocks();
   });
 
   it('returns loading state initially', () => {
-    const wrapper = ({ children }) => (
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
-    );
-
     const { result } = renderHook(() => useStaffStatus(), { wrapper });
 
     expect(result.current.isLoading).toBe(true);
@@ -62,12 +49,6 @@ describe('useStaffStatus', () => {
       maybeSingle: vi.fn().mockResolvedValue({ data: mockData, error: null })
     }));
 
-    const wrapper = ({ children }) => (
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
-    );
-
     const { result } = renderHook(() => useStaffStatus(), { wrapper });
 
     await waitFor(() => {
@@ -87,12 +68,6 @@ describe('useStaffStatus', () => {
       maybeSingle: vi.fn().mockRejectedValue(mockError)
     }));
 
-    const wrapper = ({ children }) => (
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
-    );
-
     const { result } = renderHook(() => useStaffStatus(), { wrapper });
 
     await waitFor(() => {
@@ -102,3 +77,4 @@ describe('useStaffStatus', () => {
     expect(result.current.error).toBeTruthy();
   });
 });
+
