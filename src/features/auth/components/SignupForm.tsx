@@ -4,13 +4,13 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import { useAuth } from "../context/AuthContext";
 
-// Import refactored components
-import FormInputField from "./signup/FormInputField";
-import AccountTypeSelector from "./signup/AccountTypeSelector";
-import BusinessNameField from "./signup/BusinessNameField";
-import TermsCheckbox from "./signup/TermsCheckbox";
-import SubmitButton from "./signup/SubmitButton";
-import TroubleshootingTips from "./signup/TroubleshootingTips";
+// Update these imports to match the actual location
+import FormInputField from "../components/signup/FormInputField";
+import AccountTypeSelector from "../components/signup/AccountTypeSelector";
+import BusinessNameField from "../components/signup/BusinessNameField";
+import TermsCheckbox from "../components/signup/TermsCheckbox";
+import SubmitButton from "../components/signup/SubmitButton";
+import TroubleshootingTips from "../components/signup/TroubleshootingTips";
 
 interface SignupFormProps {
   setError: (error: string) => void;
