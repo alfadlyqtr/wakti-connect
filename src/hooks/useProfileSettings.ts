@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { toast } from "@/components/ui/use-toast";
+import { useAuth } from "@/features/auth";
 
 export type ProfileWithEmail = Tables<"profiles"> & {
   email?: string;
@@ -13,6 +14,7 @@ export type ProfileWithEmail = Tables<"profiles"> & {
 
 export const useProfileSettings = () => {
   const queryClient = useQueryClient();
+  const { user, userId, isAuthenticated } = useAuth();
   
   const { data, isLoading, error } = useQuery({
     queryKey: ['settingsProfile'],
@@ -20,18 +22,17 @@ export const useProfileSettings = () => {
       try {
         console.log("Fetching profile data in useProfileSettings...");
         
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          console.log("No active session found");
+        if (!userId || !isAuthenticated) {
+          console.log("No authenticated user found");
           return null;
         }
         
-        console.log("Session found, fetching profile for user:", session.user.id);
+        console.log("Fetching profile for user:", userId);
         
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', session.user.id)
+          .eq('id', userId)
           .single();
           
         if (error) {
@@ -40,8 +41,8 @@ export const useProfileSettings = () => {
           if (error.code === 'PGRST116') {
             console.log("Profile not found, returning default profile");
             const defaultProfile: ProfileWithEmail = {
-              id: session.user.id,
-              account_type: 'free',
+              id: userId,
+              account_type: 'individual',
               is_searchable: true,
               auto_approve_contacts: false,
               auto_add_staff_to_contacts: true,
@@ -68,7 +69,7 @@ export const useProfileSettings = () => {
               // Add the missing properties that were added in our SQL migration
               is_active: true,
               last_login_at: null,
-              email: session.user.email
+              email: user?.email
             };
             return defaultProfile;
           }
@@ -82,7 +83,7 @@ export const useProfileSettings = () => {
         const profileWithEmail: ProfileWithEmail = {
           ...data,
           auto_add_staff_to_contacts: data.auto_add_staff_to_contacts ?? true, // Ensure field exists
-          email: session.user.email
+          email: user?.email
         };
         
         return profileWithEmail;
@@ -93,6 +94,7 @@ export const useProfileSettings = () => {
     },
     retry: 2,
     staleTime: 60000, // 1 minute
+    enabled: !!userId && isAuthenticated,
   });
 
   const updateProfile = useMutation({
@@ -100,8 +102,7 @@ export const useProfileSettings = () => {
       try {
         console.log("Updating profile with data:", updatedData);
         
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) throw new Error("No active session");
+        if (!userId) throw new Error("No authenticated user");
         
         // Remove email property as it's not in the profiles table
         const { email, ...profileData } = updatedData;
@@ -113,7 +114,7 @@ export const useProfileSettings = () => {
             ...profileData,
             updated_at: new Date().toISOString()
           })
-          .eq('id', session.user.id)
+          .eq('id', userId)
           .select()
           .single();
           
@@ -125,7 +126,7 @@ export const useProfileSettings = () => {
         console.log("Profile updated successfully:", data);
         
         // Update email if provided
-        if (email && email !== session.user.email) {
+        if (email && email !== user?.email) {
           console.log("Updating user email to:", email);
           const { error: emailError } = await supabase.auth.updateUser({
             email
@@ -141,7 +142,7 @@ export const useProfileSettings = () => {
         const updatedProfile: ProfileWithEmail = {
           ...data,
           auto_add_staff_to_contacts: data.auto_add_staff_to_contacts ?? true, // Ensure field exists
-          email: email || session.user.email
+          email: email || user?.email
         };
         
         return updatedProfile;

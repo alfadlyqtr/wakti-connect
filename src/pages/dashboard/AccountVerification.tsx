@@ -8,28 +8,29 @@ import { ShieldAlert, ShieldCheck, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/features/auth";
 
 const AccountVerification = () => {
   const navigate = useNavigate();
+  const { session, user, isAuthenticated } = useAuth();
 
-  // Fetch auth session and profile data
-  const { data } = useQuery({
-    queryKey: ['verificationPageData'],
+  // Fetch profile data
+  const { data: profile } = useQuery({
+    queryKey: ['verificationProfileData'],
     queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session?.user) {
-        return { session: null, profile: null };
+      if (!user?.id) {
+        return null;
       }
       
       const { data: profile } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', session.user.id)
+        .eq('id', user.id)
         .single();
       
-      return { session, profile };
+      return profile;
     },
+    enabled: !!user?.id,
   });
 
   return (
@@ -56,23 +57,23 @@ const AccountVerification = () => {
             <CardDescription>Details about your current user session</CardDescription>
           </CardHeader>
           <CardContent>
-            {data?.session ? (
+            {isAuthenticated && session ? (
               <div className="space-y-4">
                 <div className="p-4 bg-muted rounded-md">
                   <h3 className="font-medium mb-2">Authentication</h3>
-                  <p><span className="font-semibold">User ID:</span> {data.session.user.id}</p>
-                  <p><span className="font-semibold">Email:</span> {data.session.user.email}</p>
-                  <p><span className="font-semibold">Auth Provider:</span> {data.session.user.app_metadata.provider || 'email'}</p>
+                  <p><span className="font-semibold">User ID:</span> {user?.id}</p>
+                  <p><span className="font-semibold">Email:</span> {user?.email}</p>
+                  <p><span className="font-semibold">Auth Provider:</span> {session.user?.app_metadata?.provider || 'email'}</p>
                 </div>
                 
-                {data.profile && (
+                {profile && (
                   <div className="p-4 bg-muted rounded-md">
                     <h3 className="font-medium mb-2">Profile</h3>
-                    <p><span className="font-semibold">Account Type:</span> {data.profile.account_type}</p>
-                    <p><span className="font-semibold">Full Name:</span> {data.profile.full_name || 'Not set'}</p>
-                    <p><span className="font-semibold">Display Name:</span> {data.profile.display_name || 'Not set'}</p>
-                    {data.profile.account_type === 'business' && (
-                      <p><span className="font-semibold">Business Name:</span> {data.profile.business_name || 'Not set'}</p>
+                    <p><span className="font-semibold">Account Type:</span> {profile.account_type}</p>
+                    <p><span className="font-semibold">Full Name:</span> {profile.full_name || 'Not set'}</p>
+                    <p><span className="font-semibold">Display Name:</span> {profile.display_name || 'Not set'}</p>
+                    {profile.account_type === 'business' && (
+                      <p><span className="font-semibold">Business Name:</span> {profile.business_name || 'Not set'}</p>
                     )}
                   </div>
                 )}
@@ -115,7 +116,7 @@ const AccountVerification = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Your account type ({data?.profile?.account_type || 'unknown'}) should only see features relevant to that account level.
+                Your account type ({profile?.account_type || user?.account_type || 'unknown'}) should only see features relevant to that account level.
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <Button variant="outline" onClick={() => navigate('/dashboard')}>

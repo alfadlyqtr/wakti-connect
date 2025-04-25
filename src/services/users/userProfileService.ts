@@ -94,3 +94,21 @@ export const getDashboardUserProfile = async (): Promise<DashboardUserProfile> =
     };
   }
 };
+
+// Add the missing getUserProfile function
+export const getUserProfile = async (userId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+      
+    if (error) throw error;
+    
+    return data;
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    return null;
+  }
+};

@@ -1,28 +1,20 @@
-import React, { useState, useEffect } from "react";
+
+import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProfileTab from "@/components/settings/ProfileTab";
 import NotificationsTab from "@/components/settings/NotificationsTab";
 import { AIAssistantSettings } from "@/components/settings/ai";
-import { useAuth } from "@/features/auth/hooks/useAuth";
 import CurrencyTab from "@/components/settings/CurrencyTab";
 import BillingTab from "@/components/settings/BillingTab";
 import { useProfileSettings } from "@/hooks/useProfileSettings";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { useAuth } from "@/features/auth";
 
 const DashboardSettings = () => {
-  const [userRole, setUserRole] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const { user } = useAuth();
+  const { userRole, isStaff, isLoading } = useAuth();
   const { data: profileData } = useProfileSettings();
   const isMobile = useMediaQuery("(max-width: 640px)");
   
-  useEffect(() => {
-    const storedRole = localStorage.getItem('userRole');
-    setUserRole(storedRole);
-    setIsLoading(false);
-  }, [user]);
-  
-  const isStaff = userRole === 'staff';
   const isBusinessAccount = userRole === 'business';
   
   if (isLoading) {

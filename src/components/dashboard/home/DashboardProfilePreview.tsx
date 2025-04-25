@@ -5,32 +5,41 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { useProfileSettings } from "@/hooks/useProfileSettings";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import { useAuth } from "@/features/auth";
 
 const ACCOUNT_TYPE_COLORS: Record<string, string> = {
   business: "bg-wakti-blue/90 text-white border-wakti-blue",
   individual: "bg-wakti-gold/90 text-wakti-navy border-wakti-gold",
-  free: "bg-muted text-muted-foreground border-muted",
   staff: "bg-muted text-muted-foreground border-muted",
   "super-admin": "bg-wakti-navy/90 text-white border-wakti-navy",
 };
 
 const DashboardProfilePreview = () => {
-  // Real profile settings
-  const { data: profile, isLoading, error } = useProfileSettings();
+  // Use auth system for core user data
+  const { user, isLoading: authLoading } = useAuth();
+  
+  // Use profile settings for additional profile data
+  const { data: profile, isLoading: profileLoading, error } = useProfileSettings();
+
+  // Combined loading state
+  const isLoading = authLoading || profileLoading;
 
   // Get initials
   const getInitials = () => {
-    const name =
-      profile?.display_name ||
-      profile?.business_name ||
-      profile?.full_name ||
-      "";
+    const displayName = user?.displayName || profile?.display_name;
+    const businessName = user?.business_name || profile?.business_name;
+    const fullName = user?.full_name || profile?.full_name;
+    const name = displayName || businessName || fullName || "";
+    
     if (!name) return "?";
+    
     const parts = name.trim().split(/\s+/);
-    if (profile?.account_type === "business" && profile?.business_name) {
+    const accountType = user?.account_type || profile?.account_type;
+    
+    if (accountType === "business" && businessName) {
       // Use first 2 letters of business name if present
       return (
-        profile.business_name
+        businessName
           .split(" ")
           .map((w) => w[0])
           .join("")
@@ -44,14 +53,22 @@ const DashboardProfilePreview = () => {
   };
 
   // Get profile name
-  const getName = () =>
-    profile?.display_name ||
-    profile?.business_name ||
-    profile?.full_name ||
-    "User";
+  const getName = () => {
+    return user?.displayName || 
+           profile?.display_name ||
+           user?.business_name || 
+           profile?.business_name ||
+           user?.full_name || 
+           profile?.full_name ||
+           "User";
+  };
 
   // Show account type badge
-  const getType = () => profile?.account_type || "free";
+  const getType = () => {
+    return user?.account_type || 
+           profile?.account_type || 
+           'individual';
+  };
 
   if (isLoading) {
     return (
@@ -96,6 +113,9 @@ const DashboardProfilePreview = () => {
     );
   }
 
+  const avatarUrl = user?.avatar_url || profile?.avatar_url;
+  const accountType = getType();
+
   return (
     <Card
       className={cn(
@@ -119,7 +139,7 @@ const DashboardProfilePreview = () => {
         )}
       >
         <Avatar className="h-8 w-8">
-          <AvatarImage src={profile?.avatar_url || undefined} alt="Profile" />
+          <AvatarImage src={avatarUrl || undefined} alt="Profile" />
           <AvatarFallback className="text-xs font-semibold bg-gradient-to-br from-wakti-blue via-wakti-gold to-wakti-navy text-white">
             {getInitials()}
           </AvatarFallback>
@@ -133,7 +153,7 @@ const DashboardProfilePreview = () => {
       <span
         className={cn(
           "ml-2 px-2 py-0.5 rounded-full text-xs font-semibold border",
-          ACCOUNT_TYPE_COLORS[getType()] || ACCOUNT_TYPE_COLORS["free"],
+          ACCOUNT_TYPE_COLORS[accountType] || ACCOUNT_TYPE_COLORS["individual"],
           "capitalize"
         )}
         style={{
@@ -142,7 +162,7 @@ const DashboardProfilePreview = () => {
           letterSpacing: "0.03em",
         }}
       >
-        {getType()}
+        {accountType}
       </span>
     </Card>
   );

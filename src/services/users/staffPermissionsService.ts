@@ -3,9 +3,27 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const getStaffPermissions = async () => {
   try {
-    const userRole = localStorage.getItem('userRole');
+    const { data: { session } } = await supabase.auth.getSession();
     
-    if (userRole === 'staff') {
+    if (!session?.user) {
+      return {
+        isStaff: false,
+        canEditProfile: false,
+        canEditTheme: true,
+        canEditBasicInfo: false,
+        loading: false
+      };
+    }
+    
+    // Check if the user is a staff member
+    const { data: staffData } = await supabase
+      .from('business_staff')
+      .select('*')
+      .eq('staff_id', session.user.id)
+      .eq('status', 'active')
+      .single();
+    
+    if (staffData) {
       return {
         isStaff: true,
         canEditProfile: false,

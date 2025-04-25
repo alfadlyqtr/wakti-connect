@@ -3,13 +3,14 @@ import React, { useEffect, useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
 import "@/components/layout/sidebar/sidebar.css";
-import { useDashboardUserProfile } from "@/hooks/useDashboardUserProfile";
 import { useSidebarToggle } from "@/hooks/useSidebarToggle";
 import DashboardContent from "./DashboardContent";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { UserRole, getEffectiveRole } from "@/types/user";
 import CommandSearch from "@/components/search/CommandSearch";
 import FreeAccountBanner from "./FreeAccountBanner";
+import { useAuth } from "@/features/auth";
+import { UserRole } from "@/types/roles";
+import { slugifyBusinessName } from "@/utils/authUtils";
 
 interface DashboardLayoutProps {
   children?: React.ReactNode;
@@ -26,32 +27,34 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
   const [redirectAttempts, setRedirectAttempts] = useState(0);
   const [lastRedirectTime, setLastRedirectTime] = useState(0);
   
-  // Fetch user profile data
+  // Get auth data from unified auth system
   const { 
-    profileData, 
-    profileLoading, 
-    userId, 
+    user,
+    userId,
     isStaff, 
-    userRole: detectedUserRole,
-    isSuperAdmin
-  } = useDashboardUserProfile();
+    userRole: authUserRole, 
+    isSuperAdmin,
+    isAuthenticated,
+    isLoading: authLoading
+  } = useAuth();
+  
+  // Use the profile data from the authenticated user
+  const profileData = user ? {
+    account_type: user.account_type || 'individual',
+    display_name: user.displayName || null,
+    business_name: user.business_name || null,
+    full_name: user.full_name || null,
+    theme_preference: user.theme_preference || 'light'
+  } : null;
 
   // Use provided role or detected role
-  const accountType = profileData?.account_type || propUserRole || detectedUserRole || "individual";
+  const accountType = profileData?.account_type || propUserRole || authUserRole || "individual";
   
-  // Get effective user role with proper prioritization
-  const userRoleValue: UserRole = getEffectiveRole(
-    accountType as any, 
-    isStaff,
-    isSuperAdmin
-  );
-
-  // Determine if the banner should be shown (only for accounts with limited features)
-  // Only show the banner once loading is fully complete and we have a resolved non-loading account type
+  // Determine if the banner should be shown (only for individual users)
   const showUpgradeBanner = (
-    !profileLoading &&
+    !authLoading &&
     !isStaff &&
-    userRoleValue === 'individual'
+    authUserRole === 'individual'
   );
 
   // Handle sidebar collapse state
@@ -64,21 +67,21 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
     setCommandSearchOpen(true);
   };
 
+  // Set theme based on user preference
+  useEffect(() => {
+    if (profileData?.theme_preference) {
+      document.documentElement.classList.remove('light', 'dark');
+      document.documentElement.classList.add(profileData.theme_preference);
+    }
+  }, [profileData?.theme_preference]);
+
   // Redirect to appropriate dashboard based on role if on main dashboard
   useEffect(() => {
     // Fix: Check for both "/dashboard" and "/dashboard/" paths
     const isMainDashboardPath = location.pathname === "/dashboard" || location.pathname === "/dashboard/";
     const isAnalyticsPath = location.pathname === "/dashboard/analytics";
     
-    console.log("DashboardLayout user role check:", {
-      userRoleValue,
-      accountType: profileData?.account_type,
-      isStaff,
-      isMainDashboardPath,
-      isSuperAdmin
-    });
-    
-    if (!profileLoading && isMainDashboardPath) {
+    if (!authLoading && isMainDashboardPath && isAuthenticated) {
       // Prevent redirect floods by limiting frequency and number of attempts
       const now = Date.now();
       if (redirectAttempts > 5 || (now - lastRedirectTime < 2000 && redirectAttempts > 0)) {
@@ -87,7 +90,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
       }
       
       // Only super admins should be redirected to their special dashboard
-      if (userRoleValue === 'super-admin' && isSuperAdmin) {
+      if (authUserRole === 'super-admin' && isSuperAdmin) {
         console.log("Super admin detected, redirecting to super admin dashboard");
         setRedirectAttempts(prev => prev + 1);
         setLastRedirectTime(now);
@@ -96,7 +99,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
       }
       
       // Only staff users (who are not also business owners) go to staff dashboard
-      if (userRoleValue === 'staff') {
+      if (authUserRole === 'staff') {
         console.log("Staff user detected, redirecting to staff dashboard");
         setRedirectAttempts(prev => prev + 1);
         setLastRedirectTime(now);
@@ -104,15 +107,15 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
       } else {
         // All users (including business) go to the main dashboard
         // We're already on the main dashboard path, so no redirect needed
-        console.log(`${userRoleValue} account detected, already on main dashboard`);
+        console.log(`${authUserRole} account detected, already on main dashboard`);
       }
     }
     
     // If business user is on analytics page but should be redirected to main dashboard
-    if (!profileLoading && isAnalyticsPath && userRoleValue === 'business' && location.state?.fromInitialRedirect) {
+    if (!authLoading && isAnalyticsPath && authUserRole === 'business' && location.state?.fromInitialRedirect) {
       navigate('/dashboard');
     }
-  }, [profileLoading, location.pathname, userRoleValue, isStaff, navigate, location.state, profileData?.account_type, accountType, isSuperAdmin, redirectAttempts, lastRedirectTime]);
+  }, [authLoading, location.pathname, authUserRole, isStaff, navigate, location.state, profileData?.account_type, accountType, isSuperAdmin, redirectAttempts, lastRedirectTime, isAuthenticated]);
 
   // For components that don't recognize super-admin yet, map it to business role
   const mapRoleForCompatibility = (role: UserRole): "individual" | "business" | "staff" => {
@@ -121,7 +124,12 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
   };
 
   // Get display role that's compatible with components expecting the old type
-  const displayRole = mapRoleForCompatibility(userRoleValue);
+  const displayRole = mapRoleForCompatibility(authUserRole as UserRole);
+
+  // Calculate business slug if applicable
+  const businessSlug = profileData?.business_name 
+    ? slugifyBusinessName(profileData.business_name) 
+    : undefined;
 
   return (
     <div className={`min-h-screen flex flex-col overflow-hidden ${isSidebarOpen && isMobile ? 'sidebar-open-body' : ''}`}>
@@ -150,7 +158,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
         />
         
         <DashboardContent
-          isLoading={profileLoading}
+          isLoading={authLoading}
           isStaff={isStaff}
           userId={userId}
           isMobile={isMobile}

@@ -2,8 +2,12 @@
 import React from 'react';
 import { PermissionGuard } from '@/features/auth';
 import StaffManagementContent from '@/components/staff/StaffManagementContent';
+import { useAuth } from '@/features/auth';
 
 const DashboardStaffManagement = () => {
+  const { userRole } = useAuth();
+  const isBusiness = userRole === 'business' || userRole === 'super-admin';
+  
   return (
     <PermissionGuard 
       feature="staff_management"
