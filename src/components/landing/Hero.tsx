@@ -1,12 +1,9 @@
-
 import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
 const Hero = () => {
-  return (
-    <section className="py-16 md:py-24 px-4 bg-gradient-to-b from-wakti-navy/5 to-wakti-beige/20">
+  return <section className="">
       <div className="container mx-auto max-w-5xl">
         <div className="text-center space-y-6 animate-fade-in">
           <div className="inline-block mb-4">
@@ -42,8 +39,6 @@ const Hero = () => {
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default Hero;
