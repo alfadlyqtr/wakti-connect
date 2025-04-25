@@ -37,7 +37,7 @@ export const getUserProfile = async (): Promise<UserProfile | null> => {
     const accountType: UserRole = 
       data.account_type === 'business' ? 'business' :
       data.account_type === 'staff' ? 'staff' :
-      data.account_type === 'superadmin' || data.account_type === 'super-admin' ? 'superadmin' :
+      data.account_type === 'superadmin' ? 'superadmin' :
       'individual';
     
     const profile: UserProfile = {
