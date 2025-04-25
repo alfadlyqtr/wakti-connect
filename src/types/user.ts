@@ -5,9 +5,6 @@ import { UserRole, hasRoleAccess, getEffectiveRole } from './roles';
 export type { UserRole };
 export { hasRoleAccess, getEffectiveRole };
 
-// For legacy components that still reference 'free'
-export type LegacyUserRole = UserRole | 'free';
-
 // Define UserProfile type needed by services
 export interface UserProfile {
   id: string;
@@ -15,7 +12,7 @@ export interface UserProfile {
   display_name: string | null;
   business_name: string | null;
   occupation: string | null;
-  account_type: "free" | "individual" | "business";
+  account_type: "individual" | "business";
   avatar_url: string | null;
   created_at: string;
   updated_at: string;

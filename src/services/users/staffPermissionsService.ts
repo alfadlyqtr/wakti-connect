@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const getStaffPermissions = async () => {
   try {
-    // Get user role from localStorage
     const userRole = localStorage.getItem('userRole');
     
     if (userRole === 'staff') {

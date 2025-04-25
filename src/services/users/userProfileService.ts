@@ -1,28 +1,35 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { UserProfile } from "@/types/user";
+import { UserRole } from "@/types/roles";
 
-export const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .single();
+export interface DashboardUserProfile {
+  profileData: {
+    account_type: "individual" | "business";
+    display_name: string | null;
+    business_name: string | null;
+    full_name: string | null;
+    theme_preference: string | null;
+  } | null;
+  isLoading: boolean;
+  userId: string | null;
+  isStaff: boolean;
+  userRole: UserRole;
+  isSuperAdmin: boolean;
+}
 
-  if (error) {
-    console.error('Error fetching user profile:', error);
-    return null;
-  }
-
-  return data;
-};
-
-export const getDashboardUserProfile = async () => {
+export const getDashboardUserProfile = async (): Promise<DashboardUserProfile> => {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session?.user) {
-      return null;
+      return {
+        profileData: null,
+        isLoading: false,
+        userId: null,
+        isStaff: false,
+        userRole: 'individual',
+        isSuperAdmin: false
+      };
     }
     
     // Check if super admin
@@ -31,7 +38,7 @@ export const getDashboardUserProfile = async () => {
     if (isSuperAdminResult) {
       return {
         profileData: {
-          account_type: 'super-admin',
+          account_type: 'business',
           display_name: 'System Administrator',
           business_name: 'WAKTI Administration',
           full_name: 'System Administrator',
@@ -61,14 +68,18 @@ export const getDashboardUserProfile = async () => {
       .eq('status', 'active')
       .single();
 
+    // Convert legacy or invalid account types to 'individual'
+    const accountType = (profileData?.account_type === 'business') ? 'business' : 'individual';
+
     return {
       profileData: {
         ...profileData,
+        account_type: accountType
       },
       isLoading: false,
       userId: session.user.id,
       isStaff: !!staffData,
-      userRole: staffData ? 'staff' : profileData.account_type,
+      userRole: staffData ? 'staff' : accountType,
       isSuperAdmin: false
     };
   } catch (error) {
@@ -78,7 +89,7 @@ export const getDashboardUserProfile = async () => {
       isLoading: false,
       userId: null,
       isStaff: false,
-      userRole: 'free',
+      userRole: 'individual',
       isSuperAdmin: false
     };
   }

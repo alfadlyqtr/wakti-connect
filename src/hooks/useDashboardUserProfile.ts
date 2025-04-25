@@ -1,27 +1,24 @@
 
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { getDashboardUserProfile } from "@/services/users/userProfileService";
+import type { UserRole } from "@/types/roles";
 
-export const useDashboardUserProfile = () => {
-  const [profileData, setProfileData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+export function useDashboardUserProfile() {
+  const { data: profileResult, isLoading: profileLoading } = useQuery({
+    queryKey: ['dashboardUserProfile'],
+    queryFn: getDashboardUserProfile,
+    retry: 1,
+    retryDelay: 500,
+  });
 
-  useEffect(() => {
-    const loadProfile = async () => {
-      try {
-        const data = await getDashboardUserProfile();
-        setProfileData(data);
-      } catch (error) {
-        console.error('Error loading dashboard profile:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadProfile();
-  }, []);
-
-  return { profileData, isLoading };
-};
+  return {
+    profileData: profileResult?.profileData,
+    profileLoading,
+    userId: profileResult?.userId,
+    isStaff: profileResult?.isStaff || false,
+    userRole: profileResult?.userRole as UserRole,
+    isSuperAdmin: profileResult?.isSuperAdmin || false,
+  };
+}
 
 export default useDashboardUserProfile;

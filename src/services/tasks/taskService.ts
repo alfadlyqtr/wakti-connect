@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Task, TaskFormData, TaskStatus } from "@/types/task.types";
 
@@ -59,9 +58,18 @@ export const searchTasks = async (query: string): Promise<Task[]> => {
 
 export const createTask = async (taskData: TaskFormData): Promise<Task | null> => {
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('No authenticated user');
+    
+    const taskWithUser = {
+      ...taskData,
+      user_id: user.id,
+      status: taskData.status || 'pending'
+    };
+    
     const { data, error } = await supabase
       .from('tasks')
-      .insert([taskData])
+      .insert([taskWithUser])
       .select()
       .single();
       
