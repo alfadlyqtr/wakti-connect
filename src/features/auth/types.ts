@@ -2,15 +2,21 @@
 import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 import { UserRole } from "@/types/roles";
 
-export interface User extends SupabaseUser {
+export interface AppUser extends SupabaseUser {
+  name?: string;
+  displayName?: string;
   role?: UserRole;
+  effectiveRole?: UserRole;
   account_type?: string;
   full_name?: string;
   avatar_url?: string;
+  plan?: UserRole;
 }
 
+export type User = AppUser;
+
 export interface AuthContextType {
-  user: SupabaseUser | null;
+  user: AppUser | null;
   session: Session | null;
   effectiveRole: UserRole | null;
   isAuthenticated: boolean;

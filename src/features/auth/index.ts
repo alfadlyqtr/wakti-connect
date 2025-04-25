@@ -1,7 +1,8 @@
 
 // Re-export everything from the new structure
 export * from './types';
-export { useAuth, AuthProvider } from './context/AuthContext';
+export { AuthProvider } from './context/AuthContext';
+export { useAuth } from './context/AuthContext'; // Export useAuth from one place only
 export * from './components';
 export * from './hooks/usePermissions';
 

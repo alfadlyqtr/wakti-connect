@@ -25,7 +25,7 @@ interface UserMenuProps {
 }
 
 const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications }: UserMenuProps) => {
-  const { effectiveRole } = useEffectiveRole();
+  const { role: effectiveRole } = useEffectiveRole();
   const { data: staffStatus } = useStaffWorkingStatus();
   const isWorking = staffStatus?.isWorking || false;
   
@@ -64,7 +64,6 @@ const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications }: User
     }
   };
 
-  // Filter navigation items based on user role
   const filteredNavItems = dropdownNavItems.filter(item => {
     if (!effectiveRole) return false;
     return item.showFor.includes(effectiveRole);

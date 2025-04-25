@@ -1,5 +1,6 @@
+
 // Direct import from new location
-import { User } from "../types";
+import { AppUser } from "../types";
 import { UserRole } from "@/types/user";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
@@ -7,7 +8,7 @@ import { useState, useEffect } from "react";
 const SUPER_ADMIN_ID = "28e863b3-0a91-4220-8330-fbee7ecd3f96";
 
 export function useAuthState() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
@@ -30,11 +31,12 @@ export function useAuthState() {
                   console.log("Auth state: User is the hard-coded super admin");
                   localStorage.setItem('isSuperAdmin', 'true');
                   
-                  const userData: User = {
+                  const userData: AppUser = {
                     ...session.user,
                     name: 'System Administrator',
                     displayName: 'System Administrator',
-                    plan: 'super-admin' as UserRole
+                    plan: 'super-admin' as UserRole,
+                    role: 'super-admin' as UserRole
                   };
                   
                   setUser(userData);
@@ -56,11 +58,12 @@ export function useAuthState() {
                   }
                 }
                 
-                const userData: User = {
+                const userData: AppUser = {
                   ...session.user,
                   name: profile?.full_name || session.user.email?.split('@')[0],
                   displayName: profile?.display_name || profile?.full_name,
-                  plan: (profile?.account_type as UserRole) || "individual"
+                  plan: (profile?.account_type as UserRole) || "individual",
+                  role: (profile?.account_type as UserRole) || "individual"
                 };
                 
                 if (isMounted) setUser(userData);
@@ -92,11 +95,12 @@ export function useAuthState() {
               console.log("Initial session: User is the hard-coded super admin");
               localStorage.setItem('isSuperAdmin', 'true');
               
-              const userData: User = {
+              const userData: AppUser = {
                 ...session.user,
                 name: 'System Administrator',
                 displayName: 'System Administrator',
-                plan: 'super-admin' as UserRole
+                plan: 'super-admin' as UserRole,
+                role: 'super-admin' as UserRole
               };
               
               if (isMounted) {
@@ -121,11 +125,12 @@ export function useAuthState() {
               }
             }
             
-            const userData: User = {
+            const userData: AppUser = {
               ...session.user,
               name: profile?.full_name || session.user.email?.split('@')[0],
               displayName: profile?.display_name || profile?.full_name,
-              plan: (profile?.account_type as UserRole) || "individual"
+              plan: (profile?.account_type as UserRole) || "individual",
+              role: (profile?.account_type as UserRole) || "individual"
             };
             
             if (isMounted) setUser(userData);

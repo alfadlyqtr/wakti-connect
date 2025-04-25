@@ -1,9 +1,10 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { User } from "@/features/auth/types";
+import { AppUser } from "@/features/auth/types";
 
 export function useAuthInitializer() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [authInitialized, setAuthInitialized] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -27,7 +28,8 @@ export function useAuthInitializer() {
           });
           
           if (session) {
-            setUser(session.user);
+            // Cast the user to AppUser type
+            setUser(session.user as unknown as AppUser);
           } else if (event === 'SIGNED_OUT') {
             setUser(null);
           }
@@ -57,7 +59,8 @@ export function useAuthInitializer() {
         
         if (data?.session) {
           console.log("Found existing session for user:", data.session.user.id);
-          setUser(data.session.user);
+          // Cast the user to AppUser type
+          setUser(data.session.user as unknown as AppUser);
         } else {
           console.log("No session found");
         }

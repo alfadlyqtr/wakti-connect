@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -6,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
-import { User } from "@/features/auth/types"; // Using our extended User type
+import { AppUser } from "@/features/auth/types"; // Updated import
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { Loader2 } from 'lucide-react';
@@ -27,7 +28,7 @@ const BookingModalContent: React.FC<BookingModalContentProps> = ({
   
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedTime, setSelectedTime] = useState<string>('');
-  const [name, setName] = useState<string>((user as User)?.name || '');
+  const [name, setName] = useState<string>((user as AppUser)?.name || '');
   const [email, setEmail] = useState<string>(user?.email || '');
   const [phone, setPhone] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
@@ -63,7 +64,7 @@ const BookingModalContent: React.FC<BookingModalContentProps> = ({
           business_id: businessId,
           template_id: template.id,
           title: template.name || "Booking", // Add title field which is required
-          customer_name: name || (user as User)?.name || 'Guest',
+          customer_name: name || (user as AppUser)?.name || 'Guest',
           customer_email: email || user?.email,
           customer_phone: phone,
           description: notes, // Use description field instead of notes

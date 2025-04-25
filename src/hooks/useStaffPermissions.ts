@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from 'react';
 import { hasStaffPermission } from '@/utils/staffUtils';
-import { useAuth } from '@/hooks/auth';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 
 export const useStaffPermissions = () => {
   const { user } = useAuth();
