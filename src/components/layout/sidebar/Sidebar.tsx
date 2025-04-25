@@ -84,7 +84,7 @@ const Sidebar = ({
         effectiveRole = 'business';
       } else if (data.account_type === 'staff') {
         effectiveRole = 'staff';
-      } else if (data.account_type === 'superadmin') {
+      } else if (data.account_type === 'superadmin' || data.account_type === 'super-admin') {
         effectiveRole = 'superadmin';
       }
       
