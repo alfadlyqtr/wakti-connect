@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Reminder } from "@/types/reminder.types";
 import { fetchReminders } from "@/services/reminder/reminderService";
@@ -77,23 +78,6 @@ const RemindersContainer: React.FC<RemindersContainerProps> = ({
     }
   };
   
-  const getRelativeTime = (reminderTime: string) => {
-    const now = new Date();
-    const reminder = new Date(reminderTime);
-    const diffInSeconds = Math.floor((reminder.getTime() - now.getTime()) / 1000);
-    
-    if (diffInSeconds < 0) {
-      const passedSeconds = Math.abs(diffInSeconds);
-      if (passedSeconds < 60) return `Due ${passedSeconds} seconds ago`;
-      if (passedSeconds < 3600) return `Due ${Math.floor(passedSeconds / 60)} minutes ago`;
-      return `Due ${Math.floor(passedSeconds / 3600)} hours ago`;
-    }
-    
-    if (diffInSeconds < 60) return `Due in ${diffInSeconds} seconds`;
-    if (diffInSeconds < 3600) return `Due in ${Math.floor(diffInSeconds / 60)} minutes`;
-    return `Due in ${Math.floor(diffInSeconds / 3600)} hours`;
-  };
-  
   const formatLastCheckTime = (time: Date) => {
     return time.toLocaleTimeString(undefined, { 
       hour: '2-digit', 
@@ -163,27 +147,22 @@ const RemindersContainer: React.FC<RemindersContainerProps> = ({
         </div>
       </div>
       
-      <div className="p-3 bg-blue-50 text-blue-700 rounded-md flex items-center justify-between text-sm">
-        <div className="flex items-center">
-          <ClipboardCheck className="h-4 w-4 mr-2 text-blue-500" />
-          <span>
-            Reminders are checked every 3 seconds. Last check: {formatLastCheckTime(lastCheckTime)}
-          </span>
-        </div>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="text-blue-600 hover:text-blue-800 p-1 h-auto"
-          onClick={loadReminders}
-        >
-          <RefreshCw className="h-4 w-4" />
-        </Button>
-      </div>
-      
       <RemindersList 
         reminders={reminders} 
         onReminderUpdate={loadReminders}
-        getRelativeTime={getRelativeTime}
+        getRelativeTime={(time: string) => {
+          const date = new Date(time);
+          const now = new Date();
+          const diff = date.getTime() - now.getTime();
+          
+          if (diff <= 0) return "Past due";
+          
+          const hours = Math.floor(diff / (1000 * 60 * 60));
+          const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+          
+          if (hours > 0) return `Due in ${hours} hour${hours !== 1 ? 's' : ''}`;
+          return `Due in ${minutes} minute${minutes !== 1 ? 's' : ''}`;
+        }}
       />
       
       <CreateReminderDialog
