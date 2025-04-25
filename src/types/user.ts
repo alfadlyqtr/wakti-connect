@@ -1,9 +1,8 @@
-
-import { UserRole, hasRoleAccess, getEffectiveRole } from './roles';
+import { UserRole, hasRoleAccess, mapDatabaseRoleToUserRole } from './roles';
 
 // Re-export for backward compatibility
 export type { UserRole };
-export { hasRoleAccess, getEffectiveRole };
+export { hasRoleAccess, mapDatabaseRoleToUserRole };
 
 // Define UserProfile type needed by services
 export interface UserProfile {
@@ -20,6 +19,25 @@ export interface UserProfile {
   theme_preference: string | null;
 }
 
-// Deprecated re-exports with type exports
-export type { hasRoleAccess as deprecatedHasRoleAccess };
-export type { getEffectiveRole as deprecatedGetEffectiveRole };
+// Deprecated exports with type declaration only
+// These are kept to avoid breaking existing imports
+// but they don't actually provide any functionality
+export type GetEffectiveRoleFunction = (
+  accountType: string | undefined | null,
+  isStaff: boolean,
+  isSuperAdmin?: boolean
+) => UserRole;
+
+export const getEffectiveRole: GetEffectiveRoleFunction = (accountType, isStaff, isSuperAdmin = false) => {
+  // Superadmin has highest priority
+  if (isSuperAdmin) return 'superadmin';
+  
+  // Business owner takes next highest priority
+  if (accountType === 'business') return 'business';
+  
+  // Staff (not a business owner) is next
+  if (isStaff) return 'staff';
+  
+  // Otherwise, individual user
+  return 'individual';
+};
