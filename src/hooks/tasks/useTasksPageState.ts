@@ -1,206 +1,118 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/components/ui/use-toast';
-import { useTaskQueries } from './useTaskQueries';
-import { TaskTab, Task, TaskFormData, TaskStatus } from '@/types/task.types';
-import { TaskStatusFilter, TaskPriorityFilter } from '@/components/tasks/types';
-import { UserRole } from '@/types/user';
+
+import { useState, useEffect, useCallback } from "react";
+import { useTaskQueries } from "./useTaskQueries";
+import { useAuth } from "@/features/auth";
+import { Task, TaskFormData, TaskTab } from "@/types/task.types";
+import { toast } from "@/components/ui/use-toast";
 
 export const useTasksPageState = () => {
-  const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState<string | null>(null);
-  const [filterPriority, setFilterPriority] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterPriority, setFilterPriority] = useState("all");
   const [createTaskDialogOpen, setCreateTaskDialogOpen] = useState(false);
   const [editTaskDialogOpen, setEditTaskDialogOpen] = useState(false);
-  const [currentEditTask, setCurrentEditTask] = useState(null);
-  const [activeTab, setActiveTab] = useState<TaskTab>('my-tasks');
-  const [userRole, setUserRole] = useState<UserRole>('individual');
+  const [currentEditTask, setCurrentEditTask] = useState<Task | null>(null);
+  const [activeTab, setActiveTab] = useState<TaskTab>("my-tasks");
+  
+  const { effectiveRole } = useAuth();
+  
+  // Determine if user has a paid account (business or superadmin)
+  const isPaidAccount = effectiveRole === 'business' || effectiveRole === 'superadmin';
   
   const {
     tasks,
+    sharedTasks,
     isLoading,
+    isError,
     error,
-    refetch: refetchTasks,
-    userRole: detectedUserRole,
-    isStaff
-  } = useTaskQueries(activeTab as any);
+    createTask,
+    updateTask,
+    deleteTask,
+    refetch: refetchTasks
+  } = useTaskQueries();
   
-  useEffect(() => {
-    const getUserRole = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          setUserRole('individual');
-          return;
-        }
-        
-        if (localStorage.getItem('isSuperAdmin') === 'true') {
-          setUserRole('superadmin');
-          return;
-        }
-        
-        const isStaffMember = localStorage.getItem('isStaff') === 'true';
-        
-        if (isStaffMember) {
-          setUserRole('staff');
-          return;
-        }
-        
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('account_type')
-          .eq('id', session.user.id)
-          .single();
-        
-        if (profileData?.account_type === 'business') {
-          setUserRole('business');
-        } else if (profileData?.account_type === 'staff') {
-          setUserRole('staff');
-        } else if (profileData?.account_type === 'superadmin') {
-          setUserRole('superadmin');
-        } else {
-          setUserRole('individual');
-        }
-      } catch (err) {
-        console.error('Error getting user role:', err);
-        setUserRole('individual');
-      }
-    };
+  // Filter tasks based on search query, status, priority, and active tab
+  const filteredTasks = useCallback(() => {
+    let taskList = tasks || [];
     
-    if (detectedUserRole) {
-      setUserRole(detectedUserRole);
-    } else {
-      getUserRole();
+    // Determine which tasks to show based on active tab
+    if (activeTab === "shared-with-me") {
+      taskList = sharedTasks || [];
     }
-  }, [detectedUserRole]);
+    
+    return taskList.filter(task => {
+      // Filter by search query
+      const matchesSearch = 
+        !searchQuery || 
+        task.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        task.description?.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      // Filter by status
+      const matchesStatus = 
+        filterStatus === "all" || 
+        task.status === filterStatus;
+      
+      // Filter by priority
+      const matchesPriority = 
+        filterPriority === "all" || 
+        task.priority === filterPriority;
+      
+      return matchesSearch && matchesStatus && matchesPriority;
+    });
+  }, [tasks, sharedTasks, searchQuery, filterStatus, filterPriority, activeTab]);
   
-  const filteredTasks = tasks.filter(task => {
-    const matchesSearch = searchQuery 
-      ? task.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        (task.description && task.description.toLowerCase().includes(searchQuery.toLowerCase()))
-      : true;
-    
-    const matchesStatus = filterStatus && filterStatus !== 'all' 
-      ? task.status === filterStatus 
-      : true;
-    
-    const matchesPriority = filterPriority && filterPriority !== 'all'
-      ? task.priority === filterPriority
-      : true;
-    
-    return matchesSearch && matchesStatus && matchesPriority;
-  });
-  
+  // Handler for creating a task
   const handleCreateTask = async (taskData: TaskFormData): Promise<Task> => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('You must be logged in to create tasks');
-      
-      const { data, error } = await supabase
-        .from('tasks')
-        .insert({
-          ...taskData,
-          user_id: session.user.id,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          status: taskData.status || 'pending' as TaskStatus
-        })
-        .select()
-        .single();
-      
-      if (error) throw new Error(error.message);
+      const newTask = await createTask(taskData);
+      await refetchTasks();
       
       toast({
-        title: 'Task created',
-        description: 'Your task was created successfully',
+        title: "Task created",
+        description: "Your task has been created successfully."
       });
       
-      refetchTasks();
-      
-      setCreateTaskDialogOpen(false);
-      
-      return data as Task;
-    } catch (err) {
-      console.error('Error creating task:', err);
+      return newTask;
+    } catch (error) {
+      console.error("Error creating task:", error);
       toast({
-        variant: 'destructive',
-        title: 'Failed to create task',
-        description: err instanceof Error ? err.message : 'An unknown error occurred',
+        title: "Failed to create task",
+        description: "There was an error creating your task. Please try again.",
+        variant: "destructive"
       });
-      throw err;
+      throw error;
     }
   };
   
-  const handleUpdateTask = async (taskId: string, taskData: any): Promise<void> => {
+  // Handler for updating a task
+  const handleUpdateTask = async (taskId: string, taskData: Partial<Task>): Promise<void> => {
     try {
-      const { error } = await supabase
-        .from('tasks')
-        .update({
-          ...taskData,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', taskId);
-      
-      if (error) throw new Error(error.message);
+      await updateTask(taskId, taskData);
+      await refetchTasks();
       
       toast({
-        title: 'Task updated',
-        description: 'Your task was updated successfully',
+        title: "Task updated",
+        description: "Your task has been updated successfully."
       });
-      
-      refetchTasks();
-      setEditTaskDialogOpen(false);
-    } catch (err) {
-      console.error('Error updating task:', err);
+    } catch (error) {
+      console.error("Error updating task:", error);
       toast({
-        variant: 'destructive',
-        title: 'Failed to update task',
-        description: err instanceof Error ? err.message : 'An unknown error occurred',
+        title: "Failed to update task",
+        description: "There was an error updating your task. Please try again.",
+        variant: "destructive"
       });
-      throw err;
+      throw error;
     }
   };
-  
-  const deleteTask = async (taskId: string): Promise<boolean> => {
-    try {
-      const { error } = await supabase
-        .from('tasks')
-        .delete()
-        .eq('id', taskId);
-      
-      if (error) throw new Error(error.message);
-      
-      toast({
-        title: 'Task deleted',
-        description: 'Your task was deleted successfully',
-      });
-      
-      return true;
-    } catch (err) {
-      console.error('Error deleting task:', err);
-      toast({
-        variant: 'destructive',
-        title: 'Failed to delete task',
-        description: err instanceof Error ? err.message : 'An unknown error occurred',
-      });
-      return false;
-    }
-  };
-  
-  const isPaidAccount = userRole === 'business' || userRole === 'superadmin';
   
   return {
-    isLoading,
-    error,
     searchQuery,
     setSearchQuery,
     filterStatus,
     setFilterStatus,
     filterPriority,
     setFilterPriority,
-    userRole,
+    userRole: effectiveRole,
     createTaskDialogOpen,
     setCreateTaskDialogOpen,
     editTaskDialogOpen,
@@ -209,12 +121,14 @@ export const useTasksPageState = () => {
     setCurrentEditTask,
     handleCreateTask,
     handleUpdateTask,
-    deleteTask,
     refetchTasks,
-    filteredTasks,
+    filteredTasks: filteredTasks(),
+    isLoading,
+    isError,
+    error,
+    deleteTask,
     isPaidAccount,
     activeTab,
-    setActiveTab,
-    isStaff
+    setActiveTab
   };
 };

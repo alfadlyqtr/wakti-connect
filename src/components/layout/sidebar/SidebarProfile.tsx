@@ -57,11 +57,11 @@ const SidebarProfile: React.FC<SidebarProfileProps> = ({ profileData, collapsed 
       case "staff":
         type = "Staff";
         break;
-      case "super-admin":
+      case "superadmin":
         type = "Super Admin";
         break;
       default:
-        type = "Free";
+        type = "Individual";
     }
     
     return { name, type };

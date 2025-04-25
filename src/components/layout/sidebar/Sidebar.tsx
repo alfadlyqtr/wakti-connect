@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,7 +24,7 @@ interface SidebarProfileData {
 
 interface SidebarProps {
   isOpen: boolean;
-  userRole: "individual" | "business" | "staff";
+  userRole: UserRole;
   onCollapseChange?: (collapsed: boolean) => void;
   closeSidebar?: () => void;
   openCommandSearch?: () => void;
@@ -90,8 +91,8 @@ const Sidebar = ({
         effectiveRole = 'business';
       } else if (data.account_type === 'staff') {
         effectiveRole = 'staff';
-      } else if (data.account_type === 'super-admin') {
-        effectiveRole = 'super-admin';
+      } else if (data.account_type === 'superadmin') {
+        effectiveRole = 'superadmin';
       }
       
       return {

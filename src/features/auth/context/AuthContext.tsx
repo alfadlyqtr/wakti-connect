@@ -1,38 +1,47 @@
+
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Session } from '@supabase/supabase-js';
+import { Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { UserRole } from "@/types/roles";
 
-export interface User {
-  id: string;
-  email: string | null;
-  displayName: string | null;
-  full_name: string | null;
-  account_type: UserRole | null;
-  avatar_url: string | null;
-  theme_preference: string | null;
-  created_at: string | null;
+export interface User extends Omit<SupabaseUser, 'app_metadata' | 'user_metadata'> {
+  name?: string;
+  displayName?: string;
+  role?: UserRole;
+  effectiveRole?: UserRole;
+  account_type?: string;
+  full_name?: string;
+  avatar_url?: string;
+  plan?: UserRole;
+  business_name?: string;
+  theme_preference?: string;
 }
 
 export interface AuthContextType {
   user: User | null;
-  userId: string | null;
   session: Session | null;
-  userRole: UserRole | null;
   effectiveRole: UserRole;
-  isStaff: boolean;
-  isSuperAdmin: boolean;
   isAuthenticated: boolean;
   isLoading: boolean;
-  business_name: string | null;
-  theme_preference: string | null;
-  signIn: (email: string) => Promise<void>;
-  signOut: () => Promise<void>;
+  userId: string | null;
+  userRole: UserRole;
+  isStaff: boolean;
+  isSuperAdmin: boolean;
+  business_name?: string;
+  theme_preference?: string;
   hasRole: (role: UserRole) => boolean;
-  hasAccess: (roles: UserRole[]) => boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, meta?: any) => Promise<void>;
+  hasAccess: (requiredRoles: UserRole[]) => boolean;
+  login: (email: string, password: string) => Promise<{ error?: any; data?: any }>;
+  logout: () => Promise<void>;
+  register: (
+    email: string, 
+    password: string, 
+    name?: string, 
+    accountType?: string, 
+    businessName?: string
+  ) => Promise<{ error?: any; data?: any }>;
+  refreshUserRole: () => Promise<void>;
 }
 
 interface AuthProviderProps {
@@ -45,7 +54,7 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-	const [userRole, setUserRole] = useState<UserRole | null>(null);
+	const [userRole, setUserRole] = useState<UserRole>('individual');
   const [effectiveRole, setEffectiveRole] = useState<UserRole>('individual');
   const [isStaff, setIsStaff] = useState<boolean>(false);
   const [isSuperAdmin, setIsSuperAdmin] = useState<boolean>(false);
@@ -74,7 +83,7 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         setUser(null);
         setUserId(null);
-        setUserRole(null);
+        setUserRole('individual');
         setIsStaff(false);
         setIsSuperAdmin(false);
         setIsAuthenticated(false);
@@ -93,7 +102,7 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (!session?.user) {
         setUser(null);
         setUserId(null);
-        setUserRole(null);
+        setUserRole('individual');
         setIsStaff(false);
         setIsSuperAdmin(false);
         setIsAuthenticated(false);
@@ -117,18 +126,21 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           console.error("Error fetching profile:", profileError);
           throw profileError;
         }
-        
-        setUser({
+
+        // Create a custom User object without directly accessing user_metadata
+        const customUser: User = {
+          ...session.user,
           id: session.user.id,
           email: session.user.email,
-          displayName: session.user.user_metadata.full_name || session.user.user_metadata.name || null,
-          full_name: session.user.user_metadata.full_name || null,
+          displayName: profile?.display_name || profile?.full_name || null,
+          full_name: profile?.full_name || null,
           account_type: profile?.account_type || 'individual',
           avatar_url: profile?.avatar_url || null,
           theme_preference: profile?.theme_preference || 'light',
           created_at: profile?.created_at || null,
-        });
+        };
         
+        setUser(customUser);
         setBusinessName(profile?.business_name || null);
         setThemePreference(profile?.theme_preference || 'light');
         
@@ -184,17 +196,18 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, [session]);
   
-  const signIn = async (email: string) => {
+  const login = async (email: string, password: string): Promise<{ error?: any; data?: any }> => {
     try {
-      const { error } = await supabase.auth.signInWithOtp({ email });
-      if (error) throw error;
-      alert('Check your email for the magic link to sign in.');
-    } catch (error: any) {
-      alert(error.error_description || error.message);
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) return { error };
+      return { data };
+    } catch (error) {
+      console.error("Login error:", error);
+      return { error };
     }
   };
   
-  const signOut = async () => {
+  const logout = async () => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
@@ -203,36 +216,38 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       alert(error.error_description || error.message);
     }
   };
+  
+  const register = async (
+    email: string, 
+    password: string, 
+    name?: string, 
+    accountType?: string, 
+    businessName?: string
+  ): Promise<{ error?: any; data?: any }> => {
+    try {
+      const { data, error } = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options: {
+          data: {
+            full_name: name,
+            account_type: accountType || 'individual',
+            business_name: businessName
+          }
+        }
+      });
+      
+      if (error) return { error };
+      return { data };
+    } catch (error) {
+      console.error("Registration error:", error);
+      return { error };
+    }
+  };
 
   const hasRole = (role: UserRole): boolean => {
     if (!userRole) return false;
     return userRole === role;
-  };
-  
-  const login = async (email: string, password: string): Promise<void> => {
-    try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-    } catch (error: any) {
-      console.error("Login error:", error);
-      throw error;
-    }
-  };
-  
-  const register = async (email: string, password: string, meta?: any): Promise<void> => {
-    try {
-      const { error } = await supabase.auth.signUp({ 
-        email, 
-        password,
-        options: {
-          data: meta
-        }
-      });
-      if (error) throw error;
-    } catch (error: any) {
-      console.error("Registration error:", error);
-      throw error;
-    }
   };
   
   const hasAccess = (roles: UserRole[]): boolean => {
@@ -240,11 +255,55 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return roles.includes(userRole);
   };
   
+  const refreshUserRole = async (): Promise<void> => {
+    if (!session?.user) return;
+    
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('account_type')
+        .eq('id', session.user.id)
+        .single();
+        
+      const { data: staffData } = await supabase
+        .from('business_staff')
+        .select('id')
+        .eq('staff_id', session.user.id)
+        .not('status', 'eq', 'inactive')
+        .maybeSingle();
+        
+      const { data: superAdminData } = await supabase
+        .from('super_admins')
+        .select('id')
+        .eq('id', session.user.id)
+        .maybeSingle();
+        
+      const staffStatus = !!staffData;
+      const superAdminStatus = !!superAdminData;
+      
+      let calculatedRole: UserRole = 'individual';
+      if (superAdminStatus) {
+          calculatedRole = 'superadmin';
+      } else if (profile?.account_type === 'business') {
+          calculatedRole = 'business';
+      } else if (staffStatus) {
+          calculatedRole = 'staff';
+      }
+      
+      setUserRole(calculatedRole);
+      setEffectiveRole(calculatedRole);
+      setIsStaff(staffStatus);
+      setIsSuperAdmin(superAdminStatus);
+    } catch (error) {
+      console.error("Error refreshing user role:", error);
+    }
+  };
+  
   const value: AuthContextType = {
     user,
     userId,
     session,
-		userRole,
+    userRole,
     effectiveRole,
     isStaff,
     isSuperAdmin,
@@ -252,12 +311,12 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isLoading,
     business_name,
     theme_preference,
-    signIn,
-    signOut,
+    login,
+    logout,
     hasRole,
     hasAccess,
-    login,
     register,
+    refreshUserRole,
   };
   
   return (

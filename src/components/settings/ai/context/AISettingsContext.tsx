@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
+import { User as SupabaseUser } from '@supabase/supabase-js';
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useAISettingsQuery, useAIKnowledgeUploadsQuery, useCanUseAIQuery } from '@/hooks/ai/settings/useAISettingsQueries';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -29,21 +30,31 @@ export const AISettingsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const queryClient = useQueryClient();
   const [isCreatingSettings, setIsCreatingSettings] = useState(false);
   
+  // Convert our custom User type to SupabaseUser for query functions
+  const supabaseUser = user ? { 
+    id: user.id,
+    email: user.email,
+    // Add minimum required properties for compatibility
+    app_metadata: {},
+    user_metadata: {},
+    aud: "authenticated"
+  } as SupabaseUser : null;
+  
   // Fetch AI settings
   const {
     data: settings,
     isLoading: isLoadingSettings,
     error: settingsError,
-  } = useAISettingsQuery(user);
+  } = useAISettingsQuery(supabaseUser);
   
   // Fetch knowledge uploads
   const {
     data: knowledgeUploads = [],
     isLoading: isLoadingKnowledge,
-  } = useAIKnowledgeUploadsQuery(user);
+  } = useAIKnowledgeUploadsQuery(supabaseUser);
   
   // Check if user can use AI
-  const { data: canUseAI = false } = useCanUseAIQuery(user);
+  const { data: canUseAI = false } = useCanUseAIQuery(supabaseUser);
   
   // Update AI settings
   const updateSettingsMutation = useMutation({
@@ -244,4 +255,10 @@ export const AISettingsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   );
 };
 
-export const useAISettings = () => useContext(AISettingsContext);
+export const useAISettings = () => {
+  const context = useContext(AISettingsContext);
+  if (context === undefined) {
+    throw new Error("useAISettings must be used within an AISettingsProvider");
+  }
+  return context;
+};

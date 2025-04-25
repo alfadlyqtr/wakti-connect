@@ -1,4 +1,6 @@
+
 import { useState, useEffect, useCallback } from 'react';
+import { User as SupabaseUser } from '@supabase/supabase-js';
 import { globalChatMemory } from '@/services/GlobalChatMemory';
 import { ChatMemoryMessage } from '@/components/ai/personality-switcher/types';
 import { useAIPersonality } from '@/components/ai/personality-switcher/AIPersonalityContext';
@@ -71,10 +73,10 @@ export const useGlobalChat = () => {
       // Get user context for better personalization
       let userContext = '';
       if (profile) {
-        userContext = `User: ${profile.full_name || 'Unknown'}, Account Type: ${profile.account_type || 'free'}`;
+        userContext = `User: ${profile.full_name || 'Unknown'}, Account Type: ${profile.account_type || 'individual'}`;
       } else if (user) {
-        // Use metadata as fallback if profile not loaded
-        userContext = `User: ${user.user_metadata?.full_name || 'Unknown'}, Account Type: ${user.user_metadata?.account_type || 'free'}`;
+        // Create a safe context without accessing user_metadata directly
+        userContext = `User: ${user.full_name || user.displayName || 'Unknown'}, Account Type: ${user.account_type || 'individual'}`;
       } else {
         userContext = 'Unknown User';
       }

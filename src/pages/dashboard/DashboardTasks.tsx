@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import TaskControls from "@/components/tasks/TaskControls";
 import TasksLoading from "@/components/tasks/TasksLoading";
@@ -65,7 +66,7 @@ const DashboardTasks = () => {
     setEditTaskDialogOpen(true);
   };
 
-  const displayRole = userRole === 'super-admin' ? 'business' : userRole;
+  const displayRole = userRole === 'superadmin' ? 'business' : userRole;
 
   const handleDeleteTask = async (taskId: string) => {
     await deleteTask(taskId);

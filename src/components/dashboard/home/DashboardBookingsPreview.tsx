@@ -15,7 +15,7 @@ interface DashboardBookingsPreviewProps {
 
 const DashboardBookingsPreview: React.FC<DashboardBookingsPreviewProps> = ({ userRole }) => {
   const navigate = useNavigate();
-  const isBusinessAccount = userRole === "business" || userRole === "super-admin";
+  const isBusinessAccount = userRole === "business" || userRole === "superadmin";
   
   const { 
     bookings, 
