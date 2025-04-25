@@ -5,7 +5,8 @@ import { User, Session } from "@supabase/supabase-js";
 import { UserRole, getEffectiveRole } from "@/types/roles";
 import { toast } from "@/components/ui/use-toast";
 
-interface AuthContextType {
+// Make sure we export the interface
+export interface AuthContextType {
   user: User | null;
   session: Session | null;
   effectiveRole: UserRole | null;

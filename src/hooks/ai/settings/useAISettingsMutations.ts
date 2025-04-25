@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { User } from "@/hooks/auth";
+import { User } from "@supabase/supabase-js";
 import { AISettings, AIAssistantRole } from "@/types/ai-assistant.types";
 
 /**
