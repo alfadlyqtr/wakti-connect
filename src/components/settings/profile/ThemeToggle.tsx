@@ -1,11 +1,10 @@
-
 import React, { useEffect, useState } from "react";
 import { useTheme } from "@/hooks/use-theme";
 import { Button } from "@/components/ui/button";
 import { Moon, Sun } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/auth";
+import { useAuth } from "@/features/auth/hooks/useAuth";
 
 interface ThemeToggleProps {
   initialTheme?: string;
@@ -16,7 +15,6 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ initialTheme = "light" }) => 
   const [isUpdating, setIsUpdating] = useState(false);
   const { user } = useAuth();
   
-  // Initialize with profile preference when component mounts
   useEffect(() => {
     if (initialTheme) {
       setTheme(initialTheme as "light" | "dark" | "system");
@@ -31,7 +29,6 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ initialTheme = "light" }) => 
     setIsUpdating(true);
     
     try {
-      // Update theme in database
       const { error } = await supabase
         .from('profiles')
         .update({ 
@@ -42,7 +39,6 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ initialTheme = "light" }) => 
         
       if (error) throw error;
       
-      // Apply theme to document
       document.documentElement.classList.remove('light', 'dark');
       document.documentElement.classList.add(newTheme);
       

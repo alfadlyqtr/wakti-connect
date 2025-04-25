@@ -1,66 +1,60 @@
 
-import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "../context/AuthContext";
 
-// Create an in-memory cache for permissions
-const permissionsCache = new Map<string, boolean>();
-const cacheTTL = 5 * 60 * 1000; // 5 minutes
-const cacheTimestamps = new Map<string, number>();
-
-export const usePermissions = (feature: string) => {
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+export const usePermissions = (featureName: string) => {
+  const { user, effectiveRole, isLoading: authLoading } = useAuth();
   const [hasPermission, setHasPermission] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  const checkPermission = useCallback(async () => {
-    try {
-      // Check cache first
-      const now = Date.now();
-      const cachedTimestamp = cacheTimestamps.get(feature);
-      const cachedValue = permissionsCache.get(feature);
-
-      if (cachedValue !== undefined && cachedTimestamp && now - cachedTimestamp < cacheTTL) {
-        setHasPermission(cachedValue);
-        setIsLoading(false);
-        return;
-      }
-
-      const { data, error: rpcError } = await supabase.rpc('can_use_feature', {
-        feature_name: feature
-      });
-
-      if (rpcError) throw rpcError;
-
-      // Update cache
-      permissionsCache.set(feature, data);
-      cacheTimestamps.set(feature, now);
-      
-      setHasPermission(data);
-      setError(null);
-    } catch (err) {
-      console.error('Error checking permission:', err);
-      setError(err as Error);
-      setHasPermission(false);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [feature]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    if (isAuthenticated && !authLoading) {
-      checkPermission();
-    } else if (!isAuthenticated && !authLoading) {
-      setHasPermission(false);
-      setIsLoading(false);
-    }
-  }, [isAuthenticated, authLoading, checkPermission]);
+    const checkPermissions = async () => {
+      if (authLoading) return;
+
+      try {
+        setIsLoading(true);
+
+        // If user is not authenticated, they don't have permission
+        if (!user) {
+          setHasPermission(false);
+          return;
+        }
+
+        // Super admin has all permissions
+        if (effectiveRole === "super-admin") {
+          setHasPermission(true);
+          return;
+        }
+
+        // Check permissions in the database
+        const { data, error } = await supabase
+          .from("role_permissions")
+          .select("*")
+          .eq("role", effectiveRole)
+          .eq("feature", featureName)
+          .single();
+
+        if (error) {
+          console.error("Error checking permissions:", error);
+          setHasPermission(false);
+          return;
+        }
+
+        setHasPermission(!!data && !!data.allowed);
+      } catch (error) {
+        console.error("Error in usePermissions:", error);
+        setHasPermission(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkPermissions();
+  }, [user, effectiveRole, featureName, authLoading]);
 
   return {
     hasPermission,
-    isLoading,
-    error,
-    checkPermission // Exposed to allow manual refresh
+    isLoading: isLoading || authLoading,
   };
 };

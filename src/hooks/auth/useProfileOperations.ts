@@ -1,6 +1,5 @@
-
 import { supabase } from "@/integrations/supabase/client";
-import { User } from "./types";
+import { User } from "@/features/auth/types";
 import { toast } from "@/components/ui/use-toast";
 import { UserRole } from "@/types/user";
 

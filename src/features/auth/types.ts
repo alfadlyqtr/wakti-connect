@@ -1,27 +1,23 @@
 
-import { User as SupabaseUser } from '@supabase/supabase-js';
-import { UserRole } from '@/types/user';
+import { User as SupabaseUser, Session } from "@supabase/supabase-js";
+import { UserRole } from "@/types/roles";
 
-// Extended User type that includes additional fields
 export interface User extends SupabaseUser {
-  name?: string;
-  displayName?: string;
-  plan?: UserRole;
+  role?: UserRole;
+  account_type?: string;
+  full_name?: string;
+  avatar_url?: string;
 }
 
-// Complete AuthContextType with all required methods
 export interface AuthContextType {
-  user: User | null;
-  session: any | null;
+  user: SupabaseUser | null;
+  session: Session | null;
   effectiveRole: UserRole | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   hasRole: (role: UserRole) => boolean;
   hasAccess: (requiredRoles: UserRole[]) => boolean;
-  login: (email: string, password: string) => Promise<{
-    error: Error | null;
-    data?: any;
-  }>;
+  login: (email: string, password: string) => Promise<{ error: any; data?: any }>;
   logout: () => Promise<void>;
   register: (
     email: string,
@@ -29,9 +25,6 @@ export interface AuthContextType {
     name?: string,
     accountType?: string,
     businessName?: string
-  ) => Promise<{
-    error: Error | null;
-    data?: any;
-  }>;
+  ) => Promise<{ error: any; data?: any }>;
   refreshUserRole: () => Promise<void>;
 }

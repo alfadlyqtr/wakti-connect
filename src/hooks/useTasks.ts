@@ -1,8 +1,7 @@
-
 import { useState, useCallback } from 'react';
 import { TaskFormData, Task } from "@/types/task.types";
 import { useTaskOperations } from './tasks/useTaskOperations';
-import { useUserRole } from './useUserRole';
+import { useUserRole } from "@/features/auth/hooks/useUserRole";
 
 export const useTasks = () => {
   const { userRole } = useUserRole();

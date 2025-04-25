@@ -1,11 +1,10 @@
-
 import { useChatStorage } from './useChatStorage';
 import { useState, useRef, useCallback } from 'react';
 import { useSendMessage } from './useSendMessage';
 import { AIMessage } from '@/types/ai-assistant.types';
 import { AITaskDetectionResult } from './types';
 import { useProfile } from '@/hooks/useProfile';
-import { useAuth } from '@/hooks/auth';
+import { useAuth } from "@/features/auth/hooks/useAuth";
 
 export const useAIChatEnhanced = (options = {}) => {
   const { user } = useAuth();

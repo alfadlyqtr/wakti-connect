@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProfileTab from "@/components/settings/ProfileTab";
 import NotificationsTab from "@/components/settings/NotificationsTab";
 import { AIAssistantSettings } from "@/components/settings/ai";
-import { useAuth } from "@/hooks/auth";
+import { useAuth } from "@/features/auth/hooks/useAuth";
 import CurrencyTab from "@/components/settings/CurrencyTab";
 import BillingTab from "@/components/settings/BillingTab";
 import { useProfileSettings } from "@/hooks/useProfileSettings";
@@ -17,14 +16,12 @@ const DashboardSettings = () => {
   const { data: profileData } = useProfileSettings();
   const isMobile = useMediaQuery("(max-width: 640px)");
   
-  // Get the user role from localStorage
   useEffect(() => {
     const storedRole = localStorage.getItem('userRole');
     setUserRole(storedRole);
     setIsLoading(false);
   }, [user]);
   
-  // Only show Billing, Currency and AI Assistant tabs for non-staff users
   const isStaff = userRole === 'staff';
   const isBusinessAccount = userRole === 'business';
   

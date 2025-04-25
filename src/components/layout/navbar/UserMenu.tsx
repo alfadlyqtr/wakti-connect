@@ -15,7 +15,7 @@ import { fetchUnreadNotificationsCount } from "@/services/notifications/notifica
 import { useStaffWorkingStatus } from "@/hooks/staff/useStaffWorkingStatus";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
-import { useEffectiveRole } from "@/hooks/useEffectiveRole";
+import { useEffectiveRole } from "@/features/auth/hooks/useEffectiveRole";
 import { dropdownNavItems } from "../sidebar/sidebarNavConfig";
 
 interface UserMenuProps {

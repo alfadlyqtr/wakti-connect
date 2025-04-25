@@ -1,5 +1,4 @@
-
-import { useAuth } from "@/hooks/auth";
+import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useAISettingsQuery } from "./useAISettingsQueries";
 import { useUpdateAISettings } from "./useAISettingsMutations";
 import { useState, useEffect } from "react";

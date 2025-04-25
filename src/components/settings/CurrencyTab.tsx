@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -6,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/auth";
+import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useProfileSettings } from "@/hooks/useProfileSettings";
 import { useCurrency } from "@/contexts/CurrencyContext";
 
@@ -36,12 +35,10 @@ const CurrencyTab = () => {
   const { data: profileData, updateProfile, isUpdating } = useProfileSettings();
   const { setCurrency: setGlobalCurrency } = useCurrency();
 
-  // Use the currency from profile data
   useEffect(() => {
     if (profileData?.currency_preference) {
       setCurrency(profileData.currency_preference as Currency);
     } else {
-      // Default to QAR if no preference set
       setCurrency('QAR');
     }
   }, [profileData]);
@@ -51,12 +48,10 @@ const CurrencyTab = () => {
     
     console.log("Saving currency preference:", currency);
     
-    // Use the updateProfile function from useProfileSettings hook
     updateProfile({
       currency_preference: currency
     }, {
       onSuccess: () => {
-        // Update the global currency context as well
         setGlobalCurrency(currency);
         
         toast({

@@ -1,6 +1,5 @@
-
 import React, { createContext, useContext, useState } from 'react';
-import { useAuth } from '@/hooks/auth';
+import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useAISettingsQuery, useAIKnowledgeUploadsQuery, useCanUseAIQuery } from '@/hooks/ai/settings/useAISettingsQueries';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';

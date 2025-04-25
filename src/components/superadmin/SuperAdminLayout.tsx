@@ -1,10 +1,9 @@
-
 import React, { useState } from "react";
 import { Shield, AlertTriangle, Activity, Bell, ChevronLeft, Menu, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import SuperAdminSidebar from "./SuperAdminSidebar";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/features/auth/context/AuthContext";
 import { cn } from "@/lib/utils";
 import { Outlet, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
