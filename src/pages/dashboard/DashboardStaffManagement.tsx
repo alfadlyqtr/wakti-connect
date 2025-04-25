@@ -6,7 +6,7 @@ import { useAuth } from '@/features/auth';
 
 const DashboardStaffManagement = () => {
   const { userRole } = useAuth();
-  const isBusiness = userRole === 'business' || userRole === 'super-admin';
+  const isBusiness = userRole === 'business' || userRole === 'superadmin';
   
   return (
     <PermissionGuard 

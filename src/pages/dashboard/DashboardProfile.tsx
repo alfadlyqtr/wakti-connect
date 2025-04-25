@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import ProfileHeader from "@/components/dashboard/profile/ProfileHeader";
 import ProfileDetailsCard from "@/components/dashboard/profile/ProfileDetailsCard";
@@ -12,7 +11,7 @@ import { useAuth } from "@/features/auth";
 
 const DashboardProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
-  const { isLoading: authLoading, userId } = useAuth();
+  const { userId, isLoading: authLoading } = useAuth();
 
   // Fetch profile data
   const { data: profile, isLoading: profileLoading } = useQuery({

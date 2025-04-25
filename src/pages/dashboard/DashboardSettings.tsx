@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProfileTab from "@/components/settings/ProfileTab";
@@ -15,7 +14,7 @@ const DashboardSettings = () => {
   const { data: profileData } = useProfileSettings();
   const isMobile = useMediaQuery("(max-width: 640px)");
   
-  const isBusinessAccount = userRole === 'business';
+  const isBusinessAccount = userRole === 'business' || userRole === 'superadmin';
   
   if (isLoading) {
     return <div className="mx-auto max-w-7xl py-6">Loading...</div>;

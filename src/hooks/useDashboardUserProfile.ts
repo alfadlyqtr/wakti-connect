@@ -1,5 +1,4 @@
 
-import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/features/auth";
 import { slugifyBusinessName } from "@/utils/authUtils";
@@ -10,8 +9,8 @@ export function useDashboardUserProfile() {
   const { 
     user,
     userId,
-    isStaff,
     userRole, 
+    isStaff,
     isSuperAdmin,
     isAuthenticated,
     isLoading,
@@ -21,19 +20,12 @@ export function useDashboardUserProfile() {
   
   // Get profile data from the authenticated user
   const profileData = user ? {
-    account_type: user.account_type || 'individual',
+    account_type: userRole,
     display_name: user.displayName || null,
     business_name: business_name || null,
     full_name: user.full_name || null,
-    theme_preference: theme_preference || null
+    theme_preference: theme_preference || 'light'
   } : null;
-
-  // Setup auth listener for sign out
-  useEffect(() => {
-    if (!isAuthenticated && !isLoading) {
-      navigate("/auth");
-    }
-  }, [isAuthenticated, isLoading, navigate]);
 
   return {
     profileData,
@@ -42,8 +34,8 @@ export function useDashboardUserProfile() {
     isStaff,
     userRole,
     isSuperAdmin,
-    businessSlug: profileData?.business_name 
-      ? slugifyBusinessName(profileData.business_name) 
+    businessSlug: business_name 
+      ? slugifyBusinessName(business_name) 
       : undefined,
     isLoading
   };
