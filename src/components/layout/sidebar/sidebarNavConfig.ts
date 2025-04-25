@@ -1,3 +1,4 @@
+
 import { Home, MessageSquare, Calendar, Users, Bell, Clock, Settings, HeartHandshake, 
   LayoutDashboard, ListChecks, KanbanSquare, HelpCircle, Building2, Store,
   UserPlus, PartyPopper, BarChart2, FileText, Bot, Headphones, Mic } from "lucide-react";
@@ -108,56 +109,50 @@ export const navItems: NavItem[] = [
     icon: Mic,
     showFor: ['individual', 'business', 'staff', 'superadmin'],
   },
-].map(item => ({
-  ...item,
-  showFor: item.showFor.map(role => role === 'super-admin' ? 'superadmin' : role)
-}));
+];
 
 export const dropdownNavItems: NavItem[] = [
   {
     icon: Bell,
     label: 'Notifications',
     path: 'notifications',
-    showFor: ['individual', 'business', 'staff'],
+    showFor: ['individual', 'business', 'staff', 'superadmin'],
     badge: 0
   },
   {
     icon: Users,
     label: 'Contacts',
     path: 'contacts',
-    showFor: ['individual', 'business', 'staff']
+    showFor: ['individual', 'business', 'staff', 'superadmin']
   },
   {
     icon: HeartHandshake,
     label: 'Subscribers',
     path: 'subscribers',
-    showFor: ['business']
+    showFor: ['business', 'superadmin']
   },
   {
     icon: MessageSquare,
     label: 'Messages',
     path: 'messages',
-    showFor: ['individual', 'business', 'staff']
+    showFor: ['individual', 'business', 'staff', 'superadmin']
   },
   {
     icon: Calendar,
     label: 'Calendar',
     path: 'calendar',
-    showFor: ['individual', 'business', 'staff']
+    showFor: ['individual', 'business', 'staff', 'superadmin']
   },
   {
     icon: Clock,
     label: 'Time Tracking',
     path: 'time-tracking',
-    showFor: ['individual', 'business', 'staff']
+    showFor: ['individual', 'business', 'staff', 'superadmin']
   },
   {
     icon: Settings,
     label: 'Settings',
     path: 'settings',
-    showFor: ['individual', 'business', 'staff']
+    showFor: ['individual', 'business', 'staff', 'superadmin']
   },
-].map(item => ({
-  ...item,
-  showFor: item.showFor.map(role => role === 'super-admin' ? 'superadmin' : role)
-}));
+];

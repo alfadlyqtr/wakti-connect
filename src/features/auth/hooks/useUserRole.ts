@@ -10,7 +10,7 @@ export const useUserRole = () => {
     isIndividual: effectiveRole === 'individual',
     isBusiness: effectiveRole === 'business',
     isStaff: effectiveRole === 'staff',
-    isSuperAdmin: effectiveRole === 'superadmin', // Updated from 'super-admin'
+    isSuperAdmin: effectiveRole === 'superadmin',
     // Handle legacy 'free' comparison with type safety
     isFree: effectiveRole === null || effectiveRole === (('free' as unknown) as UserRole),
   };

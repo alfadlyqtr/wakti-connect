@@ -13,9 +13,9 @@ export function MessageAvatar({ isUser, className }: MessageAvatarProps) {
   const { user } = useAuth();
   
   // Get the avatar URL or user initials
-  const userAvatarUrl = user?.user_metadata?.avatar_url || null;
-  const userInitial = user?.user_metadata?.full_name?.[0] || 
-                    user?.user_metadata?.name?.[0] || 
+  const userAvatarUrl = user?.avatar_url || null;
+  const userInitial = user?.displayName?.[0] || 
+                    user?.full_name?.[0] || 
                     user?.email?.[0]?.toUpperCase() || 'U';
   
   return (

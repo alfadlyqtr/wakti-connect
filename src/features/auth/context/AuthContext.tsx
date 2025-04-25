@@ -2,14 +2,14 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
-import { AccountType, UserRole } from "@/types/roles";
+import { UserRole } from "@/types/roles";
 
 export interface User {
   id: string;
   email: string | null;
   displayName: string | null;
   full_name: string | null;
-  account_type: AccountType | null;
+  account_type: UserRole | null;
   avatar_url: string | null;
   theme_preference: string | null;
   created_at: string | null;
@@ -30,6 +30,9 @@ export interface AuthContextType {
   signIn: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
   hasRole: (role: UserRole) => boolean;
+  hasAccess: (roles: UserRole[]) => boolean;
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, meta?: any) => Promise<void>;
 }
 
 interface AuthProviderProps {
@@ -65,7 +68,6 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setSession(session);
       
       if (event === 'SIGNED_OUT') {
-        // Clear stored user role on sign out
         localStorage.removeItem('userRole');
         localStorage.removeItem('isStaff');
         localStorage.removeItem('isSuperAdmin');
@@ -105,7 +107,6 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUserId(session.user.id);
         setIsAuthenticated(true);
         
-        // Fetch profile data
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
@@ -117,7 +118,6 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           throw profileError;
         }
         
-        // Set user data
         setUser({
           id: session.user.id,
           email: session.user.email,
@@ -132,7 +132,6 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setBusinessName(profile?.business_name || null);
         setThemePreference(profile?.theme_preference || 'light');
         
-        // Check if user is staff
         const { data: staffData, error: staffError } = await supabase
           .from('business_staff')
           .select('id')
@@ -147,7 +146,6 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const staffStatus = !!staffData;
         setIsStaff(staffStatus);
         
-        // Check if user is super admin
         const { data: superAdminData, error: superAdminError } = await supabase
           .from('super_admins')
           .select('id')
@@ -161,7 +159,6 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const superAdminStatus = !!superAdminData;
         setIsSuperAdmin(superAdminStatus);
 
-        // Determine effective role
         let calculatedRole: UserRole = 'individual';
         if (superAdminStatus) {
             calculatedRole = 'superadmin';
@@ -212,6 +209,37 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return userRole === role;
   };
   
+  const login = async (email: string, password: string): Promise<void> => {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+    } catch (error: any) {
+      console.error("Login error:", error);
+      throw error;
+    }
+  };
+  
+  const register = async (email: string, password: string, meta?: any): Promise<void> => {
+    try {
+      const { error } = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options: {
+          data: meta
+        }
+      });
+      if (error) throw error;
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      throw error;
+    }
+  };
+  
+  const hasAccess = (roles: UserRole[]): boolean => {
+    if (!userRole) return false;
+    return roles.includes(userRole);
+  };
+  
   const value: AuthContextType = {
     user,
     userId,
@@ -227,6 +255,9 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     signIn,
     signOut,
     hasRole,
+    hasAccess,
+    login,
+    register,
   };
   
   return (
