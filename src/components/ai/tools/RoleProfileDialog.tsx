@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import {
   AlertDialog,
@@ -21,7 +22,7 @@ interface RoleProfileDialogProps {
 }
 
 const RoleProfileDialog: React.FC<RoleProfileDialogProps> = ({ open, onOpenChange }) => {
-  const { aiSettings: settings, updateSettings } = useAISettings();
+  const { settings, updateSettings } = useAISettings();
   const [profile, setProfile] = useState(settings?.roleProfile || "");
   const [isSaving, setIsSaving] = useState(false);
   

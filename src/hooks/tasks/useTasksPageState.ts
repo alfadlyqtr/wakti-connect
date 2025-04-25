@@ -1,8 +1,9 @@
+
 import { useState, useEffect, useCallback } from "react";
-import { useTaskQueries } from "./useTaskQueries";
 import { useAuth } from "@/features/auth";
 import { Task, TaskFormData, TaskTab } from "@/types/task.types";
 import { toast } from "@/components/ui/use-toast";
+import { useTasksQuery } from "@/features/tasks/hooks/useTasksQuery";
 
 export const useTasksPageState = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -18,27 +19,22 @@ export const useTasksPageState = () => {
   // Determine if user has a paid account (business or superadmin)
   const isPaidAccount = effectiveRole === 'business' || effectiveRole === 'superadmin';
   
+  // Use the tasks query hook
   const {
     tasks,
-    sharedTasks,
     isLoading,
-    isError,
     error,
+    refetch,
     createTask,
     updateTask,
-    deleteTask,
-    refetch: refetchTasks
-  } = useTaskQueries();
+    deleteTask
+  } = useTasksQuery();
   
-  // Filter tasks based on search query, status, priority, and active tab
+  // Filter tasks based on search query, status, priority
   const filteredTasks = useCallback(() => {
     let taskList = tasks || [];
     
-    // Determine which tasks to show based on active tab
-    if (activeTab === "shared-with-me") {
-      taskList = sharedTasks || [];
-    }
-    
+    // Only show tasks based on active filters
     return taskList.filter(task => {
       // Filter by search query
       const matchesSearch = 
@@ -58,20 +54,19 @@ export const useTasksPageState = () => {
       
       return matchesSearch && matchesStatus && matchesPriority;
     });
-  }, [tasks, sharedTasks, searchQuery, filterStatus, filterPriority, activeTab]);
+  }, [tasks, searchQuery, filterStatus, filterPriority]);
   
   // Handler for creating a task
   const handleCreateTask = async (taskData: TaskFormData): Promise<Task> => {
     try {
-      const newTask = await createTask(taskData);
-      await refetchTasks();
+      const result = await createTask.mutateAsync(taskData);
       
       toast({
         title: "Task created",
         description: "Your task has been created successfully."
       });
       
-      return newTask;
+      return result.data;
     } catch (error) {
       console.error("Error creating task:", error);
       toast({
@@ -86,8 +81,7 @@ export const useTasksPageState = () => {
   // Handler for updating a task
   const handleUpdateTask = async (taskId: string, taskData: Partial<Task>): Promise<void> => {
     try {
-      await updateTask(taskId, taskData);
-      await refetchTasks();
+      await updateTask.mutateAsync({ id: taskId, data: taskData });
       
       toast({
         title: "Task updated",
@@ -120,10 +114,9 @@ export const useTasksPageState = () => {
     setCurrentEditTask,
     handleCreateTask,
     handleUpdateTask,
-    refetchTasks,
+    refetchTasks: refetch,
     filteredTasks: filteredTasks(),
     isLoading,
-    isError,
     error,
     deleteTask,
     isPaidAccount,
