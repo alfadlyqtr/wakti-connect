@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useForm } from "react-hook-form";
 import { 
@@ -10,6 +9,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
+import { TimePicker } from "@/components/ui/time-picker";
 import {
   Form,
   FormControl,
@@ -40,24 +41,23 @@ export const CreateReminderDialog: React.FC<CreateReminderDialogProps> = ({
   onOpenChange,
   onReminderCreated
 }) => {
+  const defaultDate = new Date();
+  defaultDate.setMinutes(defaultDate.getMinutes() + 5); // Default to 5 minutes from now
+
   const form = useForm<ReminderFormData>({
     defaultValues: {
       message: '',
-      reminder_time: new Date(Date.now() + 5 * 60 * 1000),
+      reminder_time: defaultDate,
       repeat_type: 'none' as RepeatType
     }
   });
   
   const handleSubmit = async (data: ReminderFormData) => {
     try {
-      // Get current time and add 1 minute for minimum validation
       const minTime = new Date();
       minTime.setMinutes(minTime.getMinutes() + 1);
       
-      // Create a Date object from the form data
-      const selectedDateTime = data.reminder_time;
-      
-      if (selectedDateTime < minTime) {
+      if (data.reminder_time < minTime) {
         toast({
           title: "Invalid time",
           description: "Please set a reminder time at least 1 minute in the future.",
@@ -66,14 +66,11 @@ export const CreateReminderDialog: React.FC<CreateReminderDialogProps> = ({
         return;
       }
       
-      const result = await createReminder({
-        ...data,
-        reminder_time: selectedDateTime
-      });
+      const result = await createReminder(data);
       
       toast({
         title: "Reminder created",
-        description: "Your reminder has been set successfully.",
+        description: "Your reminder has been set successfully."
       });
       
       form.reset();
@@ -87,6 +84,32 @@ export const CreateReminderDialog: React.FC<CreateReminderDialogProps> = ({
         variant: "destructive"
       });
     }
+  };
+
+  const handleDateChange = (date: Date | undefined) => {
+    if (!date) return;
+    
+    const currentValue = form.getValues('reminder_time');
+    const newDateTime = new Date(date);
+    
+    // Keep the current time
+    if (currentValue) {
+      newDateTime.setHours(currentValue.getHours());
+      newDateTime.setMinutes(currentValue.getMinutes());
+    }
+    
+    form.setValue('reminder_time', newDateTime);
+  };
+
+  const handleTimeChange = (timeString: string) => {
+    const [hours, minutes] = timeString.split(':').map(Number);
+    const currentValue = form.getValues('reminder_time');
+    const newDateTime = new Date(currentValue);
+    
+    newDateTime.setHours(hours);
+    newDateTime.setMinutes(minutes);
+    
+    form.setValue('reminder_time', newDateTime);
   };
   
   return (
@@ -116,29 +139,44 @@ export const CreateReminderDialog: React.FC<CreateReminderDialogProps> = ({
               )}
             />
             
-            <FormField
-              control={form.control}
-              name="reminder_time"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Time</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="datetime-local" 
-                      value={field.value instanceof Date ? field.value.toISOString().slice(0, 16) : ''}
-                      onChange={(e) => {
-                        const newDate = new Date(e.target.value);
-                        field.onChange(newDate);
-                      }}
-                      min={new Date().toISOString().slice(0, 16)}
-                      required
-                      className="w-full"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="reminder_time"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Date</FormLabel>
+                    <FormControl>
+                      <DatePicker 
+                        date={field.value}
+                        setDate={handleDateChange}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="reminder_time"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Time</FormLabel>
+                    <FormControl>
+                      <TimePicker
+                        value={field.value instanceof Date ? 
+                          `${field.value.getHours().toString().padStart(2, '0')}:${field.value.getMinutes().toString().padStart(2, '0')}` 
+                          : ''}
+                        onChange={handleTimeChange}
+                        interval={15}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             
             <FormField
               control={form.control}
