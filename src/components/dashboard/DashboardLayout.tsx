@@ -31,13 +31,13 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
   const { 
     user,
     userId,
-    isStaff, 
     userRole, 
+    isStaff, 
     isSuperAdmin,
     isAuthenticated,
     isLoading,
-    business_name,
-    theme_preference
+    theme_preference,
+    business_name
   } = useAuth();
   
   // Use the profile data from the authenticated user
@@ -83,7 +83,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
     const isMainDashboardPath = location.pathname === "/dashboard" || location.pathname === "/dashboard/";
     const isAnalyticsPath = location.pathname === "/dashboard/analytics";
     
-    if (!authLoading && isMainDashboardPath && isAuthenticated) {
+    if (!isLoading && isMainDashboardPath && isAuthenticated) {
       // Prevent redirect floods by limiting frequency and number of attempts
       const now = Date.now();
       if (redirectAttempts > 5 || (now - lastRedirectTime < 2000 && redirectAttempts > 0)) {
@@ -92,7 +92,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
       }
       
       // Only super admins should be redirected to their special dashboard
-      if (authUserRole === 'super-admin' && isSuperAdmin) {
+      if (userRole === 'superadmin' && isSuperAdmin) {
         console.log("Super admin detected, redirecting to super admin dashboard");
         setRedirectAttempts(prev => prev + 1);
         setLastRedirectTime(now);
@@ -101,7 +101,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
       }
       
       // Only staff users (who are not also business owners) go to staff dashboard
-      if (authUserRole === 'staff') {
+      if (userRole === 'staff') {
         console.log("Staff user detected, redirecting to staff dashboard");
         setRedirectAttempts(prev => prev + 1);
         setLastRedirectTime(now);
@@ -109,24 +109,24 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
       } else {
         // All users (including business) go to the main dashboard
         // We're already on the main dashboard path, so no redirect needed
-        console.log(`${authUserRole} account detected, already on main dashboard`);
+        console.log(`${userRole} account detected, already on main dashboard`);
       }
     }
     
     // If business user is on analytics page but should be redirected to main dashboard
-    if (!authLoading && isAnalyticsPath && authUserRole === 'business' && location.state?.fromInitialRedirect) {
+    if (!isLoading && isAnalyticsPath && userRole === 'business' && location.state?.fromInitialRedirect) {
       navigate('/dashboard');
     }
-  }, [authLoading, location.pathname, authUserRole, isStaff, navigate, location.state, profileData?.account_type, accountType, isSuperAdmin, redirectAttempts, lastRedirectTime, isAuthenticated]);
+  }, [isLoading, location.pathname, userRole, isStaff, navigate, location.state, profileData?.account_type, accountType, isSuperAdmin, redirectAttempts, lastRedirectTime, isAuthenticated]);
 
   // For components that don't recognize super-admin yet, map it to business role
   const mapRoleForCompatibility = (role: UserRole): "individual" | "business" | "staff" => {
-    if (role === 'super-admin') return 'business';
+    if (role === 'superadmin') return 'business';
     return role as "individual" | "business" | "staff";
   };
 
   // Get display role that's compatible with components expecting the old type
-  const displayRole = mapRoleForCompatibility(authUserRole as UserRole);
+  const displayRole = mapRoleForCompatibility(userRole as UserRole);
 
   // Calculate business slug if applicable
   const businessSlug = profileData?.business_name 
@@ -160,7 +160,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
         />
         
         <DashboardContent
-          isLoading={authLoading}
+          isLoading={isLoading}
           isStaff={isStaff}
           userId={userId}
           isMobile={isMobile}
