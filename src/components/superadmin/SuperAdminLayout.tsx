@@ -4,7 +4,7 @@ import { Shield, AlertTriangle, Activity, Bell, ChevronLeft, Menu, LogOut } from
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import SuperAdminSidebar from "./SuperAdminSidebar";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { Outlet, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
