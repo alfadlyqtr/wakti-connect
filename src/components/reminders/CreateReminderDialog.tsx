@@ -54,8 +54,8 @@ export const CreateReminderDialog: React.FC<CreateReminderDialogProps> = ({
       const minTime = new Date();
       minTime.setMinutes(minTime.getMinutes() + 1);
       
-      // Create a Date object from the form data, ensuring it uses local timezone
-      const selectedDateTime = new Date(data.reminder_time);
+      // Create a Date object from the form data
+      const selectedDateTime = data.reminder_time;
       
       if (selectedDateTime < minTime) {
         toast({
@@ -74,7 +74,6 @@ export const CreateReminderDialog: React.FC<CreateReminderDialogProps> = ({
       toast({
         title: "Reminder created",
         description: "Your reminder has been set successfully.",
-        variant: "success"
       });
       
       form.reset();
@@ -128,14 +127,12 @@ export const CreateReminderDialog: React.FC<CreateReminderDialogProps> = ({
                       type="datetime-local" 
                       value={field.value instanceof Date ? field.value.toISOString().slice(0, 16) : ''}
                       onChange={(e) => {
-                        if (e.target.value) {
-                          // Create a new Date object in the local timezone
-                          const selectedDate = new Date(e.target.value);
-                          field.onChange(selectedDate);
-                        }
+                        const newDate = new Date(e.target.value);
+                        field.onChange(newDate);
                       }}
                       min={new Date().toISOString().slice(0, 16)}
                       required
+                      className="w-full"
                     />
                   </FormControl>
                   <FormMessage />
