@@ -17,7 +17,7 @@ interface SidebarProfileData {
   full_name: string | null;
   display_name: string | null;
   business_name: string | null;
-  account_type: UserRole;
+  account_type: string;
   avatar_url: string | null;
 }
 
