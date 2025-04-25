@@ -13,6 +13,11 @@ export interface UserProfile {
   updated_at: string;
 }
 
+/**
+ * Fetches the user profile from Supabase
+ * Maps database account_type to UserRole
+ * @returns Promise with the user profile or null
+ */
 export const getUserProfile = async (): Promise<UserProfile | null> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
@@ -54,6 +59,10 @@ export const getUserProfile = async (): Promise<UserProfile | null> => {
   }
 };
 
+/**
+ * Gets the current user's role
+ * @returns Promise with the user role or 'individual' as default
+ */
 export const getUserRole = async (): Promise<UserRole> => {
   try {
     const profile = await getUserProfile();
@@ -64,8 +73,12 @@ export const getUserRole = async (): Promise<UserRole> => {
   }
 };
 
+/**
+ * Checks if the current user can create events
+ * Currently, individual and business users can create events
+ * @returns Promise<boolean> indicating if user can create events
+ */
 export const canUserCreateEvents = async (): Promise<boolean> => {
   const role = await getUserRole();
   return role === 'individual' || role === 'business';
 };
-
