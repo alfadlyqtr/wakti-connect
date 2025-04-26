@@ -6,7 +6,6 @@ import { businessRoutes, bookingRoutes } from './businessRoutes';
 import { publicRoutes } from './publicRoutes';
 import { superadminRoutes } from './superadminRoutes';
 
-// Combine all routes into a single component
 export const AppRoutes = () => {
   const elements = useRoutes([
     ...authRoutes,
@@ -19,5 +18,5 @@ export const AppRoutes = () => {
   return elements;
 };
 
-// Export also as default for backward compatibility
+// Export as default for backward compatibility
 export default AppRoutes;
