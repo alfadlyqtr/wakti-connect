@@ -44,7 +44,7 @@ export class StaffRepository {
         staff_number: item.staff_number || '',
         profile_image_url: item.profile_image_url,
         created_at: item.created_at,
-        profile: item.profile as Profile | null
+        profile: item.profile as unknown as Profile | null
       }));
       
     } catch (error) {
