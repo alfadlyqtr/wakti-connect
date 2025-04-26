@@ -9,6 +9,7 @@ interface PermissionGuardProps {
   children: React.ReactNode;
   redirectTo?: string;
   showToast?: boolean;
+  fallback?: React.ReactNode; // Added fallback prop
 }
 
 /**
@@ -18,7 +19,8 @@ const PermissionGuard: React.FC<PermissionGuardProps> = ({
   feature, 
   children, 
   redirectTo = '/dashboard',
-  showToast = false
+  showToast = false,
+  fallback // Use the fallback prop
 }) => {
   const { hasPermission, isLoading } = usePermissions(feature);
   const { toast } = useToast();
@@ -34,6 +36,11 @@ const PermissionGuard: React.FC<PermissionGuardProps> = ({
         description: `You don't have permission to access this feature.`,
         variant: "destructive"
       });
+    }
+    
+    // If a fallback is provided, render it instead of redirecting
+    if (fallback) {
+      return <>{fallback}</>;
     }
     
     return <Navigate to={redirectTo} replace />;

@@ -24,7 +24,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     let isMounted = true;
     
     const setupAuthListener = () => {
-      const { subscription } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+      const { data } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
         if (!isMounted) return;
         
         console.log("Auth state changed:", event, currentSession?.user?.id || "no user");
@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setIsLoading(false);
       });
       
-      return subscription;
+      return data.subscription;
     };
     
     const checkSession = async () => {

@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { StaffMember, CreateStaffParams } from "../types";
+import { Json } from "@/integrations/supabase/types";
 
 export class StaffRepository {
   /**
@@ -28,7 +29,7 @@ export class StaffRepository {
         
       if (error) throw error;
       
-      // Map to StaffMember type
+      // Map to StaffMember type with proper type handling for permissions
       return (data || []).map(item => ({
         id: item.id,
         staff_id: item.staff_id,
@@ -39,7 +40,7 @@ export class StaffRepository {
         role: item.role || 'staff',
         status: item.status || 'active',
         is_service_provider: item.is_service_provider || false,
-        permissions: item.permissions || {},
+        permissions: this.parsePermissions(item.permissions),
         staff_number: item.staff_number || '',
         profile_image_url: item.profile_image_url,
         created_at: item.created_at,
@@ -50,6 +51,29 @@ export class StaffRepository {
       console.error("Error fetching staff members:", error);
       throw error;
     }
+  }
+  
+  /**
+   * Helper method to parse permissions from various formats
+   */
+  private parsePermissions(permissions: any): { [key: string]: boolean } {
+    if (!permissions) {
+      return {};
+    }
+    
+    if (typeof permissions === 'string') {
+      try {
+        return JSON.parse(permissions);
+      } catch (e) {
+        return {};
+      }
+    }
+    
+    if (typeof permissions === 'object' && !Array.isArray(permissions)) {
+      return permissions as { [key: string]: boolean };
+    }
+    
+    return {};
   }
   
   /**
@@ -105,7 +129,7 @@ export class StaffRepository {
         throw new Error("Cannot create staff without existing account or password");
       }
       
-      // Create staff entry
+      // Create staff entry with properly typed permissions
       const staffData = {
         business_id: session.user.id,
         staff_id: staffUserId,
@@ -156,7 +180,7 @@ export class StaffRepository {
         role: newStaff.role || 'staff',
         status: newStaff.status || 'active',
         is_service_provider: newStaff.is_service_provider || false,
-        permissions: newStaff.permissions || {},
+        permissions: this.parsePermissions(newStaff.permissions),
         staff_number: newStaff.staff_number || '',
         profile_image_url: newStaff.profile_image_url,
         created_at: newStaff.created_at,
