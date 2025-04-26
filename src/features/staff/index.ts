@@ -1,9 +1,19 @@
 
-// Staff management feature barrel export
-export { default as StaffDialog } from "@/components/staff/StaffDialog";
-export { default as StaffSignupForm } from "./components/StaffSignupForm";
-export { useStaffDialog } from "./hooks/useStaffDialog";
+// Re-export domain types
+export type {
+  StaffMember,
+  StaffPermissions,
+  StaffFormValues,
+  WorkLog,
+  Profile
+} from './domain/types';
 
-// Re-export inner components for cleaner imports
-export * from "./components/dialog-fields";
-export * from "./components/list";
+// Re-export application hooks
+export { useStaffMembers } from './application/hooks/useStaffMembers';
+export { useCreateStaff } from './application/hooks/useCreateStaff';
+
+// Re-export domain services
+export { staffService } from './domain/services/staffService';
+
+// Re-export presentation components
+export { StaffFormSchema } from './presentation/components/StaffFormSchema';
