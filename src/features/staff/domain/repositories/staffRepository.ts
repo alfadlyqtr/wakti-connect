@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { StaffMember, CreateStaffParams } from "../types";
+import { StaffMember, CreateStaffParams, Profile } from "../types";
 import { Json } from "@/integrations/supabase/types";
 
 export class StaffRepository {
@@ -44,7 +44,7 @@ export class StaffRepository {
         staff_number: item.staff_number || '',
         profile_image_url: item.profile_image_url,
         created_at: item.created_at,
-        profile: item.profile
+        profile: item.profile as Profile | null
       }));
       
     } catch (error) {

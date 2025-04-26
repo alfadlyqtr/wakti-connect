@@ -13,7 +13,7 @@ export const useCreateStaff = () => {
   
   // Use react-hook-form with zod validation
   const form = useForm<StaffFormValues>({
-    resolver: zodResolver(StaffFormSchema),
+    resolver: zodResolver(StaffFormSchema as any), // Use type assertion to resolve compatibility issue
     defaultValues: {
       fullName: "",
       email: "",

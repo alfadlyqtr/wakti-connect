@@ -4,6 +4,7 @@ import { Json } from "@/integrations/supabase/types";
 export interface Profile {
   full_name: string | null;
   avatar_url: string | null;
+  [key: string]: any; // Allow additional properties to handle DB return types
 }
 
 export interface StaffMember {
@@ -31,7 +32,7 @@ export interface StaffMember {
     [key: string]: boolean | undefined;
   };
   created_at: string;
-  profile?: Profile | null;
+  profile?: Profile | null | any; // Modified to allow for database return types
   profile_image_url?: string | null;
 }
 
