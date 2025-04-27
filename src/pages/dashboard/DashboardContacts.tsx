@@ -1,22 +1,19 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Plus, RefreshCcw } from "lucide-react";
-import { useContacts } from "@/hooks/useContacts";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { UserPlus, RefreshCw, MessageSquare, X, Trash2 } from "lucide-react";
 import ContactsList from "@/components/contacts/ContactsList";
+import { useContacts } from "@/hooks/useContacts";
 import AddContactDialog from "@/components/contacts/AddContactDialog";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import {
-  Alert,
-  AlertTitle,
-  AlertDescription,
-} from "@/components/ui/alert";
-import { InfoIcon } from "lucide-react";
-import { UserContact } from "@/types/invitation.types";
+import PendingRequestsList from "@/components/contacts/PendingRequestsList";
+import PendingRequestsTabs from "@/components/contacts/PendingRequestsTabs";
+import StaffSyncSection from "@/components/contacts/StaffSyncSection";
+import { UserContact, ContactRequestStatus } from '@/types/invitation.types';
 import MessageComposerDialog from "@/components/messages/MessageComposerDialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { useToast } from '@/hooks/use-toast';
 
 const DashboardContacts = () => {
   const [isAddContactDialogOpen, setIsAddContactDialogOpen] = useState(false);
@@ -90,11 +87,11 @@ const DashboardContacts = () => {
             onClick={() => refreshContacts()}
             disabled={isSyncingContacts}
           >
-            <RefreshCcw className="h-4 w-4 mr-1" />
+            <RefreshCw className="h-4 w-4 mr-1" />
             {isSyncingContacts ? "Syncing..." : "Sync"}
           </Button>
           <Button size="sm" onClick={() => setIsAddContactDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-1" />
+            <UserPlus className="h-4 w-4 mr-1" />
             Add Contact
           </Button>
         </div>
