@@ -1,299 +1,225 @@
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   getUserContacts, 
   getContactRequests, 
   getStaffContacts,
-  sendContactRequest as apiSendContactRequest,
-  respondToContactRequest as apiRespondToContactRequest,
-  deleteContact as apiDeleteContact,
+  sendContactRequest as sendRequest,
+  respondToContactRequest as respondToRequest,
+  deleteContact as deleteContactRequest,
   fetchAutoApproveSetting,
-  updateAutoApproveContacts
+  updateAutoApproveContacts,
+  syncStaffBusinessContacts,
+  fetchAutoAddStaffSetting,
+  updateAutoAddStaffSetting
 } from '@/services/contacts';
-import { supabase } from '@/integrations/supabase/client';
-import { UserContact, ContactRequestStatus } from '@/types/invitation.types';
+import { UserContact } from '@/types/invitation.types';
 
 export const useContacts = () => {
   const queryClient = useQueryClient();
   const [userId, setUserId] = useState<string | null>(null);
-  const [autoApprove, setAutoApprove] = useState(false);
-  const [isUpdatingAutoApprove, setIsUpdatingAutoApprove] = useState(false);
-  
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  // Get the current user ID
   useEffect(() => {
-    const getUserId = async () => {
+    const checkSession = async () => {
       const { data } = await supabase.auth.getSession();
-      if (data.session?.user) {
+      if (data.session) {
         setUserId(data.session.user.id);
       }
     };
     
-    getUserId();
+    checkSession();
   }, []);
-  
-  useEffect(() => {
-    if (userId) {
-      const loadAutoApprove = async () => {
-        try {
-          const setting = await fetchAutoApproveSetting();
-          setAutoApprove(setting);
-        } catch (error) {
-          console.error("Error loading auto-approve setting:", error);
-        }
-      };
-      
-      loadAutoApprove();
-    }
-  }, [userId]);
 
-  const {
-    data: contacts,
-    isLoading,
-    refetch: refetchContacts
+  // Regular contacts query
+  const { 
+    data: contacts, 
+    isLoading, 
+    refetch: refreshContacts 
   } = useQuery({
     queryKey: ['contacts', userId],
-    queryFn: async () => {
-      if (!userId) return [];
-      console.log("[useContacts] Fetching regular contacts for user:", userId);
-      const contacts = await getUserContacts(userId);
-      console.log("[useContacts] Fetched regular contacts:", contacts);
-      return contacts;
-    },
-    enabled: !!userId
-  });
-  
-  const {
-    data: staffContacts,
-    isLoading: isLoadingStaffContacts,
-    refetch: refetchStaffContacts
-  } = useQuery({
-    queryKey: ['staffContacts', userId],
-    queryFn: async () => {
-      if (!userId) return [];
-      console.log("[useContacts] Fetching staff contacts for user:", userId);
-      const contacts = await getStaffContacts(userId);
-      console.log("[useContacts] Fetched staff contacts:", contacts);
-      return contacts;
-    },
-    enabled: !!userId
+    queryFn: () => userId ? getUserContacts(userId) : Promise.resolve([]),
+    enabled: !!userId,
   });
 
-  const {
-    data: pendingRequestsData,
+  // Staff contacts query 
+  const { 
+    data: staffContacts, 
+    isLoading: isLoadingStaffContacts
+  } = useQuery({
+    queryKey: ['staff-contacts', userId],
+    queryFn: () => userId ? getStaffContacts(userId) : Promise.resolve([]),
+    enabled: !!userId,
+  });
+
+  // Contact requests query
+  const { 
+    data: pendingRequests = { incoming: [], outgoing: [] }, 
     isLoading: isLoadingRequests,
-    refetch: refetchRequests
+    refetch: refreshRequests
   } = useQuery({
-    queryKey: ['contactRequests', userId],
-    queryFn: async () => {
-      if (!userId) return { incomingRequests: [], outgoingRequests: [] };
-      console.log("[useContacts] Fetching contact requests for user:", userId);
-      
-      // Get incoming requests
-      const incomingRequests = await getContactRequests(userId);
-      
-      // Fetch outgoing requests
-      const { data: outgoingData, error: outgoingError } = await supabase
-        .from('user_contacts')
-        .select(`
-          id,
-          user_id,
-          contact_id,
-          status,
-          staff_relation_id,
-          created_at
-        `)
-        .eq('user_id', userId)
-        .eq('status', 'pending')
-        .is('staff_relation_id', null);
-
-      if (outgoingError) {
-        console.error("[useContacts] Error fetching outgoing requests:", outgoingError);
-        return { incomingRequests: [], outgoingRequests: [] };
-      }
-      
-      // Log the raw outgoing requests data for debugging
-      console.log("[useContacts] Raw outgoing requests data:", outgoingData);
-      
-      // Separately fetch profile data for contacts
-      const outgoingRequests = await Promise.all(outgoingData.map(async (request) => {
-        // Fetch profile data separately to avoid RLS issues
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select(`
-            id,
-            full_name,
-            display_name,
-            avatar_url,
-            account_type,
-            business_name,
-            email
-          `)
-          .eq('id', request.contact_id)
-          .single();
-          
-        if (profileError) {
-          console.error(`[useContacts] Error fetching profile for contact ${request.contact_id}:`, profileError);
-        }
-        
-        // Create a properly formatted contact object, using available profile data or fallbacks
-        return {
-          id: request.id,
-          userId: request.user_id,
-          contactId: request.contact_id,
-          status: request.status as "accepted" | "pending" | "rejected",
-          staffRelationId: request.staff_relation_id,
-          created_at: request.created_at,
-          contactProfile: {
-            id: profileData?.id || request.contact_id,
-            fullName: profileData?.full_name || null,
-            displayName: profileData?.display_name || null,
-            avatarUrl: profileData?.avatar_url || null,
-            accountType: profileData?.account_type || null,
-            businessName: profileData?.business_name || null,
-            email: profileData?.email || request.contact_id
-          }
-        } as UserContact;
-      }));
-
-      // Log the processed requests for debugging
-      console.log("[useContacts] Fetched requests:", {
-        incoming: incomingRequests.length,
-        outgoing: outgoingRequests.length
-      });
-      
-      console.log("[useContacts] Processed outgoing requests:", outgoingRequests);
-
-      return {
-        incomingRequests,
-        outgoingRequests
-      };
-    },
-    enabled: !!userId
+    queryKey: ['contact-requests', userId],
+    queryFn: () => userId ? getContactRequests(userId) : Promise.resolve({ incoming: [], outgoing: [] }),
+    enabled: !!userId,
   });
-  
+
+  // Auto-approve setting
+  const { 
+    data: autoApprove = false, 
+    isLoading: isLoadingAutoApprove,
+    refetch: refreshAutoApprove 
+  } = useQuery({
+    queryKey: ['auto-approve-setting', userId],
+    queryFn: () => userId ? fetchAutoApproveSetting(userId) : Promise.resolve(false),
+    enabled: !!userId,
+  });
+
+  // Auto-add staff setting
+  const { 
+    data: autoAddStaff = true, 
+    isLoading: isLoadingAutoAddStaff
+  } = useQuery({
+    queryKey: ['auto-add-staff-setting', userId],
+    queryFn: () => userId ? fetchAutoAddStaffSetting(userId) : Promise.resolve(true),
+    enabled: !!userId,
+  });
+
+  // Mutations
   const sendContactRequest = useMutation({
-    mutationFn: async (contactId: string) => {
-      if (!userId) throw new Error('Not authenticated');
-      return await apiSendContactRequest(contactId);
-    },
+    mutationFn: (contactId: string) => sendRequest(contactId),
     onSuccess: () => {
       toast({
         title: "Contact request sent",
         description: "The user will be notified of your request.",
       });
-      queryClient.invalidateQueries({queryKey: ['contacts']});
-      queryClient.invalidateQueries({queryKey: ['contactRequests']});
+      refreshRequests();
     },
     onError: (error) => {
-      console.error("Error sending contact request:", error);
       toast({
         title: "Error",
-        description: "Could not send contact request.",
+        description: `Failed to send contact request: ${error.message}`,
         variant: "destructive",
       });
-    }
+    },
   });
-  
+
   const respondToContactRequest = useMutation({
-    mutationFn: async ({ requestId, accept }: { requestId: string, accept: boolean }) => {
-      if (!userId) throw new Error('Not authenticated');
-      return await apiRespondToContactRequest(requestId, accept);
-    },
-    onSuccess: (data, variables) => {
-      toast({
-        title: variables.accept ? "Contact accepted" : "Contact rejected",
-        description: variables.accept 
-          ? "Contact has been added to your list." 
-          : "Contact request has been rejected.",
-      });
-      queryClient.invalidateQueries({queryKey: ['contacts']});
-      queryClient.invalidateQueries({queryKey: ['contactRequests']});
-    },
-    onError: (error) => {
-      console.error("Error responding to contact request:", error);
-      toast({
-        title: "Error",
-        description: "Could not update contact request.",
-        variant: "destructive",
-      });
-    }
-  });
-  
-  const deleteContact = useMutation({
-    mutationFn: async (contactId: string) => {
-      if (!userId) throw new Error('Not authenticated');
-      return await apiDeleteContact(contactId);
-    },
+    mutationFn: ({ requestId, accept }: { requestId: string; accept: boolean }) => 
+      respondToRequest(requestId, accept),
     onSuccess: () => {
       toast({
-        title: "Contact removed",
-        description: "Contact has been removed from your list.",
+        title: "Request processed",
+        description: "The contact request has been processed.",
       });
-      queryClient.invalidateQueries({queryKey: ['contacts']});
-      queryClient.invalidateQueries({queryKey: ['dashboardContactsCount']});
+      refreshRequests();
+      refreshContacts();
     },
     onError: (error) => {
-      console.error("Error deleting contact:", error);
       toast({
         title: "Error",
-        description: "Could not remove contact.",
+        description: `Failed to process request: ${error.message}`,
         variant: "destructive",
       });
-    }
+    },
   });
-  
-  const handleToggleAutoApprove = async () => {
-    setIsUpdatingAutoApprove(true);
-    try {
-      await updateAutoApproveContacts(!autoApprove);
-      setAutoApprove(!autoApprove);
-      
+
+  const deleteContact = useMutation({
+    mutationFn: (contactId: string) => deleteContactRequest(contactId),
+    onSuccess: () => {
       toast({
-        title: "Setting Updated",
-        description: !autoApprove 
-          ? "Contact requests will be automatically approved" 
-          : "Contact requests require manual approval"
+        title: "Contact deleted",
+        description: "The contact has been removed from your list.",
       });
-    } catch (error) {
+      queryClient.invalidateQueries({ queryKey: ['contacts'] });
+    },
+    onError: (error) => {
       toast({
-        title: "Update Failed",
-        description: "Could not update setting",
-        variant: "destructive"
+        title: "Error",
+        description: `Failed to delete contact: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const toggleAutoApprove = useMutation({
+    mutationFn: (value: boolean) => updateAutoApproveContacts(value),
+    onSuccess: () => {
+      toast({
+        title: "Setting updated",
+        description: "Auto-approve contacts setting has been updated.",
+      });
+      refreshAutoApprove();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to update setting: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const toggleAutoAddStaff = useMutation({
+    mutationFn: (value: boolean) => updateAutoAddStaffSetting(value),
+    onSuccess: () => {
+      toast({
+        title: "Setting updated",
+        description: "Auto-add staff setting has been updated.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['auto-add-staff-setting'] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to update setting: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const syncContacts = async () => {
+    setIsSyncing(true);
+    try {
+      await syncStaffBusinessContacts();
+      toast({
+        title: "Contacts synced",
+        description: "Your contacts have been synchronized.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['contacts'] });
+      queryClient.invalidateQueries({ queryKey: ['staff-contacts'] });
+    } catch (error) {
+      console.error("Error syncing contacts:", error);
+      toast({
+        title: "Sync failed",
+        description: "Could not sync contacts. Please try again later.",
+        variant: "destructive",
       });
     } finally {
-      setIsUpdatingAutoApprove(false);
+      setIsSyncing(false);
     }
-  };
-  
-  const refreshContacts = async () => {
-    console.log("[useContacts] Refreshing contact data");
-    await Promise.all([
-      refetchContacts(),
-      refetchRequests(),
-      refetchStaffContacts()
-    ]);
-    
-    queryClient.invalidateQueries({queryKey: ['dashboardContactsCount']});
   };
 
   return {
     contacts,
-    isLoading,
     staffContacts,
-    isLoadingStaffContacts,
-    pendingRequests: {
-      incoming: pendingRequestsData?.incomingRequests || [],
-      outgoing: pendingRequestsData?.outgoingRequests || []
-    },
-    isLoadingRequests,
-    isSyncingContacts: sendContactRequest.isPending,
+    pendingRequests,
     autoApprove,
-    isUpdatingAutoApprove,
+    autoAddStaff,
+    isLoading,
+    isLoadingRequests,
+    isLoadingStaffContacts,
+    isUpdatingAutoApprove: toggleAutoApprove.isPending,
+    isUpdatingAutoAddStaff: toggleAutoAddStaff.isPending,
+    isSyncingContacts: isSyncing,
     sendContactRequest,
     respondToContactRequest,
     deleteContact,
-    handleToggleAutoApprove,
-    refreshContacts
+    handleToggleAutoApprove: (value: boolean) => toggleAutoApprove.mutate(value),
+    handleToggleAutoAddStaff: (value: boolean) => toggleAutoAddStaff.mutate(value),
+    refreshContacts: syncContacts
   };
 };

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useContacts } from "@/hooks/useContacts";
 import { Button } from "@/components/ui/button";
@@ -234,8 +235,8 @@ const DashboardContacts = () => {
             </CardHeader>
             <CardContent>
               <PendingRequestsTabs
-                incomingRequests={pendingRequests.incoming}
-                outgoingRequests={pendingRequests.outgoing as UserContact[]}
+                incomingRequests={pendingRequests.incoming || []}
+                outgoingRequests={pendingRequests.outgoing || []}
                 isLoading={isLoadingRequests}
                 onRespondToRequest={handleRespondToRequest}
               />

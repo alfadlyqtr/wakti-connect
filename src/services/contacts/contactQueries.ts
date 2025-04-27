@@ -132,15 +132,134 @@ export const searchUsers = async (query: string): Promise<UserSearchResult[]> =>
 };
 
 /**
- * These are placeholder exports to satisfy the index.ts imports
- * They should be implemented or removed from the index exports
+ * Get contact requests for a user
  */
-export const getContactRequests = async () => {
-  console.warn('getContactRequests is not fully implemented');
-  return { incoming: [], outgoing: [] };
+export const getContactRequests = async (userId: string) => {
+  try {
+    console.log('[ContactQueries] Fetching contact requests for user:', userId);
+    
+    // Get incoming requests (where the user is the contact_id and status is pending)
+    const { data: incomingRequests, error: incomingError } = await supabase
+      .from('user_contacts')
+      .select(`
+        id,
+        user_id,
+        contact_id,
+        status,
+        staff_relation_id,
+        created_at,
+        contact_profile:profiles!user_id(
+          id,
+          full_name,
+          display_name,
+          avatar_url,
+          account_type,
+          business_name,
+          email
+        )
+      `)
+      .eq('contact_id', userId)
+      .eq('status', 'pending');
+      
+    // Get outgoing requests (where the user is the user_id and status is pending)
+    const { data: outgoingRequests, error: outgoingError } = await supabase
+      .from('user_contacts')
+      .select(`
+        id,
+        user_id,
+        contact_id,
+        status,
+        staff_relation_id,
+        created_at,
+        contact_profile:profiles!contact_id(
+          id,
+          full_name,
+          display_name,
+          avatar_url,
+          account_type,
+          business_name,
+          email
+        )
+      `)
+      .eq('user_id', userId)
+      .eq('status', 'pending');
+    
+    if (incomingError) console.error('[ContactQueries] Error fetching incoming requests:', incomingError);
+    if (outgoingError) console.error('[ContactQueries] Error fetching outgoing requests:', outgoingError);
+    
+    return {
+      incoming: incomingRequests || [],
+      outgoing: outgoingRequests || []
+    };
+  } catch (error) {
+    console.error('[ContactQueries] Error fetching contact requests:', error);
+    return { incoming: [], outgoing: [] };
+  }
 };
 
-export const getStaffContacts = async () => {
-  console.warn('getStaffContacts is not fully implemented');
-  return [];
+/**
+ * Get staff contacts for a user
+ */
+export const getStaffContacts = async (userId: string) => {
+  try {
+    console.log('[ContactQueries] Fetching staff contacts for user:', userId);
+    
+    const { data: staffContacts, error } = await supabase
+      .from('user_contacts')
+      .select(`
+        id,
+        user_id,
+        contact_id,
+        status,
+        staff_relation_id,
+        created_at,
+        contact_profile:profiles!contact_id(
+          id,
+          full_name,
+          display_name,
+          avatar_url,
+          account_type,
+          business_name,
+          email
+        )
+      `)
+      .eq('user_id', userId)
+      .eq('status', 'accepted')
+      .not('staff_relation_id', 'is', null);
+      
+    if (error) {
+      console.error('[ContactQueries] Error fetching staff contacts:', error);
+      return [];
+    }
+    
+    return staffContacts.map(row => {
+      const contactProfile = row.contact_profile;
+      
+      return {
+        id: row.id,
+        userId: row.user_id,
+        contactId: row.contact_id,
+        status: row.status as ContactRequestStatusValue,
+        staffRelationId: row.staff_relation_id,
+        created_at: row.created_at,
+        contactProfile: contactProfile ? {
+          id: row.contact_id,
+          fullName: contactProfile.full_name || 'Unknown User',
+          displayName: contactProfile.display_name || contactProfile.full_name || 'Unknown User',
+          avatarUrl: contactProfile.avatar_url,
+          accountType: contactProfile.account_type || 'free',
+          businessName: contactProfile.business_name,
+          email: contactProfile.email
+        } : {
+          id: row.contact_id,
+          fullName: 'Unknown User',
+          displayName: 'Unknown User',
+          accountType: 'free'
+        }
+      };
+    });
+  } catch (error) {
+    console.error('[ContactQueries] Error fetching staff contacts:', error);
+    return [];
+  }
 };
