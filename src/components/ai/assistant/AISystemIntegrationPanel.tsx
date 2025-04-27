@@ -1,71 +1,96 @@
 
 import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { CalendarClock, MessageSquare, BriefcaseBusiness, FileText } from 'lucide-react';
 import { AIAssistantRole } from '@/types/ai-assistant.types';
-import { Calendar, ClipboardList, Building2, Users, Settings, Heading1 } from 'lucide-react';
 
 interface AISystemIntegrationPanelProps {
   selectedRole: AIAssistantRole;
-  onExampleClick: (example: string) => void;
+  onExampleClick: (text: string) => void;
 }
 
 export const AISystemIntegrationPanel: React.FC<AISystemIntegrationPanelProps> = ({
   selectedRole,
   onExampleClick
 }) => {
-  // Example business operations prompts
-  const businessExamples = [
-    {
-      icon: <ClipboardList className="h-3.5 w-3.5" />,
-      text: "Create a task to review marketing plan tomorrow at 3pm with high priority"
-    },
-    {
-      icon: <Calendar className="h-3.5 w-3.5" />,
-      text: "Schedule a team meeting on Thursday morning about Q2 planning"
-    },
-    {
-      icon: <Users className="h-3.5 w-3.5" />,
-      text: "Assign Ali to contact our suppliers about the delayed shipment"
-    },
-    {
-      icon: <Building2 className="h-3.5 w-3.5" />,
-      text: "Create a task to prepare the monthly financial report by Friday"
-    },
-    {
-      icon: <Settings className="h-3.5 w-3.5" />,
-      text: "Set up a reminder to review staff performance next week"
+  // Examples based on role
+  const getRoleExamples = (): {icon: React.ReactNode; text: string; example: string}[] => {
+    const baseExamples = [
+      {
+        icon: <MessageSquare className="h-4 w-4" />,
+        text: 'Chat with the assistant',
+        example: 'How can you help me with my business?'
+      }
+    ];
+    
+    switch (selectedRole) {
+      case 'student':
+        return [
+          ...baseExamples,
+          {
+            icon: <FileText className="h-4 w-4" />,
+            text: 'Get help with studying',
+            example: 'Help me create a study plan for my exam next week'
+          }
+        ];
+      case 'employee':
+      case 'writer':
+        return [
+          ...baseExamples,
+          {
+            icon: <FileText className="h-4 w-4" />,
+            text: 'Create professional content',
+            example: 'Help me draft an email to my team about the upcoming project'
+          }
+        ];
+      case 'business_owner':
+        return [
+          ...baseExamples,
+          {
+            icon: <BriefcaseBusiness className="h-4 w-4" />,
+            text: 'Business operations',
+            example: 'What strategies can I use to improve customer retention?'
+          }
+        ];
+      default:
+        return [
+          ...baseExamples,
+          {
+            icon: <CalendarClock className="h-4 w-4" />,
+            text: 'Schedule management',
+            example: 'Help me organize my tasks for the week'
+          }
+        ];
     }
-  ];
-
+  };
+  
+  const examples = getRoleExamples();
+  
   return (
-    <div className="space-y-2">
-      <p className="text-xs text-muted-foreground mb-1">Try these examples:</p>
-      <div className="space-y-1.5">
-        {businessExamples.map((example, index) => (
-          <Button
-            key={index}
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start text-xs h-auto py-1.5 px-2 rounded-sm font-normal"
-            onClick={() => onExampleClick(example.text)}
-          >
-            <span className="mr-1.5 text-muted-foreground">{example.icon}</span>
-            <span className="truncate">{example.text}</span>
-          </Button>
-        ))}
-      </div>
-      
-      <div className="pt-2">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="w-full text-xs"
-          onClick={() => onExampleClick("What tasks can you help me create?")}
-        >
-          <Heading1 className="h-3 w-3 mr-1.5" />
-          Learn about smart tasks
-        </Button>
-      </div>
-    </div>
+    <Card className="bg-muted/30 shadow-sm">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg">WAKTI System Integration</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-gray-600 mb-4">
+          Your AI assistant can interact with various WAKTI systems to provide comprehensive assistance.
+        </p>
+        
+        <div className="space-y-3">
+          {examples.map((example, index) => (
+            <Button
+              key={index}
+              variant="outline"
+              className="justify-start w-full text-left h-auto py-2"
+              onClick={() => onExampleClick(example.example)}
+            >
+              {example.icon}
+              <span className="ml-2 text-sm">{example.text}</span>
+            </Button>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 };

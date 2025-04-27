@@ -1,171 +1,59 @@
 
-import { useState, useEffect, useCallback } from 'react';
-import { User as SupabaseUser } from '@supabase/supabase-js';
-import { globalChatMemory } from '@/services/GlobalChatMemory';
-import { ChatMemoryMessage } from '@/components/ai/personality-switcher/types';
-import { useAIPersonality } from '@/components/ai/personality-switcher/AIPersonalityContext';
-import { callAIAssistant } from '@/hooks/ai/utils/callAIAssistant';
-import { useAuth } from "@/features/auth/hooks/useAuth";
-import { useProfile } from '@/hooks/useProfile';
-import { toast } from '@/components/ui/use-toast';
+import { useState, useCallback } from 'react';
+import { AIMessage, WAKTIAIMode } from '@/types/ai-assistant.types';
+import { v4 as uuidv4 } from 'uuid';
 
 export const useGlobalChat = () => {
-  const [messages, setMessages] = useState<ChatMemoryMessage[]>([]);
+  const [messages, setMessages] = useState<AIMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const { currentMode, currentPersonality } = useAIPersonality();
-  const { user } = useAuth();
-  const { profile, isLoading: isProfileLoading } = useProfile(user?.id);
   
-  // Subscribe to global chat memory
-  useEffect(() => {
-    const unsubscribe = globalChatMemory.subscribe(updatedMessages => {
-      setMessages(updatedMessages);
-    });
-    
-    return unsubscribe;
-  }, []);
+  // In a real app, this would be based on user permissions or subscription
+  const canUseAI = true;
   
-  // Process for embedded images in AI responses
-  const processMessageWithImages = (content: string): { content: string, imageUrl: string | null } => {
-    const imagePattern = /\[IMAGE_GENERATED\](.*?)\[\/IMAGE_GENERATED\]/;
-    const match = content.match(imagePattern);
-    
-    if (match && match[1]) {
-      // Remove the image tag from the content
-      const processedContent = content.replace(imagePattern, '');
-      return {
-        content: processedContent.trim(),
-        imageUrl: match[1].trim() 
-      };
-    }
-    
-    return { content, imageUrl: null };
-  };
-  
-  // Always allow AI access - no auth checks
-  const canUseAI = useCallback(() => {
-    return true; // Always return true - no auth checking
-  }, []);
-  
-  // Send message function with improved error handling
   const sendMessage = useCallback(async (content: string) => {
     if (!content.trim() || isLoading) return;
     
+    // Create a user message
+    const userMessage: AIMessage = {
+      id: uuidv4(),
+      role: 'user',
+      content,
+      timestamp: new Date()
+    };
+    
+    setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
     
     try {
-      console.log('[useGlobalChat] Sending message:', content.substring(0, 30) + (content.length > 30 ? '...' : ''));
+      // In a real app, this would be an API call to an AI service
+      // For now, we'll simulate a response after a delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Add user message to memory
-      globalChatMemory.addMessage({
-        role: 'user',
-        content,
-        mode: currentMode,
+      // Create an assistant response
+      const assistantMessage: AIMessage = {
+        id: uuidv4(),
+        role: 'assistant',
+        content: `I received your message: "${content}". This is a simulated response for demonstration purposes.`,
         timestamp: new Date()
-      });
+      };
       
-      // Prepare system message with current personality
-      const systemMessage = currentPersonality.systemPrompt;
-      
-      // Get up to 10 recent messages for context
-      const recentMessages = messages.slice(-10);
-      
-      // Get user context for better personalization
-      let userContext = '';
-      if (profile) {
-        userContext = `User: ${profile.full_name || 'Unknown'}, Account Type: ${profile.account_type || 'individual'}`;
-      } else if (user) {
-        // Create a safe context without accessing user_metadata directly
-        userContext = `User: ${user.full_name || user.displayName || 'Unknown'}, Account Type: ${user.account_type || 'individual'}`;
-      } else {
-        userContext = 'Unknown User';
-      }
-      
-      console.log('[useGlobalChat] Calling AI assistant with personality:', currentMode);
-      
-      // Call AI assistant with additional debugging
-      try {
-        const { response, generatedImage, error } = await callAIAssistant(
-          systemMessage,
-          content,
-          JSON.stringify(recentMessages),
-          userContext,
-          currentMode // Pass the current mode to help with content moderation
-        );
-        
-        if (error) {
-          console.error('[useGlobalChat] AI assistant error:', error);
-          
-          // Handle different types of errors differently
-          if (error.isConnectionError) {
-            toast({
-              title: "Connection Error",
-              description: "Could not connect to AI service. Please check your internet connection and try again.",
-              variant: "destructive",
-            });
-          } else {
-            toast({
-              title: "Error",
-              description: error.message || "Failed to get AI response",
-              variant: "destructive",
-            });
-          }
-          return;
-        }
-        
-        if (response) {
-          console.log('[useGlobalChat] Received AI response successfully');
-          
-          // Process response for embedded images
-          const { content: processedContent, imageUrl } = processMessageWithImages(response);
-          
-          // Add AI response to memory
-          globalChatMemory.addMessage({
-            role: 'assistant',
-            content: processedContent,
-            mode: currentMode,
-            imageUrl: imageUrl || generatedImage, // Use either embedded image or separately returned image
-            timestamp: new Date()
-          });
-        } else {
-          console.error('[useGlobalChat] Empty response from AI assistant');
-          toast({
-            title: "Error",
-            description: "Received empty response from AI",
-            variant: "destructive",
-          });
-        }
-      } catch (callError) {
-        console.error('[useGlobalChat] Exception during AI assistant call:', callError);
-        toast({
-          title: "Communication Error",
-          description: "Failed to communicate with AI service. Please try again.",
-          variant: "destructive",
-        });
-      }
+      setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
-      console.error('[useGlobalChat] Unexpected error sending message:', error);
-      toast({
-        title: "Error",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
-      });
+      console.error('Error sending message:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, messages, currentMode, currentPersonality, profile, user]);
+  }, [isLoading]);
   
-  // Clear all messages
   const clearMessages = useCallback(() => {
-    globalChatMemory.clearMessages();
+    setMessages([]);
   }, []);
   
   return {
     messages,
-    sendMessage,
     isLoading,
+    sendMessage,
     clearMessages,
-    canUseAI: true, // Always allow AI access
-    sessionId: globalChatMemory.getSessionId()
+    canUseAI
   };
 };

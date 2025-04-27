@@ -1,50 +1,40 @@
 
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
 
+// Combine classNames with Tailwind's class conflict resolution
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
-/**
- * Formats a timestamp to a relative time string (e.g. "2 minutes ago")
- * with improved accuracy for recent timestamps
- */
-export function formatRelativeTime(date: Date | string): string {
+// Format a date as a relative time (e.g. "5 minutes ago")
+export function formatRelativeTime(date: Date): string {
   const now = new Date();
-  const timestamp = date instanceof Date ? date : new Date(date);
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
   
-  // Handle invalid dates
-  if (isNaN(timestamp.getTime())) {
-    return 'Invalid date';
+  if (diffInSeconds < 60) {
+    return "just now";
   }
   
-  const milliseconds = now.getTime() - timestamp.getTime();
-  const seconds = Math.floor(milliseconds / 1000);
-  
-  // Less than a minute
-  if (seconds < 60) {
-    return 'just now';
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) {
+    return `${diffInMinutes} ${diffInMinutes === 1 ? 'minute' : 'minutes'} ago`;
   }
   
-  // Minutes
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) {
-    return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`;
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) {
+    return `${diffInHours} ${diffInHours === 1 ? 'hour' : 'hours'} ago`;
   }
   
-  // Hours
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) {
-    return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
+  const diffInDays = Math.floor(diffInHours / 24);
+  if (diffInDays < 7) {
+    return `${diffInDays} ${diffInDays === 1 ? 'day' : 'days'} ago`;
   }
   
-  // Days
-  const days = Math.floor(hours / 24);
-  if (days < 30) {
-    return `${days} ${days === 1 ? 'day' : 'days'} ago`;
-  }
-  
-  // Format as regular date for older timestamps
-  return timestamp.toLocaleDateString();
+  return date.toLocaleDateString();
+}
+
+// Generate a random ID
+export function generateId(): string {
+  return Math.random().toString(36).substring(2, 10);
 }

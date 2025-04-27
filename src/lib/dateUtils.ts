@@ -1,8 +1,8 @@
 
 /**
- * Get a greeting based on the current time of day
+ * Get a greeting based on the time of day
  */
-export const getTimeBasedGreeting = (): string => {
+export const getTimeBasedGreeting = (name?: string): string => {
   const hour = new Date().getHours();
   
   if (hour < 12) {
@@ -15,49 +15,15 @@ export const getTimeBasedGreeting = (): string => {
 };
 
 /**
- * Format a date to a readable string
+ * Format a date as a relative time (e.g. "5 minutes ago")
  */
-export const formatDate = (date: Date | string): string => {
-  if (!date) return '';
-  
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  
-  return dateObj.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  });
-};
-
-/**
- * Format a date to include time
- */
-export const formatDateTime = (date: Date | string): string => {
-  if (!date) return '';
-  
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  
-  return dateObj.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-};
-
-/**
- * Get relative time string (e.g. "2 hours ago")
- */
-export const getRelativeTimeString = (date: Date | string): string => {
-  if (!date) return '';
-  
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
+export const formatRelativeTime = (date: Date | string): string => {
   const now = new Date();
-  const diffInSeconds = Math.floor((now.getTime() - dateObj.getTime()) / 1000);
+  const messageDate = typeof date === 'string' ? new Date(date) : date;
+  const diffInSeconds = Math.floor((now.getTime() - messageDate.getTime()) / 1000);
   
   if (diffInSeconds < 60) {
-    return 'just now';
+    return "just now";
   }
   
   const diffInMinutes = Math.floor(diffInSeconds / 60);
@@ -71,9 +37,10 @@ export const getRelativeTimeString = (date: Date | string): string => {
   }
   
   const diffInDays = Math.floor(diffInHours / 24);
-  if (diffInDays < 7) {
+  if (diffInDays < 30) {
     return `${diffInDays} ${diffInDays === 1 ? 'day' : 'days'} ago`;
   }
   
-  return formatDate(dateObj);
+  // If it's older than a month, just return the date
+  return messageDate.toLocaleDateString();
 };
