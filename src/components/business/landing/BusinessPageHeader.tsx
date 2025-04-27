@@ -1,10 +1,11 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { BusinessProfile } from "@/types/business.types";
 import { Button } from "@/components/ui/button";
 import { useContacts } from "@/hooks/useContacts";
 import { useContactSearch } from "@/hooks/useContactSearch";
 import { Loader2, User, UserPlus } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
 
 export interface BusinessPageHeaderProps {
   business: BusinessProfile;
@@ -19,23 +20,51 @@ const BusinessPageHeader: React.FC<BusinessPageHeaderProps> = ({
 }) => {
   const { sendContactRequest } = useContacts();
   const { checkContactRequest } = useContactSearch();
-  const [isAddingContact, setIsAddingContact] = React.useState(false);
-  const [contactStatus, setContactStatus] = React.useState<'none' | 'pending' | 'accepted'>('none');
+  const [isAddingContact, setIsAddingContact] = useState(false);
+  const [contactStatus, setContactStatus] = useState<'none' | 'pending' | 'accepted'>('none');
 
-  React.useEffect(() => {
-    if (isAuthenticated && !isPreviewMode && business.id) {
-      checkContactRequest(business.id);
-    }
+  useEffect(() => {
+    const checkStatus = async () => {
+      if (isAuthenticated && !isPreviewMode && business.id) {
+        try {
+          const result = await checkContactRequest(business.id);
+          if (result?.requestExists) {
+            setContactStatus(result.requestStatus || 'none');
+          }
+        } catch (error) {
+          console.error('Error checking contact status:', error);
+        }
+      }
+    };
+    
+    checkStatus();
   }, [isAuthenticated, isPreviewMode, business.id, checkContactRequest]);
 
   const handleAddContact = async () => {
-    if (!isAuthenticated || !business.id) return;
+    if (!isAuthenticated || !business.id) {
+      toast({
+        title: "Authentication Required",
+        description: "You need to log in to add this business to your contacts",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setIsAddingContact(true);
     try {
       await sendContactRequest.mutateAsync(business.id);
+      setContactStatus('pending');
+      toast({
+        title: "Contact Request Sent",
+        description: "Your request to connect has been sent",
+      });
     } catch (error) {
       console.error('Error adding contact:', error);
+      toast({
+        title: "Failed to Send Request",
+        description: "There was an error sending your contact request",
+        variant: "destructive",
+      });
     } finally {
       setIsAddingContact(false);
     }

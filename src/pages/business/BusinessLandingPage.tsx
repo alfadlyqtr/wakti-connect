@@ -1,8 +1,9 @@
 
-import React from "react";
-import { useParams, useLocation, useSearchParams } from "react-router-dom";
+import React, { useEffect } from "react";
+import { useParams, useLocation, useSearchParams, useNavigate } from "react-router-dom";
 import BusinessLandingPageComponent from "@/components/business/landing/BusinessLandingPage";
 import { Helmet } from "react-helmet-async";
+import { toast } from "@/components/ui/use-toast";
 
 interface BusinessLandingPageProps {
   isPreview?: boolean;
@@ -12,6 +13,7 @@ const BusinessLandingPage: React.FC<BusinessLandingPageProps> = ({ isPreview: is
   const { slug } = useParams<{ slug: string }>();
   const location = useLocation();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   
   // Check if we're in preview mode from props, URL path, or search param
   const isPreviewMode = isPreviewProp || 
@@ -24,11 +26,30 @@ const BusinessLandingPage: React.FC<BusinessLandingPageProps> = ({ isPreview: is
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
   
+  useEffect(() => {
+    if (!slug) {
+      toast({
+        title: "Business Page Not Found",
+        description: "The URL is invalid or the business page doesn't exist.",
+        variant: "destructive",
+      });
+      navigate("/");
+    }
+  }, [slug, navigate]);
+  
   if (!slug) {
     return (
-      <div className="text-center py-12">
-        <h1 className="text-2xl font-bold">Business Page Not Found</h1>
-        <p className="text-muted-foreground mt-2">The URL is invalid.</p>
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-center p-6">
+          <h1 className="text-2xl font-bold">Business Page Not Found</h1>
+          <p className="text-muted-foreground mt-2 mb-6">The URL is invalid or the page doesn't exist.</p>
+          <button 
+            className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/90"
+            onClick={() => navigate("/")}
+          >
+            Go Home
+          </button>
+        </div>
       </div>
     );
   }

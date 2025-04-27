@@ -1,61 +1,87 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { UserContact, ContactRequestStatus } from "@/types/invitation.types";
+import { UserContact, ContactsRequestsResponse } from "@/types/invitation.types";
 
 /**
- * Get all contacts for a user
+ * Get a user's contacts
  */
 export const getUserContacts = async (userId: string): Promise<UserContact[]> => {
   try {
-    // Fetch contacts where the current user is the owner of the contact
+    // Get contacts where user is the owner of the contact
     const { data: contactsData, error } = await supabase
       .from('user_contacts')
       .select(`
-        id, 
+        id,
         user_id,
         contact_id,
         status,
         staff_relation_id,
-        created_at,
-        profiles!user_contacts_contact_id_fkey(
-          id,
-          full_name,
-          display_name, 
-          avatar_url,
-          account_type,
-          business_name,
-          email
-        )
+        created_at
       `)
       .eq('user_id', userId)
-      .eq('status', 'accepted')
-      .order('created_at', { ascending: false });
-    
+      .eq('status', 'accepted');
+      
     if (error) {
-      console.error("Error fetching user contacts:", error);
-      throw error;
+      console.error("Error fetching contacts:", error);
+      return [];
     }
     
-    // Map and transform data to match UserContact interface
-    const contacts: UserContact[] = contactsData.map(contact => {
-      const profileData = contact.profiles || {};
+    // Early return if no contacts
+    if (!contactsData || contactsData.length === 0) {
+      return [];
+    }
+
+    // Get contact profile details
+    const contactIds = contactsData.map(contact => contact.contact_id);
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select(`
+        id, 
+        full_name,
+        display_name,
+        avatar_url,
+        account_type,
+        business_name,
+        email
+      `)
+      .in('id', contactIds);
+      
+    if (profilesError) {
+      console.error("Error fetching contact profiles:", profilesError);
+    }
+    
+    // Create a map for faster profile lookup
+    const profileMap: Record<string, any> = {};
+    if (profiles) {
+      profiles.forEach(profile => {
+        profileMap[profile.id] = profile;
+      });
+    }
+    
+    // Format the contacts with profile information
+    const formattedContacts: UserContact[] = contactsData.map(contact => {
+      const profile = profileMap[contact.contact_id] || {};
+      
       return {
         id: contact.id,
-        userId: contact.user_id,
-        contactId: contact.contact_id,
-        status: contact.status as ContactRequestStatus,
-        staffRelationId: contact.staff_relation_id,
-        fullName: profileData.full_name || 'Unknown',
-        displayName: profileData.display_name || profileData.full_name || 'Unknown',
-        avatarUrl: profileData.avatar_url || null,
-        accountType: profileData.account_type || 'free',
-        businessName: profileData.business_name || null,
-        email: profileData.email || '',
-        createdAt: contact.created_at
+        user_id: contact.user_id,
+        contact_id: contact.contact_id,
+        status: contact.status as 'pending' | 'accepted' | 'rejected',
+        staff_relation_id: contact.staff_relation_id,
+        created_at: contact.created_at,
+        contactProfile: {
+          id: contact.contact_id,
+          fullName: profile.full_name || 'Unknown',
+          displayName: profile.display_name || profile.full_name || 'Unknown',
+          avatarUrl: profile.avatar_url || '',
+          accountType: profile.account_type || 'free',
+          businessName: profile.business_name || '',
+          email: profile.email || ''
+        }
       };
     });
     
-    return contacts;
+    return formattedContacts;
   } catch (error) {
     console.error("Error in getUserContacts:", error);
     return [];
@@ -63,112 +89,54 @@ export const getUserContacts = async (userId: string): Promise<UserContact[]> =>
 };
 
 /**
- * Get pending contact requests (both incoming and outgoing)
+ * Get a user's incoming and outgoing contact requests
  */
-export const getContactRequests = async (userId: string): Promise<{
-  incoming: UserContact[];
-  outgoing: UserContact[];
-}> => {
+export const getContactRequests = async (userId: string): Promise<ContactsRequestsResponse> => {
   try {
-    // Fetch incoming requests (where others have sent requests to current user)
+    // Get incoming requests (where user is the contact)
     const { data: incomingData, error: incomingError } = await supabase
       .from('user_contacts')
       .select(`
-        id, 
+        id,
         user_id,
         contact_id,
         status,
         staff_relation_id,
-        created_at,
-        profiles!user_contacts_user_id_fkey(
-          id,
-          full_name,
-          display_name, 
-          avatar_url,
-          account_type,
-          business_name,
-          email
-        )
+        created_at
       `)
       .eq('contact_id', userId)
-      .eq('status', 'pending')
-      .order('created_at', { ascending: false });
-    
+      .eq('status', 'pending');
+      
     if (incomingError) {
       console.error("Error fetching incoming requests:", incomingError);
-      throw incomingError;
+      return { incoming: [], outgoing: [] };
     }
-    
-    // Fetch outgoing requests (where current user has sent requests to others)
+
+    // Get outgoing requests (where user is the requester)
     const { data: outgoingData, error: outgoingError } = await supabase
       .from('user_contacts')
       .select(`
-        id, 
+        id,
         user_id,
         contact_id,
         status,
         staff_relation_id,
-        created_at,
-        profiles!user_contacts_contact_id_fkey(
-          id,
-          full_name,
-          display_name, 
-          avatar_url,
-          account_type,
-          business_name,
-          email
-        )
+        created_at
       `)
       .eq('user_id', userId)
-      .eq('status', 'pending')
-      .order('created_at', { ascending: false });
-    
+      .eq('status', 'pending');
+      
     if (outgoingError) {
       console.error("Error fetching outgoing requests:", outgoingError);
-      throw outgoingError;
+      return { incoming: incomingData ? await formatIncomingRequests(incomingData) : [], outgoing: [] };
     }
     
-    // Transform incoming requests
-    const incomingRequests: UserContact[] = incomingData.map(request => {
-      const profileData = request.profiles || {};
-      return {
-        id: request.id,
-        userId: request.user_id,
-        contactId: request.contact_id,
-        status: request.status as ContactRequestStatus,
-        staffRelationId: request.staff_relation_id,
-        fullName: profileData.full_name || 'Unknown',
-        displayName: profileData.display_name || profileData.full_name || 'Unknown',
-        avatarUrl: profileData.avatar_url || null,
-        accountType: profileData.account_type || 'free',
-        businessName: profileData.business_name || null,
-        email: profileData.email || '',
-        createdAt: request.created_at
-      };
-    });
-    
-    // Transform outgoing requests
-    const outgoingRequests: UserContact[] = outgoingData.map(request => {
-      const profileData = request.profiles || {};
-      return {
-        id: request.id,
-        userId: request.user_id,
-        contactId: request.contact_id,
-        status: request.status as ContactRequestStatus,
-        staffRelationId: request.staff_relation_id,
-        fullName: profileData.full_name || 'Unknown',
-        displayName: profileData.display_name || profileData.full_name || 'Unknown',
-        avatarUrl: profileData.avatar_url || null,
-        accountType: profileData.account_type || 'free',
-        businessName: profileData.business_name || null,
-        email: profileData.email || '',
-        createdAt: request.created_at
-      };
-    });
+    const incoming = incomingData ? await formatIncomingRequests(incomingData) : [];
+    const outgoing = outgoingData ? await formatOutgoingRequests(outgoingData) : [];
     
     return {
-      incoming: incomingRequests,
-      outgoing: outgoingRequests
+      incoming,
+      outgoing
     };
   } catch (error) {
     console.error("Error in getContactRequests:", error);
@@ -179,136 +147,212 @@ export const getContactRequests = async (userId: string): Promise<{
   }
 };
 
+// Helper function to format incoming requests with requester profile information
+async function formatIncomingRequests(requests: any[]): Promise<UserContact[]> {
+  try {
+    if (requests.length === 0) return [];
+    
+    // Get profile information for requesters
+    const requesterIds = requests.map(req => req.user_id);
+    const { data: profiles, error } = await supabase
+      .from('profiles')
+      .select(`
+        id,
+        full_name,
+        display_name,
+        avatar_url,
+        account_type,
+        business_name,
+        email
+      `)
+      .in('id', requesterIds);
+      
+    if (error) {
+      console.error("Error fetching requester profiles:", error);
+    }
+    
+    // Create a map for faster profile lookup
+    const profileMap: Record<string, any> = {};
+    if (profiles) {
+      profiles.forEach(profile => {
+        profileMap[profile.id] = profile;
+      });
+    }
+    
+    // Format the requests with profile information
+    const formattedRequests: UserContact[] = requests.map(request => {
+      const profile = profileMap[request.user_id] || {};
+      
+      return {
+        id: request.id,
+        user_id: request.user_id,
+        contact_id: request.contact_id,
+        status: request.status as 'pending' | 'accepted' | 'rejected',
+        staff_relation_id: request.staff_relation_id,
+        created_at: request.created_at,
+        contactProfile: {
+          id: request.user_id,
+          fullName: profile.full_name || 'Unknown',
+          displayName: profile.display_name || profile.full_name || 'Unknown',
+          avatarUrl: profile.avatar_url || '',
+          accountType: profile.account_type || 'free',
+          businessName: profile.business_name || '',
+          email: profile.email || ''
+        }
+      };
+    });
+    
+    return formattedRequests;
+  } catch (error) {
+    console.error("Error in formatIncomingRequests:", error);
+    return [];
+  }
+}
+
+// Helper function to format outgoing requests with recipient profile information
+async function formatOutgoingRequests(requests: any[]): Promise<UserContact[]> {
+  try {
+    if (requests.length === 0) return [];
+    
+    // Get profile information for recipients
+    const recipientIds = requests.map(req => req.contact_id);
+    const { data: profiles, error } = await supabase
+      .from('profiles')
+      .select(`
+        id,
+        full_name,
+        display_name,
+        avatar_url,
+        account_type,
+        business_name,
+        email
+      `)
+      .in('id', recipientIds);
+      
+    if (error) {
+      console.error("Error fetching recipient profiles:", error);
+    }
+    
+    // Create a map for faster profile lookup
+    const profileMap: Record<string, any> = {};
+    if (profiles) {
+      profiles.forEach(profile => {
+        profileMap[profile.id] = profile;
+      });
+    }
+    
+    // Format the requests with profile information
+    const formattedRequests: UserContact[] = requests.map(request => {
+      const profile = profileMap[request.contact_id] || {};
+      
+      return {
+        id: request.id,
+        user_id: request.user_id,
+        contact_id: request.contact_id,
+        status: request.status as 'pending' | 'accepted' | 'rejected',
+        staff_relation_id: request.staff_relation_id,
+        created_at: request.created_at,
+        contactProfile: {
+          id: request.contact_id,
+          fullName: profile.full_name || 'Unknown',
+          displayName: profile.display_name || profile.full_name || 'Unknown',
+          avatarUrl: profile.avatar_url || '',
+          accountType: profile.account_type || 'free',
+          businessName: profile.business_name || '',
+          email: profile.email || ''
+        }
+      };
+    });
+    
+    return formattedRequests;
+  } catch (error) {
+    console.error("Error in formatOutgoingRequests:", error);
+    return [];
+  }
+}
+
 /**
- * Get staff contacts for the current user
+ * Get staff contacts for a user
  */
 export const getStaffContacts = async (userId: string): Promise<UserContact[]> => {
   try {
-    // Get staff contacts (users connected via staff_relation_id)
-    const { data: staffContacts, error } = await supabase
+    // Get staff contacts (marked by staff_relation_id)
+    const { data: staffContactsData, error } = await supabase
       .from('user_contacts')
       .select(`
-        id, 
+        id,
         user_id,
         contact_id,
         status,
         staff_relation_id,
-        created_at,
-        profiles!user_contacts_contact_id_fkey(
-          id,
-          full_name,
-          display_name, 
-          avatar_url,
-          account_type,
-          business_name,
-          email
-        )
+        created_at
       `)
       .eq('user_id', userId)
-      .not('staff_relation_id', 'is', null)
       .eq('status', 'accepted')
-      .order('created_at', { ascending: false });
-    
+      .not('staff_relation_id', 'is', null);
+      
     if (error) {
       console.error("Error fetching staff contacts:", error);
-      throw error;
+      return [];
     }
     
-    // Transform staff contacts to match UserContact interface
-    const contacts: UserContact[] = staffContacts.map(contact => {
-      const profileData = contact.profiles || {};
+    if (!staffContactsData || staffContactsData.length === 0) {
+      return [];
+    }
+    
+    // Get contact profile details
+    const contactIds = staffContactsData.map(contact => contact.contact_id);
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select(`
+        id, 
+        full_name,
+        display_name,
+        avatar_url,
+        account_type,
+        business_name,
+        email
+      `)
+      .in('id', contactIds);
+      
+    if (profilesError) {
+      console.error("Error fetching staff profiles:", profilesError);
+    }
+    
+    // Create a map for faster profile lookup
+    const profileMap: Record<string, any> = {};
+    if (profiles) {
+      profiles.forEach(profile => {
+        profileMap[profile.id] = profile;
+      });
+    }
+    
+    // Format the contacts with profile information
+    const formattedStaffContacts: UserContact[] = staffContactsData.map(contact => {
+      const profile = profileMap[contact.contact_id] || {};
+      
       return {
         id: contact.id,
-        userId: contact.user_id,
-        contactId: contact.contact_id,
-        status: contact.status as ContactRequestStatus,
-        staffRelationId: contact.staff_relation_id,
-        fullName: profileData.full_name || 'Unknown',
-        displayName: profileData.display_name || profileData.full_name || 'Unknown',
-        avatarUrl: profileData.avatar_url || null,
-        accountType: profileData.account_type || 'free',
-        businessName: profileData.business_name || null,
-        email: profileData.email || '',
-        createdAt: contact.created_at
+        user_id: contact.user_id,
+        contact_id: contact.contact_id,
+        status: contact.status as 'pending' | 'accepted' | 'rejected',
+        staff_relation_id: contact.staff_relation_id,
+        created_at: contact.created_at,
+        contactProfile: {
+          id: contact.contact_id,
+          fullName: profile.full_name || 'Unknown',
+          displayName: profile.display_name || profile.full_name || 'Unknown',
+          avatarUrl: profile.avatar_url || '',
+          accountType: profile.account_type || 'free',
+          businessName: profile.business_name || '',
+          email: profile.email || ''
+        }
       };
     });
     
-    return contacts;
+    return formattedStaffContacts;
   } catch (error) {
     console.error("Error in getStaffContacts:", error);
     return [];
-  }
-};
-
-/**
- * Search for users to add as contacts
- */
-export const searchUsers = async (query: string): Promise<UserContact[]> => {
-  if (!query || query.length < 2) {
-    return [];
-  }
-
-  try {
-    const { data, error } = await supabase.rpc('search_users', {
-      search_query: query
-    });
-    
-    if (error) {
-      console.error("Error searching users:", error);
-      throw error;
-    }
-    
-    // Transform search results to match UserContact interface
-    return (data || []).map(user => ({
-      id: '', // This will be populated if a contact request is created
-      userId: '',
-      contactId: user.id,
-      status: 'none' as ContactRequestStatus,
-      staffRelationId: null,
-      fullName: user.full_name || 'Unknown',
-      displayName: user.display_name || user.full_name || 'Unknown',
-      avatarUrl: user.avatar_url || null,
-      accountType: user.account_type || 'free',
-      businessName: user.business_name || null,
-      email: user.email || '',
-      createdAt: new Date().toISOString()
-    }));
-  } catch (error) {
-    console.error("Error in searchUsers:", error);
-    return [];
-  }
-};
-
-/**
- * Check if a contact request already exists between two users
- */
-export const checkContactRequest = async (contactId: string): Promise<{ 
-  requestExists: boolean;
-  requestStatus: string;
-}> => {
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session?.user) {
-      throw new Error("Not authenticated");
-    }
-    
-    const { data, error } = await supabase.rpc('check_contact_request', {
-      user_id_param: session.user.id,
-      contact_id_param: contactId
-    });
-    
-    if (error) {
-      console.error("Error checking contact request:", error);
-      return { requestExists: false, requestStatus: 'none' };
-    }
-    
-    return {
-      requestExists: data?.[0]?.request_exists || false,
-      requestStatus: data?.[0]?.request_status || 'none'
-    };
-  } catch (error) {
-    console.error("Error in checkContactRequest:", error);
-    return { requestExists: false, requestStatus: 'none' };
   }
 };

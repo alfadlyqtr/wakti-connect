@@ -1,87 +1,40 @@
 
-export interface UserSearchResult {
-  id: string;
-  fullName: string | null;
-  displayName: string | null;
-  email: string | null;
-  avatarUrl: string | null;
-  accountType: string | null;
-  businessName?: string | null;
-}
-
-export type ContactRequestStatusValue = 'accepted' | 'pending' | 'rejected' | 'none';
+export type ContactRequestStatusValue = 'pending' | 'accepted' | 'rejected' | null;
 
 export interface ContactRequestStatus {
   requestExists: boolean;
   requestStatus: ContactRequestStatusValue;
 }
 
+export interface UserSearchResult {
+  id: string;
+  fullName: string;
+  displayName: string;
+  email: string;
+  avatarUrl: string;
+  accountType: string;
+  businessName?: string;
+}
+
 export interface UserContact {
   id: string;
-  userId: string;
-  contactId: string;
-  status: ContactRequestStatusValue;
+  user_id: string;
+  contact_id: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  staff_relation_id: string | null;
   created_at: string;
-  staffRelationId?: string;
   contactProfile?: {
-    displayName?: string;
-    fullName?: string;
-    email?: string;
-    avatarUrl?: string;
+    id: string;
+    fullName: string;
+    displayName: string;
+    email: string;
+    avatarUrl: string;
+    accountType: string;
     businessName?: string;
-    accountType?: string;
   };
 }
 
-export interface InvitationRecipient {
-  id: string;
-  name: string;
-  email?: string;
-  userId?: string;
-  type: 'user' | 'email' | 'contact';
-  status?: 'pending' | 'accepted' | 'declined';
-}
-
-export interface InvitationRequest {
-  recipients: InvitationRecipient[];
-  shared_as_link?: boolean;
-}
-
-export interface InvitationResponse {
-  id: string;
-  status: 'sent' | 'failed';
-  createdAt: string;
-  recipients: {
-    total: number;
-    accepted: number;
-    pending: number;
-    declined: number;
-    successful: string[];
-    failed: string[];
-  };
-}
-
-export interface InvitationCustomization {
-  backgroundType: string;
-  backgroundValue: string;
-  fontFamily: string;
-  fontSize: string;
-  textColor: string;
-  textAlign: string;
-  buttonStyles: {
-    style: string;
-    color: string;
-  };
-  layoutSize: string;
-  customEffects: Record<string, any>;
-}
-
-export interface InvitationTemplate {
-  id: string;
-  name: string;
-  previewImage: string;
-  defaultStyles: Record<string, any>;
-  customization: Record<string, any>;
-  isDefault: boolean;
-  createdAt: string;
+export interface ContactsRequestsResponse {
+  incoming: UserContact[];
+  outgoing: UserContact[];
 }

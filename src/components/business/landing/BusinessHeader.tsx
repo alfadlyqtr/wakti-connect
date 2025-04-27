@@ -28,7 +28,11 @@ const BusinessHeader = ({ section, businessPage }: BusinessHeaderProps) => {
   });
   
   const handleBookNow = () => {
-    navigate(`/business/${businessPage.page_slug}/book`);
+    if (businessPage.page_slug) {
+      navigate(`/booking/${businessPage.business_id}`);
+    } else {
+      console.error("Unable to navigate: Missing page_slug");
+    }
   };
   
   // Custom button style based on business page colors
