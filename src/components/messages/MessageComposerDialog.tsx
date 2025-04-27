@@ -35,8 +35,7 @@ const MessageComposerDialog: React.FC<MessageComposerDialogProps> = ({
   const { 
     messages, 
     sendMessage, 
-    isLoadingMessages, 
-    canMessage,
+    isLoadingMessages,
     markConversationAsRead
   } = useMessaging(contact?.contact_id || "");
 
@@ -117,16 +116,10 @@ const MessageComposerDialog: React.FC<MessageComposerDialogProps> = ({
         </div>
 
         <div className="border-t pt-4">
-          {canMessage ? (
-            <MessageComposer 
-              onSendMessage={handleSendMessage}
-              isDisabled={!contact.contact_id}
-            />
-          ) : (
-            <div className="text-center text-muted-foreground p-4">
-              <p>You cannot message this user.</p>
-            </div>
-          )}
+          <MessageComposer 
+            onSendMessage={handleSendMessage}
+            isDisabled={!contact.contact_id}
+          />
         </div>
       </DialogContent>
     </Dialog>
