@@ -1,9 +1,10 @@
 
 import React, { useState } from "react";
-import { formatDistanceToNow, isValid } from "date-fns";
+import { isValid } from "date-fns";
 import { Play, Pause, ExternalLink } from "lucide-react";
 import { isMessageExpired } from "@/utils/messageExpiration";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { safeFormatDistanceToNow } from "@/utils/safeFormatters";
 
 interface MessageBubbleProps {
   content: string;
@@ -28,22 +29,8 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   const [imageOpen, setImageOpen] = useState(false);
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
   
-  // Safe date formatting with validation
-  const getFormattedTime = (dateString: string): string => {
-    try {
-      const date = new Date(dateString);
-      if (!isValid(date)) {
-        console.error("Invalid date:", dateString);
-        return "Invalid date";
-      }
-      return formatDistanceToNow(date, { addSuffix: true });
-    } catch (error) {
-      console.error("Error formatting date:", error);
-      return "Date error";
-    }
-  };
-  
-  const formattedTime = getFormattedTime(timestamp);
+  // Safe date formatting with our utility function
+  const formattedTime = safeFormatDistanceToNow(timestamp, "Recently");
   
   // Check if message has expired
   if (isMessageExpired(timestamp)) {
@@ -158,4 +145,3 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
 };
 
 export default MessageBubble;
-

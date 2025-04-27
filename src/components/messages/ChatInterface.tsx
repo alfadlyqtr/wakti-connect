@@ -5,7 +5,7 @@ import MessageList from "./chat/MessageList";
 import MessageComposer from "./chat/MessageComposer";
 import { Message } from "@/types/message.types";
 import { Loader2 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { safeFormatDistanceToNow } from "@/utils/safeFormatters";
 
 interface ChatInterfaceProps {
   userId: string;
@@ -62,23 +62,30 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ userId }) => {
     setReplyToMessage(message);
   };
   
-  // Organize messages by date
+  // Organize messages by date - with safe date handling
   const organizeMessagesByDate = () => {
     const messagesByDate: Record<string, Message[]> = {};
     
     messages.forEach(msg => {
       try {
+        // First try to parse the date
         const date = new Date(msg.createdAt);
-        if (isNaN(date.getTime())) {
-          console.error("Invalid date in message:", msg.id, msg.createdAt);
-          return;
-        }
-        const dateKey = date.toLocaleDateString();
+        
+        // Use a default date key for invalid dates
+        const dateKey = isNaN(date.getTime()) 
+          ? "Invalid Date" 
+          : date.toLocaleDateString();
+        
         if (!messagesByDate[dateKey]) {
           messagesByDate[dateKey] = [];
         }
         messagesByDate[dateKey].push(msg);
       } catch (error) {
+        // Fallback for any parsing errors
+        if (!messagesByDate["Unknown Date"]) {
+          messagesByDate["Unknown Date"] = [];
+        }
+        messagesByDate["Unknown Date"].push(msg);
         console.error("Error processing message date:", error, "Message:", msg);
       }
     });
@@ -87,9 +94,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ userId }) => {
   };
   
   const messagesByDate = organizeMessagesByDate();
-  const dateSections = Object.keys(messagesByDate).sort((a, b) => 
-    new Date(a).getTime() - new Date(b).getTime()
-  );
+  const dateSections = Object.keys(messagesByDate).sort((a, b) => {
+    // Handle our special keys properly
+    if (a === "Invalid Date" || a === "Unknown Date") return -1;
+    if (b === "Invalid Date" || b === "Unknown Date") return 1;
+    
+    // Normal date sorting for valid dates
+    return new Date(a).getTime() - new Date(b).getTime();
+  });
 
   if (isLoadingMessages) {
     return (
@@ -115,9 +127,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ userId }) => {
               <div key={date} className="mb-6">
                 <div className="flex justify-center mb-4">
                   <span className="text-xs text-muted-foreground bg-background px-2 py-1 rounded-full border">
-                    {new Date(date).toLocaleDateString() === new Date().toLocaleDateString()
+                    {date === new Date().toLocaleDateString()
                       ? "Today"
-                      : formatDistanceToNow(new Date(date), { addSuffix: true })}
+                      : date === "Invalid Date" || date === "Unknown Date" 
+                        ? "Previous Messages" 
+                        : safeFormatDistanceToNow(date, "Previous")}
                   </span>
                 </div>
                 <MessageList 
