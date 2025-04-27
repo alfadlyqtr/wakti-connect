@@ -1,12 +1,13 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Check, Loader2, User, UserPlus, AlertCircle, Briefcase } from "lucide-react";
+import { Loader2, User, UserPlus, AlertCircle, Briefcase } from "lucide-react";
 import { useContactSearch } from "@/hooks/useContactSearch";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { UserSearchResult } from "@/types/invitation.types";
 import { Badge } from "@/components/ui/badge";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandList } from "@/components/ui/command";
+import { SearchResults } from "./SearchResults";
+import { ContactPreview } from "./ContactPreview";
 
 interface AddContactDialogProps {
   isOpen: boolean;
@@ -14,8 +15,8 @@ interface AddContactDialogProps {
   onAddContact: (contactId: string) => Promise<void>;
 }
 
-const AddContactDialog: React.FC<AddContactDialogProps> = ({ 
-  isOpen, 
+const AddContactDialog: React.FC<AddContactDialogProps> = ({
+  isOpen,
   onOpenChange,
   onAddContact
 }) => {
@@ -30,9 +31,9 @@ const AddContactDialog: React.FC<AddContactDialogProps> = ({
     selectContact,
     clearSearch
   } = useContactSearch();
-  
+
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  
+
   useEffect(() => {
     if (!isOpen) {
       clearSearch();
@@ -80,55 +81,6 @@ const AddContactDialog: React.FC<AddContactDialogProps> = ({
     }
   };
 
-  const renderContactStatus = () => {
-    if (!contactStatus || !selectedContact) return null;
-    
-    if (contactStatus.requestExists) {
-      if (contactStatus.requestStatus === 'accepted') {
-        return (
-          <div className="flex items-center gap-2 text-green-600 mt-4 p-2 rounded-md bg-green-50">
-            <Check className="h-4 w-4" />
-            <span>Already in your contacts</span>
-          </div>
-        );
-      } else if (contactStatus.requestStatus === 'pending') {
-        return (
-          <div className="flex items-center gap-2 text-amber-600 mt-4 p-2 rounded-md bg-amber-50">
-            <AlertCircle className="h-4 w-4" />
-            <span>Contact request already sent</span>
-          </div>
-        );
-      } else if (contactStatus.requestStatus === 'rejected') {
-        return (
-          <div className="flex items-center gap-2 text-red-600 mt-4 p-2 rounded-md bg-red-50">
-            <AlertCircle className="h-4 w-4" />
-            <span>Contact request was rejected</span>
-          </div>
-        );
-      }
-    }
-    
-    return (
-      <Button 
-        onClick={handleSubmit} 
-        className="w-full mt-4"
-        disabled={isSubmitting}
-      >
-        {isSubmitting ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Sending...
-          </>
-        ) : (
-          <>
-            <UserPlus className="mr-2 h-4 w-4" />
-            Send Contact Request
-          </>
-        )}
-      </Button>
-    );
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -158,32 +110,10 @@ const AddContactDialog: React.FC<AddContactDialogProps> = ({
                   <CommandEmpty>No users or businesses found</CommandEmpty>
                 ) : (
                   <CommandGroup>
-                    {searchResults.map((user) => (
-                      <CommandItem 
-                        key={user.id}
-                        onSelect={() => selectContact(user)}
-                        className="flex items-center gap-2 cursor-pointer"
-                      >
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={user.avatarUrl || ''} />
-                          <AvatarFallback>
-                            {(user.displayName || user.fullName || 'U').charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex flex-col flex-1 min-w-0">
-                          <span className="font-medium">
-                            {user.displayName || user.fullName || 'Unknown User'}
-                          </span>
-                          {user.businessName && (
-                            <span className="text-xs text-slate-600">{user.businessName}</span>
-                          )}
-                          <span className="text-xs text-muted-foreground truncate">
-                            {user.email}
-                          </span>
-                        </div>
-                        {getAccountTypeBadge(user.accountType)}
-                      </CommandItem>
-                    ))}
+                    <SearchResults 
+                      searchResults={searchResults}
+                      onSelectContact={selectContact}
+                    />
                   </CommandGroup>
                 )}
               </CommandList>
@@ -191,38 +121,14 @@ const AddContactDialog: React.FC<AddContactDialogProps> = ({
           </Command>
           
           {selectedContact && (
-            <div className="p-4 border rounded-md mt-2">
-              <div className="flex items-center gap-3">
-                <Avatar>
-                  <AvatarImage src={selectedContact.avatarUrl || ''} />
-                  <AvatarFallback>
-                    {(selectedContact.displayName || selectedContact.fullName || 'U').charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">
-                      {selectedContact.displayName || selectedContact.fullName || 'Unknown User'}
-                    </span>
-                    {getAccountTypeBadge(selectedContact.accountType)}
-                  </div>
-                  {selectedContact.businessName && (
-                    <span className="text-sm">{selectedContact.businessName}</span>
-                  )}
-                  <span className="text-xs text-muted-foreground truncate">
-                    {selectedContact.email}
-                  </span>
-                </div>
-              </div>
-              
-              {isCheckingStatus ? (
-                <div className="flex justify-center mt-4">
-                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                </div>
-              ) : (
-                renderContactStatus()
-              )}
-            </div>
+            <ContactPreview
+              contact={selectedContact}
+              contactStatus={contactStatus}
+              isCheckingStatus={isCheckingStatus}
+              isSubmitting={isSubmitting}
+              onSubmit={handleSubmit}
+              getAccountTypeBadge={getAccountTypeBadge}
+            />
           )}
         </div>
       </DialogContent>
