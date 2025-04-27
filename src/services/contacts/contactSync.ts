@@ -1,131 +1,91 @@
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from '@/integrations/supabase/client';
+import { getStaffBusinessId } from '@/utils/staffUtils';
+import { toast } from '@/components/ui/use-toast';
 
 /**
- * Sync contacts between staff and business
+ * Synchronizes staff and business contacts
+ * Ensures staff members can communicate with the business owner and other staff members
  */
-export const syncStaffBusinessContacts = async (): Promise<{success: boolean; message?: string}> => {
+export async function syncStaffBusinessContacts() {
   try {
-    // This calls the Supabase DB function to sync contacts
-    const { error } = await supabase.rpc('update_existing_staff_contacts');
+    const { data: result, error } = await supabase.functions.invoke('sync-staff-contacts');
     
     if (error) {
-      console.error("Error syncing staff contacts:", error);
-      return { success: false, message: error.message };
-    }
-    return { success: true };
-  } catch (error: any) {
-    console.error("Error in syncStaffBusinessContacts:", error);
-    return { success: false, message: error.message };
-  }
-};
-
-/**
- * Force sync staff contacts with retry mechanism
- */
-export const forceSyncStaffContacts = async (): Promise<{success: boolean; message?: string}> => {
-  try {
-    // Try to sync contacts up to 3 times
-    let attempts = 0;
-    let success = false;
-    let lastError;
-    
-    while (attempts < 3 && !success) {
-      attempts++;
-      try {
-        const result = await syncStaffBusinessContacts();
-        if (result.success) {
-          success = true;
-          return result;
-        } else {
-          lastError = result.message;
-          // Wait before retrying
-          await new Promise(resolve => setTimeout(resolve, 500));
-        }
-      } catch (err: any) {
-        lastError = err.message;
-      }
+      console.error('Error syncing staff contacts:', error);
+      throw error;
     }
     
-    return { 
-      success: false, 
-      message: `Failed after ${attempts} attempts. Last error: ${lastError}` 
-    };
-  } catch (error: any) {
-    console.error("Error in forceSyncStaffContacts:", error);
-    return { success: false, message: error.message };
+    return result;
+  } catch (error) {
+    console.error('Error syncing staff contacts:', error);
+    throw error;
   }
-};
+}
 
 /**
- * Ensure all staff are connected as contacts
+ * Forcibly synchronizes staff contacts
+ * This is a more direct method used when regular sync fails
  */
-export const ensureStaffContacts = async (businessId: string): Promise<{success: boolean; message?: string}> => {
+export async function forceSyncStaffContacts() {
   try {
-    // Get all active staff for this business
-    const { data: staffMembers, error } = await supabase
-      .from('business_staff')
-      .select('staff_id')
-      .eq('business_id', businessId)
-      .eq('status', 'active');
+    const { data: result, error } = await supabase.functions.invoke('force-sync-staff-contacts');
     
     if (error) {
-      console.error("Error getting staff members:", error);
-      return { success: false, message: error.message };
+      console.error('Error force syncing staff contacts:', error);
+      throw error;
     }
     
-    // Make sure all staff are connected to each other
-    if (staffMembers && staffMembers.length > 0) {
-      for (const staff1 of staffMembers) {
-        for (const staff2 of staffMembers) {
-          if (staff1.staff_id !== staff2.staff_id) {
-            // Create or update contact relationship
-            await supabase
-              .from('user_contacts')
-              .upsert({
-                user_id: staff1.staff_id,
-                contact_id: staff2.staff_id,
-                status: 'accepted'
-              }, { 
-                onConflict: 'user_id,contact_id' 
-              });
-          }
-        }
-      }
-    }
-    return { success: true };
-  } catch (error: any) {
-    console.error("Error in ensureStaffContacts:", error);
-    return { success: false, message: error.message };
+    return result;
+  } catch (error) {
+    console.error('Error force syncing staff contacts:', error);
+    throw error;
   }
-};
+}
 
 /**
- * Get the setting for auto-adding staff to contacts
+ * Ensures that staff contacts are properly established
+ * Used when setting up a new staff member
  */
-export const getAutoAddStaffSetting = async (): Promise<boolean> => {
+export async function ensureStaffContacts() {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session?.user) {
-      throw new Error("Not authenticated");
-    }
+    const businessId = await getStaffBusinessId();
+    if (!businessId) return;
     
     const { data, error } = await supabase
+      .from('user_contacts')
+      .select('*')
+      .eq('staff_relation_id', businessId)
+      .limit(1);
+      
+    if (error) throw error;
+    
+    // If no staff contacts are found, sync them
+    if (!data || data.length === 0) {
+      await syncStaffBusinessContacts();
+    }
+  } catch (error) {
+    console.error('Error ensuring staff contacts:', error);
+    // Silent failure - will try again next time
+  }
+}
+
+/**
+ * Gets the auto-add staff setting
+ */
+export async function getAutoAddStaffSetting(): Promise<boolean> {
+  try {
+    const { data: profile, error } = await supabase
       .from('profiles')
       .select('auto_add_staff_to_contacts')
-      .eq('id', session.user.id)
       .single();
+      
+    if (error) throw error;
     
-    if (error) {
-      console.error('Error fetching auto add staff setting:', error);
-      return true; // Default to true on error
-    }
-    
-    // If the field is null, default to true
-    return data.auto_add_staff_to_contacts !== false;
+    // Default to true if not set
+    return profile?.auto_add_staff_to_contacts ?? true;
   } catch (error) {
-    console.error('Error in getAutoAddStaffSetting:', error);
+    console.error('Error getting auto-add staff setting:', error);
     return true; // Default to true on error
   }
-};
+}

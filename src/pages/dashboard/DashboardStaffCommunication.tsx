@@ -53,16 +53,12 @@ const DashboardStaffCommunication = () => {
   const handleSyncContacts = async () => {
     setIsSyncing(true);
     try {
-      const result = await syncStaffBusinessContacts();
-      if (result && result.success) {
-        toast({
-          title: "Staff contacts synced",
-          description: "All staff contacts have been synchronized"
-        });
-        refreshContacts();
-      } else {
-        throw new Error(result?.message || "Failed to sync contacts");
-      }
+      await syncStaffBusinessContacts();
+      toast({
+        title: "Staff contacts synced",
+        description: "All staff contacts have been synchronized"
+      });
+      refreshContacts();
     } catch (error: any) {
       console.error("Error syncing staff contacts:", error);
       toast({

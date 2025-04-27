@@ -28,7 +28,7 @@ const BusinessPageHeader: React.FC<BusinessPageHeaderProps> = ({
       if (isAuthenticated && !isPreviewMode && business.id) {
         try {
           const result = await checkContactRequest(business.id);
-          if (result?.requestExists) {
+          if (result && result.requestExists) {
             setContactStatus(result.requestStatus || 'none');
           }
         } catch (error) {

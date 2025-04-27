@@ -64,7 +64,7 @@ const PendingRequestsList: React.FC<PendingRequestsListProps> = ({
                 <p className="text-sm">{request.contactProfile.businessName}</p>
               )}
               <p className="text-xs text-muted-foreground">
-                {request.contactProfile?.email || request.userId}
+                {request.contactProfile?.email || request.user_id}
               </p>
             </div>
           </div>

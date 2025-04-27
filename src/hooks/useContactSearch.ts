@@ -1,119 +1,89 @@
 
-import { useState, useCallback, useEffect } from "react";
-import { UserSearchResult, ContactRequestStatus } from "@/types/invitation.types";
-import { searchUsers, checkContactRequest } from "@/services/contacts";
-import { toast } from "@/components/ui/use-toast";
-import { useMutation } from "@tanstack/react-query";
+import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { UserSearchResult, ContactRequestStatus } from '@/types/invitation.types';
+import { toast } from '@/components/ui/use-toast';
 
 export const useContactSearch = () => {
-  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<UserSearchResult[]>([]);
-  const [isSearching, setIsSearching] = useState<boolean>(false);
-  const [selectedContact, setSelectedContact] = useState<UserSearchResult | null>(null);
-  const [contactStatus, setContactStatus] = useState<ContactRequestStatus | null>(null);
-  
-  // Debounce search input
-  const [debouncedQuery, setDebouncedQuery] = useState<string>("");
-  
-  // Set up debouncing for search query
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedQuery(searchQuery);
-    }, 300);
-    
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
-  
-  // Perform the actual search when debounced query changes
-  useEffect(() => {
-    const performSearch = async () => {
-      if (!debouncedQuery || debouncedQuery.trim().length < 2) {
+
+  const searchUsers = async (query: string): Promise<UserSearchResult[]> => {
+    setIsSearching(true);
+    try {
+      if (query.length < 3) {
         setSearchResults([]);
-        return;
+        return [];
       }
+
+      // Search for users that match the query
+      const { data, error } = await supabase.rpc('search_users', {
+        search_term: query.toLowerCase()
+      });
+
+      if (error) throw error;
       
-      setIsSearching(true);
-      try {
-        console.log("[useContactSearch] Searching for:", debouncedQuery);
-        const results = await searchUsers(debouncedQuery);
-        
-        // Ensure we always set a valid array
-        if (Array.isArray(results)) {
-          console.log("[useContactSearch] Found results:", results.length);
-          setSearchResults(results);
-        } else {
-          console.warn("[useContactSearch] Search returned non-array:", results);
-          setSearchResults([]);
-        }
-      } catch (error) {
-        console.error("[useContactSearch] Search error:", error);
-        setSearchResults([]);
-        toast({
-          title: "Search Error",
-          description: "Failed to search for contacts. Please try again.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsSearching(false);
-      }
-    };
-    
-    performSearch();
-  }, [debouncedQuery]);
-
-  const handleSearchChange = useCallback((query: string) => {
-    console.log("[useContactSearch] Query changed:", query);
-    setSearchQuery(query);
-  }, []);
-
-  const checkStatus = useMutation({
-    mutationFn: async (contactId: string) => {
-      return await checkContactRequest(contactId);
-    },
-    onSuccess: (data) => {
-      console.log("[useContactSearch] Contact status:", data);
-      setContactStatus(data);
-    },
-    onError: (error) => {
-      console.error("[useContactSearch] Status check error:", error);
-      setContactStatus(null);
+      // Transform the results to match the UserSearchResult interface
+      const formattedResults: UserSearchResult[] = data.map((user: any) => ({
+        id: user.id,
+        fullName: user.full_name || '',
+        displayName: user.display_name || user.full_name || '',
+        email: user.email || '',
+        avatarUrl: user.avatar_url || '',
+        accountType: user.account_type || 'free',
+        businessName: user.business_name || undefined
+      }));
+      
+      setSearchResults(formattedResults);
+      return formattedResults;
+    } catch (error) {
+      console.error('Error searching users:', error);
       toast({
-        title: "Error",
-        description: "Failed to check contact status.",
+        title: "Search Error",
+        description: "Failed to search for users",
         variant: "destructive",
       });
-    },
-  });
-
-  const selectContact = useCallback((contact: UserSearchResult) => {
-    if (!contact || !contact.id) {
-      console.error("[useContactSearch] Invalid contact selected");
-      return;
+      return [];
+    } finally {
+      setIsSearching(false);
     }
-    
-    console.log("[useContactSearch] Selected contact:", contact.id);
-    setSelectedContact(contact);
-    checkStatus.mutate(contact.id);
-  }, [checkStatus]);
+  };
 
-  const clearSearch = useCallback(() => {
-    console.log("[useContactSearch] Clearing search");
-    setSearchQuery("");
-    setSearchResults([]);
-    setSelectedContact(null);
-    setContactStatus(null);
-  }, []);
+  const checkContactRequest = async (userId: string): Promise<ContactRequestStatus> => {
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session) {
+        return { requestExists: false, requestStatus: null };
+      }
+      
+      // Check if a contact request exists between the current user and the specified user
+      const { data, error } = await supabase
+        .from('user_contacts')
+        .select('status')
+        .or(`user_id.eq.${session.session.user.id},contact_id.eq.${session.session.user.id}`)
+        .or(`user_id.eq.${userId},contact_id.eq.${userId}`)
+        .single();
+        
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error checking contact request:', error);
+        throw error;
+      }
+      
+      // Return the status of the request
+      return {
+        requestExists: !!data,
+        requestStatus: data ? data.status : null
+      };
+    } catch (error) {
+      console.error('Error checking contact request:', error);
+      return { requestExists: false, requestStatus: null };
+    }
+  };
 
   return {
-    searchQuery,
+    searchUsers,
     searchResults,
     isSearching,
-    selectedContact,
-    contactStatus,
-    isCheckingStatus: checkStatus.isPending,
-    handleSearchChange,
-    selectContact,
-    clearSearch,
-    checkContactRequest: (contactId: string) => checkStatus.mutate(contactId)
+    checkContactRequest
   };
 };

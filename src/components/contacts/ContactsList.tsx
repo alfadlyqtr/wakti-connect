@@ -38,15 +38,15 @@ const ContactItem = ({
   
   // Determine contact type
   const isBusinessOwner = contact.contactProfile?.accountType === 'business';
-  const hasStaffRelation = !!contact.staffRelationId;
+  const hasStaffRelation = !!contact.staff_relation_id;
   
   const handleMessageClick = () => {
-    navigate(`/dashboard/messages/${contact.contactId}`);
+    navigate(`/dashboard/messages/${contact.contact_id}`);
   };
 
   const handleDeleteClick = async () => {
     if (onDeleteContact) {
-      await onDeleteContact(contact.contactId);
+      await onDeleteContact(contact.contact_id);
     }
   };
   
@@ -83,7 +83,7 @@ const ContactItem = ({
             </p>
           )}
           <p className="text-xs text-muted-foreground">
-            {contact.contactProfile?.email || contact.contactId}
+            {contact.contactProfile?.email || contact.contact_id}
           </p>
         </div>
       </div>

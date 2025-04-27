@@ -1,14 +1,15 @@
-import React, { useState } from "react";
+
+import React, { useState } from 'react';
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Checkbox } from "@/components/ui/checkbox";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useContacts } from "@/hooks/useContacts";
-import { InvitationRecipient, UserContact } from "@/types/invitation.types";
-import { PlusCircle, X, Check, User, Mail } from "lucide-react";
+import { X, Search, User, Mail, Plus } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { InvitationRecipient } from '@/types/invitation.types';
+import { useContactSearch } from '@/hooks/useContactSearch';
+import { UserContact } from '@/types/invitation.types';
+import { useContacts } from '@/hooks/useContacts';
 
 interface RecipientSelectorProps {
   selectedRecipients: InvitationRecipient[];
@@ -19,184 +20,201 @@ interface RecipientSelectorProps {
 const RecipientSelector: React.FC<RecipientSelectorProps> = ({
   selectedRecipients,
   onAddRecipient,
-  onRemoveRecipient
+  onRemoveRecipient,
 }) => {
-  const [emailInput, setEmailInput] = useState("");
-  const { contacts, isLoading } = useContacts();
+  const [searchTerm, setSearchTerm] = useState("");
+  const { searchUsers, searchResults, isSearching } = useContactSearch();
+  const { contacts } = useContacts();
   
-  const handleEmailAdd = () => {
-    if (!emailInput || !emailInput.includes('@')) return;
+  const handleSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    
+    if (value.length >= 3) {
+      await searchUsers(value);
+    }
+  };
+  
+  const handleAddContact = (contact: UserContact) => {
+    const recipientExists = selectedRecipients.some(r => 
+      (r.userId && r.userId === contact.contact_id) || (r.id === contact.contact_id)
+    );
+    
+    if (recipientExists) return;
     
     onAddRecipient({
-      id: `email-${Date.now()}`, // Generate a unique ID
-      name: emailInput,
-      email: emailInput,
+      id: contact.contact_id,
+      userId: contact.contact_id,
+      name: contact.contactProfile?.displayName || contact.contactProfile?.fullName || 'Contact',
+      type: 'user'
+    });
+  };
+  
+  const handleAddSearchResult = (result: any) => {
+    const recipientExists = selectedRecipients.some(r => 
+      (r.userId && r.userId === result.id) || (r.id === result.id)
+    );
+    
+    if (recipientExists) return;
+    
+    onAddRecipient({
+      id: result.id,
+      userId: result.id,
+      name: result.displayName || result.fullName || result.email,
+      email: result.email,
+      type: 'user'
+    });
+    
+    setSearchTerm("");
+  };
+  
+  const handleAddEmail = () => {
+    if (!searchTerm || !searchTerm.includes('@')) return;
+    
+    const emailExists = selectedRecipients.some(r => r.email === searchTerm);
+    if (emailExists) return;
+    
+    onAddRecipient({
+      id: `email-${Date.now()}`,
+      name: searchTerm,
+      email: searchTerm,
       type: 'email'
     });
     
-    setEmailInput("");
-  };
-  
-  const handleContactSelect = (contact: UserContact) => {
-    const name = contact.contactProfile?.fullName || 
-                 contact.contactProfile?.displayName || 
-                 "User";
-    
-    onAddRecipient({
-      id: contact.contactId,
-      name,
-      type: 'user', // Changed from 'contact' to 'user' to match the type definition
-      userId: contact.contactId // Add userId for event submission
-    });
-  };
-  
-  const isContactSelected = (contactId: string) => {
-    return selectedRecipients.some(
-      r => (r.type === 'user' && r.id === contactId) || r.userId === contactId
-    );
+    setSearchTerm("");
   };
   
   return (
     <div className="space-y-4">
-      <div>
-        <Label className="text-base font-medium">Recipients</Label>
-        <p className="text-sm text-muted-foreground mb-2">
-          Select who should receive this invitation
-        </p>
-      </div>
-      
-      {/* Selected Recipients */}
+      {/* Recipients list */}
       {selectedRecipients.length > 0 && (
-        <div className="space-y-2">
-          <Label className="text-sm">Selected Recipients</Label>
-          <div className="flex flex-wrap gap-2">
-            {selectedRecipients.map((recipient, index) => (
-              <div 
-                key={`${recipient.type}-${recipient.id || recipient.email}`}
-                className="flex items-center gap-1 bg-muted px-2 py-1 rounded-md text-sm"
+        <div className="flex flex-wrap gap-2 mb-4">
+          {selectedRecipients.map((recipient, index) => (
+            <Badge key={recipient.id} variant="secondary" className="flex items-center gap-1 px-2 py-1">
+              {recipient.type === 'email' ? <Mail className="h-3 w-3" /> : <User className="h-3 w-3" />}
+              <span>{recipient.name}</span>
+              <button 
+                onClick={() => onRemoveRecipient(index)}
+                className="ml-1 rounded-full hover:bg-muted p-0.5"
               >
-                {recipient.type === 'user' ? (
-                  <User className="h-3.5 w-3.5 text-muted-foreground" />
-                ) : (
-                  <Mail className="h-3.5 w-3.5 text-muted-foreground" />
-                )}
-                <span>{recipient.name}</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-5 w-5 p-0 ml-1"
-                  onClick={() => onRemoveRecipient(index)}
-                >
-                  <X className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            ))}
-          </div>
+                <X className="h-3 w-3" />
+                <span className="sr-only">Remove</span>
+              </button>
+            </Badge>
+          ))}
         </div>
       )}
       
-      <Tabs defaultValue="contacts">
-        <TabsList className="grid grid-cols-2">
-          <TabsTrigger value="contacts" className="flex items-center gap-2">
-            <User className="h-4 w-4" />
-            <span>Contacts</span>
-          </TabsTrigger>
-          <TabsTrigger value="email" className="flex items-center gap-2">
-            <Mail className="h-4 w-4" />
-            <span>Email</span>
-          </TabsTrigger>
-        </TabsList>
+      {/* Search input */}
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <Input
+            placeholder="Search contacts or enter email..."
+            value={searchTerm}
+            onChange={handleSearch}
+            className="pl-8"
+          />
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        </div>
         
-        <TabsContent value="contacts" className="mt-4">
-          {isLoading ? (
-            <div className="flex justify-center py-6">
-              <div className="animate-pulse text-sm text-muted-foreground">
-                Loading contacts...
+        {searchTerm.includes('@') && (
+          <Button 
+            type="button" 
+            size="sm" 
+            variant="outline"
+            onClick={handleAddEmail}
+          >
+            <Mail className="h-4 w-4 mr-2" />
+            Add Email
+          </Button>
+        )}
+      </div>
+      
+      {/* Search results and contacts */}
+      <ScrollArea className="h-[200px] rounded-md border">
+        {searchTerm.length >= 3 ? (
+          <div className="p-4 space-y-2">
+            <h3 className="text-sm font-medium mb-2">Search Results</h3>
+            
+            {isSearching ? (
+              <div className="text-center p-4">
+                <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full mx-auto"></div>
+                <p className="text-sm text-muted-foreground mt-2">Searching...</p>
               </div>
-            </div>
-          ) : contacts && contacts.length > 0 ? (
-            <ScrollArea className="h-48 rounded-md border">
-              <div className="p-4 space-y-3">
-                {contacts.map(contact => (
-                  <div key={contact.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`contact-${contact.contactId}`}
-                      checked={isContactSelected(contact.contactId)}
-                      onCheckedChange={(checked) => {
-                        if (checked && !isContactSelected(contact.contactId)) {
-                          handleContactSelect(contact);
-                        }
-                      }}
-                    />
-                    <Label
-                      htmlFor={`contact-${contact.contactId}`}
-                      className="flex items-center gap-2 cursor-pointer text-sm flex-1"
-                    >
-                      <Avatar className="h-6 w-6">
-                        <AvatarImage src={contact.contactProfile?.avatarUrl || ''} />
-                        <AvatarFallback>
-                          {(contact.contactProfile?.fullName || contact.contactProfile?.displayName || 'U').charAt(0)}
-                        </AvatarFallback>
+            ) : searchResults.length > 0 ? (
+              <div className="space-y-2">
+                {searchResults.map(result => (
+                  <div 
+                    key={result.id} 
+                    className="flex justify-between items-center p-2 hover:bg-accent/20 rounded-md cursor-pointer"
+                    onClick={() => handleAddSearchResult(result)}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={result.avatarUrl || ''} />
+                        <AvatarFallback>{result.displayName?.charAt(0) || 'U'}</AvatarFallback>
                       </Avatar>
-                      <span>
-                        {contact.contactProfile?.fullName || contact.contactProfile?.displayName || 'User'}
-                      </span>
-                    </Label>
+                      <div>
+                        <p className="text-sm font-medium">{result.displayName || result.fullName}</p>
+                        <p className="text-xs text-muted-foreground">{result.email}</p>
+                      </div>
+                    </div>
+                    <Button type="button" size="sm" variant="ghost">
+                      <Plus className="h-4 w-4" />
+                    </Button>
                   </div>
                 ))}
               </div>
-            </ScrollArea>
-          ) : (
-            <div className="flex flex-col items-center justify-center p-6 text-center">
-              <User className="h-8 w-8 text-muted-foreground mb-2" />
-              <p className="text-sm text-muted-foreground">
-                You don't have any contacts yet.
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No results found
               </p>
-              <Button variant="link" size="sm">
-                Add Contacts
-              </Button>
-            </div>
-          )}
-        </TabsContent>
-        
-        <TabsContent value="email" className="mt-4">
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Invite people via email. They'll receive a link to view your invitation.
-            </p>
-            
-            <div className="flex items-center space-x-2">
-              <Input
-                type="email"
-                placeholder="email@example.com"
-                value={emailInput}
-                onChange={(e) => setEmailInput(e.target.value)}
-                className="flex-1"
-              />
-              <Button
-                type="button"
-                onClick={handleEmailAdd}
-                disabled={!emailInput.includes('@')}
-                className="flex-shrink-0"
-              >
-                <PlusCircle className="h-4 w-4 mr-2" />
-                Add
-              </Button>
-            </div>
-            
-            <div className="text-xs text-muted-foreground">
-              <p>
-                <Check className="h-3 w-3 inline-block mr-1" /> 
-                Recipients will receive an email with a link to view the invitation
-              </p>
-              <p>
-                <Check className="h-3 w-3 inline-block mr-1" /> 
-                They will need a WAKTI account to interact with the invitation
-              </p>
-            </div>
+            )}
           </div>
-        </TabsContent>
-      </Tabs>
+        ) : (
+          <div className="p-4 space-y-2">
+            <h3 className="text-sm font-medium mb-2">Your Contacts</h3>
+            
+            {contacts && contacts.length > 0 ? (
+              <div className="space-y-2">
+                {contacts.map(contact => (
+                  <div 
+                    key={contact.id} 
+                    className="flex justify-between items-center p-2 hover:bg-accent/20 rounded-md cursor-pointer"
+                    onClick={() => handleAddContact(contact)}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={contact.contactProfile?.avatarUrl || ''} />
+                        <AvatarFallback>
+                          {contact.contactProfile?.displayName?.charAt(0) ||
+                           contact.contactProfile?.fullName?.charAt(0) || 'C'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="text-sm font-medium">
+                          {contact.contactProfile?.displayName || 
+                           contact.contactProfile?.fullName || 'Contact'}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {contact.contactProfile?.email || ''}
+                        </p>
+                      </div>
+                    </div>
+                    <Button type="button" size="sm" variant="ghost">
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No contacts found
+              </p>
+            )}
+          </div>
+        )}
+      </ScrollArea>
     </div>
   );
 };

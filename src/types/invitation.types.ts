@@ -38,3 +38,51 @@ export interface ContactsRequestsResponse {
   incoming: UserContact[];
   outgoing: UserContact[];
 }
+
+// Add missing types needed by the events system
+export interface InvitationRecipient {
+  id: string;
+  name: string;
+  email?: string;
+  userId?: string;
+  type: 'user' | 'email';
+  status?: 'pending' | 'accepted' | 'declined';
+}
+
+export interface InvitationCustomization {
+  backgroundType: string;
+  backgroundValue: string;
+  fontFamily: string;
+  fontSize: string;
+  textColor: string;
+  textAlign: string;
+  buttonStyles: {
+    style: string;
+    color: string;
+  };
+  layoutSize: string;
+  customEffects: Record<string, any>;
+}
+
+export interface InvitationRequest {
+  eventId: string;
+  recipients: InvitationRecipient[];
+  customizationId?: string;
+}
+
+export interface InvitationResponse {
+  id: string;
+  status: 'sent' | 'failed';
+  recipients: InvitationRecipient[];
+  failedRecipients?: string[];
+}
+
+export interface InvitationTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  content: string;
+  customizationId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
