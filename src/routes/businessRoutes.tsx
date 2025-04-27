@@ -1,7 +1,7 @@
 
 import React from "react";
 import { RouteObject } from "react-router-dom";
-import DashboardLayout from "@/layouts/DashboardLayout";
+import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import BusinessDashboard from "@/pages/dashboard/BusinessDashboard";
 import MyBusinessPage from "@/pages/business/MyBusinessPage";
 import BusinessSettings from "@/pages/settings/BusinessSettings";
