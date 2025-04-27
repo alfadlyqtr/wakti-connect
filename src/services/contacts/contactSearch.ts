@@ -1,6 +1,5 @@
-
 import { supabase } from "@/integrations/supabase/client";
-import { UserSearchResult, ContactRequestStatus } from "@/types/invitation.types";
+import { UserSearchResult, ContactRequestStatus, ContactRequestStatusValue } from "@/types/invitation.types";
 
 /**
  * Search for users by email, name or business name
@@ -60,9 +59,10 @@ export const checkContactRequest = async (contactId: string): Promise<ContactReq
     
     // The RPC function returns a single row with request_exists and request_status
     if (data && data.length > 0) {
+      const status = data[0].request_status;
       return {
         requestExists: data[0].request_exists,
-        requestStatus: data[0].request_status === 'none' ? null : data[0].request_status
+        requestStatus: status === 'none' ? null : status as ContactRequestStatusValue
       };
     }
     
@@ -75,8 +75,6 @@ export const checkContactRequest = async (contactId: string): Promise<ContactReq
 
 /**
  * Get profile data for a user, even if they are a pending contact
- * This function specifically tries to fetch profile data for pending outgoing requests
- * where normal RLS policies might restrict access
  */
 export const fetchContactProfile = async (userId: string): Promise<UserSearchResult | null> => {
   try {
