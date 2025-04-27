@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/ui/use-toast";
 import { 
@@ -106,13 +107,17 @@ export const useMessaging = (options?: string | UseMessagingOptions) => {
     enabled: !!otherUserId,
     retry: 2,
     staleTime: 30000,
-    onError: (error) => {
-      console.error("Error checking messaging permissions:", error);
-      toast({
-        title: "Permission Check Failed",
-        description: "Unable to verify messaging permissions. Please try again.",
-        variant: "destructive"
-      });
+    // In the latest version of @tanstack/react-query, we need to use meta for error handling
+    // instead of directly using onError
+    meta: {
+      onError: (error: any) => {
+        console.error("Error checking messaging permissions:", error);
+        toast({
+          title: "Permission Check Failed",
+          description: "Unable to verify messaging permissions. Please try again.",
+          variant: "destructive"
+        });
+      }
     }
   });
 
