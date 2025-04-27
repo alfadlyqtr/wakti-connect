@@ -1,43 +1,44 @@
 
 /**
- * Checks if a message is expired (older than 24 hours)
- * @param timestamp The timestamp to check
- * @returns boolean indicating if the message is expired
+ * Checks if a message has expired based on its timestamp
+ * Messages older than 30 days could be considered expired
+ * 
+ * @param timestamp ISO timestamp string
+ * @returns boolean
  */
 export const isMessageExpired = (timestamp: string): boolean => {
-  try {
-    const messageDate = new Date(timestamp);
-    const now = new Date();
-    
-    // Calculate difference in milliseconds
-    const differenceMs = now.getTime() - messageDate.getTime();
-    
-    // 24 hours in milliseconds
-    const twentyFourHoursMs = 24 * 60 * 60 * 1000;
-    
-    return differenceMs >= twentyFourHoursMs;
-  } catch {
-    // If there's an error parsing the date, assume it's expired
-    return true;
-  }
+  const messageDate = new Date(timestamp);
+  const now = new Date();
+  
+  // Calculate difference in days
+  const diffTime = now.getTime() - messageDate.getTime();
+  const diffDays = diffTime / (1000 * 60 * 60 * 24);
+  
+  // Messages older than 30 days are considered expired
+  return diffDays > 30;
 };
 
 /**
- * Checks and cleans up expired messages (older than 24 hours)
- * This function can be called periodically to ensure messages don't stay longer than 24 hours
+ * Get the remaining time until a message expires
+ * 
+ * @param timestamp ISO timestamp string
+ * @returns string describing remaining time
  */
-export const cleanupExpiredMessages = async (): Promise<void> => {
-  try {
-    const { supabase } = await import('@/integrations/supabase/client');
-    
-    const { error } = await supabase.rpc('expire_old_messages');
-    
-    if (error) {
-      console.error("Error cleaning up expired messages:", error);
-    } else {
-      console.log("Successfully cleaned up expired messages");
-    }
-  } catch (error) {
-    console.error("Error in message cleanup process:", error);
+export const getMessageExpirationTime = (timestamp: string): string => {
+  const messageDate = new Date(timestamp);
+  const now = new Date();
+  
+  // Calculate difference in days
+  const diffTime = now.getTime() - messageDate.getTime();
+  const diffDays = diffTime / (1000 * 60 * 60 * 24);
+  
+  const daysRemaining = Math.floor(30 - diffDays);
+  
+  if (daysRemaining <= 0) {
+    return 'Expired';
+  } else if (daysRemaining === 1) {
+    return 'Expires tomorrow';
+  } else {
+    return `Expires in ${daysRemaining} days`;
   }
 };

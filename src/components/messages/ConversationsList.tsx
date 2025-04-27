@@ -15,6 +15,20 @@ const ConversationsList: React.FC<ConversationsListProps> = ({ staffOnly = false
   const { conversations, isLoadingConversations } = useMessaging({ staffOnly });
   const navigate = useNavigate();
   
+  // Get the content preview text based on message type and content
+  const getContentPreview = (conversation: Conversation) => {
+    if (conversation.lastMessage) {
+      if (conversation.lastMessage.includes('[VOICE_MESSAGE]')) {
+        return '🎤 Voice message';
+      } else if (conversation.lastMessage.includes('[IMAGE]')) {
+        return '📷 Image';
+      } else {
+        return conversation.lastMessage;
+      }
+    }
+    return 'No messages yet';
+  };
+  
   if (isLoadingConversations) {
     return (
       <div className="p-4 text-center">
@@ -27,6 +41,9 @@ const ConversationsList: React.FC<ConversationsListProps> = ({ staffOnly = false
     return (
       <div className="p-4 text-center">
         <p className="text-sm text-muted-foreground">No conversations yet</p>
+        <p className="text-xs text-muted-foreground mt-1">
+          Start a new message to begin chatting
+        </p>
       </div>
     );
   }
@@ -57,7 +74,7 @@ const ConversationsList: React.FC<ConversationsListProps> = ({ staffOnly = false
             </div>
             
             <p className="text-sm text-muted-foreground truncate">
-              {conversation.lastMessage}
+              {getContentPreview(conversation)}
             </p>
           </div>
           
