@@ -142,6 +142,61 @@ export const AIFeaturesTab: React.FC = () => {
                 onCheckedChange={(checked) => handleFeatureToggle("personalized_suggestions", checked)}
               />
             </div>
+            
+            {settings.enabled_features.tasks !== undefined && (
+              <div className="flex items-center justify-between">
+                <Label htmlFor="tasks_feature" className="cursor-pointer">Tasks Integration</Label>
+                <Switch
+                  id="tasks_feature"
+                  checked={settings.enabled_features.tasks}
+                  onCheckedChange={(checked) => handleFeatureToggle("tasks", checked)}
+                />
+              </div>
+            )}
+            
+            {settings.enabled_features.events !== undefined && (
+              <div className="flex items-center justify-between">
+                <Label htmlFor="events_feature" className="cursor-pointer">Events Integration</Label>
+                <Switch
+                  id="events_feature"
+                  checked={settings.enabled_features.events}
+                  onCheckedChange={(checked) => handleFeatureToggle("events", checked)}
+                />
+              </div>
+            )}
+            
+            {settings.enabled_features.staff !== undefined && (
+              <div className="flex items-center justify-between">
+                <Label htmlFor="staff_feature" className="cursor-pointer">Staff Integration</Label>
+                <Switch
+                  id="staff_feature"
+                  checked={settings.enabled_features.staff}
+                  onCheckedChange={(checked) => handleFeatureToggle("staff", checked)}
+                />
+              </div>
+            )}
+            
+            {settings.enabled_features.analytics !== undefined && (
+              <div className="flex items-center justify-between">
+                <Label htmlFor="analytics_feature" className="cursor-pointer">Analytics Integration</Label>
+                <Switch
+                  id="analytics_feature"
+                  checked={settings.enabled_features.analytics}
+                  onCheckedChange={(checked) => handleFeatureToggle("analytics", checked)}
+                />
+              </div>
+            )}
+            
+            {settings.enabled_features.messaging !== undefined && (
+              <div className="flex items-center justify-between">
+                <Label htmlFor="messaging_feature" className="cursor-pointer">Messaging Integration</Label>
+                <Switch
+                  id="messaging_feature"
+                  checked={settings.enabled_features.messaging}
+                  onCheckedChange={(checked) => handleFeatureToggle("messaging", checked)}
+                />
+              </div>
+            )}
           </div>
         </div>
       </CardContent>

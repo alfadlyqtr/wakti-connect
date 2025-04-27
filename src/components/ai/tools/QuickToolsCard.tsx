@@ -15,6 +15,12 @@ interface QuickToolsCardProps {
   inSidebar?: boolean;
 }
 
+interface QuickTool {
+  name: string;
+  icon: string;
+  description: string;
+}
+
 export const QuickToolsCard: React.FC<QuickToolsCardProps> = ({
   selectedRole,
   onToolSelect,
@@ -22,7 +28,7 @@ export const QuickToolsCard: React.FC<QuickToolsCardProps> = ({
   inSidebar = false
 }) => {
   // Get quick tools for the current role
-  const quickTools = RoleContexts[selectedRole]?.quickTools || [];
+  const quickTools = (RoleContexts[selectedRole]?.quickTools || []) as QuickTool[];
   
   const getIconComponent = (iconName: string) => {
     switch (iconName) {

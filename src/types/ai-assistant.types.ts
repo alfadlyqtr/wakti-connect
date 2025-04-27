@@ -27,6 +27,7 @@ export interface AISettings {
   id?: string;
   name: string;
   assistant_name?: string;
+  role?: AIAssistantRole;
   tone: 'professional' | 'friendly' | 'balanced' | 'formal' | 'casual';
   response_length: 'concise' | 'balanced' | 'detailed';
   proactiveness: boolean;
@@ -48,11 +49,17 @@ export interface AISettings {
 export interface AIKnowledgeUpload {
   id: string;
   name: string;
+  title?: string;
+  role?: AIAssistantRole;
   type: string;
   size: number;
   upload_date: Date;
+  created_at?: string;
+  updated_at?: string;
   status: 'processing' | 'ready' | 'error';
   description?: string;
+  content?: string;
+  user_id?: string;
 }
 
 // Define role contexts for the assistant to use in different modes
@@ -64,7 +71,11 @@ export const RoleContexts = {
     icon: 'bot',
     suggestedPrompts: ['How can I use WAKTI?', 'What features are available?', 'Help me get started'],
     commandSuggestions: ['Create a task', 'Schedule a meeting', 'Set a reminder'],
-    quickTools: ['voice-to-text', 'tasks', 'calendar']
+    quickTools: [
+      { name: 'Voice Assistant', icon: 'Mic', description: 'Use voice commands to interact' },
+      { name: 'Task Creator', icon: 'CheckSquare', description: 'Create and manage tasks' },
+      { name: 'Quick Answer', icon: 'HelpCircle', description: 'Get quick answers to questions' }
+    ]
   },
   student: {
     title: 'Learning Assistant',
@@ -73,7 +84,11 @@ export const RoleContexts = {
     icon: 'graduation-cap',
     suggestedPrompts: ['Explain this concept', 'Help with homework', 'Create a study plan'],
     commandSuggestions: ['Summarize this text', 'Quiz me on this topic', 'Find learning resources'],
-    quickTools: ['voice-to-text', 'notes', 'research']
+    quickTools: [
+      { name: 'Study Planner', icon: 'Calendar', description: 'Plan your study sessions' },
+      { name: 'Note Summarizer', icon: 'FileText', description: 'Summarize your notes' },
+      { name: 'Research Assistant', icon: 'Search', description: 'Find relevant resources' }
+    ]
   },
   productivity: {
     title: 'Productivity Assistant',
@@ -82,7 +97,11 @@ export const RoleContexts = {
     icon: 'list-check',
     suggestedPrompts: ['How can I be more productive?', 'Help me organize my day', 'Create a project timeline'],
     commandSuggestions: ['Add a task', 'Create a schedule', 'Set priorities'],
-    quickTools: ['tasks', 'calendar', 'timer']
+    quickTools: [
+      { name: 'Day Planner', icon: 'Calendar', description: 'Plan your day efficiently' },
+      { name: 'Task Creator', icon: 'CheckSquare', description: 'Create and manage tasks' },
+      { name: 'Idea Generator', icon: 'Lightbulb', description: 'Generate new ideas' }
+    ]
   },
   creative: {
     title: 'Creative Assistant',
@@ -91,7 +110,11 @@ export const RoleContexts = {
     icon: 'sparkles',
     suggestedPrompts: ['Help me brainstorm ideas', 'Write creative content', 'Design suggestions'],
     commandSuggestions: ['Generate a story', 'Create marketing copy', 'Design concepts'],
-    quickTools: ['image-generator', 'content-ideas', 'text-refiner']
+    quickTools: [
+      { name: 'Content Creator', icon: 'Edit', description: 'Create engaging content' },
+      { name: 'Idea Generator', icon: 'Lightbulb', description: 'Generate creative ideas' },
+      { name: 'Image Inspiration', icon: 'Image', description: 'Get visual inspiration' }
+    ]
   },
   employee: {
     title: 'Work Assistant',
@@ -100,7 +123,11 @@ export const RoleContexts = {
     icon: 'briefcase',
     suggestedPrompts: ['Draft an email to my team', 'Help with a presentation', 'Professional writing tips'],
     commandSuggestions: ['Create meeting minutes', 'Draft a project proposal', 'Write professional email'],
-    quickTools: ['email-writer', 'meeting-notes', 'task-manager']
+    quickTools: [
+      { name: 'Email Composer', icon: 'Edit', description: 'Draft professional emails' },
+      { name: 'Meeting Organizer', icon: 'Calendar', description: 'Plan and organize meetings' },
+      { name: 'Task Manager', icon: 'CheckSquare', description: 'Manage your work tasks' }
+    ]
   },
   writer: {
     title: 'Writer Assistant',
@@ -109,7 +136,11 @@ export const RoleContexts = {
     icon: 'pen',
     suggestedPrompts: ['Help me write an article', 'Proofread my text', 'Improve my paragraph'],
     commandSuggestions: ['Generate blog ideas', 'Create content outline', 'Edit my writing'],
-    quickTools: ['text-improver', 'idea-generator', 'grammar-checker']
+    quickTools: [
+      { name: 'Content Generator', icon: 'Edit', description: 'Generate writing content' },
+      { name: 'Editor Helper', icon: 'FileText', description: 'Edit and improve your writing' },
+      { name: 'Research Tool', icon: 'Search', description: 'Find writing resources' }
+    ]
   },
   business_owner: {
     title: 'Business Assistant',
@@ -118,7 +149,11 @@ export const RoleContexts = {
     icon: 'building',
     suggestedPrompts: ['Help with business planning', 'Marketing strategy ideas', 'Customer engagement tips'],
     commandSuggestions: ['Create business report', 'Draft business proposal', 'Analyze customer data'],
-    quickTools: ['analytics', 'reports', 'business-planner']
+    quickTools: [
+      { name: 'Staff Scheduler', icon: 'Users', description: 'Manage staff schedules' },
+      { name: 'Business Analytics', icon: 'BarChart', description: 'Analyze business data' },
+      { name: 'Customer Service', icon: 'HeartHandshake', description: 'Improve customer relations' }
+    ]
   }
 };
 

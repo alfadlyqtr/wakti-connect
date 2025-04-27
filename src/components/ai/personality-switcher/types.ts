@@ -8,10 +8,10 @@ export interface AIPersonality {
   name: string;
   systemPrompt: string;
   description: string;
-  welcomeMessage: string;
-  suggestedPrompts: string[];
+  welcomeMessage?: string; // Make this optional
+  suggestedPrompts?: string[];
   color: string;
-  mode: WAKTIAIMode;
+  mode?: WAKTIAIMode;
   title: string;
   gradient?: string;
   bgGradient?: string;

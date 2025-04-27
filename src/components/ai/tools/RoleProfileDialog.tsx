@@ -23,7 +23,7 @@ interface RoleProfileDialogProps {
 
 const RoleProfileDialog: React.FC<RoleProfileDialogProps> = ({ open, onOpenChange }) => {
   const { settings, updateSettings } = useAISettings();
-  // Profile doesn't exist directly on settings, so we'll set it to an empty string if not present
+  // Use empty string as fallback if assistant_name is not present
   const [profile, setProfile] = useState(settings?.assistant_name || "");
   const [isSaving, setIsSaving] = useState(false);
   

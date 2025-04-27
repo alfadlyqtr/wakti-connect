@@ -60,3 +60,6 @@ export function useMobileBreakpoint(): boolean {
   const activeBreakpoints = useBreakpoint();
   return !activeBreakpoints.includes('md');
 }
+
+// Export explicitly to avoid confusion
+export { useMobileBreakpoint };
