@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useContacts } from "@/hooks/useContacts";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -42,9 +41,9 @@ const BusinessContactsList = () => {
       {businessContacts.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {businessContacts.map((contact) => {
-            // Ensure we have proper avatar display names
             const businessName = contact.contactProfile?.businessName || contact.contactProfile?.displayName || "Business";
             const initials = businessName.slice(0, 2).toUpperCase();
+            const contactDate = contact.created_at ? new Date(contact.created_at).toLocaleDateString() : 'N/A';
             
             return (
               <Card key={contact.id} className="overflow-hidden">
@@ -66,7 +65,7 @@ const BusinessContactsList = () => {
                           {businessName}
                         </Link>
                         <p className="text-sm text-muted-foreground">
-                          Added: {new Date(contact.created_at || Date.now()).toLocaleDateString()}
+                          Added: {contactDate}
                         </p>
                       </div>
                     </div>

@@ -2,14 +2,14 @@
 import React from "react";
 import { BusinessProfile } from "@/types/business.types";
 import { Button } from "@/components/ui/button";
-import { useContactSearch } from "@/hooks/useContactSearch";
 import { useContacts } from "@/hooks/useContacts";
+import { useContactSearch } from "@/hooks/useContactSearch";
 import { Loader2, User, UserPlus } from "lucide-react";
 
 export interface BusinessPageHeaderProps {
   business: BusinessProfile;
   isPreviewMode?: boolean;
-  isAuthenticated?: boolean;
+  isAuthenticated?: boolean | null;
 }
 
 const BusinessPageHeader: React.FC<BusinessPageHeaderProps> = ({
@@ -17,29 +17,16 @@ const BusinessPageHeader: React.FC<BusinessPageHeaderProps> = ({
   isPreviewMode,
   isAuthenticated,
 }) => {
-  console.log("BusinessPageHeader component rendering with:", business);
-  
-  // Use contacts system instead of subscribers
   const { sendContactRequest } = useContacts();
-  const { checkStatus, isCheckingStatus } = useContactSearch();
-
+  const { checkContactRequest } = useContactSearch();
   const [isAddingContact, setIsAddingContact] = React.useState(false);
   const [contactStatus, setContactStatus] = React.useState<'none' | 'pending' | 'accepted'>('none');
 
   React.useEffect(() => {
-    // Only check status if user is authenticated and not in preview mode
     if (isAuthenticated && !isPreviewMode && business.id) {
-      checkStatus.mutate(business.id, {
-        onSuccess: (data) => {
-          if (data.requestExists) {
-            setContactStatus(data.requestStatus as 'pending' | 'accepted');
-          } else {
-            setContactStatus('none');
-          }
-        }
-      });
+      checkContactRequest(business.id);
     }
-  }, [isAuthenticated, isPreviewMode, business.id, checkStatus]);
+  }, [isAuthenticated, isPreviewMode, business.id]);
 
   const handleAddContact = async () => {
     if (!isAuthenticated || !business.id) return;
@@ -57,15 +44,6 @@ const BusinessPageHeader: React.FC<BusinessPageHeaderProps> = ({
 
   // Render different button states based on contact status
   const renderContactButton = () => {
-    if (isCheckingStatus) {
-      return (
-        <Button disabled>
-          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-          Checking...
-        </Button>
-      );
-    }
-
     if (contactStatus === 'accepted') {
       return (
         <Button variant="outline">
@@ -88,7 +66,8 @@ const BusinessPageHeader: React.FC<BusinessPageHeaderProps> = ({
       <Button 
         onClick={handleAddContact}
         disabled={isAddingContact}
-        variant="gradient"
+        variant="default"
+        className="bg-primary hover:bg-primary/90"
       >
         {isAddingContact ? (
           <>
@@ -114,17 +93,14 @@ const BusinessPageHeader: React.FC<BusinessPageHeaderProps> = ({
               src={business.avatar_url} 
               alt={business.business_name || "Business"} 
               className="h-24 w-24 rounded-full object-cover border-2 border-primary/20"
-              onError={(e) => {
-                console.error("Error loading avatar image:", e);
-                // Don't hide the image container, just log the error
-              }}
             />
           </div>
         )}
         
-        <h1 className="text-3xl md:text-4xl font-bold text-center mb-4">{business.business_name || "Business Name"}</h1>
+        <h1 className="text-3xl md:text-4xl font-bold text-center mb-4">
+          {business.business_name || "Business Name"}
+        </h1>
         
-        {/* Contact button instead of subscribe button */}
         {!isPreviewMode && isAuthenticated && (
           <div className="mt-2 mb-4">
             {renderContactButton()}
