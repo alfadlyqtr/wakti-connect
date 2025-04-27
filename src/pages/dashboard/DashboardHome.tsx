@@ -1,12 +1,13 @@
+
 import React from "react";
 import { useDashboardData } from "@/hooks/useDashboardData";
-import { DashboardSummaryCards } from "@/components/dashboard/home/DashboardSummaryCards";
-import { DashboardTasks } from "@/components/dashboard/home/DashboardTasks";
-import { DashboardProfile } from "@/components/dashboard/home/DashboardProfile";
-import { DashboardReminders } from "@/components/dashboard/home/DashboardReminders";
-import { DashboardBookings } from "@/components/dashboard/home/DashboardBookings";
-import { DashboardAnalytics } from "@/components/dashboard/home/DashboardAnalytics";
-import { DashboardEvents } from "@/components/dashboard/home/DashboardEvents";
+import DashboardSummaryCards from "@/components/dashboard/home/DashboardSummaryCards";
+import DashboardTasks from "@/components/dashboard/home/DashboardTasks";
+import DashboardProfile from "@/components/dashboard/home/DashboardProfile";
+import DashboardReminders from "@/components/dashboard/home/DashboardReminders";
+import DashboardBookings from "@/components/dashboard/home/DashboardBookings";
+import DashboardAnalytics from "@/components/dashboard/home/DashboardAnalytics";
+import DashboardEvents from "@/components/dashboard/home/DashboardEvents";
 import { DashboardWidgetLayout } from "@/types/dashboard";
 import { useDashboardLayout } from "@/hooks/useDashboardLayout";
 import { Loader2 } from "lucide-react";

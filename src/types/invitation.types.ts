@@ -1,4 +1,3 @@
-
 export interface UserSearchResult {
   id: string;
   fullName: string | null;
@@ -20,12 +19,17 @@ export interface UserContact {
   id: string;
   userId: string;
   contactId: string;
-  status: 'accepted' | 'pending' | 'rejected';
-  staffRelationId?: string | null;
-  contactProfile: UserSearchResult;
+  status: ContactRequestStatusValue;
+  created_at: string;
+  contactProfile?: {
+    displayName?: string;
+    fullName?: string;
+    email?: string;
+    avatarUrl?: string;
+    businessName?: string;
+    accountType?: string;
+  };
 }
-
-// New types to fix errors
 
 export interface InvitationRecipient {
   id: string;

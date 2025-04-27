@@ -1,4 +1,3 @@
-
 import React from "react";
 import { BusinessProfile } from "@/types/business.types";
 import { Button } from "@/components/ui/button";
@@ -26,7 +25,7 @@ const BusinessPageHeader: React.FC<BusinessPageHeaderProps> = ({
     if (isAuthenticated && !isPreviewMode && business.id) {
       checkContactRequest(business.id);
     }
-  }, [isAuthenticated, isPreviewMode, business.id]);
+  }, [isAuthenticated, isPreviewMode, business.id, checkContactRequest]);
 
   const handleAddContact = async () => {
     if (!isAuthenticated || !business.id) return;
@@ -34,7 +33,6 @@ const BusinessPageHeader: React.FC<BusinessPageHeaderProps> = ({
     setIsAddingContact(true);
     try {
       await sendContactRequest.mutateAsync(business.id);
-      setContactStatus('pending');
     } catch (error) {
       console.error('Error adding contact:', error);
     } finally {

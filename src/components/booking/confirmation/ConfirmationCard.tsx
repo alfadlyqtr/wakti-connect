@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,7 +13,7 @@ import CalendarExportOptions from "./CalendarExportOptions";
 import BookingDetailsCard from "./BookingDetailsCard";
 import { supabase } from "@/integrations/supabase/client";
 import { BusinessProfile } from "@/types/business.types";
-import { useBusinessSubscribers } from "@/hooks/useBusinessSubscribers";
+import { useContacts } from "@/hooks/useContacts";
 import PoweredByWAKTI from "@/components/common/PoweredByWAKTI";
 import { useBusinessStyling } from "@/hooks/useBusinessStyling";
 
@@ -30,11 +29,13 @@ const ConfirmationCard: React.FC<ConfirmationCardProps> = ({ booking, serviceNam
   const [showCalendarOptions, setShowCalendarOptions] = useState(false);
   const [businessLogo, setBusinessLogo] = useState<string | null>(null);
   const [businessProfile, setBusinessProfile] = useState<BusinessProfile | null>(null);
-  // Changed how we call useBusinessSubscribers - passing the business_id directly to fix the type error
-  const { isSubscribed, subscribe } = useBusinessSubscribers(booking.business_id);
+  const { sendContactRequest } = useContacts();
+  const [isAddingContact, setIsAddingContact] = useState(false);
+  const [contactStatus, setContactStatus] = React.useState<'none' | 'pending' | 'accepted'>('none');
   const [businessLocation, setBusinessLocation] = useState<string | null>(null);
   const { styling, isLoading: stylingLoading } = useBusinessStyling(booking.business_id);
-  
+  const { contacts, deleteContact } = useContacts();
+
   useEffect(() => {
     if (styling.primaryColor) {
       document.documentElement.style.setProperty('--primary', styling.primaryColor);
@@ -119,15 +120,72 @@ const ConfirmationCard: React.FC<ConfirmationCardProps> = ({ booking, serviceNam
     }
   };
 
-  const handleSubscribe = () => {
-    if (isAuthenticated && businessProfile) {
-      // Fixed: No need to pass business_id as an argument to subscribe.mutate()
-      subscribe.mutate();
-    } else {
-      navigate("/login", { 
-        state: { from: window.location.pathname, subscribeAfter: booking.business_id } 
-      });
+  const isContacted = contacts?.some(contact => contact.contactId === booking.business_id);
+
+  const handleAddContact = async () => {
+    if (!isAuthenticated || !businessProfile?.id) return;
+    
+    setIsAddingContact(true);
+    try {
+      await sendContactRequest.mutateAsync(businessProfile.id);
+      setContactStatus('pending');
+    } catch (error) {
+      console.error('Error adding contact:', error);
+    } finally {
+      setIsAddingContact(false);
     }
+  };
+
+  const handleRemoveContact = async () => {
+    if (!isAuthenticated || !businessProfile?.id) return;
+
+    try {
+      await deleteContact.mutateAsync(businessProfile.id);
+      setContactStatus('none');
+    } catch (error) {
+      console.error('Error removing contact:', error);
+    }
+  };
+
+  const renderContactButton = () => {
+    if (isContacted) {
+      return (
+        <Button variant="outline" onClick={handleRemoveContact} disabled={deleteContact.isPending}>
+          {deleteContact.isPending ? (
+            <>
+              <Clock className="h-4 w-4 animate-spin mr-2" />
+              Removing...
+            </>
+          ) : (
+            <>
+              <User className="h-4 w-4 mr-2" />
+              Remove Contact
+            </>
+          )}
+        </Button>
+      );
+    }
+
+    return (
+      <Button 
+        onClick={handleAddContact}
+        disabled={isAddingContact}
+        variant="default"
+        className="bg-primary hover:bg-primary/90"
+      >
+        {isAddingContact ? (
+          <>
+            <Clock className="h-4 w-4 animate-spin mr-2" />
+            Adding...
+          </>
+        ) : (
+          <>
+            <UserPlus className="h-4 w-4 mr-2" />
+            Add to Contacts
+          </>
+        )}
+      </Button>
+    );
   };
 
   const handleOpenMaps = () => {
@@ -179,19 +237,11 @@ const ConfirmationCard: React.FC<ConfirmationCardProps> = ({ booking, serviceNam
           <AccountPromotionCard onCalendarExport={handleCalendarExport} />
         )}
         
-        {!isSubscribed && isAuthenticated && businessProfile && (
+        {!isContacted && isAuthenticated && businessProfile && (
           <div className="mt-4 text-center">
-            <Button 
-              variant="outline" 
-              onClick={handleSubscribe}
-              className="w-full sm:w-auto"
-              disabled={subscribe.isPending}
-            >
-              <Heart className="mr-2 h-4 w-4" />
-              Subscribe to {businessProfile.business_name}
-            </Button>
+            {renderContactButton()}
             <p className="text-xs text-muted-foreground mt-1">
-              Get updates about services and special offers
+              Add {businessProfile.business_name} to your contacts
             </p>
           </div>
         )}
