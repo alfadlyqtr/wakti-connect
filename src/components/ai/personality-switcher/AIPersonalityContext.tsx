@@ -1,115 +1,64 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { AIPersonality, AIPersonalityMode } from './types';
-import { personalityPresets } from './personalityPresets';
+import React, { createContext, useContext, useState, useCallback } from 'react';
+import { WAKTIAIMode, AIPersonality } from '@/types/ai-assistant.types';
 
 interface AIPersonalityContextType {
-  currentMode: AIPersonalityMode;
-  setCurrentMode: (mode: AIPersonalityMode) => void;
+  currentMode: WAKTIAIMode;
+  setCurrentMode: (mode: WAKTIAIMode) => void;
   currentPersonality: AIPersonality;
-  previousMode: AIPersonalityMode | null;
-  themeClass: string;
-  getBackgroundStyle: () => string;
-  getInputGlowClass: (isFocused: boolean) => string;
 }
 
-const AIPersonalityContext = createContext<AIPersonalityContextType | undefined>(undefined);
+const defaultPersonalities: Record<WAKTIAIMode, AIPersonality> = {
+  general: {
+    id: 'general',
+    name: 'General',
+    systemPrompt: 'You are WAKTI, a helpful AI assistant for business management.',
+    icon: 'bot',
+    color: 'blue',
+  },
+  student: {
+    id: 'student',
+    name: 'Learning',
+    systemPrompt: 'You are WAKTI, an AI tutor helping with learning and education.',
+    icon: 'graduation-cap',
+    color: 'green',
+  },
+  productivity: {
+    id: 'productivity',
+    name: 'Productivity',
+    systemPrompt: 'You are WAKTI, an AI assistant focused on productivity and task management.',
+    icon: 'list-checks',
+    color: 'purple',
+  },
+  creative: {
+    id: 'creative',
+    name: 'Creative',
+    systemPrompt: 'You are WAKTI, an AI designed to help with creative tasks and brainstorming.',
+    icon: 'sparkles',
+    color: 'pink',
+  }
+};
+
+const AIPersonalityContext = createContext<AIPersonalityContextType>({
+  currentMode: 'general',
+  setCurrentMode: () => {},
+  currentPersonality: defaultPersonalities.general,
+});
 
 export const AIPersonalityProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Initialize from localStorage or default to 'general' mode
-  const [currentMode, setCurrentMode] = useState<AIPersonalityMode>(() => {
-    const savedMode = localStorage.getItem('wakti-ai-mode');
-    return (savedMode as AIPersonalityMode) || 'general';
-  });
+  const [currentMode, setCurrentMode] = useState<WAKTIAIMode>('general');
   
-  // Track previous mode for transition effects
-  const [previousMode, setPreviousMode] = useState<AIPersonalityMode | null>(null);
-
-  // Get the current personality based on the mode
-  const currentPersonality = personalityPresets[currentMode];
-
-  // Update previous mode when current mode changes
-  const handleModeChange = (newMode: AIPersonalityMode) => {
-    setPreviousMode(currentMode);
-    setCurrentMode(newMode);
-  };
-
-  // Get background class for current mode
-  const getThemeClass = () => {
-    switch (currentMode) {
-      case 'general':
-        return 'ai-bg-general';
-      case 'student':
-        return 'ai-bg-student';
-      case 'productivity':
-        return 'ai-bg-productivity';
-      case 'creative':
-        return 'ai-bg-creative';
-      default:
-        return 'ai-bg-general';
-    }
+  const personalityContextValue = {
+    currentMode,
+    setCurrentMode,
+    currentPersonality: defaultPersonalities[currentMode],
   };
   
-  // Get page background style based on current mode
-  const getBackgroundStyle = () => {
-    switch (currentMode) {
-      case 'general':
-        return 'bg-gradient-to-b from-blue-50 via-blue-100 to-blue-200';
-      case 'student':
-        return 'bg-gradient-to-b from-green-50 via-green-100 to-green-200';
-      case 'productivity':
-        return 'bg-gradient-to-b from-yellow-50 via-orange-100 to-yellow-200';
-      case 'creative':
-        return 'bg-gradient-to-b from-purple-50 via-pink-100 to-purple-200';
-      default:
-        return 'bg-gradient-to-b from-blue-50 via-blue-100 to-blue-200';
-    }
-  };
-  
-  // Get input glow effect based on mode
-  const getInputGlowClass = (isFocused: boolean) => {
-    if (!isFocused) return '';
-    
-    switch (currentMode) {
-      case 'general':
-        return 'input-glow-general';
-      case 'student':
-        return 'input-glow-student';
-      case 'productivity':
-        return 'input-glow-productivity';
-      case 'creative':
-        return 'input-glow-creative';
-      default:
-        return 'input-glow-general';
-    }
-  };
-
-  // Save the current mode to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem('wakti-ai-mode', currentMode);
-  }, [currentMode]);
-
   return (
-    <AIPersonalityContext.Provider
-      value={{ 
-        currentMode, 
-        setCurrentMode: handleModeChange, 
-        currentPersonality,
-        previousMode,
-        themeClass: getThemeClass(),
-        getBackgroundStyle,
-        getInputGlowClass
-      }}
-    >
+    <AIPersonalityContext.Provider value={personalityContextValue}>
       {children}
     </AIPersonalityContext.Provider>
   );
 };
 
-export const useAIPersonality = () => {
-  const context = useContext(AIPersonalityContext);
-  if (!context) {
-    throw new Error('useAIPersonality must be used within an AIPersonalityProvider');
-  }
-  return context;
-};
+export const useAIPersonality = () => useContext(AIPersonalityContext);

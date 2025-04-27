@@ -1,3 +1,3 @@
 
-export * from './AIAssistantMouthAnimation';
-export * from './TypingIndicator';
+export { TypingIndicator } from './TypingIndicator';
+export { AIAssistantMouthAnimation } from './AIAssistantMouthAnimation';
