@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useMessaging } from "@/hooks/useMessaging";
 import ConversationsList from "@/components/messages/ConversationsList";
@@ -12,8 +13,10 @@ import { UserContact } from "@/types/invitation.types";
 import AddContactDialog from "@/components/contacts/AddContactDialog";
 import { useContacts } from "@/hooks/useContacts";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useUserRole } from "@/features/auth/hooks/useUserRole";
 
 const DashboardMessages: React.FC = () => {
+  const { isBusiness } = useUserRole();
   const [isComposerOpen, setIsComposerOpen] = useState(false);
   const [selectedContact, setSelectedContact] = useState<UserContact | null>(null);
   const [isAddContactOpen, setIsAddContactOpen] = useState(false);
@@ -107,7 +110,9 @@ const DashboardMessages: React.FC = () => {
             <div className="px-3 pt-3">
               <TabsList className="w-full">
                 <TabsTrigger value="all" className="flex-1">All Conversations</TabsTrigger>
-                <TabsTrigger value="staff" className="flex-1">Staff Only</TabsTrigger>
+                {isBusiness && (
+                  <TabsTrigger value="staff" className="flex-1">Staff Only</TabsTrigger>
+                )}
               </TabsList>
             </div>
             
@@ -129,23 +134,25 @@ const DashboardMessages: React.FC = () => {
               )}
             </TabsContent>
             
-            <TabsContent value="staff" className="m-0 flex-1 overflow-y-auto">
-              {isLoadingConversations ? (
-                <div className="p-3 space-y-3">
-                  {Array.from({ length: 3 }).map((_, index) => (
-                    <div key={index} className="flex items-center space-x-3 p-2">
-                      <Skeleton className="h-10 w-10 rounded-full" />
-                      <div className="space-y-2 flex-1">
-                        <Skeleton className="h-4 w-3/4" />
-                        <Skeleton className="h-3 w-1/2" />
+            {isBusiness && (
+              <TabsContent value="staff" className="m-0 flex-1 overflow-y-auto">
+                {isLoadingConversations ? (
+                  <div className="p-3 space-y-3">
+                    {Array.from({ length: 3 }).map((_, index) => (
+                      <div key={index} className="flex items-center space-x-3 p-2">
+                        <Skeleton className="h-10 w-10 rounded-full" />
+                        <div className="space-y-2 flex-1">
+                          <Skeleton className="h-4 w-3/4" />
+                          <Skeleton className="h-3 w-1/2" />
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <ConversationsList staffOnly />
-              )}
-            </TabsContent>
+                    ))}
+                  </div>
+                ) : (
+                  <ConversationsList staffOnly />
+                )}
+              </TabsContent>
+            )}
           </Tabs>
           
           <div className="p-3 border-t mt-auto">
