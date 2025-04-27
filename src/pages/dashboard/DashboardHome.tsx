@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDashboardUserProfile } from "@/hooks/useDashboardUserProfile";
@@ -116,7 +115,6 @@ const DashboardHome: React.FC = () => {
               layoutData = data.dashboard_layout;
             }
             
-            // Ensure the new 'events' widget is included
             if (!layoutData.some((item: DashboardWidgetLayout) => item.id === 'events')) {
               layoutData.push({ id: "events", order: layoutData.length });
             }
@@ -142,7 +140,6 @@ const DashboardHome: React.FC = () => {
     if (!userId) return;
     
     try {
-      // Use UPSERT to avoid primary key conflicts
       const { error } = await supabase
         .from('user_preferences')
         .upsert({
@@ -150,7 +147,7 @@ const DashboardHome: React.FC = () => {
           dashboard_layout: JSON.stringify(newLayout),
           updated_at: new Date().toISOString()
         }, {
-          onConflict: 'user_id' // Specify the conflict resolution field
+          onConflict: 'user_id'
         });
         
       if (error) {
