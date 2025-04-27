@@ -104,9 +104,7 @@ const DashboardHome = () => {
   return (
     <div className="space-y-8">
       <DashboardSummaryCards
-        profileData={profileData}
         todayTasks={todayTasks}
-        unreadNotifications={unreadNotifications}
         isLoading={isLoading}
       />
 
