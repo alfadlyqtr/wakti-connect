@@ -16,8 +16,10 @@ export const useContactSearch = () => {
     console.log("[useContactSearch] Starting search with query:", query);
     setSearchQuery(query);
     
+    // Clear results if query is empty or too short
     if (!query || query.trim().length < 2) {
       setSearchResults([]);
+      console.log("[useContactSearch] Query too short, clearing results");
       return;
     }
 
@@ -25,7 +27,14 @@ export const useContactSearch = () => {
     try {
       const results = await searchUsers(query);
       console.log("[useContactSearch] Search results:", results);
-      setSearchResults(Array.isArray(results) ? results : []);
+      
+      // Always set a valid array, even if the results are null/undefined
+      if (Array.isArray(results)) {
+        setSearchResults(results);
+      } else {
+        console.warn("[useContactSearch] Search returned non-array results:", results);
+        setSearchResults([]);
+      }
     } catch (error) {
       console.error("[useContactSearch] Search error:", error);
       toast({
@@ -58,6 +67,11 @@ export const useContactSearch = () => {
   });
 
   const selectContact = (contact: UserSearchResult) => {
+    if (!contact || !contact.id) {
+      console.error("[useContactSearch] Invalid contact selected:", contact);
+      return;
+    }
+    
     console.log("[useContactSearch] Selected contact:", contact);
     setSelectedContact(contact);
     checkStatus.mutate(contact.id);
