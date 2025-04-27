@@ -4,7 +4,6 @@ import {
   getMessages, 
   sendMessage as sendMessageService, 
   markMessageAsRead,
-  canMessageUser,
   getUnreadMessagesCount,
   markConversationAsRead as markConversationAsReadService
 } from "@/services/messages";
@@ -89,40 +88,6 @@ export const useMessaging = (options?: string | UseMessagingOptions) => {
   });
 
   const { 
-    data: canMessage = true,
-    isLoading: isCheckingPermission,
-    error: permissionError,
-    refetch: recheckPermissions
-  } = useQuery<boolean>({
-    queryKey: ['canMessage', otherUserId],
-    queryFn: async () => {
-      if (!otherUserId) return false;
-      
-      try {
-        const result = await canMessageUser(otherUserId);
-        console.log("Permission check result:", { canMessage: result, userId: otherUserId });
-        return result;
-      } catch (error) {
-        console.error("Error checking messaging permissions:", error);
-        return false;
-      }
-    },
-    enabled: !!otherUserId,
-    retry: 2,
-    staleTime: 30000,
-    meta: {
-      onError: (error: any) => {
-        console.error("Error checking messaging permissions:", error);
-        toast({
-          title: "Permission Check Failed",
-          description: "Unable to verify messaging permissions. Please try again.",
-          variant: "destructive"
-        });
-      }
-    }
-  });
-
-  const { 
     data: unreadCount = 0,
     isLoading: isLoadingUnreadCount
   } = useQuery<number>({
@@ -162,10 +127,6 @@ export const useMessaging = (options?: string | UseMessagingOptions) => {
     isLoadingConversations,
     conversationsError,
     refetchConversations,
-    canMessage,
-    isCheckingPermission,
-    permissionError,
-    recheckPermissions,
     unreadCount,
     isLoadingUnreadCount,
     markConversationAsRead

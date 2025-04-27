@@ -5,7 +5,6 @@ import MessageComposer from "./chat/MessageComposer";
 import { Message } from "@/types/message.types";
 import { Loader2 } from "lucide-react";
 import { safeFormatDistanceToNow } from "@/utils/safeFormatters";
-import NoPermissionMessage from "./chat/NoPermissionMessage";
 
 interface ChatInterfaceProps {
   userId: string;
@@ -17,23 +16,18 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ userId }) => {
     isLoadingMessages, 
     sendMessage, 
     isSending,
-    canMessage,
-    isCheckingPermission,
     markConversationAsRead
   } = useMessaging(userId);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [replyToMessage, setReplyToMessage] = useState<Message | null>(null);
   
-  // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
   
-  // Mark conversation as read when component mounts
   useEffect(() => {
     if (userId) {
-      console.log("Marking conversation as read for:", userId);
       markConversationAsRead(userId);
     }
   }, [userId, markConversationAsRead]);
@@ -54,7 +48,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ userId }) => {
       imageUrl
     });
     
-    // Clear reply state after sending
     if (replyToMessage) {
       setReplyToMessage(null);
     }
@@ -64,16 +57,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ userId }) => {
     setReplyToMessage(message);
   };
   
-  // Organize messages by date - with safe date handling
   const organizeMessagesByDate = () => {
     const messagesByDate: Record<string, Message[]> = {};
     
     messages.forEach(msg => {
       try {
-        // First try to parse the date
         const date = new Date(msg.createdAt);
-        
-        // Use a default date key for invalid dates
         const dateKey = isNaN(date.getTime()) 
           ? "Invalid Date" 
           : date.toLocaleDateString();
@@ -83,7 +72,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ userId }) => {
         }
         messagesByDate[dateKey].push(msg);
       } catch (error) {
-        // Fallback for any parsing errors
         if (!messagesByDate["Unknown Date"]) {
           messagesByDate["Unknown Date"] = [];
         }
@@ -97,11 +85,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ userId }) => {
   
   const messagesByDate = organizeMessagesByDate();
   const dateSections = Object.keys(messagesByDate).sort((a, b) => {
-    // Handle our special keys properly
     if (a === "Invalid Date" || a === "Unknown Date") return -1;
     if (b === "Invalid Date" || b === "Unknown Date") return 1;
     
-    // Normal date sorting for valid dates
     return new Date(a).getTime() - new Date(b).getTime();
   });
 
@@ -147,17 +133,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ userId }) => {
         )}
       </div>
       
-      {!canMessage ? (
-        <NoPermissionMessage />
-      ) : (
-        <div className="mt-auto">
-          <MessageComposer 
-            onSendMessage={handleSendMessage}
-            isDisabled={!canMessage || isSending || isCheckingPermission}
-            replyToMessage={replyToMessage}
-          />
-        </div>
-      )}
+      <div className="mt-auto">
+        <MessageComposer 
+          onSendMessage={handleSendMessage}
+          isDisabled={isSending}
+          replyToMessage={replyToMessage}
+        />
+      </div>
     </div>
   );
 };
