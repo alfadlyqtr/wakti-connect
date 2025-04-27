@@ -1,158 +1,108 @@
 
-import { Home, MessageSquare, Calendar, Users, Bell, Clock, Settings, HeartHandshake, 
-  LayoutDashboard, ListChecks, KanbanSquare, HelpCircle, Building2, Store,
-  UserPlus, PartyPopper, BarChart2, FileText, Bot, Headphones, Mic } from "lucide-react";
-import { UserRole } from "@/types/user";
+import {
+  Home,
+  CalendarDays,
+  Briefcase,
+  Users,
+  BarChart2,
+  FileText,
+  Settings,
+  HelpCircle,
+  Brain,
+  Mic,
+  CheckSquare,
+  Calendar,
+  Building2,
+  ScrollText,
+  Headphones,
+} from "lucide-react";
+import { UserRole } from "@/types/roles";
 
-export type NavItem = {
-  icon: any; 
-  label: string;
-  path: string;
-  showFor: UserRole[];
-  badge?: number | null;
-};
-
-export const navItems: NavItem[] = [
+export const navItems = [
   {
-    label: "Dashboard",
     path: "",
-    icon: LayoutDashboard,
-    showFor: ['individual', 'business', 'staff', 'super-admin'],
+    label: "Dashboard",
+    icon: Home,
+    showFor: ["individual", "business", "staff", "super-admin"],
   },
   {
-    label: "Tasks",
     path: "tasks",
-    icon: ListChecks,
-    showFor: ['individual', 'business', 'staff', 'super-admin'],
+    label: "Tasks",
+    icon: CheckSquare,
+    showFor: ["individual", "business"],
   },
   {
-    label: "Events",
     path: "events",
-    icon: PartyPopper,
-    showFor: ['individual', 'business', 'staff', 'super-admin'],
-  },
-  {
-    label: "Bookings",
-    path: "bookings",
+    label: "Events",
     icon: Calendar,
-    showFor: ['business', 'staff', 'super-admin'],
+    showFor: ["individual", "business"],
   },
   {
-    label: "Jobs",
+    path: "bookings",
+    label: "Bookings",
+    icon: CalendarDays,
+    showFor: ["business", "staff"],
+  },
+  {
     path: "jobs",
-    icon: KanbanSquare,
-    showFor: ['business', 'super-admin'],
+    label: "Jobs",
+    icon: Briefcase, 
+    showFor: ["business", "staff"],
   },
   {
-    label: "Job Cards",
-    path: "job-cards",
-    icon: FileText,
-    showFor: ['staff', 'super-admin'],
-  },
-  {
-    label: "Services",
     path: "services",
-    icon: Store,
-    showFor: ['business', 'super-admin'],
-  },
-  {
-    label: "Staff",
-    path: "staff",
-    icon: UserPlus,
-    showFor: ['business', 'super-admin'],
-  },
-  {
-    label: "Business Page",
-    path: "business-page",
-    icon: Building2,
-    showFor: ['business', 'super-admin'],
-  },
-  {
-    label: "Analytics",
-    path: "analytics",
-    icon: BarChart2,
-    showFor: ['business', 'super-admin'],
-  },
-  {
-    label: "Reports",
-    path: "reports",
-    icon: FileText,
-    showFor: ['business', 'super-admin'],
-  },
-  {
-    label: "WAKTI AI",
-    path: "ai-assistant",
-    icon: Bot,
-    showFor: ['individual', 'business', 'staff', 'super-admin'],
-  },
-  {
-    label: "Settings",
-    path: "settings",
-    icon: Settings,
-    showFor: ['individual', 'business', 'staff', 'super-admin'],
-  },
-  {
-    label: "Help",
-    path: "help",
-    icon: HelpCircle,
-    showFor: ['individual', 'business', 'staff', 'super-admin'],
-  },
-  {
-    label: "Staff Communication",
-    path: "staff-communication",
+    label: "Services",
     icon: Headphones,
-    showFor: ['staff', 'super-admin'],
+    showFor: ["business"],
   },
   {
-    label: "Voice Recorder & Transcription",
+    path: "staff",
+    label: "Staff",
+    icon: Users,
+    showFor: ["business"],
+  },
+  {
+    path: "business-page",
+    label: "Business Page",
+    icon: Building2,
+    showFor: ["business"],
+  },
+  {
+    path: "analytics",
+    label: "Analytics",
+    icon: BarChart2,
+    showFor: ["business"],
+  },
+  {
+    path: "reports",
+    label: "Reports",
+    icon: ScrollText,
+    showFor: ["business"],
+  },
+  {
+    path: "ai-assistant",
+    label: "WAKTI AI",
+    icon: Brain,
+    showFor: ["individual", "business"],
+  },
+  {
     path: "meeting-summary",
+    label: "Voice Recorder & Transcription",
     icon: Mic,
-    showFor: ['individual', 'business', 'staff', 'super-admin'],
+    showFor: ["individual", "business"],
+  },
+  {
+    path: "settings",
+    label: "Settings",
+    icon: Settings,
+    showFor: ["individual", "business", "staff"],
+  },
+  {
+    path: "help",
+    label: "Help",
+    icon: HelpCircle,
+    showFor: ["individual", "business", "staff"],
   },
 ];
 
-export const dropdownNavItems: NavItem[] = [
-  {
-    icon: Bell,
-    label: 'Notifications',
-    path: 'notifications',
-    showFor: ['individual', 'business', 'staff'],
-    badge: 0
-  },
-  {
-    icon: Users,
-    label: 'Contacts',
-    path: 'contacts',
-    showFor: ['individual', 'business', 'staff']
-  },
-  {
-    icon: HeartHandshake,
-    label: 'Subscribers',
-    path: 'subscribers',
-    showFor: ['business']
-  },
-  {
-    icon: MessageSquare,
-    label: 'Messages',
-    path: 'messages',
-    showFor: ['individual', 'business', 'staff']
-  },
-  {
-    icon: Calendar,
-    label: 'Calendar',
-    path: 'calendar',
-    showFor: ['individual', 'business', 'staff']
-  },
-  {
-    icon: Clock,
-    label: 'Time Tracking',
-    path: 'time-tracking',
-    showFor: ['individual', 'business', 'staff']
-  },
-  {
-    icon: Settings,
-    label: 'Settings',
-    path: 'settings',
-    showFor: ['individual', 'business', 'staff']
-  },
-];
+export type NavItem = typeof navItems[number];
