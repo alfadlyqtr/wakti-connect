@@ -1,5 +1,6 @@
 
 import { Message } from "@/types/message.types";
+import { isValid } from "date-fns";
 
 /**
  * Transforms raw message data from database into Message objects
@@ -10,6 +11,12 @@ export const transformMessages = (
   staffProfiles: Record<string, any>
 ): Message[] => {
   return messageData.map(msg => {
+    // Validate the timestamp
+    const timestamp = new Date(msg.created_at);
+    if (!isValid(timestamp)) {
+      console.error("Invalid timestamp in message:", msg.id, msg.created_at);
+    }
+    
     // Get sender profile from either user profiles or staff profiles
     const senderProfile = userProfiles.get(msg.sender_id) || staffProfiles[msg.sender_id];
     
@@ -49,17 +56,18 @@ export const transformMessages = (
     }
     
     return {
-      id: msg.id,
+      id: msg.id || '',
       content: msg.content || '',
-      senderId: msg.sender_id,
+      senderId: msg.sender_id || '',
       senderName: senderName,
-      recipientId: msg.recipient_id,
+      recipientId: msg.recipient_id || '',
       recipientName: recipientName,
-      isRead: msg.is_read,
-      createdAt: msg.created_at,
+      isRead: msg.is_read || false,
+      createdAt: isValid(timestamp) ? msg.created_at : new Date().toISOString(),
       type: msg.message_type || messageType,
       audioUrl: msg.audio_url,
       imageUrl: msg.image_url
     };
   });
 };
+

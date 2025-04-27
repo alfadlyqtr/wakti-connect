@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, isValid } from "date-fns";
 import { Play, Pause, ExternalLink } from "lucide-react";
 import { isMessageExpired } from "@/utils/messageExpiration";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -28,7 +28,22 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   const [imageOpen, setImageOpen] = useState(false);
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
   
-  const formattedTime = formatDistanceToNow(new Date(timestamp), { addSuffix: true });
+  // Safe date formatting with validation
+  const getFormattedTime = (dateString: string): string => {
+    try {
+      const date = new Date(dateString);
+      if (!isValid(date)) {
+        console.error("Invalid date:", dateString);
+        return "Invalid date";
+      }
+      return formatDistanceToNow(date, { addSuffix: true });
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return "Date error";
+    }
+  };
+  
+  const formattedTime = getFormattedTime(timestamp);
   
   // Check if message has expired
   if (isMessageExpired(timestamp)) {
@@ -117,12 +132,10 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
               </div>
             </div>
             
-            {/* Caption if any */}
             {content && (
               <div className="mt-2 text-sm">{content}</div>
             )}
             
-            {/* Image dialog */}
             <Dialog open={imageOpen} onOpenChange={setImageOpen}>
               <DialogContent className="max-w-3xl">
                 <img 
@@ -145,3 +158,4 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
 };
 
 export default MessageBubble;
+
