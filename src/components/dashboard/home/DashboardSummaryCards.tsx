@@ -7,24 +7,12 @@ import { useDashboardNotifications } from "@/hooks/useDashboardNotifications";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-interface ProfileDataType {
-  account_type: "free" | "individual" | "business";
-  display_name?: string | null;
-  full_name?: string | null;
-  business_name?: string | null;
-  occupation?: string | null;
-  avatar_url?: string | null;
-}
-
 interface DashboardSummaryCardsProps {
-  profileData: ProfileDataType | undefined;
   todayTasks: any[] | undefined;
-  unreadNotifications: any[] | undefined;
   isLoading?: boolean;
 }
 
 export const DashboardSummaryCards = ({
-  profileData,
   todayTasks = [],
   isLoading = false,
 }: DashboardSummaryCardsProps) => {
@@ -37,15 +25,23 @@ export const DashboardSummaryCards = ({
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) return { contactsCount: 0 };
+      
+      console.log("[DashboardSummaryCards] Fetching regular contacts count for user:", session.user.id);
+      
+      // Only count regular contacts (excluding staff contacts)
       const { count, error } = await supabase
         .from('user_contacts')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', session.user.id)
-        .eq('status', 'accepted');
+        .eq('status', 'accepted')
+        .is('staff_relation_id', null);
+      
       if (error) {
-        console.error("Error fetching contacts count:", error);
+        console.error("[DashboardSummaryCards] Error fetching contacts count:", error);
         return { contactsCount: 0 };
       }
+      
+      console.log("[DashboardSummaryCards] Regular contacts count:", count);
       return { contactsCount: count || 0 };
     }
   });
@@ -129,7 +125,7 @@ export const DashboardSummaryCards = ({
       <StatsCard
         title="Contacts"
         value={contactsData?.contactsCount || 0}
-        subtitle="Total contacts"
+        subtitle="Regular contacts"
         icon={Users}
         iconColor="text-blue-500"
         gradient="blue"

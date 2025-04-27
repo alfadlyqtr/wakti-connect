@@ -3,7 +3,7 @@ import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, MessageSquare, Trash2, User, Users, Briefcase } from "lucide-react";
+import { MessageSquare, Trash2, User, Users, Briefcase } from "lucide-react";
 import { UserContact } from "@/types/invitation.types";
 import { useNavigate } from "react-router-dom";
 import {
@@ -17,7 +17,6 @@ interface ContactsListProps {
   contacts: UserContact[];
   isLoading: boolean;
   isSyncing?: boolean;
-  onRefresh?: () => void;
   onDeleteContact?: (contactId: string) => Promise<void>;
 }
 
@@ -136,8 +135,6 @@ const ContactItem = ({
 const ContactsList: React.FC<ContactsListProps> = ({ 
   contacts, 
   isLoading,
-  isSyncing,
-  onRefresh,
   onDeleteContact
 }) => {
   if (isLoading) {
@@ -150,20 +147,6 @@ const ContactsList: React.FC<ContactsListProps> = ({
 
   return (
     <div>
-      {onRefresh && (
-        <div className="flex justify-end mb-4">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={onRefresh}
-            disabled={isSyncing}
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
-            {isSyncing ? 'Refreshing...' : 'Refresh Contacts'}
-          </Button>
-        </div>
-      )}
-      
       {contacts && contacts.length > 0 ? (
         <div className="space-y-4">
           {contacts.map((contact) => (
@@ -178,18 +161,6 @@ const ContactsList: React.FC<ContactsListProps> = ({
         <div className="py-10 text-center">
           <Users className="mx-auto h-10 w-10 text-muted-foreground" />
           <p className="mt-2 text-sm text-muted-foreground">No contacts found</p>
-          {onRefresh && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={onRefresh} 
-              className="mt-4"
-              disabled={isSyncing}
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
-          )}
         </div>
       )}
     </div>

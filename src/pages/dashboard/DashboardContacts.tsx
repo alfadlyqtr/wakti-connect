@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { UserSearch, UserPlus } from "lucide-react";
+import { UserSearch, UserPlus, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 // Import the components
@@ -126,9 +126,9 @@ const DashboardContacts = () => {
     return (
       <div className="space-y-6">
         <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-bold tracking-tight">Contacts</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Staff Communications</h1>
           <p className="text-muted-foreground">
-            View your staff contacts.
+            As a staff member, you can communicate with your business and other staff
           </p>
         </div>
         
@@ -136,25 +136,6 @@ const DashboardContacts = () => {
           businessId={businessId || undefined}
           businessName={businessName || undefined}
         />
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Your Staff Contacts</CardTitle>
-            <CardDescription>
-              These contacts are automatically managed by the system.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ContactsList 
-              contacts={filteredContacts || []} 
-              isLoading={isLoading}
-              isSyncing={isSyncingContacts}
-              onRefresh={refreshContacts}
-              // Staff members cannot delete contacts
-              onDeleteContact={undefined}
-            />
-          </CardContent>
-        </Card>
       </div>
     );
   }
@@ -164,14 +145,28 @@ const DashboardContacts = () => {
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold tracking-tight">Contacts</h1>
         <p className="text-muted-foreground">
-          Manage your contacts and network.
+          Manage your personal contacts network
         </p>
       </div>
       
-      <StaffSyncSection 
-        isBusiness={isBusiness} 
-        onContactsRefresh={refreshContacts} 
-      />
+      {isBusiness && (
+        <Card className="bg-blue-50/50 border-blue-200">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Staff Communication</CardTitle>
+            <CardDescription>
+              Staff communication is managed separately under the Staff Communication page
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button 
+              variant="secondary" 
+              onClick={() => window.location.href = '/dashboard/staff-communication'}
+            >
+              Go to Staff Communications
+            </Button>
+          </CardContent>
+        </Card>
+      )}
       
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
         <div className="flex w-full sm:w-auto items-center space-x-4">
@@ -187,11 +182,23 @@ const DashboardContacts = () => {
           </Button>
         </div>
         
-        <AutoApproveToggle 
-          autoApprove={autoApprove}
-          isUpdating={isUpdatingAutoApprove}
-          onToggle={handleToggleAutoApprove}
-        />
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={refreshContacts}
+            disabled={isSyncingContacts}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isSyncingContacts ? 'animate-spin' : ''}`} />
+            {isSyncingContacts ? 'Refreshing...' : 'Refresh'}
+          </Button>
+          
+          <AutoApproveToggle 
+            autoApprove={autoApprove}
+            isUpdating={isUpdatingAutoApprove}
+            onToggle={handleToggleAutoApprove}
+          />
+        </div>
       </div>
       
       <Tabs defaultValue="contacts">
@@ -214,8 +221,7 @@ const DashboardContacts = () => {
               <ContactsList 
                 contacts={filteredContacts || []} 
                 isLoading={isLoading}
-                isSyncing={isSyncingContacts}
-                onRefresh={refreshContacts}
+                isSyncing={false} // Removed isSyncingContacts since we have a button at the top level now
                 onDeleteContact={handleDeleteContact}
               />
             </CardContent>

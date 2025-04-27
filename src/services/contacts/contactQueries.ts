@@ -3,13 +3,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { UserContact } from '@/types/invitation.types';
 
 /**
- * Get all contacts for a user
+ * Get regular contacts for a user (excluding staff contacts)
  */
 export const getUserContacts = async (userId: string): Promise<UserContact[]> => {
   try {
-    console.log('[ContactQueries] Fetching contacts for user:', userId);
+    console.log('[ContactQueries] Fetching regular contacts for user:', userId);
     
-    // Get all user's contacts with accepted status
+    // Get user's contacts with accepted status, excluding staff contacts
     const { data: contacts, error } = await supabase
       .from('user_contacts')
       .select(`
@@ -30,25 +30,20 @@ export const getUserContacts = async (userId: string): Promise<UserContact[]> =>
         )
       `)
       .eq('user_id', userId)
-      .eq('status', 'accepted');
+      .eq('status', 'accepted')
+      .is('staff_relation_id', null); // Only get regular contacts, not staff-related
     
     if (error) {
-      console.error('[ContactQueries] Error fetching user contacts:', error);
+      console.error('[ContactQueries] Error fetching regular user contacts:', error);
       return [];
     }
     
-    console.log(`[ContactQueries] Raw data from database: ${contacts?.length || 0} contacts:`, contacts);
+    console.log(`[ContactQueries] Found ${contacts?.length || 0} regular contacts:`, contacts);
     
     // Transform the data to match our types
     const userContacts = contacts.map(contact => {
-      // Log the raw contact data to see what's available
-      console.log('[ContactQueries] Processing contact:', contact);
-      
-      // Explicitly cast contact.profiles to any to avoid TypeScript errors
       const contactData = (contact.profiles || {}) as any;
-      console.log('[ContactQueries] Contact profile data:', contactData);
       
-      // Make sure contact exists and has necessary properties
       const contactProfile = {
         id: contactData.id || contact.contact_id,
         fullName: contactData.full_name || null,
@@ -70,17 +65,81 @@ export const getUserContacts = async (userId: string): Promise<UserContact[]> =>
       };
     });
     
-    console.log('[ContactQueries] Transformed contacts:', userContacts);
-    
-    // Check if we lost any contacts during transformation
-    if (contacts.length !== userContacts.length) {
-      console.warn('[ContactQueries] Contact count mismatch after transformation!', 
-        `Raw: ${contacts.length}, Transformed: ${userContacts.length}`);
-    }
-    
+    console.log('[ContactQueries] Transformed regular contacts:', userContacts);
     return userContacts;
   } catch (error) {
     console.error('[ContactQueries] Error in getUserContacts:', error);
+    return [];
+  }
+};
+
+/**
+ * Get staff-related contacts for a user
+ */
+export const getStaffContacts = async (userId: string): Promise<UserContact[]> => {
+  try {
+    console.log('[ContactQueries] Fetching staff contacts for user:', userId);
+    
+    // Get user's contacts with accepted status that are staff-related
+    const { data: contacts, error } = await supabase
+      .from('user_contacts')
+      .select(`
+        id,
+        user_id,
+        contact_id,
+        status,
+        staff_relation_id,
+        created_at,
+        profiles:contact_id (
+          id,
+          full_name,
+          display_name,
+          avatar_url,
+          account_type,
+          business_name,
+          email
+        )
+      `)
+      .eq('user_id', userId)
+      .eq('status', 'accepted')
+      .not('staff_relation_id', 'is', null); // Only get staff-related contacts
+    
+    if (error) {
+      console.error('[ContactQueries] Error fetching staff contacts:', error);
+      return [];
+    }
+    
+    console.log(`[ContactQueries] Found ${contacts?.length || 0} staff contacts:`, contacts);
+    
+    // Transform the data to match our types
+    const userContacts = contacts.map(contact => {
+      const contactData = (contact.profiles || {}) as any;
+      
+      const contactProfile = {
+        id: contactData.id || contact.contact_id,
+        fullName: contactData.full_name || null,
+        displayName: contactData.display_name || null,
+        avatarUrl: contactData.avatar_url || null,
+        accountType: contactData.account_type || null,
+        businessName: contactData.business_name || null,
+        email: contactData.email || null
+      };
+      
+      return {
+        id: contact.id,
+        userId: contact.user_id,
+        contactId: contact.contact_id,
+        status: contact.status as "accepted" | "pending" | "rejected",
+        staffRelationId: contact.staff_relation_id,
+        created_at: contact.created_at,
+        contactProfile
+      };
+    });
+    
+    console.log('[ContactQueries] Transformed staff contacts:', userContacts);
+    return userContacts;
+  } catch (error) {
+    console.error('[ContactQueries] Error in getStaffContacts:', error);
     return [];
   }
 };
@@ -113,7 +172,8 @@ export const getContactRequests = async (userId: string): Promise<UserContact[]>
         )
       `)
       .eq('contact_id', userId)
-      .eq('status', 'pending');
+      .eq('status', 'pending')
+      .is('staff_relation_id', null); // Only show non-staff pending requests
     
     if (error) {
       console.error('[ContactQueries] Error fetching contact requests:', error);
