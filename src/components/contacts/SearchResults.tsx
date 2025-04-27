@@ -1,8 +1,7 @@
-
 import React from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { CommandItem } from "@/components/ui/command";
+import { CommandItem, CommandEmpty } from "@/components/ui/command";
 import { Briefcase, User } from "lucide-react";
 import { UserSearchResult } from "@/types/invitation.types";
 
@@ -11,7 +10,10 @@ interface SearchResultsProps {
   onSelectContact: (contact: UserSearchResult) => void;
 }
 
-export const SearchResults = ({ searchResults, onSelectContact }: SearchResultsProps) => {
+export const SearchResults = ({ searchResults = [], onSelectContact }: SearchResultsProps) => {
+  const results = Array.isArray(searchResults) ? searchResults : [];
+  console.log("[SearchResults] Rendering with results:", results);
+
   const getAccountTypeIcon = (accountType: string) => {
     switch (accountType) {
       case 'business':
@@ -38,9 +40,13 @@ export const SearchResults = ({ searchResults, onSelectContact }: SearchResultsP
     }
   };
 
+  if (results.length === 0) {
+    return <CommandEmpty>No users or businesses found</CommandEmpty>;
+  }
+
   return (
     <>
-      {searchResults.map((user) => (
+      {results.map((user) => (
         <CommandItem 
           key={user.id}
           onSelect={() => onSelectContact(user)}

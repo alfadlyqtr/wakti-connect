@@ -13,7 +13,9 @@ export const useContactSearch = () => {
   const [contactStatus, setContactStatus] = useState<ContactRequestStatus | null>(null);
 
   const handleSearch = async (query: string) => {
+    console.log("[useContactSearch] Starting search with query:", query);
     setSearchQuery(query);
+    
     if (!query || query.trim().length < 2) {
       setSearchResults([]);
       return;
@@ -22,14 +24,16 @@ export const useContactSearch = () => {
     setIsSearching(true);
     try {
       const results = await searchUsers(query);
-      setSearchResults(results);
+      console.log("[useContactSearch] Search results:", results);
+      setSearchResults(Array.isArray(results) ? results : []);
     } catch (error) {
-      console.error("Error searching contacts:", error);
+      console.error("[useContactSearch] Search error:", error);
       toast({
         title: "Search Error",
-        description: "Failed to search for contacts",
+        description: "Failed to search for contacts. Please try again.",
         variant: "destructive",
       });
+      setSearchResults([]);
     } finally {
       setIsSearching(false);
     }
@@ -40,24 +44,27 @@ export const useContactSearch = () => {
       return await checkContactRequest(contactId);
     },
     onSuccess: (data) => {
+      console.log("[useContactSearch] Contact status check:", data);
       setContactStatus(data);
     },
     onError: (error) => {
-      console.error("Error checking contact status:", error);
+      console.error("[useContactSearch] Status check error:", error);
       toast({
         title: "Error",
-        description: "Failed to check contact status",
+        description: "Failed to check contact status. Please try again.",
         variant: "destructive",
       });
     },
   });
 
   const selectContact = (contact: UserSearchResult) => {
+    console.log("[useContactSearch] Selected contact:", contact);
     setSelectedContact(contact);
     checkStatus.mutate(contact.id);
   };
 
   const clearSearch = () => {
+    console.log("[useContactSearch] Clearing search");
     setSearchQuery("");
     setSearchResults([]);
     setSelectedContact(null);

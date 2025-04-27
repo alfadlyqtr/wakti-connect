@@ -1,13 +1,12 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Loader2, User, UserPlus, AlertCircle, Briefcase } from "lucide-react";
-import { useContactSearch } from "@/hooks/useContactSearch";
-import { Badge } from "@/components/ui/badge";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandList } from "@/components/ui/command";
+import { Command, CommandInput, CommandList, CommandGroup } from "@/components/ui/command";
 import { SearchResults } from "./SearchResults";
 import { ContactPreview } from "./ContactPreview";
+import { useContactSearch } from "@/hooks/useContactSearch";
+import { Loader2, User, UserPlus, AlertCircle, Briefcase } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface AddContactDialogProps {
   isOpen: boolean;
@@ -34,6 +33,7 @@ const AddContactDialog: React.FC<AddContactDialogProps> = ({
 
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
+  // Clear search when dialog closes
   useEffect(() => {
     if (!isOpen) {
       clearSearch();
@@ -81,6 +81,15 @@ const AddContactDialog: React.FC<AddContactDialogProps> = ({
     }
   };
 
+  // Debug logs
+  console.log("[AddContactDialog] Current state:", {
+    searchQuery,
+    searchResults,
+    isSearching,
+    selectedContact,
+    contactStatus
+  });
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -102,20 +111,21 @@ const AddContactDialog: React.FC<AddContactDialogProps> = ({
             
             {searchQuery.length > 0 && (
               <CommandList>
-                {isSearching ? (
-                  <div className="flex justify-center p-4">
-                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                  </div>
-                ) : searchResults.length === 0 ? (
-                  <CommandEmpty>No users or businesses found</CommandEmpty>
-                ) : (
-                  <CommandGroup>
+                <CommandGroup>
+                  {isSearching ? (
+                    <div className="flex justify-center p-4">
+                      <svg className="animate-spin h-5 w-5 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    </div>
+                  ) : (
                     <SearchResults 
-                      searchResults={searchResults}
+                      searchResults={searchResults || []}
                       onSelectContact={selectContact}
                     />
-                  </CommandGroup>
-                )}
+                  )}
+                </CommandGroup>
               </CommandList>
             )}
           </Command>
