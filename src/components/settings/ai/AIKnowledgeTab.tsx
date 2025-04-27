@@ -8,7 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload, Trash2, FileText, AlertTriangle } from "lucide-react";
 import { useAISettings } from './context/AISettingsContext';
-import { AIKnowledgeUpload } from '@/components/ai/personality-switcher/types';
+import { AIKnowledgeUpload } from '@/types/ai-assistant.types';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { format } from 'date-fns';
@@ -160,14 +160,14 @@ export function AIKnowledgeTab() {
         </CardHeader>
         
         <CardContent>
-          {knowledgeUploads.length === 0 ? (
+          {!knowledgeUploads || knowledgeUploads.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               No documents uploaded yet.
             </div>
           ) : (
             <ScrollArea className="h-[300px]">
               <div className="space-y-2">
-                {knowledgeUploads.map((doc: AIKnowledgeUpload) => (
+                {knowledgeUploads.map((doc) => (
                   <div 
                     key={doc.id} 
                     className="flex items-center justify-between p-3 border rounded-md"
@@ -205,10 +205,10 @@ export function AIKnowledgeTab() {
         
         <CardFooter className="justify-between items-center border-t px-6 py-3">
           <p className="text-sm text-muted-foreground">
-            {knowledgeUploads.length} document{knowledgeUploads.length !== 1 ? 's' : ''}
+            {knowledgeUploads ? `${knowledgeUploads.length} document${knowledgeUploads.length !== 1 ? 's' : ''}` : '0 documents'}
           </p>
           
-          {knowledgeUploads.length > 0 && (
+          {knowledgeUploads && knowledgeUploads.length > 0 && (
             <Button variant="outline" size="sm">
               Manage All
             </Button>
