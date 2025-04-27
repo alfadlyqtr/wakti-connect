@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/components/ui/use-toast';
@@ -118,23 +119,28 @@ export const useContacts = () => {
         return { incomingRequests: [], outgoingRequests: [] };
       }
 
-      const outgoingRequests = outgoingData.map(request => ({
-        id: request.id,
-        userId: request.user_id,
-        contactId: request.contact_id,
-        status: request.status as "accepted" | "pending" | "rejected",
-        staffRelationId: request.staff_relation_id,
-        created_at: request.created_at,
-        contactProfile: {
-          id: request.profiles?.id || request.contact_id,
-          fullName: request.profiles?.full_name || null,
-          displayName: request.profiles?.display_name || null,
-          avatarUrl: request.profiles?.avatar_url || null,
-          accountType: request.profiles?.account_type || null,
-          businessName: request.profiles?.business_name || null,
-          email: request.profiles?.email || null
-        }
-      }));
+      const outgoingRequests = outgoingData.map(request => {
+        // Safely access profiles data with proper type checking
+        const profiles = request.profiles || {};
+        
+        return {
+          id: request.id,
+          userId: request.user_id,
+          contactId: request.contact_id,
+          status: request.status as "accepted" | "pending" | "rejected",
+          staffRelationId: request.staff_relation_id,
+          created_at: request.created_at,
+          contactProfile: {
+            id: typeof profiles === 'object' && 'id' in profiles ? profiles.id : request.contact_id,
+            fullName: typeof profiles === 'object' && 'full_name' in profiles ? profiles.full_name : null,
+            displayName: typeof profiles === 'object' && 'display_name' in profiles ? profiles.display_name : null,
+            avatarUrl: typeof profiles === 'object' && 'avatar_url' in profiles ? profiles.avatar_url : null,
+            accountType: typeof profiles === 'object' && 'account_type' in profiles ? profiles.account_type : null,
+            businessName: typeof profiles === 'object' && 'business_name' in profiles ? profiles.business_name : null,
+            email: typeof profiles === 'object' && 'email' in profiles ? profiles.email : null
+          }
+        };
+      });
 
       console.log("[useContacts] Fetched requests:", {
         incoming: incomingRequests.length,
