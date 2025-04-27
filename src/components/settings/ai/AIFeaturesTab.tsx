@@ -1,169 +1,251 @@
 
-import React from "react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import React from 'react';
+import { Card, CardContent } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Save, Loader2 } from "lucide-react";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Separator } from "@/components/ui/separator";
-import { useAISettings } from "./context/AISettingsContext";
-import { useTranslation } from "react-i18next";
+import { useAISettings } from './context/AISettingsContext';
+import { AlertOctagon, Mic, Megaphone, CheckSquare, CalendarRange, Brain, Lock } from "lucide-react";
+import { toast } from '@/components/ui/use-toast';
 
-export const AIFeaturesTab: React.FC = () => {
-  const { t } = useTranslation();
-  const { settings, updateSettings, isUpdatingSettings } = useAISettings();
+export function AIFeaturesTab() {
+  const { settings, updateFeature, isLoading } = useAISettings();
   
-  if (!settings) return null;
+  if (isLoading || !settings) {
+    return (
+      <div className="flex justify-center items-center p-8">
+        <p>Loading AI features...</p>
+      </div>
+    );
+  }
+  
+  const handleFeatureToggle = (feature: keyof typeof settings.enabled_features) => {
+    if (!settings) return;
 
-  const handleProactivenessChange = (checked: boolean) => {
-    updateSettings({
-      ...settings,
-      proactiveness: checked,
-    });
+    // Check if the feature exists
+    if (feature in settings.enabled_features) {
+      // Type assertion to ensure TypeScript recognizes the feature as a valid key
+      const featureKey = feature as keyof typeof settings.enabled_features;
+      const newValue = !settings.enabled_features[featureKey];
+      
+      updateFeature(featureKey, newValue)
+        .then(() => {
+          toast({
+            title: newValue ? "Feature enabled" : "Feature disabled",
+            description: `${feature.replace(/_/g, ' ')} has been ${newValue ? 'enabled' : 'disabled'}.`,
+          });
+        })
+        .catch((err) => {
+          console.error(`Error updating ${feature}:`, err);
+          toast({
+            variant: "destructive",
+            title: "Update failed",
+            description: `Failed to update ${feature.replace(/_/g, ' ')}.`,
+          });
+        });
+    } else {
+      console.error(`Feature ${feature} doesn't exist in settings.enabled_features`);
+    }
   };
-
-  const handleSuggestionFrequencyChange = (value: "low" | "medium" | "high") => {
-    updateSettings({
-      ...settings,
-      suggestion_frequency: value,
-    });
-  };
-
-  const handleFeatureToggle = (feature: keyof typeof settings.enabled_features, checked: boolean) => {
-    updateSettings({
-      ...settings,
-      enabled_features: {
-        ...settings.enabled_features,
-        [feature]: checked,
-      },
-    });
-  };
-
+  
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{t("aiSettings.features.title")}</CardTitle>
-        <CardDescription>
-          {t("aiSettings.features.description")}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="space-y-0.5">
-            <Label htmlFor="proactiveness">{t("aiSettings.features.proactiveness")}</Label>
-            <p className="text-sm text-muted-foreground">
-              {t("aiSettings.features.proactivenessDescription")}
+    <div className="space-y-6">
+      <h3 className="text-lg font-medium">AI Assistant Features</h3>
+      <p className="text-sm text-muted-foreground">
+        Configure which AI features are enabled for your WAKTI assistant.
+      </p>
+      
+      <div className="grid gap-4 md:grid-cols-2">
+        {/* Core Features Card */}
+        <Card>
+          <CardContent className="pt-6">
+            <h4 className="text-sm font-semibold mb-4">Core Features</h4>
+            
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Mic className="w-4 h-4 text-primary" />
+                  <Label htmlFor="voice-input">Voice Input</Label>
+                </div>
+                <Switch
+                  id="voice-input"
+                  checked={settings.enabled_features.voice_input}
+                  onCheckedChange={() => handleFeatureToggle('voice_input')}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Megaphone className="w-4 h-4 text-primary" />
+                  <Label htmlFor="voice-output">Voice Output</Label>
+                </div>
+                <Switch
+                  id="voice-output"
+                  checked={settings.enabled_features.voice_output}
+                  onCheckedChange={() => handleFeatureToggle('voice_output')}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <CheckSquare className="w-4 h-4 text-primary" />
+                  <Label htmlFor="task-detection">Task Detection</Label>
+                </div>
+                <Switch
+                  id="task-detection"
+                  checked={settings.enabled_features.task_detection}
+                  onCheckedChange={() => handleFeatureToggle('task_detection')}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <CalendarRange className="w-4 h-4 text-primary" />
+                  <Label htmlFor="meeting-scheduling">Meeting Scheduling</Label>
+                </div>
+                <Switch
+                  id="meeting-scheduling"
+                  checked={settings.enabled_features.meeting_scheduling}
+                  onCheckedChange={() => handleFeatureToggle('meeting_scheduling')}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Brain className="w-4 h-4 text-primary" />
+                  <Label htmlFor="personalized-suggestions">Personalized Suggestions</Label>
+                </div>
+                <Switch
+                  id="personalized-suggestions"
+                  checked={settings.enabled_features.personalized_suggestions}
+                  onCheckedChange={() => handleFeatureToggle('personalized_suggestions')}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Integration Features Card */}
+        <Card>
+          <CardContent className="pt-6">
+            <h4 className="text-sm font-semibold mb-4">Integration Features</h4>
+            
+            <div className="space-y-4">
+              {/* Tasks Integration */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <CheckSquare className="w-4 h-4 text-primary" />
+                  <Label htmlFor="tasks-integration">Tasks Integration</Label>
+                </div>
+                {settings.enabled_features.tasks !== undefined && (
+                  <Switch
+                    id="tasks-integration"
+                    checked={settings.enabled_features.tasks}
+                    onCheckedChange={() => handleFeatureToggle('tasks')}
+                  />
+                )}
+              </div>
+              
+              {/* Events Integration */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <CalendarRange className="w-4 h-4 text-primary" />
+                  <Label htmlFor="events-integration">Events Integration</Label>
+                </div>
+                {settings.enabled_features.events !== undefined && (
+                  <Switch
+                    id="events-integration"
+                    checked={settings.enabled_features.events}
+                    onCheckedChange={() => handleFeatureToggle('events')}
+                  />
+                )}
+              </div>
+              
+              {/* Staff Integration */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <CheckSquare className="w-4 h-4 text-primary" />
+                  <Label htmlFor="staff-integration">Staff Integration</Label>
+                </div>
+                {settings.enabled_features.staff !== undefined && (
+                  <Switch
+                    id="staff-integration"
+                    checked={settings.enabled_features.staff}
+                    onCheckedChange={() => handleFeatureToggle('staff')}
+                  />
+                )}
+              </div>
+              
+              {/* Analytics Integration */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <CheckSquare className="w-4 h-4 text-primary" />
+                  <Label htmlFor="analytics-integration">Analytics Integration</Label>
+                </div>
+                {settings.enabled_features.analytics !== undefined && (
+                  <Switch
+                    id="analytics-integration"
+                    checked={settings.enabled_features.analytics}
+                    onCheckedChange={() => handleFeatureToggle('analytics')}
+                  />
+                )}
+              </div>
+              
+              {/* Messaging Integration */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <CheckSquare className="w-4 h-4 text-primary" />
+                  <Label htmlFor="messaging-integration">Messaging Integration</Label>
+                </div>
+                {settings.enabled_features.messaging !== undefined && (
+                  <Switch
+                    id="messaging-integration"
+                    checked={settings.enabled_features.messaging}
+                    onCheckedChange={() => handleFeatureToggle('messaging')}
+                  />
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+      
+      {/* Premium Features Card */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex justify-between items-center mb-4">
+            <h4 className="text-sm font-semibold">Premium Features</h4>
+            <Button variant="outline" size="sm" className="h-8">
+              <Lock className="w-3 h-3 mr-1" />
+              Upgrade
+            </Button>
+          </div>
+          
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2 opacity-50">
+                <Brain className="w-4 h-4" />
+                <Label htmlFor="custom-knowledge">Custom Knowledge Base</Label>
+              </div>
+              <Switch id="custom-knowledge" disabled />
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2 opacity-50">
+                <AlertOctagon className="w-4 h-4" />
+                <Label htmlFor="priority-support">Priority Support</Label>
+              </div>
+              <Switch id="priority-support" disabled />
+            </div>
+          </div>
+          
+          <div className="mt-4">
+            <p className="text-xs text-muted-foreground">
+              Premium features require a paid subscription.
             </p>
           </div>
-          <Switch
-            id="proactiveness"
-            checked={settings.proactiveness}
-            onCheckedChange={handleProactivenessChange}
-          />
-        </div>
-        
-        <Separator />
-        
-        <div className="space-y-3">
-          <Label>{t("aiSettings.features.suggestionFrequency")}</Label>
-          <p className="text-sm text-muted-foreground">
-            {t("aiSettings.features.suggestionFrequencyDescription")}
-          </p>
-          <RadioGroup 
-            value={settings.suggestion_frequency} 
-            onValueChange={handleSuggestionFrequencyChange}
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="low" id="low_freq" />
-              <Label htmlFor="low_freq" className="cursor-pointer">{t("aiSettings.frequency.low")}</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="medium" id="medium_freq" />
-              <Label htmlFor="medium_freq" className="cursor-pointer">{t("aiSettings.frequency.medium")}</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="high" id="high_freq" />
-              <Label htmlFor="high_freq" className="cursor-pointer">{t("aiSettings.frequency.high")}</Label>
-            </div>
-          </RadioGroup>
-        </div>
-        
-        <Separator />
-        
-        <div className="space-y-3">
-          <Label>{t("aiSettings.features.enabledFeatures")}</Label>
-          <p className="text-sm text-muted-foreground">
-            {t("aiSettings.features.selectFeatures")}
-          </p>
-          
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="tasks_feature" className="cursor-pointer">{t("aiSettings.features.taskManagement")}</Label>
-              <Switch
-                id="tasks_feature"
-                checked={settings.enabled_features.tasks}
-                onCheckedChange={(checked) => handleFeatureToggle("tasks", checked)}
-              />
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <Label htmlFor="events_feature" className="cursor-pointer">{t("aiSettings.features.eventPlanning")}</Label>
-              <Switch
-                id="events_feature"
-                checked={settings.enabled_features.events}
-                onCheckedChange={(checked) => handleFeatureToggle("events", checked)}
-              />
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <Label htmlFor="staff_feature" className="cursor-pointer">{t("aiSettings.features.staffManagement")}</Label>
-              <Switch
-                id="staff_feature"
-                checked={settings.enabled_features.staff}
-                onCheckedChange={(checked) => handleFeatureToggle("staff", checked)}
-              />
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <Label htmlFor="analytics_feature" className="cursor-pointer">{t("aiSettings.features.analytics")}</Label>
-              <Switch
-                id="analytics_feature"
-                checked={settings.enabled_features.analytics}
-                onCheckedChange={(checked) => handleFeatureToggle("analytics", checked)}
-              />
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <Label htmlFor="messaging_feature" className="cursor-pointer">{t("aiSettings.features.messagingAssistance")}</Label>
-              <Switch
-                id="messaging_feature"
-                checked={settings.enabled_features.messaging}
-                onCheckedChange={(checked) => handleFeatureToggle("messaging", checked)}
-              />
-            </div>
-          </div>
-        </div>
-      </CardContent>
-      <CardFooter>
-        <Button 
-          onClick={() => updateSettings(settings)}
-          disabled={isUpdatingSettings}
-          className="w-full"
-        >
-          {isUpdatingSettings ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {t("aiSettings.saving")}
-            </>
-          ) : (
-            <>
-              <Save className="mr-2 h-4 w-4" />
-              {t("aiSettings.saveFeatures")}
-            </>
-          )}
-        </Button>
-      </CardFooter>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
-};
+}

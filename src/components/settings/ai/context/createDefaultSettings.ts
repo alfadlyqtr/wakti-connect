@@ -1,55 +1,47 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/use-toast";
-import { AIAssistantRole } from "@/types/ai-assistant.types";
+import { supabase } from '@/integrations/supabase/client';
+import { WAKTIAIMode, AISettings } from '@/components/ai/personality-switcher/types';
 
-export const createDefaultSettings = async () => {
+export const createDefaultSettings = async (userId: string): Promise<AISettings | null> => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      throw new Error("User not authenticated");
-    }
-    
-    // Set role specifically to one of the valid database enum values
-    // to avoid type errors with the database schema
-    const defaultSettings = {
-      user_id: user.id,
-      assistant_name: "WAKTI",
-      role: "general" as AIAssistantRole, // Using proper type assertion
-      tone: "balanced",
-      response_length: "balanced",
+    const defaultSettings: AISettings = {
+      user_id: userId,
+      assistant_name: 'WAKTI Assistant',
+      role: 'general' as WAKTIAIMode,
+      tone: 'friendly',
+      response_length: 'medium',
       proactiveness: true,
-      suggestion_frequency: "medium",
+      suggestion_frequency: 'medium',
       enabled_features: {
+        voice_input: true,
+        voice_output: false,
+        task_detection: true,
+        meeting_scheduling: true,
+        personalized_suggestions: true,
         tasks: true,
         events: true,
         staff: true,
         analytics: true,
-        messaging: true,
+        messaging: true
       }
     };
     
-    const { error } = await supabase
-      .from("ai_assistant_settings")
-      .insert(defaultSettings);
-      
+    // Convert to a type that matches the database schema
+    const dbSettings = {
+      ...defaultSettings,
+      role: defaultSettings.role as "general" | "student" | "employee" | "writer" | "business_owner"
+    };
+    
+    const { data, error } = await supabase
+      .from('ai_settings')
+      .insert([dbSettings])
+      .select()
+      .single();
+    
     if (error) throw error;
-    
-    toast({
-      title: "Settings created",
-      description: "Default AI assistant settings have been created."
-    });
-    
-    // Refresh the page to load the new settings
-    window.location.reload();
-    
-  } catch (error) {
-    console.error("Error creating default settings:", error);
-    toast({
-      title: "Error creating settings",
-      description: error instanceof Error ? error.message : "An unknown error occurred",
-      variant: "destructive"
-    });
+    return defaultSettings;
+  } catch (err) {
+    console.error('Failed to create default AI settings:', err);
+    return null;
   }
 };

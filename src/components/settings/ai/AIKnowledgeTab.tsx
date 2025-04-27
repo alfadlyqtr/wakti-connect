@@ -1,168 +1,220 @@
 
-import React, { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Loader2, Upload, File, Trash2 } from "lucide-react";
-import { useAISettings } from "./context/AISettingsContext";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AIAssistantRole } from "@/types/ai-assistant.types";
-import { useTranslation } from "react-i18next";
+import { Upload, Trash2, FileText, AlertTriangle } from "lucide-react";
+import { useAISettings } from './context/AISettingsContext';
+import { AIKnowledgeUpload } from '@/components/ai/personality-switcher/types';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
+import { format } from 'date-fns';
 
-export const AIKnowledgeTab: React.FC = () => {
-  const { t } = useTranslation();
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [selectedRole, setSelectedRole] = useState<AIAssistantRole | undefined>(undefined);
-  const { 
-    knowledgeUploads, 
-    addKnowledge, 
-    deleteKnowledge, 
-    isAddingKnowledge, 
-    isLoadingKnowledge 
-  } = useAISettings();
+export function AIKnowledgeTab() {
+  const { knowledgeUploads, uploadKnowledge, deleteKnowledge, isUploading, uploadError } = useAISettings();
+  const [file, setFile] = useState<File | null>(null);
+  const [title, setTitle] = useState<string>("");
   
-  const handleAddKnowledge = async () => {
-    if (!title.trim() || !content.trim()) return;
-    
-    try {
-      await addKnowledge(title, content, selectedRole);
-      setTitle("");
-      setContent("");
-      setSelectedRole(undefined);
-    } catch (error) {
-      console.error("Failed to add knowledge:", error);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const selectedFile = e.target.files[0];
+      setFile(selectedFile);
+      
+      // Set default title from filename without extension
+      if (!title) {
+        const fileName = selectedFile.name.split('.')[0];
+        setTitle(fileName);
+      }
+    }
+  };
+  
+  const handleUpload = async () => {
+    if (!file || !title.trim()) return;
+    await uploadKnowledge(file, title);
+    setFile(null);
+    setTitle("");
+  };
+  
+  const handleDelete = async (id: string) => {
+    if (window.confirm("Are you sure you want to delete this document?")) {
+      await deleteKnowledge(id);
+    }
+  };
+  
+  const getFileIcon = (fileType: string) => {
+    switch (fileType.toLowerCase()) {
+      case 'pdf': return <FileText className="text-red-500" />;
+      case 'doc':
+      case 'docx': return <FileText className="text-blue-500" />;
+      case 'txt': return <FileText className="text-gray-500" />;
+      default: return <FileText className="text-primary" />;
     }
   };
   
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{t("aiSettings.knowledge.title")}</CardTitle>
-        <CardDescription>
-          {t("aiSettings.knowledge.description")}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="knowledge_title">{t("aiSettings.knowledge.titleLabel")}</Label>
-            <Input
-              id="knowledge_title"
-              placeholder={t("aiSettings.knowledge.titlePlaceholder")}
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="knowledge_role">{t("aiSettings.knowledge.roleSpecific")}</Label>
-            <Select
-              value={selectedRole}
-              onValueChange={(value: AIAssistantRole | undefined) => setSelectedRole(value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={t("aiSettings.knowledge.selectRole")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="general">{t("aiSettings.roles.general")}</SelectItem>
-                <SelectItem value="student">{t("aiSettings.roles.student")}</SelectItem>
-                <SelectItem value="business_owner">{t("aiSettings.roles.business")}</SelectItem>
-                <SelectItem value="employee">{t("aiSettings.roles.work")}</SelectItem>
-                <SelectItem value="writer">{t("aiSettings.roles.creative")}</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              {t("aiSettings.knowledge.roleDescription")}
-            </p>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="knowledge_content">{t("aiSettings.knowledge.content")}</Label>
-            <Textarea
-              id="knowledge_content"
-              placeholder={t("aiSettings.knowledge.contentPlaceholder")}
-              className="min-h-[200px]"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-            />
-          </div>
-          
-          <Button 
-            onClick={handleAddKnowledge}
-            disabled={isAddingKnowledge || !title.trim() || !content.trim()}
-            className="w-full"
-          >
-            {isAddingKnowledge ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {t("aiSettings.knowledge.adding")}
-              </>
-            ) : (
-              <>
-                <Upload className="mr-2 h-4 w-4" />
-                {t("aiSettings.knowledge.add")}
-              </>
-            )}
-          </Button>
-        </div>
+    <div className="space-y-6">
+      <h3 className="text-lg font-medium">Knowledge Base</h3>
+      <p className="text-sm text-muted-foreground">
+        Upload documents to enhance your AI assistant's knowledge.
+      </p>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Upload Documents</CardTitle>
+          <CardDescription>
+            Upload PDF, Word, or text files to improve AI responses.
+          </CardDescription>
+        </CardHeader>
         
-        {isLoadingKnowledge ? (
-          <div className="flex justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          </div>
-        ) : knowledgeUploads && knowledgeUploads.length > 0 ? (
+        <CardContent>
           <div className="space-y-4">
-            <h3 className="font-medium">{t("aiSettings.knowledge.yourKnowledge")}</h3>
-            <div className="space-y-2">
-              {knowledgeUploads.map((item) => (
-                <div 
-                  key={item.id}
-                  className="flex items-center justify-between p-3 border rounded-md"
-                >
-                  <div className="flex items-center">
-                    <File className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <div>
-                      <div className="flex items-center">
-                        <p className="font-medium text-sm">{item.title}</p>
-                        {item.role && (
-                          <span className="ml-2 text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">
-                            {t(`aiSettings.roles.${item.role}`, {
-                              defaultValue: t("aiSettings.roles.general")
-                            })}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {t("aiSettings.knowledge.added", {
-                          date: new Date(item.created_at).toLocaleDateString()
-                        })}
-                      </p>
-                    </div>
+            <div className="grid gap-2">
+              <Label htmlFor="title">Document Title</Label>
+              <Input
+                id="title"
+                placeholder="Enter a descriptive title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="file-upload">Upload File</Label>
+              <div className="border rounded-md p-2">
+                <Input
+                  id="file-upload"
+                  type="file"
+                  className="hidden"
+                  accept=".pdf,.doc,.docx,.txt"
+                  onChange={handleFileChange}
+                />
+                <Label htmlFor="file-upload" className="cursor-pointer">
+                  <div className="flex flex-col items-center justify-center py-4 border-2 border-dashed rounded-md">
+                    <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+                    <span className="text-sm font-medium">
+                      {file ? file.name : "Click to browse files"}
+                    </span>
+                    <span className="text-xs text-muted-foreground mt-1">
+                      PDF, Word, or text files up to 10MB
+                    </span>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => deleteKnowledge(item.id)}
-                    title={t("aiSettings.knowledge.delete")}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              ))}
+                </Label>
+              </div>
+            </div>
+            
+            {isUploading && (
+              <div className="space-y-2">
+                <p className="text-sm">Uploading...</p>
+                <Progress value={70} />
+              </div>
+            )}
+            
+            {uploadError && (
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  {uploadError.message || "Failed to upload file."}
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            <div className="grid gap-2">
+              <Label htmlFor="role-select">Apply to AI Role</Label>
+              <Select defaultValue="general">
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="general">General Assistant</SelectItem>
+                  <SelectItem value="business">Business Assistant</SelectItem>
+                  <SelectItem value="writer">Writing Assistant</SelectItem>
+                  <SelectItem value="student">Student Assistant</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                The AI role that will utilize this knowledge.
+              </p>
             </div>
           </div>
-        ) : (
-          <div className="text-center py-8 text-muted-foreground">
-            <p>{t("aiSettings.knowledge.noItems")}</p>
-            <p className="text-sm">
-              {t("aiSettings.knowledge.addInfo")}
-            </p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+        </CardContent>
+        
+        <CardFooter className="flex justify-end">
+          <Button
+            onClick={handleUpload}
+            disabled={!file || !title.trim() || isUploading}
+          >
+            Upload Document
+          </Button>
+        </CardFooter>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Uploaded Documents</CardTitle>
+          <CardDescription>
+            Manage your AI knowledge base documents.
+          </CardDescription>
+        </CardHeader>
+        
+        <CardContent>
+          {knowledgeUploads.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No documents uploaded yet.
+            </div>
+          ) : (
+            <ScrollArea className="h-[300px]">
+              <div className="space-y-2">
+                {knowledgeUploads.map((doc: AIKnowledgeUpload) => (
+                  <div 
+                    key={doc.id} 
+                    className="flex items-center justify-between p-3 border rounded-md"
+                  >
+                    <div className="flex items-center">
+                      {getFileIcon(doc.type || 'txt')}
+                      
+                      <div className="ml-3">
+                        <p className="font-medium text-sm">
+                          {doc.title || doc.name || 'Untitled Document'}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {doc.role || 'General'} • {
+                            doc.created_at ? 
+                            format(new Date(doc.created_at), 'MMM d, yyyy') : 
+                            'Unknown date'
+                          }
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleDelete(doc.id)}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          )}
+        </CardContent>
+        
+        <CardFooter className="justify-between items-center border-t px-6 py-3">
+          <p className="text-sm text-muted-foreground">
+            {knowledgeUploads.length} document{knowledgeUploads.length !== 1 ? 's' : ''}
+          </p>
+          
+          {knowledgeUploads.length > 0 && (
+            <Button variant="outline" size="sm">
+              Manage All
+            </Button>
+          )}
+        </CardFooter>
+      </Card>
+    </div>
   );
-};
+}

@@ -17,11 +17,13 @@ const SidebarNavItems = ({
   openCommandSearch 
 }: SidebarNavItemsProps) => {
   const location = useLocation();
-  const userRole = localStorage.getItem('userRole');
+  const userRole = localStorage.getItem('userRole') || 'individual';
+  console.log("Current user role:", userRole);
+  console.log("Available nav items:", navItems);
   
   // Filter the navigation items based on the user's role
   const filteredNavItems = navItems.filter(item => {
-    // If the item should only be shown for certain roles
+    // If the item has showFor property and current role isn't included
     if (item.showFor && !item.showFor.includes(userRole as any)) {
       return false;
     }
@@ -33,6 +35,8 @@ const SidebarNavItems = ({
     
     return true;
   });
+  
+  console.log("Filtered nav items:", filteredNavItems);
 
   // Add the search item for non-staff users
   const shouldShowSearch = userRole !== 'staff' && openCommandSearch;
