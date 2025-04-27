@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { DashboardWidgetLayout } from "@/types/dashboard";
 import { supabase } from "@/integrations/supabase/client";
+import { Json } from "@/types/supabase";
 
 export const useDashboardLayout = () => {
   const [layout, setLayout] = useState<DashboardWidgetLayout[]>([]);
@@ -30,7 +31,7 @@ export const useDashboardLayout = () => {
         if (savedLayout) {
           const parsedLayout = JSON.parse(savedLayout);
           if (Array.isArray(parsedLayout)) {
-            setLayout(parsedLayout);
+            setLayout(parsedLayout as DashboardWidgetLayout[]);
           }
         }
         
@@ -44,7 +45,7 @@ export const useDashboardLayout = () => {
         if (!error && data?.dashboard_layout) {
           const dbLayout = data.dashboard_layout;
           if (Array.isArray(dbLayout)) {
-            setLayout(dbLayout);
+            setLayout(dbLayout as DashboardWidgetLayout[]);
             localStorage.setItem(`dashboard_layout_${userId}`, JSON.stringify(dbLayout));
           }
         }
@@ -71,7 +72,7 @@ export const useDashboardLayout = () => {
         .from('user_preferences')
         .upsert({
           user_id: userId,
-          dashboard_layout: newLayout
+          dashboard_layout: newLayout as unknown as Json
         }, {
           onConflict: 'user_id'
         });
