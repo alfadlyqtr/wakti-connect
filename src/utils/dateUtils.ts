@@ -48,7 +48,7 @@ export const formatDateTime = (isoString: string): string => {
       hour12: true
     });
   } catch (e) {
-    console.error("Error formatting datetime:", error, "for string:", isoString);
+    console.error("Error formatting datetime:", e, "for string:", isoString);
     return "Invalid date";
   }
 };
