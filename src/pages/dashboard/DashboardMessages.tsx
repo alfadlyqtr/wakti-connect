@@ -68,8 +68,8 @@ const DashboardMessagesHome = () => {
   useEffect(() => {
     if (isStaff) {
       const syncContacts = async () => {
-        const { forceSyncStaffContacts } = await import('@/services/contacts/contactSync');
-        await forceSyncStaffContacts();
+        const { syncStaffBusinessContacts } = await import('@/services/contacts/contactSync');
+        await syncStaffBusinessContacts();
       };
       
       syncContacts();

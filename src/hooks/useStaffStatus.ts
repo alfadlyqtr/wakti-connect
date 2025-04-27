@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { getStaffRelationId, getActiveWorkSession } from '@/utils/staffUtils';
 import { toast } from "@/components/ui/use-toast";
-import { forceSyncStaffContacts } from '@/services/contacts/contactSync';
+import { syncStaffBusinessContacts } from '@/services/contacts/contactSync';
 
 export const useStaffStatus = () => {
   const [isStaff, setIsStaff] = useState<boolean>(false);
@@ -51,7 +51,7 @@ export const useStaffStatus = () => {
         setActiveWorkSession(session);
         
         // Ensure staff contacts are synced
-        await forceSyncStaffContacts();
+        await syncStaffBusinessContacts();
       }
       
     } catch (err: any) {

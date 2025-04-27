@@ -96,6 +96,7 @@ const DashboardStaffCommunication = () => {
                 : "Your business owner and fellow staff members"}
             </CardDescription>
           </div>
+          
           <Button 
             variant="outline" 
             size="sm" 

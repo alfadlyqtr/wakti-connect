@@ -1,8 +1,9 @@
+
 import React, { useEffect } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
 import { UserRole } from "@/types/user";
-import { ensureStaffContacts, forceSyncStaffContacts } from "@/services/contacts/contactSync";
+import { ensureStaffContacts, syncStaffBusinessContacts } from "@/services/contacts/contactSync";
 import { clearStaffCache } from "@/utils/staffUtils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../context/AuthContext";
@@ -40,7 +41,7 @@ const StaffRoleGuard: React.FC<StaffRoleGuardProps> = ({
           await clearStaffCache();
           
           // Then ensure contacts are synced (staff-business relationship)
-          const result = await forceSyncStaffContacts();
+          const result = await syncStaffBusinessContacts();
           console.log("Staff contacts sync result:", result);
           
           // Set user role in localStorage for quicker access
