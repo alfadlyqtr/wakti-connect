@@ -44,17 +44,22 @@ export const useBusinessSubscribers = (businessId?: string) => {
         }
 
         // Map and clean up data to handle null profiles
-        const transformedData = data.map(item => ({
-          id: item.id,
-          subscriber_id: item.subscriber_id,
-          created_at: item.created_at,
-          profile: {
-            display_name: item.profiles?.display_name || null,
-            full_name: item.profiles?.full_name || null,
-            avatar_url: item.profiles?.avatar_url || null,
-            account_type: item.profiles?.account_type || 'free'
-          }
-        }));
+        const transformedData = data.map(item => {
+          // Safely access profiles data with null checks
+          const profileData = item.profiles || {};
+          
+          return {
+            id: item.id,
+            subscriber_id: item.subscriber_id,
+            created_at: item.created_at,
+            profile: {
+              display_name: profileData.display_name || null,
+              full_name: profileData.full_name || null,
+              avatar_url: profileData.avatar_url || null,
+              account_type: profileData.account_type || 'free'
+            }
+          };
+        });
         
         console.log("Retrieved subscribers:", transformedData);
         return transformedData as BusinessSubscriberWithProfile[];

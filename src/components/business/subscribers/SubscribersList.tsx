@@ -48,10 +48,13 @@ const SubscribersList = ({ businessId }: SubscribersListProps) => {
       {subscribers.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {subscribers.map((subscriber) => {
+            // Safely handle null profile data
+            const profile = subscriber.profile || {};
+            
             // Fallback for display name
             const displayName = 
-              subscriber.profile?.display_name || 
-              subscriber.profile?.full_name || 
+              profile.display_name || 
+              profile.full_name || 
               "Subscriber";
             
             // Get initials for avatar fallback
@@ -67,7 +70,7 @@ const SubscribersList = ({ businessId }: SubscribersListProps) => {
                 <CardContent className="p-4">
                   <div className="flex items-center space-x-4">
                     <Avatar>
-                      <AvatarImage src={subscriber.profile?.avatar_url || ''} />
+                      <AvatarImage src={profile.avatar_url || ''} />
                       <AvatarFallback>
                         {nameInitials}
                       </AvatarFallback>
