@@ -6,7 +6,7 @@ import { ContactPreview } from "./ContactPreview";
 import { ContactSearchInput } from "./ContactSearchInput";
 import { useContactSearch } from "@/hooks/useContactSearch";
 import { Loader2, UserPlus } from "lucide-react";
-import { ContactRequestStatusValue } from "@/types/invitation.types";
+import { ContactRequestStatus, ContactRequestStatusValue } from "@/types/invitation.types";
 
 interface AddContactDialogProps {
   isOpen: boolean;
@@ -33,6 +33,10 @@ const AddContactDialog: React.FC<AddContactDialogProps> = ({
   } = useContactSearch();
 
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [contactRequestStatus, setContactRequestStatus] = useState<ContactRequestStatus>({
+    requestExists: false,
+    requestStatus: null
+  });
 
   // Clear search when dialog closes
   useEffect(() => {
@@ -85,7 +89,7 @@ const AddContactDialog: React.FC<AddContactDialogProps> = ({
           {selectedContact && (
             <ContactPreview
               contact={selectedContact}
-              contactStatus={contactStatus}
+              contactStatus={contactRequestStatus}
               isCheckingStatus={isCheckingStatus}
               isSubmitting={isSubmitting}
               onSubmit={handleSubmit}
