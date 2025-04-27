@@ -26,6 +26,7 @@ export interface AIMessage {
 export interface AISettings {
   id?: string;
   name: string;
+  assistant_name?: string;
   tone: 'professional' | 'friendly' | 'balanced' | 'formal' | 'casual';
   response_length: 'concise' | 'balanced' | 'detailed';
   proactiveness: boolean;
@@ -36,6 +37,11 @@ export interface AISettings {
     task_detection: boolean;
     meeting_scheduling: boolean;
     personalized_suggestions: boolean;
+    tasks?: boolean;
+    events?: boolean;
+    staff?: boolean;
+    analytics?: boolean;
+    messaging?: boolean;
   };
 }
 
@@ -57,7 +63,8 @@ export const RoleContexts = {
     welcomeMessage: 'Hello! How can I assist you with your business today?',
     icon: 'bot',
     suggestedPrompts: ['How can I use WAKTI?', 'What features are available?', 'Help me get started'],
-    commandSuggestions: ['Create a task', 'Schedule a meeting', 'Set a reminder']
+    commandSuggestions: ['Create a task', 'Schedule a meeting', 'Set a reminder'],
+    quickTools: ['voice-to-text', 'tasks', 'calendar']
   },
   student: {
     title: 'Learning Assistant',
@@ -65,7 +72,8 @@ export const RoleContexts = {
     welcomeMessage: 'Hello! What would you like to learn about today?',
     icon: 'graduation-cap',
     suggestedPrompts: ['Explain this concept', 'Help with homework', 'Create a study plan'],
-    commandSuggestions: ['Summarize this text', 'Quiz me on this topic', 'Find learning resources']
+    commandSuggestions: ['Summarize this text', 'Quiz me on this topic', 'Find learning resources'],
+    quickTools: ['voice-to-text', 'notes', 'research']
   },
   productivity: {
     title: 'Productivity Assistant',
@@ -73,7 +81,8 @@ export const RoleContexts = {
     welcomeMessage: 'Hello! I can help you manage tasks and improve productivity. What would you like to focus on?',
     icon: 'list-check',
     suggestedPrompts: ['How can I be more productive?', 'Help me organize my day', 'Create a project timeline'],
-    commandSuggestions: ['Add a task', 'Create a schedule', 'Set priorities']
+    commandSuggestions: ['Add a task', 'Create a schedule', 'Set priorities'],
+    quickTools: ['tasks', 'calendar', 'timer']
   },
   creative: {
     title: 'Creative Assistant',
@@ -81,7 +90,8 @@ export const RoleContexts = {
     welcomeMessage: 'Hello! Let\'s unleash your creativity today. What would you like to create?',
     icon: 'sparkles',
     suggestedPrompts: ['Help me brainstorm ideas', 'Write creative content', 'Design suggestions'],
-    commandSuggestions: ['Generate a story', 'Create marketing copy', 'Design concepts']
+    commandSuggestions: ['Generate a story', 'Create marketing copy', 'Design concepts'],
+    quickTools: ['image-generator', 'content-ideas', 'text-refiner']
   },
   employee: {
     title: 'Work Assistant',
@@ -89,7 +99,8 @@ export const RoleContexts = {
     welcomeMessage: 'Hello! I can help with your work tasks and professional communication. What do you need today?',
     icon: 'briefcase',
     suggestedPrompts: ['Draft an email to my team', 'Help with a presentation', 'Professional writing tips'],
-    commandSuggestions: ['Create meeting minutes', 'Draft a project proposal', 'Write professional email']
+    commandSuggestions: ['Create meeting minutes', 'Draft a project proposal', 'Write professional email'],
+    quickTools: ['email-writer', 'meeting-notes', 'task-manager']
   },
   writer: {
     title: 'Writer Assistant',
@@ -97,7 +108,8 @@ export const RoleContexts = {
     welcomeMessage: 'Hello! Ready to write something amazing today? How can I assist with your writing?',
     icon: 'pen',
     suggestedPrompts: ['Help me write an article', 'Proofread my text', 'Improve my paragraph'],
-    commandSuggestions: ['Generate blog ideas', 'Create content outline', 'Edit my writing']
+    commandSuggestions: ['Generate blog ideas', 'Create content outline', 'Edit my writing'],
+    quickTools: ['text-improver', 'idea-generator', 'grammar-checker']
   },
   business_owner: {
     title: 'Business Assistant',
@@ -105,7 +117,8 @@ export const RoleContexts = {
     welcomeMessage: 'Hello! I can assist with your business operations and strategy. How can I help you today?',
     icon: 'building',
     suggestedPrompts: ['Help with business planning', 'Marketing strategy ideas', 'Customer engagement tips'],
-    commandSuggestions: ['Create business report', 'Draft business proposal', 'Analyze customer data']
+    commandSuggestions: ['Create business report', 'Draft business proposal', 'Analyze customer data'],
+    quickTools: ['analytics', 'reports', 'business-planner']
   }
 };
 

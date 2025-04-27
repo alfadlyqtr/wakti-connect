@@ -99,47 +99,47 @@ export const AIFeaturesTab: React.FC = () => {
           
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="tasks_feature" className="cursor-pointer">{t("aiSettings.features.taskManagement")}</Label>
+              <Label htmlFor="voice_input_feature" className="cursor-pointer">{t("aiSettings.features.voiceInput")}</Label>
               <Switch
-                id="tasks_feature"
-                checked={settings.enabled_features.tasks}
-                onCheckedChange={(checked) => handleFeatureToggle("tasks", checked)}
+                id="voice_input_feature"
+                checked={settings.enabled_features.voice_input}
+                onCheckedChange={(checked) => handleFeatureToggle("voice_input", checked)}
               />
             </div>
             
             <div className="flex items-center justify-between">
-              <Label htmlFor="events_feature" className="cursor-pointer">{t("aiSettings.features.eventPlanning")}</Label>
+              <Label htmlFor="voice_output_feature" className="cursor-pointer">{t("aiSettings.features.voiceOutput")}</Label>
               <Switch
-                id="events_feature"
-                checked={settings.enabled_features.events}
-                onCheckedChange={(checked) => handleFeatureToggle("events", checked)}
+                id="voice_output_feature"
+                checked={settings.enabled_features.voice_output}
+                onCheckedChange={(checked) => handleFeatureToggle("voice_output", checked)}
               />
             </div>
             
             <div className="flex items-center justify-between">
-              <Label htmlFor="staff_feature" className="cursor-pointer">{t("aiSettings.features.staffManagement")}</Label>
+              <Label htmlFor="task_detection_feature" className="cursor-pointer">{t("aiSettings.features.taskDetection")}</Label>
               <Switch
-                id="staff_feature"
-                checked={settings.enabled_features.staff}
-                onCheckedChange={(checked) => handleFeatureToggle("staff", checked)}
+                id="task_detection_feature"
+                checked={settings.enabled_features.task_detection}
+                onCheckedChange={(checked) => handleFeatureToggle("task_detection", checked)}
               />
             </div>
             
             <div className="flex items-center justify-between">
-              <Label htmlFor="analytics_feature" className="cursor-pointer">{t("aiSettings.features.analytics")}</Label>
+              <Label htmlFor="meeting_scheduling_feature" className="cursor-pointer">{t("aiSettings.features.meetingScheduling")}</Label>
               <Switch
-                id="analytics_feature"
-                checked={settings.enabled_features.analytics}
-                onCheckedChange={(checked) => handleFeatureToggle("analytics", checked)}
+                id="meeting_scheduling_feature"
+                checked={settings.enabled_features.meeting_scheduling}
+                onCheckedChange={(checked) => handleFeatureToggle("meeting_scheduling", checked)}
               />
             </div>
             
             <div className="flex items-center justify-between">
-              <Label htmlFor="messaging_feature" className="cursor-pointer">{t("aiSettings.features.messagingAssistance")}</Label>
+              <Label htmlFor="personalized_suggestions_feature" className="cursor-pointer">{t("aiSettings.features.personalizedSuggestions")}</Label>
               <Switch
-                id="messaging_feature"
-                checked={settings.enabled_features.messaging}
-                onCheckedChange={(checked) => handleFeatureToggle("messaging", checked)}
+                id="personalized_suggestions_feature"
+                checked={settings.enabled_features.personalized_suggestions}
+                onCheckedChange={(checked) => handleFeatureToggle("personalized_suggestions", checked)}
               />
             </div>
           </div>

@@ -54,3 +54,9 @@ export function useBreakpointValue<T>(breakpoint: Breakpoint): boolean {
   const activeBreakpoints = useBreakpoint();
   return activeBreakpoints.includes(breakpoint);
 }
+
+// Mobile breakpoint utility hook
+export function useMobileBreakpoint(): boolean {
+  const activeBreakpoints = useBreakpoint();
+  return !activeBreakpoints.includes('md');
+}
