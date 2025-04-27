@@ -9,8 +9,13 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export const canMessageUser = async (recipientId: string): Promise<boolean> => {
   try {
+    // First get the current session
     const { data: { session } } = await supabase.auth.getSession();
-    
+    console.log("Checking messaging permissions for:", { 
+      currentUser: session?.user?.id, 
+      recipientId 
+    });
+
     if (!session?.user) {
       console.log("No active session found");
       return false;
