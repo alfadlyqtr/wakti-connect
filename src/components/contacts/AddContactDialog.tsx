@@ -45,6 +45,26 @@ const AddContactDialog: React.FC<AddContactDialogProps> = ({
     }
   }, [isOpen, clearSearch]);
 
+  // Update contactRequestStatus when contactStatus changes
+  useEffect(() => {
+    if (contactStatus === 'pending') {
+      setContactRequestStatus({
+        requestExists: true,
+        requestStatus: 'pending'
+      });
+    } else if (contactStatus === 'accepted') {
+      setContactRequestStatus({
+        requestExists: true,
+        requestStatus: 'accepted'
+      });
+    } else {
+      setContactRequestStatus({
+        requestExists: false,
+        requestStatus: null
+      });
+    }
+  }, [contactStatus]);
+
   const handleSubmit = async () => {
     if (!selectedContact) return;
     

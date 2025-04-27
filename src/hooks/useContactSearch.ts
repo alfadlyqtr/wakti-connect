@@ -9,7 +9,7 @@ export const useContactSearch = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<UserSearchResult[]>([]);
   const [selectedContact, setSelectedContact] = useState<UserSearchResult | null>(null);
-  const [contactStatus, setContactStatus] = useState<'pending' | 'accepted' | 'none'>('none');
+  const [contactStatus, setContactStatus] = useState<ContactRequestStatusValue>(null);
   const [isCheckingStatus, setIsCheckingStatus] = useState(false);
 
   const searchUsers = async (query: string): Promise<UserSearchResult[]> => {
@@ -85,9 +85,9 @@ export const useContactSearch = () => {
           setContactStatus('accepted');
         } else if (data[0].request_status === 'rejected') {
           statusValue = 'rejected';
-          setContactStatus('none');
+          setContactStatus('rejected');
         } else {
-          setContactStatus('none');
+          setContactStatus(null);
         }
         
         return {
@@ -96,11 +96,11 @@ export const useContactSearch = () => {
         };
       }
       
-      setContactStatus('none');
+      setContactStatus(null);
       return { requestExists: false, requestStatus: null };
     } catch (error) {
       console.error('Error checking contact request:', error);
-      setContactStatus('none');
+      setContactStatus(null);
       return { requestExists: false, requestStatus: null };
     } finally {
       setIsCheckingStatus(false);
@@ -126,7 +126,7 @@ export const useContactSearch = () => {
     setSearchQuery('');
     setSearchResults([]);
     setSelectedContact(null);
-    setContactStatus('none');
+    setContactStatus(null);
   };
 
   return {
@@ -134,7 +134,6 @@ export const useContactSearch = () => {
     searchResults,
     isSearching,
     checkContactRequest,
-    // Added missing properties
     searchQuery,
     selectedContact,
     contactStatus,

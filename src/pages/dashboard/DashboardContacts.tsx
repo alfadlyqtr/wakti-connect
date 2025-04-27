@@ -1,260 +1,345 @@
 
-import React, { useState, useEffect } from "react";
-import { useContacts } from "@/hooks/useContacts";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Plus, RefreshCcw } from "lucide-react";
+import { useContacts } from "@/hooks/useContacts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { UserSearch, UserPlus, RefreshCw } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import ContactsList from "@/components/contacts/ContactsList";
 import AddContactDialog from "@/components/contacts/AddContactDialog";
-import AutoApproveToggle from "@/components/contacts/AutoApproveToggle";
-import StaffSyncSection from "@/components/contacts/StaffSyncSection";
-import ContactsStaffRestriction from "@/components/contacts/ContactsStaffRestriction";
-import { supabase } from "@/integrations/supabase/client";
-import { getStaffBusinessId } from "@/utils/staffUtils";
-import PendingRequestsTabs from "@/components/contacts/PendingRequestsTabs";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import {
+  Alert,
+  AlertTitle,
+  AlertDescription,
+} from "@/components/ui/alert";
+import { InfoIcon } from "lucide-react";
+import { UserContact } from "@/types/invitation.types";
+import MessageComposerDialog from "@/components/messages/MessageComposerDialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 const DashboardContacts = () => {
-  const { 
-    contacts, 
-    isLoading, 
-    pendingRequests, 
-    isLoadingRequests,
+  const [isAddContactDialogOpen, setIsAddContactDialogOpen] = useState(false);
+  const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false);
+  const [deleteContactId, setDeleteContactId] = useState<string | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedContact, setSelectedContact] = useState<UserContact | null>(null);
+
+  const {
+    contacts = [],
+    staffContacts = [],
+    pendingRequests,
     autoApprove,
+    autoAddStaff,
+    isLoading,
+    isLoadingRequests,
+    isLoadingStaffContacts,
     isUpdatingAutoApprove,
+    isUpdatingAutoAddStaff,
     isSyncingContacts,
     sendContactRequest,
     respondToContactRequest,
     deleteContact,
     handleToggleAutoApprove,
-    refreshContacts
+    handleToggleAutoAddStaff,
+    refreshContacts,
   } = useContacts();
-  
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isAddContactOpen, setIsAddContactOpen] = useState(false);
-  const [isBusiness, setIsBusiness] = useState(false);
-  const [isStaff, setIsStaff] = useState(false);
-  const [businessId, setBusinessId] = useState<string | null>(null);
-  const [businessName, setBusinessName] = useState<string | null>(null);
-
-  useEffect(() => {
-    const checkUserType = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        // Check if user is a business owner
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('account_type, business_name')
-          .eq('id', data.session.user.id)
-          .single();
-          
-        if (!error && profile) {
-          setIsBusiness(profile.account_type === 'business');
-        }
-        
-        // Check if user is a staff member
-        const staffBizId = await getStaffBusinessId();
-        if (staffBizId) {
-          setIsStaff(true);
-          setBusinessId(staffBizId);
-          
-          // Get business name
-          const { data: bizData } = await supabase
-            .from('profiles')
-            .select('business_name, full_name')
-            .eq('id', staffBizId)
-            .single();
-            
-          if (bizData) {
-            setBusinessName(bizData.business_name || bizData.full_name || "your business");
-          }
-        }
-      }
-    };
-    
-    checkUserType();
-  }, []);
 
   const handleAddContact = async (contactId: string) => {
-    if (!contactId.trim()) {
-      return;
-    }
-    
     try {
       await sendContactRequest.mutateAsync(contactId);
-      setIsAddContactOpen(false);
+      return Promise.resolve();
     } catch (error) {
-      console.error("Error adding contact:", error);
+      return Promise.reject(error);
     }
+  };
+
+  const handleDeleteContact = async (contactId: string) => {
+    setDeleteContactId(contactId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteContact = async () => {
+    if (!deleteContactId) return;
+    await deleteContact.mutateAsync(deleteContactId);
+    setIsDeleteDialogOpen(false);
+    setDeleteContactId(null);
+  };
+
+  const handleMessageContact = (contact: UserContact) => {
+    setSelectedContact(contact);
+    setIsMessageDialogOpen(true);
   };
 
   const handleRespondToRequest = async (requestId: string, accept: boolean) => {
     try {
       await respondToContactRequest.mutateAsync({ requestId, accept });
     } catch (error) {
-      console.error("Error responding to request:", error);
+      console.error("Error responding to contact request:", error);
     }
   };
-
-  const handleDeleteContact = async (contactId: string) => {
-    try {
-      await deleteContact.mutateAsync(contactId);
-    } catch (error) {
-      console.error("Error deleting contact:", error);
-    }
-  };
-
-  // Fix for TypeScript error: providing the correct function type for handleToggleAutoApprove
-  const onToggleAutoApprove = () => {
-    handleToggleAutoApprove(!autoApprove);
-  };
-
-  const filteredContacts = searchQuery && contacts 
-    ? contacts.filter(contact => {
-        const displayName = contact.contactProfile?.displayName || contact.contactProfile?.fullName || '';
-        const businessName = contact.contactProfile?.businessName || '';
-        const email = contact.contactProfile?.email || '';
-        
-        return displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-               businessName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-               email.toLowerCase().includes(searchQuery.toLowerCase());
-      })
-    : contacts;
-
-  if (isStaff) {
-    return (
-      <div className="space-y-6">
-        <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-bold tracking-tight">Staff Communications</h1>
-          <p className="text-muted-foreground">
-            As a staff member, you can communicate with your business and other staff
-          </p>
-        </div>
-        
-        <ContactsStaffRestriction 
-          businessId={businessId || undefined}
-          businessName={businessName || undefined}
-        />
-      </div>
-    );
-  }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">Contacts</h1>
-        <p className="text-muted-foreground">
-          Manage your personal contacts network
-        </p>
-      </div>
-      
-      {isBusiness && (
-        <Card className="bg-blue-50/50 border-blue-200">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Staff Communication</CardTitle>
-            <CardDescription>
-              Staff communication is managed separately under the Staff Communication page
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button 
-              variant="secondary" 
-              onClick={() => window.location.href = '/dashboard/staff-communication'}
-            >
-              Go to Staff Communications
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-      
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-        <div className="flex w-full sm:w-auto items-center space-x-4">
-          <Input
-            placeholder="Search contacts..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="max-w-xs"
-          />
-          <Button onClick={() => setIsAddContactOpen(true)}>
-            <UserPlus className="h-4 w-4 mr-2" />
+    <div className="container mx-auto p-4 md:p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Contacts</h1>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refreshContacts()}
+            disabled={isSyncingContacts}
+          >
+            <RefreshCcw className="h-4 w-4 mr-1" />
+            {isSyncingContacts ? "Syncing..." : "Sync"}
+          </Button>
+          <Button size="sm" onClick={() => setIsAddContactDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-1" />
             Add Contact
           </Button>
         </div>
-        
-        <div className="flex items-center gap-3">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={refreshContacts}
-            disabled={isSyncingContacts}
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isSyncingContacts ? 'animate-spin' : ''}`} />
-            {isSyncingContacts ? 'Refreshing...' : 'Refresh'}
-          </Button>
-          
-          <AutoApproveToggle 
-            autoApprove={autoApprove}
-            isUpdating={isUpdatingAutoApprove}
-            onToggle={onToggleAutoApprove}
-          />
-        </div>
       </div>
-      
+
       <Tabs defaultValue="contacts">
-        <TabsList>
+        <TabsList className="mb-4">
           <TabsTrigger value="contacts">My Contacts</TabsTrigger>
-          <TabsTrigger value="requests">
-            Pending Requests
-            {pendingRequests && ((pendingRequests.incoming.length + pendingRequests.outgoing.length) > 0) && (
-              <Badge variant="secondary" className="ml-2">
-                {pendingRequests.incoming.length + pendingRequests.outgoing.length}
-              </Badge>
-            )}
+          <TabsTrigger value="staff">
+            Staff Contacts {staffContacts.length > 0 && `(${staffContacts.length})`}
           </TabsTrigger>
+          <TabsTrigger value="requests">
+            Requests
+            {pendingRequests.incoming.length > 0 &&
+              ` (${pendingRequests.incoming.length})`}
+          </TabsTrigger>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
+
         <TabsContent value="contacts">
-          <Card>
-            <CardHeader>
-              <CardTitle>Contacts</CardTitle>
-              <CardDescription>View and manage your contacts.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ContactsList 
-                contacts={filteredContacts || []} 
-                isLoading={isLoading}
-                isSyncing={false}
-                onDeleteContact={handleDeleteContact}
-              />
-            </CardContent>
-          </Card>
+          <div className="bg-white rounded-lg shadow p-6">
+            <ContactsList
+              contacts={contacts}
+              isLoading={isLoading}
+              isSyncing={isSyncingContacts}
+              onDeleteContact={handleDeleteContact}
+              onMessageContact={handleMessageContact}
+            />
+          </div>
         </TabsContent>
+
+        <TabsContent value="staff">
+          <div className="bg-white rounded-lg shadow p-6">
+            <ContactsList
+              contacts={staffContacts}
+              isLoading={isLoadingStaffContacts}
+              isSyncing={isSyncingContacts}
+              showChat={true}
+            />
+          </div>
+        </TabsContent>
+
         <TabsContent value="requests">
-          <Card>
-            <CardHeader>
-              <CardTitle>Pending Requests</CardTitle>
-              <CardDescription>Review and respond to contact requests.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {pendingRequests && (
-                <PendingRequestsTabs
-                  incomingRequests={pendingRequests.incoming}
-                  outgoingRequests={pendingRequests.outgoing}
-                  isLoading={isLoadingRequests}
-                  onRespondToRequest={handleRespondToRequest}
-                />
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Incoming requests */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-lg font-semibold mb-4">Incoming Requests</h2>
+              {isLoadingRequests ? (
+                <p>Loading requests...</p>
+              ) : pendingRequests.incoming.length === 0 ? (
+                <p className="text-muted-foreground">No incoming requests</p>
+              ) : (
+                <div className="space-y-4">
+                  {pendingRequests.incoming.map((request) => (
+                    <div
+                      key={request.id}
+                      className="flex items-center justify-between p-3 rounded-lg border"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Avatar>
+                          <AvatarImage
+                            src={request.contactProfile?.avatarUrl || ""}
+                          />
+                          <AvatarFallback>
+                            {(
+                              request.contactProfile?.displayName ||
+                              request.contactProfile?.fullName ||
+                              "U"
+                            ).charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium">
+                            {request.contactProfile?.displayName ||
+                              request.contactProfile?.fullName ||
+                              "Unknown User"}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {request.contactProfile?.email ||
+                              request.contact_id}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="bg-green-50 hover:bg-green-100 text-green-700 border-green-100"
+                          onClick={() =>
+                            handleRespondToRequest(request.id, true)
+                          }
+                        >
+                          Accept
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="bg-red-50 hover:bg-red-100 text-red-700 border-red-100"
+                          onClick={() =>
+                            handleRespondToRequest(request.id, false)
+                          }
+                        >
+                          Decline
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+
+            {/* Outgoing requests */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-lg font-semibold mb-4">Outgoing Requests</h2>
+              {isLoadingRequests ? (
+                <p>Loading requests...</p>
+              ) : pendingRequests.outgoing.length === 0 ? (
+                <p className="text-muted-foreground">No outgoing requests</p>
+              ) : (
+                <div className="space-y-4">
+                  {pendingRequests.outgoing.map((request) => (
+                    <div
+                      key={request.id}
+                      className="flex items-center justify-between p-3 rounded-lg border"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Avatar>
+                          <AvatarImage
+                            src={request.contactProfile?.avatarUrl || ""}
+                          />
+                          <AvatarFallback>
+                            {(
+                              request.contactProfile?.displayName ||
+                              request.contactProfile?.fullName ||
+                              "U"
+                            ).charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium">
+                            {request.contactProfile?.displayName ||
+                              request.contactProfile?.fullName ||
+                              "Unknown User"}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {request.contactProfile?.email ||
+                              request.contact_id}
+                          </p>
+                          <p className="text-xs text-yellow-600 mt-1">
+                            Pending approval
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="settings">
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="space-y-6">
+              <Alert variant="default" className="bg-blue-50 border-blue-200">
+                <InfoIcon className="h-4 w-4 text-blue-600" />
+                <AlertTitle>Contact Settings</AlertTitle>
+                <AlertDescription>
+                  Configure how your contacts system works
+                </AlertDescription>
+              </Alert>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="auto-approve" className="font-medium">
+                    Auto-approve contact requests
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Automatically approve all incoming contact requests
+                  </p>
+                </div>
+                <Switch
+                  id="auto-approve"
+                  checked={autoApprove}
+                  onCheckedChange={handleToggleAutoApprove}
+                  disabled={isUpdatingAutoApprove}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="auto-add-staff" className="font-medium">
+                    Auto-add business staff contacts
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Automatically add staff members as contacts when they join
+                    your business
+                  </p>
+                </div>
+                <Switch
+                  id="auto-add-staff"
+                  checked={autoAddStaff}
+                  onCheckedChange={handleToggleAutoAddStaff}
+                  disabled={isUpdatingAutoAddStaff}
+                />
+              </div>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
-      
+
+      {/* Add Contact Dialog */}
       <AddContactDialog
-        isOpen={isAddContactOpen}
-        onOpenChange={setIsAddContactOpen}
+        isOpen={isAddContactDialogOpen}
+        onOpenChange={setIsAddContactDialogOpen}
         onAddContact={handleAddContact}
       />
+
+      {/* Message Dialog */}
+      <MessageComposerDialog
+        isOpen={isMessageDialogOpen}
+        onOpenChange={setIsMessageDialogOpen}
+        contact={selectedContact}
+      />
+
+      {/* Delete Contact Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Contact</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove this contact? They will need to send you a new contact request to reconnect.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDeleteContact}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

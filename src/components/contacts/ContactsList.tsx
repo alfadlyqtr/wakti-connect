@@ -10,17 +10,19 @@ import { Badge } from "@/components/ui/badge";
 interface ContactsListProps {
   contacts: UserContact[];
   isLoading: boolean;
-  isSyncing?: boolean; // Add the optional isSyncing prop
+  isSyncing?: boolean;
   showChat?: boolean;
   onDeleteContact?: (contactId: string) => void;
+  onMessageContact?: (contact: UserContact) => void;
 }
 
 const ContactsList: React.FC<ContactsListProps> = ({ 
   contacts, 
   isLoading,
-  isSyncing = false, // Default to false
+  isSyncing = false,
   showChat = false,
-  onDeleteContact
+  onDeleteContact,
+  onMessageContact
 }) => {
   if (isLoading || isSyncing) {
     return (
@@ -89,6 +91,17 @@ const ContactsList: React.FC<ContactsListProps> = ({
             </div>
           </div>
           <div className="flex gap-2">
+            {onMessageContact && (
+              <Button 
+                onClick={() => onMessageContact(contact)}
+                size="sm" 
+                variant="outline"
+              >
+                <MessageSquare className="h-4 w-4 mr-1" />
+                Message
+              </Button>
+            )}
+            
             {showChat && (
               <Button asChild size="sm" variant="outline">
                 <Link to={getChatLink(contact)}>
@@ -97,6 +110,7 @@ const ContactsList: React.FC<ContactsListProps> = ({
                 </Link>
               </Button>
             )}
+            
             {onDeleteContact && !isStaffContact(contact) && (
               <Button 
                 onClick={() => onDeleteContact(contact.contact_id)}
