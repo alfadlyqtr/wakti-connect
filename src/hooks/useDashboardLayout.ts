@@ -28,7 +28,14 @@ export const useDashboardLayout = () => {
         // Try to load from localStorage first for quicker startup
         const savedLayout = localStorage.getItem(`dashboard_layout_${userId}`);
         if (savedLayout) {
-          setLayout(JSON.parse(savedLayout));
+          try {
+            const parsedLayout = JSON.parse(savedLayout);
+            if (Array.isArray(parsedLayout)) {
+              setLayout(parsedLayout);
+            }
+          } catch (parseError) {
+            console.error('Error parsing dashboard layout from localStorage:', parseError);
+          }
         }
         
         // Then try to load from DB (for cross-device sync)
@@ -39,9 +46,16 @@ export const useDashboardLayout = () => {
           .single();
         
         if (!error && data?.dashboard_layout) {
-          const dbLayout = data.dashboard_layout;
-          setLayout(dbLayout);
-          localStorage.setItem(`dashboard_layout_${userId}`, JSON.stringify(dbLayout));
+          try {
+            // Ensure we have a proper array of DashboardWidgetLayout objects
+            const dbLayout = data.dashboard_layout;
+            if (Array.isArray(dbLayout)) {
+              setLayout(dbLayout);
+              localStorage.setItem(`dashboard_layout_${userId}`, JSON.stringify(dbLayout));
+            }
+          } catch (dbParseError) {
+            console.error('Error processing dashboard layout from DB:', dbParseError);
+          }
         }
       } catch (error) {
         console.error('Error loading dashboard layout:', error);
@@ -66,7 +80,7 @@ export const useDashboardLayout = () => {
         .from('user_preferences')
         .upsert({
           user_id: userId,
-          dashboard_layout: newLayout
+          dashboard_layout: newLayout as any // Type assertion for DB compatibility
         }, {
           onConflict: 'user_id'
         });
