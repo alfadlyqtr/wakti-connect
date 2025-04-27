@@ -74,7 +74,7 @@ export const useContacts = () => {
     refetch: refreshAutoApprove 
   } = useQuery({
     queryKey: ['auto-approve-setting', userId],
-    queryFn: () => userId ? fetchAutoApproveSetting(userId) : Promise.resolve(false),
+    queryFn: () => userId ? fetchAutoApproveSetting() : Promise.resolve(false),
     enabled: !!userId,
   });
 
@@ -84,7 +84,7 @@ export const useContacts = () => {
     isLoading: isLoadingAutoAddStaff
   } = useQuery({
     queryKey: ['auto-add-staff-setting', userId],
-    queryFn: () => userId ? fetchAutoAddStaffSetting(userId) : Promise.resolve(true),
+    queryFn: () => userId ? fetchAutoAddStaffSetting() : Promise.resolve(true),
     enabled: !!userId,
   });
 

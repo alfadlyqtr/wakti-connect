@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { UserSearch, UserPlus, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import ContactsList from "@/components/contacts/ContactsList";
-import PendingRequestsList from "@/components/contacts/PendingRequestsList";
 import AddContactDialog from "@/components/contacts/AddContactDialog";
 import AutoApproveToggle from "@/components/contacts/AutoApproveToggle";
 import StaffSyncSection from "@/components/contacts/StaffSyncSection";
@@ -16,7 +15,6 @@ import ContactsStaffRestriction from "@/components/contacts/ContactsStaffRestric
 import { supabase } from "@/integrations/supabase/client";
 import { getStaffBusinessId } from "@/utils/staffUtils";
 import PendingRequestsTabs from "@/components/contacts/PendingRequestsTabs";
-import { UserContact } from "@/types/invitation.types";
 
 const DashboardContacts = () => {
   const { 
@@ -235,8 +233,8 @@ const DashboardContacts = () => {
             </CardHeader>
             <CardContent>
               <PendingRequestsTabs
-                incomingRequests={pendingRequests.incoming || []}
-                outgoingRequests={pendingRequests.outgoing || []}
+                incomingRequests={pendingRequests.incoming}
+                outgoingRequests={pendingRequests.outgoing}
                 isLoading={isLoadingRequests}
                 onRespondToRequest={handleRespondToRequest}
               />

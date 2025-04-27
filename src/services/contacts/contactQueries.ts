@@ -18,11 +18,11 @@ export const getUserContacts = async (userId: string): Promise<UserContact[]> =>
         status,
         staff_relation_id,
         created_at,
-        contact_profile:profiles!contact_id(
-          id,
-          full_name,
-          display_name,
-          avatar_url,
+        profiles:contact_id(
+          id, 
+          full_name, 
+          display_name, 
+          avatar_url, 
           account_type,
           business_name,
           email
@@ -47,13 +47,9 @@ export const getUserContacts = async (userId: string): Promise<UserContact[]> =>
     // Transform results to match the UserContact type
     return contactRows.map(row => {
       const isReversed = row.contact_id === userId;
-      const contactProfile = row.contact_profile;
+      const contactProfile = row.profiles;
       const actualContactId = isReversed ? row.user_id : row.contact_id;
       
-      if (!contactProfile) {
-        console.warn(`[ContactQueries] Missing profile for contact ID: ${actualContactId}`);
-      }
-
       return {
         id: row.id,
         userId: row.user_id,
@@ -148,7 +144,7 @@ export const getContactRequests = async (userId: string) => {
         status,
         staff_relation_id,
         created_at,
-        contact_profile:profiles!user_id(
+        profiles:user_id(
           id,
           full_name,
           display_name,
@@ -171,7 +167,7 @@ export const getContactRequests = async (userId: string) => {
         status,
         staff_relation_id,
         created_at,
-        contact_profile:profiles!contact_id(
+        profiles:contact_id(
           id,
           full_name,
           display_name,
@@ -187,9 +183,59 @@ export const getContactRequests = async (userId: string) => {
     if (incomingError) console.error('[ContactQueries] Error fetching incoming requests:', incomingError);
     if (outgoingError) console.error('[ContactQueries] Error fetching outgoing requests:', outgoingError);
     
+    const formattedIncoming = (incomingRequests || []).map(row => {
+      return {
+        id: row.id,
+        userId: row.user_id,
+        contactId: row.contact_id,
+        status: row.status as ContactRequestStatusValue,
+        staffRelationId: row.staff_relation_id,
+        created_at: row.created_at,
+        contactProfile: row.profiles ? {
+          id: row.user_id,
+          fullName: row.profiles.full_name || 'Unknown User',
+          displayName: row.profiles.display_name || row.profiles.full_name || 'Unknown User',
+          avatarUrl: row.profiles.avatar_url,
+          accountType: row.profiles.account_type || 'free',
+          businessName: row.profiles.business_name,
+          email: row.profiles.email
+        } : {
+          id: row.user_id,
+          fullName: 'Unknown User',
+          displayName: 'Unknown User',
+          accountType: 'free'
+        }
+      };
+    });
+    
+    const formattedOutgoing = (outgoingRequests || []).map(row => {
+      return {
+        id: row.id,
+        userId: row.user_id,
+        contactId: row.contact_id,
+        status: row.status as ContactRequestStatusValue,
+        staffRelationId: row.staff_relation_id,
+        created_at: row.created_at,
+        contactProfile: row.profiles ? {
+          id: row.contact_id,
+          fullName: row.profiles.full_name || 'Unknown User',
+          displayName: row.profiles.display_name || row.profiles.full_name || 'Unknown User',
+          avatarUrl: row.profiles.avatar_url,
+          accountType: row.profiles.account_type || 'free',
+          businessName: row.profiles.business_name,
+          email: row.profiles.email
+        } : {
+          id: row.contact_id,
+          fullName: 'Unknown User',
+          displayName: 'Unknown User',
+          accountType: 'free'
+        }
+      };
+    });
+    
     return {
-      incoming: incomingRequests || [],
-      outgoing: outgoingRequests || []
+      incoming: formattedIncoming,
+      outgoing: formattedOutgoing
     };
   } catch (error) {
     console.error('[ContactQueries] Error fetching contact requests:', error);
@@ -200,7 +246,7 @@ export const getContactRequests = async (userId: string) => {
 /**
  * Get staff contacts for a user
  */
-export const getStaffContacts = async (userId: string) => {
+export const getStaffContacts = async (userId: string): Promise<UserContact[]> => {
   try {
     console.log('[ContactQueries] Fetching staff contacts for user:', userId);
     
@@ -213,7 +259,7 @@ export const getStaffContacts = async (userId: string) => {
         status,
         staff_relation_id,
         created_at,
-        contact_profile:profiles!contact_id(
+        profiles:contact_id(
           id,
           full_name,
           display_name,
@@ -233,7 +279,7 @@ export const getStaffContacts = async (userId: string) => {
     }
     
     return staffContacts.map(row => {
-      const contactProfile = row.contact_profile;
+      const contactProfile = row.profiles;
       
       return {
         id: row.id,

@@ -2,19 +2,21 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { AlertCircle, CheckCircle, XCircle, Briefcase, User } from "lucide-react";
+import { AlertCircle, CheckCircle, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { UserContact } from "@/types/invitation.types";
 
 interface PendingRequestsListProps {
   pendingRequests: UserContact[];
   isLoading: boolean;
-  onRespondToRequest: (requestId: string, accept: boolean) => Promise<void>;
+  direction: string;
+  onRespondToRequest?: (requestId: string, accept: boolean) => Promise<void>;
 }
 
 const PendingRequestsList: React.FC<PendingRequestsListProps> = ({ 
   pendingRequests, 
   isLoading,
+  direction,
   onRespondToRequest 
 }) => {
   if (isLoading) {
@@ -66,26 +68,28 @@ const PendingRequestsList: React.FC<PendingRequestsListProps> = ({
               </p>
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="sm"
-              className="border-green-200 hover:bg-green-50"
-              onClick={() => onRespondToRequest(request.id, true)}
-            >
-              <CheckCircle className="h-4 w-4 mr-1 text-green-500" />
-              Accept
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm"
-              className="border-red-200 hover:bg-red-50"
-              onClick={() => onRespondToRequest(request.id, false)}
-            >
-              <XCircle className="h-4 w-4 mr-1 text-red-500" />
-              Reject
-            </Button>
-          </div>
+          {direction === 'incoming' && onRespondToRequest && (
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="border-green-200 hover:bg-green-50"
+                onClick={() => onRespondToRequest(request.id, true)}
+              >
+                <CheckCircle className="h-4 w-4 mr-1 text-green-500" />
+                Accept
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="border-red-200 hover:bg-red-50"
+                onClick={() => onRespondToRequest(request.id, false)}
+              >
+                <XCircle className="h-4 w-4 mr-1 text-red-500" />
+                Reject
+              </Button>
+            </div>
+          )}
         </div>
       ))}
     </div>

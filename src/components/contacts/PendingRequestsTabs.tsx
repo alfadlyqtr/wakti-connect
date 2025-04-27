@@ -41,7 +41,7 @@ const PendingRequestsTabs: React.FC<PendingRequestsTabsProps> = ({
       
       <TabsContent value="incoming">
         <PendingRequestsList
-          requests={incomingRequests}
+          pendingRequests={incomingRequests}
           isLoading={isLoading}
           direction="incoming"
           onRespondToRequest={onRespondToRequest}
@@ -50,7 +50,7 @@ const PendingRequestsTabs: React.FC<PendingRequestsTabsProps> = ({
       
       <TabsContent value="outgoing">
         <PendingRequestsList
-          requests={outgoingRequests}
+          pendingRequests={outgoingRequests}
           isLoading={isLoading}
           direction="outgoing"
         />
