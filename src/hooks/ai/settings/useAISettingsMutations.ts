@@ -3,7 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { User } from "@supabase/supabase-js";
-import { AISettings, AIAssistantRole } from "@/types/ai-assistant.types";
+import { AISettings } from "@/components/ai/personality-switcher/types";
+import { AIAssistantRole } from "@/types/ai-assistant.types";
+import { Json } from "@/types/supabase";
 
 /**
  * Mutation hook for updating AI settings
@@ -17,27 +19,20 @@ export const useUpdateAISettings = (user: User | null) => {
 
       console.log("Updating AI settings:", newSettings);
       
-      // Ensure the role is a valid database enum value
-      // If it's not one of the allowed values, default to "general"
-      let roleValue = newSettings.role;
-      
-      // Convert WAKTIAIMode to AIAssistantRole (string type for db)
-      // Map any unsupported roles to the closest supported one
+      // Map WAKTIAIMode to supported AIAssistantRole (string type for db)
       const mapRoleToDbRole = (role: string): AIAssistantRole => {
-        const validRoles = ["student", "business_owner", "general", "employee", "writer"];
-        if (validRoles.includes(role)) {
+        const validRoles: AIAssistantRole[] = ["student", "business_owner", "general", "employee", "writer"];
+        if (validRoles.includes(role as AIAssistantRole)) {
           return role as AIAssistantRole;
         }
         // Map unsupported roles to general
-        if (role === "productivity" || role === "creative") {
-          return "general";
-        }
         return "general";
       };
       
-      const dbRole = mapRoleToDbRole(roleValue as string);
+      // Get the valid database role
+      const dbRole = mapRoleToDbRole(newSettings.role as string);
       
-      // Prepare the basic settings object (without knowledge_profile)
+      // Prepare the settings object for database storage
       const baseSettings = {
         user_id: user.id,
         assistant_name: newSettings.assistant_name,
@@ -46,7 +41,7 @@ export const useUpdateAISettings = (user: User | null) => {
         proactiveness: newSettings.proactiveness,
         suggestion_frequency: newSettings.suggestion_frequency,
         role: dbRole, // Use the validated role value
-        enabled_features: newSettings.enabled_features,
+        enabled_features: newSettings.enabled_features as unknown as Json
       };
       
       // If we have an id, update the existing record
@@ -62,7 +57,7 @@ export const useUpdateAISettings = (user: User | null) => {
         
         console.log("Settings updated successfully");
         
-        // Convert to AISettings type and add knowledge_profile from the original newSettings
+        // Convert to AISettings type
         const updatedSettings: AISettings = {
           id: data.id,
           user_id: user.id,
@@ -72,12 +67,29 @@ export const useUpdateAISettings = (user: User | null) => {
           proactiveness: data.proactiveness !== null ? data.proactiveness : true,
           suggestion_frequency: data.suggestion_frequency || "medium",
           role: data.role || "general",
-          enabled_features: data.enabled_features || {
+          enabled_features: data.enabled_features ? {
+            // Type conversion from Json to specific structure
+            voice_input: data.enabled_features.voice_input === true,
+            voice_output: data.enabled_features.voice_output === true,
+            task_detection: data.enabled_features.task_detection === true,
+            meeting_scheduling: data.enabled_features.meeting_scheduling === true,
+            personalized_suggestions: data.enabled_features.personalized_suggestions === true,
+            tasks: data.enabled_features.tasks === true,
+            events: data.enabled_features.events === true,
+            staff: data.enabled_features.staff === true,
+            analytics: data.enabled_features.analytics === true,
+            messaging: data.enabled_features.messaging === true,
+          } : {
             tasks: true,
             events: true,
             staff: true,
             analytics: true,
             messaging: true,
+            voice_input: true,
+            voice_output: false,
+            task_detection: true,
+            meeting_scheduling: true,
+            personalized_suggestions: true
           },
           knowledge_profile: newSettings.knowledge_profile || { role: data.role }
         };
@@ -105,12 +117,29 @@ export const useUpdateAISettings = (user: User | null) => {
           proactiveness: data.proactiveness !== null ? data.proactiveness : true,
           suggestion_frequency: data.suggestion_frequency || "medium",
           role: data.role || "general",
-          enabled_features: data.enabled_features || {
+          enabled_features: data.enabled_features ? {
+            // Type conversion from Json to specific structure
+            voice_input: data.enabled_features.voice_input === true,
+            voice_output: data.enabled_features.voice_output === true,
+            task_detection: data.enabled_features.task_detection === true,
+            meeting_scheduling: data.enabled_features.meeting_scheduling === true,
+            personalized_suggestions: data.enabled_features.personalized_suggestions === true,
+            tasks: data.enabled_features.tasks === true,
+            events: data.enabled_features.events === true,
+            staff: data.enabled_features.staff === true,
+            analytics: data.enabled_features.analytics === true,
+            messaging: data.enabled_features.messaging === true,
+          } : {
             tasks: true,
             events: true,
             staff: true,
             analytics: true,
             messaging: true,
+            voice_input: true,
+            voice_output: false,
+            task_detection: true,
+            meeting_scheduling: true,
+            personalized_suggestions: true
           },
           knowledge_profile: newSettings.knowledge_profile || { role: data.role }
         };

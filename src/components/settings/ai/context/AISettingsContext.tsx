@@ -1,344 +1,310 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { AISettings, AIKnowledgeUpload, WAKTIAIMode } from '@/components/ai/personality-switcher/types';
-import { AISettingsContextType } from './AISettingsContext.types';
-import { createDefaultSettings } from './createDefaultSettings';
-import { toast } from '@/components/ui/use-toast';
-import { useAuth } from '@/features/auth/hooks/useAuth';
-import { Json } from '@/types/supabase';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { AISettings, AIKnowledgeUpload } from "@/components/ai/personality-switcher/types";
+import { AISettingsContextType } from "./AISettingsContext.types";
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { Json } from "@/types/supabase";
+import { useAISettingsQuery, useAIKnowledgeUploadsQuery } from "@/hooks/ai/settings/useAISettingsQueries";
+import { useUpdateAISettings } from "@/hooks/ai/settings/useAISettingsMutations";
+import { AIAssistantRole } from "@/types/ai-assistant.types";
+
+// Create a default context
+const defaultContext: AISettingsContextType = {
+  settings: null,
+  isLoadingSettings: false,
+  isUpdatingSettings: false,
+  isAddingKnowledge: false,
+  knowledgeUploads: null,
+  isLoadingKnowledge: false,
+  canUseAI: false,
+  error: null,
+  updateSettings: async () => false,
+  addKnowledge: async () => false,
+  deleteKnowledge: async () => false,
+  createDefaultSettings: async () => {},
+  isCreatingSettings: false,
+  // Add the missing properties
+  updateFeature: async () => false,
+  isLoading: false,
+  uploadKnowledge: async () => false,
+  isUploading: false,
+  uploadError: null
+};
 
 // Create the context
-const AISettingsContext = createContext<AISettingsContextType | undefined>(undefined);
+const AISettingsContext = createContext<AISettingsContextType>(defaultContext);
 
-interface AISettingsProviderProps {
-  children: React.ReactNode;
-}
-
-export const AISettingsProvider: React.FC<AISettingsProviderProps> = ({ children }) => {
+// Create a provider component
+export const AISettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
-  const userId = user?.id;
-  const queryClient = useQueryClient();
   const [error, setError] = useState<string | Error | null>(null);
+  const [isCreatingSettings, setIsCreatingSettings] = useState(false);
+  const [isAddingKnowledge, setIsAddingKnowledge] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<Error | null>(null);
 
-  // Fetch AI settings
+  // Fetch AI assistant settings
   const {
-    data: settings,
+    data: aiSettings,
     isLoading: isLoadingSettings,
-    error: settingsError,
-  } = useQuery({
-    queryKey: ['ai-settings', userId],
-    queryFn: async () => {
-      if (!userId) return null;
-
-      try {
-        // Using ai_assistant_settings table which exists in the database
-        const { data, error } = await supabase
-          .from('ai_assistant_settings')
-          .select('*')
-          .eq('user_id', userId)
-          .single();
-
-        if (error) throw error;
-        
-        // Parse potentially nested JSON
-        const parsedData: AISettings = {
-          ...data,
-          enabled_features: typeof data.enabled_features === 'string' 
-            ? JSON.parse(data.enabled_features) 
-            : data.enabled_features,
-          // Ensure role is cast correctly to WAKTIAIMode
-          role: data.role as WAKTIAIMode
-        };
-        
-        return parsedData;
-      } catch (error) {
-        console.error('Error fetching AI settings:', error);
-        setError(error instanceof Error ? error : new Error('Failed to fetch AI settings'));
-        return null;
-      }
-    },
-    enabled: !!userId,
-  });
+    refetch: refetchSettings
+  } = useAISettingsQuery(user);
 
   // Fetch knowledge uploads
   const {
     data: knowledgeUploads,
     isLoading: isLoadingKnowledge,
-  } = useQuery({
-    queryKey: ['ai-knowledge', userId],
-    queryFn: async () => {
-      if (!userId) return null;
+    refetch: refetchKnowledge
+  } = useAIKnowledgeUploadsQuery(user);
 
-      try {
-        const { data, error } = await supabase
-          .from('ai_knowledge_uploads')
-          .select('*')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false });
+  // Use the mutation hook for updating settings
+  const updateSettingsMutation = useUpdateAISettings(user);
 
-        if (error) throw error;
-        return data as AIKnowledgeUpload[];
-      } catch (error) {
-        console.error('Error fetching knowledge uploads:', error);
-        return null;
-      }
-    },
-    enabled: !!userId,
-  });
+  // Function to create default settings if none exist
+  const createDefaultSettings = async () => {
+    if (!user) {
+      setError(new Error("User not authenticated"));
+      return;
+    }
 
-  // Update settings mutation
-  const updateSettingsMutation = useMutation({
-    mutationFn: async (newSettings: AISettings) => {
-      if (!userId) throw new Error('User not authenticated');
+    setIsCreatingSettings(true);
+    setError(null);
 
-      // Make sure to fix the role type
-      const role = newSettings.role as string;
-      if (!["general", "student", "employee", "writer", "business_owner", "productivity", "creative"].includes(role)) {
-        console.warn(`Role '${role}' may cause issues with database - proceeding anyway`);
-      }
-
-      // Convert WAKTIAIMode to string to match the database field type
-      const dbSettings = {
-        ...newSettings,
-        role: newSettings.role as string, // Cast to string for database
+    try {
+      // Map role type to valid database enum value
+      const mapRoleToDbRole = (role: string): AIAssistantRole => {
+        const validRoles: AIAssistantRole[] = ["student", "business_owner", "general", "employee", "writer"];
+        if (validRoles.includes(role as AIAssistantRole)) {
+          return role as AIAssistantRole;
+        }
+        return "general";
       };
 
-      // Using ai_assistant_settings table
-      const { data, error } = await supabase
+      // Default settings with type-safe role
+      const defaultSettings = {
+        user_id: user.id,
+        assistant_name: 'WAKTI Assistant',
+        role: mapRoleToDbRole('general'),
+        tone: 'friendly',
+        response_length: 'medium',
+        proactiveness: true,
+        suggestion_frequency: 'medium',
+        enabled_features: {
+          voice_input: true,
+          voice_output: false,
+          task_detection: true,
+          meeting_scheduling: true,
+          personalized_suggestions: true,
+          tasks: true,
+          events: true,
+          staff: true,
+          analytics: true,
+          messaging: true
+        }
+      };
+
+      // Insert into ai_assistant_settings table (not ai_settings)
+      const { data, error: insertError } = await supabase
         .from('ai_assistant_settings')
-        .upsert({
-          user_id: userId,
-          assistant_name: dbSettings.assistant_name,
-          role: dbSettings.role,
-          tone: dbSettings.tone,
-          response_length: dbSettings.response_length,
-          proactiveness: dbSettings.proactiveness,
-          suggestion_frequency: dbSettings.suggestion_frequency,
-          enabled_features: dbSettings.enabled_features as Json,
+        .insert({
+          user_id: defaultSettings.user_id,
+          assistant_name: defaultSettings.assistant_name,
+          role: defaultSettings.role,
+          tone: defaultSettings.tone,
+          response_length: defaultSettings.response_length,
+          proactiveness: defaultSettings.proactiveness,
+          suggestion_frequency: defaultSettings.suggestion_frequency,
+          enabled_features: defaultSettings.enabled_features as unknown as Json
         })
         .select()
         .single();
 
-      if (error) throw error;
-      return data as AISettings;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ai-settings', userId] });
-      toast({
-        title: 'Settings Updated',
-        description: 'Your AI assistant settings have been updated.',
-      });
-    },
-    onError: (error) => {
-      console.error('Error updating settings:', error);
-      toast({
-        title: 'Update Failed',
-        description: 'Failed to update AI settings. Please try again.',
-        variant: 'destructive',
-      });
-    },
-  });
+      if (insertError) throw insertError;
 
-  // Add knowledge mutation
-  const addKnowledgeMutation = useMutation({
-    mutationFn: async (data: { title: string; content: string; role?: string }) => {
-      if (!userId) throw new Error('User not authenticated');
+      // Convert the database result to our AISettings type
+      const settings: AISettings = {
+        user_id: data.user_id,
+        assistant_name: data.assistant_name,
+        role: data.role,
+        tone: data.tone,
+        response_length: data.response_length,
+        proactiveness: data.proactiveness,
+        suggestion_frequency: data.suggestion_frequency,
+        enabled_features: data.enabled_features as unknown as AISettings['enabled_features']
+      };
 
-      const { title, content, role } = data;
+      // Refresh the settings data
+      refetchSettings();
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error(String(err)));
+      console.error("Error creating default settings:", err);
+    } finally {
+      setIsCreatingSettings(false);
+    }
+  };
+
+  // Update a single feature (for toggle switches)
+  const updateFeature = async (featureName: string, enabled: boolean): Promise<boolean> => {
+    if (!user || !aiSettings) {
+      setError(new Error("User not authenticated or settings not loaded"));
+      return false;
+    }
+
+    try {
+      // Create a copy of the current settings to modify
+      const updatedSettings = { ...aiSettings };
       
-      const { data: uploadData, error } = await supabase
+      // Update the specific feature
+      if (!updatedSettings.enabled_features) {
+        updatedSettings.enabled_features = {} as AISettings['enabled_features'];
+      }
+
+      // Type assertion to allow dynamic property access
+      (updatedSettings.enabled_features as any)[featureName] = enabled;
+
+      // Use the update settings function to save changes
+      const success = await updateSettings(updatedSettings);
+      return success;
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error(String(err)));
+      console.error(`Error updating feature ${featureName}:`, err);
+      return false;
+    }
+  };
+
+  // Add knowledge to the assistant
+  const addKnowledge = async (title: string, content: string, role?: string): Promise<boolean> => {
+    if (!user) {
+      setError(new Error("User not authenticated"));
+      return false;
+    }
+
+    setIsAddingKnowledge(true);
+    setError(null);
+
+    try {
+      const { error: insertError } = await supabase
         .from('ai_knowledge_uploads')
         .insert({
+          user_id: user.id,
           title,
           content,
-          user_id: userId,
-          role
-        })
-        .select()
-        .single();
+          // Add role if provided
+          ...(role ? { role } : {})
+        });
 
-      if (error) throw error;
-      return uploadData;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ai-knowledge', userId] });
-      toast({
-        title: 'Knowledge Added',
-        description: 'Your knowledge has been successfully added.',
-      });
-    },
-    onError: (error) => {
-      console.error('Error adding knowledge:', error);
-      toast({
-        title: 'Upload Failed',
-        description: 'Failed to add knowledge. Please try again.',
-        variant: 'destructive',
-      });
-    },
-  });
+      if (insertError) throw insertError;
 
-  // Delete knowledge mutation
-  const deleteKnowledgeMutation = useMutation({
-    mutationFn: async (id: string) => {
-      if (!userId) throw new Error('User not authenticated');
+      // Refresh knowledge data
+      refetchKnowledge();
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error(String(err)));
+      console.error("Error adding knowledge:", err);
+      return false;
+    } finally {
+      setIsAddingKnowledge(false);
+    }
+  };
 
-      const { error } = await supabase
+  // Upload knowledge file
+  const uploadKnowledge = async (file: File, title: string): Promise<boolean> => {
+    if (!user) {
+      setError(new Error("User not authenticated"));
+      return false;
+    }
+
+    setIsUploading(true);
+    setUploadError(null);
+
+    try {
+      // Read file content
+      const fileContent = await file.text();
+      
+      // Use the addKnowledge function to store the file content
+      const success = await addKnowledge(title, fileContent);
+      return success;
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      setUploadError(error);
+      console.error("Error uploading knowledge:", err);
+      return false;
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // Delete knowledge item
+  const deleteKnowledge = async (id: string): Promise<boolean> => {
+    if (!user) {
+      setError(new Error("User not authenticated"));
+      return false;
+    }
+
+    try {
+      const { error: deleteError } = await supabase
         .from('ai_knowledge_uploads')
         .delete()
         .eq('id', id)
-        .eq('user_id', userId);
+        .eq('user_id', user.id);
 
-      if (error) throw error;
+      if (deleteError) throw deleteError;
+
+      // Refresh knowledge data
+      refetchKnowledge();
       return true;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ai-knowledge', userId] });
-      toast({
-        title: 'Knowledge Deleted',
-        description: 'Your knowledge has been successfully deleted.',
-      });
-    },
-    onError: (error) => {
-      console.error('Error deleting knowledge:', error);
-      toast({
-        title: 'Deletion Failed',
-        description: 'Failed to delete knowledge. Please try again.',
-        variant: 'destructive',
-      });
-    },
-  });
-
-  // Create default settings mutation
-  const createSettingsMutation = useMutation({
-    mutationFn: async () => {
-      if (!userId) throw new Error('User not authenticated');
-      return await createDefaultSettings(userId);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ai-settings', userId] });
-      toast({
-        title: 'Default Settings Created',
-        description: 'Default AI assistant settings have been created.',
-      });
-    },
-    onError: (error) => {
-      console.error('Error creating default settings:', error);
-      setError(error instanceof Error ? error : new Error('Failed to create default settings'));
-      toast({
-        title: 'Setup Failed',
-        description: 'Failed to create default AI settings. Please try again.',
-        variant: 'destructive',
-      });
-    },
-  });
-
-  // Update error when settingsError changes
-  useEffect(() => {
-    if (settingsError) {
-      setError(settingsError instanceof Error ? settingsError : new Error(String(settingsError)));
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error(String(err)));
+      console.error("Error deleting knowledge:", err);
+      return false;
     }
-  }, [settingsError]);
+  };
 
-  // Determine if user can use AI
-  const canUseAI = !!userId;
-
-  // For debugging
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('AI Settings Context State:', {
-        settings,
-        isLoadingSettings,
-        error,
-        canUseAI
-      });
-    }
-  }, [settings, isLoadingSettings, error, canUseAI]);
-
-  // Wrap mutation functions to return Promises for compatibility with interface
-  const wrappedUpdateSettings = async (newSettings: AISettings): Promise<boolean> => {
+  // Wrap the mutation function to return a boolean result
+  const updateSettings = async (newSettings: AISettings): Promise<boolean> => {
     try {
       await updateSettingsMutation.mutateAsync(newSettings);
       return true;
-    } catch (error) {
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error(String(err)));
+      console.error("Error updating settings:", err);
       return false;
     }
   };
 
-  const wrappedAddKnowledge = async (title: string, content: string, role?: string): Promise<boolean> => {
-    try {
-      await addKnowledgeMutation.mutateAsync({ title, content, role });
-      return true;
-    } catch (error) {
-      return false;
-    }
-  };
+  // Simple check - allow AI for all authenticated users
+  const canUseAI = !!user;
 
-  const wrappedDeleteKnowledge = async (id: string): Promise<boolean> => {
-    try {
-      await deleteKnowledgeMutation.mutateAsync(id);
-      return true;
-    } catch (error) {
-      return false;
-    }
-  };
-
-  const wrappedCreateDefaultSettings = async (): Promise<void> => {
-    await createSettingsMutation.mutateAsync();
-  };
-
-  const contextValue: AISettingsContextType = {
-    settings,
-    isLoadingSettings,
+  // Provide the context value
+  const value: AISettingsContextType = {
+    settings: aiSettings || null,
+    isLoadingSettings: isLoadingSettings,
     isUpdatingSettings: updateSettingsMutation.isPending,
-    isAddingKnowledge: addKnowledgeMutation.isPending,
+    isAddingKnowledge,
     knowledgeUploads,
     isLoadingKnowledge,
     canUseAI,
     error,
-    updateSettings: wrappedUpdateSettings,
-    addKnowledge: wrappedAddKnowledge,
-    deleteKnowledge: wrappedDeleteKnowledge,
-    createDefaultSettings: wrappedCreateDefaultSettings,
-    isCreatingSettings: createSettingsMutation.isPending,
-    // Additional properties for AIFeaturesTab and AIKnowledgeTab
-    updateFeature: async (featureName: string, enabled: boolean) => {
-      if (!settings) return false;
-      const newSettings = {
-        ...settings,
-        enabled_features: {
-          ...settings.enabled_features,
-          [featureName]: enabled
-        }
-      };
-      return wrappedUpdateSettings(newSettings);
-    },
+    updateSettings,
+    addKnowledge,
+    deleteKnowledge,
+    createDefaultSettings,
+    isCreatingSettings,
+    // Add the missing properties
+    updateFeature,
     isLoading: isLoadingSettings,
-    uploadKnowledge: async (file: File, title: string) => {
-      try {
-        const content = await file.text();
-        return wrappedAddKnowledge(title, content);
-      } catch (error) {
-        console.error('Error processing file:', error);
-        return false;
-      }
-    },
-    isUploading: addKnowledgeMutation.isPending,
-    uploadError: addKnowledgeMutation.error as Error | null,
+    uploadKnowledge,
+    isUploading,
+    uploadError
   };
 
   return (
-    <AISettingsContext.Provider value={contextValue}>
+    <AISettingsContext.Provider value={value}>
       {children}
     </AISettingsContext.Provider>
   );
 };
 
-export const useAISettings = (): AISettingsContextType => {
-  const context = useContext(AISettingsContext);
-  if (!context) {
-    throw new Error('useAISettings must be used within an AISettingsProvider');
-  }
-  return context;
-};
+// Create a hook to use the context
+export const useAISettings = () => useContext(AISettingsContext);
