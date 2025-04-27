@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useContacts } from "@/hooks/useContacts";
 import { Button } from "@/components/ui/button";
@@ -7,8 +6,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { UserSearch, UserPlus, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
-
-// Import the components
 import ContactsList from "@/components/contacts/ContactsList";
 import PendingRequestsList from "@/components/contacts/PendingRequestsList";
 import AddContactDialog from "@/components/contacts/AddContactDialog";
@@ -17,6 +14,7 @@ import StaffSyncSection from "@/components/contacts/StaffSyncSection";
 import ContactsStaffRestriction from "@/components/contacts/ContactsStaffRestriction";
 import { supabase } from "@/integrations/supabase/client";
 import { getStaffBusinessId } from "@/utils/staffUtils";
+import PendingRequestsTabs from "@/components/contacts/PendingRequestsTabs";
 
 const DashboardContacts = () => {
   const { 
@@ -108,7 +106,6 @@ const DashboardContacts = () => {
     }
   };
 
-  // Filter contacts by search query if provided
   const filteredContacts = searchQuery && contacts 
     ? contacts.filter(contact => {
         const displayName = contact.contactProfile?.displayName || contact.contactProfile?.fullName || '';
@@ -121,7 +118,6 @@ const DashboardContacts = () => {
       })
     : contacts;
 
-  // If user is a staff member, show restricted view
   if (isStaff) {
     return (
       <div className="space-y-6">
@@ -206,8 +202,10 @@ const DashboardContacts = () => {
           <TabsTrigger value="contacts">My Contacts</TabsTrigger>
           <TabsTrigger value="requests">
             Pending Requests
-            {pendingRequests && pendingRequests.length > 0 && (
-              <Badge variant="secondary" className="ml-2">{pendingRequests.length}</Badge>
+            {((pendingRequests.incoming.length + pendingRequests.outgoing.length) > 0) && (
+              <Badge variant="secondary" className="ml-2">
+                {pendingRequests.incoming.length + pendingRequests.outgoing.length}
+              </Badge>
             )}
           </TabsTrigger>
         </TabsList>
@@ -221,7 +219,7 @@ const DashboardContacts = () => {
               <ContactsList 
                 contacts={filteredContacts || []} 
                 isLoading={isLoading}
-                isSyncing={false} // Removed isSyncingContacts since we have a button at the top level now
+                isSyncing={false}
                 onDeleteContact={handleDeleteContact}
               />
             </CardContent>
@@ -234,8 +232,9 @@ const DashboardContacts = () => {
               <CardDescription>Review and respond to contact requests.</CardDescription>
             </CardHeader>
             <CardContent>
-              <PendingRequestsList 
-                pendingRequests={pendingRequests || []} 
+              <PendingRequestsTabs
+                incomingRequests={pendingRequests.incoming}
+                outgoingRequests={pendingRequests.outgoing}
                 isLoading={isLoadingRequests}
                 onRespondToRequest={handleRespondToRequest}
               />

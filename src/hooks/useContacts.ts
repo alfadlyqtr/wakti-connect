@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/components/ui/use-toast';
@@ -21,7 +20,6 @@ export const useContacts = () => {
   const [autoApprove, setAutoApprove] = useState(false);
   const [isUpdatingAutoApprove, setIsUpdatingAutoApprove] = useState(false);
   
-  // Use state to track userId
   useEffect(() => {
     const getUserId = async () => {
       const { data } = await supabase.auth.getSession();
@@ -33,7 +31,6 @@ export const useContacts = () => {
     getUserId();
   }, []);
   
-  // Load auto-approve setting
   useEffect(() => {
     if (userId) {
       const loadAutoApprove = async () => {
@@ -49,7 +46,6 @@ export const useContacts = () => {
     }
   }, [userId]);
 
-  // Get regular contacts
   const {
     data: contacts,
     isLoading,
@@ -66,7 +62,6 @@ export const useContacts = () => {
     enabled: !!userId
   });
   
-  // Get staff contacts
   const {
     data: staffContacts,
     isLoading: isLoadingStaffContacts,
@@ -83,24 +78,77 @@ export const useContacts = () => {
     enabled: !!userId
   });
 
-  // Get pending contact requests
   const {
-    data: pendingRequests,
+    data: pendingRequestsData,
     isLoading: isLoadingRequests,
     refetch: refetchRequests
   } = useQuery({
     queryKey: ['contactRequests', userId],
     queryFn: async () => {
-      if (!userId) return [];
+      if (!userId) return { incomingRequests: [], outgoingRequests: [] };
       console.log("[useContacts] Fetching contact requests for user:", userId);
-      const requests = await getContactRequests(userId);
-      console.log("[useContacts] Fetched contact requests:", requests);
-      return requests;
+      
+      const incomingRequests = await getContactRequests(userId);
+      
+      const { data: outgoingData, error: outgoingError } = await supabase
+        .from('user_contacts')
+        .select(`
+          id,
+          user_id,
+          contact_id,
+          status,
+          staff_relation_id,
+          created_at,
+          profiles:contact_id (
+            id,
+            full_name,
+            display_name,
+            avatar_url,
+            account_type,
+            business_name,
+            email
+          )
+        `)
+        .eq('user_id', userId)
+        .eq('status', 'pending')
+        .is('staff_relation_id', null);
+
+      if (outgoingError) {
+        console.error("[useContacts] Error fetching outgoing requests:", outgoingError);
+        return { incomingRequests: [], outgoingRequests: [] };
+      }
+
+      const outgoingRequests = outgoingData.map(request => ({
+        id: request.id,
+        userId: request.user_id,
+        contactId: request.contact_id,
+        status: request.status as "accepted" | "pending" | "rejected",
+        staffRelationId: request.staff_relation_id,
+        created_at: request.created_at,
+        contactProfile: {
+          id: request.profiles?.id || request.contact_id,
+          fullName: request.profiles?.full_name || null,
+          displayName: request.profiles?.display_name || null,
+          avatarUrl: request.profiles?.avatar_url || null,
+          accountType: request.profiles?.account_type || null,
+          businessName: request.profiles?.business_name || null,
+          email: request.profiles?.email || null
+        }
+      }));
+
+      console.log("[useContacts] Fetched requests:", {
+        incoming: incomingRequests.length,
+        outgoing: outgoingRequests.length
+      });
+
+      return {
+        incomingRequests,
+        outgoingRequests
+      };
     },
     enabled: !!userId
   });
   
-  // Send contact request mutation
   const sendContactRequest = useMutation({
     mutationFn: async (contactId: string) => {
       if (!userId) throw new Error('Not authenticated');
@@ -124,7 +172,6 @@ export const useContacts = () => {
     }
   });
   
-  // Respond to contact request mutation
   const respondToContactRequest = useMutation({
     mutationFn: async ({ requestId, accept }: { requestId: string, accept: boolean }) => {
       if (!userId) throw new Error('Not authenticated');
@@ -150,7 +197,6 @@ export const useContacts = () => {
     }
   });
   
-  // Delete contact mutation
   const deleteContact = useMutation({
     mutationFn: async (contactId: string) => {
       if (!userId) throw new Error('Not authenticated');
@@ -197,7 +243,6 @@ export const useContacts = () => {
     }
   };
   
-  // Function to refresh data
   const refreshContacts = async () => {
     console.log("[useContacts] Refreshing contact data");
     await Promise.all([
@@ -206,7 +251,6 @@ export const useContacts = () => {
       refetchStaffContacts()
     ]);
     
-    // Also refresh dashboard count
     queryClient.invalidateQueries({queryKey: ['dashboardContactsCount']});
   };
 
@@ -215,7 +259,10 @@ export const useContacts = () => {
     isLoading,
     staffContacts,
     isLoadingStaffContacts,
-    pendingRequests,
+    pendingRequests: {
+      incoming: pendingRequestsData?.incomingRequests || [],
+      outgoing: pendingRequestsData?.outgoingRequests || []
+    },
     isLoadingRequests,
     isSyncingContacts: sendContactRequest.isPending,
     autoApprove,
@@ -228,5 +275,4 @@ export const useContacts = () => {
   };
 };
 
-// Import useState at the top
 import { useState } from 'react';
