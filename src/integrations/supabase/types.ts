@@ -2225,6 +2225,18 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_contact_requests: {
+        Args: { request_user_id: string }
+        Returns: {
+          id: string
+          user_id: string
+          contact_id: string
+          status: string
+          staff_relation_id: string
+          created_at: string
+          contact_profile: Json
+        }[]
+      }
       get_template_available_slots: {
         Args: { template_id_param: string; date_param: string }
         Returns: {

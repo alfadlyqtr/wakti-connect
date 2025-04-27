@@ -21,29 +21,39 @@ let notificationChannel: RealtimeChannel | null = null;
  * Fetches notifications for the current user
  */
 export const fetchNotifications = async (limit = 20, offset = 0) => {
-  const { data } = await supabase.auth.getSession();
-  const userId = data.session?.user?.id;
+  const { data: { session } } = await supabase.auth.getSession();
+  const userId = session?.user?.id;
 
   if (!userId) {
     return { data: null, error: new Error("No authenticated user") };
   }
 
-  const { data: notifications, error } = await supabase
-    .from('notifications')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false })
-    .range(offset, offset + limit - 1);
+  try {
+    const { data: notifications, error } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
 
-  return { data: notifications, error };
+    if (error) throw error;
+
+    return { 
+      data: notifications?.filter(n => n !== null) || [], 
+      error: null 
+    };
+  } catch (error) {
+    console.error("Error fetching notifications:", error);
+    return { data: [], error };
+  }
 };
 
 /**
  * Fetches unread notifications count
  */
 export const fetchUnreadNotificationsCount = async () => {
-  const { data } = await supabase.auth.getSession();
-  const userId = data.session?.user?.id;
+  const { data: { session } } = await supabase.auth.getSession();
+  const userId = session?.user?.id;
 
   if (!userId) {
     return 0;
@@ -79,8 +89,8 @@ export const markNotificationAsRead = async (notificationId: string) => {
  * Marks all notifications as read
  */
 export const markAllNotificationsAsRead = async () => {
-  const { data } = await supabase.auth.getSession();
-  const userId = data.session?.user?.id;
+  const { data: { session } } = await supabase.auth.getSession();
+  const userId = session?.user?.id;
 
   if (!userId) {
     return { success: false, error: new Error("No authenticated user") };

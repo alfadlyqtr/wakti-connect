@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { NotificationError } from '../notifications/NotificationError';
 
 interface PendingRequestsTabsProps {
   incomingRequests: UserContact[];
@@ -20,18 +21,19 @@ const PendingRequestsTabs: React.FC<PendingRequestsTabsProps> = ({
   isLoading,
   onRespondToRequest
 }) => {
-  console.log("[PendingRequestsTabs] Incoming requests:", incomingRequests);
-  console.log("[PendingRequestsTabs] Outgoing requests:", outgoingRequests);
-
   const renderContactInfo = (request: UserContact) => {
+    if (!request) {
+      return <NotificationError />;
+    }
+
     const displayName = request.contactProfile?.displayName || 
                        request.contactProfile?.fullName || 
                        request.contactProfile?.email || 
                        'Unknown User';
 
-    const avatarLetter = (request.contactProfile?.displayName?.charAt(0) || 
-                         request.contactProfile?.fullName?.charAt(0) || 
-                         displayName.charAt(0)).toUpperCase();
+    const avatarLetter = ((request.contactProfile?.displayName?.[0] || 
+                          request.contactProfile?.fullName?.[0] || 
+                          displayName[0]) || '?').toUpperCase();
 
     return (
       <div className="flex items-center gap-3">
@@ -51,7 +53,7 @@ const PendingRequestsTabs: React.FC<PendingRequestsTabsProps> = ({
             )}
           </div>
           {request.contactProfile?.businessName && (
-            <p className="text-sm">{request.contactProfile.businessName}</p>
+            <p className="text-sm text-muted-foreground">{request.contactProfile.businessName}</p>
           )}
           <p className="text-xs text-muted-foreground">
             {request.contactProfile?.email || request.contactId}
