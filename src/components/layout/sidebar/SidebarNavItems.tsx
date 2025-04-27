@@ -3,7 +3,7 @@ import React from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Search } from "lucide-react";
-import { navItems } from "./sidebarNavConfig";
+import { navItems, NavItem } from "./sidebarNavConfig";
 import { useAuth } from "@/features/auth/context/AuthContext";
 
 interface SidebarNavItemsProps {
@@ -44,7 +44,7 @@ const SidebarNavItems = ({
         </button>
       )}
       
-      {filteredNavItems.map((item) => (
+      {filteredNavItems.map((item: NavItem) => (
         <NavLink
           key={item.path}
           to={`/dashboard/${item.path}`}
