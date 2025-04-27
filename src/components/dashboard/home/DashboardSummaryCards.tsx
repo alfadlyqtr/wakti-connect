@@ -7,14 +7,6 @@ import { useDashboardNotifications } from "@/hooks/useDashboardNotifications";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-interface ProfileDataType {
-  account_type: "free" | "individual" | "business";
-  display_name?: string | null;
-  full_name?: string | null;
-  business_name?: string | null;
-  occupation?: string | null;
-}
-
 interface DashboardSummaryCardsProps {
   profileData: ProfileDataType | undefined;
   todayTasks: any[] | undefined;
