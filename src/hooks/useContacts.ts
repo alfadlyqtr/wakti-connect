@@ -1,4 +1,4 @@
-
+import { useState } from 'react';
 import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/components/ui/use-toast';
@@ -131,15 +131,15 @@ export const useContacts = () => {
           staffRelationId: request.staff_relation_id,
           created_at: request.created_at,
           contactProfile: {
-            id: typeof profiles === 'object' && 'id' in profiles ? profiles.id : request.contact_id,
-            fullName: typeof profiles === 'object' && 'full_name' in profiles ? profiles.full_name : null,
-            displayName: typeof profiles === 'object' && 'display_name' in profiles ? profiles.display_name : null,
-            avatarUrl: typeof profiles === 'object' && 'avatar_url' in profiles ? profiles.avatar_url : null,
-            accountType: typeof profiles === 'object' && 'account_type' in profiles ? profiles.account_type : null,
-            businessName: typeof profiles === 'object' && 'business_name' in profiles ? profiles.business_name : null,
-            email: typeof profiles === 'object' && 'email' in profiles ? profiles.email : null
+            id: typeof profiles === 'object' && 'id' in profiles ? (profiles.id as string) : request.contact_id,
+            fullName: typeof profiles === 'object' && 'full_name' in profiles ? (profiles.full_name as string | null) : null,
+            displayName: typeof profiles === 'object' && 'display_name' in profiles ? (profiles.display_name as string | null) : null,
+            avatarUrl: typeof profiles === 'object' && 'avatar_url' in profiles ? (profiles.avatar_url as string | null) : null,
+            accountType: typeof profiles === 'object' && 'account_type' in profiles ? (profiles.account_type as string | null) : null,
+            businessName: typeof profiles === 'object' && 'business_name' in profiles ? (profiles.business_name as string | null) : null,
+            email: typeof profiles === 'object' && 'email' in profiles ? (profiles.email as string | null) : null
           }
-        };
+        } as UserContact;  // Explicitly cast to UserContact type
       });
 
       console.log("[useContacts] Fetched requests:", {

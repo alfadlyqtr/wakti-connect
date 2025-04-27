@@ -15,6 +15,7 @@ import ContactsStaffRestriction from "@/components/contacts/ContactsStaffRestric
 import { supabase } from "@/integrations/supabase/client";
 import { getStaffBusinessId } from "@/utils/staffUtils";
 import PendingRequestsTabs from "@/components/contacts/PendingRequestsTabs";
+import { UserContact } from "@/types/invitation.types";
 
 const DashboardContacts = () => {
   const { 
@@ -234,7 +235,7 @@ const DashboardContacts = () => {
             <CardContent>
               <PendingRequestsTabs
                 incomingRequests={pendingRequests.incoming}
-                outgoingRequests={pendingRequests.outgoing}
+                outgoingRequests={pendingRequests.outgoing as UserContact[]}
                 isLoading={isLoadingRequests}
                 onRespondToRequest={handleRespondToRequest}
               />
