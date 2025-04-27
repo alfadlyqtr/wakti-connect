@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { UserContact } from '@/types/invitation.types';
 
@@ -163,11 +164,26 @@ export const getContactRequests = async (userId: string): Promise<UserContact[]>
     
     console.log('[ContactQueries] Raw pending requests:', requests);
 
-    // Transform and validate each contact
-    const validRequests = (requests || []).filter(request => {
-      return request && request.user_id && request.contact_profile;
-    });
+    // Transform and validate each contact to match our UserContact interface
+    const validRequests = (requests || [])
+      .filter(request => {
+        // Filter out invalid requests
+        return request && request.user_id && request.contact_profile;
+      })
+      .map(request => {
+        // Transform from snake_case to camelCase
+        return {
+          id: request.id,
+          userId: request.user_id, // Transform to camelCase
+          contactId: request.contact_id, // Transform to camelCase
+          status: request.status as "accepted" | "pending" | "rejected",
+          staffRelationId: request.staff_relation_id,
+          created_at: request.created_at,
+          contactProfile: request.contact_profile
+        } as UserContact;
+      });
     
+    console.log('[ContactQueries] Transformed contact requests:', validRequests);
     return validRequests;
   } catch (error) {
     console.error('[ContactQueries] Error in getContactRequests:', error);
