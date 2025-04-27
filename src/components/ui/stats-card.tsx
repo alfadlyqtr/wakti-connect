@@ -22,10 +22,10 @@ export const StatsCard = ({
   gradient = "blue"
 }: StatsCardProps) => {
   const gradientClasses = {
-    purple: "from-[#9b87f5]/10 via-white/80 to-[#D6BCFA]/10",
-    blue: "from-[#60A5FA]/10 via-white/80 to-[#93C5FD]/10",
-    gold: "from-[#FCD34D]/10 via-white/80 to-[#FBBF24]/10",
-    green: "from-[#34D399]/10 via-white/80 to-[#6EE7B7]/10"
+    purple: "from-[#9b87f5]/20 via-white/90 to-[#D6BCFA]/20 hover:from-[#9b87f5]/30 hover:to-[#D6BCFA]/30",
+    blue: "from-[#60A5FA]/20 via-white/90 to-[#93C5FD]/20 hover:from-[#60A5FA]/30 hover:to-[#93C5FD]/30",
+    gold: "from-[#FCD34D]/20 via-white/90 to-[#FBBF24]/20 hover:from-[#FCD34D]/30 hover:to-[#FBBF24]/30",
+    green: "from-[#34D399]/20 via-white/90 to-[#6EE7B7]/20 hover:from-[#34D399]/30 hover:to-[#6EE7B7]/30"
   };
 
   return (
