@@ -1,3 +1,4 @@
+
 import React from "react";
 import { User, Settings, LogOut, MessageSquare, Users, HeartHandshake, Bell, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -64,7 +65,18 @@ const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications }: User
     }
   };
 
-  const filteredNavItems = dropdownNavItems.filter(item => {
+  // Update dropdown items with unread counts
+  const navItemsWithCounts = dropdownNavItems.map(item => {
+    if (item.path === 'messages' && unreadMessages.length > 0) {
+      return { ...item, badge: unreadMessages.length };
+    }
+    if (item.path === 'notifications' && unreadNotifications.length > 0) {
+      return { ...item, badge: unreadNotifications.length };
+    }
+    return item;
+  });
+
+  const filteredNavItems = navItemsWithCounts.filter(item => {
     if (!effectiveRole) return false;
     return item.showFor.includes(effectiveRole);
   });
@@ -108,7 +120,7 @@ const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications }: User
             >
               <div className="relative">
                 <item.icon className="h-4 w-4" />
-                {item.badge && item.badge > 0 && (
+                {item.badge !== undefined && item.badge > 0 && (
                   <span className="absolute -top-1 -right-1 h-3 w-3 bg-destructive rounded-full flex items-center justify-center text-[8px] text-white font-bold">
                     {item.badge > 9 ? '9+' : item.badge}
                   </span>

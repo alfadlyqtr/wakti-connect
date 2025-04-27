@@ -52,7 +52,7 @@ const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
               aria-current={isActive ? "page" : undefined}
             >
               <Icon className="h-5 w-5" />
-              {badge && (
+              {badge !== undefined && badge > 0 && (
                 <Badge variant="secondary" className="ml-auto px-1 min-w-5 h-5">
                   {badge}
                 </Badge>
@@ -61,7 +61,7 @@ const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
           </TooltipTrigger>
           <TooltipContent side="right" className="flex items-center gap-4">
             {label}
-            {badge && (
+            {badge !== undefined && badge > 0 && (
               <Badge variant="secondary" className="px-1 min-w-5 h-5">
                 {badge}
               </Badge>
@@ -84,7 +84,7 @@ const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
       {!isCollapsed && (
         <>
           <span>{label}</span>
-          {badge && (
+          {badge !== undefined && badge > 0 && (
             <Badge variant="secondary" className="ml-auto px-1 min-w-5 h-5">
               {badge}
             </Badge>

@@ -15,6 +15,8 @@ import {
   Building2,
   ScrollText,
   Headphones,
+  Bell,
+  MessageSquare,
 } from "lucide-react";
 import { UserRole } from "@/types/roles";
 
@@ -105,4 +107,35 @@ export const navItems = [
   },
 ];
 
-export type NavItem = typeof navItems[number];
+// Create dropdown nav items for the user menu
+export const dropdownNavItems = [
+  {
+    path: "notifications",
+    label: "Notifications",
+    icon: Bell,
+    showFor: ["individual", "business", "staff"],
+    badge: 0,
+  },
+  {
+    path: "messages",
+    label: "Messages",
+    icon: MessageSquare,
+    showFor: ["individual", "business", "staff"],
+    badge: 0,
+  },
+  {
+    path: "settings",
+    label: "Settings",
+    icon: Settings,
+    showFor: ["individual", "business", "staff"],
+  },
+];
+
+export type NavItem = {
+  path: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  showFor: string[];
+  badge?: number;
+};
+

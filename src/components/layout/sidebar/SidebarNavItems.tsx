@@ -62,7 +62,7 @@ const SidebarNavItems = ({
         >
           <item.icon className="h-5 w-5 shrink-0" />
           {!isCollapsed && <span className="ml-3">{item.label}</span>}
-          {!isCollapsed && item.badge && (
+          {!isCollapsed && item.badge !== undefined && item.badge > 0 && (
             <span className="ml-auto bg-primary/10 text-primary px-1.5 py-0.5 rounded-full text-xs font-medium">
               {item.badge}
             </span>
