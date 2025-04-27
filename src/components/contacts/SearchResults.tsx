@@ -12,18 +12,20 @@ interface SearchResultsProps {
 }
 
 export const SearchResults = ({ searchResults, onSelectContact }: SearchResultsProps) => {
-  // Defensive programming: ensure searchResults is always a valid array
-  const results = Array.isArray(searchResults) ? searchResults : [];
-  
-  console.log("[SearchResults] Rendering with results:", results);
+  console.log("[SearchResults] Received results:", searchResults);
 
-  if (!results || results.length === 0) {
-    return <CommandEmpty>No users or businesses found</CommandEmpty>;
+  // If searchResults is null, undefined, or empty, show empty state
+  if (!searchResults || searchResults.length === 0) {
+    return (
+      <CommandGroup>
+        <CommandEmpty>No users or businesses found</CommandEmpty>
+      </CommandGroup>
+    );
   }
 
   return (
     <CommandGroup>
-      {results.map((user) => (
+      {searchResults.map((user) => (
         <CommandItem 
           key={user.id}
           onSelect={() => onSelectContact(user)}

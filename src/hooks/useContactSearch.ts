@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { UserSearchResult, ContactRequestStatus } from "@/types/invitation.types";
 import { searchUsers, checkContactRequest } from "@/services/contacts";
 import { toast } from "@/components/ui/use-toast";
@@ -12,29 +11,25 @@ export const useContactSearch = () => {
   const [selectedContact, setSelectedContact] = useState<UserSearchResult | null>(null);
   const [contactStatus, setContactStatus] = useState<ContactRequestStatus | null>(null);
 
-  const handleSearch = async (query: string) => {
+  const handleSearch = useCallback(async (query: string) => {
     console.log("[useContactSearch] Starting search with query:", query);
     setSearchQuery(query);
     
-    // Clear results if query is empty or too short
     if (!query || query.trim().length < 2) {
-      setSearchResults([]);
       console.log("[useContactSearch] Query too short, clearing results");
+      setSearchResults([]);
       return;
     }
 
     setIsSearching(true);
     try {
       const results = await searchUsers(query);
-      console.log("[useContactSearch] Search results:", results);
+      console.log("[useContactSearch] Raw search results:", results);
       
-      // Always set a valid array, even if the results are null/undefined
-      if (Array.isArray(results)) {
-        setSearchResults(results);
-      } else {
-        console.warn("[useContactSearch] Search returned non-array results:", results);
-        setSearchResults([]);
-      }
+      // Ensure we always set a valid array
+      const validResults = Array.isArray(results) ? results : [];
+      console.log("[useContactSearch] Processed results:", validResults);
+      setSearchResults(validResults);
     } catch (error) {
       console.error("[useContactSearch] Search error:", error);
       toast({
@@ -46,7 +41,7 @@ export const useContactSearch = () => {
     } finally {
       setIsSearching(false);
     }
-  };
+  }, []);
 
   const checkStatus = useMutation({
     mutationFn: async (contactId: string) => {
@@ -66,7 +61,7 @@ export const useContactSearch = () => {
     },
   });
 
-  const selectContact = (contact: UserSearchResult) => {
+  const selectContact = useCallback((contact: UserSearchResult) => {
     if (!contact || !contact.id) {
       console.error("[useContactSearch] Invalid contact selected:", contact);
       return;
@@ -75,15 +70,15 @@ export const useContactSearch = () => {
     console.log("[useContactSearch] Selected contact:", contact);
     setSelectedContact(contact);
     checkStatus.mutate(contact.id);
-  };
+  }, []);
 
-  const clearSearch = () => {
+  const clearSearch = useCallback(() => {
     console.log("[useContactSearch] Clearing search");
     setSearchQuery("");
     setSearchResults([]);
     setSelectedContact(null);
     setContactStatus(null);
-  };
+  }, []);
 
   return {
     searchQuery,
