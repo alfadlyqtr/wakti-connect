@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -12,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { useNotifications } from "@/hooks/useNotifications";
 import { format } from "date-fns";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { NotificationError } from './NotificationError';
 
 interface NotificationsDropdownProps {
   className?: string;
@@ -24,7 +24,8 @@ const NotificationsDropdown: React.FC<NotificationsDropdownProps> = ({ className
     unreadCount, 
     markAsRead, 
     markAllAsRead, 
-    isLoading 
+    isLoading,
+    error 
   } = useNotifications();
 
   const formatDate = (dateString: string) => {
@@ -32,9 +33,9 @@ const NotificationsDropdown: React.FC<NotificationsDropdownProps> = ({ className
     return format(date, 'MMM d, h:mm a');
   };
 
-  const recentNotifications = notifications.slice(0, 5);
+  const recentNotifications = notifications && Array.isArray(notifications) ? 
+    notifications.slice(0, 5) : [];
 
-  // Get icon based on notification type
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case "message":
@@ -52,13 +53,13 @@ const NotificationsDropdown: React.FC<NotificationsDropdownProps> = ({ className
     }
   };
 
-  // Handle notification click to navigate to related entity
   const handleNotificationClick = (notification: any) => {
+    if (!notification) return;
+
     if (!notification.is_read) {
       markAsRead(notification.id);
     }
     
-    // Navigate based on notification type and related entity
     if (notification.related_entity_id && notification.related_entity_type) {
       switch (notification.type) {
         case "message":
@@ -83,6 +84,58 @@ const NotificationsDropdown: React.FC<NotificationsDropdownProps> = ({ className
     } else {
       navigate('/dashboard/notifications');
     }
+  };
+
+  const renderContent = () => {
+    if (error) {
+      return <NotificationError />;
+    }
+
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center p-4">
+          <p className="text-sm text-muted-foreground">Loading notifications...</p>
+        </div>
+      );
+    }
+
+    if (!recentNotifications.length) {
+      return (
+        <div className="flex flex-col items-center justify-center p-6">
+          <p className="text-sm text-muted-foreground">No notifications</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="divide-y">
+        {recentNotifications.map((notification) => (
+          <div 
+            key={notification.id} 
+            className={`p-3 flex gap-2 items-start hover:bg-muted/50 cursor-pointer ${
+              !notification.is_read ? 'bg-muted/30' : ''
+            }`}
+            onClick={() => handleNotificationClick(notification)}
+          >
+            <div className="flex-shrink-0 mt-1">
+              {getNotificationIcon(notification.type)}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-col">
+                <span className="font-medium text-sm">{notification.title}</span>
+                <span className="text-xs text-muted-foreground mt-1">{notification.content}</span>
+                <span className="text-xs text-muted-foreground mt-1">
+                  {formatDate(notification.created_at)}
+                </span>
+              </div>
+            </div>
+            <div className="flex-shrink-0 mt-1">
+              <div className={`w-2 h-2 rounded-full ${!notification.is_read ? 'bg-wakti-blue' : 'bg-muted'}`} />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
   };
 
   return (
@@ -116,41 +169,7 @@ const NotificationsDropdown: React.FC<NotificationsDropdownProps> = ({ className
         </div>
         
         <ScrollArea className="max-h-[300px]">
-          {isLoading ? (
-            <div className="flex items-center justify-center p-4">
-              <p className="text-sm text-muted-foreground">Loading notifications...</p>
-            </div>
-          ) : recentNotifications.length > 0 ? (
-            <div className="divide-y">
-              {recentNotifications.map((notification) => (
-                <div 
-                  key={notification.id} 
-                  className={`p-3 flex gap-2 items-start hover:bg-muted/50 cursor-pointer ${
-                    !notification.is_read ? 'bg-muted/30' : ''
-                  }`}
-                  onClick={() => handleNotificationClick(notification)}
-                >
-                  <div className="flex-shrink-0 mt-1">
-                    {getNotificationIcon(notification.type)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-col">
-                      <span className="font-medium text-sm">{notification.title}</span>
-                      <span className="text-xs text-muted-foreground mt-1">{notification.content}</span>
-                      <span className="text-xs text-muted-foreground mt-1">{formatDate(notification.created_at)}</span>
-                    </div>
-                  </div>
-                  <div className="flex-shrink-0 mt-1">
-                    <div className={`w-2 h-2 rounded-full ${!notification.is_read ? 'bg-wakti-blue' : 'bg-muted'}`} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center p-6">
-              <p className="text-sm text-muted-foreground">No notifications</p>
-            </div>
-          )}
+          {renderContent()}
         </ScrollArea>
         
         <div className="border-t p-3">

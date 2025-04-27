@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { UserContact } from '@/types/invitation.types';
 
@@ -151,66 +150,25 @@ export const getContactRequests = async (userId: string): Promise<UserContact[]>
   try {
     console.log('[ContactQueries] Fetching contact requests for user:', userId);
     
-    // Get all users who have this user as a contact with pending status
-    const { data: contacts, error } = await supabase
-      .from('user_contacts')
-      .select(`
-        id,
-        user_id,
-        contact_id,
-        status,
-        staff_relation_id,
-        created_at,
-        profiles:user_id (
-          id,
-          full_name,
-          display_name,
-          avatar_url,
-          account_type,
-          business_name,
-          email
-        )
-      `)
-      .eq('contact_id', userId)
-      .eq('status', 'pending')
-      .is('staff_relation_id', null); // Only show non-staff pending requests
+    // Use the get_contact_requests database function
+    const { data: requests, error } = await supabase
+      .rpc('get_contact_requests', {
+        request_user_id: userId
+      });
     
     if (error) {
       console.error('[ContactQueries] Error fetching contact requests:', error);
       return [];
     }
     
-    console.log(`[ContactQueries] Raw pending requests: ${contacts?.length || 0}`);
-    
-    // Transform the data to match our types
-    const userContacts = contacts.map(contact => {
-      // Explicitly cast contact.profiles to any to avoid TypeScript errors
-      const contactData = (contact.profiles || {}) as any;
-      
-      // Make sure contact exists and has necessary properties
-      const contactProfile = {
-        id: contactData.id || contact.user_id,
-        fullName: contactData.full_name || null,
-        displayName: contactData.display_name || null,
-        avatarUrl: contactData.avatar_url || null,
-        accountType: contactData.account_type || null,
-        businessName: contactData.business_name || null,
-        email: contactData.email || null
-      };
-      
-      return {
-        id: contact.id,
-        userId: contact.user_id,
-        contactId: contact.contact_id,
-        status: contact.status as "accepted" | "pending" | "rejected",
-        staffRelationId: contact.staff_relation_id,
-        created_at: contact.created_at,
-        contactProfile
-      };
+    console.log('[ContactQueries] Raw pending requests:', requests);
+
+    // Transform and validate each contact
+    const validRequests = (requests || []).filter(request => {
+      return request && request.user_id && request.contact_profile;
     });
     
-    console.log('[ContactQueries] Transformed pending requests:', userContacts);
-    return userContacts;
+    return validRequests;
   } catch (error) {
     console.error('[ContactQueries] Error in getContactRequests:', error);
     return [];
