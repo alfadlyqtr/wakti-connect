@@ -67,11 +67,20 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ userId }) => {
     const messagesByDate: Record<string, Message[]> = {};
     
     messages.forEach(msg => {
-      const date = new Date(msg.createdAt).toLocaleDateString();
-      if (!messagesByDate[date]) {
-        messagesByDate[date] = [];
+      try {
+        const date = new Date(msg.createdAt);
+        if (isNaN(date.getTime())) {
+          console.error("Invalid date in message:", msg.id, msg.createdAt);
+          return;
+        }
+        const dateKey = date.toLocaleDateString();
+        if (!messagesByDate[dateKey]) {
+          messagesByDate[dateKey] = [];
+        }
+        messagesByDate[dateKey].push(msg);
+      } catch (error) {
+        console.error("Error processing message date:", error, "Message:", msg);
       }
-      messagesByDate[date].push(msg);
     });
     
     return messagesByDate;

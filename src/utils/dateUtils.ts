@@ -1,4 +1,6 @@
 
+import { format, formatDistanceToNow, isValid } from "date-fns";
+
 /**
  * Format a time string to display time in a readable format
  */
@@ -46,7 +48,7 @@ export const formatDateTime = (isoString: string): string => {
       hour12: true
     });
   } catch (e) {
-    console.error("Error formatting datetime:", e, "for string:", isoString);
+    console.error("Error formatting datetime:", error, "for string:", isoString);
     return "Invalid date";
   }
 };
