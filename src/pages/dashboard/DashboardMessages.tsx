@@ -1,11 +1,10 @@
-
 import React, { useState } from "react";
 import { useMessaging } from "@/hooks/useMessaging";
 import ConversationsList from "@/components/messages/ConversationsList";
 import MessageComposerDialog from "@/components/messages/MessageComposerDialog";
 import { Outlet, useParams, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plus, RefreshCcw, UserPlus, StaffStack } from "lucide-react";
+import { Plus, RefreshCcw, UserPlus, Users } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -94,7 +93,7 @@ const DashboardMessages: React.FC = () => {
                 size="sm" 
                 title="Manage Contacts"
               >
-                <StaffStack className="h-4 w-4" />
+                <Users className="h-4 w-4" />
               </Button>
             </div>
           </div>

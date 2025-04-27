@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ChatInterface } from "@/components/messages/ChatInterface";
+import ChatInterface from "@/components/messages/ChatInterface";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useIsMobile } from "@/hooks/useIsMobile";
