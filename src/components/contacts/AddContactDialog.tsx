@@ -2,12 +2,10 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Command, CommandInput, CommandList } from "@/components/ui/command";
-import { SearchResults } from "./SearchResults";
 import { ContactPreview } from "./ContactPreview";
+import { ContactSearchInput } from "./ContactSearchInput";
 import { useContactSearch } from "@/hooks/useContactSearch";
-import { Loader2, User, UserPlus, AlertCircle, Briefcase } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Loader2, UserPlus } from "lucide-react";
 
 interface AddContactDialogProps {
   isOpen: boolean;
@@ -27,7 +25,7 @@ const AddContactDialog: React.FC<AddContactDialogProps> = ({
     selectedContact,
     contactStatus,
     isCheckingStatus,
-    handleSearch,
+    handleSearchChange,
     selectContact,
     clearSearch
   } = useContactSearch();
@@ -56,40 +54,12 @@ const AddContactDialog: React.FC<AddContactDialogProps> = ({
     }
   };
 
-  const getAccountTypeIcon = (accountType: string) => {
-    switch (accountType) {
-      case 'business':
-        return <Briefcase className="h-3 w-3 mr-1" />;
-      default:
-        return <User className="h-3 w-3 mr-1" />;
-    }
-  };
-
+  // Create account type badge rendering function
   const getAccountTypeBadge = (accountType: string) => {
-    switch (accountType) {
-      case 'business':
-        return <Badge variant="outline" className="bg-blue-50 flex items-center">
-          {getAccountTypeIcon(accountType)} Business
-        </Badge>;
-      case 'individual':
-        return <Badge variant="outline" className="bg-green-50 flex items-center">
-          {getAccountTypeIcon(accountType)} Individual
-        </Badge>;
-      default:
-        return <Badge variant="outline" className="flex items-center">
-          {getAccountTypeIcon(accountType)} Free
-        </Badge>;
-    }
+    // This function is passed to ContactPreview
+    // The implementation is already there in ContactPreview component
+    return null;
   };
-
-  // Debug logs
-  console.log("[AddContactDialog] Current state:", {
-    searchQuery,
-    searchResults: Array.isArray(searchResults) ? searchResults : 'Not an array',
-    isSearching,
-    selectedContact,
-    contactStatus
-  });
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -102,29 +72,13 @@ const AddContactDialog: React.FC<AddContactDialogProps> = ({
         </DialogHeader>
         
         <div className="flex flex-col gap-4">
-          <Command className="rounded-lg border shadow-md">
-            <CommandInput 
-              placeholder="Search by name, email, or business name..." 
-              value={searchQuery}
-              onValueChange={handleSearch}
-              className="h-9"
-            />
-            
-            {searchQuery.length > 0 && (
-              <CommandList>
-                {isSearching ? (
-                  <div className="flex justify-center p-4">
-                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                  </div>
-                ) : (
-                  <SearchResults 
-                    searchResults={searchResults || []}
-                    onSelectContact={selectContact}
-                  />
-                )}
-              </CommandList>
-            )}
-          </Command>
+          <ContactSearchInput
+            searchQuery={searchQuery}
+            onSearchChange={handleSearchChange}
+            searchResults={searchResults}
+            isSearching={isSearching}
+            onSelectContact={selectContact}
+          />
           
           {selectedContact && (
             <ContactPreview

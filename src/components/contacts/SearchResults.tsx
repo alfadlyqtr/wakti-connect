@@ -11,6 +11,8 @@ interface SearchResultsProps {
   onSelectContact: (contact: UserSearchResult) => void;
 }
 
+// This component is being deprecated in favor of ContactSearchInput
+// It's kept here for backward compatibility
 export const SearchResults = ({ searchResults, onSelectContact }: SearchResultsProps) => {
   console.log("[SearchResults] Received results:", searchResults);
 
