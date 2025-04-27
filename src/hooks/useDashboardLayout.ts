@@ -30,7 +30,8 @@ export const useDashboardLayout = () => {
         const savedLayout = localStorage.getItem(`dashboard_layout_${userId}`);
         if (savedLayout) {
           const parsedLayout = JSON.parse(savedLayout);
-          if (Array.isArray(parsedLayout)) {
+          if (Array.isArray(parsedLayout) && parsedLayout.length > 0 && 
+              'id' in parsedLayout[0] && 'order' in parsedLayout[0]) {
             setLayout(parsedLayout as DashboardWidgetLayout[]);
           }
         }
@@ -44,9 +45,15 @@ export const useDashboardLayout = () => {
         
         if (!error && data?.dashboard_layout) {
           const dbLayout = data.dashboard_layout;
-          if (Array.isArray(dbLayout)) {
-            setLayout(dbLayout as DashboardWidgetLayout[]);
-            localStorage.setItem(`dashboard_layout_${userId}`, JSON.stringify(dbLayout));
+          if (Array.isArray(dbLayout) && dbLayout.length > 0) {
+            // Properly validate and convert the JSON data to DashboardWidgetLayout[]
+            const typedLayout = dbLayout.map(item => ({
+              id: String(item.id),
+              order: Number(item.order)
+            })) as DashboardWidgetLayout[];
+            
+            setLayout(typedLayout);
+            localStorage.setItem(`dashboard_layout_${userId}`, JSON.stringify(typedLayout));
           }
         }
       } catch (error) {
@@ -67,12 +74,18 @@ export const useDashboardLayout = () => {
       // Save to localStorage for quick access
       localStorage.setItem(`dashboard_layout_${userId}`, JSON.stringify(newLayout));
       
+      // Convert to a format suitable for Supabase storage
+      const jsonLayout = newLayout.map(item => ({
+        id: item.id,
+        order: item.order
+      }));
+      
       // Save to DB for persistence across devices
       await supabase
         .from('user_preferences')
         .upsert({
           user_id: userId,
-          dashboard_layout: newLayout as unknown as Json
+          dashboard_layout: jsonLayout as unknown as Json
         }, {
           onConflict: 'user_id'
         });
