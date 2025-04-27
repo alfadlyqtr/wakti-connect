@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from "react";
 import { useMessaging } from "@/hooks/useMessaging";
 import MessageList from "./chat/MessageList";
@@ -6,6 +5,7 @@ import MessageComposer from "./chat/MessageComposer";
 import { Message } from "@/types/message.types";
 import { Loader2 } from "lucide-react";
 import { safeFormatDistanceToNow } from "@/utils/safeFormatters";
+import NoPermissionMessage from "./chat/NoPermissionMessage";
 
 interface ChatInterfaceProps {
   userId: string;
@@ -18,6 +18,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ userId }) => {
     sendMessage, 
     isSending,
     canMessage,
+    isCheckingPermission,
     markConversationAsRead
   } = useMessaging(userId);
   
@@ -32,6 +33,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ userId }) => {
   // Mark conversation as read when component mounts
   useEffect(() => {
     if (userId) {
+      console.log("Marking conversation as read for:", userId);
       markConversationAsRead(userId);
     }
   }, [userId, markConversationAsRead]);
@@ -145,13 +147,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ userId }) => {
         )}
       </div>
       
-      <div className="mt-auto">
-        <MessageComposer 
-          onSendMessage={handleSendMessage}
-          isDisabled={!canMessage || isSending}
-          replyToMessage={replyToMessage}
-        />
-      </div>
+      {!canMessage ? (
+        <NoPermissionMessage />
+      ) : (
+        <div className="mt-auto">
+          <MessageComposer 
+            onSendMessage={handleSendMessage}
+            isDisabled={!canMessage || isSending || isCheckingPermission}
+            replyToMessage={replyToMessage}
+          />
+        </div>
+      )}
     </div>
   );
 };

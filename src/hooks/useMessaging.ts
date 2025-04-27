@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/ui/use-toast";
 import { 
@@ -42,7 +41,6 @@ export const useMessaging = (options?: string | UseMessagingOptions) => {
     staffOnly = options.staffOnly || false;
   }
 
-  // Fetch messages
   const { 
     data: messages = [],
     isLoading: isLoadingMessages,
@@ -55,7 +53,6 @@ export const useMessaging = (options?: string | UseMessagingOptions) => {
     refetchInterval: 5000
   });
 
-  // Send message mutation
   const sendMessageMutation = useMutation({
     mutationFn: async ({ 
       recipientId, 
@@ -80,7 +77,6 @@ export const useMessaging = (options?: string | UseMessagingOptions) => {
     }
   });
 
-  // Fetch conversations
   const { 
     data: conversations = [],
     isLoading: isLoadingConversations,
@@ -92,7 +88,6 @@ export const useMessaging = (options?: string | UseMessagingOptions) => {
     refetchInterval: 10000
   });
 
-  // Check messaging permissions
   const { 
     data: canMessage = true,
     isLoading: isCheckingPermission,
@@ -102,13 +97,19 @@ export const useMessaging = (options?: string | UseMessagingOptions) => {
     queryKey: ['canMessage', otherUserId],
     queryFn: async () => {
       if (!otherUserId) return false;
-      return canMessageUser(otherUserId);
+      
+      try {
+        const result = await canMessageUser(otherUserId);
+        console.log("Permission check result:", { canMessage: result, userId: otherUserId });
+        return result;
+      } catch (error) {
+        console.error("Error checking messaging permissions:", error);
+        return false;
+      }
     },
     enabled: !!otherUserId,
     retry: 2,
     staleTime: 30000,
-    // In the latest version of @tanstack/react-query, we need to use meta for error handling
-    // instead of directly using onError
     meta: {
       onError: (error: any) => {
         console.error("Error checking messaging permissions:", error);
@@ -121,7 +122,6 @@ export const useMessaging = (options?: string | UseMessagingOptions) => {
     }
   });
 
-  // Get unread message count
   const { 
     data: unreadCount = 0,
     isLoading: isLoadingUnreadCount
@@ -131,9 +131,7 @@ export const useMessaging = (options?: string | UseMessagingOptions) => {
     refetchInterval: 15000
   });
 
-  // Set up real-time updates using Supabase subscription
   useEffect(() => {
-    // Clean up the polling interval on component unmount
     return () => {
       if (pollingIntervalRef.current) {
         window.clearInterval(pollingIntervalRef.current);
@@ -141,12 +139,10 @@ export const useMessaging = (options?: string | UseMessagingOptions) => {
     };
   }, []);
 
-  // Mark conversation as read
   const markConversationAsRead = async (userId: string) => {
     try {
       await markConversationAsReadService(userId);
       
-      // Invalidate queries to update UI
       queryClient.invalidateQueries({ queryKey: ['messages', userId] });
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
       queryClient.invalidateQueries({ queryKey: ['unreadMessages'] });
