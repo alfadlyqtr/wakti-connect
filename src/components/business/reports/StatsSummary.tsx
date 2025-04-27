@@ -1,7 +1,14 @@
 
 import React, { ReactNode } from "react";
 import { Users, Calendar, Clock } from "lucide-react";
-import { StatsCard } from "@/components/ui/stats-card";  // Updated import path
+import { StatsCard } from "@/components/ui/stats-card";
+
+interface StatsSummaryProps {
+  subscriberCount: number | ReactNode;
+  subscribersLoading: boolean;
+  staffCount: number | ReactNode;
+  staffLoading: boolean;
+}
 
 export const StatsSummary: React.FC<StatsSummaryProps> = ({
   subscriberCount,
