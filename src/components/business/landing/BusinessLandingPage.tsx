@@ -5,12 +5,9 @@ import PoweredByWAKTI from "@/components/common/PoweredByWAKTI";
 import BusinessPageNotFound from "./BusinessPageNotFound";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { useAuthentication } from "@/hooks/useAuthentication";
-import { useBusinessSubscribers } from "@/hooks/useBusinessSubscribers";
-import { useAuth } from "@/hooks/useAuth";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import PageBackground from "./PageBackground";
 import SidebarSocialLinks from "./SidebarSocialLinks";
-import FloatingSubscribeButton from "./FloatingSubscribeButton";
 import ThemeColorApplier from "./ThemeColorApplier";
 import BusinessPageContent from "./BusinessPageContent";
 
@@ -31,33 +28,21 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
   } = useBusinessPage(slug, isPreviewMode);
   
   const [showPoweredBy, setShowPoweredBy] = useState(true);
-  const [showFloatingButton, setShowFloatingButton] = useState(false);
   const isAuthenticated = useAuthentication();
   const { redirectToLogin } = useAuthRedirect();
   
-  const { isSubscribed, checkingSubscription, subscribe, unsubscribe } = 
-    useBusinessSubscribers(businessPage?.business_id);
-
   console.log("BusinessLandingPage - authentication status:", isAuthenticated);
   console.log("BusinessLandingPage - businessPage:", businessPage);
   console.log("BusinessLandingPage - socialLinks:", socialLinks?.length || 0);
   console.log("BusinessLandingPage - social icons position:", businessPage?.social_icons_position);
-  console.log("BusinessLandingPage - subscription status:", isSubscribed);
-  console.log("BusinessLandingPage - subscribe button settings:", {
-    show: businessPage?.show_subscribe_button,
-    position: businessPage?.subscribe_button_position,
-    text: businessPage?.subscribe_button_text
-  });
 
-  // Handle scroll effects for powered by and floating button
+  // Handle scroll effects for powered by
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 300) {
         setShowPoweredBy(false);
-        setShowFloatingButton(true);
       } else {
         setShowPoweredBy(true);
-        setShowFloatingButton(false);
       }
     };
 
@@ -88,8 +73,6 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
   const bgColor = businessPage.background_color || "#ffffff";
   const showSidebarSocialLinks = socialLinks && socialLinks.length > 0 && 
     ['sidebar'].includes(businessPage.social_icons_position || '');
-  const showFloatingSubscribeBtn = businessPage.show_subscribe_button && 
-    ['floating', 'both'].includes(businessPage.subscribe_button_position || '');
 
   return (
     <CurrencyProvider initialCurrency={businessPage.business_id}>
@@ -110,23 +93,6 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
             />
           )}
           
-          {/* Floating Subscribe Button */}
-          {showFloatingSubscribeBtn && (
-            <FloatingSubscribeButton 
-              businessId={businessPage.business_id}
-              visible={showFloatingButton}
-              showButton={businessPage.show_subscribe_button}
-              isAuthenticated={isAuthenticated}
-              onAuthRequired={handleAuthRequired}
-              backgroundColor={businessPage.primary_color}
-              textColor="#FFFFFF"
-              borderRadius="0.5rem"
-              gradientFrom={businessPage.primary_color}
-              gradientTo={businessPage.secondary_color}
-              customText={businessPage.subscribe_button_text || "Subscribe"}
-            />
-          )}
-          
           {/* Main Content */}
           <BusinessPageContent 
             businessPage={businessPage}
@@ -134,11 +100,6 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
             socialLinks={socialLinks}
             isPreviewMode={isPreviewMode}
             isAuthenticated={isAuthenticated}
-            isSubscribed={isSubscribed}
-            checkingSubscription={checkingSubscription}
-            subscribe={subscribe}
-            unsubscribe={unsubscribe}
-            handleAuthRequired={handleAuthRequired}
           />
 
           {/* Powered by WAKTI */}

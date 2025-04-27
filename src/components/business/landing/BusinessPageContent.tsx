@@ -11,11 +11,6 @@ interface BusinessPageContentProps {
   socialLinks: BusinessSocialLink[] | undefined;
   isPreviewMode: boolean;
   isAuthenticated: boolean | null;
-  isSubscribed: boolean | undefined;
-  checkingSubscription: boolean | undefined;
-  subscribe: any;
-  unsubscribe: any;
-  handleAuthRequired: () => void;
 }
 
 const BusinessPageContent: React.FC<BusinessPageContentProps> = ({
@@ -23,12 +18,7 @@ const BusinessPageContent: React.FC<BusinessPageContentProps> = ({
   pageSections,
   socialLinks,
   isPreviewMode,
-  isAuthenticated,
-  isSubscribed,
-  checkingSubscription,
-  subscribe,
-  unsubscribe,
-  handleAuthRequired
+  isAuthenticated
 }) => {
   const {
     content_max_width = "1200px",
@@ -70,10 +60,6 @@ const BusinessPageContent: React.FC<BusinessPageContentProps> = ({
         }} 
         isPreviewMode={isPreviewMode}
         isAuthenticated={isAuthenticated}
-        isSubscribed={isSubscribed}
-        checkingSubscription={checkingSubscription}
-        subscribe={subscribe}
-        unsubscribe={unsubscribe}
       />
       
       <BusinessPageSections 

@@ -1,30 +1,109 @@
 
 import React from "react";
 import { BusinessProfile } from "@/types/business.types";
-import BusinessSubscribeButton from "./BusinessSubscribeButton";
+import { Button } from "@/components/ui/button";
+import { useContactSearch } from "@/hooks/useContactSearch";
+import { useContacts } from "@/hooks/useContacts";
+import { Loader2, User, UserPlus } from "lucide-react";
 
 export interface BusinessPageHeaderProps {
   business: BusinessProfile;
   isPreviewMode?: boolean;
   isAuthenticated?: boolean;
-  isSubscribed?: boolean;
-  subscriptionId?: string;
-  checkingSubscription?: boolean;
-  subscribe?: any;
-  unsubscribe?: any;
 }
 
 const BusinessPageHeader: React.FC<BusinessPageHeaderProps> = ({
   business,
   isPreviewMode,
   isAuthenticated,
-  isSubscribed,
-  checkingSubscription,
-  subscribe,
-  unsubscribe
 }) => {
   console.log("BusinessPageHeader component rendering with:", business);
-  console.log("Subscribe button props:", { isPreviewMode, isAuthenticated, isSubscribed });
+  
+  // Use contacts system instead of subscribers
+  const { sendContactRequest } = useContacts();
+  const { checkStatus, isCheckingStatus } = useContactSearch();
+
+  const [isAddingContact, setIsAddingContact] = React.useState(false);
+  const [contactStatus, setContactStatus] = React.useState<'none' | 'pending' | 'accepted'>('none');
+
+  React.useEffect(() => {
+    // Only check status if user is authenticated and not in preview mode
+    if (isAuthenticated && !isPreviewMode && business.id) {
+      checkStatus.mutate(business.id, {
+        onSuccess: (data) => {
+          if (data.requestExists) {
+            setContactStatus(data.requestStatus as 'pending' | 'accepted');
+          } else {
+            setContactStatus('none');
+          }
+        }
+      });
+    }
+  }, [isAuthenticated, isPreviewMode, business.id, checkStatus]);
+
+  const handleAddContact = async () => {
+    if (!isAuthenticated || !business.id) return;
+    
+    setIsAddingContact(true);
+    try {
+      await sendContactRequest.mutateAsync(business.id);
+      setContactStatus('pending');
+    } catch (error) {
+      console.error('Error adding contact:', error);
+    } finally {
+      setIsAddingContact(false);
+    }
+  };
+
+  // Render different button states based on contact status
+  const renderContactButton = () => {
+    if (isCheckingStatus) {
+      return (
+        <Button disabled>
+          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+          Checking...
+        </Button>
+      );
+    }
+
+    if (contactStatus === 'accepted') {
+      return (
+        <Button variant="outline">
+          <User className="h-4 w-4 mr-2" />
+          In Contacts
+        </Button>
+      );
+    }
+
+    if (contactStatus === 'pending') {
+      return (
+        <Button variant="outline" disabled>
+          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+          Request Pending
+        </Button>
+      );
+    }
+
+    return (
+      <Button 
+        onClick={handleAddContact}
+        disabled={isAddingContact}
+        variant="gradient"
+      >
+        {isAddingContact ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            Adding...
+          </>
+        ) : (
+          <>
+            <UserPlus className="h-4 w-4 mr-2" />
+            Add to Contacts
+          </>
+        )}
+      </Button>
+    );
+  };
   
   return (
     <div className="business-page-header py-8">
@@ -45,28 +124,10 @@ const BusinessPageHeader: React.FC<BusinessPageHeaderProps> = ({
         
         <h1 className="text-3xl md:text-4xl font-bold text-center mb-4">{business.business_name || "Business Name"}</h1>
         
-        {/* Adding a debug output to check visibility conditions */}
-        <div className="hidden">
-          Debug: isPreviewMode={String(isPreviewMode)}, isAuthenticated={String(isAuthenticated)}
-        </div>
-        
-        {/* Subscribe button placed directly under the business name with forced display */}
-        {!isPreviewMode && (
+        {/* Contact button instead of subscribe button */}
+        {!isPreviewMode && isAuthenticated && (
           <div className="mt-2 mb-4">
-            <BusinessSubscribeButton 
-              businessId={business.id}
-              isAuthenticated={isAuthenticated}
-              backgroundColor="#0053c3"
-              textColor="#ffffff"
-              customText={isSubscribed ? "Unsubscribe" : "Subscribe"}
-              gradientFrom="#0053c3"
-              gradientTo="#3B82F6"
-              variant="gradient"
-              borderRadius="0.5rem"
-              boxShadow="md"
-              className="px-6 py-2"
-              showAuthAlert={true}
-            />
+            {renderContactButton()}
           </div>
         )}
       </div>

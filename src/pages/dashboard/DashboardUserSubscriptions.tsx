@@ -1,11 +1,11 @@
 
 import React from "react";
-import BusinessSubscriptionsList from "@/components/contacts/BusinessSubscriptionsList";
+import BusinessContactsList from "@/components/contacts/BusinessContactsList";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 
-const DashboardUserSubscriptions = () => {
+const DashboardBusinessContacts = () => {
   // Fetch the current user's account type
   const { data: userData, isLoading } = useQuery({
     queryKey: ['currentUserType'],
@@ -46,13 +46,13 @@ const DashboardUserSubscriptions = () => {
       <div className="p-6 text-center">
         <h2 className="text-xl font-semibold mb-2">Individual Account Required</h2>
         <p className="text-muted-foreground">
-          This page is designed for individual accounts to manage their business subscriptions.
+          This page is designed for individual accounts to manage their business contacts.
         </p>
       </div>
     );
   }
 
-  return <BusinessSubscriptionsList />;
+  return <BusinessContactsList />;
 };
 
-export default DashboardUserSubscriptions;
+export default DashboardBusinessContacts;

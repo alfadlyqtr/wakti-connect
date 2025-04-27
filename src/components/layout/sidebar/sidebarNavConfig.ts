@@ -106,7 +106,6 @@ export const navItems = [
   },
 ];
 
-// Update dropdown nav items for the user menu
 export const dropdownNavItems = [
   {
     path: "notifications",
@@ -123,10 +122,10 @@ export const dropdownNavItems = [
     badge: 0,
   },
   {
-    path: "subscribers",
-    label: "Subscribers",
+    path: "contacts",
+    label: "Contacts",
     icon: Users,
-    showFor: ["business"],
+    showFor: ["individual", "business", "staff"],
     badge: 0,
   },
   {

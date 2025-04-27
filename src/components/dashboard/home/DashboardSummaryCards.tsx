@@ -19,7 +19,6 @@ interface DashboardSummaryCardsProps {
   todayTasks: any[] | undefined;
   unreadNotifications: any[] | undefined;
   isLoading?: boolean;
-  subscribersCount?: number;
 }
 
 const CARD_COMMON =
@@ -32,32 +31,32 @@ export const DashboardSummaryCards = ({
   todayTasks = [],
   unreadNotifications = [],
   isLoading = false,
-  subscribersCount = 0,
 }: DashboardSummaryCardsProps) => {
   const tasks = todayTasks || [];
   const completedTasksCount = tasks.filter((task: any) => task.status === "completed").length;
   const { unreadCount, isLoading: notificationsLoading } = useDashboardNotifications();
 
-  const { data: subscribersData, isLoading: subscribersLoading } = useQuery({
-    queryKey: ['dashboardSubscribersCount'],
+  const { data: contactsData, isLoading: contactsLoading } = useQuery({
+    queryKey: ['dashboardContactsCount'],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) return { subscribersCount: 0 };
+      if (!session?.user) return { contactsCount: 0 };
       const { count, error } = await supabase
-        .from('business_subscribers')
+        .from('user_contacts')
         .select('*', { count: 'exact', head: true })
-        .eq('business_id', session.user.id);
+        .eq('user_id', session.user.id)
+        .eq('status', 'accepted');
       if (error) {
-        console.error("Error fetching subscribers count:", error);
-        return { subscribersCount: 0 };
+        console.error("Error fetching contacts count:", error);
+        return { contactsCount: 0 };
       }
-      return { subscribersCount: count || 0 };
+      return { contactsCount: count || 0 };
     }
   });
 
-  const actualSubscribersCount = subscribersData?.subscribersCount || 0;
+  const actualContactsCount = contactsData?.contactsCount || 0;
 
-  if (isLoading || subscribersLoading) {
+  if (isLoading || contactsLoading) {
     return (
       <div className="grid gap-2 grid-cols-2 md:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
@@ -112,16 +111,16 @@ export const DashboardSummaryCards = ({
         </CardContent>
       </Card>
 
-      {/* Subscribers Card */}
+      {/* Contacts Card - Replace Subscribers */}
       <Card className={CARD_COMMON}>
         <CardHeader className={CARD_HEADER}>
-          <CardTitle className="text-xs font-semibold text-blue-500">Subscribers</CardTitle>
+          <CardTitle className="text-xs font-semibold text-blue-500">Contacts</CardTitle>
           <Users className="h-5 w-5 text-blue-500 group-hover:scale-110 transition-transform" />
         </CardHeader>
         <CardContent className={CARD_CONTENT}>
-          <div className="text-xl md:text-2xl font-bold">{actualSubscribersCount}</div>
+          <div className="text-xl md:text-2xl font-bold">{actualContactsCount}</div>
           <p className="text-xs text-muted-foreground">
-            Total subscribers
+            Total contacts
           </p>
         </CardContent>
       </Card>
