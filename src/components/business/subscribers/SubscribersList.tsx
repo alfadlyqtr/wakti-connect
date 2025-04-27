@@ -48,8 +48,13 @@ const SubscribersList = ({ businessId }: SubscribersListProps) => {
       {subscribers.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {subscribers.map((subscriber) => {
-            // Safely handle null profile data
-            const profile = subscriber.profile || {};
+            // Define proper types for profile data with defaults
+            const profile = subscriber.profile || {
+              display_name: null,
+              full_name: null,
+              avatar_url: null,
+              account_type: 'free'
+            };
             
             // Fallback for display name
             const displayName = 

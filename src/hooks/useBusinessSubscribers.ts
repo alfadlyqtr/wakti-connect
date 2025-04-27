@@ -45,8 +45,13 @@ export const useBusinessSubscribers = (businessId?: string) => {
 
         // Map and clean up data to handle null profiles
         const transformedData = data.map(item => {
-          // Safely access profiles data with null checks
-          const profileData = item.profiles || {};
+          // Safely access profiles data with proper type definition
+          const profileData = item.profiles || {
+            display_name: null,
+            full_name: null,
+            avatar_url: null,
+            account_type: 'free' as const
+          };
           
           return {
             id: item.id,
