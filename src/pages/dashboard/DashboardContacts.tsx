@@ -106,6 +106,11 @@ const DashboardContacts = () => {
     }
   };
 
+  // Fix for TypeScript error: providing the correct function type for handleToggleAutoApprove
+  const onToggleAutoApprove = () => {
+    handleToggleAutoApprove(!autoApprove);
+  };
+
   const filteredContacts = searchQuery && contacts 
     ? contacts.filter(contact => {
         const displayName = contact.contactProfile?.displayName || contact.contactProfile?.fullName || '';
@@ -192,7 +197,7 @@ const DashboardContacts = () => {
           <AutoApproveToggle 
             autoApprove={autoApprove}
             isUpdating={isUpdatingAutoApprove}
-            onToggle={handleToggleAutoApprove}
+            onToggle={onToggleAutoApprove}
           />
         </div>
       </div>
@@ -202,7 +207,7 @@ const DashboardContacts = () => {
           <TabsTrigger value="contacts">My Contacts</TabsTrigger>
           <TabsTrigger value="requests">
             Pending Requests
-            {((pendingRequests.incoming.length + pendingRequests.outgoing.length) > 0) && (
+            {pendingRequests && ((pendingRequests.incoming.length + pendingRequests.outgoing.length) > 0) && (
               <Badge variant="secondary" className="ml-2">
                 {pendingRequests.incoming.length + pendingRequests.outgoing.length}
               </Badge>
@@ -232,12 +237,14 @@ const DashboardContacts = () => {
               <CardDescription>Review and respond to contact requests.</CardDescription>
             </CardHeader>
             <CardContent>
-              <PendingRequestsTabs
-                incomingRequests={pendingRequests.incoming}
-                outgoingRequests={pendingRequests.outgoing}
-                isLoading={isLoadingRequests}
-                onRespondToRequest={handleRespondToRequest}
-              />
+              {pendingRequests && (
+                <PendingRequestsTabs
+                  incomingRequests={pendingRequests.incoming}
+                  outgoingRequests={pendingRequests.outgoing}
+                  isLoading={isLoadingRequests}
+                  onRespondToRequest={handleRespondToRequest}
+                />
+              )}
             </CardContent>
           </Card>
         </TabsContent>

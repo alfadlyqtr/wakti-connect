@@ -1,86 +1,288 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { UserContact, ContactRequestStatusValue, UserSearchResult } from '@/types/invitation.types';
+import { supabase } from "@/integrations/supabase/client";
+import { UserContact, UserSearchResult, ContactRequestStatusValue } from "@/types/invitation.types";
+import { fetchContactProfile } from "./contactSearch";
 
 /**
- * Get regular contacts for a user (excluding staff contacts)
+ * Get the user's approved contacts
  */
 export const getUserContacts = async (userId: string): Promise<UserContact[]> => {
   try {
-    console.log('[ContactQueries] Fetching contacts for user:', userId);
-    
-    const { data: contactRows, error } = await supabase
+    const { data, error } = await supabase
       .from('user_contacts')
       .select(`
-        id,
+        id, 
         user_id,
         contact_id,
         status,
         staff_relation_id,
-        created_at,
-        profiles:contact_id(
-          id, 
-          full_name, 
-          display_name, 
-          avatar_url, 
-          account_type,
-          business_name,
-          email
-        )
+        created_at
       `)
-      .or(`user_id.eq.${userId},contact_id.eq.${userId}`)
-      .eq('status', 'accepted')
-      .is('staff_relation_id', null);
+      .eq('user_id', userId)
+      .eq('status', 'accepted');
 
     if (error) {
-      console.error('[ContactQueries] Database error:', error);
+      console.error('Error fetching contacts:', error);
       return [];
     }
 
-    if (!contactRows?.length) {
-      console.log('[ContactQueries] No contacts found for user:', userId);
-      return [];
-    }
-
-    console.log('[ContactQueries] Found contacts:', contactRows);
-
-    // Transform results to match the UserContact type
-    return contactRows.map(row => {
-      const isReversed = row.contact_id === userId;
-      const contactProfile = row.profiles;
-      const actualContactId = isReversed ? row.user_id : row.contact_id;
-      
-      return {
-        id: row.id,
-        userId: row.user_id,
-        contactId: actualContactId,
-        status: row.status as ContactRequestStatusValue,
-        staffRelationId: row.staff_relation_id,
-        created_at: row.created_at,
-        contactProfile: contactProfile ? {
-          id: actualContactId,
-          fullName: contactProfile.full_name || 'Unknown User',
-          displayName: contactProfile.display_name || contactProfile.full_name || 'Unknown User',
-          avatarUrl: contactProfile.avatar_url,
-          accountType: contactProfile.account_type || 'free',
-          businessName: contactProfile.business_name,
-          email: contactProfile.email
-        } : {
-          id: actualContactId,
-          fullName: 'Unknown User',
-          displayName: 'Unknown User',
-          accountType: 'free'
+    // For each contact, fetch their profile data
+    const contactsWithProfiles = await Promise.all(
+      data.map(async (contact) => {
+        try {
+          // We need to fetch the profiles separately to avoid errors with the join
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select(`
+              id,
+              full_name,
+              display_name,
+              avatar_url,
+              account_type,
+              business_name,
+              email
+            `)
+            .eq('id', contact.contact_id)
+            .single();
+            
+          return {
+            ...contact,
+            contactProfile: profileData ? {
+              id: profileData.id,
+              fullName: profileData.full_name,
+              displayName: profileData.display_name,
+              avatarUrl: profileData.avatar_url,
+              accountType: profileData.account_type,
+              businessName: profileData.business_name,
+              email: profileData.email
+            } : null
+          };
+        } catch (profileError) {
+          console.error('Error fetching contact profile:', profileError);
+          return {
+            ...contact,
+            contactProfile: null
+          };
         }
-      };
-    });
+      })
+    );
+
+    return contactsWithProfiles as UserContact[];
   } catch (error) {
-    console.error('[ContactQueries] Unexpected error:', error);
+    console.error('Error in getUserContacts:', error);
     return [];
   }
 };
 
 /**
- * Simple direct search for users by name, email, or phone
+ * Get the user's pending contact requests (both incoming and outgoing)
+ */
+export const getContactRequests = async (userId: string): Promise<{ incoming: UserContact[]; outgoing: UserContact[] }> => {
+  try {
+    // Get incoming requests
+    const { data: incomingRequestsData, error: incomingError } = await supabase
+      .from('user_contacts')
+      .select(`
+        id, 
+        user_id,
+        contact_id,
+        status,
+        staff_relation_id,
+        created_at
+      `)
+      .eq('contact_id', userId)
+      .eq('status', 'pending');
+
+    if (incomingError) {
+      console.error('Error fetching incoming requests:', incomingError);
+      return { incoming: [], outgoing: [] };
+    }
+
+    // For each incoming request, fetch the sender's profile data
+    const incomingWithProfiles = await Promise.all(
+      (incomingRequestsData || []).map(async (request) => {
+        try {
+          // We need to fetch the profiles separately to avoid errors with the join
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select(`
+              id,
+              full_name,
+              display_name,
+              avatar_url,
+              account_type,
+              business_name,
+              email
+            `)
+            .eq('id', request.user_id)
+            .single();
+            
+          return {
+            ...request,
+            contactProfile: profileData ? {
+              id: profileData.id,
+              fullName: profileData.full_name,
+              displayName: profileData.display_name,
+              avatarUrl: profileData.avatar_url,
+              accountType: profileData.account_type,
+              businessName: profileData.business_name,
+              email: profileData.email
+            } : null
+          };
+        } catch (profileError) {
+          console.error('Error fetching incoming request profile:', profileError);
+          return {
+            ...request,
+            contactProfile: null
+          };
+        }
+      })
+    );
+
+    // Get outgoing requests
+    const { data: outgoingRequestsData, error: outgoingError } = await supabase
+      .from('user_contacts')
+      .select(`
+        id, 
+        user_id,
+        contact_id,
+        status,
+        staff_relation_id,
+        created_at
+      `)
+      .eq('user_id', userId)
+      .eq('status', 'pending');
+
+    if (outgoingError) {
+      console.error('Error fetching outgoing requests:', outgoingError);
+      return { incoming: incomingWithProfiles as UserContact[], outgoing: [] };
+    }
+
+    // For each outgoing request, fetch the recipient's profile data
+    const outgoingWithProfiles = await Promise.all(
+      (outgoingRequestsData || []).map(async (request) => {
+        try {
+          // We need to fetch the profiles separately to avoid errors with the join
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select(`
+              id,
+              full_name,
+              display_name,
+              avatar_url,
+              account_type,
+              business_name,
+              email
+            `)
+            .eq('id', request.contact_id)
+            .single();
+            
+          return {
+            ...request,
+            contactProfile: profileData ? {
+              id: profileData.id,
+              fullName: profileData.full_name,
+              displayName: profileData.display_name,
+              avatarUrl: profileData.avatar_url,
+              accountType: profileData.account_type,
+              businessName: profileData.business_name,
+              email: profileData.email
+            } : null
+          };
+        } catch (profileError) {
+          console.error('Error fetching outgoing request profile:', profileError);
+          return {
+            ...request,
+            contactProfile: null
+          };
+        }
+      })
+    );
+
+    return {
+      incoming: incomingWithProfiles as UserContact[],
+      outgoing: outgoingWithProfiles as UserContact[]
+    };
+  } catch (error) {
+    console.error('Error in getContactRequests:', error);
+    return { incoming: [], outgoing: [] };
+  }
+};
+
+/**
+ * Get staff contacts for the current user
+ */
+export const getStaffContacts = async (userId: string): Promise<UserContact[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('user_contacts')
+      .select(`
+        id, 
+        user_id,
+        contact_id,
+        status,
+        staff_relation_id,
+        created_at
+      `)
+      .eq('user_id', userId)
+      .eq('status', 'accepted')
+      .not('staff_relation_id', 'is', null);
+
+    if (error) {
+      console.error('Error fetching staff contacts:', error);
+      return [];
+    }
+
+    // For each contact, fetch their profile data
+    const contactsWithProfiles = await Promise.all(
+      data.map(async (contact) => {
+        try {
+          // We need to fetch the profiles separately to avoid errors with the join
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select(`
+              id,
+              full_name,
+              display_name,
+              avatar_url,
+              account_type,
+              business_name,
+              email
+            `)
+            .eq('id', contact.contact_id)
+            .single();
+            
+          return {
+            ...contact,
+            contactProfile: profileData ? {
+              id: profileData.id,
+              fullName: profileData.full_name,
+              displayName: profileData.display_name,
+              avatarUrl: profileData.avatar_url,
+              accountType: profileData.account_type,
+              businessName: profileData.business_name,
+              email: profileData.email
+            } : null
+          };
+        } catch (profileError) {
+          console.error('Error fetching staff contact profile:', profileError);
+          return {
+            ...contact,
+            contactProfile: null
+          };
+        }
+      })
+    );
+
+    return contactsWithProfiles as UserContact[];
+  } catch (error) {
+    console.error('Error in getStaffContacts:', error);
+    return [];
+  }
+};
+
+/**
+ * Search for users by name or email
  */
 export const searchUsers = async (query: string): Promise<UserSearchResult[]> => {
   try {
@@ -88,31 +290,17 @@ export const searchUsers = async (query: string): Promise<UserSearchResult[]> =>
       return [];
     }
     
-    const { data, error } = await supabase
-      .from('profiles')
-      .select(`
-        id,
-        full_name,
-        display_name,
-        email,
-        avatar_url,
-        account_type,
-        business_name
-      `)
-      .or(`
-        display_name.ilike.%${query}%,
-        full_name.ilike.%${query}%,
-        email.ilike.%${query}%
-      `)
-      .eq('is_searchable', true)
-      .limit(10);
-
+    const { data, error } = await supabase.rpc('search_users', {
+      search_query: query
+    });
+    
     if (error) {
-      console.error('[ContactSearch] Error searching users:', error);
+      console.error("Error searching users:", error);
       return [];
     }
-
-    return data.map(user => ({
+    
+    // Transform the response to match our expected type
+    return data.map((user: any) => ({
       id: user.id,
       fullName: user.full_name,
       displayName: user.display_name,
@@ -122,190 +310,7 @@ export const searchUsers = async (query: string): Promise<UserSearchResult[]> =>
       businessName: user.business_name
     }));
   } catch (error) {
-    console.error('[ContactSearch] Unexpected error:', error);
-    return [];
-  }
-};
-
-/**
- * Get contact requests for a user
- */
-export const getContactRequests = async (userId: string) => {
-  try {
-    console.log('[ContactQueries] Fetching contact requests for user:', userId);
-    
-    // Get incoming requests (where the user is the contact_id and status is pending)
-    const { data: incomingRequests, error: incomingError } = await supabase
-      .from('user_contacts')
-      .select(`
-        id,
-        user_id,
-        contact_id,
-        status,
-        staff_relation_id,
-        created_at,
-        profiles:user_id(
-          id,
-          full_name,
-          display_name,
-          avatar_url,
-          account_type,
-          business_name,
-          email
-        )
-      `)
-      .eq('contact_id', userId)
-      .eq('status', 'pending');
-      
-    // Get outgoing requests (where the user is the user_id and status is pending)
-    const { data: outgoingRequests, error: outgoingError } = await supabase
-      .from('user_contacts')
-      .select(`
-        id,
-        user_id,
-        contact_id,
-        status,
-        staff_relation_id,
-        created_at,
-        profiles:contact_id(
-          id,
-          full_name,
-          display_name,
-          avatar_url,
-          account_type,
-          business_name,
-          email
-        )
-      `)
-      .eq('user_id', userId)
-      .eq('status', 'pending');
-    
-    if (incomingError) console.error('[ContactQueries] Error fetching incoming requests:', incomingError);
-    if (outgoingError) console.error('[ContactQueries] Error fetching outgoing requests:', outgoingError);
-    
-    const formattedIncoming = (incomingRequests || []).map(row => {
-      return {
-        id: row.id,
-        userId: row.user_id,
-        contactId: row.contact_id,
-        status: row.status as ContactRequestStatusValue,
-        staffRelationId: row.staff_relation_id,
-        created_at: row.created_at,
-        contactProfile: row.profiles ? {
-          id: row.user_id,
-          fullName: row.profiles.full_name || 'Unknown User',
-          displayName: row.profiles.display_name || row.profiles.full_name || 'Unknown User',
-          avatarUrl: row.profiles.avatar_url,
-          accountType: row.profiles.account_type || 'free',
-          businessName: row.profiles.business_name,
-          email: row.profiles.email
-        } : {
-          id: row.user_id,
-          fullName: 'Unknown User',
-          displayName: 'Unknown User',
-          accountType: 'free'
-        }
-      };
-    });
-    
-    const formattedOutgoing = (outgoingRequests || []).map(row => {
-      return {
-        id: row.id,
-        userId: row.user_id,
-        contactId: row.contact_id,
-        status: row.status as ContactRequestStatusValue,
-        staffRelationId: row.staff_relation_id,
-        created_at: row.created_at,
-        contactProfile: row.profiles ? {
-          id: row.contact_id,
-          fullName: row.profiles.full_name || 'Unknown User',
-          displayName: row.profiles.display_name || row.profiles.full_name || 'Unknown User',
-          avatarUrl: row.profiles.avatar_url,
-          accountType: row.profiles.account_type || 'free',
-          businessName: row.profiles.business_name,
-          email: row.profiles.email
-        } : {
-          id: row.contact_id,
-          fullName: 'Unknown User',
-          displayName: 'Unknown User',
-          accountType: 'free'
-        }
-      };
-    });
-    
-    return {
-      incoming: formattedIncoming,
-      outgoing: formattedOutgoing
-    };
-  } catch (error) {
-    console.error('[ContactQueries] Error fetching contact requests:', error);
-    return { incoming: [], outgoing: [] };
-  }
-};
-
-/**
- * Get staff contacts for a user
- */
-export const getStaffContacts = async (userId: string): Promise<UserContact[]> => {
-  try {
-    console.log('[ContactQueries] Fetching staff contacts for user:', userId);
-    
-    const { data: staffContacts, error } = await supabase
-      .from('user_contacts')
-      .select(`
-        id,
-        user_id,
-        contact_id,
-        status,
-        staff_relation_id,
-        created_at,
-        profiles:contact_id(
-          id,
-          full_name,
-          display_name,
-          avatar_url,
-          account_type,
-          business_name,
-          email
-        )
-      `)
-      .eq('user_id', userId)
-      .eq('status', 'accepted')
-      .not('staff_relation_id', 'is', null);
-      
-    if (error) {
-      console.error('[ContactQueries] Error fetching staff contacts:', error);
-      return [];
-    }
-    
-    return staffContacts.map(row => {
-      const contactProfile = row.profiles;
-      
-      return {
-        id: row.id,
-        userId: row.user_id,
-        contactId: row.contact_id,
-        status: row.status as ContactRequestStatusValue,
-        staffRelationId: row.staff_relation_id,
-        created_at: row.created_at,
-        contactProfile: contactProfile ? {
-          id: row.contact_id,
-          fullName: contactProfile.full_name || 'Unknown User',
-          displayName: contactProfile.display_name || contactProfile.full_name || 'Unknown User',
-          avatarUrl: contactProfile.avatar_url,
-          accountType: contactProfile.account_type || 'free',
-          businessName: contactProfile.business_name,
-          email: contactProfile.email
-        } : {
-          id: row.contact_id,
-          fullName: 'Unknown User',
-          displayName: 'Unknown User',
-          accountType: 'free'
-        }
-      };
-    });
-  } catch (error) {
-    console.error('[ContactQueries] Error fetching staff contacts:', error);
+    console.error("Error in searchUsers:", error);
     return [];
   }
 };
