@@ -15,4 +15,10 @@ export interface AISettingsContextType {
   deleteKnowledge: (id: string) => Promise<boolean>;
   createDefaultSettings: () => Promise<void>;
   isCreatingSettings: boolean;
+  // Add these properties to fix AIFeaturesTab and AIKnowledgeTab errors
+  updateFeature?: (featureName: string, enabled: boolean) => Promise<boolean>;
+  isLoading?: boolean;
+  uploadKnowledge?: (file: File, title: string) => Promise<boolean>;
+  isUploading?: boolean;
+  uploadError?: Error | null;
 }

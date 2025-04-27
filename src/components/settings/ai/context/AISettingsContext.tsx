@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { AISettings, AIKnowledgeUpload, WAKTIAIMode } from '@/components/ai/personality-switcher/types';
 import { AISettingsContextType } from './AISettingsContext.types';
 import { createDefaultSettings } from './createDefaultSettings';
@@ -33,7 +33,7 @@ export const AISettingsProvider: React.FC<AISettingsProviderProps> = ({ children
       if (!userId) return null;
 
       try {
-        // Using ai_assistant_settings instead of ai_settings
+        // Using ai_assistant_settings table which exists in the database
         const { data, error } = await supabase
           .from('ai_assistant_settings')
           .select('*')
@@ -89,9 +89,15 @@ export const AISettingsProvider: React.FC<AISettingsProviderProps> = ({ children
   });
 
   // Update settings mutation
-  const updateSettings = useMutation({
+  const updateSettingsMutation = useMutation({
     mutationFn: async (newSettings: AISettings) => {
       if (!userId) throw new Error('User not authenticated');
+
+      // Make sure to fix the role type
+      const role = newSettings.role as string;
+      if (!["general", "student", "employee", "writer", "business_owner", "productivity", "creative"].includes(role)) {
+        console.warn(`Role '${role}' may cause issues with database - proceeding anyway`);
+      }
 
       // Convert WAKTIAIMode to string to match the database field type
       const dbSettings = {
@@ -99,7 +105,7 @@ export const AISettingsProvider: React.FC<AISettingsProviderProps> = ({ children
         role: newSettings.role as string, // Cast to string for database
       };
 
-      // Using ai_assistant_settings instead of ai_settings
+      // Using ai_assistant_settings table
       const { data, error } = await supabase
         .from('ai_assistant_settings')
         .upsert({
@@ -136,7 +142,7 @@ export const AISettingsProvider: React.FC<AISettingsProviderProps> = ({ children
   });
 
   // Add knowledge mutation
-  const addKnowledge = useMutation({
+  const addKnowledgeMutation = useMutation({
     mutationFn: async (data: { title: string; content: string; role?: string }) => {
       if (!userId) throw new Error('User not authenticated');
 
@@ -174,7 +180,7 @@ export const AISettingsProvider: React.FC<AISettingsProviderProps> = ({ children
   });
 
   // Delete knowledge mutation
-  const deleteKnowledge = useMutation({
+  const deleteKnowledgeMutation = useMutation({
     mutationFn: async (id: string) => {
       if (!userId) throw new Error('User not authenticated');
 
@@ -250,20 +256,76 @@ export const AISettingsProvider: React.FC<AISettingsProviderProps> = ({ children
     }
   }, [settings, isLoadingSettings, error, canUseAI]);
 
+  // Wrap mutation functions to return Promises for compatibility with interface
+  const wrappedUpdateSettings = async (newSettings: AISettings): Promise<boolean> => {
+    try {
+      await updateSettingsMutation.mutateAsync(newSettings);
+      return true;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  const wrappedAddKnowledge = async (title: string, content: string, role?: string): Promise<boolean> => {
+    try {
+      await addKnowledgeMutation.mutateAsync({ title, content, role });
+      return true;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  const wrappedDeleteKnowledge = async (id: string): Promise<boolean> => {
+    try {
+      await deleteKnowledgeMutation.mutateAsync(id);
+      return true;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  const wrappedCreateDefaultSettings = async (): Promise<void> => {
+    await createSettingsMutation.mutateAsync();
+  };
+
   const contextValue: AISettingsContextType = {
     settings,
     isLoadingSettings,
-    isUpdatingSettings: updateSettings.isPending,
-    isAddingKnowledge: addKnowledge.isPending,
+    isUpdatingSettings: updateSettingsMutation.isPending,
+    isAddingKnowledge: addKnowledgeMutation.isPending,
     knowledgeUploads,
     isLoadingKnowledge,
     canUseAI,
     error,
-    updateSettings: updateSettings.mutate,
-    addKnowledge: addKnowledge.mutate,
-    deleteKnowledge: deleteKnowledge.mutate,
-    createDefaultSettings: createSettingsMutation.mutate,
+    updateSettings: wrappedUpdateSettings,
+    addKnowledge: wrappedAddKnowledge,
+    deleteKnowledge: wrappedDeleteKnowledge,
+    createDefaultSettings: wrappedCreateDefaultSettings,
     isCreatingSettings: createSettingsMutation.isPending,
+    // Additional properties for AIFeaturesTab and AIKnowledgeTab
+    updateFeature: async (featureName: string, enabled: boolean) => {
+      if (!settings) return false;
+      const newSettings = {
+        ...settings,
+        enabled_features: {
+          ...settings.enabled_features,
+          [featureName]: enabled
+        }
+      };
+      return wrappedUpdateSettings(newSettings);
+    },
+    isLoading: isLoadingSettings,
+    uploadKnowledge: async (file: File, title: string) => {
+      try {
+        const content = await file.text();
+        return wrappedAddKnowledge(title, content);
+      } catch (error) {
+        console.error('Error processing file:', error);
+        return false;
+      }
+    },
+    isUploading: addKnowledgeMutation.isPending,
+    uploadError: addKnowledgeMutation.error as Error | null,
   };
 
   return (

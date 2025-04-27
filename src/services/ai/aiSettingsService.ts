@@ -26,8 +26,18 @@ export const updateAISettings = async (settings: AISettings): Promise<AISettings
   const { data: userData } = await supabase.auth.getUser();
   if (!userData?.user) throw new Error('Not authenticated');
   
+  // Map WAKTIAIMode to supported AIAssistantRole
+  const mapRoleToDbRole = (role: string): AIAssistantRole => {
+    const validRoles = ["student", "business_owner", "general", "employee", "writer"];
+    if (validRoles.includes(role)) {
+      return role as AIAssistantRole;
+    }
+    // Map unsupported roles to general
+    return "general";
+  };
+  
   // Ensure role is a valid enum value
-  const roleValue: AIAssistantRole = settings.role;
+  const roleValue: AIAssistantRole = mapRoleToDbRole(settings.role as string);
   
   const updateData = {
     user_id: settings.user_id,

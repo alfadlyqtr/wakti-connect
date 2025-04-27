@@ -1,5 +1,5 @@
 
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { WAKTIAIMode, AISettings } from '@/components/ai/personality-switcher/types';
 import { Json } from '@/types/supabase';
 
@@ -30,11 +30,11 @@ export const createDefaultSettings = async (userId: string): Promise<AISettings 
     // Convert role to string for database compatibility
     const dbSettings = {
       ...defaultSettings,
-      role: defaultSettings.role,
+      role: defaultSettings.role as string, // Cast to string for database
       enabled_features: defaultSettings.enabled_features as unknown as Json
     };
     
-    // Using ai_assistant_settings instead of ai_settings
+    // Using ai_assistant_settings table
     const { data, error } = await supabase
       .from('ai_assistant_settings')
       .insert([dbSettings])

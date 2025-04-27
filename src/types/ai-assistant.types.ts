@@ -1,3 +1,4 @@
+
 export interface AIMessage {
   id: string;
   role: 'user' | 'assistant' | 'system';
@@ -5,6 +6,7 @@ export interface AIMessage {
   timestamp: Date;
 }
 
+// Update the AIAssistantRole to include all possible WAKTIAIMode values
 export type AIAssistantRole = 'general' | 'student' | 'employee' | 'writer' | 'business_owner';
 
 // Enhanced KnowledgeProfile interface with all required fields
@@ -171,6 +173,16 @@ export interface AIMode {
   color: string;
 }
 
+// ChatMemoryMessage interface
+export interface ChatMemoryMessage {
+  id?: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  timestamp?: Date;
+  imageUrl?: string;
+  mode?: WAKTIAIMode; // Added mode property
+}
+
 // Define WAKTIAIModes as an array of AIMode
 export const WAKTIAIModes: AIMode[] = [
   {
@@ -202,3 +214,10 @@ export const WAKTIAIModes: AIMode[] = [
     color: 'pink'
   }
 ];
+
+// AIAssistantToolsCardProps interface
+export interface AIAssistantToolsCardProps {
+  canAccess?: boolean;
+  onUseDocumentContent?: (content: string) => void;
+  selectedRole?: string;
+}

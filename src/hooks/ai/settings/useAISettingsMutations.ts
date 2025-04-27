@@ -21,11 +21,21 @@ export const useUpdateAISettings = (user: User | null) => {
       // If it's not one of the allowed values, default to "general"
       let roleValue = newSettings.role;
       
-      // Make sure the role is one of the database-allowed values
-      if (!["student", "business_owner", "general", "employee", "writer"].includes(roleValue)) {
-        console.warn(`Role '${roleValue}' is not valid for the database, defaulting to 'general'`);
-        roleValue = "general";
-      }
+      // Convert WAKTIAIMode to AIAssistantRole (string type for db)
+      // Map any unsupported roles to the closest supported one
+      const mapRoleToDbRole = (role: string): AIAssistantRole => {
+        const validRoles = ["student", "business_owner", "general", "employee", "writer"];
+        if (validRoles.includes(role)) {
+          return role as AIAssistantRole;
+        }
+        // Map unsupported roles to general
+        if (role === "productivity" || role === "creative") {
+          return "general";
+        }
+        return "general";
+      };
+      
+      const dbRole = mapRoleToDbRole(roleValue as string);
       
       // Prepare the basic settings object (without knowledge_profile)
       const baseSettings = {
@@ -35,7 +45,7 @@ export const useUpdateAISettings = (user: User | null) => {
         response_length: newSettings.response_length,
         proactiveness: newSettings.proactiveness,
         suggestion_frequency: newSettings.suggestion_frequency,
-        role: roleValue, // Use the validated role value
+        role: dbRole, // Use the validated role value
         enabled_features: newSettings.enabled_features,
       };
       
@@ -61,8 +71,8 @@ export const useUpdateAISettings = (user: User | null) => {
           response_length: data.response_length || "balanced",
           proactiveness: data.proactiveness !== null ? data.proactiveness : true,
           suggestion_frequency: data.suggestion_frequency || "medium",
-          role: data.role as AIAssistantRole || "general",
-          enabled_features: data.enabled_features as Record<string, boolean> || {
+          role: data.role || "general",
+          enabled_features: data.enabled_features || {
             tasks: true,
             events: true,
             staff: true,
@@ -94,8 +104,8 @@ export const useUpdateAISettings = (user: User | null) => {
           response_length: data.response_length || "balanced",
           proactiveness: data.proactiveness !== null ? data.proactiveness : true,
           suggestion_frequency: data.suggestion_frequency || "medium",
-          role: data.role as AIAssistantRole || "general",
-          enabled_features: data.enabled_features as Record<string, boolean> || {
+          role: data.role || "general",
+          enabled_features: data.enabled_features || {
             tasks: true,
             events: true,
             staff: true,
