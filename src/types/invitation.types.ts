@@ -1,3 +1,4 @@
+
 export interface UserSearchResult {
   id: string;
   fullName: string | null;
@@ -21,6 +22,7 @@ export interface UserContact {
   contactId: string;
   status: ContactRequestStatusValue;
   created_at: string;
+  staffRelationId?: string;
   contactProfile?: {
     displayName?: string;
     fullName?: string;

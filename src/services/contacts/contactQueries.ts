@@ -18,6 +18,7 @@ export const getUserContacts = async (userId: string): Promise<UserContact[]> =>
         contact_id,
         status,
         staff_relation_id,
+        created_at,
         profiles:contact_id (
           id,
           full_name,
@@ -60,6 +61,7 @@ export const getUserContacts = async (userId: string): Promise<UserContact[]> =>
         contactId: contact.contact_id,
         status: contact.status as "accepted" | "pending" | "rejected",
         staffRelationId: contact.staff_relation_id,
+        created_at: contact.created_at,
         contactProfile
       };
     });
@@ -86,6 +88,7 @@ export const getContactRequests = async (userId: string): Promise<UserContact[]>
         contact_id,
         status,
         staff_relation_id,
+        created_at,
         profiles:user_id (
           id,
           full_name,
@@ -126,6 +129,7 @@ export const getContactRequests = async (userId: string): Promise<UserContact[]>
         contactId: contact.contact_id,
         status: contact.status as "accepted" | "pending" | "rejected",
         staffRelationId: contact.staff_relation_id,
+        created_at: contact.created_at,
         contactProfile
       };
     });

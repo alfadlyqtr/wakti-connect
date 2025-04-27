@@ -1,3 +1,4 @@
+
 import React from "react";
 import { BusinessProfile } from "@/types/business.types";
 import { Button } from "@/components/ui/button";

@@ -74,5 +74,6 @@ export const useContactSearch = () => {
     handleSearch,
     selectContact,
     clearSearch,
+    checkContactRequest: (contactId: string) => checkStatus.mutate(contactId)
   };
 };

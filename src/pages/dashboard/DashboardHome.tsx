@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useDashboardData } from "@/hooks/useDashboardData";
-import DashboardSummaryCards from "@/components/dashboard/home/DashboardSummaryCards";
+import { DashboardSummaryCards } from "@/components/dashboard/home/DashboardSummaryCards";
 import DashboardTasks from "@/components/dashboard/home/DashboardTasks";
 import DashboardProfile from "@/components/dashboard/home/DashboardProfile";
 import DashboardReminders from "@/components/dashboard/home/DashboardReminders";

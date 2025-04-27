@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { BookingWithRelations } from "@/types/booking.types";
-import { Calendar, Clock, MapPin, Heart } from "lucide-react";
+import { Calendar, Clock, MapPin, Heart, User, UserPlus } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import BookingServiceInfo from "./BookingServiceInfo";
 import BookingReferenceDisplay from "./BookingReferenceDisplay";
