@@ -1,9 +1,10 @@
+
 import React from 'react';
 import { RouterProvider } from 'react-router-dom';
 import { router } from './router';
 import { AuthProvider } from "@/features/auth";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeProvider } from "next-themes";
 
 // Create a client for React Query
 const queryClient = new QueryClient({
@@ -17,7 +18,12 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <ThemeProvider defaultTheme="system" storageKey="ui-theme">
+    <ThemeProvider 
+      attribute="class" 
+      defaultTheme="system" 
+      enableSystem 
+      disableTransitionOnChange
+    >
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <RouterProvider router={router} />
