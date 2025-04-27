@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { UserSearchResult, ContactRequestStatus } from '@/types/invitation.types';
+import { UserSearchResult, ContactRequestStatus, ContactRequestStatusValue } from '@/types/invitation.types';
 import { toast } from '@/components/ui/use-toast';
 
 export const useContactSearch = () => {
@@ -74,16 +74,25 @@ export const useContactSearch = () => {
       
       // Return the status of the request
       if (data && data.length > 0) {
-        const status = data[0].request_status === 'none' ? null : data[0].request_status;
+        // Convert the status to the correct type
+        let statusValue: ContactRequestStatusValue = null;
         
-        // Update the contact status in the state
-        if (status === 'pending') setContactStatus('pending');
-        else if (status === 'accepted') setContactStatus('accepted');
-        else setContactStatus('none');
+        if (data[0].request_status === 'pending') {
+          statusValue = 'pending';
+          setContactStatus('pending');
+        } else if (data[0].request_status === 'accepted') {
+          statusValue = 'accepted';
+          setContactStatus('accepted');
+        } else if (data[0].request_status === 'rejected') {
+          statusValue = 'rejected';
+          setContactStatus('none');
+        } else {
+          setContactStatus('none');
+        }
         
         return {
           requestExists: data[0].request_exists,
-          requestStatus: status
+          requestStatus: statusValue
         };
       }
       

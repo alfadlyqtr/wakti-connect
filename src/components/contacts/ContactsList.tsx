@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 interface ContactsListProps {
   contacts: UserContact[];
   isLoading: boolean;
+  isSyncing?: boolean; // Add the optional isSyncing prop
   showChat?: boolean;
   onDeleteContact?: (contactId: string) => void;
 }
@@ -17,10 +18,11 @@ interface ContactsListProps {
 const ContactsList: React.FC<ContactsListProps> = ({ 
   contacts, 
   isLoading,
+  isSyncing = false, // Default to false
   showChat = false,
   onDeleteContact
 }) => {
-  if (isLoading) {
+  if (isLoading || isSyncing) {
     return (
       <div className="py-10 text-center">
         <p>Loading contacts...</p>

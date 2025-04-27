@@ -6,6 +6,7 @@ import { ContactPreview } from "./ContactPreview";
 import { ContactSearchInput } from "./ContactSearchInput";
 import { useContactSearch } from "@/hooks/useContactSearch";
 import { Loader2, UserPlus } from "lucide-react";
+import { ContactRequestStatusValue } from "@/types/invitation.types";
 
 interface AddContactDialogProps {
   isOpen: boolean;
