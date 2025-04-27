@@ -1,4 +1,3 @@
-
 import {
   Home,
   CalendarDays,
@@ -107,7 +106,7 @@ export const navItems = [
   },
 ];
 
-// Create dropdown nav items for the user menu
+// Update dropdown nav items for the user menu
 export const dropdownNavItems = [
   {
     path: "notifications",
@@ -121,6 +120,13 @@ export const dropdownNavItems = [
     label: "Messages",
     icon: MessageSquare,
     showFor: ["individual", "business", "staff"],
+    badge: 0,
+  },
+  {
+    path: "subscribers",
+    label: "Subscribers",
+    icon: Users,
+    showFor: ["business"],
     badge: 0,
   },
   {
@@ -138,4 +144,3 @@ export type NavItem = {
   showFor: string[];
   badge?: number;
 };
-
