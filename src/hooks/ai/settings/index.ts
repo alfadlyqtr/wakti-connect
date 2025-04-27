@@ -1,7 +1,9 @@
+
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useAISettingsQuery } from "./useAISettingsQueries";
 import { useUpdateAISettings } from "./useAISettingsMutations";
 import { useState, useEffect } from "react";
+import { AISettings } from "@/types/ai-assistant.types";
 
 /**
  * Hook for managing AI assistant settings

@@ -9,6 +9,8 @@ export interface AIMessage {
 // Update the AIAssistantRole to include all possible WAKTIAIMode values
 export type AIAssistantRole = 'general' | 'student' | 'employee' | 'writer' | 'business_owner';
 
+export type WAKTIAIMode = 'general' | 'student' | 'productivity' | 'employee' | 'writer' | 'business_owner' | 'creative';
+
 // Enhanced KnowledgeProfile interface with all required fields
 export interface KnowledgeProfile {
   role: string;
@@ -136,9 +138,6 @@ export const RoleContexts: Record<AIAssistantRole, RoleContext> = {
   }
 };
 
-// Adding missing interfaces that are needed for various components
-export type WAKTIAIMode = 'general' | 'student' | 'productivity' | 'employee' | 'writer' | 'business_owner' | 'creative';
-
 // AISettings interface for the AI settings components
 export interface AISettings {
   id?: string;
@@ -149,7 +148,18 @@ export interface AISettings {
   response_length: string;
   proactiveness: boolean;
   suggestion_frequency: string;
-  enabled_features: Record<string, boolean>;
+  enabled_features: {
+    voice_input: boolean;
+    voice_output: boolean;
+    task_detection: boolean;
+    meeting_scheduling: boolean;
+    personalized_suggestions: boolean;
+    tasks?: boolean;
+    events?: boolean;
+    staff?: boolean;
+    analytics?: boolean;
+    messaging?: boolean;
+  };
   knowledge_profile?: KnowledgeProfile;
 }
 
@@ -161,16 +171,12 @@ export interface AIKnowledgeUpload {
   content: string;
   created_at: string;
   updated_at: string;
+  name?: string;
+  type?: string;
+  size?: number;
+  upload_date?: string;
+  status?: 'processing' | 'complete' | 'error';
   role?: WAKTIAIMode;
-}
-
-// Define AIMode interface for AIModeSwitcher
-export interface AIMode {
-  id: string;
-  title: string;
-  description: string;
-  icon: string;
-  color: string;
 }
 
 // ChatMemoryMessage interface
@@ -180,7 +186,16 @@ export interface ChatMemoryMessage {
   content: string;
   timestamp?: Date;
   imageUrl?: string;
-  mode?: WAKTIAIMode; // Added mode property
+  mode?: WAKTIAIMode;
+}
+
+// Define AIMode interface for AIModeSwitcher
+export interface AIMode {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  color: string;
 }
 
 // Define WAKTIAIModes as an array of AIMode

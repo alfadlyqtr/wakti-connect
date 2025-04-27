@@ -3,8 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { User } from "@supabase/supabase-js";
-import { AISettings } from "@/components/ai/personality-switcher/types";
-import { AIAssistantRole } from "@/types/ai-assistant.types";
+import { AISettings, AIAssistantRole } from "@/types/ai-assistant.types";
 import { Json } from "@/types/supabase";
 
 /**
@@ -30,7 +29,21 @@ export const useUpdateAISettings = (user: User | null) => {
       };
       
       // Get the valid database role
-      const dbRole = mapRoleToDbRole(newSettings.role as string);
+      const dbRole = mapRoleToDbRole(newSettings.role);
+      
+      // Convert the enabled_features object to a database compatible format
+      const dbEnabledFeatures: Record<string, boolean> = {
+        voice_input: newSettings.enabled_features.voice_input || false,
+        voice_output: newSettings.enabled_features.voice_output || false,
+        task_detection: newSettings.enabled_features.task_detection || false,
+        meeting_scheduling: newSettings.enabled_features.meeting_scheduling || false,
+        personalized_suggestions: newSettings.enabled_features.personalized_suggestions || false,
+        tasks: newSettings.enabled_features.tasks || true,
+        events: newSettings.enabled_features.events || true,
+        staff: newSettings.enabled_features.staff || true,
+        analytics: newSettings.enabled_features.analytics || true,
+        messaging: newSettings.enabled_features.messaging || true
+      };
       
       // Prepare the settings object for database storage
       const baseSettings = {
@@ -41,111 +54,65 @@ export const useUpdateAISettings = (user: User | null) => {
         proactiveness: newSettings.proactiveness,
         suggestion_frequency: newSettings.suggestion_frequency,
         role: dbRole, // Use the validated role value
-        enabled_features: newSettings.enabled_features as unknown as Json
+        enabled_features: dbEnabledFeatures as unknown as Json
       };
       
+      let data;
+      let error;
+      
       // If we have an id, update the existing record
-      if (newSettings.id) {
-        const { data, error } = await supabase
+      if ('id' in newSettings && newSettings.id) {
+        const result = await supabase
           .from("ai_assistant_settings")
           .update(baseSettings)
           .eq("user_id", user.id)
           .select()
           .single();
-
-        if (error) throw error;
-        
-        console.log("Settings updated successfully");
-        
-        // Convert to AISettings type
-        const updatedSettings: AISettings = {
-          id: data.id,
-          user_id: user.id,
-          assistant_name: data.assistant_name || "WAKTI",
-          tone: data.tone || "balanced",
-          response_length: data.response_length || "balanced",
-          proactiveness: data.proactiveness !== null ? data.proactiveness : true,
-          suggestion_frequency: data.suggestion_frequency || "medium",
-          role: data.role || "general",
-          enabled_features: data.enabled_features ? {
-            // Type conversion from Json to specific structure
-            voice_input: data.enabled_features.voice_input === true,
-            voice_output: data.enabled_features.voice_output === true,
-            task_detection: data.enabled_features.task_detection === true,
-            meeting_scheduling: data.enabled_features.meeting_scheduling === true,
-            personalized_suggestions: data.enabled_features.personalized_suggestions === true,
-            tasks: data.enabled_features.tasks === true,
-            events: data.enabled_features.events === true,
-            staff: data.enabled_features.staff === true,
-            analytics: data.enabled_features.analytics === true,
-            messaging: data.enabled_features.messaging === true,
-          } : {
-            tasks: true,
-            events: true,
-            staff: true,
-            analytics: true,
-            messaging: true,
-            voice_input: true,
-            voice_output: false,
-            task_detection: true,
-            meeting_scheduling: true,
-            personalized_suggestions: true
-          },
-          knowledge_profile: newSettings.knowledge_profile || { role: data.role }
-        };
-        
-        return updatedSettings;
+          
+        data = result.data;
+        error = result.error;
       } else {
         // No id, so insert a new record
-        const { data, error } = await supabase
+        const result = await supabase
           .from("ai_assistant_settings")
           .insert(baseSettings)
           .select()
           .single();
-
-        if (error) throw error;
-        
-        console.log("Settings created successfully");
-        
-        // Convert to AISettings type
-        const createdSettings: AISettings = {
-          id: data.id,
-          user_id: user.id,
-          assistant_name: data.assistant_name || "WAKTI",
-          tone: data.tone || "balanced", 
-          response_length: data.response_length || "balanced",
-          proactiveness: data.proactiveness !== null ? data.proactiveness : true,
-          suggestion_frequency: data.suggestion_frequency || "medium",
-          role: data.role || "general",
-          enabled_features: data.enabled_features ? {
-            // Type conversion from Json to specific structure
-            voice_input: data.enabled_features.voice_input === true,
-            voice_output: data.enabled_features.voice_output === true,
-            task_detection: data.enabled_features.task_detection === true,
-            meeting_scheduling: data.enabled_features.meeting_scheduling === true,
-            personalized_suggestions: data.enabled_features.personalized_suggestions === true,
-            tasks: data.enabled_features.tasks === true,
-            events: data.enabled_features.events === true,
-            staff: data.enabled_features.staff === true,
-            analytics: data.enabled_features.analytics === true,
-            messaging: data.enabled_features.messaging === true,
-          } : {
-            tasks: true,
-            events: true,
-            staff: true,
-            analytics: true,
-            messaging: true,
-            voice_input: true,
-            voice_output: false,
-            task_detection: true,
-            meeting_scheduling: true,
-            personalized_suggestions: true
-          },
-          knowledge_profile: newSettings.knowledge_profile || { role: data.role }
-        };
-        
-        return createdSettings;
+          
+        data = result.data;
+        error = result.error;
       }
+
+      if (error) throw error;
+      
+      console.log("Settings updated/created successfully");
+      
+      // Convert database response to AISettings type
+      const resultSettings: AISettings = {
+        id: data?.id,
+        user_id: user.id,
+        assistant_name: data?.assistant_name || "WAKTI",
+        tone: data?.tone || "balanced", 
+        response_length: data?.response_length || "balanced",
+        proactiveness: data?.proactiveness !== null ? data?.proactiveness : true,
+        suggestion_frequency: data?.suggestion_frequency || "medium",
+        role: data?.role || "general",
+        enabled_features: {
+          // Type conversion from Json to specific structure
+          voice_input: data?.enabled_features?.voice_input === true,
+          voice_output: data?.enabled_features?.voice_output === true,
+          task_detection: data?.enabled_features?.task_detection === true,
+          meeting_scheduling: data?.enabled_features?.meeting_scheduling === true,
+          personalized_suggestions: data?.enabled_features?.personalized_suggestions === true,
+          tasks: data?.enabled_features?.tasks === true,
+          events: data?.enabled_features?.events === true,
+          staff: data?.enabled_features?.staff === true,
+          analytics: data?.enabled_features?.analytics === true,
+          messaging: data?.enabled_features?.messaging === true,
+        }
+      };
+      
+      return resultSettings;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["aiSettings", user?.id] });
