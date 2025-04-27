@@ -1,19 +1,8 @@
-import { useState } from 'react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/components/ui/use-toast';
-import { 
-  getUserContacts, 
-  getContactRequests, 
-  sendContactRequest as apiSendContactRequest,
-  respondToContactRequest as apiRespondToContactRequest,
-  deleteContact as apiDeleteContact,
-  fetchAutoApproveSetting,
-  updateAutoApproveContacts,
-  getStaffContacts
-} from '@/services/contacts';
 import { supabase } from '@/integrations/supabase/client';
-import { UserContact } from '@/types/invitation.types';
+import { UserContact, ContactRequestStatus } from '@/types/invitation.types';
 
 export const useContacts = () => {
   const queryClient = useQueryClient();
@@ -280,5 +269,3 @@ export const useContacts = () => {
     refreshContacts
   };
 };
-
-import { useState } from 'react';
