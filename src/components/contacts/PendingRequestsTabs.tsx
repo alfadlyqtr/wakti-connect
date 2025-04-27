@@ -5,7 +5,7 @@ import { UserContact } from "@/types/invitation.types";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, XCircle } from "lucide-react";
+import { CheckCircle, XCircle, AlertCircle } from "lucide-react";
 
 interface PendingRequestsTabsProps {
   incomingRequests: UserContact[];
@@ -20,6 +20,9 @@ const PendingRequestsTabs: React.FC<PendingRequestsTabsProps> = ({
   isLoading,
   onRespondToRequest
 }) => {
+  console.log("[PendingRequestsTabs] Incoming requests:", incomingRequests);
+  console.log("[PendingRequestsTabs] Outgoing requests:", outgoingRequests);
+
   return (
     <Tabs defaultValue="incoming">
       <TabsList>
@@ -62,7 +65,9 @@ const PendingRequestsTabs: React.FC<PendingRequestsTabsProps> = ({
                     <div className="flex items-center gap-2">
                       <p className="font-medium">
                         {request.contactProfile?.displayName || 
-                         request.contactProfile?.fullName || 'Unknown User'}
+                         request.contactProfile?.fullName || 
+                         request.contactProfile?.email || 
+                         'Unknown User'}
                       </p>
                       {request.contactProfile?.accountType === 'business' ? (
                         <Badge variant="outline" className="bg-blue-50">Business</Badge>
@@ -74,7 +79,7 @@ const PendingRequestsTabs: React.FC<PendingRequestsTabsProps> = ({
                       <p className="text-sm">{request.contactProfile.businessName}</p>
                     )}
                     <p className="text-xs text-muted-foreground">
-                      {request.contactProfile?.email || request.userId}
+                      {request.contactProfile?.email || request.contactId}
                     </p>
                   </div>
                 </div>
@@ -122,28 +127,37 @@ const PendingRequestsTabs: React.FC<PendingRequestsTabsProps> = ({
                     <AvatarImage src={request.contactProfile?.avatarUrl || ''} />
                     <AvatarFallback>
                       {request.contactProfile?.displayName?.charAt(0) || 
-                       request.contactProfile?.fullName?.charAt(0) || 'U'}
+                       request.contactProfile?.fullName?.charAt(0) || 
+                       (request.contactProfile?.email?.charAt(0) || 'U')}
                     </AvatarFallback>
                   </Avatar>
                   <div>
                     <div className="flex items-center gap-2">
                       <p className="font-medium">
                         {request.contactProfile?.displayName || 
-                         request.contactProfile?.fullName || 'Unknown User'}
+                         request.contactProfile?.fullName || 
+                         request.contactProfile?.email ||
+                         request.contactId}
                       </p>
-                      {request.contactProfile?.accountType === 'business' ? (
-                        <Badge variant="outline" className="bg-blue-50">Business</Badge>
-                      ) : (
-                        <Badge variant="outline" className="bg-green-50">Individual</Badge>
-                      )}
+                      {request.contactProfile?.accountType ? (
+                        <Badge variant="outline" className={request.contactProfile.accountType === 'business' ? "bg-blue-50" : "bg-green-50"}>
+                          {request.contactProfile.accountType === 'business' ? 'Business' : 'Individual'}
+                        </Badge>
+                      ) : null}
                       <Badge variant="secondary">Awaiting Response</Badge>
                     </div>
                     {request.contactProfile?.businessName && (
                       <p className="text-sm">{request.contactProfile.businessName}</p>
                     )}
                     <p className="text-xs text-muted-foreground">
-                      {request.contactProfile?.email || request.userId}
+                      {request.contactProfile?.email || request.contactId}
                     </p>
+                    {!request.contactProfile?.email && (
+                      <p className="text-xs text-amber-500">
+                        <AlertCircle className="inline h-3 w-3 mr-1" />
+                        Profile information limited
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>

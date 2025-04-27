@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/components/ui/use-toast';
@@ -88,8 +89,10 @@ export const useContacts = () => {
       if (!userId) return { incomingRequests: [], outgoingRequests: [] };
       console.log("[useContacts] Fetching contact requests for user:", userId);
       
+      // Get incoming requests
       const incomingRequests = await getContactRequests(userId);
       
+      // Fetch outgoing requests
       const { data: outgoingData, error: outgoingError } = await supabase
         .from('user_contacts')
         .select(`
@@ -98,16 +101,7 @@ export const useContacts = () => {
           contact_id,
           status,
           staff_relation_id,
-          created_at,
-          profiles:contact_id (
-            id,
-            full_name,
-            display_name,
-            avatar_url,
-            account_type,
-            business_name,
-            email
-          )
+          created_at
         `)
         .eq('user_id', userId)
         .eq('status', 'pending')
@@ -117,10 +111,32 @@ export const useContacts = () => {
         console.error("[useContacts] Error fetching outgoing requests:", outgoingError);
         return { incomingRequests: [], outgoingRequests: [] };
       }
-
-      const outgoingRequests = outgoingData.map(request => {
-        const profiles = request.profiles || {};
+      
+      // Log the raw outgoing requests data for debugging
+      console.log("[useContacts] Raw outgoing requests data:", outgoingData);
+      
+      // Separately fetch profile data for contacts
+      const outgoingRequests = await Promise.all(outgoingData.map(async (request) => {
+        // Fetch profile data separately to avoid RLS issues
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select(`
+            id,
+            full_name,
+            display_name,
+            avatar_url,
+            account_type,
+            business_name,
+            email
+          `)
+          .eq('id', request.contact_id)
+          .single();
+          
+        if (profileError) {
+          console.error(`[useContacts] Error fetching profile for contact ${request.contact_id}:`, profileError);
+        }
         
+        // Create a properly formatted contact object, using available profile data or fallbacks
         return {
           id: request.id,
           userId: request.user_id,
@@ -129,21 +145,24 @@ export const useContacts = () => {
           staffRelationId: request.staff_relation_id,
           created_at: request.created_at,
           contactProfile: {
-            id: typeof profiles === 'object' && 'id' in profiles ? (profiles.id as string) : request.contact_id,
-            fullName: typeof profiles === 'object' && 'full_name' in profiles ? (profiles.full_name as string | null) : null,
-            displayName: typeof profiles === 'object' && 'display_name' in profiles ? (profiles.display_name as string | null) : null,
-            avatarUrl: typeof profiles === 'object' && 'avatar_url' in profiles ? (profiles.avatar_url as string | null) : null,
-            accountType: typeof profiles === 'object' && 'account_type' in profiles ? (profiles.account_type as string | null) : null,
-            businessName: typeof profiles === 'object' && 'business_name' in profiles ? (profiles.business_name as string | null) : null,
-            email: typeof profiles === 'object' && 'email' in profiles ? (profiles.email as string | null) : null
+            id: profileData?.id || request.contact_id,
+            fullName: profileData?.full_name || null,
+            displayName: profileData?.display_name || null,
+            avatarUrl: profileData?.avatar_url || null,
+            accountType: profileData?.account_type || null,
+            businessName: profileData?.business_name || null,
+            email: profileData?.email || request.contact_id
           }
         } as UserContact;
-      });
+      }));
 
+      // Log the processed requests for debugging
       console.log("[useContacts] Fetched requests:", {
         incoming: incomingRequests.length,
         outgoing: outgoingRequests.length
       });
+      
+      console.log("[useContacts] Processed outgoing requests:", outgoingRequests);
 
       return {
         incomingRequests,

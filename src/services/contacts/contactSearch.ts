@@ -1,45 +1,27 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { UserSearchResult, ContactRequestStatus, ContactRequestStatusValue } from '@/types/invitation.types';
+import { supabase } from "@/integrations/supabase/client";
+import { UserSearchResult, ContactRequestStatus } from "@/types/invitation.types";
 
-export const searchUsers = async (searchTerm: string): Promise<UserSearchResult[]> => {
+/**
+ * Search for users by email, name or business name
+ */
+export const searchUsers = async (query: string): Promise<UserSearchResult[]> => {
   try {
-    // Early validation to prevent empty searches
-    if (!searchTerm || !searchTerm.trim()) {
-      console.log("[searchUsers] Empty search term, returning empty array");
+    if (!query || query.length < 3) {
       return [];
     }
     
-    // Get the current user's session
-    const { data: session } = await supabase.auth.getSession();
-    if (!session?.session) {
-      console.error("[searchUsers] No session found");
-      throw new Error('You must be logged in to search users');
-    }
-    
-    const currentUserId = session.session.user.id;
-    console.log(`[searchUsers] Searching for "${searchTerm}" by user ${currentUserId}`);
-    
-    // Using a clean, optimized query to search users
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('id, full_name, display_name, email, avatar_url, account_type, business_name')
-      .or(`full_name.ilike.%${searchTerm}%,display_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,business_name.ilike.%${searchTerm}%`)
-      .neq('id', currentUserId)
-      .eq('is_searchable', true)
-      .limit(10);
+    const { data, error } = await supabase.rpc('search_users', {
+      search_query: query
+    });
     
     if (error) {
-      console.error('[searchUsers] Database error:', error);
-      throw new Error(error.message);
-    }
-    
-    if (!data || !Array.isArray(data)) {
-      console.log("[searchUsers] No results or invalid data format:", data);
+      console.error("Error searching users:", error);
       return [];
     }
     
-    const results = data.map((user) => ({
+    // Transform the response to match our type
+    return data.map((user: any) => ({
       id: user.id,
       fullName: user.full_name,
       displayName: user.display_name,
@@ -48,60 +30,86 @@ export const searchUsers = async (searchTerm: string): Promise<UserSearchResult[
       accountType: user.account_type,
       businessName: user.business_name
     }));
-    
-    console.log(`[searchUsers] Found ${results.length} results`);
-    return results;
   } catch (error) {
-    console.error('[searchUsers] Error in search function:', error);
-    throw error;
+    console.error("Error in searchUsers:", error);
+    return [];
   }
 };
 
+/**
+ * Check if a contact request already exists
+ */
 export const checkContactRequest = async (contactId: string): Promise<ContactRequestStatus> => {
   try {
-    if (!contactId) {
-      console.error("[checkContactRequest] No contactId provided");
-      throw new Error('Contact ID is required');
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      throw new Error("Not authenticated");
     }
     
-    const { data: session } = await supabase.auth.getSession();
-    if (!session?.session) {
-      console.error("[checkContactRequest] No session found");
-      throw new Error('You must be logged in to check contact status');
-    }
-    
-    const currentUserId = session.session.user.id;
-    console.log(`[checkContactRequest] Checking contact status between ${currentUserId} and ${contactId}`);
-    
-    // Direct query to check if a contact request exists in either direction
-    const { data, error } = await supabase
-      .from('user_contacts')
-      .select('id, status')
-      .or(`and(user_id.eq.${currentUserId},contact_id.eq.${contactId}),and(user_id.eq.${contactId},contact_id.eq.${currentUserId})`)
-      .maybeSingle();
+    // Use RPC function to check contact request status
+    const { data, error } = await supabase.rpc('check_contact_request', {
+      user_id_param: session.user.id,
+      contact_id_param: contactId
+    });
     
     if (error) {
-      console.error('[checkContactRequest] Database error:', error);
-      throw new Error(error.message);
+      console.error("Error checking contact request:", error);
+      return { requestExists: false, requestStatus: null };
     }
     
-    if (!data) {
-      console.log("[checkContactRequest] No existing contact request found");
-      return { requestExists: false, requestStatus: 'none' };
+    // The RPC function returns a single row with request_exists and request_status
+    if (data && data.length > 0) {
+      return {
+        requestExists: data[0].request_exists,
+        requestStatus: data[0].request_status === 'none' ? null : data[0].request_status
+      };
     }
     
-    // Make sure we only return valid status values
-    const validStatus = (data.status === 'accepted' || data.status === 'pending' || data.status === 'rejected') 
-      ? data.status as ContactRequestStatusValue
-      : 'none' as ContactRequestStatusValue;
+    return { requestExists: false, requestStatus: null };
+  } catch (error) {
+    console.error("Error in checkContactRequest:", error);
+    return { requestExists: false, requestStatus: null };
+  }
+};
+
+/**
+ * Get profile data for a user, even if they are a pending contact
+ * This function specifically tries to fetch profile data for pending outgoing requests
+ * where normal RLS policies might restrict access
+ */
+export const fetchContactProfile = async (userId: string): Promise<UserSearchResult | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select(`
+        id,
+        full_name,
+        display_name,
+        avatar_url, 
+        account_type,
+        business_name,
+        email
+      `)
+      .eq('id', userId)
+      .single();
     
-    console.log("[checkContactRequest] Found contact request with status:", validStatus);
+    if (error) {
+      console.error(`Error fetching profile for user ${userId}:`, error);
+      return null;
+    }
+    
     return {
-      requestExists: true,
-      requestStatus: validStatus
+      id: data.id,
+      fullName: data.full_name,
+      displayName: data.display_name,
+      avatarUrl: data.avatar_url,
+      accountType: data.account_type,
+      businessName: data.business_name,
+      email: data.email
     };
   } catch (error) {
-    console.error('[checkContactRequest] Error checking contact:', error);
-    throw error;
+    console.error(`Error in fetchContactProfile for user ${userId}:`, error);
+    return null;
   }
 };
