@@ -11,7 +11,7 @@ interface SuperAdminGuardProps {
 const SuperAdminGuard: React.FC<SuperAdminGuardProps> = ({ children }) => {
   const { isAuthenticated, isLoading, hasRole } = useAuth();
   const location = useLocation();
-  const isSuperAdmin = hasRole('superadmin');
+  const isSuperAdmin = hasRole('super-admin');
 
   // Show loading indicator while checking authentication
   if (isLoading) {

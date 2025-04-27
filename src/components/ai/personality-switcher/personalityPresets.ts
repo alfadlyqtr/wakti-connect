@@ -1,7 +1,7 @@
 
-import { AIPersonality, WAKTIAIMode } from '@/types/ai-assistant.types';
+import { AIPersonality, AIPersonalityMode } from './types';
 
-export const personalityPresets: Record<WAKTIAIMode, AIPersonality> = {
+export const personalityPresets: Record<AIPersonalityMode, AIPersonality> = {
   general: {
     id: 'general',
     name: 'General Assistant',
@@ -124,99 +124,6 @@ export const personalityPresets: Record<WAKTIAIMode, AIPersonality> = {
       chatBgColor: 'rgba(45, 27, 54, 0.7)',
       messageColor: '#f8fafc',
       accentColor: '#e879f9'
-    }
-  },
-  employee: {
-    id: 'employee',
-    name: 'Employee Assistant',
-    title: 'Work Mode',
-    description: 'Your professional assistant for workplace tasks',
-    systemPrompt: 'You are a professional assistant helping with workplace tasks and communication. Provide clear, professional guidance on workplace matters.',
-    welcomeMessage: 'Hello! I can help with workplace communication, reports, and professional tasks. What do you need assistance with today?',
-    suggestedPrompts: [
-      'Draft an email to my team',
-      'Help with a presentation',
-      'Professional writing tips',
-      'Create meeting minutes'
-    ],
-    color: 'bg-indigo-600',
-    gradient: 'from-indigo-500 to-indigo-600',
-    bgGradient: 'bg-gradient-to-r from-indigo-50 to-indigo-100/50',
-    iconColor: 'text-indigo-600',
-    mode: 'employee',
-    lightTheme: {
-      backgroundColor: '#eef2ff',
-      chatBgColor: 'rgba(255, 255, 255, 0.7)',
-      messageColor: '#1e293b',
-      accentColor: '#6366f1'
-    },
-    darkTheme: {
-      backgroundColor: '#1e1b4b',
-      chatBgColor: 'rgba(30, 27, 75, 0.7)',
-      messageColor: '#f8fafc',
-      accentColor: '#818cf8'
-    }
-  },
-  writer: {
-    id: 'writer',
-    name: 'Writer Assistant',
-    title: 'Writer Mode',
-    description: 'Your writing partner for all content needs',
-    systemPrompt: 'You are a writing assistant specializing in content creation, editing, and improvement. Help with clear, engaging, and effective writing across various formats.',
-    welcomeMessage: 'Hello! Ready to write something amazing today? How can I assist with your writing?',
-    suggestedPrompts: [
-      'Help me write an article',
-      'Proofread my text',
-      'Improve this paragraph',
-      'Generate blog ideas'
-    ],
-    color: 'bg-emerald-600',
-    gradient: 'from-emerald-500 to-emerald-600',
-    bgGradient: 'bg-gradient-to-r from-emerald-50 to-emerald-100/50',
-    iconColor: 'text-emerald-600',
-    mode: 'writer',
-    lightTheme: {
-      backgroundColor: '#ecfdf5',
-      chatBgColor: 'rgba(255, 255, 255, 0.7)',
-      messageColor: '#1e293b',
-      accentColor: '#10b981'
-    },
-    darkTheme: {
-      backgroundColor: '#064e3b',
-      chatBgColor: 'rgba(6, 78, 59, 0.7)',
-      messageColor: '#f8fafc',
-      accentColor: '#34d399'
-    }
-  },
-  business_owner: {
-    id: 'business_owner',
-    name: 'Business Owner Assistant',
-    title: 'Business Mode',
-    description: 'Your strategic partner for business operations',
-    systemPrompt: 'You are a business assistant specializing in strategy, operations, marketing, and management. Provide actionable business advice and insights.',
-    welcomeMessage: 'Hello! I can assist with your business operations and strategy. How can I help you today?',
-    suggestedPrompts: [
-      'Help with business planning',
-      'Marketing strategy ideas',
-      'Customer engagement tips',
-      'Competitive analysis guidance'
-    ],
-    color: 'bg-amber-600',
-    gradient: 'from-amber-500 to-amber-600',
-    bgGradient: 'bg-gradient-to-r from-amber-50 to-amber-100/50',
-    iconColor: 'text-amber-600',
-    mode: 'business_owner',
-    lightTheme: {
-      backgroundColor: '#fffbeb',
-      chatBgColor: 'rgba(255, 255, 255, 0.7)',
-      messageColor: '#1e293b',
-      accentColor: '#d97706'
-    },
-    darkTheme: {
-      backgroundColor: '#78350f',
-      chatBgColor: 'rgba(120, 53, 15, 0.7)',
-      messageColor: '#f8fafc',
-      accentColor: '#fbbf24'
     }
   }
 };

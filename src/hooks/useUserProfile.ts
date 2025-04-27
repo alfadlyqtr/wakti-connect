@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { getDashboardUserProfile } from "@/services/users/userProfileService";
+import { getUserProfile } from "@/services/users/userProfileService";
 
 // Define interface locally since we're getting type errors
 interface UserProfile {
@@ -9,7 +9,7 @@ interface UserProfile {
   display_name: string | null;
   business_name: string | null;
   occupation: string | null;
-  account_type: "individual" | "business";
+  account_type: "free" | "individual" | "business";
   avatar_url: string | null;
   created_at: string;
   updated_at: string;
@@ -25,9 +25,8 @@ export const useUserProfile = (userId: string) => {
     const loadProfile = async () => {
       try {
         setIsLoading(true);
-        // Using getDashboardUserProfile as getUserProfile seems to be missing
-        const { profileData } = await getDashboardUserProfile();
-        setProfile(profileData as UserProfile);
+        const data = await getUserProfile(userId);
+        setProfile(data as UserProfile);
       } catch (error) {
         console.error('Error loading user profile:', error);
       } finally {

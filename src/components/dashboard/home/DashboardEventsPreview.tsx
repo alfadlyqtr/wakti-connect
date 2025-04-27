@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -83,7 +84,7 @@ const DashboardEventsPreview: React.FC<DashboardEventsPreviewProps> = ({ userRol
           onClick={() => navigate('/dashboard/events')}
         >
           <PlusCircle className="h-4 w-4 mr-2" />
-          {userRole === "business" || userRole === "superadmin" ? "Manage Events" : "View All Events"}
+          {userRole === "business" || userRole === "super-admin" ? "Manage Events" : "View All Events"}
         </Button>
       </CardFooter>
     </Card>

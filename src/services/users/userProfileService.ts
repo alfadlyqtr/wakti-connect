@@ -1,90 +1,96 @@
+
 import { supabase } from "@/integrations/supabase/client";
-import { UserRole } from "@/types/user";
+import { UserRole } from "@/types/roles";
 
-// Correct ID for the super admin - used for direct comparison to avoid RLS issues
-const SUPER_ADMIN_ID = "28e863b3-0a91-4220-8330-fbee7ecd3f96";
+export interface DashboardUserProfile {
+  profileData: {
+    account_type: "individual" | "business";
+    display_name: string | null;
+    business_name: string | null;
+    full_name: string | null;
+    theme_preference: string | null;
+  } | null;
+  isLoading: boolean;
+  userId: string | null;
+  isStaff: boolean;
+  userRole: UserRole;
+  isSuperAdmin: boolean;
+}
 
-/**
- * Checks if the user is a super admin directly against the super_admins table
- * @param userId User ID to check
- * @returns Promise<boolean> true if user is a super admin
- */
-export const checkSuperAdminStatus = async (userId: string): Promise<boolean> => {
+export const getDashboardUserProfile = async (): Promise<DashboardUserProfile> => {
   try {
-    const { data: superAdminData } = await supabase
-      .from('super_admins')
-      .select('id')
-      .eq('id', userId)
-      .maybeSingle();
+    const { data: { session } } = await supabase.auth.getSession();
     
-    const isSuperAdmin = !!superAdminData;
-    localStorage.setItem('isSuperAdmin', JSON.stringify(isSuperAdmin));
-    return isSuperAdmin;
-  } catch (error) {
-    console.error("Error checking super admin status:", error);
-    return false;
-  }
-};
+    if (!session?.user) {
+      return {
+        profileData: null,
+        isLoading: false,
+        userId: null,
+        isStaff: false,
+        userRole: 'individual',
+        isSuperAdmin: false
+      };
+    }
+    
+    // Check if super admin
+    const { data: isSuperAdminResult } = await supabase.rpc('is_super_admin');
+    
+    if (isSuperAdminResult) {
+      return {
+        profileData: {
+          account_type: 'business',
+          display_name: 'System Administrator',
+          business_name: 'WAKTI Administration',
+          full_name: 'System Administrator',
+          theme_preference: 'dark'
+        },
+        isLoading: false,
+        userId: session.user.id,
+        isStaff: false,
+        userRole: 'super-admin',
+        isSuperAdmin: true
+      };
+    }
 
-/**
- * Fetches the dashboard user profile, determines user roles, and sets local storage
- * @returns Promise with profile data, user ID, roles, and loading state
- */
-export async function getDashboardUserProfile() {
-  const { data: { session } } = await supabase.auth.getSession();
-  
-  if (!session?.user) {
-    console.warn("No active session found");
+    const { data: profileData, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', session.user.id)
+      .single();
+      
+    if (error) throw error;
+    
+    // Check staff status
+    const { data: staffData } = await supabase
+      .from('business_staff')
+      .select('*')
+      .eq('staff_id', session.user.id)
+      .eq('status', 'active')
+      .single();
+
+    // Convert legacy or invalid account types to 'individual'
+    const accountType = (profileData?.account_type === 'business') ? 'business' : 'individual';
+
+    return {
+      profileData: {
+        ...profileData,
+        account_type: accountType
+      },
+      isLoading: false,
+      userId: session.user.id,
+      isStaff: !!staffData,
+      userRole: staffData ? 'staff' : accountType,
+      isSuperAdmin: false
+    };
+  } catch (error) {
+    console.error('Error fetching dashboard profile:', error);
     return {
       profileData: null,
+      isLoading: false,
       userId: null,
-      userRole: 'individual' as UserRole,
       isStaff: false,
-      isSuperAdmin: false,
+      userRole: 'individual',
+      isSuperAdmin: false
     };
   }
-  
-  const userId = session.user.id;
-  
-  // Fetch profile data
-  const { data: profileData, error: profileError } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .single();
-  
-  if (profileError) {
-    console.error("Error fetching profile:", profileError);
-  }
-  
-  // Fetch staff relation data
-  const { data: staffRelation, error: staffError } = await supabase
-    .from('business_staff')
-    .select('*')
-    .eq('staff_id', userId)
-    .maybeSingle();
-  
-  if (staffError) {
-    console.error("Error fetching staff relation:", staffError);
-  }
-  
-  const isStaff = !!staffRelation;
-  localStorage.setItem('isStaff', JSON.stringify(isStaff));
-  
-  // Update role checks to use 'superadmin'
-  const isSuperAdmin = localStorage.getItem('isSuperAdmin') === 'true' || 
-    (await checkSuperAdminStatus(userId));
-  
-  const effectiveRole = isSuperAdmin ? 'superadmin' : 
-    (profileData?.account_type as UserRole) || 'individual';
-  
-  localStorage.setItem('userRole', effectiveRole);
-  
-  return {
-    profileData: profileData || null,
-    userId,
-    userRole: effectiveRole,
-    isStaff,
-    isSuperAdmin,
-  };
-}
+};

@@ -18,7 +18,7 @@ interface ProfileFormProps {
 }
 
 const ProfileForm: React.FC<ProfileFormProps> = ({ profile }) => {
-  const { isStaff, canEditProfile, canEditTheme, canEditBasicInfo, isLoading } = useStaffPermissions();
+  const { isStaff, loading } = useStaffPermissions();
   
   const {
     form,
@@ -29,7 +29,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile }) => {
     errors,
   } = useProfileForm(profile, { canEdit: !isStaff, isStaff });
   
-  if (isLoading) {
+  if (loading) {
     return <div className="flex items-center justify-center p-4">
       <div className="h-8 w-8 border-4 border-t-transparent border-wakti-blue rounded-full animate-spin"></div>
     </div>;
@@ -53,7 +53,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile }) => {
             watch={watch} 
             errors={errors} 
             readOnly={isStaff}
-            canEditBasicInfo={canEditBasicInfo}
+            canEditBasicInfo={false}
           />
           
           {/* Account type specific fields */}

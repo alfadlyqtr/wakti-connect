@@ -1,11 +1,9 @@
-
-import React from "react";
-import { BrowserRouter as Router } from "react-router-dom";
-import { AppRoutes } from "./routes/index.tsx";  // Note the .tsx extension
-import { ThemeProvider } from "@/components/ui/theme-provider";
-import { Toaster } from "./components/ui/toaster";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { AuthProvider } from "./features/auth";
+import React from 'react';
+import { RouterProvider } from 'react-router-dom';
+import { router } from './router';
+import { AuthProvider } from "@/features/auth";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ThemeProvider } from "@/components/theme-provider";
 
 // Create a client for React Query
 const queryClient = new QueryClient({
@@ -19,13 +17,10 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <ThemeProvider>
+    <ThemeProvider defaultTheme="system" storageKey="ui-theme">
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <Router>
-            <AppRoutes />
-            <Toaster />
-          </Router>
+          <RouterProvider router={router} />
         </AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>

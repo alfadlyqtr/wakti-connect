@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { UnifiedChatInterfaceWithProvider } from './chat/UnifiedChatInterface';
-import { useMediaQuery } from '@/hooks/useMediaQuery';
 
 interface WAKTIAIAssistantProps {
   isFullscreen?: boolean;
@@ -12,15 +11,12 @@ const WAKTIAIAssistant: React.FC<WAKTIAIAssistantProps> = ({
   isFullscreen = false,
   className = '' 
 }) => {
-  const isMobile = useMediaQuery("(max-width: 640px)");
-  const isTablet = useMediaQuery("(max-width: 1024px)");
-  
   return (
     <div 
       className={`w-full h-full flex items-center justify-center py-2 sm:py-6 ${className}`}
       style={{
         background: 'transparent',
-        minHeight: isMobile ? 'calc(100vh - 100px)' : 'calc(100vh - 60px)'
+        minHeight: 'calc(100vh - 60px)'
       }}
     >
       <div className="container px-0 sm:px-4 mx-auto w-full sm:w-[95%] sm:max-w-5xl lg:max-w-6xl">
@@ -30,7 +26,7 @@ const WAKTIAIAssistant: React.FC<WAKTIAIAssistantProps> = ({
             backdropFilter: 'blur(20px)',
             backgroundColor: 'rgba(0, 0, 0, 0.05)',
             boxShadow: '0 15px 50px 0 rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1) inset, 0 0 30px rgba(59, 130, 246, 0.3)',
-            transform: isMobile ? 'none' : 'perspective(1500px) rotateX(1deg)',
+            transform: 'perspective(1500px) rotateX(1deg)',
             WebkitBackfaceVisibility: 'hidden',
             backfaceVisibility: 'hidden'
           }}

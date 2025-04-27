@@ -1,65 +1,72 @@
 
 import { useState, useEffect } from 'react';
 
+type Breakpoint = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+
 const breakpoints = {
-  'xs': '(min-width: 475px)',
-  'sm': '(min-width: 640px)',
-  'md': '(min-width: 768px)',
-  'lg': '(min-width: 1024px)',
-  'xl': '(min-width: 1280px)',
-  '2xl': '(min-width: 1536px)'
+  xs: 0,
+  sm: 640,
+  md: 768,
+  lg: 1024,
+  xl: 1280,
+  '2xl': 1536
 };
 
-type Breakpoint = keyof typeof breakpoints;
-
+/**
+ * Hook that returns an array of breakpoints that are currently active
+ * @returns Array of active breakpoints
+ */
 export function useBreakpoint(): Breakpoint[] {
-  const [activeBreakpoints, setActiveBreakpoints] = useState<Breakpoint[]>([]);
+  const [activeBreakpoints, setActiveBreakpoints] = useState<Breakpoint[]>(['xs']);
 
   useEffect(() => {
-    // Create MediaQueryList objects
-    const mediaQueries = Object.entries(breakpoints).map(([key, value]) => ({
-      key: key as Breakpoint,
-      mql: window.matchMedia(value)
-    }));
-
-    // Function to update active breakpoints
-    const updateActiveBreakpoints = () => {
-      const active = mediaQueries
-        .filter(({ mql }) => mql.matches)
-        .map(({ key }) => key);
+    const handleResize = () => {
+      const width = window.innerWidth;
+      const active: Breakpoint[] = [];
+      
+      // Add all breakpoints that are smaller than or equal to the current width
+      if (width >= 0) active.push('xs');
+      if (width >= breakpoints.sm) active.push('sm');
+      if (width >= breakpoints.md) active.push('md');
+      if (width >= breakpoints.lg) active.push('lg');
+      if (width >= breakpoints.xl) active.push('xl');
+      if (width >= breakpoints['2xl']) active.push('2xl');
       
       setActiveBreakpoints(active);
     };
 
-    // Initial check
-    updateActiveBreakpoints();
+    // Set initial breakpoints
+    handleResize();
 
-    // Add listeners
-    mediaQueries.forEach(({ mql }) => {
-      mql.addEventListener('change', updateActiveBreakpoints);
-    });
+    // Add event listener
+    window.addEventListener('resize', handleResize);
 
-    // Cleanup
+    // Clean up
     return () => {
-      mediaQueries.forEach(({ mql }) => {
-        mql.removeEventListener('change', updateActiveBreakpoints);
-      });
+      window.removeEventListener('resize', handleResize);
     };
   }, []);
 
   return activeBreakpoints;
 }
 
-export function useBreakpointValue<T>(breakpoint: Breakpoint): boolean {
-  const activeBreakpoints = useBreakpoint();
-  return activeBreakpoints.includes(breakpoint);
+/**
+ * Hook to check if the current breakpoint is at or above a specified breakpoint
+ * @param breakpoint Minimum breakpoint to check for
+ * @returns Boolean indicating if current width meets or exceeds the specified breakpoint
+ */
+export function useBreakpointValue(minBreakpoint: Breakpoint): boolean {
+  const currentBreakpoints = useBreakpoint();
+  return currentBreakpoints.includes(minBreakpoint);
 }
 
-// Mobile breakpoint utility hook
+/**
+ * Hook that returns whether the current viewport is 'mobile' (below sm breakpoint)
+ * For direct boolean usage in components
+ */
 export function useMobileBreakpoint(): boolean {
-  const activeBreakpoints = useBreakpoint();
-  return !activeBreakpoints.includes('md');
+  const breakpoints = useBreakpoint();
+  return !breakpoints.includes('sm');
 }
 
-// Export explicitly to avoid confusion
-export { useMobileBreakpoint };
+export default useBreakpoint;

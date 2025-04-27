@@ -2,22 +2,36 @@
 import { useState, useEffect } from 'react';
 
 export const useIsMobile = (): boolean => {
-  const [isMobile, setIsMobile] = useState(false);
-  
+  // Start with a default value based on window width if available
+  const [isMobile, setIsMobile] = useState<boolean>(
+    typeof window !== 'undefined' ? window.innerWidth < 640 : false
+  );
+
   useEffect(() => {
+    // Only execute in browser environment
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    // Function to check if window width is mobile sized
     const checkIfMobile = () => {
-      setIsMobile(window.innerWidth < 768); // Consider screens less than 768px as mobile
+      setIsMobile(window.innerWidth < 640);
     };
     
-    // Check initially
+    // Initial detection
     checkIfMobile();
     
     // Add event listener for window resize
     window.addEventListener('resize', checkIfMobile);
     
-    // Clean up
-    return () => window.removeEventListener('resize', checkIfMobile);
+    // Clean up event listener
+    return () => {
+      window.removeEventListener('resize', checkIfMobile);
+    };
   }, []);
   
   return isMobile;
 };
+
+// For backward compatibility with default exports
+export default useIsMobile;

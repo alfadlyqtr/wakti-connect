@@ -1,7 +1,8 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useStaffStatus } from "@/hooks/useStaffStatus";
 import { useStaffDetails } from "@/hooks/staff/useStaffDetails";
+import { useCurrentUser } from "@/hooks/staff/useCurrentUser";
 import { useStaffStats } from "@/hooks/staff/useStaffStats";
 import { useWorkSession } from "@/hooks/staff/useWorkSession";
 import StaffNotFound from "@/components/staff/dashboard/StaffNotFound";
@@ -15,7 +16,6 @@ import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { clearStaffCache } from "@/utils/staffUtils";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/features/auth";
 
 // Type for staff permissions
 interface StaffPermissions {
@@ -35,7 +35,7 @@ interface StaffPermissions {
 
 const StaffDashboard = () => {
   const { isStaff, staffRelationId, isLoading: staffStatusLoading } = useStaffStatus();
-  const { user, userId, isLoading: authLoading } = useAuth();
+  const { data: { user } = { user: null }, isLoading: userLoading } = useCurrentUser();
   const { toast } = useToast();
   const [isRefreshing, setIsRefreshing] = useState(false);
   
@@ -57,7 +57,7 @@ const StaffDashboard = () => {
     data: stats, 
     isLoading: statsLoading,
     refetch: refetchStats
-  } = useStaffStats(staffRelationId, userId || null);
+  } = useStaffStats(staffRelationId, user?.id || null);
   
   // Function to refresh all data
   const handleRefresh = async () => {
@@ -87,7 +87,7 @@ const StaffDashboard = () => {
   };
   
   // Combined loading state
-  const isLoading = staffStatusLoading || authLoading || staffLoading || sessionLoading || statsLoading;
+  const isLoading = staffStatusLoading || userLoading || staffLoading || sessionLoading || statsLoading;
 
   // If not a staff member, show not found state
   if (!staffStatusLoading && !isStaff) {

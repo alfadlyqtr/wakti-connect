@@ -1,31 +1,33 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 interface TypingIndicatorProps {
   className?: string;
 }
 
-export const TypingIndicator: React.FC<TypingIndicatorProps> = ({ className = '' }) => {
+export function TypingIndicator({ className }: TypingIndicatorProps) {
   return (
-    <div className={`flex items-center space-x-1 ${className}`}>
-      {[0, 1, 2].map((index) => (
+    <div className={cn("flex items-center space-x-1", className)}>
+      {[0, 1, 2].map((dot) => (
         <motion.div
-          key={index}
-          className="w-1.5 h-1.5 rounded-full bg-current"
-          initial={{ opacity: 0.3, y: 0 }}
-          animate={{
-            opacity: [0.3, 1, 0.3],
-            y: [0, -4, 0],
+          key={dot}
+          className="h-2 w-2 bg-current rounded-full"
+          initial={{ opacity: 0.4, y: 0 }}
+          animate={{ 
+            opacity: [0.4, 1, 0.4], 
+            y: ["0%", "-50%", "0%"] 
           }}
           transition={{
-            duration: 1,
+            duration: 1.2,
             repeat: Infinity,
-            delay: index * 0.2,
+            repeatType: "loop",
+            delay: dot * 0.2,
             ease: "easeInOut"
           }}
         />
       ))}
     </div>
   );
-};
+}

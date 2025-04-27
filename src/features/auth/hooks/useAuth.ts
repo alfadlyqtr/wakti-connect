@@ -1,5 +1,4 @@
 
-// Redirect to the new path
-import { useAuth as useAuthContext } from "../application/context/AuthContext";
+import { useAuth as useAuthContext } from "../context/AuthContext";
 
 export const useAuth = useAuthContext;

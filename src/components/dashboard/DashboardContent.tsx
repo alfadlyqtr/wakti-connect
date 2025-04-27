@@ -21,7 +21,7 @@ interface DashboardContentProps {
 const getDashboardTypeHeading = (role: UserRole | undefined, isStaff: boolean): string => {
   if (role === 'business') return 'Business Dashboard';
   if (role === 'staff' || isStaff) return 'Staff Dashboard';
-  if (role === 'superadmin') return 'Business Dashboard';
+  if (role === 'super-admin') return 'Business Dashboard';
   return 'Individual Dashboard';
 };
 

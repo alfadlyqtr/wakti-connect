@@ -1,9 +1,9 @@
 
-import { UserRole, hasRoleAccess, mapDatabaseRoleToUserRole, getEffectiveRole } from './roles';
+import { UserRole, hasRoleAccess, getEffectiveRole } from './roles';
 
 // Re-export for backward compatibility
 export type { UserRole };
-export { hasRoleAccess, mapDatabaseRoleToUserRole, getEffectiveRole };
+export { hasRoleAccess, getEffectiveRole };
 
 // Define UserProfile type needed by services
 export interface UserProfile {
@@ -20,10 +20,6 @@ export interface UserProfile {
   theme_preference: string | null;
 }
 
-// Type for the getEffectiveRole function
-// This maintains backward compatibility with code that imports this type
-export type GetEffectiveRoleFunction = (
-  accountType: string | undefined | null,
-  isStaff: boolean,
-  isSuperAdmin?: boolean
-) => UserRole;
+// Deprecated re-exports with type exports
+export type { hasRoleAccess as deprecatedHasRoleAccess };
+export type { getEffectiveRole as deprecatedGetEffectiveRole };

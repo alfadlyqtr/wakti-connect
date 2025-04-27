@@ -1,312 +1,276 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { Session, User as SupabaseUser } from '@supabase/supabase-js';
-import { UserRole } from "@/types/roles";
 
-export interface User extends SupabaseUser {
-  name?: string;
-  displayName?: string;
-  role?: UserRole;
-  effectiveRole?: UserRole;
-  account_type?: string;
-  full_name?: string;
-  avatar_url?: string;
-  plan?: UserRole;
-  business_name?: string;
-  theme_preference?: string;
-}
-
-export interface AuthContextType {
-  user: User | null;
-  session: Session | null;
-  effectiveRole: UserRole;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  userId: string | null;
-  userRole: UserRole;
-  isStaff: boolean;
-  isSuperAdmin: boolean;
-  business_name?: string;
-  theme_preference?: string;
-  hasRole: (role: UserRole) => boolean;
-  hasAccess: (requiredRoles: UserRole[]) => boolean;
-  login: (email: string, password: string) => Promise<{ error?: any; data?: any }>;
-  logout: () => Promise<void>;
-  register: (
-    email: string, 
-    password: string, 
-    name?: string, 
-    accountType?: string, 
-    businessName?: string
-  ) => Promise<{ error?: any; data?: any }>;
-  refreshUserRole: () => Promise<void>;
-}
-
-interface AuthProviderProps {
-  children: React.ReactNode;
-}
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { User, Session } from "@supabase/supabase-js";
+import { UserRole, getEffectiveRole } from "@/types/roles";
+import { toast } from "@/components/ui/use-toast";
+import { AuthContextType, User as ExtendedUser, AppUser } from "../types";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<AppUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [userRole, setUserRole] = useState<UserRole>('individual');
-  const [effectiveRole, setEffectiveRole] = useState<UserRole>('individual');
-  const [isStaff, setIsStaff] = useState<boolean>(false);
-  const [isSuperAdmin, setIsSuperAdmin] = useState<boolean>(false);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [business_name, setBusinessName] = useState<string | null>(null);
-  const [theme_preference, setThemePreference] = useState<string | null>(null);
-  const navigate = useNavigate();
-  
-  useEffect(() => {
-    const fetchSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-    };
-    
-    fetchSession();
-    
-    supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state change:", event);
-      setSession(session);
-      
-      if (event === 'SIGNED_OUT') {
-        localStorage.removeItem('userRole');
-        localStorage.removeItem('isStaff');
-        localStorage.removeItem('isSuperAdmin');
-        
-        setUser(null);
-        setUserId(null);
-        setUserRole('individual');
-        setIsStaff(false);
-        setIsSuperAdmin(false);
-        setIsAuthenticated(false);
-        setIsLoading(false);
-        setBusinessName(null);
-        setThemePreference(null);
-        navigate("/auth");
-      }
-    });
-  }, [navigate]);
+  const [effectiveRole, setEffectiveRole] = useState<UserRole | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [authError, setAuthError] = useState<Error | null>(null);
 
   useEffect(() => {
-    const getUserData = async () => {
-      setIsLoading(true);
-      
-      if (!session?.user) {
-        setUser(null);
-        setUserId(null);
-        setUserRole('individual');
-        setIsStaff(false);
-        setIsSuperAdmin(false);
-        setIsAuthenticated(false);
+    console.log("Initializing auth state...");
+    let mounted = true;
+    let authListenerSubscription: { subscription: { unsubscribe: () => void } } | null = null;
+    
+    const loadingTimeout = setTimeout(() => {
+      if (mounted && isLoading) {
+        console.warn("Auth state loading timed out after 5 seconds");
         setIsLoading(false);
-        setBusinessName(null);
-        setThemePreference(null);
-        return;
       }
-      
+    }, 5000);
+    
+    const setupAuth = async () => {
       try {
-        setUserId(session.user.id);
-        setIsAuthenticated(true);
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          (event, newSession) => {
+            console.log("Auth state changed:", event, newSession?.user?.id);
+            
+            if (!mounted) return;
+            
+            setSession(newSession);
+            
+            if (newSession?.user) {
+              const supabaseUser = newSession.user;
+              const role = supabaseUser.user_metadata?.account_type as UserRole || 'individual';
+              
+              const appUser: AppUser = {
+                ...supabaseUser,
+                name: supabaseUser.user_metadata?.full_name || '',
+                displayName: supabaseUser.user_metadata?.display_name || supabaseUser.user_metadata?.full_name,
+                role: role,
+                effectiveRole: role,
+                account_type: supabaseUser.user_metadata?.account_type,
+                full_name: supabaseUser.user_metadata?.full_name,
+                avatar_url: supabaseUser.user_metadata?.avatar_url,
+                plan: role
+              };
+              
+              setUser(appUser);
+              
+              setTimeout(async () => {
+                if (!mounted) return;
+                
+                try {
+                  const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('account_type')
+                    .eq('id', newSession.user.id)
+                    .maybeSingle();
+                    
+                  if (mounted) {
+                    const role = profile?.account_type as UserRole || 'individual';
+                    setEffectiveRole(role);
+                    setIsLoading(false);
+                  }
+                } catch (error) {
+                  console.error("Error fetching profile after auth state change:", error);
+                  if (mounted) setIsLoading(false);
+                }
+              }, 0);
+            } else {
+              setUser(null);
+              setEffectiveRole(null);
+              setIsLoading(false);
+            }
+          }
+        );
         
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
+        authListenerSubscription = { subscription };
         
-        if (profileError) {
-          console.error("Error fetching profile:", profileError);
-          throw profileError;
+        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          throw error;
         }
-
-        const customUser: User = mapProfile(profile);
         
-        setUser(customUser);
-        setBusinessName(profile?.business_name || null);
-        setThemePreference(profile?.theme_preference || 'light');
-        
-        const { data: staffData, error: staffError } = await supabase
-          .from('business_staff')
-          .select('id')
-          .eq('staff_id', session.user.id)
-          .not('status', 'eq', 'inactive')
-          .maybeSingle();
-        
-        if (staffError) {
-          console.error("Error fetching staff status:", staffError);
+        if (mounted) {
+          setSession(currentSession);
+          
+          if (currentSession?.user) {
+            const supabaseUser = currentSession.user;
+            const role = supabaseUser.user_metadata?.account_type as UserRole || 'individual';
+            
+            const appUser: AppUser = {
+              ...supabaseUser,
+              name: supabaseUser.user_metadata?.full_name || '',
+              displayName: supabaseUser.user_metadata?.display_name || supabaseUser.user_metadata?.full_name,
+              role: role,
+              effectiveRole: role,
+              account_type: supabaseUser.user_metadata?.account_type,
+              full_name: supabaseUser.user_metadata?.full_name,
+              avatar_url: supabaseUser.user_metadata?.avatar_url,
+              plan: role
+            };
+            
+            setUser(appUser);
+          }
         }
         
-        const staffStatus = !!staffData;
-        setIsStaff(staffStatus);
-        
-        const { data: superAdminData, error: superAdminError } = await supabase
-          .from('super_admins')
-          .select('id')
-          .eq('id', session.user.id)
-          .maybeSingle();
-        
-        if (superAdminError) {
-          console.error("Error fetching super admin status:", superAdminError);
+        if (currentSession?.user && mounted) {
+          try {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('account_type')
+              .eq('id', currentSession.user.id)
+              .maybeSingle();
+              
+            if (mounted) {
+              const role = profile?.account_type as UserRole || 'individual';
+              setEffectiveRole(role);
+            }
+          } catch (profileError) {
+            console.error("Error fetching profile:", profileError);
+          }
         }
         
-        const superAdminStatus = !!superAdminData;
-        setIsSuperAdmin(superAdminStatus);
-
-        let calculatedRole: UserRole = 'individual';
-        if (superAdminStatus) {
-            calculatedRole = 'superadmin';
-        } else if (profile?.account_type === 'business') {
-            calculatedRole = 'business';
-        } else if (staffStatus) {
-            calculatedRole = 'staff';
+        if (mounted) {
+          setIsLoading(false);
         }
         
-        setUserRole(calculatedRole);
-        setEffectiveRole(calculatedRole);
       } catch (error) {
-        console.error("Error fetching user data:", error);
-      } finally {
-        setIsLoading(false);
+        console.error("Error initializing auth:", error);
+        if (mounted) {
+          setAuthError(error as Error);
+          setIsLoading(false);
+        }
       }
     };
     
-    if (session?.user) {
-      getUserData();
-    } else {
+    setupAuth();
+    
+    return () => {
+      mounted = false;
+      clearTimeout(loadingTimeout);
+      
+      if (authListenerSubscription?.subscription) {
+        console.log("Cleaning up auth listener subscription");
+        authListenerSubscription.subscription.unsubscribe();
+      }
+    };
+  }, []);
+
+  const login = async (email: string, password: string) => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+      return { error: null, data };
+    } catch (error: any) {
+      console.error('Login error:', error);
+      return { error };
+    } finally {
       setIsLoading(false);
     }
-  }, [session]);
-  
-  const login = async (email: string, password: string): Promise<{ error?: any; data?: any }> => {
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) return { error };
-      return { data };
-    } catch (error) {
-      console.error("Login error:", error);
-      return { error };
-    }
   };
-  
+
   const logout = async () => {
     try {
+      setIsLoading(true);
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      navigate('/auth');
-    } catch (error: any) {
-      alert(error.error_description || error.message);
+      
+      setUser(null);
+      setSession(null);
+      setEffectiveRole(null);
+      
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast({
+        title: "Logout failed",
+        description: "There was a problem signing out. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
-  
+
   const register = async (
     email: string, 
     password: string, 
     name?: string, 
-    accountType?: string, 
+    accountType: string = 'individual', 
     businessName?: string
-  ): Promise<{ error?: any; data?: any }> => {
+  ) => {
     try {
-      const { data, error } = await supabase.auth.signUp({ 
-        email, 
+      setIsLoading(true);
+      
+      const metadata: Record<string, any> = {
+        full_name: name || '',
+        account_type: accountType
+      };
+      
+      if (businessName && accountType === 'business') {
+        metadata.business_name = businessName;
+      }
+
+      const { data, error } = await supabase.auth.signUp({
+        email,
         password,
         options: {
-          data: {
-            full_name: name,
-            account_type: accountType || 'individual',
-            business_name: businessName
-          }
+          data: metadata,
+          emailRedirectTo: window.location.origin + '/auth/login'
         }
       });
-      
-      if (error) return { error };
-      return { data };
-    } catch (error) {
-      console.error("Registration error:", error);
+
+      if (error) throw error;
+      return { error: null, data };
+    } catch (error: any) {
+      console.error('Registration error:', error);
       return { error };
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const hasRole = (role: UserRole): boolean => {
-    if (!userRole) return false;
-    return userRole === role;
-  };
-  
-  const hasAccess = (roles: UserRole[]): boolean => {
-    if (!userRole) return false;
-    return roles.includes(userRole);
-  };
-  
-  const refreshUserRole = async (): Promise<void> => {
-    if (!session?.user) return;
-    
-    try {
+  const refreshUserRole = async () => {
+    if (user) {
       const { data: profile } = await supabase
         .from('profiles')
         .select('account_type')
-        .eq('id', session.user.id)
-        .single();
-        
-      const { data: staffData } = await supabase
-        .from('business_staff')
-        .select('id')
-        .eq('staff_id', session.user.id)
-        .not('status', 'eq', 'inactive')
+        .eq('id', user.id)
         .maybeSingle();
         
-      const { data: superAdminData } = await supabase
-        .from('super_admins')
-        .select('id')
-        .eq('id', session.user.id)
-        .maybeSingle();
-        
-      const staffStatus = !!staffData;
-      const superAdminStatus = !!superAdminData;
-      
-      let calculatedRole: UserRole = 'individual';
-      if (superAdminStatus) {
-          calculatedRole = 'superadmin';
-      } else if (profile?.account_type === 'business') {
-          calculatedRole = 'business';
-      } else if (staffStatus) {
-          calculatedRole = 'staff';
-      }
-      
-      setUserRole(calculatedRole);
-      setEffectiveRole(calculatedRole);
-      setIsStaff(staffStatus);
-      setIsSuperAdmin(superAdminStatus);
-    } catch (error) {
-      console.error("Error refreshing user role:", error);
+      const role = profile?.account_type as UserRole || 'individual';
+      setEffectiveRole(role);
     }
   };
-  
+
+  const hasRole = useCallback((role: UserRole): boolean => {
+    return effectiveRole === role;
+  }, [effectiveRole]);
+
+  const hasAccess = useCallback((requiredRoles: UserRole[]): boolean => {
+    if (!effectiveRole) return false;
+    return requiredRoles.includes(effectiveRole);
+  }, [effectiveRole]);
+
   const value: AuthContextType = {
     user,
-    userId,
     session,
-    userRole,
     effectiveRole,
-    isStaff,
-    isSuperAdmin,
-    isAuthenticated,
+    isAuthenticated: !!user,
     isLoading,
-    business_name,
-    theme_preference,
-    login,
-    logout,
     hasRole,
     hasAccess,
+    login,
+    logout,
     register,
-    refreshUserRole,
+    refreshUserRole
   };
-  
+
   return (
     <AuthContext.Provider value={value}>
       {children}
@@ -314,7 +278,7 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   );
 };
 
-const useAuth = () => {
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
@@ -322,13 +286,4 @@ const useAuth = () => {
   return context;
 };
 
-export { AuthProvider, useAuth };
-
-const mapProfile = (profile: any): User => {
-  return {
-    ...profile,
-    role: profile.account_type === 'superadmin' ? 'superadmin' : 
-          profile.account_type === 'business' ? 'business' :
-          profile.account_type === 'staff' ? 'staff' : 'individual',
-  };
-};
+export type { AuthContextType };

@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Mail, Lock, Eye, EyeOff, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,7 @@ const SignupForm = ({ setError }: SignupFormProps) => {
     setError("");
     setIsLoading(true);
 
+    // Validate business name if account type is business
     if (needsBusinessName && !businessName.trim()) {
       setError("Business name is required for business accounts");
       toast({
@@ -48,6 +50,7 @@ const SignupForm = ({ setError }: SignupFormProps) => {
     try {
       console.log("Registering with account type:", accountType);
       
+      // Call the register function with all parameters
       const result = await register(email, password, fullName, accountType, businessName);
       
       if (result.error) {
@@ -58,11 +61,15 @@ const SignupForm = ({ setError }: SignupFormProps) => {
         title: "Account created!",
         description: "Please check your email to verify your account.",
       });
+
+      // Note: we don't redirect here as the user needs to verify their email first
     } catch (error: any) {
       console.error("Signup error:", error);
       
+      // Track registration attempts
       setRegisterAttempts(prev => prev + 1);
       
+      // Provide contextual error messages
       let errorMessage = error.message || "Failed to create account. Please try again.";
       
       if (registerAttempts >= 2 && (error.message?.includes("database") || error.message?.includes("profiles"))) {

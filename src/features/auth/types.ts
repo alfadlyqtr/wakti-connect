@@ -10,8 +10,6 @@ export interface AppUser extends SupabaseUser {
   full_name?: string;
   avatar_url?: string;
   plan?: UserRole;
-  business_name?: string;
-  theme_preference?: string;
 }
 
 export type User = AppUser;
@@ -22,12 +20,6 @@ export interface AuthContextType {
   effectiveRole: UserRole | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  userId: string | null;
-  userRole: UserRole;
-  isStaff: boolean;
-  isSuperAdmin: boolean;
-  business_name?: string;
-  theme_preference?: string;
   hasRole: (role: UserRole) => boolean;
   hasAccess: (requiredRoles: UserRole[]) => boolean;
   login: (email: string, password: string) => Promise<{ error: any; data?: any }>;

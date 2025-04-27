@@ -2,11 +2,10 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "../context/AuthContext";
+import { Permission } from "../types";
 
 /**
  * Hook for checking if a user has permission to perform specific actions
- * @param featureName The feature to check permissions for
- * @returns Object with permission state and loading state
  */
 export const usePermissions = (featureName: string) => {
   const { effectiveRole, isLoading: authLoading } = useAuth();
@@ -26,7 +25,7 @@ export const usePermissions = (featureName: string) => {
           .select('action, allowed')
           .eq('role', effectiveRole)
           .eq('action', featureName)
-          .maybeSingle();
+          .single();
 
         if (error) {
           console.error("Error checking permissions:", error);

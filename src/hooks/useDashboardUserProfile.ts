@@ -1,43 +1,23 @@
 
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/features/auth";
-import { slugifyBusinessName } from "@/utils/authUtils";
+import { useQuery } from "@tanstack/react-query";
+import { getDashboardUserProfile } from "@/services/users/userProfileService";
+import type { UserRole } from "@/types/roles";
 
 export function useDashboardUserProfile() {
-  const navigate = useNavigate();
-  
-  const { 
-    user,
-    userId,
-    userRole, 
-    isStaff,
-    isSuperAdmin,
-    isAuthenticated,
-    isLoading,
-    business_name,
-    theme_preference
-  } = useAuth();
-  
-  // Get profile data from the authenticated user
-  const profileData = user ? {
-    account_type: userRole,
-    display_name: user.displayName || null,
-    business_name: business_name || null,
-    full_name: user.full_name || null,
-    theme_preference: theme_preference || 'light'
-  } : null;
+  const { data: profileResult, isLoading: profileLoading } = useQuery({
+    queryKey: ['dashboardUserProfile'],
+    queryFn: getDashboardUserProfile,
+    retry: 1,
+    retryDelay: 500,
+  });
 
   return {
-    profileData,
-    profileLoading: isLoading,
-    userId,
-    isStaff,
-    userRole,
-    isSuperAdmin,
-    businessSlug: business_name 
-      ? slugifyBusinessName(business_name) 
-      : undefined,
-    isLoading
+    profileData: profileResult?.profileData,
+    profileLoading,
+    userId: profileResult?.userId,
+    isStaff: profileResult?.isStaff || false,
+    userRole: profileResult?.userRole as UserRole,
+    isSuperAdmin: profileResult?.isSuperAdmin || false,
   };
 }
 

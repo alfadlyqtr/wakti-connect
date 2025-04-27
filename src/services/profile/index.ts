@@ -1,6 +1,5 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { UserRole, mapDatabaseRoleToUserRole } from '@/types/roles';
 
 export interface UserProfile {
   id: string;
@@ -8,15 +7,13 @@ export interface UserProfile {
   full_name?: string;
   display_name?: string;
   avatar_url?: string;
-  account_type: UserRole;
+  account_type: 'free' | 'individual' | 'business';
   created_at: string;
   updated_at: string;
 }
 
 /**
- * Fetches the user profile from Supabase
- * Maps database account_type to UserRole
- * @returns Promise with the user profile or null
+ * Fetches the current user's profile
  */
 export const getUserProfile = async (): Promise<UserProfile | null> => {
   try {
@@ -38,12 +35,16 @@ export const getUserProfile = async (): Promise<UserProfile | null> => {
       throw error;
     }
     
-    // Map the database account_type to our UserRole type
-    const accountType: UserRole = mapDatabaseRoleToUserRole(data.account_type);
+    // Map the data to match UserProfile interface
+    // Convert 'staff' and 'super-admin' to 'free' for compatibility
+    const accountType = 
+      data.account_type === 'business' ? 'business' :
+      data.account_type === 'individual' ? 'individual' :
+      'free';
     
     const profile: UserProfile = {
       id: data.id,
-      user_id: user.id,
+      user_id: user.id, // Set user_id from the auth user
       full_name: data.full_name || null,
       display_name: data.display_name || null,
       avatar_url: data.avatar_url || null,
@@ -60,23 +61,20 @@ export const getUserProfile = async (): Promise<UserProfile | null> => {
 };
 
 /**
- * Gets the current user's role
- * @returns Promise with the user role or 'individual' as default
+ * Gets the current user's role ('free', 'individual', or 'business')
  */
-export const getUserRole = async (): Promise<UserRole> => {
+export const getUserRole = async (): Promise<'free' | 'individual' | 'business'> => {
   try {
     const profile = await getUserProfile();
-    return profile?.account_type || 'individual';
+    return profile?.account_type || 'free';
   } catch (error) {
     console.error("Error getting user role:", error);
-    return 'individual';
+    return 'free';
   }
 };
 
 /**
- * Checks if the current user can create events
- * Currently, individual and business users can create events
- * @returns Promise<boolean> indicating if user can create events
+ * Checks if the current user has permission to create events
  */
 export const canUserCreateEvents = async (): Promise<boolean> => {
   const role = await getUserRole();

@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import TaskControls from "@/components/tasks/TaskControls";
 import TasksLoading from "@/components/tasks/TasksLoading";
@@ -38,7 +37,7 @@ const DashboardTasks = () => {
     isPaidAccount,
     activeTab,
     setActiveTab,
-    deleteTask: handleDeleteTask
+    deleteTask
   } = useTasksPageState();
   
   const { requestNotificationPermission } = useReminders();
@@ -66,10 +65,10 @@ const DashboardTasks = () => {
     setEditTaskDialogOpen(true);
   };
 
-  const displayRole = userRole === 'superadmin' ? 'business' : userRole;
+  const displayRole = userRole === 'super-admin' ? 'business' : userRole;
 
-  const deleteTask = async (taskId: string) => {
-    await handleDeleteTask.mutateAsync(taskId);
+  const handleDeleteTask = async (taskId: string) => {
+    await deleteTask(taskId);
     await refetchTasks();
   };
 
@@ -106,11 +105,11 @@ const DashboardTasks = () => {
         <TasksContainer
           tasks={filteredTasks}
           userRole={displayRole as "individual" | "business" | "staff"}
-          refetch={async () => { await refetchTasks() }}
+          refetch={refetchTasks}
           isPaidAccount={isPaidAccount}
           onCreateTask={() => setCreateTaskDialogOpen(true)}
           onEdit={handleEditTask}
-          onDelete={deleteTask}
+          onDelete={handleDeleteTask}
           activeTab={activeTab}
         />
       )}
