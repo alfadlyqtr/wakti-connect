@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/ui/use-toast";
 import { 
@@ -95,80 +94,26 @@ export const useMessaging = (options?: string | UseMessagingOptions) => {
   // Check messaging permissions
   const { 
     data: canMessage = true,
-    isLoading: isCheckingPermission 
+    isLoading: isCheckingPermission,
+    error: permissionError,
+    refetch: recheckPermissions
   } = useQuery<boolean>({
     queryKey: ['canMessage', otherUserId],
     queryFn: async () => {
       if (!otherUserId) return false;
-      
-      // Check if this is a staff-business conversation
-      if (isStaff) {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.user) return false;
-        
-        // Get staff's business ID
-        const { data: staffData } = await supabase
-          .from('business_staff')
-          .select('business_id')
-          .eq('staff_id', session.user.id)
-          .eq('status', 'active')
-          .maybeSingle();
-          
-        if (staffData) {
-          // If the other user is the business owner, staff can message them
-          if (staffData?.business_id === otherUserId) {
-            console.log("Staff can message business owner");
-            return true;
-          }
-          
-          // Check if the other user is a staff member in the same business
-          const { data: targetIsStaff } = await supabase
-            .from('business_staff')
-            .select('id')
-            .eq('staff_id', otherUserId)
-            .eq('business_id', staffData?.business_id)
-            .eq('status', 'active')
-            .maybeSingle();
-            
-          if (targetIsStaff) {
-            // Staff can message other staff of the same business
-            console.log("Staff can message other staff");
-            return true;
-          }
-        }
-      }
-      
-      // Business owners can message their staff members
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) return false;
-      
-      const { data: userProfile } = await supabase
-        .from('profiles')
-        .select('account_type')
-        .eq('id', session.user.id)
-        .single();
-        
-      if (userProfile?.account_type === 'business') {
-        // Check if the other user is a staff member of this business
-        const { data: isMyStaff } = await supabase
-          .from('business_staff')
-          .select('id')
-          .eq('staff_id', otherUserId)
-          .eq('business_id', session.user.id)
-          .eq('status', 'active')
-          .maybeSingle();
-          
-        if (isMyStaff) {
-          console.log("Business owner can message their staff");
-          return true;
-        }
-      }
-      
-      // For other scenarios, use the general permission check
       return canMessageUser(otherUserId);
     },
     enabled: !!otherUserId,
-    refetchInterval: 30000
+    retry: 2,
+    staleTime: 30000,
+    onError: (error) => {
+      console.error("Error checking messaging permissions:", error);
+      toast({
+        title: "Permission Check Failed",
+        description: "Unable to verify messaging permissions. Please try again.",
+        variant: "destructive"
+      });
+    }
   });
 
   // Get unread message count
@@ -218,6 +163,8 @@ export const useMessaging = (options?: string | UseMessagingOptions) => {
     refetchConversations,
     canMessage,
     isCheckingPermission,
+    permissionError,
+    recheckPermissions,
     unreadCount,
     isLoadingUnreadCount,
     markConversationAsRead

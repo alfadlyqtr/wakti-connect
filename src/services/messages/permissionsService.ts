@@ -12,61 +12,63 @@ export const canMessageUser = async (recipientId: string): Promise<boolean> => {
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session?.user) {
+      console.log("No active session found");
       return false;
     }
 
-    // Get current user's profile to check account type
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .select('account_type')
-      .eq('id', session.user.id)
-      .single();
-    
-    if (profileError || !profileData) {
-      console.error("Error fetching user profile:", profileError);
-      return false;
-    }
-    
-    // Free users can't message anyone
-    if (profileData.account_type === 'free') {
-      console.log("Free users cannot send messages");
-      return false;
-    }
-    
-    // Check if users are connected in the contacts table
+    // Check if users are connected in the user_contacts table with status 'accepted'
     const { data: contactData, error: contactError } = await supabase
-      .from('contacts')
+      .from('user_contacts')
       .select('id, status')
       .or(`and(user_id.eq.${session.user.id},contact_id.eq.${recipientId}),and(user_id.eq.${recipientId},contact_id.eq.${session.user.id})`)
-      .eq('status', 'approved')
+      .eq('status', 'accepted')
       .maybeSingle();
+
+    if (contactError) {
+      console.error("Error checking contact status:", contactError);
+      return false;
+    }
     
+    // If they are contacts with accepted status, they can message
     if (contactData) {
       return true;
     }
-    
-    // Check if the user is a business
-    const { data: recipientData } = await supabase
+
+    // Fall back to checking business relationships
+    const { data: businessProfile } = await supabase
       .from('profiles')
       .select('account_type')
-      .eq('id', recipientId)
+      .eq('id', session.user.id)
       .maybeSingle();
-      
-    if (recipientData?.account_type === 'business') {
-      // Check if user is subscribed to the business
-      const { data: subscriptionData } = await supabase
-        .from('business_subscribers')
+
+    // Business owners can always message their staff
+    if (businessProfile?.account_type === 'business') {
+      const { data: staffData } = await supabase
+        .from('business_staff')
         .select('id')
-        .eq('business_id', recipientId)
-        .eq('subscriber_id', session.user.id)
+        .eq('business_id', session.user.id)
+        .eq('staff_id', recipientId)
+        .eq('status', 'active')
         .maybeSingle();
-        
-      if (subscriptionData) {
+
+      if (staffData) {
         return true;
       }
     }
     
-    // By default, if they're not connected, they can't message
+    // Staff can message their business owner
+    const { data: staffData } = await supabase
+      .from('business_staff')
+      .select('business_id')
+      .eq('staff_id', session.user.id)
+      .eq('status', 'active')
+      .maybeSingle();
+      
+    if (staffData && staffData.business_id === recipientId) {
+      return true;
+    }
+
+    // Not connected and no business relationship
     return false;
   } catch (error) {
     console.error("Error checking messaging permissions:", error);

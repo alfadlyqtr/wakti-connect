@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,17 +16,23 @@ interface MessageInputProps {
   onSendLocation?: (location: string) => void;
   canShareLocation?: boolean;
   isSending: boolean;
+  isDisabled?: boolean;
+  isCheckingPermissions?: boolean;
 }
 
 const MessageInput: React.FC<MessageInputProps> = ({
   onSendMessage,
   onSendLocation,
   canShareLocation = false,
-  isSending
+  isSending,
+  isDisabled = false,
+  isCheckingPermissions = false
 }) => {
   const [message, setMessage] = useState('');
   const [location, setLocation] = useState('');
   const [isLocationDialogOpen, setIsLocationDialogOpen] = useState(false);
+
+  const inputDisabled = isDisabled || isSending || isCheckingPermissions;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,11 +55,11 @@ const MessageInput: React.FC<MessageInputProps> = ({
     <div className="p-4 border-t bg-background">
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <Input
-          placeholder="Type a message..."
+          placeholder={isCheckingPermissions ? "Checking permissions..." : "Type a message..."}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           className="flex-1 text-sm md:text-base py-6"
-          disabled={isSending}
+          disabled={inputDisabled}
         />
 
         <div className="flex justify-between items-center">
@@ -102,15 +107,17 @@ const MessageInput: React.FC<MessageInputProps> = ({
 
           <Button 
             type="submit" 
-            disabled={!message.trim() || isSending}
+            disabled={!message.trim() || inputDisabled}
             className="ml-auto rounded-full px-5"
           >
             {isSending ? (
               <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-1" />
+            ) : isCheckingPermissions ? (
+              <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-1" />
             ) : (
               <Send className="h-4 w-4 mr-1" />
             )}
-            <span>Send</span>
+            <span>{isSending ? "Sending" : isCheckingPermissions ? "Checking" : "Send"}</span>
           </Button>
         </div>
       </form>
