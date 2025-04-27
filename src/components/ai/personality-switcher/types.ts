@@ -1,5 +1,14 @@
 
-export type WAKTIAIMode = 'general' | 'student' | 'productivity' | 'employee' | 'writer' | 'business_owner';
+export type WAKTIAIMode = 'general' | 'student' | 'productivity' | 'employee' | 'writer' | 'business_owner' | 'creative';
+
+// Adding ChatMemoryMessage type which is missing
+export interface ChatMemoryMessage {
+  id?: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  timestamp?: Date;
+  imageUrl?: string;
+}
 
 export interface AIPersonality {
   id: string;
@@ -7,7 +16,7 @@ export interface AIPersonality {
   title: string;
   description: string;
   systemPrompt: string;
-  welcomeMessage: string; // Adding this property that was missing
+  welcomeMessage: string; 
   suggestedPrompts: string[];
   color: string;
   gradient: string;
@@ -69,4 +78,14 @@ export interface AIKnowledgeUpload {
   upload_date: string;
   status: 'processing' | 'complete' | 'error';
   role?: string;
+}
+
+// Define AIPersonalityMode type which was missing
+export type AIPersonalityMode = WAKTIAIMode;
+
+// Add AIAssistantToolsCardProps interface
+export interface AIAssistantToolsCardProps {
+  canAccess?: boolean;
+  onUseDocumentContent?: (content: string) => void;
+  selectedRole?: string;
 }

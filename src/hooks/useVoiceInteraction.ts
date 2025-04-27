@@ -3,9 +3,10 @@ import { useState, useCallback, useEffect } from 'react';
 
 export interface VoiceInteractionOptions {
   onTranscript?: (transcript: string) => void;
+  onTranscriptComplete?: (transcript: string) => void;
   continuous?: boolean;
-  continuousListening?: boolean;
   language?: string;
+  continuousListening?: boolean;
 }
 
 export interface VoiceInteractionResult {
@@ -70,6 +71,13 @@ export const useVoiceInteraction = (options?: VoiceInteractionOptions): VoiceInt
       setApiKeyStatus('valid');
     }, 1000);
   }, []);
+
+  // Handle transcript completion
+  useEffect(() => {
+    if (transcript && options?.onTranscriptComplete) {
+      options.onTranscriptComplete(transcript);
+    }
+  }, [transcript, options]);
 
   return {
     isListening,

@@ -3,12 +3,12 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAIPersonality } from '@/components/ai/personality-switcher/AIPersonalityContext';
-import { AIPersonalityMode } from '@/components/ai/personality-switcher/types';
+import { WAKTIAIMode } from '@/components/ai/personality-switcher/types';
 import { personalityPresets } from '@/components/ai/personality-switcher/personalityPresets';
 import { Bot, Book, Zap, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
-import { useBreakpointValue } from '@/hooks/useBreakpoint';
+import { useBreakpoint } from '@/hooks/useBreakpoint';
 
 const modeIcons = {
   general: Bot,
@@ -26,9 +26,10 @@ const modeColors = {
 
 export const ModeSwitcher: React.FC = () => {
   const { currentMode, setCurrentMode } = useAIPersonality();
-  const isMobile = !useBreakpointValue('sm');
+  const { breakpoint } = useBreakpoint();
+  const isMobile = breakpoint === 'sm' || breakpoint === 'md';
   
-  const handleModeChange = (mode: AIPersonalityMode) => {
+  const handleModeChange = (mode: WAKTIAIMode) => {
     setCurrentMode(mode);
   };
   
@@ -45,10 +46,10 @@ export const ModeSwitcher: React.FC = () => {
         borderRadius: '16px',
       }}
     >
-      {(Object.keys(modeIcons) as AIPersonalityMode[]).map((mode) => {
+      {(Object.keys(modeIcons) as WAKTIAIMode[]).map((mode) => {
         const Icon = modeIcons[mode];
         const isActive = currentMode === mode;
-        const activeColor = modeColors[mode];
+        const activeColor = modeColors[mode as keyof typeof modeColors];
         
         return (
           <HoverCard key={mode} openDelay={300} closeDelay={100}>
@@ -81,8 +82,8 @@ export const ModeSwitcher: React.FC = () => {
               </motion.div>
             </HoverCardTrigger>
             <HoverCardContent className="p-3 text-sm" align="center" side="bottom">
-              <div className="font-medium mb-1">{personalityPresets[mode].title}</div>
-              <p className="text-xs text-muted-foreground">{personalityPresets[mode].description}</p>
+              <div className="font-medium mb-1">{personalityPresets[mode]?.title}</div>
+              <p className="text-xs text-muted-foreground">{personalityPresets[mode]?.description}</p>
             </HoverCardContent>
           </HoverCard>
         );

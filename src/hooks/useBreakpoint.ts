@@ -29,12 +29,26 @@ export const useBreakpoint = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  return { breakpoint, width };
+  // Add a method to check if current breakpoint matches or exceeds a given breakpoint
+  const includes = (bp: string): boolean => {
+    const breakpoints = ['sm', 'md', 'lg', 'xl', '2xl'];
+    const currentIndex = breakpoints.indexOf(breakpoint);
+    const targetIndex = breakpoints.indexOf(bp);
+    return currentIndex >= targetIndex;
+  };
+
+  return { breakpoint, width, includes };
 };
 
 export const useMobileBreakpoint = () => {
   const { breakpoint } = useBreakpoint();
   return breakpoint === 'sm' || breakpoint === 'md';
+};
+
+// Adding useBreakpointValue helper to match the import in ModeSwitcher.tsx
+export const useBreakpointValue = (bp: string): boolean => {
+  const { includes } = useBreakpoint();
+  return includes(bp);
 };
 
 export default useBreakpoint;

@@ -1,13 +1,13 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { AIPersonality, AIPersonalityMode } from './types';
+import { AIPersonality, WAKTIAIMode } from './types';
 import { personalityPresets } from './personalityPresets';
 
 interface AIPersonalityContextType {
-  currentMode: AIPersonalityMode;
-  setCurrentMode: (mode: AIPersonalityMode) => void;
+  currentMode: WAKTIAIMode;
+  setCurrentMode: (mode: WAKTIAIMode) => void;
   currentPersonality: AIPersonality;
-  previousMode: AIPersonalityMode | null;
+  previousMode: WAKTIAIMode | null;
   themeClass: string;
   getBackgroundStyle: () => string;
   getInputGlowClass: (isFocused: boolean) => string;
@@ -17,19 +17,19 @@ const AIPersonalityContext = createContext<AIPersonalityContextType | undefined>
 
 export const AIPersonalityProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Initialize from localStorage or default to 'general' mode
-  const [currentMode, setCurrentMode] = useState<AIPersonalityMode>(() => {
+  const [currentMode, setCurrentMode] = useState<WAKTIAIMode>(() => {
     const savedMode = localStorage.getItem('wakti-ai-mode');
-    return (savedMode as AIPersonalityMode) || 'general';
+    return (savedMode as WAKTIAIMode) || 'general';
   });
   
   // Track previous mode for transition effects
-  const [previousMode, setPreviousMode] = useState<AIPersonalityMode | null>(null);
+  const [previousMode, setPreviousMode] = useState<WAKTIAIMode | null>(null);
 
   // Get the current personality based on the mode
-  const currentPersonality = personalityPresets[currentMode];
+  const currentPersonality = personalityPresets[currentMode] || personalityPresets.general;
 
   // Update previous mode when current mode changes
-  const handleModeChange = (newMode: AIPersonalityMode) => {
+  const handleModeChange = (newMode: WAKTIAIMode) => {
     setPreviousMode(currentMode);
     setCurrentMode(newMode);
   };

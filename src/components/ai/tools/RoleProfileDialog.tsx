@@ -48,7 +48,11 @@ const RoleProfileDialog: React.FC<RoleProfileDialogProps> = ({ open, onClose }) 
           </div>
           
           {currentPersonality.quickTools && currentPersonality.quickTools.length > 0 && (
-            <AIAssistantToolsCard />
+            <AIAssistantToolsCard 
+              canAccess={true} 
+              selectedRole={currentPersonality.mode}
+              onUseDocumentContent={() => {}} 
+            />
           )}
           
           <div>

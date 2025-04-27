@@ -1,7 +1,7 @@
 
-import { AIPersonality, AIPersonalityMode } from './types';
+import { AIPersonality, WAKTIAIMode } from './types';
 
-export const personalityPresets: Record<AIPersonalityMode, AIPersonality> = {
+export const personalityPresets: Record<WAKTIAIMode, AIPersonality> = {
   general: {
     id: 'general',
     name: 'General Assistant',
@@ -21,15 +21,15 @@ export const personalityPresets: Record<AIPersonalityMode, AIPersonality> = {
     iconColor: 'text-wakti-blue',
     mode: 'general',
     lightTheme: {
-      backgroundColor: '#f0f7ff',
-      chatBgColor: 'rgba(255, 255, 255, 0.7)',
-      messageColor: '#1e293b',
+      bgColor: '#f0f7ff',
+      textColor: '#1e293b',
+      buttonColor: '#3b82f6',
       accentColor: '#3b82f6'
     },
     darkTheme: {
-      backgroundColor: '#0f172a',
-      chatBgColor: 'rgba(15, 23, 42, 0.7)',
-      messageColor: '#f8fafc',
+      bgColor: '#0f172a',
+      textColor: '#f8fafc', 
+      buttonColor: '#60a5fa',
       accentColor: '#60a5fa'
     }
   },
@@ -52,15 +52,15 @@ export const personalityPresets: Record<AIPersonalityMode, AIPersonality> = {
     iconColor: 'text-green-600',
     mode: 'student',
     lightTheme: {
-      backgroundColor: '#f0fdf4',
-      chatBgColor: 'rgba(255, 255, 255, 0.7)',
-      messageColor: '#1e293b',
+      bgColor: '#f0fdf4',
+      textColor: '#1e293b',
+      buttonColor: '#22c55e',
       accentColor: '#22c55e'
     },
     darkTheme: {
-      backgroundColor: '#0f2617',
-      chatBgColor: 'rgba(15, 38, 23, 0.7)',
-      messageColor: '#f8fafc',
+      bgColor: '#0f2617',
+      textColor: '#f8fafc',
+      buttonColor: '#4ade80',
       accentColor: '#4ade80'
     }
   },
@@ -83,15 +83,15 @@ export const personalityPresets: Record<AIPersonalityMode, AIPersonality> = {
     iconColor: 'text-purple-600',
     mode: 'productivity',
     lightTheme: {
-      backgroundColor: '#f5f3ff',
-      chatBgColor: 'rgba(255, 255, 255, 0.7)',
-      messageColor: '#1e293b',
+      bgColor: '#f5f3ff',
+      textColor: '#1e293b',
+      buttonColor: '#8b5cf6',
       accentColor: '#8b5cf6'
     },
     darkTheme: {
-      backgroundColor: '#1e1b4b',
-      chatBgColor: 'rgba(30, 27, 75, 0.7)',
-      messageColor: '#f8fafc',
+      bgColor: '#1e1b4b',
+      textColor: '#f8fafc',
+      buttonColor: '#a78bfa',
       accentColor: '#a78bfa'
     }
   },
@@ -114,16 +114,110 @@ export const personalityPresets: Record<AIPersonalityMode, AIPersonality> = {
     iconColor: 'text-purple-500',
     mode: 'creative',
     lightTheme: {
-      backgroundColor: '#fdf2f8',
-      chatBgColor: 'rgba(255, 255, 255, 0.7)',
-      messageColor: '#1e293b',
+      bgColor: '#fdf2f8',
+      textColor: '#1e293b',
+      buttonColor: '#d946ef',
       accentColor: '#d946ef'
     },
     darkTheme: {
-      backgroundColor: '#2d1b36',
-      chatBgColor: 'rgba(45, 27, 54, 0.7)',
-      messageColor: '#f8fafc',
+      bgColor: '#2d1b36',
+      textColor: '#f8fafc',
+      buttonColor: '#e879f9',
       accentColor: '#e879f9'
+    }
+  },
+  // Adding the additional required modes to satisfy the WAKTIAIMode type
+  employee: {
+    id: 'employee',
+    name: 'Employee Assistant',
+    title: 'Employee Mode',
+    description: 'Your assistant for workplace productivity and organization',
+    systemPrompt: 'You are an employee-focused AI assistant. Help with workplace tasks, meetings, communications, and professional development.',
+    welcomeMessage: 'Hello! I\'m your Employee Assistant. I can help with workplace tasks, meeting notes, project management, or professional development. How can I assist you today?',
+    suggestedPrompts: [
+      'Create a meeting agenda',
+      'Help me prioritize my tasks',
+      'Draft an email to my team',
+      'Suggest professional development resources'
+    ],
+    color: 'bg-blue-600',
+    gradient: 'from-blue-500 to-blue-600',
+    bgGradient: 'bg-gradient-to-r from-blue-50 to-blue-100/50',
+    iconColor: 'text-blue-600',
+    mode: 'employee',
+    lightTheme: {
+      bgColor: '#f0f7ff',
+      textColor: '#1e293b',
+      buttonColor: '#3b82f6',
+      accentColor: '#3b82f6'
+    },
+    darkTheme: {
+      bgColor: '#1e3a8a',
+      textColor: '#f8fafc',
+      buttonColor: '#60a5fa',
+      accentColor: '#60a5fa'
+    }
+  },
+  writer: {
+    id: 'writer',
+    name: 'Writer Assistant',
+    title: 'Writer Mode',
+    description: 'Your assistant for creative and professional writing',
+    systemPrompt: 'You are a writing-focused AI assistant. Help with drafting, editing, and improving all types of written content.',
+    welcomeMessage: 'Welcome to Writer Mode! I can help you craft compelling content, edit your writing, generate ideas, or provide feedback. What would you like to work on today?',
+    suggestedPrompts: [
+      'Help me draft a blog post',
+      'Edit this paragraph for clarity',
+      'Suggest a catchy headline',
+      'Create an outline for my article'
+    ],
+    color: 'bg-amber-600',
+    gradient: 'from-amber-500 to-amber-600',
+    bgGradient: 'bg-gradient-to-r from-amber-50 to-amber-100/50',
+    iconColor: 'text-amber-600',
+    mode: 'writer',
+    lightTheme: {
+      bgColor: '#fffbeb',
+      textColor: '#1e293b',
+      buttonColor: '#d97706',
+      accentColor: '#d97706'
+    },
+    darkTheme: {
+      bgColor: '#451a03',
+      textColor: '#f8fafc',
+      buttonColor: '#f59e0b',
+      accentColor: '#f59e0b'
+    }
+  },
+  business_owner: {
+    id: 'business_owner',
+    name: 'Business Owner',
+    title: 'Business Owner Mode',
+    description: 'Your strategic partner for business management',
+    systemPrompt: 'You are a business-focused AI assistant. Help with strategic planning, marketing, customer relations, and operational decisions.',
+    welcomeMessage: 'Hello! I\'m your Business Owner Assistant. I can help with business strategy, marketing plans, customer insights, or operational improvements. What aspect of your business would you like to focus on?',
+    suggestedPrompts: [
+      'Create a marketing plan outline',
+      'Analyze this customer feedback',
+      'Help me improve my business operations',
+      'Draft a business proposal'
+    ],
+    color: 'bg-emerald-600',
+    gradient: 'from-emerald-500 to-emerald-600',
+    bgGradient: 'bg-gradient-to-r from-emerald-50 to-emerald-100/50',
+    iconColor: 'text-emerald-600',
+    mode: 'business_owner',
+    lightTheme: {
+      bgColor: '#ecfdf5',
+      textColor: '#1e293b',
+      buttonColor: '#10b981',
+      accentColor: '#10b981'
+    },
+    darkTheme: {
+      bgColor: '#064e3b',
+      textColor: '#f8fafc',
+      buttonColor: '#34d399',
+      accentColor: '#34d399'
     }
   }
 };
