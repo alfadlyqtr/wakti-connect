@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { UserContact } from '@/types/invitation.types';
+import { UserContact, ContactRequestStatusValue, UserSearchResult } from '@/types/invitation.types';
 
 /**
  * Get regular contacts for a user (excluding staff contacts)
@@ -9,7 +9,7 @@ export const getUserContacts = async (userId: string): Promise<UserContact[]> =>
   try {
     console.log('[ContactQueries] Fetching contacts for user:', userId);
     
-    const { data: contacts, error } = await supabase
+    const { data: contactRows, error } = await supabase
       .from('user_contacts')
       .select(`
         id,
@@ -18,7 +18,7 @@ export const getUserContacts = async (userId: string): Promise<UserContact[]> =>
         status,
         staff_relation_id,
         created_at,
-        contact:contact_id (
+        contact_profile:profiles!contact_id(
           id,
           full_name,
           display_name,
@@ -37,33 +37,43 @@ export const getUserContacts = async (userId: string): Promise<UserContact[]> =>
       return [];
     }
 
-    if (!contacts?.length) {
+    if (!contactRows?.length) {
       console.log('[ContactQueries] No contacts found for user:', userId);
       return [];
     }
 
-    console.log('[ContactQueries] Found contacts:', contacts);
+    console.log('[ContactQueries] Found contacts:', contactRows);
 
-    return contacts.map(contact => {
-      const isReversed = contact.contact_id === userId;
-      const contactData = contact.contact;
-      const actualContactId = isReversed ? contact.user_id : contact.contact_id;
+    // Transform results to match the UserContact type
+    return contactRows.map(row => {
+      const isReversed = row.contact_id === userId;
+      const contactProfile = row.contact_profile;
+      const actualContactId = isReversed ? row.user_id : row.contact_id;
+      
+      if (!contactProfile) {
+        console.warn(`[ContactQueries] Missing profile for contact ID: ${actualContactId}`);
+      }
 
       return {
-        id: contact.id,
-        userId: contact.user_id,
+        id: row.id,
+        userId: row.user_id,
         contactId: actualContactId,
-        status: contact.status,
-        staffRelationId: contact.staff_relation_id,
-        created_at: contact.created_at,
-        contactProfile: {
+        status: row.status as ContactRequestStatusValue,
+        staffRelationId: row.staff_relation_id,
+        created_at: row.created_at,
+        contactProfile: contactProfile ? {
           id: actualContactId,
-          fullName: contactData?.full_name || 'Unknown User',
-          displayName: contactData?.display_name || contactData?.full_name || 'Unknown User',
-          avatarUrl: contactData?.avatar_url,
-          accountType: contactData?.account_type || 'free',
-          businessName: contactData?.business_name,
-          email: contactData?.email
+          fullName: contactProfile.full_name || 'Unknown User',
+          displayName: contactProfile.display_name || contactProfile.full_name || 'Unknown User',
+          avatarUrl: contactProfile.avatar_url,
+          accountType: contactProfile.account_type || 'free',
+          businessName: contactProfile.business_name,
+          email: contactProfile.email
+        } : {
+          id: actualContactId,
+          fullName: 'Unknown User',
+          displayName: 'Unknown User',
+          accountType: 'free'
         }
       };
     });
@@ -119,4 +129,18 @@ export const searchUsers = async (query: string): Promise<UserSearchResult[]> =>
     console.error('[ContactSearch] Unexpected error:', error);
     return [];
   }
+};
+
+/**
+ * These are placeholder exports to satisfy the index.ts imports
+ * They should be implemented or removed from the index exports
+ */
+export const getContactRequests = async () => {
+  console.warn('getContactRequests is not fully implemented');
+  return { incoming: [], outgoing: [] };
+};
+
+export const getStaffContacts = async () => {
+  console.warn('getStaffContacts is not fully implemented');
+  return [];
 };
