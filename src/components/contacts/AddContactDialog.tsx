@@ -19,9 +19,10 @@ const AddContactDialog: React.FC<AddContactDialogProps> = ({
   onAddContact
 }) => {
   const {
-    searchQuery,
+    searchUsers,
     searchResults,
     isSearching,
+    searchQuery,
     selectedContact,
     contactStatus,
     isCheckingStatus,

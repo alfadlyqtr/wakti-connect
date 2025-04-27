@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { InvitationRequest, InvitationResponse, InvitationRecipient } from "@/types/invitation.types";
@@ -46,15 +45,9 @@ export const sendInvitation = async (
       results.push({
         id: `invitation-batch-${Date.now()}`,
         status: 'sent',
-        createdAt: new Date().toISOString(),
-        recipients: {
-          total: successful.length,
-          accepted: 0,
-          pending: successful.length,
-          declined: 0,
-          successful: successful,
-          failed: []
-        }
+        recipients: invitation.recipients,
+        failedRecipients: [],
+        createdAt: new Date().toISOString()
       });
     }
     

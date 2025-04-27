@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { UserSearchResult, ContactRequestStatus, ContactRequestStatusValue } from "@/types/invitation.types";
 
@@ -59,10 +60,10 @@ export const checkContactRequest = async (contactId: string): Promise<ContactReq
     
     // The RPC function returns a single row with request_exists and request_status
     if (data && data.length > 0) {
-      const status = data[0].request_status;
+      const status = data[0].request_status === 'none' ? null : data[0].request_status as ContactRequestStatusValue;
       return {
         requestExists: data[0].request_exists,
-        requestStatus: status === 'none' ? null : status as ContactRequestStatusValue
+        requestStatus: status
       };
     }
     

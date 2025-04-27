@@ -2,7 +2,7 @@
 // Re-export all contact-related functionality from a single entry point
 export { getUserContacts, getContactRequests, getStaffContacts } from './contactQueries';
 export { sendContactRequest, respondToContactRequest, deleteContact } from './contactMutations';
-export { checkContactRequest } from './contactSearch';
+export { checkContactRequest, searchUsers } from './contactSearch';
 export { 
   syncStaffBusinessContacts, 
   ensureStaffContacts, 

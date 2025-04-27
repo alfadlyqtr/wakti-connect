@@ -68,6 +68,7 @@ export interface InvitationRequest {
   eventId: string;
   recipients: InvitationRecipient[];
   customizationId?: string;
+  shared_as_link?: boolean;
 }
 
 export interface InvitationResponse {
@@ -75,14 +76,19 @@ export interface InvitationResponse {
   status: 'sent' | 'failed';
   recipients: InvitationRecipient[];
   failedRecipients?: string[];
+  createdAt?: string;
 }
 
 export interface InvitationTemplate {
   id: string;
   name: string;
   description?: string;
-  content: string;
+  content?: string;
   customizationId?: string;
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
+  previewImage?: string;
+  defaultStyles?: Record<string, any>;
+  customization?: Record<string, any>;
+  isDefault?: boolean;
 }

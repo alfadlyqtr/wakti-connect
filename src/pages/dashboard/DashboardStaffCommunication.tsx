@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { RefreshCw, Users } from "lucide-react";
@@ -107,7 +106,6 @@ const DashboardStaffCommunication = () => {
           <ContactsList 
             contacts={staffContacts || []} 
             isLoading={isLoadingStaffContacts}
-            // Staff contacts cannot be deleted as they are maintained by the system
             onDeleteContact={undefined}
           />
         </CardContent>

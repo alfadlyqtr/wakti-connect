@@ -5,10 +5,7 @@ import { InvitationTemplate } from "@/types/invitation.types";
 // Define a default template structure to avoid TypeScript errors
 const defaultTemplate: Omit<InvitationTemplate, 'id'> = {
   name: '',
-  previewImage: '',
-  defaultStyles: {},
-  customization: {},
-  isDefault: false,
+  content: '',
   createdAt: ''
 };
 

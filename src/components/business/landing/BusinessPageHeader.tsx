@@ -21,15 +21,22 @@ const BusinessPageHeader: React.FC<BusinessPageHeaderProps> = ({
   const { sendContactRequest } = useContacts();
   const { checkContactRequest } = useContactSearch();
   const [isAddingContact, setIsAddingContact] = useState(false);
-  const [contactStatus, setContactStatus] = useState<'none' | 'pending' | 'accepted'>('none');
+  const [contactStatus, setContactStatus] = useState<'pending' | 'accepted' | 'none'>('none');
 
   useEffect(() => {
     const checkStatus = async () => {
       if (isAuthenticated && !isPreviewMode && business.id) {
         try {
           const result = await checkContactRequest(business.id);
-          if (result && result.requestExists) {
-            setContactStatus(result.requestStatus || 'none');
+          if (result.requestExists) {
+            // Convert the result to our component's expected status type
+            if (result.requestStatus === 'pending') {
+              setContactStatus('pending');
+            } else if (result.requestStatus === 'accepted') {
+              setContactStatus('accepted');
+            } else {
+              setContactStatus('none');
+            }
           }
         } catch (error) {
           console.error('Error checking contact status:', error);

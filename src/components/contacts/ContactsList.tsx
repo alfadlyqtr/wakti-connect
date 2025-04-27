@@ -1,140 +1,23 @@
 
 import React from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { MessageSquare, Trash2, User, Users, Briefcase } from "lucide-react";
 import { UserContact } from "@/types/invitation.types";
-import { useNavigate } from "react-router-dom";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Trash2, MessageSquare } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
 
 interface ContactsListProps {
   contacts: UserContact[];
   isLoading: boolean;
-  isSyncing?: boolean;
-  onDeleteContact?: (contactId: string) => Promise<void>;
+  showChat?: boolean;
+  onDeleteContact?: (contactId: string) => void;
 }
-
-const ContactItem = ({ 
-  contact, 
-  onDeleteContact 
-}: { 
-  contact: UserContact;
-  onDeleteContact?: (contactId: string) => Promise<void>;
-}) => {
-  const navigate = useNavigate();
-  
-  const displayName = contact.contactProfile?.displayName || 
-                      contact.contactProfile?.fullName || 
-                      'Unknown User';
-                      
-  const avatarUrl = contact.contactProfile?.avatarUrl;
-  const displayInitial = displayName.charAt(0) || 'U';
-  
-  // Determine contact type
-  const isBusinessOwner = contact.contactProfile?.accountType === 'business';
-  const hasStaffRelation = !!contact.staff_relation_id;
-  
-  const handleMessageClick = () => {
-    navigate(`/dashboard/messages/${contact.contact_id}`);
-  };
-
-  const handleDeleteClick = async () => {
-    if (onDeleteContact) {
-      await onDeleteContact(contact.contact_id);
-    }
-  };
-  
-  return (
-    <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent/10">
-      <div className="flex items-center gap-3">
-        <Avatar>
-          <AvatarImage src={avatarUrl || ''} alt={displayName} />
-          <AvatarFallback>{displayInitial}</AvatarFallback>
-        </Avatar>
-        <div>
-          <div className="flex items-center gap-2">
-            <p className="font-medium">{displayName}</p>
-            {isBusinessOwner ? (
-              <Badge variant="outline" className="bg-blue-50">
-                <Briefcase className="h-3 w-3 mr-1" />
-                Business
-              </Badge>
-            ) : hasStaffRelation ? (
-              <Badge variant="outline" className="bg-green-50">
-                <User className="h-3 w-3 mr-1" />
-                Staff
-              </Badge>
-            ) : (
-              <Badge variant="outline">
-                <User className="h-3 w-3 mr-1" />
-                Individual
-              </Badge>
-            )}
-          </div>
-          {contact.contactProfile?.businessName && (
-            <p className="text-sm text-muted-foreground">
-              {contact.contactProfile.businessName}
-            </p>
-          )}
-          <p className="text-xs text-muted-foreground">
-            {contact.contactProfile?.email || contact.contact_id}
-          </p>
-        </div>
-      </div>
-      
-      <div className="flex items-center gap-2">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                size="sm" 
-                variant="outline"
-                onClick={handleMessageClick}
-              >
-                <MessageSquare className="h-4 w-4" />
-                <span className="sr-only md:not-sr-only md:ml-2">Message</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Send message</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        
-        {onDeleteContact && !hasStaffRelation && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  className="text-red-500 hover:bg-red-50"
-                  onClick={handleDeleteClick}
-                >
-                  <Trash2 className="h-4 w-4" />
-                  <span className="sr-only md:not-sr-only md:ml-2">Remove</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Remove contact</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
-      </div>
-    </div>
-  );
-};
 
 const ContactsList: React.FC<ContactsListProps> = ({ 
   contacts, 
   isLoading,
+  showChat = false,
   onDeleteContact
 }) => {
   if (isLoading) {
@@ -145,24 +28,87 @@ const ContactsList: React.FC<ContactsListProps> = ({
     );
   }
 
+  if (!contacts || contacts.length === 0) {
+    return (
+      <div className="py-10 text-center">
+        <p className="text-muted-foreground">No contacts found</p>
+      </div>
+    );
+  }
+
+  // Helper function to determine if this is a staff contact
+  const isStaffContact = (contact: UserContact) => {
+    return contact.staff_relation_id !== null;
+  };
+
+  // Helper function to get the contact user ID
+  // The contact_id field contains the other user's ID we want to display
+  const getContactUserId = (contact: UserContact) => {
+    return contact.contact_id;
+  };
+
+  // Helper function to generate chat link
+  const getChatLink = (contact: UserContact) => {
+    return `/dashboard/messages/${getContactUserId(contact)}`;
+  };
+
   return (
-    <div>
-      {contacts && contacts.length > 0 ? (
-        <div className="space-y-4">
-          {contacts.map((contact) => (
-            <ContactItem 
-              key={contact.id} 
-              contact={contact} 
-              onDeleteContact={onDeleteContact}
-            />
-          ))}
+    <div className="space-y-4">
+      {contacts.map((contact) => (
+        <div key={contact.id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent/10">
+          <div className="flex items-center gap-3">
+            <Avatar>
+              <AvatarImage src={contact.contactProfile?.avatarUrl || ''} />
+              <AvatarFallback>
+                {(contact.contactProfile?.displayName || contact.contactProfile?.fullName || 'U').charAt(0)}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <div className="flex items-center gap-2">
+                <p className="font-medium">
+                  {contact.contactProfile?.displayName || 
+                  contact.contactProfile?.fullName || 'Unknown User'}
+                </p>
+                {contact.contactProfile?.accountType === 'business' ? (
+                  <Badge variant="outline" className="bg-blue-50">Business</Badge>
+                ) : (
+                  <Badge variant="outline" className="bg-green-50">Individual</Badge>
+                )}
+                {isStaffContact(contact) && (
+                  <Badge variant="outline" className="bg-purple-50">Staff</Badge>
+                )}
+              </div>
+              {contact.contactProfile?.businessName && (
+                <p className="text-sm">{contact.contactProfile.businessName}</p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                {contact.contactProfile?.email || getContactUserId(contact)}
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            {showChat && (
+              <Button asChild size="sm" variant="outline">
+                <Link to={getChatLink(contact)}>
+                  <MessageSquare className="h-4 w-4 mr-1" />
+                  Chat
+                </Link>
+              </Button>
+            )}
+            {onDeleteContact && !isStaffContact(contact) && (
+              <Button 
+                onClick={() => onDeleteContact(contact.contact_id)}
+                variant="outline" 
+                size="sm" 
+                className="text-red-500 hover:bg-red-50 hover:border-red-200"
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+                Remove
+              </Button>
+            )}
+          </div>
         </div>
-      ) : (
-        <div className="py-10 text-center">
-          <Users className="mx-auto h-10 w-10 text-muted-foreground" />
-          <p className="mt-2 text-sm text-muted-foreground">No contacts found</p>
-        </div>
-      )}
+      ))}
     </div>
   );
 };
