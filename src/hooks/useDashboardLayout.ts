@@ -47,10 +47,14 @@ export const useDashboardLayout = () => {
           const dbLayout = data.dashboard_layout;
           if (Array.isArray(dbLayout) && dbLayout.length > 0) {
             // Properly validate and convert the JSON data to DashboardWidgetLayout[]
-            const typedLayout = dbLayout.map(item => ({
-              id: String(item.id),
-              order: Number(item.order)
-            })) as DashboardWidgetLayout[];
+            const typedLayout = dbLayout.map(item => {
+              // Since item could be of unknown structure, we need to safely access properties
+              const itemObj = item as unknown as Record<string, unknown>;
+              return {
+                id: String(itemObj.id || ''),
+                order: Number(itemObj.order || 0)
+              };
+            });
             
             setLayout(typedLayout);
             localStorage.setItem(`dashboard_layout_${userId}`, JSON.stringify(typedLayout));
