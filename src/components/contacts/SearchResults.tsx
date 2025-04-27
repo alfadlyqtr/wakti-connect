@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -11,34 +12,9 @@ interface SearchResultsProps {
 }
 
 export const SearchResults = ({ searchResults = [], onSelectContact }: SearchResultsProps) => {
+  // Ensure searchResults is always an array
   const results = Array.isArray(searchResults) ? searchResults : [];
   console.log("[SearchResults] Rendering with results:", results);
-
-  const getAccountTypeIcon = (accountType: string) => {
-    switch (accountType) {
-      case 'business':
-        return <Briefcase className="h-3 w-3 mr-1" />;
-      default:
-        return <User className="h-3 w-3 mr-1" />;
-    }
-  };
-
-  const getAccountTypeBadge = (accountType: string) => {
-    switch (accountType) {
-      case 'business':
-        return <Badge variant="outline" className="bg-blue-50 flex items-center">
-          {getAccountTypeIcon(accountType)} Business
-        </Badge>;
-      case 'individual':
-        return <Badge variant="outline" className="bg-green-50 flex items-center">
-          {getAccountTypeIcon(accountType)} Individual
-        </Badge>;
-      default:
-        return <Badge variant="outline" className="flex items-center">
-          {getAccountTypeIcon(accountType)} Free
-        </Badge>;
-    }
-  };
 
   if (results.length === 0) {
     return <CommandEmpty>No users or businesses found</CommandEmpty>;
@@ -69,7 +45,19 @@ export const SearchResults = ({ searchResults = [], onSelectContact }: SearchRes
               {user.email}
             </span>
           </div>
-          {getAccountTypeBadge(user.accountType || 'free')}
+          {user.accountType === 'business' ? (
+            <Badge variant="outline" className="bg-blue-50 flex items-center">
+              <Briefcase className="h-3 w-3 mr-1" /> Business
+            </Badge>
+          ) : user.accountType === 'individual' ? (
+            <Badge variant="outline" className="bg-green-50 flex items-center">
+              <User className="h-3 w-3 mr-1" /> Individual
+            </Badge>
+          ) : (
+            <Badge variant="outline" className="flex items-center">
+              <User className="h-3 w-3 mr-1" /> Free
+            </Badge>
+          )}
         </CommandItem>
       ))}
     </>
