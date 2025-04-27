@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -34,7 +33,6 @@ const AddContactDialog: React.FC<AddContactDialogProps> = ({
   
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   
-  // Clear search when dialog closes
   useEffect(() => {
     if (!isOpen) {
       clearSearch();
@@ -144,7 +142,7 @@ const AddContactDialog: React.FC<AddContactDialogProps> = ({
         <div className="flex flex-col gap-4">
           <Command className="rounded-lg border shadow-md">
             <CommandInput 
-              placeholder="Search users or businesses..." 
+              placeholder="Search by name, email, or business name..." 
               value={searchQuery}
               onValueChange={handleSearch}
               className="h-9"
@@ -156,38 +154,37 @@ const AddContactDialog: React.FC<AddContactDialogProps> = ({
                   <div className="flex justify-center p-4">
                     <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                   </div>
+                ) : searchResults.length === 0 ? (
+                  <CommandEmpty>No users or businesses found</CommandEmpty>
                 ) : (
-                  <>
-                    <CommandEmpty>No users or businesses found</CommandEmpty>
-                    <CommandGroup>
-                      {searchResults.map((user) => (
-                        <CommandItem 
-                          key={user.id}
-                          onSelect={() => selectContact(user)}
-                          className="flex items-center gap-2 cursor-pointer"
-                        >
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src={user.avatarUrl || ''} />
-                            <AvatarFallback>
-                              {(user.displayName || user.fullName || 'U').charAt(0)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex flex-col flex-1 min-w-0">
-                            <span className="font-medium">
-                              {user.displayName || user.fullName || 'Unknown User'}
-                            </span>
-                            {user.businessName && (
-                              <span className="text-xs text-slate-600">{user.businessName}</span>
-                            )}
-                            <span className="text-xs text-muted-foreground truncate">
-                              {user.email}
-                            </span>
-                          </div>
-                          {getAccountTypeBadge(user.accountType)}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </>
+                  <CommandGroup>
+                    {searchResults.map((user) => (
+                      <CommandItem 
+                        key={user.id}
+                        onSelect={() => selectContact(user)}
+                        className="flex items-center gap-2 cursor-pointer"
+                      >
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={user.avatarUrl || ''} />
+                          <AvatarFallback>
+                            {(user.displayName || user.fullName || 'U').charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col flex-1 min-w-0">
+                          <span className="font-medium">
+                            {user.displayName || user.fullName || 'Unknown User'}
+                          </span>
+                          {user.businessName && (
+                            <span className="text-xs text-slate-600">{user.businessName}</span>
+                          )}
+                          <span className="text-xs text-muted-foreground truncate">
+                            {user.email}
+                          </span>
+                        </div>
+                        {getAccountTypeBadge(user.accountType)}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
                 )}
               </CommandList>
             )}
