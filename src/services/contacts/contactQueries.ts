@@ -9,7 +9,7 @@ export const getUserContacts = async (userId: string): Promise<UserContact[]> =>
   try {
     console.log('[ContactQueries] Fetching regular contacts for user:', userId);
     
-    // Get user's contacts with accepted status, excluding staff contacts
+    // Get user's contacts with accepted status, excluding staff contacts, in both directions
     const { data: contacts, error } = await supabase
       .from('user_contacts')
       .select(`
@@ -29,7 +29,7 @@ export const getUserContacts = async (userId: string): Promise<UserContact[]> =>
           email
         )
       `)
-      .eq('user_id', userId)
+      .or(`user_id.eq.${userId},contact_id.eq.${userId}`)
       .eq('status', 'accepted')
       .is('staff_relation_id', null); // Only get regular contacts, not staff-related
     
@@ -40,12 +40,17 @@ export const getUserContacts = async (userId: string): Promise<UserContact[]> =>
     
     console.log(`[ContactQueries] Found ${contacts?.length || 0} regular contacts:`, contacts);
     
-    // Transform the data to match our types
+    // Transform the data to match our types, handling both directions
     const userContacts = contacts.map(contact => {
+      // Determine if this contact is from user_id -> contact_id or contact_id -> user_id
+      const isReversed = contact.contact_id === userId;
       const contactData = (contact.profiles || {}) as any;
       
+      // If reversed, we need to use the user_id as the contact's ID
+      const actualContactId = isReversed ? contact.user_id : contact.contact_id;
+      
       const contactProfile = {
-        id: contactData.id || contact.contact_id,
+        id: contactData.id || actualContactId,
         fullName: contactData.full_name || null,
         displayName: contactData.display_name || null,
         avatarUrl: contactData.avatar_url || null,
@@ -57,7 +62,7 @@ export const getUserContacts = async (userId: string): Promise<UserContact[]> =>
       return {
         id: contact.id,
         userId: contact.user_id,
-        contactId: contact.contact_id,
+        contactId: actualContactId,
         status: contact.status as "accepted" | "pending" | "rejected",
         staffRelationId: contact.staff_relation_id,
         created_at: contact.created_at,
