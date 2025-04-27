@@ -1,6 +1,7 @@
 
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 import { WAKTIAIMode, AISettings } from '@/components/ai/personality-switcher/types';
+import { Json } from '@/types/supabase';
 
 export const createDefaultSettings = async (userId: string): Promise<AISettings | null> => {
   try {
@@ -26,14 +27,16 @@ export const createDefaultSettings = async (userId: string): Promise<AISettings 
       }
     };
     
-    // Convert to a type that matches the database schema
+    // Convert role to string for database compatibility
     const dbSettings = {
       ...defaultSettings,
-      role: defaultSettings.role as "general" | "student" | "employee" | "writer" | "business_owner"
+      role: defaultSettings.role,
+      enabled_features: defaultSettings.enabled_features as unknown as Json
     };
     
+    // Using ai_assistant_settings instead of ai_settings
     const { data, error } = await supabase
-      .from('ai_settings')
+      .from('ai_assistant_settings')
       .insert([dbSettings])
       .select()
       .single();

@@ -29,7 +29,6 @@ export const useGlobalChat = () => {
     const match = content.match(imagePattern);
     
     if (match && match[1]) {
-      // Remove the image tag from the content
       const processedContent = content.replace(imagePattern, '');
       return {
         content: processedContent.trim(),
@@ -54,12 +53,12 @@ export const useGlobalChat = () => {
     try {
       console.log('[useGlobalChat] Sending message:', content.substring(0, 30) + (content.length > 30 ? '...' : ''));
       
-      // Add user message to memory
+      // Add user message to memory - ensure all properties match ChatMemoryMessage type
       globalChatMemory.addMessage({
         role: 'user',
         content,
-        mode: currentMode,
-        timestamp: new Date()
+        timestamp: new Date(),
+        mode: currentMode
       });
       
       // Prepare system message with current personality
@@ -88,7 +87,7 @@ export const useGlobalChat = () => {
           content,
           JSON.stringify(recentMessages),
           userContext,
-          currentMode // Pass the current mode to help with content moderation
+          currentMode
         );
         
         if (error) {
@@ -117,13 +116,13 @@ export const useGlobalChat = () => {
           // Process response for embedded images
           const { content: processedContent, imageUrl } = processMessageWithImages(response);
           
-          // Add AI response to memory
+          // Add AI response to memory - ensure all properties match ChatMemoryMessage type
           globalChatMemory.addMessage({
             role: 'assistant',
             content: processedContent,
-            mode: currentMode,
-            imageUrl: imageUrl || generatedImage, // Use either embedded image or separately returned image
-            timestamp: new Date()
+            timestamp: new Date(),
+            imageUrl: imageUrl || generatedImage,
+            mode: currentMode
           });
         } else {
           console.error('[useGlobalChat] Empty response from AI assistant');
@@ -163,7 +162,7 @@ export const useGlobalChat = () => {
     sendMessage,
     isLoading,
     clearMessages,
-    canUseAI: true, // Always allow AI access
+    canUseAI: true,
     sessionId: globalChatMemory.getSessionId()
   };
 };

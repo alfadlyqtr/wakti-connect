@@ -8,6 +8,7 @@ export interface ChatMemoryMessage {
   content: string;
   timestamp?: Date;
   imageUrl?: string;
+  mode?: WAKTIAIMode; // Added mode property
 }
 
 export interface AIPersonality {

@@ -135,14 +135,14 @@ export const RoleContexts: Record<AIAssistantRole, RoleContext> = {
 };
 
 // Adding missing interfaces that are needed for various components
-export type WAKTIAIMode = 'general' | 'student' | 'productivity' | 'creative';
+export type WAKTIAIMode = 'general' | 'student' | 'productivity' | 'employee' | 'writer' | 'business_owner' | 'creative';
 
 // AISettings interface for the AI settings components
 export interface AISettings {
   id?: string;
   user_id: string;
   assistant_name: string;
-  role: AIAssistantRole;
+  role: WAKTIAIMode;
   tone: string;
   response_length: string;
   proactiveness: boolean;
@@ -159,7 +159,7 @@ export interface AIKnowledgeUpload {
   content: string;
   created_at: string;
   updated_at: string;
-  role?: AIAssistantRole;
+  role?: WAKTIAIMode;
 }
 
 // Define AIMode interface for AIModeSwitcher

@@ -1,5 +1,5 @@
 
-import { AISettings, AIKnowledgeUpload, AIAssistantRole } from "@/types/ai-assistant.types";
+import { AISettings, AIKnowledgeUpload } from "@/components/ai/personality-switcher/types";
 
 export interface AISettingsContextType {
   settings: AISettings | null;
@@ -11,7 +11,7 @@ export interface AISettingsContextType {
   canUseAI: boolean;
   error: string | Error | null;
   updateSettings: (newSettings: AISettings) => Promise<boolean>;
-  addKnowledge: (title: string, content: string, role?: AIAssistantRole) => Promise<boolean>;
+  addKnowledge: (title: string, content: string, role?: string) => Promise<boolean>;
   deleteKnowledge: (id: string) => Promise<boolean>;
   createDefaultSettings: () => Promise<void>;
   isCreatingSettings: boolean;

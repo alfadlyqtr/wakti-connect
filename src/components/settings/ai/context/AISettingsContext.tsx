@@ -1,406 +1,282 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { WAKTIAIMode, AISettings, AIKnowledgeUpload } from '@/components/ai/personality-switcher/types';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
+import { AISettings, AIKnowledgeUpload, WAKTIAIMode } from '@/components/ai/personality-switcher/types';
+import { AISettingsContextType } from './AISettingsContext.types';
+import { createDefaultSettings } from './createDefaultSettings';
+import { toast } from '@/components/ui/use-toast';
+import { useAuth } from '@/features/auth/hooks/useAuth';
+import { Json } from '@/types/supabase';
 
-// Define a minimal Json type if we can't import it from Supabase types
-type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
-
-interface AISettingsContextType {
-  settings: AISettings | null;
-  isLoading: boolean;
-  error: Error | null;
-  updateSetting: <K extends keyof AISettings>(key: K, value: AISettings[K]) => Promise<void>;
-  updateFeature: (feature: keyof AISettings['enabled_features'], value: boolean) => Promise<void>;
-  knowledgeUploads: AIKnowledgeUpload[];
-  uploadKnowledge: (file: File, title: string) => Promise<void>;
-  deleteKnowledge: (id: string) => Promise<void>;
-  isUploading: boolean;
-  uploadError: Error | null;
-  
-  // Add missing properties
-  isLoadingSettings: boolean;
-  canUseAI: boolean;
-  createDefaultSettings: () => Promise<void>;
-  isCreatingSettings: boolean;
-  isLoadingKnowledge: boolean;
-  addKnowledge: (file: File, title: string) => Promise<void>;
-  isAddingKnowledge: boolean;
-  updateSettings: (settings: AISettings) => Promise<void>;
-  isUpdatingSettings: boolean;
-}
-
+// Create the context
 const AISettingsContext = createContext<AISettingsContextType | undefined>(undefined);
-
-export const useAISettings = () => {
-  const context = useContext(AISettingsContext);
-  if (context === undefined) {
-    throw new Error('useAISettings must be used within an AISettingsProvider');
-  }
-  return context;
-};
 
 interface AISettingsProviderProps {
   children: React.ReactNode;
 }
 
 export const AISettingsProvider: React.FC<AISettingsProviderProps> = ({ children }) => {
-  const [settings, setSettings] = useState<AISettings | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isLoadingSettings, setIsLoadingSettings] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const [knowledgeUploads, setKnowledgeUploads] = useState<AIKnowledgeUpload[]>([]);
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadError, setUploadError] = useState<Error | null>(null);
-  const [isCreatingSettings, setIsCreatingSettings] = useState(false);
-  const [isLoadingKnowledge, setIsLoadingKnowledge] = useState(false);
-  const [isAddingKnowledge, setIsAddingKnowledge] = useState(false);
-  const [isUpdatingSettings, setIsUpdatingSettings] = useState(false);
-  const [canUseAI, setCanUseAI] = useState(true);
+  const { user } = useAuth();
+  const userId = user?.id;
+  const queryClient = useQueryClient();
+  const [error, setError] = useState<string | Error | null>(null);
 
-  useEffect(() => {
-    const fetchSettings = async () => {
+  // Fetch AI settings
+  const {
+    data: settings,
+    isLoading: isLoadingSettings,
+    error: settingsError,
+  } = useQuery({
+    queryKey: ['ai-settings', userId],
+    queryFn: async () => {
+      if (!userId) return null;
+
       try {
-        setIsLoading(true);
-        setIsLoadingSettings(true);
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session) {
-          setIsLoading(false);
-          setIsLoadingSettings(false);
-          return;
-        }
-        
-        // Changed to use ai_assistant_settings table instead of ai_settings
+        // Using ai_assistant_settings instead of ai_settings
         const { data, error } = await supabase
           .from('ai_assistant_settings')
           .select('*')
-          .eq('user_id', session.user.id)
+          .eq('user_id', userId)
           .single();
+
+        if (error) throw error;
         
-        if (error) {
-          // If settings don't exist, create default settings
-          if (error.code === 'PGRST116') {
-            await createDefaultSettings();
-            return;
-          }
-          throw new Error(error.message);
-        }
-        
-        // Convert database data to AISettings type
-        const settingsData: AISettings = {
-          user_id: data.user_id,
-          assistant_name: data.assistant_name || 'WAKTI Assistant',
-          role: data.role || 'general',
-          tone: data.tone || 'friendly',
-          response_length: data.response_length || 'medium',
-          proactiveness: !!data.proactiveness,
-          suggestion_frequency: data.suggestion_frequency || 'medium',
-          enabled_features: data.enabled_features as AISettings['enabled_features'] || {
-            voice_input: true,
-            voice_output: false,
-            task_detection: true,
-            meeting_scheduling: true,
-            personalized_suggestions: true,
-            tasks: true,
-            events: true,
-            staff: true,
-            analytics: true,
-            messaging: true
-          }
+        // Parse potentially nested JSON
+        const parsedData: AISettings = {
+          ...data,
+          enabled_features: typeof data.enabled_features === 'string' 
+            ? JSON.parse(data.enabled_features) 
+            : data.enabled_features,
+          // Ensure role is cast correctly to WAKTIAIMode
+          role: data.role as WAKTIAIMode
         };
         
-        setSettings(settingsData);
-        await fetchKnowledgeUploads(session.user.id);
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error('Failed to fetch AI settings'));
-      } finally {
-        setIsLoading(false);
-        setIsLoadingSettings(false);
+        return parsedData;
+      } catch (error) {
+        console.error('Error fetching AI settings:', error);
+        setError(error instanceof Error ? error : new Error('Failed to fetch AI settings'));
+        return null;
       }
-    };
-    
-    fetchSettings();
-  }, []);
-  
-  const createDefaultSettings = async () => {
-    try {
-      setIsCreatingSettings(true);
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('No active session');
-      
-      const defaultSettings: AISettings = {
-        user_id: session.user.id,
-        assistant_name: 'WAKTI Assistant',
-        role: 'general', // Make sure this is one of the allowed values
-        tone: 'friendly',
-        response_length: 'medium',
-        proactiveness: true,
-        suggestion_frequency: 'medium',
-        enabled_features: {
-          voice_input: true,
-          voice_output: false,
-          task_detection: true,
-          meeting_scheduling: true,
-          personalized_suggestions: true,
-          tasks: true,
-          events: true,
-          staff: true,
-          analytics: true,
-          messaging: true
-        }
+    },
+    enabled: !!userId,
+  });
+
+  // Fetch knowledge uploads
+  const {
+    data: knowledgeUploads,
+    isLoading: isLoadingKnowledge,
+  } = useQuery({
+    queryKey: ['ai-knowledge', userId],
+    queryFn: async () => {
+      if (!userId) return null;
+
+      try {
+        const { data, error } = await supabase
+          .from('ai_knowledge_uploads')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        return data as AIKnowledgeUpload[];
+      } catch (error) {
+        console.error('Error fetching knowledge uploads:', error);
+        return null;
+      }
+    },
+    enabled: !!userId,
+  });
+
+  // Update settings mutation
+  const updateSettings = useMutation({
+    mutationFn: async (newSettings: AISettings) => {
+      if (!userId) throw new Error('User not authenticated');
+
+      // Convert WAKTIAIMode to string to match the database field type
+      const dbSettings = {
+        ...newSettings,
+        role: newSettings.role as string, // Cast to string for database
       };
-      
-      // Use ai_assistant_settings table for Supabase
-      const { error } = await supabase
-        .from('ai_assistant_settings')
-        .insert([{
-          user_id: defaultSettings.user_id,
-          assistant_name: defaultSettings.assistant_name,
-          role: defaultSettings.role,
-          tone: defaultSettings.tone,
-          response_length: defaultSettings.response_length,
-          proactiveness: defaultSettings.proactiveness,
-          suggestion_frequency: defaultSettings.suggestion_frequency,
-          enabled_features: defaultSettings.enabled_features
-        }]);
-      
-      if (error) throw new Error(error.message);
-      
-      setSettings(defaultSettings);
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to create default AI settings'));
-    } finally {
-      setIsCreatingSettings(false);
-    }
-  };
-  
-  const fetchKnowledgeUploads = async (userId: string) => {
-    try {
-      setIsLoadingKnowledge(true);
+
+      // Using ai_assistant_settings instead of ai_settings
       const { data, error } = await supabase
-        .from('ai_knowledge_uploads')
-        .select('*')
-        .eq('user_id', userId);
-      
-      if (error) throw new Error(error.message);
-      
-      // Transform the data to match our expected AIKnowledgeUpload type
-      const transformedData: AIKnowledgeUpload[] = data.map((item: any) => ({
-        id: item.id,
-        user_id: item.user_id,
-        title: item.title || 'Untitled',
-        content: item.content,
-        created_at: item.created_at,
-        updated_at: item.updated_at,
-        name: item.title || 'Untitled', 
-        type: item.type || 'document',
-        size: item.content ? item.content.length : 0,
-        upload_date: item.created_at,
-        status: 'complete' as const,
-        role: item.role || 'general'
-      }));
-      
-      setKnowledgeUploads(transformedData);
-    } catch (err) {
-      console.error('Error fetching knowledge uploads:', err);
-    } finally {
-      setIsLoadingKnowledge(false);
-    }
-  };
-  
-  const updateSettings = async (updatedSettings: AISettings) => {
-    if (!settings) return;
-    
-    try {
-      setIsUpdatingSettings(true);
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('No active session');
-      
-      // Update the settings in Supabase
-      const { error } = await supabase
         .from('ai_assistant_settings')
-        .update({
-          assistant_name: updatedSettings.assistant_name,
-          role: updatedSettings.role,
-          tone: updatedSettings.tone,
-          response_length: updatedSettings.response_length,
-          proactiveness: updatedSettings.proactiveness,
-          suggestion_frequency: updatedSettings.suggestion_frequency,
-          enabled_features: updatedSettings.enabled_features
-        })
-        .eq('user_id', session.user.id);
-      
-      if (error) throw new Error(error.message);
-      
-      setSettings(updatedSettings);
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to update AI settings'));
-    } finally {
-      setIsUpdatingSettings(false);
-    }
-  };
-  
-  const updateSetting = async <K extends keyof AISettings>(key: K, value: AISettings[K]) => {
-    if (!settings) return;
-    
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('No active session');
-      
-      // Use ai_assistant_settings table for Supabase
-      const { error } = await supabase
-        .from('ai_assistant_settings')
-        .update({ [key]: value })
-        .eq('user_id', session.user.id);
-      
-      if (error) throw new Error(error.message);
-      
-      setSettings(prev => {
-        if (!prev) return null;
-        return { ...prev, [key]: value };
-      });
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error(`Failed to update ${String(key)}`));
-    }
-  };
-  
-  const updateFeature = async (feature: keyof AISettings['enabled_features'], value: boolean) => {
-    if (!settings) return;
-    
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('No active session');
-      
-      const updatedFeatures = {
-        ...settings.enabled_features,
-        [feature]: value
-      };
-      
-      // Use ai_assistant_settings table for Supabase
-      const { error } = await supabase
-        .from('ai_assistant_settings')
-        .update({ enabled_features: updatedFeatures })
-        .eq('user_id', session.user.id);
-      
-      if (error) throw new Error(error.message);
-      
-      setSettings(prev => {
-        if (!prev) return null;
-        return {
-          ...prev,
-          enabled_features: {
-            ...prev.enabled_features,
-            [feature]: value
-          }
-        };
-      });
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error(`Failed to update feature ${feature}`));
-    }
-  };
-  
-  const uploadKnowledge = async (file: File, title: string) => {
-    setIsUploading(true);
-    setUploadError(null);
-    setIsAddingKnowledge(true);
-    
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('No active session');
-      
-      const reader = new FileReader();
-      
-      const fileContent = await new Promise<string>((resolve, reject) => {
-        reader.onload = (e) => resolve(e.target?.result as string);
-        reader.onerror = () => reject(new Error('Failed to read file'));
-        reader.readAsText(file);
-      });
-      
-      // Use ai_knowledge_uploads table for Supabase
-      const { data, error } = await supabase
-        .from('ai_knowledge_uploads')
-        .insert({
-          user_id: session.user.id,
-          title,
-          content: fileContent,
-          type: file.type,
-          size: file.size
+        .upsert({
+          user_id: userId,
+          assistant_name: dbSettings.assistant_name,
+          role: dbSettings.role,
+          tone: dbSettings.tone,
+          response_length: dbSettings.response_length,
+          proactiveness: dbSettings.proactiveness,
+          suggestion_frequency: dbSettings.suggestion_frequency,
+          enabled_features: dbSettings.enabled_features as Json,
         })
         .select()
         .single();
+
+      if (error) throw error;
+      return data as AISettings;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ai-settings', userId] });
+      toast({
+        title: 'Settings Updated',
+        description: 'Your AI assistant settings have been updated.',
+      });
+    },
+    onError: (error) => {
+      console.error('Error updating settings:', error);
+      toast({
+        title: 'Update Failed',
+        description: 'Failed to update AI settings. Please try again.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Add knowledge mutation
+  const addKnowledge = useMutation({
+    mutationFn: async (data: { title: string; content: string; role?: string }) => {
+      if (!userId) throw new Error('User not authenticated');
+
+      const { title, content, role } = data;
       
-      if (error) throw new Error(error.message);
-      
-      // Convert the returned data to match our AIKnowledgeUpload type
-      const newUpload: AIKnowledgeUpload = {
-        id: data.id,
-        user_id: data.user_id,
-        title: data.title,
-        content: data.content,
-        created_at: data.created_at,
-        updated_at: data.updated_at,
-        name: data.title,
-        type: file.type || 'document',
-        size: file.size,
-        upload_date: data.created_at,
-        status: 'complete' as const,
-        role: 'general'
-      };
-      
-      setKnowledgeUploads(prev => [...prev, newUpload]);
-    } catch (err) {
-      setUploadError(err instanceof Error ? err : new Error('Failed to upload knowledge document'));
-    } finally {
-      setIsUploading(false);
-      setIsAddingKnowledge(false);
-    }
-  };
-  
-  // Alias for uploadKnowledge to match the interface
-  const addKnowledge = uploadKnowledge;
-  
-  const deleteKnowledge = async (id: string) => {
-    try {
-      // Use ai_knowledge_uploads table for Supabase
+      const { data: uploadData, error } = await supabase
+        .from('ai_knowledge_uploads')
+        .insert({
+          title,
+          content,
+          user_id: userId,
+          role
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return uploadData;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ai-knowledge', userId] });
+      toast({
+        title: 'Knowledge Added',
+        description: 'Your knowledge has been successfully added.',
+      });
+    },
+    onError: (error) => {
+      console.error('Error adding knowledge:', error);
+      toast({
+        title: 'Upload Failed',
+        description: 'Failed to add knowledge. Please try again.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Delete knowledge mutation
+  const deleteKnowledge = useMutation({
+    mutationFn: async (id: string) => {
+      if (!userId) throw new Error('User not authenticated');
+
       const { error } = await supabase
         .from('ai_knowledge_uploads')
         .delete()
-        .eq('id', id);
-      
-      if (error) throw new Error(error.message);
-      
-      setKnowledgeUploads(prev => prev.filter(upload => upload.id !== id));
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to delete knowledge document'));
+        .eq('id', id)
+        .eq('user_id', userId);
+
+      if (error) throw error;
+      return true;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ai-knowledge', userId] });
+      toast({
+        title: 'Knowledge Deleted',
+        description: 'Your knowledge has been successfully deleted.',
+      });
+    },
+    onError: (error) => {
+      console.error('Error deleting knowledge:', error);
+      toast({
+        title: 'Deletion Failed',
+        description: 'Failed to delete knowledge. Please try again.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Create default settings mutation
+  const createSettingsMutation = useMutation({
+    mutationFn: async () => {
+      if (!userId) throw new Error('User not authenticated');
+      return await createDefaultSettings(userId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ai-settings', userId] });
+      toast({
+        title: 'Default Settings Created',
+        description: 'Default AI assistant settings have been created.',
+      });
+    },
+    onError: (error) => {
+      console.error('Error creating default settings:', error);
+      setError(error instanceof Error ? error : new Error('Failed to create default settings'));
+      toast({
+        title: 'Setup Failed',
+        description: 'Failed to create default AI settings. Please try again.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Update error when settingsError changes
+  useEffect(() => {
+    if (settingsError) {
+      setError(settingsError instanceof Error ? settingsError : new Error(String(settingsError)));
     }
-  };
-  
-  return (
-    <AISettingsContext.Provider
-      value={{
+  }, [settingsError]);
+
+  // Determine if user can use AI
+  const canUseAI = !!userId;
+
+  // For debugging
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('AI Settings Context State:', {
         settings,
-        isLoading,
-        error,
-        updateSetting,
-        updateFeature,
-        knowledgeUploads,
-        uploadKnowledge,
-        deleteKnowledge,
-        isUploading,
-        uploadError,
         isLoadingSettings,
-        canUseAI,
-        createDefaultSettings,
-        isCreatingSettings,
-        isLoadingKnowledge,
-        addKnowledge,
-        isAddingKnowledge,
-        updateSettings,
-        isUpdatingSettings,
-      }}
-    >
+        error,
+        canUseAI
+      });
+    }
+  }, [settings, isLoadingSettings, error, canUseAI]);
+
+  const contextValue: AISettingsContextType = {
+    settings,
+    isLoadingSettings,
+    isUpdatingSettings: updateSettings.isPending,
+    isAddingKnowledge: addKnowledge.isPending,
+    knowledgeUploads,
+    isLoadingKnowledge,
+    canUseAI,
+    error,
+    updateSettings: updateSettings.mutate,
+    addKnowledge: addKnowledge.mutate,
+    deleteKnowledge: deleteKnowledge.mutate,
+    createDefaultSettings: createSettingsMutation.mutate,
+    isCreatingSettings: createSettingsMutation.isPending,
+  };
+
+  return (
+    <AISettingsContext.Provider value={contextValue}>
       {children}
     </AISettingsContext.Provider>
   );
+};
+
+export const useAISettings = (): AISettingsContextType => {
+  const context = useContext(AISettingsContext);
+  if (!context) {
+    throw new Error('useAISettings must be used within an AISettingsProvider');
+  }
+  return context;
 };

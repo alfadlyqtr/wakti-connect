@@ -1,7 +1,6 @@
 
 import { v4 as uuidv4 } from 'uuid';
-import { ChatMemoryMessage } from '@/components/ai/personality-switcher/types';
-import { WAKTIAIMode } from '@/types/ai-assistant.types';
+import { ChatMemoryMessage, WAKTIAIMode } from '@/components/ai/personality-switcher/types';
 
 type SubscriptionCallback = (messages: ChatMemoryMessage[]) => void;
 
@@ -10,7 +9,10 @@ class GlobalChatMemory {
     'general': [],
     'student': [],
     'productivity': [],
-    'creative': []
+    'creative': [],
+    'employee': [],
+    'writer': [],
+    'business_owner': []
   };
   private subscribers: SubscriptionCallback[] = [];
   private sessionId: string;
@@ -24,13 +26,14 @@ class GlobalChatMemory {
   }
 
   addMessage(message: ChatMemoryMessage) {
-    const mode = message.mode || 'general';
+    // Get mode from message or default to general
+    const mode = message.mode || 'general' as WAKTIAIMode;
     
     if (!this.messages[mode]) {
       this.messages[mode] = [];
     }
     
-    // Ensure message has an ID
+    // Ensure message has an ID and timestamp
     const messageWithId = {
       ...message,
       id: message.id || uuidv4(),
