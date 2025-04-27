@@ -7,7 +7,7 @@ import { UserContact } from '@/types/invitation.types';
  */
 export const getUserContacts = async (userId: string): Promise<UserContact[]> => {
   try {
-    console.log('Fetching contacts for user:', userId);
+    console.log('[ContactQueries] Fetching contacts for user:', userId);
     
     // Get all user's contacts with accepted status
     const { data: contacts, error } = await supabase
@@ -33,16 +33,20 @@ export const getUserContacts = async (userId: string): Promise<UserContact[]> =>
       .eq('status', 'accepted');
     
     if (error) {
-      console.error('Error fetching user contacts:', error);
+      console.error('[ContactQueries] Error fetching user contacts:', error);
       return [];
     }
     
-    console.log(`Found ${contacts?.length || 0} contacts:`, contacts);
+    console.log(`[ContactQueries] Raw data from database: ${contacts?.length || 0} contacts:`, contacts);
     
     // Transform the data to match our types
     const userContacts = contacts.map(contact => {
+      // Log the raw contact data to see what's available
+      console.log('[ContactQueries] Processing contact:', contact);
+      
       // Explicitly cast contact.profiles to any to avoid TypeScript errors
       const contactData = (contact.profiles || {}) as any;
+      console.log('[ContactQueries] Contact profile data:', contactData);
       
       // Make sure contact exists and has necessary properties
       const contactProfile = {
@@ -66,10 +70,17 @@ export const getUserContacts = async (userId: string): Promise<UserContact[]> =>
       };
     });
     
-    console.log('Transformed contacts:', userContacts);
+    console.log('[ContactQueries] Transformed contacts:', userContacts);
+    
+    // Check if we lost any contacts during transformation
+    if (contacts.length !== userContacts.length) {
+      console.warn('[ContactQueries] Contact count mismatch after transformation!', 
+        `Raw: ${contacts.length}, Transformed: ${userContacts.length}`);
+    }
+    
     return userContacts;
   } catch (error) {
-    console.error('Error in getUserContacts:', error);
+    console.error('[ContactQueries] Error in getUserContacts:', error);
     return [];
   }
 };
@@ -79,6 +90,8 @@ export const getUserContacts = async (userId: string): Promise<UserContact[]> =>
  */
 export const getContactRequests = async (userId: string): Promise<UserContact[]> => {
   try {
+    console.log('[ContactQueries] Fetching contact requests for user:', userId);
+    
     // Get all users who have this user as a contact with pending status
     const { data: contacts, error } = await supabase
       .from('user_contacts')
@@ -103,9 +116,11 @@ export const getContactRequests = async (userId: string): Promise<UserContact[]>
       .eq('status', 'pending');
     
     if (error) {
-      console.error('Error fetching contact requests:', error);
+      console.error('[ContactQueries] Error fetching contact requests:', error);
       return [];
     }
+    
+    console.log(`[ContactQueries] Raw pending requests: ${contacts?.length || 0}`);
     
     // Transform the data to match our types
     const userContacts = contacts.map(contact => {
@@ -134,9 +149,10 @@ export const getContactRequests = async (userId: string): Promise<UserContact[]>
       };
     });
     
+    console.log('[ContactQueries] Transformed pending requests:', userContacts);
     return userContacts;
   } catch (error) {
-    console.error('Error in getContactRequests:', error);
+    console.error('[ContactQueries] Error in getContactRequests:', error);
     return [];
   }
 };

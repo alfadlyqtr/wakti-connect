@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { UserContact } from "@/types/invitation.types";
@@ -31,13 +30,17 @@ export const useContacts = () => {
     const syncContacts = async () => {
       setIsSyncingContacts(true);
       try {
+        console.log("[useContacts] Starting staff-business contacts sync");
         const result = await syncStaffBusinessContacts();
         setSyncResult(result);
+        console.log("[useContacts] Sync result:", result);
+        
         if (result.success) {
+          console.log("[useContacts] Sync successful, invalidating contacts query");
           queryClient.invalidateQueries({ queryKey: ['contacts'] });
         }
       } catch (error) {
-        console.error("Error syncing staff-business contacts:", error);
+        console.error("[useContacts] Error syncing staff-business contacts:", error);
         setSyncResult({
           success: false,
           message: error.message || "Failed to sync contacts"
@@ -63,16 +66,33 @@ export const useContacts = () => {
 
   async function fetchContacts() {
     try {
+      console.log("[useContacts] Starting fetchContacts");
       const { data } = await supabase.auth.getSession();
       
       if (!data.session?.user?.id) {
+        console.error("[useContacts] No authenticated user found");
         throw new Error('Not authenticated');
       }
       
-      console.log('Fetching contacts for authenticated user:', data.session.user.id);
-      return getUserContacts(data.session.user.id);
+      console.log('[useContacts] Fetching contacts for authenticated user:', data.session.user.id);
+      const contactsData = await getUserContacts(data.session.user.id);
+      console.log(`[useContacts] Retrieved ${contactsData.length} contacts:`, contactsData);
+      
+      // Check contact statuses
+      const acceptedContacts = contactsData.filter(contact => contact.status === 'accepted');
+      console.log(`[useContacts] Accepted contacts: ${acceptedContacts.length}/${contactsData.length}`);
+      
+      // Log contact profiles to see if they're properly populated
+      contactsData.forEach((contact, index) => {
+        console.log(`[useContacts] Contact ${index + 1}: id=${contact.id}, status=${contact.status}`, 
+          contact.contactProfile ? 
+          `profile=${contact.contactProfile.displayName || contact.contactProfile.fullName || 'Unknown'}` : 
+          'No profile data');
+      });
+      
+      return contactsData;
     } catch (error) {
-      console.error('Error in fetchContacts:', error);
+      console.error('[useContacts] Error in fetchContacts:', error);
       throw error;
     }
   }
@@ -89,15 +109,21 @@ export const useContacts = () => {
 
   async function fetchPendingRequests() {
     try {
+      console.log("[useContacts] Starting fetchPendingRequests");
       const { data } = await supabase.auth.getSession();
       
       if (!data.session?.user?.id) {
+        console.error("[useContacts] No authenticated user found for pending requests");
         throw new Error('Not authenticated');
       }
       
-      return getContactRequests(data.session.user.id);
+      console.log('[useContacts] Fetching pending requests for user:', data.session.user.id);
+      const pendingData = await getContactRequests(data.session.user.id);
+      console.log(`[useContacts] Retrieved ${pendingData.length} pending requests`);
+      
+      return pendingData;
     } catch (error) {
-      console.error('Error in fetchPendingRequests:', error);
+      console.error('[useContacts] Error in fetchPendingRequests:', error);
       throw error;
     }
   }
@@ -108,8 +134,9 @@ export const useContacts = () => {
       try {
         const setting = await fetchAutoApproveSetting();
         setAutoApprove(setting);
+        console.log("[useContacts] Auto-approve setting:", setting);
       } catch (error) {
-        console.error("Error fetching auto approve setting:", error);
+        console.error("[useContacts] Error fetching auto approve setting:", error);
       }
     };
     
@@ -122,8 +149,9 @@ export const useContacts = () => {
       try {
         const setting = await fetchAutoAddStaffSetting();
         setAutoAddStaff(setting);
+        console.log("[useContacts] Auto-add staff setting:", setting);
       } catch (error) {
-        console.error("Error fetching auto add staff setting:", error);
+        console.error("[useContacts] Error fetching auto add staff setting:", error);
       }
     };
     
@@ -135,9 +163,12 @@ export const useContacts = () => {
     setIsSyncingContacts(true);
     setSyncResult(null);
     try {
+      console.log("[useContacts] Starting manual refresh of contacts");
       const result = await syncStaffBusinessContacts();
       setSyncResult(result);
+      console.log("[useContacts] Manual sync result:", result);
       
+      console.log("[useContacts] Refetching contacts and pending requests");
       await refetchContacts();
       await refetchPendingRequests();
       
@@ -147,7 +178,7 @@ export const useContacts = () => {
         variant: result.success ? "default" : "destructive"
       });
     } catch (error) {
-      console.error("Error refreshing contacts:", error);
+      console.error("[useContacts] Error refreshing contacts:", error);
       setSyncResult({
         success: false,
         message: error.message || "Failed to refresh contacts"
