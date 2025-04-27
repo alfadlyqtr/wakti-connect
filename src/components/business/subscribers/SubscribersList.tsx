@@ -9,17 +9,29 @@ interface SubscribersListProps {
   businessId: string;
 }
 
-const SubscribersList = ({ businessId }: { businessId: string }) => {
+const SubscribersList = ({ businessId }: SubscribersListProps) => {
   const { 
     subscribers, 
-    isLoading, 
-    subscriberCount 
+    subscriberCount,
+    isLoading,
+    error 
   } = useBusinessSubscribers(businessId);
 
   if (isLoading) {
     return (
       <div className="flex justify-center py-8">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12 border rounded-lg">
+        <p className="text-destructive">Error loading subscribers</p>
+        <p className="text-sm text-muted-foreground mt-2">
+          Please try again later
+        </p>
       </div>
     );
   }
@@ -33,38 +45,35 @@ const SubscribersList = ({ businessId }: { businessId: string }) => {
         </span>
       </div>
 
-      {(subscribers && subscribers.length > 0) ? (
+      {subscribers.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {subscribers.map((subscriber) => {
-            const profile = subscriber.profile || {};
+            // Fallback for display name
+            const displayName = 
+              subscriber.profile?.display_name || 
+              subscriber.profile?.full_name || 
+              "Subscriber";
             
-            const avatarUrl = typeof profile === 'object' && 'avatar_url' in profile 
-              ? String(profile.avatar_url || '') 
-              : '';
-              
-            const displayName = typeof profile === 'object' && 'display_name' in profile 
-              ? String(profile.display_name || '') 
-              : '';
-              
-            const fullName = typeof profile === 'object' && 'full_name' in profile 
-              ? String(profile.full_name || '') 
-              : '';
-              
-            const nameInitials = (displayName || fullName || "User").slice(0, 2).toUpperCase();
-            const subscriberName = displayName || fullName || "User";
+            // Get initials for avatar fallback
+            const nameInitials = displayName
+              .split(" ")
+              .map(n => n[0])
+              .join("")
+              .toUpperCase()
+              .substring(0, 2);
             
             return (
               <Card key={subscriber.id} className="overflow-hidden">
                 <CardContent className="p-4">
                   <div className="flex items-center space-x-4">
                     <Avatar>
-                      <AvatarImage src={avatarUrl} />
+                      <AvatarImage src={subscriber.profile?.avatar_url || ''} />
                       <AvatarFallback>
                         {nameInitials}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="font-medium">{subscriberName}</p>
+                      <p className="font-medium">{displayName}</p>
                       <p className="text-sm text-muted-foreground">
                         Subscribed: {new Date(subscriber.created_at).toLocaleDateString()}
                       </p>
