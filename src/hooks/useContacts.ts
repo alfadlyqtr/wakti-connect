@@ -1,6 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/components/ui/use-toast';
+import { 
+  getUserContacts, 
+  getContactRequests, 
+  getStaffContacts,
+  sendContactRequest as apiSendContactRequest,
+  respondToContactRequest as apiRespondToContactRequest,
+  deleteContact as apiDeleteContact,
+  fetchAutoApproveSetting,
+  updateAutoApproveContacts
+} from '@/services/contacts';
 import { supabase } from '@/integrations/supabase/client';
 import { UserContact, ContactRequestStatus } from '@/types/invitation.types';
 
@@ -109,7 +119,6 @@ export const useContacts = () => {
       }
 
       const outgoingRequests = outgoingData.map(request => {
-        // Safely access profiles data with proper type checking
         const profiles = request.profiles || {};
         
         return {
@@ -128,7 +137,7 @@ export const useContacts = () => {
             businessName: typeof profiles === 'object' && 'business_name' in profiles ? (profiles.business_name as string | null) : null,
             email: typeof profiles === 'object' && 'email' in profiles ? (profiles.email as string | null) : null
           }
-        } as UserContact;  // Explicitly cast to UserContact type
+        } as UserContact;
       });
 
       console.log("[useContacts] Fetched requests:", {
