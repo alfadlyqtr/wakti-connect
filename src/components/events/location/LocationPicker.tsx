@@ -78,7 +78,11 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
     
     try {
       const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject);
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        });
       });
 
       const { latitude, longitude } = position.coords;
@@ -86,13 +90,14 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
       // Make sure Google Maps API is loaded
       await waitForGoogleMapsToLoad();
       
-      // Now use the Geocoding API to get the address
+      // Use the Geocoding API to get a human-readable address
       const geocoder = new window.google.maps.Geocoder();
       
       geocoder.geocode(
         { location: { lat: latitude, lng: longitude } },
         (results, status) => {
           if (status === 'OK' && results && results[0]) {
+            // Get the most accurate address component
             const address = results[0].formatted_address;
             onChange(address, latitude, longitude);
           } else {
