@@ -9,7 +9,7 @@ import { generateGoogleMapsUrl } from '@/config/maps';
 
 interface LocationPickerProps {
   value: string;
-  onChange: (value: string, lat?: number, lng?: number) => void;
+  onChange: (displayValue: string, mapsUrl?: string, lat?: number, lng?: number) => void;
   className?: string;
   placeholder?: string;
 }
@@ -34,10 +34,16 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
     
     // Check if it's a Google Maps URL
     if (newValue.includes('google.com/maps')) {
-      onChange(newValue, undefined, undefined);
+      onChange(newValue, newValue);
     } else {
       onChange(newValue);
     }
+  };
+
+  const formatLocationDisplay = (lat: number, lng: number): string => {
+    const truncatedLat = lat.toFixed(3);
+    const truncatedLng = lng.toFixed(3);
+    return `Current Location (${truncatedLat}, ${truncatedLng})`;
   };
 
   const handleGetCurrentLocation = async () => {
@@ -63,12 +69,12 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
 
       const { latitude, longitude } = position.coords;
       
-      // Create location string with coordinates
-      const locationString = `Location (${latitude.toFixed(6)}, ${longitude.toFixed(6)})`;
+      // Create a user-friendly display text
+      const displayLocation = formatLocationDisplay(latitude, longitude);
       const mapsUrl = generateGoogleMapsUrl(`${latitude},${longitude}`);
       
-      setInputValue(mapsUrl);
-      onChange(mapsUrl, latitude, longitude);
+      setInputValue(displayLocation);
+      onChange(displayLocation, mapsUrl, latitude, longitude);
       
     } catch (error: any) {
       console.error('Error getting location:', error);

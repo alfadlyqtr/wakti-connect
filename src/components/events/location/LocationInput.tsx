@@ -5,7 +5,7 @@ import LocationPicker from './LocationPicker';
 
 interface LocationInputProps {
   location: string;
-  onLocationChange: (value: string, lat?: number, lng?: number) => void;
+  onLocationChange: (displayLocation: string, mapsUrl?: string, lat?: number, lng?: number) => void;
 }
 
 const LocationInput: React.FC<LocationInputProps> = ({
@@ -23,7 +23,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
             placeholder="Enter a location or use your current location"
           />
           <p className="text-xs text-muted-foreground mt-1">
-            Enter an address manually or use your current location
+            Enter a location manually, use your current location, or paste a Google Maps link
           </p>
         </div>
       </div>
