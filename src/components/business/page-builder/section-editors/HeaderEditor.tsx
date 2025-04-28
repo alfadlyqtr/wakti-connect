@@ -52,7 +52,7 @@ const HeaderEditor: React.FC<EditorProps> = ({ contentData, handleInputChange })
       <SectionStyleEditor 
         contentData={contentData}
         handleInputChange={handleInputChange}
-        handleStyleChange={handleStyleChange}
+        handleStyleChange={(name, value) => handleStyleChange(name, value)}
       />
     </>
   );

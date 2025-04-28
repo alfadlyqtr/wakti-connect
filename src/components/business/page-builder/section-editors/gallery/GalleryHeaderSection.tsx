@@ -13,25 +13,17 @@ const GalleryHeaderSection: React.FC<EditorProps> = ({
 }) => {
   // Helper function to handle select changes
   const handleSelectChange = (name: string, value: string) => {
-    // Create a synthetic event to update the contentData
-    handleInputChange({
-      target: {
-        name,
-        value
-      }
-    } as React.ChangeEvent<HTMLInputElement>);
+    handleInputChange(name, value);
   };
   
   // Helper function to handle toggle changes
   const handleToggleChange = (name: string, checked: boolean) => {
-    // Create a synthetic event to update the contentData
-    // Using as unknown first to avoid type errors
-    handleInputChange({
-      target: {
-        name,
-        value: checked
-      }
-    } as unknown as React.ChangeEvent<HTMLInputElement>);
+    handleInputChange(name, checked);
+  };
+  
+  // Adapter for handling standard input change events
+  const handleStandardInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    handleInputChange(e.target.name, e.target.value);
   };
   
   return (
@@ -42,7 +34,7 @@ const GalleryHeaderSection: React.FC<EditorProps> = ({
           id="title"
           name="title"
           value={contentData.title || "Gallery"}
-          onChange={handleInputChange}
+          onChange={handleStandardInputChange}
           placeholder="Enter gallery title"
         />
       </div>
@@ -53,7 +45,7 @@ const GalleryHeaderSection: React.FC<EditorProps> = ({
           id="description"
           name="description"
           value={contentData.description || "Take a look at our work"}
-          onChange={handleInputChange}
+          onChange={handleStandardInputChange}
           placeholder="Enter gallery description"
           rows={2}
         />

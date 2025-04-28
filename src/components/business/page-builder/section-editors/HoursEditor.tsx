@@ -37,14 +37,7 @@ const HoursEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }) 
       }
     };
     
-    const syntheticEvent = {
-      target: {
-        name: 'hours',
-        value: updatedHours
-      }
-    } as React.ChangeEvent<HTMLInputElement>;
-    
-    handleInputChange(syntheticEvent);
+    handleInputChange('hours', updatedHours);
   };
   
   const handleClosedToggle = (day: string, closed: boolean) => {
@@ -56,39 +49,18 @@ const HoursEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }) 
       }
     };
     
-    const syntheticEvent = {
-      target: {
-        name: 'hours',
-        value: updatedHours
-      }
-    } as React.ChangeEvent<HTMLInputElement>;
-    
-    handleInputChange(syntheticEvent);
+    handleInputChange('hours', updatedHours);
   };
   
   const applyTemplate = (templateContent: any) => {
     // Apply template hours to the current hours
     if (templateContent.hours) {
-      const syntheticEvent = {
-        target: {
-          name: 'hours',
-          value: templateContent.hours
-        }
-      } as React.ChangeEvent<HTMLInputElement>;
-      
-      handleInputChange(syntheticEvent);
+      handleInputChange('hours', templateContent.hours);
     }
     
     // Apply template title if present
     if (templateContent.title) {
-      const syntheticEvent = {
-        target: {
-          name: 'title',
-          value: templateContent.title
-        }
-      } as React.ChangeEvent<HTMLInputElement>;
-      
-      handleInputChange(syntheticEvent);
+      handleInputChange('title', templateContent.title);
     }
   };
   
@@ -115,14 +87,12 @@ const HoursEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }) 
       }
     };
     
-    const syntheticEvent = {
-      target: {
-        name: 'hours',
-        value: updatedHours
-      }
-    } as React.ChangeEvent<HTMLInputElement>;
-    
-    handleInputChange(syntheticEvent);
+    handleInputChange('hours', updatedHours);
+  };
+  
+  // Adapter for handling standard input change events
+  const handleStandardInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    handleInputChange(e.target.name, e.target.value);
   };
   
   return (
@@ -133,7 +103,7 @@ const HoursEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }) 
           id="title"
           name="title"
           value={contentData.title || "Business Hours"}
-          onChange={handleInputChange}
+          onChange={handleStandardInputChange}
           placeholder="Business Hours"
         />
       </div>
@@ -229,14 +199,7 @@ const HoursEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }) 
             id="showLocation"
             checked={contentData.showLocation}
             onCheckedChange={(checked) => {
-              const syntheticEvent = {
-                target: {
-                  name: 'showLocation',
-                  value: checked
-                }
-              } as React.ChangeEvent<HTMLInputElement>;
-              
-              handleInputChange(syntheticEvent);
+              handleInputChange('showLocation', checked);
             }}
           />
           <Label htmlFor="showLocation">Show Location</Label>
@@ -249,7 +212,7 @@ const HoursEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }) 
               id="location"
               name="location"
               value={contentData.location || ""}
-              onChange={handleInputChange}
+              onChange={handleStandardInputChange}
               placeholder="123 Business Street, City, Country"
             />
           </div>

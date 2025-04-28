@@ -85,7 +85,7 @@ const GalleryTemplateSection: React.FC<EditorProps> = ({
   
   // Apply a template
   const handleSelectTemplate = (template: GalleryLayoutTemplate) => {
-    // Create a synthetic event to update the content data
+    // Create changes object to update the content data
     const changes = {
       layout: template.layout,
       columns: template.columns,
@@ -96,12 +96,7 @@ const GalleryTemplateSection: React.FC<EditorProps> = ({
     // Update each property
     Object.entries(changes).forEach(([key, value]) => {
       if (value !== undefined) {
-        handleInputChange({
-          target: {
-            name: key,
-            value: value
-          }
-        } as unknown as React.ChangeEvent<HTMLInputElement>);
+        handleInputChange(key, value);
       }
     });
   };
