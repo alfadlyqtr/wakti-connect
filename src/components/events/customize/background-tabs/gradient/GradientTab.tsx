@@ -13,7 +13,14 @@ export const GradientTab: React.FC<GradientTabProps> = ({
 }) => {
   return (
     <div className="space-y-4">
-      <GradientGenerator />
+      <GradientGenerator
+        value={value}
+        onChange={onChange}
+        angle={angle}
+        direction={direction}
+        onAngleChange={onAngleChange}
+        onDirectionChange={onDirectionChange}
+      />
     </div>
   );
 };
