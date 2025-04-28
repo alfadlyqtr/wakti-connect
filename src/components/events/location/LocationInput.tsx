@@ -23,7 +23,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
             placeholder="Search for a location or place"
           />
           <p className="text-xs text-muted-foreground mt-1">
-            Search for a location or use your current location
+            Enter an address or use your current location
           </p>
         </div>
       </div>

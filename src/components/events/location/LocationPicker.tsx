@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Search, Navigation } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { waitForGoogleMapsToLoad } from '@/utils/googleMapsLoader';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { GOOGLE_MAPS_API_KEY } from '@/config/maps';
 
 interface LocationPickerProps {
@@ -32,7 +33,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
         if (!inputRef.current) return;
 
         const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
-          fields: ['formatted_address', 'geometry', 'name']
+          fields: ['formatted_address', 'geometry', 'name', 'address_components']
         });
 
         autocomplete.addListener('place_changed', () => {
@@ -86,29 +87,52 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
       });
 
       const { latitude, longitude } = position.coords;
-      
+
       // Make sure Google Maps API is loaded
       await waitForGoogleMapsToLoad();
       
       // Use the Geocoding API to get a human-readable address
       const geocoder = new window.google.maps.Geocoder();
       
-      geocoder.geocode(
-        { location: { lat: latitude, lng: longitude } },
-        (results, status) => {
-          if (status === 'OK' && results && results[0]) {
-            // Get the most accurate address component
-            const address = results[0].formatted_address;
-            onChange(address, latitude, longitude);
-          } else {
-            // If geocoding fails, just use coordinates as fallback
-            const fallbackAddress = `Location (${latitude.toFixed(6)}, ${longitude.toFixed(6)})`;
-            onChange(fallbackAddress, latitude, longitude);
-            console.warn(`Geocoding failed with status: ${status}`);
-          }
-          setIsSearching(false);
+      const handleGeocodeResult = (results: google.maps.GeocoderResult[] | null, status: google.maps.GeocoderStatus) => {
+        if (status === 'OK' && results && results[0]) {
+          // Get the most detailed address possible
+          const address = results[0].formatted_address;
+          onChange(address, latitude, longitude);
+        } else {
+          console.warn(`Geocoding failed with status: ${status}`);
+          toast({
+            title: "Location Found",
+            description: "Could not get exact address, please try searching manually",
+            variant: "destructive"
+          });
         }
-      );
+        setIsSearching(false);
+      };
+
+      // Attempt to geocode with multiple retries
+      let retryCount = 0;
+      const maxRetries = 3;
+
+      const attemptGeocode = () => {
+        geocoder.geocode(
+          { location: { lat: latitude, lng: longitude } },
+          (results, status) => {
+            if (status === 'OK' && results && results[0]) {
+              handleGeocodeResult(results, status);
+            } else if (retryCount < maxRetries) {
+              retryCount++;
+              console.log(`Geocoding attempt ${retryCount} failed, retrying...`);
+              setTimeout(attemptGeocode, 1000);
+            } else {
+              handleGeocodeResult(results, status);
+            }
+          }
+        );
+      };
+
+      attemptGeocode();
+
     } catch (error: any) {
       console.error('Error getting location:', error);
       toast({
@@ -142,8 +166,17 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
         onClick={handleGetCurrentLocation}
         disabled={isSearching}
       >
-        <Navigation className="h-3.5 w-3.5" />
-        {isSearching ? "Getting your location..." : "Use my current location"}
+        {isSearching ? (
+          <>
+            <LoadingSpinner size="sm" />
+            Getting your location...
+          </>
+        ) : (
+          <>
+            <Navigation className="h-3.5 w-3.5" />
+            Use my current location
+          </>
+        )}
       </Button>
     </div>
   );
