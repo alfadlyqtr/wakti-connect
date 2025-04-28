@@ -37,15 +37,19 @@ declare namespace google {
     type GeocoderStatus = 'OK' | 'ZERO_RESULTS' | 'OVER_QUERY_LIMIT' | 'REQUEST_DENIED' | 'INVALID_REQUEST' | 'UNKNOWN_ERROR';
 
     namespace places {
+      class AutocompleteSessionToken {}
+      
       interface AutocompleteOptions {
         fields?: string[];
         types?: string[];
         componentRestrictions?: {
           country: string | string[];
         };
+        sessionToken?: AutocompleteSessionToken;
       }
       
-      interface Autocomplete {
+      class Autocomplete {
+        constructor(inputElement: HTMLInputElement, options?: AutocompleteOptions);
         addListener: (event: string, callback: () => void) => void;
         getPlace: () => {
           formatted_address?: string;
