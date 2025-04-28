@@ -1,5 +1,5 @@
 
-import { GradientDirection } from "./types";
+import { GradientDirection, GradientPreset } from "./types";
 
 // Gradient direction options
 export const DIRECTIONS: GradientDirection[] = [
@@ -21,7 +21,7 @@ export const DEFAULT_GRADIENT = {
 };
 
 // Gradient presets (color combinations)
-export const GRADIENT_PRESETS = [
+export const GRADIENT_PRESETS: GradientPreset[] = [
   { value: "linear-gradient(to right, #6366f1, #8b5cf6)" },
   { value: "linear-gradient(to right, #ec4899, #8b5cf6)" },
   { value: "linear-gradient(to right, #14b8a6, #0ea5e9)" },

@@ -5,15 +5,9 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, ArrowUp, ArrowDown } from "lucide-react";
+import { GradientGeneratorProps } from "@/components/events/customize/background-tabs/gradient/types";
 
-export interface GradientGeneratorProps {
-  value: string;
-  onChange: (value: string) => void;
-  angle?: number;
-  direction?: string;
-  onAngleChange?: (angle: number) => void;
-  onDirectionChange?: (direction: string) => void;
-}
+export { GradientGeneratorProps };
 
 export const GradientGenerator: React.FC<GradientGeneratorProps> = ({
   value,

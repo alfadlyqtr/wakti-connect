@@ -1,4 +1,9 @@
 
+export interface GradientColor {
+  color: string;
+  position?: number;
+}
+
 export interface GradientDirection {
   value: string;
   label: string;
@@ -7,6 +12,7 @@ export interface GradientDirection {
 
 export interface GradientPreset {
   value: string;
+  name?: string;
 }
 
 export interface GradientTabProps {
@@ -16,4 +22,13 @@ export interface GradientTabProps {
   angle?: number;
   onDirectionChange?: (direction: string) => void;
   onAngleChange?: (angle: number) => void;
+}
+
+export interface GradientGeneratorProps {
+  value: string;
+  onChange: (value: string) => void;
+  angle?: number;
+  direction?: string;
+  onAngleChange?: (angle: number) => void;
+  onDirectionChange?: (direction: string) => void;
 }
