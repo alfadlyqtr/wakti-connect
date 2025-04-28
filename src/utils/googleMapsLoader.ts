@@ -1,3 +1,4 @@
+
 /**
  * Google Maps initialization utilities
  */
@@ -18,14 +19,12 @@ export const isGoogleMapsLoaded = (): boolean => {
  */
 export const waitForGoogleMapsToLoad = (timeoutMs: number = 10000): Promise<void> => {
   return new Promise((resolve, reject) => {
-    // Check if already loaded
     if (isGoogleMapsLoaded()) {
       console.log('Google Maps API already loaded');
       resolve();
       return;
     }
     
-    // Set up a listener for when the API loads
     let timeoutId: ReturnType<typeof setTimeout>;
     const checkInterval = setInterval(() => {
       if (isGoogleMapsLoaded()) {
@@ -36,52 +35,39 @@ export const waitForGoogleMapsToLoad = (timeoutMs: number = 10000): Promise<void
       }
     }, 100);
 
-    // Set timeout to avoid waiting forever
     timeoutId = setTimeout(() => {
       clearInterval(checkInterval);
-      const error = new Error('Google Maps failed to load within timeout period');
-      console.error(error);
-      reject(error);
+      reject(new Error('Google Maps failed to load within timeout period'));
     }, timeoutMs);
   });
 };
 
 /**
  * Dynamically load Google Maps API if not already loaded
- * @param apiKey Google Maps API key
- * @param libraries Optional libraries to load (e.g., 'places', 'geometry')
- * @returns Promise that resolves when Google Maps is loaded
  */
-export const loadGoogleMapsApi = (
-  apiKey: string, 
-  libraries: string[] = ['places', 'geocoding']
-): Promise<void> => {
-  // Return immediately if already loaded
+export const loadGoogleMapsApi = async (): Promise<void> => {
+  const GOOGLE_MAPS_API_KEY = 'AIzaSyBQ6iROkrf7ebTpqevZPaa0-Gdb_-ORw0Y';
+  
   if (isGoogleMapsLoaded()) {
     return Promise.resolve();
   }
 
   return new Promise((resolve, reject) => {
     try {
-      // Create script element
       const script = document.createElement('script');
-      const librariesParam = libraries.join(',');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=${librariesParam}&callback=initGoogleMaps`;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places,geocoding&callback=initGoogleMaps`;
       script.async = true;
       script.defer = true;
       
-      // Define callback function
       window.initGoogleMaps = function() {
         console.log('Google Maps API initialized via dynamic loading');
         resolve();
       };
       
-      // Handle errors
       script.onerror = () => {
         reject(new Error('Failed to load Google Maps API script'));
       };
       
-      // Add script to document
       document.head.appendChild(script);
     } catch (error) {
       reject(error);
@@ -89,7 +75,6 @@ export const loadGoogleMapsApi = (
   });
 };
 
-// Add the global callback to window
 declare global {
   interface Window {
     initGoogleMaps?: () => void;
