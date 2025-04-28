@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Event } from '@/types/event.types';
 import { Card } from '@/components/ui/card';
@@ -40,11 +39,9 @@ const EventCard = ({
     customization 
   } = event;
   
-  // Extract the date from start_time
   const date = start_time ? new Date(start_time) : new Date();
   const formattedDate = formatDateShort(date);
   
-  // Format the time range
   const timeDisplay = is_all_day 
     ? "All day" 
     : formatTimeRange(new Date(start_time), new Date(end_time));
@@ -74,8 +71,6 @@ const EventCard = ({
     backgroundPosition: 'center',
   };
 
-  const handleCardClick = onCardClick || onClick;
-
   const handleViewOnMap = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click
     if (event.location) {
@@ -92,7 +87,8 @@ const EventCard = ({
     }
   };
 
-  const formattedLocation = location ? formatLocation(location) : '';
+  const formattedLocation = event.location ? formatLocation(event.location) : '';
+  const handleCardClick = onCardClick || onClick;
   
   return (
     <Card 

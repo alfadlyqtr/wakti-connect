@@ -2,6 +2,7 @@
 import React from 'react';
 import { useCustomization } from '../context';
 import { Card } from '@/components/ui/card';
+import { MapPin } from 'lucide-react';
 
 const EventCardPreview = () => {
   const { customization } = useCustomization();
@@ -40,7 +41,10 @@ const EventCardPreview = () => {
         
         <div style={{ fontFamily: customization.descriptionFont?.family }} className="flex-1">
           <p>A preview of how your event card will appear to recipients.</p>
-          <p className="text-sm mt-2 opacity-70">Location: Sample Venue</p>
+          <div className="flex items-center gap-2 mt-2 text-sm">
+            <MapPin className="h-4 w-4 flex-shrink-0" />
+            <span className="opacity-70">1234 Main St, San Francisco, CA</span>
+          </div>
         </div>
 
         <div className="flex gap-2 mt-4">
