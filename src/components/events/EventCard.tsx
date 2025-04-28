@@ -83,7 +83,7 @@ const EventCard = ({
     }
   };
 
-  const formattedLocation = location ? formatLocation(location, location_type) : '';
+  const formattedLocation = location ? formatLocation(location) : '';
   const hasLocation = Boolean(formattedLocation);
 
   return (
