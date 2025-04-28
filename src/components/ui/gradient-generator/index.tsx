@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, ArrowUp, ArrowDown } from "lucide-react";
 
-interface GradientGeneratorProps {
+export interface GradientGeneratorProps {
   value: string;
   onChange: (value: string) => void;
   angle?: number;
@@ -37,6 +37,11 @@ export const GradientGenerator: React.FC<GradientGeneratorProps> = ({
       }
     }
   }, [value]);
+
+  useEffect(() => {
+    // Update current angle when angle prop changes
+    setCurrentAngle(angle);
+  }, [angle]);
 
   const handleColorChange = (index: number, newColor: string) => {
     if (index === 0) {
