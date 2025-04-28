@@ -1,12 +1,12 @@
 
 import * as React from "react"
-import { useEffect, useRef, useState } from "react";
-import { Slider } from "@/components/ui/slider";
-import { Copy, Minus, Plus, RotateCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+import { useEffect, useRef, useState } from "react"
+import { Slider } from "@/components/ui/slider"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
+import { Copy, Minus, Plus, RotateCw } from "lucide-react"
 
 type ColorStop = {
   color: string;
@@ -14,8 +14,8 @@ type ColorStop = {
 };
 
 const defaultColorStops: ColorStop[] = [
-  { color: "#00e1ff", position: 0 },
-  { color: "#0000ff", position: 100 },
+  { color: "#6366f1", position: 0 },
+  { color: "#8b5cf6", position: 100 },
 ];
 
 export function GradientGenerator() {
@@ -62,7 +62,7 @@ export function GradientGenerator() {
             0,
             0,
             canvas.width,
-            canvas.height,
+            canvas.height
           );
         } else {
           gradient = ctx.createRadialGradient(
@@ -71,7 +71,7 @@ export function GradientGenerator() {
             0,
             canvas.width / 2,
             canvas.height / 2,
-            canvas.width / 2,
+            canvas.width / 2
           );
         }
 
@@ -99,7 +99,7 @@ export function GradientGenerator() {
           0,
           0,
           displayCanvas.width,
-          displayCanvas.height,
+          displayCanvas.height
         );
       }
     }
@@ -119,13 +119,9 @@ export function GradientGenerator() {
   const addColorStop = () => {
     if (colorStops.length < 5) {
       const newPosition = Math.round(
-        (colorStops[colorStops.length - 1].position + colorStops[0].position) /
-          2,
+        (colorStops[colorStops.length - 1].position + colorStops[0].position) / 2
       );
-      setColorStops([
-        ...colorStops,
-        { color: "#ffffff", position: newPosition },
-      ]);
+      setColorStops([...colorStops, { color: "#ffffff", position: newPosition }]);
     }
   };
 
@@ -150,159 +146,148 @@ export function GradientGenerator() {
   };
 
   return (
-    <div className="mt-10 flex items-center justify-center p-6 xl:p-0">
-      <div className="mx-auto w-full max-w-7xl space-y-2 rounded-2xl border-2 bg-popover/80 p-6">
-        <div className="flex flex-wrap justify-center gap-6">
-          <div className="relative">
-            <div
-              className="aspect-square h-full w-60 rounded-md md:w-80"
-              style={gradientStyle}
-            ></div>
-            <canvas
-              ref={displayCanvasRef}
-              width={1000}
-              height={1000}
-              className="absolute left-0 top-0 aspect-square h-full w-60 rounded-md mix-blend-overlay md:w-80"
-            />
-          </div>
-          <div className="grid w-full flex-1 gap-2">
-            <div className="flex flex-wrap items-center gap-2">
-              {colorStops.map((stop, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <div className="relative flex w-full max-w-[40px] items-center gap-3">
-                    <label
-                      htmlFor={`color-${index}`}
-                      className="text-lg font-bold"
-                    >
-                      <div
-                        className="size-10 cursor-pointer rounded-full border-2"
-                        style={{ backgroundColor: stop.color }}
-                      />
-                    </label>
-                    <Input
-                      className="absolute left-0 top-3 opacity-0"
-                      type="color"
-                      id={`color-${index}`}
-                      value={stop.color}
-                      onChange={(e) =>
-                        updateColorStop(index, e.target.value, stop.position)
-                      }
+    <div className="mt-4 space-y-2 rounded-lg border bg-popover/80 p-4">
+      <div className="flex flex-wrap gap-4">
+        <div className="relative">
+          <div
+            className="aspect-square h-full w-60 rounded-md md:w-80"
+            style={gradientStyle}
+          ></div>
+          <canvas
+            ref={displayCanvasRef}
+            width={1000}
+            height={1000}
+            className="absolute left-0 top-0 aspect-square h-full w-60 rounded-md mix-blend-overlay md:w-80"
+          />
+        </div>
+        <div className="grid w-full flex-1 gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {colorStops.map((stop, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <div className="relative flex w-full max-w-[40px] items-center gap-3">
+                  <label htmlFor={`color-${index}`} className="text-lg font-bold">
+                    <div
+                      className="size-10 cursor-pointer rounded-full border-2"
+                      style={{ backgroundColor: stop.color }}
                     />
-                  </div>
+                  </label>
                   <Input
-                    type="number"
-                    min={0}
-                    max={100}
-                    value={stop.position}
+                    className="absolute left-0 top-3 opacity-0"
+                    type="color"
+                    id={`color-${index}`}
+                    value={stop.color}
                     onChange={(e) =>
-                      updateColorStop(index, stop.color, Number(e.target.value))
+                      updateColorStop(index, e.target.value, stop.position)
                     }
-                    className="w-16"
                   />
-                  {colorStops.length > 2 && (
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => removeColorStop(index)}
-                    >
-                      <Minus className="h-4 w-4" />
-                    </Button>
-                  )}
                 </div>
-              ))}
-              {colorStops.length < 5 && (
-                <Button variant="outline" size="icon" onClick={addColorStop}>
-                  <Plus className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-2">
-                <Label className={!isRadialGradient ? "font-medium" : ""}>
-                  Linear
-                </Label>
-                <Switch
-                  id="gradient-type"
-                  checked={isRadialGradient}
-                  onCheckedChange={(checked) => setIsRadialGradient(checked)}
+                <Input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={stop.position}
+                  onChange={(e) =>
+                    updateColorStop(index, stop.color, Number(e.target.value))
+                  }
+                  className="w-16"
                 />
-                <Label className={isRadialGradient ? "font-medium" : ""}>
-                  Radial
-                </Label>
-              </div>
-              {!isRadialGradient && (
-                <div className="flex w-full items-center gap-2">
-                  <Label className="w-auto" htmlFor="angle">
-                    Angle
-                  </Label>
-                  <Slider
-                    id="angle"
-                    value={[angle]}
-                    min={0}
-                    max={360}
-                    className="w-full"
-                    onValueChange={(value) => setAngle(Number(value))}
-                  />
-                  <Label className="w-auto" htmlFor="angle">
-                    {angle}°
-                  </Label>
-                </div>
-              )}
-            </div>
-
-            <div className="flex w-full items-center gap-2">
-              <Switch
-                id="apply-noise"
-                checked={applyNoise}
-                onCheckedChange={setApplyNoise}
-              />
-              <Label className="w-auto" htmlFor="apply-noise">
-                Noise
-              </Label>
-              {applyNoise && (
-                <div className="flex w-full gap-2">
-                  <Slider
-                    id="noise"
-                    min={0}
-                    max={200}
-                    value={[noiseAmount]}
-                    className="w-full"
-                    onValueChange={(value) => setNoiseAmount(Number(value))}
-                  />
-                  <Label className="w-auto" htmlFor="noise">
-                    {noiseAmount}
-                  </Label>
-                </div>
-              )}
-            </div>
-            <div className="grid gap-2">
-              <div>
-                <div className="mt-1 flex flex-wrap items-center gap-2">
-                  <Label htmlFor="css">CSS Code</Label>
-                  <Input
-                    id="css"
-                    value={gradientCSS}
-                    readOnly
-                    className="w-auto flex-grow"
-                  />
+                {colorStops.length > 2 && (
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={copyToClipboard}
+                    onClick={() => removeColorStop(index)}
                   >
-                    <Copy className="h-4 w-4" />
+                    <Minus className="h-4 w-4" />
                   </Button>
-                  <Button onClick={downloadJPG} className="">
-                    Download JPG
-                  </Button>
-                  <Button
-                    size="icon"
-                    onClick={resetSettings}
-                    variant="secondary"
-                  >
-                    <RotateCw />
-                  </Button>
-                </div>
+                )}
+              </div>
+            ))}
+            {colorStops.length < 5 && (
+              <Button variant="outline" size="icon" onClick={addColorStop}>
+                <Plus className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
+              <Label className={!isRadialGradient ? "font-medium" : ""}>
+                Linear
+              </Label>
+              <Switch
+                id="gradient-type"
+                checked={isRadialGradient}
+                onCheckedChange={(checked) => setIsRadialGradient(checked)}
+              />
+              <Label className={isRadialGradient ? "font-medium" : ""}>
+                Radial
+              </Label>
+            </div>
+            {!isRadialGradient && (
+              <div className="flex w-full items-center gap-2">
+                <Label className="w-auto" htmlFor="angle">
+                  Angle
+                </Label>
+                <Slider
+                  id="angle"
+                  value={[angle]}
+                  defaultValue={[90]}
+                  min={0}
+                  max={360}
+                  className="w-full"
+                  onValueChange={(value) => setAngle(Number(value[0]))}
+                />
+                <Label className="w-auto" htmlFor="angle">
+                  {angle}°
+                </Label>
+              </div>
+            )}
+          </div>
+
+          <div className="flex w-full items-center gap-2">
+            <Switch
+              id="apply-noise"
+              checked={applyNoise}
+              onCheckedChange={setApplyNoise}
+            />
+            <Label className="w-auto" htmlFor="apply-noise">
+              Noise
+            </Label>
+            {applyNoise && (
+              <div className="flex w-full gap-2">
+                <Slider
+                  id="noise"
+                  defaultValue={[33]}
+                  min={0}
+                  max={200}
+                  value={[noiseAmount]}
+                  className="w-full"
+                  onValueChange={(value) => setNoiseAmount(Number(value[0]))}
+                />
+                <Label className="w-auto" htmlFor="noise">
+                  {noiseAmount}
+                </Label>
+              </div>
+            )}
+          </div>
+
+          <div className="grid gap-2">
+            <div>
+              <div className="mt-1 flex flex-wrap items-center gap-2">
+                <Label htmlFor="css">CSS Code</Label>
+                <Input
+                  id="css"
+                  value={gradientCSS}
+                  readOnly
+                  className="w-auto flex-grow"
+                />
+                <Button variant="outline" size="icon" onClick={copyToClipboard}>
+                  <Copy className="h-4 w-4" />
+                </Button>
+                <Button onClick={downloadJPG}>Download JPG</Button>
+                <Button size="icon" onClick={resetSettings} variant="secondary">
+                  <RotateCw className="h-4 w-4" />
+                </Button>
               </div>
             </div>
           </div>

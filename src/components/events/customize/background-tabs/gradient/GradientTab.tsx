@@ -6,6 +6,10 @@ import { GradientTabProps } from "./types";
 export const GradientTab: React.FC<GradientTabProps> = ({
   value,
   onChange,
+  direction,
+  angle,
+  onDirectionChange,
+  onAngleChange,
 }) => {
   return (
     <div className="space-y-4">
