@@ -1,16 +1,14 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { MapPin } from 'lucide-react';
-import { toast } from '@/components/ui/use-toast';
-import { generateMapsUrl } from '@/utils/locationUtils';
+import { formatLocation } from '@/utils/locationUtils';
 import LocationDialog from './LocationDialog';
 
 interface LocationPickerProps {
   value: string;
   onChange: (location: string, type?: 'manual' | 'google_maps', url?: string) => void;
   className?: string;
-  placeholder?: string;
 }
 
 const LocationPicker: React.FC<LocationPickerProps> = ({
@@ -19,11 +17,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   className = ''
 }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [displayValue, setDisplayValue] = useState(value);
-
-  useEffect(() => {
-    setDisplayValue(value);
-  }, [value]);
+  const formattedLocation = formatLocation(value);
 
   return (
     <div className={`${className}`}>
@@ -35,7 +29,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
       >
         <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
         <span className="text-left">
-          {displayValue || "Add location"}
+          {formattedLocation || "Add location"}
         </span>
       </Button>
 
