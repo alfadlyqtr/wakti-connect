@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Navigation } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { generateGoogleMapsUrl } from '@/config/maps';
+import { generateMapsUrl } from '@/utils/locationUtils';
 
 interface LocationPickerProps {
   value: string;
@@ -36,14 +36,15 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
     if (newValue.includes('google.com/maps')) {
       onChange(newValue, 'google_maps', newValue);
     } else {
-      onChange(newValue, 'manual');
+      const mapsUrl = generateMapsUrl(newValue);
+      onChange(newValue, 'manual', mapsUrl);
     }
   };
 
   const formatLocationDisplay = (lat: number, lng: number): string => {
     const truncatedLat = lat.toFixed(3);
     const truncatedLng = lng.toFixed(3);
-    return `Current Location (${truncatedLat}, ${truncatedLng})`;
+    return `${truncatedLat}, ${truncatedLng}`;
   };
 
   const handleGetCurrentLocation = async () => {
@@ -69,12 +70,12 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
 
       const { latitude, longitude } = position.coords;
       
-      // Create a user-friendly display text
-      const displayLocation = formatLocationDisplay(latitude, longitude);
-      const mapsUrl = generateGoogleMapsUrl(`${latitude},${longitude}`);
+      // Create location strings
+      const coordsDisplay = formatLocationDisplay(latitude, longitude);
+      const mapsUrl = generateMapsUrl(`${latitude},${longitude}`);
       
-      setInputValue(displayLocation);
-      onChange(displayLocation, 'google_maps', mapsUrl);
+      setInputValue(coordsDisplay);
+      onChange(coordsDisplay, 'google_maps', mapsUrl);
       
     } catch (error: any) {
       console.error('Error getting location:', error);
@@ -136,3 +137,4 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
 };
 
 export default LocationPicker;
+
