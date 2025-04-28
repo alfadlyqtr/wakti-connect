@@ -13,7 +13,12 @@ import TestimonialsEditor from "./TestimonialsEditor";
 import ChatbotSection from "../sections/ChatbotSection";
 
 const SectionEditorFields: React.FC = () => {
-  const { section, contentData, handleInputChange } = useSectionEditor();
+  const { section, contentData, updateContentField } = useSectionEditor();
+
+  // Create adapter function that converts from event-based to name/value based
+  const handleInputChange = (name: string, value: any) => {
+    updateContentField(name, value);
+  };
   
   const renderEditorFields = () => {
     switch (section.section_type) {
