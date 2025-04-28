@@ -1,4 +1,3 @@
-
 import { z } from 'zod';
 
 // Define text alignment type
@@ -58,8 +57,8 @@ export interface EventFormData {
   }>;
 }
 
-// Background type definition
-export type BackgroundType = "solid" | "gradient" | "image";
+// Background type definition - removing gradient
+export type BackgroundType = "solid" | "image";
 
 // Font weight type
 export type FontWeight = "normal" | "medium" | "bold" | "light";
@@ -69,12 +68,10 @@ export type AnimationDelay = "none" | "staggered" | "sequence";
 
 // Event customization interface
 export interface EventCustomization {
-  // Background
+  // Background - removing gradient-related properties
   background: {
     type: BackgroundType;
     value: string;
-    angle?: number;
-    direction?: string;
   };
   
   // Font styles
