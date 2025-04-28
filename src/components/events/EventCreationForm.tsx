@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -95,15 +94,9 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
     setIsAllDay,
     setStartTime,
     setEndTime,
-    setLocation: (loc) => handleLocationChange(loc, undefined, undefined, undefined),
-    setLocationType: (type) => {
-      // We need to adapt to the useEventLocation structure
-      // This is a placeholder function that works with the interface
-    },
-    setMapsUrl: (url) => {
-      // We need to adapt to the useEventLocation structure
-      // This is a placeholder function that works with the interface
-    },
+    setLocation: (loc) => handleLocationChange(loc),
+    setLocationType: (type) => handleLocationChange(location, type),
+    setMapsUrl: (url) => handleLocationChange(location, 'google_maps', url),
     setCustomization: (newCustomization: EventCustomization) => setCustomization(newCustomization)
   });
 
@@ -122,9 +115,13 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
     form.setValue("startDate", newDate);
   };
   
-  const handleAdvancedLocationChange = (displayLocation: string, mapsUrl?: string, lat?: number, lng?: number) => {
-    handleLocationChange(displayLocation, mapsUrl, lat, lng);
-    form.setValue("location", displayLocation);
+  const handleAdvancedLocationChange = (
+    location: string,
+    type?: 'manual' | 'google_maps', 
+    url?: string
+  ) => {
+    handleLocationChange(location, type, url);
+    form.setValue("location", location);
   };
 
   // Handler for sending email invitations

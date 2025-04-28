@@ -9,7 +9,7 @@ import { generateGoogleMapsUrl } from '@/config/maps';
 
 interface LocationPickerProps {
   value: string;
-  onChange: (displayValue: string, mapsUrl?: string, lat?: number, lng?: number) => void;
+  onChange: (location: string, type?: 'manual' | 'google_maps', url?: string) => void;
   className?: string;
   placeholder?: string;
 }
@@ -34,9 +34,9 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
     
     // Check if it's a Google Maps URL
     if (newValue.includes('google.com/maps')) {
-      onChange(newValue, newValue);
+      onChange(newValue, 'google_maps', newValue);
     } else {
-      onChange(newValue);
+      onChange(newValue, 'manual');
     }
   };
 
@@ -74,7 +74,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
       const mapsUrl = generateGoogleMapsUrl(`${latitude},${longitude}`);
       
       setInputValue(displayLocation);
-      onChange(displayLocation, mapsUrl, latitude, longitude);
+      onChange(displayLocation, 'google_maps', mapsUrl);
       
     } catch (error: any) {
       console.error('Error getting location:', error);

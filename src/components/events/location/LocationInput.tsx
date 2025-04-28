@@ -5,7 +5,7 @@ import LocationPicker from './LocationPicker';
 
 interface LocationInputProps {
   location: string;
-  onLocationChange: (displayLocation: string, mapsUrl?: string, lat?: number, lng?: number) => void;
+  onLocationChange: (location: string, type?: 'manual' | 'google_maps', url?: string) => void;
 }
 
 const LocationInput: React.FC<LocationInputProps> = ({

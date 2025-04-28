@@ -17,7 +17,37 @@ export const useEventLocation = () => {
     return `Current Location (${truncatedLat}, ${truncatedLng})`;
   };
 
+  // Update the signature to match what's expected in various components
   const handleLocationChange = useCallback((
+    location: string,
+    type?: 'manual' | 'google_maps',
+    url?: string
+  ) => {
+    setLocation(location);
+    setDisplayLocation(location);
+    
+    if (type) {
+      setLocationType(type);
+    } else if (url?.includes('google.com/maps')) {
+      setLocationType('google_maps');
+    } else {
+      setLocationType('manual');
+    }
+    
+    if (url) {
+      setMapsUrl(url);
+    } else {
+      setMapsUrl('');
+    }
+    
+    // Clear coordinates when setting manual location
+    if (!url && type !== 'google_maps') {
+      setCoordinates(null);
+    }
+  }, []);
+
+  // Add a new method that can handle lat/lng parameters
+  const handleLocationWithCoordinates = useCallback((
     displayLocation: string,
     mapsUrl?: string,
     lat?: number,
@@ -48,6 +78,7 @@ export const useEventLocation = () => {
     mapsUrl,
     coordinates,
     handleLocationChange,
+    handleLocationWithCoordinates,
     isGettingLocation,
     setMapsUrl,
     formatLocationDisplay
