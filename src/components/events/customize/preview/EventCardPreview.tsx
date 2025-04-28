@@ -6,15 +6,14 @@ const EventCardPreview = () => {
   const { customization } = useCustomization();
 
   const getBackgroundStyle = () => {
-    const { type, value, angle = 90, direction = 'to right' } = customization.background;
+    const { type, value } = customization.background;
     
     if (type === 'gradient') {
-      if (value.includes('url(') && value.includes('svg+xml')) {
-        return value;
-      } else if (value.startsWith('radial-gradient')) {
+      // Support both advanced gradients and legacy format
+      if (value.includes('noise') || value.startsWith('radial-gradient')) {
         return value;
       }
-      return value || `linear-gradient(${angle}deg, rgba(99,102,241,1) 0%, rgba(139,92,246,1) 100%)`;
+      return value || `linear-gradient(90deg, rgba(99,102,241,1) 0%, rgba(139,92,246,1) 100%)`;
     } else if (type === 'image') {
       return `url(${value})`;
     }
