@@ -126,27 +126,34 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
             />
           </div>
         </PopoverTrigger>
-        {searchResults.length > 0 && (
+        {open && (
           <PopoverContent className="w-[400px] p-0" align="start">
             <Command>
-              <CommandGroup>
-                {searchResults.map((result, index) => (
-                  <CommandItem
-                    key={index}
-                    onSelect={() => handleSelectLocation(result.display_name, result.lat, result.lon)}
-                    className="px-4 py-2 cursor-pointer hover:bg-accent"
-                  >
-                    {result.display_name}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-              {isSearching && (
-                <div className="flex items-center justify-center p-2">
+              <CommandInput 
+                placeholder="Search for a location..."
+                value={inputValue}
+                onValueChange={handleInputChange}
+              />
+              {isSearching ? (
+                <div className="flex items-center justify-center p-4">
                   <LoadingSpinner size="sm" />
                 </div>
-              )}
-              {!isSearching && searchResults.length === 0 && (
-                <CommandEmpty>No results found</CommandEmpty>
+              ) : (
+                <CommandGroup>
+                  {searchResults.length === 0 ? (
+                    <CommandEmpty>No locations found</CommandEmpty>
+                  ) : (
+                    searchResults.map((result, index) => (
+                      <CommandItem
+                        key={index}
+                        onSelect={() => handleSelectLocation(result.display_name, result.lat, result.lon)}
+                        className="px-4 py-2 cursor-pointer hover:bg-accent"
+                      >
+                        {result.display_name}
+                      </CommandItem>
+                    ))
+                  )}
+                </CommandGroup>
               )}
             </Command>
           </PopoverContent>

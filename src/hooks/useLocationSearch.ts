@@ -1,6 +1,7 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/use-toast';
+import { useDebouncedCallback } from '@/hooks/useDebouncedCallback';
 
 interface LocationResult {
   display_name: string;
@@ -11,14 +12,18 @@ interface LocationResult {
 export const useLocationSearch = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<LocationResult[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-  const searchLocation = async (query: string) => {
+  const debouncedSearch = useDebouncedCallback(async (query: string) => {
     if (!query.trim()) {
       setSearchResults([]);
+      setError(null);
       return;
     }
 
     setIsSearching(true);
+    setError(null);
+
     try {
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
@@ -36,15 +41,21 @@ export const useLocationSearch = () => {
       }
 
       const data = await response.json();
-      setSearchResults(
-        data.map((item: any) => ({
-          display_name: item.display_name,
-          lat: parseFloat(item.lat),
-          lon: parseFloat(item.lon),
-        }))
-      );
+      
+      if (Array.isArray(data)) {
+        setSearchResults(
+          data.map((item: any) => ({
+            display_name: item.display_name,
+            lat: parseFloat(item.lat),
+            lon: parseFloat(item.lon),
+          }))
+        );
+      } else {
+        setSearchResults([]);
+      }
     } catch (error) {
       console.error('Error searching location:', error);
+      setError('Failed to search location');
       toast({
         title: 'Error',
         description: 'Failed to search location. Please try again.',
@@ -54,11 +65,16 @@ export const useLocationSearch = () => {
     } finally {
       setIsSearching(false);
     }
+  }, 300); // 300ms debounce
+
+  const searchLocation = (query: string) => {
+    debouncedSearch(query);
   };
 
   return {
     searchLocation,
     searchResults,
     isSearching,
+    error
   };
 };
