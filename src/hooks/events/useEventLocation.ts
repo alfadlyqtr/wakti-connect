@@ -9,24 +9,32 @@ export const useEventLocation = () => {
   const [mapsUrl, setMapsUrl] = useState<string>('');
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [coordinates, setCoordinates] = useState<{lat: number, lng: number} | null>(null);
+  const [displayLocation, setDisplayLocation] = useState<string>('');
 
-  const handleLocationChange = useCallback(async (
+  const formatLocationDisplay = (lat: number, lng: number): string => {
+    const truncatedLat = lat.toFixed(3);
+    const truncatedLng = lng.toFixed(3);
+    return `Current Location (${truncatedLat}, ${truncatedLng})`;
+  };
+
+  const handleLocationChange = useCallback((
     displayLocation: string,
-    newMapsUrl?: string,
+    mapsUrl?: string,
     lat?: number,
     lng?: number
   ) => {
     setLocation(displayLocation);
+    setDisplayLocation(displayLocation);
     
-    if (newMapsUrl?.includes('google.com/maps')) {
+    if (mapsUrl?.includes('google.com/maps')) {
       setLocationType('google_maps');
-      setMapsUrl(newMapsUrl);
+      setMapsUrl(mapsUrl);
     } else {
       setLocationType('manual');
       setMapsUrl('');
     }
     
-    if (lat && lng) {
+    if (lat !== undefined && lng !== undefined) {
       setCoordinates({ lat, lng });
     } else {
       setCoordinates(null);
@@ -35,11 +43,13 @@ export const useEventLocation = () => {
 
   return {
     location,
+    displayLocation,
     locationType,
     mapsUrl,
     coordinates,
     handleLocationChange,
     isGettingLocation,
-    setMapsUrl
+    setMapsUrl,
+    formatLocationDisplay
   };
 };

@@ -25,7 +25,7 @@ interface DetailsTabProps {
   location: string;
   locationType: 'manual' | 'google_maps';
   mapsUrl?: string;
-  handleLocationChange: (value: string, lat?: number, lng?: number) => void;
+  handleLocationChange: (displayLocation: string, mapsUrl?: string, lat?: number, lng?: number) => void;
   handleNextTab: () => void;
   title: string;
   description: string;

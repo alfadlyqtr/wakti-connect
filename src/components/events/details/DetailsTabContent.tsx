@@ -50,10 +50,9 @@ const DetailsTabContent: React.FC<DetailsTabContentProps> = ({
   onIsAllDayChange,
   isGettingLocation = false
 }) => {
-  const handleLocationChange = (value: string, lat?: number, lng?: number) => {
+  const handleLocationChange = (displayValue: string, mapsUrl?: string, lat?: number, lng?: number) => {
     if (onLocationChange) {
-      const url = lat && lng ? `https://www.google.com/maps?q=${lat},${lng}` : undefined;
-      onLocationChange(value, 'google_maps', url);
+      onLocationChange(displayValue, mapsUrl ? 'google_maps' : 'manual', mapsUrl);
     }
   };
 

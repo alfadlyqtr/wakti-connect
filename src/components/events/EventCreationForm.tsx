@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -94,8 +95,8 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
     setIsAllDay,
     setStartTime,
     setEndTime,
-    setLocation: (loc) => handleLocationChange(loc, 'manual'),
-    setLocationType: (type) => handleLocationChange(location, type),
+    setLocation: (loc) => handleLocationChange(loc),
+    setLocationType: () => {},
     setMapsUrl: () => {},
     setCustomization: (newCustomization: EventCustomization) => setCustomization(newCustomization)
   });
@@ -115,9 +116,9 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
     form.setValue("startDate", newDate);
   };
   
-  const handleAdvancedLocationChange = (value: string, type: 'manual' | 'google_maps' = 'manual', url?: string) => {
-    handleLocationChange(value, type, url);
-    form.setValue("location", value);
+  const handleAdvancedLocationChange = (displayLocation: string, mapsUrl?: string, lat?: number, lng?: number) => {
+    handleLocationChange(displayLocation, mapsUrl, lat, lng);
+    form.setValue("location", displayLocation);
   };
 
   // Handler for sending email invitations
@@ -156,7 +157,7 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
       setIsAllDay(false);
       setStartTime("09:00");
       setEndTime("10:00");
-      handleLocationChange("", 'manual');
+      handleLocationChange("", undefined);
       setRecipients([]);
       setActiveTab("details");
       form.reset();
