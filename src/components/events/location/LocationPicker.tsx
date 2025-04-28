@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -23,6 +22,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   const [isSearching, setIsSearching] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isMapError, setIsMapError] = useState(false);
   const [inputValue, setInputValue] = useState(value);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -35,29 +35,25 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
     const initializeGoogleMaps = async () => {
       try {
         setIsLoading(true);
-        console.log('[LocationPicker] Starting initialization...');
+        setIsMapError(false);
         
         await loadGoogleMapsApi();
         await waitForGoogleMapsToLoad();
-        
-        console.log('[LocationPicker] Maps loaded, initializing Autocomplete...');
         
         if (!inputRef.current) {
           console.error('[LocationPicker] Input reference not available');
           return;
         }
 
-        // Initialize Places Autocomplete with expanded options
+        // Initialize Places Autocomplete with correct options
         const autocomplete = new google.maps.places.Autocomplete(inputRef.current, {
           fields: ['formatted_address', 'geometry', 'name', 'place_id'],
-          types: ['geocode', 'establishment', 'regions', 'cities'],
+          // Use only valid types supported by the Places API
+          types: ['address', 'establishment', 'geocode'],
         });
-
-        console.log('[LocationPicker] Autocomplete instance created');
 
         autocomplete.addListener('place_changed', () => {
           const place = autocomplete.getPlace();
-          console.log('[LocationPicker] Place selected:', place);
           
           if (!place.geometry?.location) {
             toast({
@@ -78,12 +74,12 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
 
         autocompleteRef.current = autocomplete;
         setIsInitialized(true);
-        console.log('[LocationPicker] Initialization complete');
       } catch (error) {
         console.error('[LocationPicker] Error initializing:', error);
+        setIsMapError(true);
         toast({
-          title: "Error",
-          description: "Could not initialize location search. Please try again.",
+          title: "Maps Error",
+          description: "Could not initialize location search. You can still enter a location manually.",
           variant: "destructive"
         });
       } finally {
@@ -91,14 +87,24 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
       }
     };
 
-    if (!isInitialized) {
-      initializeGoogleMaps();
-    }
-  }, [onChange, isInitialized]);
+    initializeGoogleMaps();
+
+    // Clean up on unmount
+    return () => {
+      if (autocompleteRef.current) {
+        // Cleanup listeners if possible
+        google.maps.event.clearInstanceListeners(autocompleteRef.current);
+      }
+    };
+  }, [onChange]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
-    // Don't call onChange here - let the Places Autocomplete handle it
+    // If maps failed to load, we'll allow manual entry and call onChange
+    if (isMapError) {
+      onChange(e.target.value);
+    }
+    // Otherwise, let the Places Autocomplete handle it
   };
 
   const handleGetCurrentLocation = async () => {
@@ -122,43 +128,44 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
         });
       });
 
-      await waitForGoogleMapsToLoad();
-      
       const { latitude, longitude } = position.coords;
-      const geocoder = new google.maps.Geocoder();
       
-      const geocodeWithRetry = async (retryCount = 0, maxRetries = 3) => {
-        try {
-          const response = await new Promise((resolve, reject) => {
-            geocoder.geocode(
-              { location: { lat: latitude, lng: longitude } },
-              (results, status) => {
-                if (status === 'OK' && results && results[0]) {
-                  resolve(results[0]);
-                } else {
-                  reject(new Error(`Geocoding failed with status: ${status}`));
-                }
+      // If Google Maps is not loaded, just use the coordinates
+      if (!isGoogleMapsLoaded() || isMapError) {
+        const locationString = `Location (${latitude.toFixed(6)}, ${longitude.toFixed(6)})`;
+        setInputValue(locationString);
+        onChange(locationString, latitude, longitude);
+        return;
+      }
+
+      try {
+        await waitForGoogleMapsToLoad();
+        
+        const geocoder = new google.maps.Geocoder();
+        
+        const response = await new Promise<google.maps.GeocoderResult>((resolve, reject) => {
+          geocoder.geocode(
+            { location: { lat: latitude, lng: longitude } },
+            (results, status) => {
+              if (status === 'OK' && results && results[0]) {
+                resolve(results[0]);
+              } else {
+                reject(new Error(`Geocoding failed with status: ${status}`));
               }
-            );
-          });
+            }
+          );
+        });
 
-          const result = response as google.maps.GeocoderResult;
-          const address = result.formatted_address;
-          setInputValue(address);
-          onChange(address, latitude, longitude);
-          
-        } catch (error) {
-          if (retryCount < maxRetries) {
-            console.log(`Geocoding attempt ${retryCount + 1} failed, retrying...`);
-            await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
-            return geocodeWithRetry(retryCount + 1, maxRetries);
-          }
-          throw error;
-        }
-      };
-
-      await geocodeWithRetry();
-
+        const address = response.formatted_address;
+        setInputValue(address);
+        onChange(address, latitude, longitude);
+      } catch (error) {
+        // Fallback to raw coordinates if geocoding fails
+        console.error('Geocoding error:', error);
+        const locationString = `Location (${latitude.toFixed(6)}, ${longitude.toFixed(6)})`;
+        setInputValue(locationString);
+        onChange(locationString, latitude, longitude);
+      }
     } catch (error: any) {
       console.error('Error getting location:', error);
       toast({
@@ -182,9 +189,9 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
           ref={inputRef}
           placeholder={isLoading ? "Loading location search..." : (placeholder || "Search for a location")}
           className="pl-8 pr-10"
-          disabled={!isInitialized || isLoading}
+          disabled={isLoading && !isMapError}
         />
-        {isLoading && (
+        {isLoading && !isMapError && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2">
             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
           </div>
@@ -197,7 +204,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
         size="sm"
         className="w-full flex items-center justify-center gap-2 text-xs"
         onClick={handleGetCurrentLocation}
-        disabled={isSearching || !isInitialized}
+        disabled={isSearching}
       >
         {isSearching ? (
           <>

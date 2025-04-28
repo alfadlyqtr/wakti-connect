@@ -11,12 +11,6 @@ export const isGoogleMapsLoaded = (): boolean => {
   const isMapsLoaded = isGoogleDefined && typeof window.google.maps !== 'undefined';
   const isPlacesLoaded = isMapsLoaded && typeof window.google.maps.places !== 'undefined';
   
-  console.log('Google Maps loading status:', {
-    isGoogleDefined,
-    isMapsLoaded,
-    isPlacesLoaded
-  });
-  
   return isPlacesLoaded;
 };
 
@@ -35,7 +29,6 @@ export const waitForGoogleMapsToLoad = (timeoutMs: number = 10000): Promise<void
     const maxAttempts = 20;
     const checkInterval = setInterval(() => {
       attempts++;
-      console.log(`[Maps] Checking load status (attempt ${attempts}/${maxAttempts})`);
       
       if (isGoogleMapsLoaded()) {
         console.log('[Maps] Successfully loaded');
@@ -53,28 +46,31 @@ export const waitForGoogleMapsToLoad = (timeoutMs: number = 10000): Promise<void
  * Dynamically load Google Maps API
  */
 export const loadGoogleMapsApi = async (): Promise<void> => {
+  // Use the API key from the configuration
   const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
   
+  // If Google Maps is already loaded, return immediately
   if (isGoogleMapsLoaded()) {
     console.log('[Maps] API already loaded');
     return Promise.resolve();
   }
 
+  // Remove any existing scripts to prevent duplicates
+  const existingScripts = document.querySelectorAll('script[src*="maps.googleapis.com"]');
+  existingScripts.forEach(script => {
+    console.log('[Maps] Removing existing script to prevent duplication');
+    document.head.removeChild(script);
+  });
+
   return new Promise((resolve, reject) => {
     try {
       console.log('[Maps] Starting initialization...');
-      
-      // Remove any existing Google Maps scripts
-      const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
-      if (existingScript) {
-        document.head.removeChild(existingScript);
-      }
       
       const script = document.createElement('script');
       script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
       script.type = 'text/javascript';
       
-      // Removing async/defer to ensure proper loading order
+      // Important: do NOT use async/defer here as it can cause timing issues
       script.onload = () => {
         console.log('[Maps] Script loaded successfully');
         resolve();
