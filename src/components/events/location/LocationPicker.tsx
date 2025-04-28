@@ -35,28 +35,29 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
     const initializeGoogleMaps = async () => {
       try {
         setIsLoading(true);
-        console.log('Initializing Google Maps...');
+        console.log('[LocationPicker] Starting initialization...');
         
         await loadGoogleMapsApi();
         await waitForGoogleMapsToLoad();
         
-        console.log('Google Maps loaded, initializing Places Autocomplete...');
+        console.log('[LocationPicker] Maps loaded, initializing Autocomplete...');
         
         if (!inputRef.current) {
-          console.error('Input reference not available');
+          console.error('[LocationPicker] Input reference not available');
           return;
         }
 
-        // Initialize Places Autocomplete
+        // Initialize Places Autocomplete with expanded options
         const autocomplete = new google.maps.places.Autocomplete(inputRef.current, {
           fields: ['formatted_address', 'geometry', 'name', 'place_id'],
-          types: ['geocode', 'establishment'],
-          componentRestrictions: { country: ['US', 'CA'] } // Add more countries as needed
+          types: ['geocode', 'establishment', 'regions', 'cities'],
         });
+
+        console.log('[LocationPicker] Autocomplete instance created');
 
         autocomplete.addListener('place_changed', () => {
           const place = autocomplete.getPlace();
-          console.log('Place selected:', place);
+          console.log('[LocationPicker] Place selected:', place);
           
           if (!place.geometry?.location) {
             toast({
@@ -77,9 +78,9 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
 
         autocompleteRef.current = autocomplete;
         setIsInitialized(true);
-        console.log('Places Autocomplete initialized successfully');
+        console.log('[LocationPicker] Initialization complete');
       } catch (error) {
-        console.error('Error initializing Google Maps:', error);
+        console.error('[LocationPicker] Error initializing:', error);
         toast({
           title: "Error",
           description: "Could not initialize location search. Please try again.",
@@ -179,7 +180,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
           value={inputValue}
           onChange={handleInputChange}
           ref={inputRef}
-          placeholder={placeholder || "Search for a location"}
+          placeholder={isLoading ? "Loading location search..." : (placeholder || "Search for a location")}
           className="pl-8 pr-10"
           disabled={!isInitialized || isLoading}
         />

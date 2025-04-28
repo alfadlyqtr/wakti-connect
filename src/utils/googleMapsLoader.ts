@@ -7,75 +7,87 @@
  * Check if Google Maps API and Places library are loaded
  */
 export const isGoogleMapsLoaded = (): boolean => {
-  return typeof window !== 'undefined' && 
-         typeof window.google !== 'undefined' && 
-         typeof window.google.maps !== 'undefined' &&
-         typeof window.google.maps.places !== 'undefined';
+  const isGoogleDefined = typeof window.google !== 'undefined';
+  const isMapsLoaded = isGoogleDefined && typeof window.google.maps !== 'undefined';
+  const isPlacesLoaded = isMapsLoaded && typeof window.google.maps.places !== 'undefined';
+  
+  console.log('Google Maps loading status:', {
+    isGoogleDefined,
+    isMapsLoaded,
+    isPlacesLoaded
+  });
+  
+  return isPlacesLoaded;
 };
 
 /**
  * Wait for Google Maps API to load with configurable timeout
- * @param timeoutMs - Maximum time to wait for Google Maps to load in milliseconds
- * @returns Promise that resolves when Google Maps is loaded
  */
 export const waitForGoogleMapsToLoad = (timeoutMs: number = 10000): Promise<void> => {
   return new Promise((resolve, reject) => {
     if (isGoogleMapsLoaded()) {
-      console.log('Google Maps API and Places library already loaded');
+      console.log('[Maps] Already loaded');
       resolve();
       return;
     }
     
-    let timeoutId: ReturnType<typeof setTimeout>;
+    let attempts = 0;
+    const maxAttempts = 20;
     const checkInterval = setInterval(() => {
+      attempts++;
+      console.log(`[Maps] Checking load status (attempt ${attempts}/${maxAttempts})`);
+      
       if (isGoogleMapsLoaded()) {
-        console.log('Google Maps API and Places library loaded successfully');
+        console.log('[Maps] Successfully loaded');
         clearInterval(checkInterval);
-        if (timeoutId) clearTimeout(timeoutId);
         resolve();
+      } else if (attempts >= maxAttempts) {
+        clearInterval(checkInterval);
+        reject(new Error('Google Maps failed to load after maximum attempts'));
       }
-    }, 100);
-
-    timeoutId = setTimeout(() => {
-      clearInterval(checkInterval);
-      reject(new Error('Google Maps failed to load within timeout period'));
-    }, timeoutMs);
+    }, 500);
   });
 };
 
 /**
- * Dynamically load Google Maps API if not already loaded
+ * Dynamically load Google Maps API
  */
 export const loadGoogleMapsApi = async (): Promise<void> => {
-  const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'AIzaSyBQ6iROkrf7ebTpqevZPaa0-Gdb_-ORw0Y';
+  const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
   
   if (isGoogleMapsLoaded()) {
-    console.log('Google Maps API already loaded, skipping initialization');
+    console.log('[Maps] API already loaded');
     return Promise.resolve();
   }
 
   return new Promise((resolve, reject) => {
     try {
-      console.log('Starting Google Maps API initialization...');
+      console.log('[Maps] Starting initialization...');
+      
+      // Remove any existing Google Maps scripts
+      const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
+      if (existingScript) {
+        document.head.removeChild(existingScript);
+      }
       
       const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&callback=initGoogleMaps`;
-      script.async = true;
-      script.defer = true;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
+      script.type = 'text/javascript';
       
-      window.initGoogleMaps = function() {
-        console.log('Google Maps API initialized successfully');
+      // Removing async/defer to ensure proper loading order
+      script.onload = () => {
+        console.log('[Maps] Script loaded successfully');
         resolve();
       };
       
       script.onerror = (error) => {
-        console.error('Failed to load Google Maps script:', error);
+        console.error('[Maps] Failed to load script:', error);
         reject(new Error('Failed to load Google Maps API script'));
       };
       
       document.head.appendChild(script);
     } catch (error) {
-      console.error('Error in Google Maps initialization:', error);
+      console.error('[Maps] Error in initialization:', error);
       reject(error);
     }
   });
@@ -83,7 +95,6 @@ export const loadGoogleMapsApi = async (): Promise<void> => {
 
 declare global {
   interface Window {
-    initGoogleMaps?: () => void;
     google: any;
   }
 }
