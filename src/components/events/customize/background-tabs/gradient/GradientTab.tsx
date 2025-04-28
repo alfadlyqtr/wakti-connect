@@ -13,10 +13,8 @@ export const GradientTab: React.FC<GradientTabProps> = ({
 
   return (
     <div className="space-y-4">
-      <GradientGenerator 
-        defaultValue={value} 
-        onGradientChange={handleGradientChange}
-      />
+      {/* Just render the component without props for now */}
+      <GradientGenerator />
     </div>
   );
 };
