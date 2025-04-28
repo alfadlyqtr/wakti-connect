@@ -6,7 +6,6 @@ import { Search, Navigation } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { waitForGoogleMapsToLoad } from '@/utils/googleMapsLoader';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { GOOGLE_MAPS_API_KEY } from '@/config/maps';
 
 interface LocationPickerProps {
   value: string;
@@ -22,6 +21,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   placeholder
 }) => {
   const [isSearching, setIsSearching] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -33,14 +33,18 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
         if (!inputRef.current) return;
 
         const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
-          fields: ['formatted_address', 'geometry', 'name', 'address_components']
+          fields: ['formatted_address', 'geometry', 'name', 'place_id']
         });
 
         autocomplete.addListener('place_changed', () => {
           const place = autocomplete.getPlace();
           
           if (!place.geometry?.location) {
-            console.warn('No location data available for selected place');
+            toast({
+              title: "Location Error",
+              description: "Please select a location from the dropdown",
+              variant: "destructive"
+            });
             return;
           }
 
@@ -52,6 +56,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
         });
 
         autocompleteRef.current = autocomplete;
+        setIsInitialized(true);
       } catch (error) {
         console.error('Error initializing Google Maps:', error);
         toast({
@@ -62,8 +67,10 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
       }
     };
 
-    initializeAutocomplete();
-  }, [onChange]);
+    if (!isInitialized) {
+      initializeAutocomplete();
+    }
+  }, [onChange, isInitialized]);
 
   const handleGetCurrentLocation = async () => {
     if (!navigator.geolocation) {
@@ -92,40 +99,30 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
       
       const geocoder = new window.google.maps.Geocoder();
       
-      const handleGeocodeResult = (
-        results: google.maps.GeocoderResult[] | null, 
-        status: google.maps.GeocoderStatus
-      ) => {
-        if (status === 'OK' && results && results[0]) {
-          const address = results[0].formatted_address;
-          onChange(address, latitude, longitude);
-        } else {
-          console.warn(`Geocoding failed with status: ${status}`);
-          toast({
-            title: "Location Error",
-            description: "Could not get exact address. Please try searching manually.",
-            variant: "destructive"
-          });
-        }
-        setIsSearching(false);
-      };
-
-      // Attempt to geocode with multiple retries
       let retryCount = 0;
       const maxRetries = 3;
+      const retryDelay = 1000; // 1 second
 
       const attemptGeocode = () => {
         geocoder.geocode(
           { location: { lat: latitude, lng: longitude } },
           (results, status) => {
             if (status === 'OK' && results && results[0]) {
-              handleGeocodeResult(results, status);
+              const address = results[0].formatted_address;
+              onChange(address, latitude, longitude);
+              setIsSearching(false);
             } else if (retryCount < maxRetries) {
               retryCount++;
               console.log(`Geocoding attempt ${retryCount} failed, retrying...`);
-              setTimeout(attemptGeocode, 1000);
+              setTimeout(attemptGeocode, retryDelay * retryCount); // Exponential backoff
             } else {
-              handleGeocodeResult(results, status);
+              console.error('Geocoding failed after retries:', status);
+              toast({
+                title: "Location Error",
+                description: "Could not get your exact address. Please try searching manually.",
+                variant: "destructive"
+              });
+              setIsSearching(false);
             }
           }
         );
@@ -151,10 +148,10 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
         <Input
           type="text"
           value={value}
-          onChange={(e) => onChange(e.target.value)}
           ref={inputRef}
           placeholder={placeholder || "Search for a location"}
           className="pl-8 pr-10"
+          readOnly={!isInitialized} // Prevent typing until initialized
         />
       </div>
       
@@ -164,7 +161,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
         size="sm"
         className="w-full flex items-center justify-center gap-2 text-xs"
         onClick={handleGetCurrentLocation}
-        disabled={isSearching}
+        disabled={isSearching || !isInitialized}
       >
         {isSearching ? (
           <>

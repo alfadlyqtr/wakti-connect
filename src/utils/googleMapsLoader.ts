@@ -1,4 +1,3 @@
-
 /**
  * Google Maps initialization utilities
  */
@@ -55,7 +54,7 @@ export const waitForGoogleMapsToLoad = (timeoutMs: number = 10000): Promise<void
  */
 export const loadGoogleMapsApi = (
   apiKey: string, 
-  libraries: string[] = ['places']
+  libraries: string[] = ['places', 'geocoding']
 ): Promise<void> => {
   // Return immediately if already loaded
   if (isGoogleMapsLoaded()) {
