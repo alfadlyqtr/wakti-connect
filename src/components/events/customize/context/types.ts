@@ -4,10 +4,8 @@ import { EventCustomization } from "@/types/event.types";
 export interface CustomizationContextType {
   customization: EventCustomization;
   onCustomizationChange: (customization: EventCustomization) => void;
-  // Updated type to accept 'color' instead of 'solid'
-  handleBackgroundChange: (type: 'color' | 'gradient' | 'image', value: string) => void;
-  handleBackgroundAngleChange: (angle: number) => void;
-  handleBackgroundDirectionChange: (direction: string) => void;
+  // Updated type to accept 'color' instead of 'solid' and remove 'gradient'
+  handleBackgroundChange: (type: 'color' | 'image', value: string) => void;
   handleButtonStyleChange: (type: 'accept' | 'decline', property: 'background' | 'color' | 'shape', value: string) => void;
   handleFontChange: (property: 'family' | 'size' | 'color' | 'weight' | 'alignment', value: string) => void;
   handleHeaderFontChange: (property: 'family' | 'size' | 'color' | 'weight', value: string) => void;

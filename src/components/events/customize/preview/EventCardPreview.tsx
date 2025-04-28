@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useCustomization } from '../context';
 import { Card } from '@/components/ui/card';
@@ -8,13 +9,7 @@ const EventCardPreview = () => {
   const getBackgroundStyle = () => {
     const { type, value } = customization.background;
     
-    if (type === 'gradient') {
-      // Support both advanced gradients and legacy format
-      if (value.includes('noise') || value.startsWith('radial-gradient')) {
-        return value;
-      }
-      return value || `linear-gradient(90deg, rgba(99,102,241,1) 0%, rgba(139,92,246,1) 100%)`;
-    } else if (type === 'image') {
+    if (type === 'image') {
       return `url(${value})`;
     }
     return value || '#ffffff';

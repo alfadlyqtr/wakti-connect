@@ -1,118 +1,103 @@
 
-import React, { useEffect, useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Check } from 'lucide-react';
-import { getAllTemplates, getFreeTemplates, getPremiumTemplates } from '@/data/eventTemplates';
-import { EventTemplate } from '@/data/eventTemplates';
-import { EventCustomization, BackgroundType } from '@/types/event.types';
-import { cn } from '@/lib/utils';
+import React, { useState } from 'react';
+import { Card, CardContent } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { Check } from "lucide-react";
+import { EventCustomization } from '@/types/event.types';
+import { eventTemplates } from '@/data/eventTemplates';
 
 interface TemplateSelectorProps {
-  selectedTemplateId: string | null;
-  onSelectTemplate: (templateId: string) => void;
+  onSelect: (template: EventCustomization) => void;
+  currentCustomization?: EventCustomization;
 }
 
-const TemplateSelector: React.FC<TemplateSelectorProps> = ({ selectedTemplateId, onSelectTemplate }) => {
-  const [templates, setTemplates] = useState<EventTemplate[]>([]);
-  const [filter, setFilter] = useState<'all' | 'free' | 'premium'>('all');
-  
-  useEffect(() => {
-    let filteredTemplates: EventTemplate[];
-    
-    switch (filter) {
-      case 'free':
-        filteredTemplates = getFreeTemplates();
-        break;
-      case 'premium':
-        filteredTemplates = getPremiumTemplates();
-        break;
-      default:
-        filteredTemplates = getAllTemplates();
+const TemplateSelector: React.FC<TemplateSelectorProps> = ({ onSelect, currentCustomization }) => {
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+
+  const handleSelectTemplate = (templateId: string) => {
+    setSelectedTemplateId(templateId);
+    const template = eventTemplates.find(t => t.id === templateId);
+    if (template) {
+      onSelect(template.customization);
     }
-    
-    setTemplates(filteredTemplates);
-  }, [filter]);
-  
-  const getBackgroundStyle = (customization: EventCustomization) => {
-    if (!customization.background) return {};
-    
-    if (customization.background.type === 'solid') {
-      return { backgroundColor: customization.background.value || '#ffffff' };
-    } else if (customization.background.type === 'gradient') {
-      return { backgroundImage: customization.background.value || 'linear-gradient(to right, #f7f7f7, #e3e3e3)' };
-    } else if (customization.background.type === 'image') {
-      return { backgroundImage: `url(${customization.background.value})`, backgroundSize: 'cover', backgroundPosition: 'center' };
-    }
-    
-    return { backgroundColor: '#ffffff' };
   };
-  
+
+  const getBackgroundPreviewStyle = (customization: EventCustomization) => {
+    if (!customization?.background) {
+      return {};
+    }
+
+    const { type, value } = customization.background;
+    
+    if (type === 'image') {
+      return { 
+        backgroundImage: `url(${value})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      };
+    }
+    
+    return { backgroundColor: value || '#ffffff' };
+  };
+
   return (
     <div className="space-y-4">
-      <Tabs defaultValue="all" onValueChange={(value) => setFilter(value as 'all' | 'free' | 'premium')}>
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="all">All Templates</TabsTrigger>
-          <TabsTrigger value="free">Free</TabsTrigger>
-          <TabsTrigger value="premium">Premium</TabsTrigger>
-        </TabsList>
-      </Tabs>
-      
-      <ScrollArea className="h-[400px] rounded-md border p-4">
-        <div className="grid grid-cols-2 gap-4">
-          {templates.map((template) => (
-            <Card 
-              key={template.id} 
-              className={cn(
-                "overflow-hidden cursor-pointer transition-all hover:shadow-md",
-                selectedTemplateId === template.id && "ring-2 ring-primary"
-              )}
-              onClick={() => onSelectTemplate(template.id)}
-            >
-              {template.isPremium && (
-                <div className="absolute top-2 right-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded-full">
-                  Premium
-                </div>
-              )}
-              
-              <div 
-                className="h-32 relative flex items-center justify-center"
-                style={getBackgroundStyle(template.customization)}
+      <h3 className="text-lg font-medium">Choose a Template</h3>
+      <ScrollArea className="h-72 w-full rounded-md border">
+        <div className="p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {eventTemplates.map((template) => {
+            const isSelected = selectedTemplateId === template.id;
+            const previewStyle = getBackgroundPreviewStyle(template.customization);
+            
+            return (
+              <Card 
+                key={template.id}
+                className={`cursor-pointer transition-all overflow-hidden ${
+                  isSelected ? 'ring-2 ring-primary' : 'hover:border-primary/50'
+                }`}
+                onClick={() => handleSelectTemplate(template.id)}
               >
-                {template.customization.headerImage && (
-                  <div className="absolute inset-0 opacity-50">
-                    <img src={template.customization.headerImage} alt="" className="w-full h-full object-cover" />
+                <CardContent className="p-0">
+                  <div 
+                    className="h-24 relative"
+                    style={previewStyle}
+                  >
+                    {isSelected && (
+                      <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                        <div className="bg-primary text-white p-1 rounded-full">
+                          <Check size={16} />
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
-                <div className="relative z-10 p-4 text-center">
-                  <h4 style={{ 
-                    color: template.customization.font.color,
-                    fontFamily: template.customization.font.family
-                  }}>{template.name}</h4>
-                </div>
-              </div>
-              
-              <CardContent className="p-3">
-                <p className="text-xs text-muted-foreground line-clamp-2">{template.description}</p>
-              </CardContent>
-              
-              <CardFooter className="p-2 flex justify-between">
-                <p className="text-xs text-muted-foreground">
-                  {template.isPremium ? 'Premium' : 'Free'}
-                </p>
-                
-                {selectedTemplateId === template.id && (
-                  <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center">
-                    <Check className="h-4 w-4 text-white" />
+                  <div className="p-3">
+                    <h4 className="font-medium">{template.name}</h4>
+                    <p className="text-xs text-muted-foreground">{template.description}</p>
                   </div>
-                )}
-              </CardFooter>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </ScrollArea>
+      
+      <div className="flex justify-end">
+        <Button 
+          type="button"
+          onClick={() => {
+            if (selectedTemplateId) {
+              const template = eventTemplates.find(t => t.id === selectedTemplateId);
+              if (template) {
+                onSelect(template.customization);
+              }
+            }
+          }}
+          disabled={!selectedTemplateId}
+        >
+          Apply Template
+        </Button>
+      </div>
     </div>
   );
 };

@@ -49,13 +49,13 @@ export const eventTemplates: EventTemplate[] = [
   },
   {
     id: "template-2",
-    name: "Gradient Purple",
-    description: "Vibrant purple gradient with modern typography",
+    name: "Purple Theme",
+    description: "Vibrant purple design with modern typography",
     previewImageUrl: "/images/templates/gradient-purple.jpg",
     customization: {
       background: {
-        type: "gradient",
-        value: "linear-gradient(135deg, #6366f1, #8b5cf6)"
+        type: "solid",
+        value: "#6366f1"
       },
       font: {
         family: "Poppins, sans-serif",
@@ -152,14 +152,13 @@ export const eventTemplates: EventTemplate[] = [
   },
   {
     id: "template-5",
-    name: "Sunset Gradient",
+    name: "Sunset Theme",
     description: "Warm sunset colors with elegant design",
     previewImageUrl: "/images/templates/sunset-gradient.jpg",
     customization: {
       background: {
-        type: "gradient",
-        value: "linear-gradient(135deg, #f59e0b, #ef4444)",
-        angle: 135
+        type: "solid",
+        value: "#f59e0b"
       },
       font: {
         family: "Montserrat, sans-serif",

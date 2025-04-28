@@ -8,9 +8,7 @@ const convertEventCustomization = (customization: EventCustomization): any => {
   return {
     background: {
       type: customization.background.type,
-      value: customization.background.value,
-      angle: customization.background.angle,
-      direction: customization.background.direction
+      value: customization.background.value
     },
     font: {
       family: customization.font.family,
