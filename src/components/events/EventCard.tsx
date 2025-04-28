@@ -77,15 +77,14 @@ const EventCard = ({
 
   const handleMapsClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click
-    const url = event.maps_url || (event.location && generateMapsUrl(event.location));
-    if (url) {
+    if (event.location) {
+      const url = event.maps_url || generateMapsUrl(event.location);
       window.open(url, '_blank', 'noopener,noreferrer');
     }
   };
 
   const formattedLocation = location ? formatLocation(location) : '';
-  const hasLocation = Boolean(formattedLocation);
-
+  
   return (
     <Card 
       className="p-4 cursor-pointer transition-all hover:shadow-lg"
@@ -113,7 +112,7 @@ const EventCard = ({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center space-x-2">
                   <span className="line-clamp-1 text-sm">
-                    {formatLocation(event.location)}
+                    {formattedLocation}
                   </span>
                   <Button
                     variant="ghost"

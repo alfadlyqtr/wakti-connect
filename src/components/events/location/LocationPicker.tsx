@@ -9,17 +9,16 @@ interface LocationPickerProps {
   value: string;
   onChange: (location: string, type?: 'manual' | 'google_maps', url?: string) => void;
   className?: string;
-  placeholder?: string;
 }
 
 const LocationPicker: React.FC<LocationPickerProps> = ({
   value,
   onChange,
   className = '',
-  placeholder = "Add location"
 }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const formattedLocation = formatLocation(value);
+  const placeholder = "Add location";
 
   return (
     <div className={`${className}`}>
