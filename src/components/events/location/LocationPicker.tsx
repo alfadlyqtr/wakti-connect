@@ -32,8 +32,8 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
         
         if (!inputRef.current) return;
 
-        const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
-          fields: ['formatted_address', 'geometry', 'name'],
+        const autocomplete = new google.maps.places.Autocomplete(inputRef.current, {
+          fields: ['formatted_address', 'geometry', 'name']
         });
 
         autocomplete.addListener('place_changed', () => {
@@ -84,8 +84,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
 
       const { latitude, longitude } = position.coords;
       
-      // Convert coordinates to address using Google Geocoding
-      const geocoder = new google.maps.Geocoder();
+      const geocoder = new window.google.maps.Geocoder();
       const response = await geocoder.geocode({
         location: { lat: latitude, lng: longitude }
       });

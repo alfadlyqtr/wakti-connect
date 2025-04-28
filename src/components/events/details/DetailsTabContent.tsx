@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
@@ -64,16 +63,10 @@ const DetailsTabContent: React.FC<DetailsTabContentProps> = ({
     }
   };
 
-  const handleLocationPickerChange = (value: string, lat?: number, lng?: number) => {
+  const handleLocationChange = (value: string, lat?: number, lng?: number) => {
     if (onLocationChange) {
       const url = lat && lng ? `https://www.google.com/maps?q=${lat},${lng}` : undefined;
       onLocationChange(value, 'google_maps', url);
-    }
-  };
-
-  const handleMapUrlChange = (url: string) => {
-    if (onLocationChange && locationInputType === 'maps') {
-      onLocationChange(location, 'google_maps', url);
     }
   };
 
@@ -196,9 +189,8 @@ const DetailsTabContent: React.FC<DetailsTabContentProps> = ({
           <div className="space-y-2">
             <LocationPicker
               value={location}
-              onChange={handleLocationPickerChange}
+              onChange={handleLocationChange}
               placeholder="Search for a location..."
-              onMapUrlChange={handleMapUrlChange}
             />
             
             {getCurrentLocation && !isGettingLocation && (

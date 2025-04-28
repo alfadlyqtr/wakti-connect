@@ -19,7 +19,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
         <div className="flex-1">
           <LocationPicker
             value={location}
-            onChange={(value, lat, lng) => onLocationChange(value, lat, lng)}
+            onChange={onLocationChange}
             placeholder="Search for a location or place"
           />
           <p className="text-xs text-muted-foreground mt-1">

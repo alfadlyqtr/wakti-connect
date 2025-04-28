@@ -3,7 +3,7 @@
  * Maps configuration
  */
 
-export const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+export const GOOGLE_MAPS_API_KEY = 'AIzaSyBQ6iROkrf7ebTpqevZPaa0-Gdb_-ORw0Y';
 
 if (!GOOGLE_MAPS_API_KEY) {
   console.warn('Warning: No Google Maps API key found. Location features will be limited.');

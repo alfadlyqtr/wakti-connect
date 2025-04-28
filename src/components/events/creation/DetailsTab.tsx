@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,7 +24,7 @@ interface DetailsTabProps {
   location: string;
   locationType: 'manual' | 'google_maps';
   mapsUrl?: string;
-  handleLocationChange: (value: string, type: 'manual' | 'google_maps', mapsUrl?: string) => void;
+  handleLocationChange: (value: string, lat?: number, lng?: number) => void;
   handleNextTab: () => void;
   title: string;
   description: string;
@@ -67,6 +66,14 @@ const DetailsTab: React.FC<DetailsTabProps> = ({
   };
 
   const canProceedToNext = title.trim() !== '';
+
+  const handleLocationChange = (value: string, lat?: number, lng?: number) => {
+    if (handleLocationChange) {
+      // We'll store the maps URL internally when we have coordinates
+      const url = lat && lng ? `https://www.google.com/maps?q=${lat},${lng}` : undefined;
+      handleLocationChange(value, 'google_maps', url);
+    }
+  };
 
   return (
     <div className="px-4 py-2 space-y-6 max-w-2xl mx-auto">
@@ -145,9 +152,7 @@ const DetailsTab: React.FC<DetailsTabProps> = ({
         <Label htmlFor="location" className="text-base">Location</Label>
         <div className="mt-2">
           <LocationInput
-            locationType={locationType}
             location={location}
-            mapsUrl={mapsUrl}
             onLocationChange={handleLocationChange}
           />
         </div>
