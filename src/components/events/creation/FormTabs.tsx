@@ -130,9 +130,9 @@ const FormTabs: React.FC<FormTabsProps> = ({
 
         <TabsContent value="customize">
           <CustomizeTab 
-            customization={customization} 
-            onCustomizationChange={onCustomizationChange} 
-            handleNextTab={handleNextTab} 
+            customization={customization}
+            onCustomizationChange={onCustomizationChange}
+            handleNextTab={handleNextTab}
           />
         </TabsContent>
 
