@@ -1,30 +1,26 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, Navigation } from 'lucide-react';
-import { GOOGLE_MAPS_API_KEY, generateGoogleMapsUrl } from '@/config/maps';
-import { getFormattedAddress } from '@/components/ai/tools/maps-helpers';
-import { waitForGoogleMapsToLoad } from '@/utils/googleMapsLoader';
-import { useTranslation } from 'react-i18next';
 import { toast } from '@/components/ui/use-toast';
+import { useTranslation } from 'react-i18next';
+import { waitForGoogleMapsToLoad } from '@/utils/googleMapsLoader';
 
 interface LocationPickerProps {
   value: string;
   onChange: (value: string, lat?: number, lng?: number) => void;
   className?: string;
   placeholder?: string;
-  onMapUrlChange?: (url: string) => void;
 }
 
-const LocationPickerComponent: React.FC<LocationPickerProps> = ({
+const LocationPicker: React.FC<LocationPickerProps> = ({
   value,
   onChange,
   className = '',
-  placeholder,
-  onMapUrlChange
+  placeholder
 }) => {
   const { t } = useTranslation();
-  const [inputValue, setInputValue] = useState(value || '');
   const [isSearching, setIsSearching] = useState(false);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -33,15 +29,11 @@ const LocationPickerComponent: React.FC<LocationPickerProps> = ({
     const initializeAutocomplete = async () => {
       try {
         await waitForGoogleMapsToLoad();
-        console.log('Google Maps API loaded successfully');
-
-        if (!inputRef.current) {
-          console.warn('Input ref not available');
-          return;
-        }
+        
+        if (!inputRef.current) return;
 
         const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
-          fields: ['formatted_address', 'geometry', 'name', 'place_id'],
+          fields: ['formatted_address', 'geometry', 'name'],
         });
 
         autocomplete.addListener('place_changed', () => {
@@ -54,17 +46,12 @@ const LocationPickerComponent: React.FC<LocationPickerProps> = ({
 
           const lat = place.geometry.location.lat();
           const lng = place.geometry.location.lng();
+          const displayName = place.formatted_address || place.name || '';
           
-          setInputValue(place.formatted_address || '');
-          onChange(place.formatted_address || '', lat, lng);
-          
-          if (onMapUrlChange) {
-            onMapUrlChange(generateGoogleMapsUrl(place.formatted_address || ''));
-          }
+          onChange(displayName, lat, lng);
         });
 
         autocompleteRef.current = autocomplete;
-        console.log('Autocomplete initialized successfully');
       } catch (error) {
         console.error('Error initializing Google Maps:', error);
         toast({
@@ -76,11 +63,7 @@ const LocationPickerComponent: React.FC<LocationPickerProps> = ({
     };
 
     initializeAutocomplete();
-  }, [onChange, onMapUrlChange]);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
-  };
+  }, [onChange]);
 
   const handleGetCurrentLocation = async () => {
     if (!navigator.geolocation) {
@@ -100,19 +83,24 @@ const LocationPickerComponent: React.FC<LocationPickerProps> = ({
       });
 
       const { latitude, longitude } = position.coords;
-      const formattedAddress = await getFormattedAddress(latitude, longitude);
       
-      setInputValue(formattedAddress);
-      onChange(formattedAddress, latitude, longitude);
+      // Convert coordinates to address using Google Geocoding
+      const geocoder = new google.maps.Geocoder();
+      const response = await geocoder.geocode({
+        location: { lat: latitude, lng: longitude }
+      });
       
-      if (onMapUrlChange) {
-        onMapUrlChange(generateGoogleMapsUrl(formattedAddress));
+      if (response.results[0]) {
+        const address = response.results[0].formatted_address;
+        onChange(address, latitude, longitude);
+      } else {
+        throw new Error('No results found');
       }
     } catch (error: any) {
       console.error('Error getting location:', error);
       toast({
         title: "Error",
-        description: "Could not get your location",
+        description: "Could not get your current location",
         variant: "destructive"
       });
     } finally {
@@ -126,8 +114,8 @@ const LocationPickerComponent: React.FC<LocationPickerProps> = ({
         <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           type="text"
-          value={inputValue}
-          onChange={handleInputChange}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
           ref={inputRef}
           placeholder={placeholder || t('location.searchPlaceholder')}
           className="pl-8 pr-10"
@@ -149,4 +137,4 @@ const LocationPickerComponent: React.FC<LocationPickerProps> = ({
   );
 };
 
-export default LocationPickerComponent;
+export default LocationPicker;

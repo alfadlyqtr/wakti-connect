@@ -1,24 +1,10 @@
 
 import { GOOGLE_MAPS_API_KEY } from '@/config/maps';
 
-const validateMapsKey = () => {
-  if (!GOOGLE_MAPS_API_KEY) {
-    console.warn('Warning: Missing Google Maps API key');
-    return false;
-  }
-  return true;
-};
-
-export const getMapThumbnailUrl = async (location: string): Promise<string> => {
-  if (!location || !validateMapsKey()) return '';
+export const getMapThumbnailUrl = (location: string): string => {
+  if (!location || !GOOGLE_MAPS_API_KEY) return '';
   
-  try {
-    // Create Static Maps URL
-    return `https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(location)}&zoom=14&size=400x200&key=${GOOGLE_MAPS_API_KEY}&markers=${encodeURIComponent(location)}`;
-  } catch (error) {
-    console.error('Error generating map thumbnail URL:', error);
-    return '';
-  }
+  return `https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(location)}&zoom=14&size=400x200&key=${GOOGLE_MAPS_API_KEY}&markers=${encodeURIComponent(location)}`;
 };
 
 export const getLocationPreviewStyles = () => ({
@@ -28,3 +14,8 @@ export const getLocationPreviewStyles = () => ({
   borderRadius: '4px',
   border: '1px solid #e2e8f0'
 });
+
+export const handleMapsError = (error: any): string => {
+  console.error('Maps error:', error);
+  return "An error occurred while accessing location services. Please try again.";
+};
