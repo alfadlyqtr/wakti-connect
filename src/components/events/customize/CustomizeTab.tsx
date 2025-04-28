@@ -1,100 +1,155 @@
 
-import React, { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { EventCustomization } from "@/types/event.types";
-import CreateFromScratchForm from "./CreateFromScratchForm";
-import TemplateSelector from "@/components/invitations/TemplateSelector";
-import LivePreview from "./LivePreview";
-import { getTemplateById } from "@/data/eventTemplates";
-import { format } from "date-fns";
+import React from 'react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { EventCustomization } from '@/types/event.types';
+import { Button } from '@/components/ui/button';
+import BackgroundTabContent from './tabs-content/BackgroundTabContent';
+import TextTabContent from './tabs-content/TextTabContent';
+import ButtonsTabContent from './tabs-content/ButtonsTabContent';
+import HeaderTabContent from './tabs-content/HeaderTabContent';
+import AnimationsTabContent from './tabs-content/AnimationsTabContent';
+import CardEffectTabContent from './tabs-content/CardEffectTabContent';
+import FeaturesTabContent from './tabs-content/FeaturesTabContent';
 
-interface CustomizeTabProps {
+export interface CustomizeTabProps {
   customization: EventCustomization;
   onCustomizationChange: (customization: EventCustomization) => void;
-  title: string;
-  description?: string;
-  location?: string;
-  selectedDate?: Date;
-  startTime?: string;
-  endTime?: string;
+  handleNextTab?: () => void;
 }
 
-const CustomizeTab: React.FC<CustomizeTabProps> = ({
-  customization,
+const CustomizeTab: React.FC<CustomizeTabProps> = ({ 
+  customization, 
   onCustomizationChange,
-  title,
-  description,
-  location,
-  selectedDate,
-  startTime,
-  endTime
+  handleNextTab 
 }) => {
-  const [designMode, setDesignMode] = useState<'template' | 'scratch'>('template');
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
-  const [previewMode, setPreviewMode] = useState<'mobile' | 'desktop'>('mobile');
-  
-  const handleTemplateSelected = (templateId: string) => {
-    setSelectedTemplateId(templateId);
-    
-    const template = getTemplateById(templateId);
-    if (template) {
-      onCustomizationChange(template.customization);
-    }
-  };
-  
-  // Format the date and time for display
-  const getFormattedDateTime = () => {
-    if (!selectedDate) return "";
-    
-    const dateStr = format(selectedDate, "EEEE, MMMM d, yyyy");
-    
-    if (!startTime || !endTime) return dateStr;
-    
-    return `${dateStr} · ${startTime} - ${endTime}`;
-  };
+  const [activeTab, setActiveTab] = React.useState('background');
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <Tabs 
-            defaultValue={designMode} 
-            onValueChange={(value) => setDesignMode(value as 'template' | 'scratch')}
-            className="w-full"
-          >
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="template" className="px-3 py-2 text-center">Choose Template</TabsTrigger>
-              <TabsTrigger value="scratch" className="px-3 py-2 text-center">Customize</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="template">
-              <TemplateSelector
-                selectedTemplateId={selectedTemplateId}
-                onSelectTemplate={handleTemplateSelected}
-              />
-            </TabsContent>
-            
-            <TabsContent value="scratch">
-              <CreateFromScratchForm 
-                customization={customization}
-                onCustomizationChange={onCustomizationChange}
-              />
-            </TabsContent>
-          </Tabs>
+    <div className="space-y-6">
+      <Tabs 
+        defaultValue="background" 
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="w-full"
+      >
+        <div className="flex justify-center mb-6">
+          <TabsList className="grid grid-cols-3 sm:grid-cols-7">
+            <TabsTrigger value="background" onClick={() => setActiveTab('background')}>
+              Background
+            </TabsTrigger>
+            <TabsTrigger value="text" onClick={() => setActiveTab('text')}>
+              Text
+            </TabsTrigger>
+            <TabsTrigger value="buttons" onClick={() => setActiveTab('buttons')}>
+              Buttons
+            </TabsTrigger>
+            <TabsTrigger value="header" onClick={() => setActiveTab('header')} className="hidden sm:inline-flex">
+              Header
+            </TabsTrigger>
+            <TabsTrigger value="effects" onClick={() => setActiveTab('effects')} className="hidden sm:inline-flex">
+              Effects
+            </TabsTrigger>
+            <TabsTrigger value="animations" onClick={() => setActiveTab('animations')} className="hidden sm:inline-flex">
+              Animations
+            </TabsTrigger>
+            <TabsTrigger value="features" onClick={() => setActiveTab('features')} className="hidden sm:inline-flex">
+              Features
+            </TabsTrigger>
+          </TabsList>
         </div>
         
-        <div className="bg-muted/30 p-4 rounded-md flex flex-col justify-center">
-          <LivePreview 
-            customization={customization}
-            title={title || "Event Title"}
-            description={description}
-            location={location}
-            dateTime={getFormattedDateTime()}
-            viewMode={previewMode}
-            onViewModeChange={setPreviewMode}
-          />
+        <div className="mt-6 p-2">
+          {activeTab === 'background' && (
+            <BackgroundTabContent
+              background={customization.background}
+              onBackgroundChange={(background) => onCustomizationChange({ 
+                ...customization, 
+                background 
+              })}
+            />
+          )}
+          
+          {activeTab === 'text' && (
+            <TextTabContent
+              font={customization.font}
+              onFontChange={(font) => onCustomizationChange({
+                ...customization,
+                font
+              })}
+            />
+          )}
+          
+          {activeTab === 'buttons' && (
+            <ButtonsTabContent
+              buttons={customization.buttons}
+              onButtonsChange={(buttons) => onCustomizationChange({
+                ...customization,
+                buttons
+              })}
+            />
+          )}
+          
+          {activeTab === 'header' && (
+            <HeaderTabContent
+              headerStyle={customization.headerStyle}
+              onHeaderStyleChange={(headerStyle) => onCustomizationChange({
+                ...customization,
+                headerStyle
+              })}
+            />
+          )}
+          
+          {activeTab === 'animations' && (
+            <AnimationsTabContent
+              animation={customization.animation}
+              elementAnimations={customization.elementAnimations}
+              onAnimationChange={(animation) => onCustomizationChange({
+                ...customization,
+                animation
+              })}
+              onElementAnimationsChange={(elementAnimations) => onCustomizationChange({
+                ...customization,
+                elementAnimations
+              })}
+            />
+          )}
+          
+          {activeTab === 'effects' && (
+            <CardEffectTabContent
+              cardEffect={customization.cardEffect}
+              onCardEffectChange={(cardEffect) => onCustomizationChange({
+                ...customization,
+                cardEffect
+              })}
+            />
+          )}
+          
+          {activeTab === 'features' && (
+            <FeaturesTabContent
+              enableChatbot={customization.enableChatbot}
+              showAcceptDeclineButtons={customization.showAcceptDeclineButtons}
+              showAddToCalendarButton={customization.showAddToCalendarButton}
+              mapDisplay={customization.mapDisplay}
+              onFeatureChange={(key, value) => onCustomizationChange({
+                ...customization,
+                [key]: value
+              })}
+            />
+          )}
         </div>
-      </div>
+      </Tabs>
+      
+      {handleNextTab && (
+        <div className="pt-4 flex justify-end">
+          <Button 
+            type="button" 
+            onClick={handleNextTab}
+            className="px-6"
+          >
+            Next: Share
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

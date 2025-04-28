@@ -1,6 +1,6 @@
 
 import { Event, EventCustomization } from "@/types/event.types";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { EventFormValues } from "@/types/event.types";
 import { InvitationRecipient } from "@/types/invitation.types";
@@ -38,10 +38,12 @@ const useEditEventEffect = ({
   setMapsUrl,
   setCustomization
 }: UseEditEventEffectProps) => {
+  const [isLoading, setIsLoading] = useState(false);
+  
   // Use this hook to load data from editEvent into form and state
   useEffect(() => {
     if (editEvent) {
-      const { title, description, location, customization, is_all_day, start_time, end_time } = editEvent;
+      const { title, description, location, customization, is_all_day, start_time, end_time, location_type, maps_url } = editEvent;
       
       setIsEditMode(true);
       
@@ -96,18 +98,18 @@ const useEditEventEffect = ({
           id: inv.id || `email-${Date.now()}`,
           name: inv.email || "",
           email: inv.email || "",
-          type: inv.email ? 'email' as const : 'user' as const
+          type: inv.email ? ('email' as const) : ('user' as const)
         }));
         
         setRecipients(recipients);
       }
       
       // Handle location type and maps URL if present
-      if (editEvent.location_type) {
-        setLocationType(editEvent.location_type);
+      if (location_type) {
+        setLocationType(location_type);
         
-        if (editEvent.location_type === 'google_maps' && editEvent.maps_url) {
-          setMapsUrl(editEvent.maps_url);
+        if (location_type === 'google_maps' && maps_url) {
+          setMapsUrl(maps_url);
         }
       }
     }

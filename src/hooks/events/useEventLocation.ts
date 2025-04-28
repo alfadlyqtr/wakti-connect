@@ -17,9 +17,9 @@ export const useEventLocation = () => {
     return `Current Location (${truncatedLat}, ${truncatedLng})`;
   };
 
-  // Update the signature to match what's expected in various components
+  // Standard location change handler with consistent parameter types
   const handleLocationChange = useCallback((
-    location: string,
+    location: string, 
     type?: 'manual' | 'google_maps',
     url?: string
   ) => {
@@ -46,12 +46,12 @@ export const useEventLocation = () => {
     }
   }, []);
 
-  // Add a new method that can handle lat/lng parameters
+  // Legacy method for compatibility - will update coordinates
   const handleLocationWithCoordinates = useCallback((
     displayLocation: string,
-    mapsUrl?: string,
     lat?: number,
-    lng?: number
+    lng?: number,
+    mapsUrl?: string
   ) => {
     setLocation(displayLocation);
     setDisplayLocation(displayLocation);

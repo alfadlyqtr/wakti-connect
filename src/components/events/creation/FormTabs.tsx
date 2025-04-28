@@ -132,7 +132,7 @@ const FormTabs: React.FC<FormTabsProps> = ({
           <CustomizeTab 
             customization={customization} 
             onCustomizationChange={onCustomizationChange} 
-            onNextTab={handleNextTab} 
+            handleNextTab={handleNextTab} 
           />
         </TabsContent>
 
@@ -141,8 +141,8 @@ const FormTabs: React.FC<FormTabsProps> = ({
             recipients={recipients}
             addRecipient={addRecipient}
             removeRecipient={removeRecipient}
-            activeTab={shareTab}
-            setActiveTab={setShareTab}
+            shareTab={shareTab}
+            setShareTab={setShareTab}
             eventTitle={title}
             onSendEmail={onSendEmail}
           />
