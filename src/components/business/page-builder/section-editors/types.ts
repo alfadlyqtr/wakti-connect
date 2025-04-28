@@ -1,7 +1,7 @@
 
-import { ChangeEvent } from "react";
+import React from "react";
 
 export interface EditorProps {
   contentData: Record<string, any>;
-  handleInputChange: (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  handleInputChange: (name: string, value: any) => void;
 }

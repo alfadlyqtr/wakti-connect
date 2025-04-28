@@ -6,6 +6,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { EditorProps } from "./types";
 
 const AboutEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }) => {
+  // Create an adapter function for input components
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    handleInputChange(e.target.name, e.target.value);
+  };
+
   return (
     <>
       <div className="space-y-2">
@@ -14,7 +19,7 @@ const AboutEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }) 
           id="title"
           name="title"
           value={contentData.title || ""}
-          onChange={handleInputChange}
+          onChange={handleChange}
           placeholder="About Us"
         />
       </div>
@@ -24,7 +29,7 @@ const AboutEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }) 
           id="content"
           name="content"
           value={contentData.content || ""}
-          onChange={handleInputChange}
+          onChange={handleChange}
           placeholder="Tell your story and describe your business..."
           rows={5}
         />

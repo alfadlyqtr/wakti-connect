@@ -10,6 +10,11 @@ import { useSectionEditor } from "@/hooks/useSectionEditor";
 const HeaderEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }) => {
   const { handleStyleChange } = useSectionEditor();
   
+  // Create an adapter function for input components
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    handleInputChange(e.target.name, e.target.value);
+  };
+  
   return (
     <>
       <div className="space-y-2">
@@ -18,7 +23,7 @@ const HeaderEditor: React.FC<EditorProps> = ({ contentData, handleInputChange })
           id="title"
           name="title"
           value={contentData.title || ""}
-          onChange={handleInputChange}
+          onChange={handleChange}
           placeholder="Welcome to our business"
         />
       </div>
@@ -28,7 +33,7 @@ const HeaderEditor: React.FC<EditorProps> = ({ contentData, handleInputChange })
           id="subtitle"
           name="subtitle"
           value={contentData.subtitle || ""}
-          onChange={handleInputChange}
+          onChange={handleChange}
           placeholder="Book our services online"
         />
       </div>
@@ -38,7 +43,7 @@ const HeaderEditor: React.FC<EditorProps> = ({ contentData, handleInputChange })
           id="description"
           name="description"
           value={contentData.description || ""}
-          onChange={handleInputChange}
+          onChange={handleChange}
           placeholder="Welcome to our business page"
           rows={3}
         />
