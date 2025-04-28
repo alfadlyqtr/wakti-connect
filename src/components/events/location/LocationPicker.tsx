@@ -88,22 +88,22 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
 
       const { latitude, longitude } = position.coords;
 
-      // Make sure Google Maps API is loaded
       await waitForGoogleMapsToLoad();
       
-      // Use the Geocoding API to get a human-readable address
       const geocoder = new window.google.maps.Geocoder();
       
-      const handleGeocodeResult = (results: google.maps.GeocoderResult[] | null, status: google.maps.GeocoderStatus) => {
+      const handleGeocodeResult = (
+        results: google.maps.GeocoderResult[] | null, 
+        status: google.maps.GeocoderStatus
+      ) => {
         if (status === 'OK' && results && results[0]) {
-          // Get the most detailed address possible
           const address = results[0].formatted_address;
           onChange(address, latitude, longitude);
         } else {
           console.warn(`Geocoding failed with status: ${status}`);
           toast({
-            title: "Location Found",
-            description: "Could not get exact address, please try searching manually",
+            title: "Location Error",
+            description: "Could not get exact address. Please try searching manually.",
             variant: "destructive"
           });
         }

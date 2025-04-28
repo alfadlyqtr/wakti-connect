@@ -4,6 +4,38 @@
 // Google Maps types
 declare namespace google {
   namespace maps {
+    class Geocoder {
+      geocode(
+        request: GeocodeRequest,
+        callback: (results: GeocoderResult[] | null, status: GeocoderStatus) => void
+      ): void;
+    }
+
+    interface GeocodeRequest {
+      location?: { lat: number; lng: number };
+      address?: string;
+    }
+
+    interface GeocoderResult {
+      formatted_address: string;
+      geometry: {
+        location: {
+          lat(): number;
+          lng(): number;
+        };
+      };
+      address_components?: AddressComponent[];
+      place_id?: string;
+    }
+
+    interface AddressComponent {
+      long_name: string;
+      short_name: string;
+      types: string[];
+    }
+
+    type GeocoderStatus = 'OK' | 'ZERO_RESULTS' | 'OVER_QUERY_LIMIT' | 'REQUEST_DENIED' | 'INVALID_REQUEST' | 'UNKNOWN_ERROR';
+
     namespace places {
       interface AutocompleteOptions {
         fields?: string[];
