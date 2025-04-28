@@ -150,7 +150,6 @@ const DetailsTabContent: React.FC<DetailsTabContentProps> = ({
           <LocationPicker
             value={location}
             onChange={handleLocationChange}
-            placeholder="Search for a location..."
           />
         </div>
       </div>

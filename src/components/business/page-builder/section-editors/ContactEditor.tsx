@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useSectionEditor } from "@/hooks/useSectionEditor";
 import { Input } from "@/components/ui/input";
@@ -39,14 +40,20 @@ const ContactEditor: React.FC<ContactEditorProps> = ({ contentData, handleInputC
     handleInputChange('socialMedia', currentSocial);
   };
 
+  // Modified handlers for standard inputs to match the expected function signature
+  const handleStandardInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    handleInputChange(e.target.name || e.target.id, e.target.value);
+  };
+
   return (
     <div className="space-y-6">
       <div className="space-y-2">
         <Label htmlFor="title">Section Title</Label>
         <Input
           id="title"
+          name="title"
           value={contentData.title || ''}
-          onChange={(e) => handleInputChange('title', e.target.value)}
+          onChange={handleStandardInputChange}
           placeholder="Contact Us"
         />
         <FormDescription>
@@ -58,8 +65,9 @@ const ContactEditor: React.FC<ContactEditorProps> = ({ contentData, handleInputC
         <Label htmlFor="subtitle">Subtitle</Label>
         <Input
           id="subtitle"
+          name="subtitle"
           value={contentData.subtitle || ''}
-          onChange={(e) => handleInputChange('subtitle', e.target.value)}
+          onChange={handleStandardInputChange}
           placeholder="Get in touch with us"
         />
         <FormDescription>
@@ -71,8 +79,9 @@ const ContactEditor: React.FC<ContactEditorProps> = ({ contentData, handleInputC
         <Label htmlFor="description">Description</Label>
         <Textarea
           id="description"
+          name="description"
           value={contentData.description || ''}
-          onChange={(e) => handleInputChange('description', e.target.value)}
+          onChange={handleStandardInputChange}
           placeholder="We'd love to hear from you. Send us a message and we'll respond as soon as possible."
           rows={3}
         />
@@ -92,9 +101,10 @@ const ContactEditor: React.FC<ContactEditorProps> = ({ contentData, handleInputC
             <Label htmlFor="email">Email Address</Label>
             <Input
               id="email"
+              name="email"
               type="email"
               value={contentData.email || ''}
-              onChange={(e) => handleInputChange('email', e.target.value)}
+              onChange={handleStandardInputChange}
               placeholder="your@email.com"
             />
           </div>
@@ -103,9 +113,10 @@ const ContactEditor: React.FC<ContactEditorProps> = ({ contentData, handleInputC
             <Label htmlFor="phone">Phone Number</Label>
             <Input
               id="phone"
+              name="phone"
               type="tel"
               value={contentData.phone || ''}
-              onChange={(e) => handleInputChange('phone', e.target.value)}
+              onChange={handleStandardInputChange}
               placeholder="+1 (555) 123-4567"
             />
           </div>
@@ -123,8 +134,9 @@ const ContactEditor: React.FC<ContactEditorProps> = ({ contentData, handleInputC
             <Label htmlFor="hours">Business Hours</Label>
             <Textarea
               id="hours"
+              name="hours"
               value={contentData.hours || ''}
-              onChange={(e) => handleInputChange('hours', e.target.value)}
+              onChange={handleStandardInputChange}
               placeholder="Monday - Friday: 9am - 5pm&#10;Saturday: 10am - 4pm&#10;Sunday: Closed"
               rows={4}
             />
