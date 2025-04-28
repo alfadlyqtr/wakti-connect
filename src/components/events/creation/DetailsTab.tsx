@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -45,8 +46,6 @@ const DetailsTab: React.FC<DetailsTabProps> = ({
   isAllDay,
   setIsAllDay,
   location,
-  locationType,
-  mapsUrl,
   handleLocationChange,
   handleNextTab,
   title,
@@ -66,14 +65,6 @@ const DetailsTab: React.FC<DetailsTabProps> = ({
   };
 
   const canProceedToNext = title.trim() !== '';
-
-  const handleLocationChange = (value: string, lat?: number, lng?: number) => {
-    if (handleLocationChange) {
-      // We'll store the maps URL internally when we have coordinates
-      const url = lat && lng ? `https://www.google.com/maps?q=${lat},${lng}` : undefined;
-      handleLocationChange(value, 'google_maps', url);
-    }
-  };
 
   return (
     <div className="px-4 py-2 space-y-6 max-w-2xl mx-auto">

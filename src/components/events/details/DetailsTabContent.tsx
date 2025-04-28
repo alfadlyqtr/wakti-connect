@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+
+import React from "react";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,9 +8,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { CalendarIcon, Clock, MapPin, Navigation } from "lucide-react";
+import { CalendarIcon, Clock } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import LocationPicker from "../location/LocationPicker";
 
 interface DetailsTabContentProps {
@@ -41,8 +41,6 @@ const DetailsTabContent: React.FC<DetailsTabContentProps> = ({
   startTime = "09:00",
   endTime = "10:00",
   isAllDay = false,
-  locationType = 'manual',
-  mapsUrl = "",
   onTitleChange,
   onDescriptionChange,
   onDateChange,
@@ -50,19 +48,8 @@ const DetailsTabContent: React.FC<DetailsTabContentProps> = ({
   onStartTimeChange,
   onEndTimeChange,
   onIsAllDayChange,
-  getCurrentLocation,
-  isGettingLocation
+  isGettingLocation = false
 }) => {
-  const [locationInputType, setLocationInputType] = useState<'manual' | 'maps'>(locationType === 'google_maps' ? 'maps' : 'manual');
-  
-  const handleLocationTypeChange = (value: 'manual' | 'maps') => {
-    setLocationInputType(value);
-    // Reset location when changing type
-    if (value === 'manual' && onLocationChange) {
-      onLocationChange("", 'manual');
-    }
-  };
-
   const handleLocationChange = (value: string, lat?: number, lng?: number) => {
     if (onLocationChange) {
       const url = lat && lng ? `https://www.google.com/maps?q=${lat},${lng}` : undefined;
@@ -160,66 +147,13 @@ const DetailsTabContent: React.FC<DetailsTabContentProps> = ({
       
       <div className="space-y-3">
         <Label>Location</Label>
-        
-        <RadioGroup 
-          value={locationInputType} 
-          onValueChange={(v) => handleLocationTypeChange(v as 'manual' | 'maps')}
-          className="flex space-x-4"
-        >
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="manual" id="manual" />
-            <Label htmlFor="manual">Manual entry</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="maps" id="maps" />
-            <Label htmlFor="maps">Google Maps</Label>
-          </div>
-        </RadioGroup>
-        
-        {locationInputType === 'manual' ? (
-          <div className="flex items-center space-x-2">
-            <MapPin className="h-4 w-4 text-muted-foreground" />
-            <Input
-              value={location}
-              onChange={(e) => onLocationChange?.(e.target.value, 'manual')}
-              placeholder="Enter location manually"
-            />
-          </div>
-        ) : (
-          <div className="space-y-2">
-            <LocationPicker
-              value={location}
-              onChange={handleLocationChange}
-              placeholder="Search for a location..."
-            />
-            
-            {getCurrentLocation && !isGettingLocation && (
-              <Button 
-                type="button" 
-                variant="outline" 
-                size="sm"
-                className="w-full" 
-                onClick={getCurrentLocation}
-              >
-                <Navigation className="mr-2 h-4 w-4" />
-                Use my current location
-              </Button>
-            )}
-            
-            {isGettingLocation && (
-              <Button 
-                type="button" 
-                variant="outline" 
-                size="sm"
-                className="w-full" 
-                disabled={true}
-              >
-                <Navigation className="mr-2 h-4 w-4 animate-pulse" />
-                Getting your location...
-              </Button>
-            )}
-          </div>
-        )}
+        <div className="space-y-2">
+          <LocationPicker
+            value={location}
+            onChange={handleLocationChange}
+            placeholder="Search for a location..."
+          />
+        </div>
       </div>
     </div>
   );

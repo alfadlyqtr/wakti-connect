@@ -4,8 +4,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, Navigation } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
-import { useTranslation } from 'react-i18next';
 import { waitForGoogleMapsToLoad } from '@/utils/googleMapsLoader';
+import { GOOGLE_MAPS_API_KEY } from '@/config/maps';
 
 interface LocationPickerProps {
   value: string;
@@ -20,7 +20,6 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   className = '',
   placeholder
 }) => {
-  const { t } = useTranslation();
   const [isSearching, setIsSearching] = useState(false);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -32,7 +31,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
         
         if (!inputRef.current) return;
 
-        const autocomplete = new google.maps.places.Autocomplete(inputRef.current, {
+        const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
           fields: ['formatted_address', 'geometry', 'name']
         });
 
@@ -84,25 +83,34 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
 
       const { latitude, longitude } = position.coords;
       
-      const geocoder = new window.google.maps.Geocoder();
-      const response = await geocoder.geocode({
-        location: { lat: latitude, lng: longitude }
-      });
+      // Make sure Google Maps API is loaded
+      await waitForGoogleMapsToLoad();
       
-      if (response.results[0]) {
-        const address = response.results[0].formatted_address;
-        onChange(address, latitude, longitude);
-      } else {
-        throw new Error('No results found');
-      }
+      // Now use the Geocoding API to get the address
+      const geocoder = new window.google.maps.Geocoder();
+      
+      geocoder.geocode(
+        { location: { lat: latitude, lng: longitude } },
+        (results, status) => {
+          if (status === 'OK' && results && results[0]) {
+            const address = results[0].formatted_address;
+            onChange(address, latitude, longitude);
+          } else {
+            // If geocoding fails, just use coordinates as fallback
+            const fallbackAddress = `Location (${latitude.toFixed(6)}, ${longitude.toFixed(6)})`;
+            onChange(fallbackAddress, latitude, longitude);
+            console.warn(`Geocoding failed with status: ${status}`);
+          }
+          setIsSearching(false);
+        }
+      );
     } catch (error: any) {
       console.error('Error getting location:', error);
       toast({
         title: "Error",
-        description: "Could not get your current location",
+        description: error.message || "Could not get your current location",
         variant: "destructive"
       });
-    } finally {
       setIsSearching(false);
     }
   };
@@ -116,7 +124,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           ref={inputRef}
-          placeholder={placeholder || t('location.searchPlaceholder')}
+          placeholder={placeholder || "Search for a location"}
           className="pl-8 pr-10"
         />
       </div>
@@ -130,7 +138,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
         disabled={isSearching}
       >
         <Navigation className="h-3.5 w-3.5" />
-        {isSearching ? t('location.gettingLocation') : t('location.currentLocation')}
+        {isSearching ? "Getting your location..." : "Use my current location"}
       </Button>
     </div>
   );
