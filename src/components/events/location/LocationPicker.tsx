@@ -1,12 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Navigation } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { useLocationSearch } from '@/hooks/useLocationSearch';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { generateGoogleMapsUrl } from '@/config/maps';
 
 interface LocationPickerProps {
   value: string;
@@ -23,25 +22,22 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
 }) => {
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [inputValue, setInputValue] = useState(value);
-  const [open, setOpen] = useState(false);
-  const { searchLocation, searchResults, isSearching } = useLocationSearch();
 
   // Update local state when prop value changes
   useEffect(() => {
     setInputValue(value);
   }, [value]);
 
-  const handleInputChange = (newValue: string) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
     setInputValue(newValue);
-    searchLocation(newValue);
-    setOpen(true);
-    onChange(newValue);
-  };
-
-  const handleSelectLocation = (displayName: string, lat: number, lon: number) => {
-    setInputValue(displayName);
-    onChange(displayName, lat, lon);
-    setOpen(false);
+    
+    // Check if it's a Google Maps URL
+    if (newValue.includes('google.com/maps')) {
+      onChange(newValue, undefined, undefined);
+    } else {
+      onChange(newValue);
+    }
   };
 
   const handleGetCurrentLocation = async () => {
@@ -67,25 +63,13 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
 
       const { latitude, longitude } = position.coords;
       
-      // Reverse geocode the coordinates
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
-        {
-          headers: {
-            'Accept-Language': 'en',
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch location data');
-      }
-
-      const data = await response.json();
-      const locationString = data.display_name;
+      // Create location string with coordinates
+      const locationString = `Location (${latitude.toFixed(6)}, ${longitude.toFixed(6)})`;
+      const mapsUrl = generateGoogleMapsUrl(`${latitude},${longitude}`);
       
-      setInputValue(locationString);
-      onChange(locationString, latitude, longitude);
+      setInputValue(mapsUrl);
+      onChange(mapsUrl, latitude, longitude);
+      
     } catch (error: any) {
       console.error('Error getting location:', error);
       toast({
@@ -113,49 +97,13 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
 
   return (
     <div className={`space-y-2 ${className}`}>
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <div className="relative">
-            <Input
-              type="text"
-              value={inputValue}
-              onChange={(e) => handleInputChange(e.target.value)}
-              placeholder={placeholder || "Search for a location"}
-              className="w-full"
-            />
-          </div>
-        </PopoverTrigger>
-        {open && (
-          <PopoverContent className="w-[400px] p-0" align="start">
-            <Command>
-              <CommandInput
-                placeholder="Search for a location..."
-                value={inputValue}
-                onValueChange={handleInputChange}
-              />
-              <CommandGroup>
-                {isSearching ? (
-                  <div className="flex items-center justify-center p-4">
-                    <LoadingSpinner size="sm" />
-                  </div>
-                ) : searchResults && searchResults.length > 0 ? (
-                  searchResults.map((result, index) => (
-                    <CommandItem
-                      key={`${result.display_name}-${index}`}
-                      onSelect={() => handleSelectLocation(result.display_name, result.lat, result.lon)}
-                      className="px-4 py-2 cursor-pointer hover:bg-accent"
-                    >
-                      {result.display_name}
-                    </CommandItem>
-                  ))
-                ) : (
-                  <CommandEmpty className="p-4 text-center">No locations found</CommandEmpty>
-                )}
-              </CommandGroup>
-            </Command>
-          </PopoverContent>
-        )}
-      </Popover>
+      <Input
+        type="text"
+        value={inputValue}
+        onChange={handleInputChange}
+        placeholder={placeholder || "Enter a location or paste a Google Maps link"}
+        className="w-full"
+      />
       
       <Button 
         type="button" 
