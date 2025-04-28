@@ -15,9 +15,13 @@ import ChatbotSection from "../sections/ChatbotSection";
 const SectionEditorFields: React.FC = () => {
   const { section, contentData, updateContentField } = useSectionEditor();
 
-  // Create adapter function that converts from event-based to name/value based
-  const handleInputChange = (name: string, value: any) => {
-    updateContentField(name, value);
+  // Create adapter function that handles both event-based and name/value based inputs
+  const handleInputChange = (nameOrEvent: string | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, value?: any) => {
+    if (typeof nameOrEvent === 'string') {
+      updateContentField(nameOrEvent, value);
+    } else {
+      updateContentField(nameOrEvent.target.name, nameOrEvent.target.value);
+    }
   };
   
   const renderEditorFields = () => {
