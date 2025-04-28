@@ -30,6 +30,34 @@ export const formatDate = (isoString: string): string => {
 };
 
 /**
+ * Format a date string to a shorter readable format
+ */
+export const formatDateShort = (date: Date): string => {
+  try {
+    if (!isValid(date)) return "Invalid date";
+    return format(date, "MMM d, yyyy");
+  } catch (e) {
+    console.error("Error formatting date:", e);
+    return "Invalid date";
+  }
+};
+
+/**
+ * Format a time range between two dates
+ */
+export const formatTimeRange = (startDate: Date, endDate: Date): string => {
+  try {
+    if (!isValid(startDate) || !isValid(endDate)) return "Invalid time range";
+    const startTime = format(startDate, "h:mm a");
+    const endTime = format(endDate, "h:mm a");
+    return `${startTime} - ${endTime}`;
+  } catch (e) {
+    console.error("Error formatting time range:", e);
+    return "Invalid time range";
+  }
+};
+
+/**
  * Format a date/time string to a readable format with both date and time
  */
 export const formatDateTime = (isoString: string): string => {

@@ -7,9 +7,24 @@ import { formatDateShort, formatTimeRange } from '@/utils/dateUtils';
 interface EventCardProps {
   event: Event;
   onClick?: () => void;
+  onCardClick?: () => void; // Added for compatibility with DashboardEvents
+  onDelete?: (eventId: string) => Promise<void>;
+  onEdit?: (event: Event) => void;
+  onViewResponses?: (eventId: string) => void;
+  onAccept?: (eventId: string) => Promise<void>;
+  onDecline?: (eventId: string) => Promise<void>;
 }
 
-const EventCard = ({ event, onClick }: EventCardProps) => {
+const EventCard = ({ 
+  event, 
+  onClick, 
+  onCardClick,
+  onDelete,
+  onEdit,
+  onViewResponses,
+  onAccept,
+  onDecline
+}: EventCardProps) => {
   const { 
     title, 
     description, 
@@ -54,11 +69,14 @@ const EventCard = ({ event, onClick }: EventCardProps) => {
     backgroundPosition: 'center',
   };
 
+  // Use onCardClick if provided, otherwise fall back to onClick
+  const handleCardClick = onCardClick || onClick;
+
   return (
     <Card 
       className="p-4 cursor-pointer transition-all hover:shadow-lg"
       style={cardStyles}
-      onClick={onClick}
+      onClick={handleCardClick}
     >
       <div className="space-y-2">
         <div>
