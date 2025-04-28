@@ -1,9 +1,10 @@
+
 import React from 'react';
 import { Event } from '@/types/event.types';
 import { Card } from '@/components/ui/card';
 import { formatDateShort, formatTimeRange } from '@/utils/dateUtils';
-import { formatLocation, generateMapsUrl } from '@/utils/locationUtils';
-import { MapPin, ExternalLink } from 'lucide-react';
+import { formatLocation, generateMapsUrl, generateDirectionsUrl } from '@/utils/locationUtils';
+import { MapPin, Navigation, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface EventCardProps {
@@ -75,10 +76,18 @@ const EventCard = ({
 
   const handleCardClick = onCardClick || onClick;
 
-  const handleMapsClick = (e: React.MouseEvent) => {
+  const handleViewOnMap = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click
     if (event.location) {
       const url = event.maps_url || generateMapsUrl(event.location);
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  };
+  
+  const handleGetDirections = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click
+    if (event.location) {
+      const url = generateDirectionsUrl(event.location);
       window.open(url, '_blank', 'noopener,noreferrer');
     }
   };
@@ -107,21 +116,33 @@ const EventCard = ({
           </div>
           
           {event.location && (
-            <div className="mt-2 flex items-start space-x-2">
-              <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center space-x-2">
-                  <span className="line-clamp-1 text-sm">
+            <div className="mt-2">
+              <div className="flex items-start space-x-2">
+                <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="line-clamp-1 text-sm">
                     {formattedLocation}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 p-1 hover:bg-accent"
-                    onClick={handleMapsClick}
-                  >
-                    <MapPin className="h-4 w-4" />
-                  </Button>
+                  </div>
+                  <div className="flex gap-2 mt-1.5">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 px-2 text-xs flex gap-1 items-center"
+                      onClick={handleViewOnMap}
+                    >
+                      <MapPin className="h-3 w-3" />
+                      <span>View Map</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 px-2 text-xs flex gap-1 items-center"
+                      onClick={handleGetDirections}
+                    >
+                      <Navigation className="h-3 w-3" />
+                      <span>Directions</span>
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
