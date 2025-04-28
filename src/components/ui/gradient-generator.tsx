@@ -1,9 +1,11 @@
+
 "use client";
 
 import * as React from "react"
 import { useEffect, useRef, useState } from "react";
 import { Slider } from "@/components/ui/slider";
 import { Copy, Minus, Plus, RotateCw } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,7 +46,7 @@ export function GradientGenerator() {
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(gradientCSS).then(() => {
-      
+      // Success state could be added here
     });
   };
 
@@ -150,14 +152,12 @@ export function GradientGenerator() {
     setNoiseAmount(0);
     setApplyNoise(false);
     setIsRadialGradient(false);
-     
   };
 
   return (
     <div className="mt-10 flex items-center justify-center p-6 xl:p-0">
       <div className="mx-auto w-full max-w-7xl space-y-2 rounded-2xl border-2 bg-popover/80 p-6">
         <div className="flex flex-wrap justify-center gap-6">
-          {/* Preview Section */}
           <div className="relative">
             <div
               className="aspect-square h-full w-60 rounded-md md:w-80"
@@ -170,10 +170,7 @@ export function GradientGenerator() {
               className="absolute left-0 top-0 aspect-square h-full w-60 rounded-md mix-blend-overlay md:w-80"
             />
           </div>
-
-          {/* Controls Section */}
           <div className="grid w-full flex-1 gap-2">
-            {/* Color Stops */}
             <div className="flex flex-wrap items-center gap-2">
               {colorStops.map((stop, index) => (
                 <div key={index} className="flex items-center gap-2">
@@ -183,7 +180,7 @@ export function GradientGenerator() {
                       className="text-lg font-bold"
                     >
                       <div
-                        className="size-10 cursor-pointer rounded-full border-2"
+                        className="border-ali size-10 cursor-pointer rounded-full border-2"
                         style={{ backgroundColor: stop.color }}
                       />
                     </label>
@@ -224,8 +221,6 @@ export function GradientGenerator() {
                 </Button>
               )}
             </div>
-
-            {/* Gradient Type */}
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-2">
                 <Label className={!isRadialGradient ? "font-medium" : ""}>
@@ -261,7 +256,6 @@ export function GradientGenerator() {
               )}
             </div>
 
-            {/* Noise Controls */}
             <div className="flex w-full items-center gap-2">
               <Switch
                 id="apply-noise"
@@ -288,8 +282,6 @@ export function GradientGenerator() {
                 </div>
               )}
             </div>
-
-            {/* Actions */}
             <div className="grid gap-2">
               <div>
                 <div className="mt-1 flex flex-wrap items-center gap-2">
@@ -315,7 +307,7 @@ export function GradientGenerator() {
                     onClick={resetSettings}
                     variant="secondary"
                   >
-                    <RotateCw className="h-4 w-4" />
+                    <RotateCw />
                   </Button>
                 </div>
               </div>
