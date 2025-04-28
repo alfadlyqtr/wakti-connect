@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -92,12 +91,9 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
 
     // Clean up on unmount
     return () => {
-      if (autocompleteRef.current) {
+      if (autocompleteRef.current && window.google?.maps) {
         // Safely clear listeners if Google Maps is loaded
-        const maps = window.google?.maps as typeof google.maps;
-        if (maps && maps.event) {
-          maps.event.clearInstanceListeners(autocompleteRef.current);
-        }
+        google.maps.event?.clearInstanceListeners?.(autocompleteRef.current);
       }
     };
   }, [onChange]);
