@@ -68,13 +68,12 @@ export const useEventForm = (editEvent?: Event | null, onSuccess?: () => void) =
         recipients.forEach((_, index) => removeRecipient(index));
       }
     }, [recipients, removeRecipient]),
-    setLocation: useCallback((loc) => handleLocationChange(loc, 'manual'), [handleLocationChange]),
+    setLocation: useCallback((loc) => handleLocationChange(loc), [handleLocationChange]),
     setLocationType: useCallback((type) => {
-      handleLocationChange(location, type);
-    }, [handleLocationChange, location]),
-    setMapsUrl: useCallback(() => {
-      // This is just a placeholder as we don't set mapsUrl directly
-      // It's handled by handleLocationChange
+      // This is just a placeholder as we handle location type inside handleLocationChange
+    }, []),
+    setMapsUrl: useCallback((url) => {
+      // This is just a placeholder as we handle maps URL inside handleLocationChange
     }, []),
     setCustomization
   });

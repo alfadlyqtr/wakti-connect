@@ -96,8 +96,14 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
     setStartTime,
     setEndTime,
     setLocation: (loc) => handleLocationChange(loc),
-    setLocationType: () => {},
-    setMapsUrl: () => {},
+    setLocationType: (type) => {
+      // This is just a placeholder as we handle location type inside handleLocationChange
+      // but we need to satisfy the interface
+    },
+    setMapsUrl: (url) => {
+      // This is just a placeholder as we handle maps URL inside handleLocationChange
+      // but we need to satisfy the interface
+    },
     setCustomization: (newCustomization: EventCustomization) => setCustomization(newCustomization)
   });
 

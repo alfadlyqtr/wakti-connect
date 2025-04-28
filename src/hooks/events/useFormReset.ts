@@ -1,16 +1,17 @@
 
 import { useCallback } from "react";
 import { EventCustomization } from "@/types/event.types";
+import { InvitationRecipient } from "@/types/invitation.types";
 
-interface ResetFormParams {
+interface UseFormResetProps {
   setTitle: (title: string) => void;
   setDescription: (description: string) => void;
   setSelectedDate: (date: Date) => void;
   setStartTime: (time: string) => void;
   setEndTime: (time: string) => void;
   setIsAllDay: (isAllDay: boolean) => void;
-  setActiveTab: (tab: string) => void;
-  setRecipients: (recipients: any[]) => void;
+  setActiveTab: (tab: "details" | "customize" | "share") => void;
+  setRecipients: (recipients: InvitationRecipient[]) => void;
   setLocation: (location: string) => void;
   setLocationType: (type: 'manual' | 'google_maps') => void;
   setMapsUrl: (url: string) => void;
@@ -30,20 +31,20 @@ export const useFormReset = ({
   setLocationType,
   setMapsUrl,
   setCustomization
-}: ResetFormParams) => {
-  
+}: UseFormResetProps) => {
   const resetForm = useCallback(() => {
-    setTitle('');
-    setDescription('');
+    // Reset all form fields to their default values
+    setTitle("");
+    setDescription("");
     setSelectedDate(new Date());
     setStartTime("09:00");
     setEndTime("10:00");
     setIsAllDay(false);
     setActiveTab("details");
     setRecipients([]);
-    setLocation('');
-    setLocationType('manual');
-    setMapsUrl('');
+    setLocation("");
+    
+    // Set default customization
     setCustomization({
       background: {
         type: 'solid',
@@ -70,19 +71,11 @@ export const useFormReset = ({
       animation: 'fade',
     });
   }, [
-    setTitle, 
-    setDescription, 
-    setSelectedDate, 
-    setStartTime, 
-    setEndTime,
-    setIsAllDay,
-    setActiveTab,
-    setRecipients,
-    setLocation,
-    setLocationType,
-    setMapsUrl,
-    setCustomization
+    setTitle, setDescription, setSelectedDate, setStartTime, setEndTime, 
+    setIsAllDay, setActiveTab, setRecipients, setLocation, setCustomization
   ]);
 
-  return { resetForm };
+  return {
+    resetForm
+  };
 };
