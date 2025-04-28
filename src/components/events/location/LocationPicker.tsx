@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Navigation } from 'lucide-react';
+import { Search, Navigation, Loader2 } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { loadGoogleMapsApi, waitForGoogleMapsToLoad } from '@/utils/googleMapsLoader';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
@@ -22,9 +22,11 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
 }) => {
   const [isSearching, setIsSearching] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [inputValue, setInputValue] = useState(value);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const sessionTokenRef = useRef<google.maps.places.AutocompleteSessionToken | null>(null);
 
   useEffect(() => {
     setInputValue(value);
@@ -33,13 +35,19 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   useEffect(() => {
     const initializeGoogleMaps = async () => {
       try {
+        setIsLoading(true);
         await loadGoogleMapsApi();
         await waitForGoogleMapsToLoad();
         
         if (!inputRef.current) return;
 
-        const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
-          fields: ['formatted_address', 'geometry', 'name', 'place_id']
+        // Create a new session token
+        sessionTokenRef.current = new google.maps.places.AutocompleteSessionToken();
+
+        const autocomplete = new google.maps.places.Autocomplete(inputRef.current, {
+          fields: ['formatted_address', 'geometry', 'name', 'place_id'],
+          types: ['geocode', 'establishment'],
+          sessionToken: sessionTokenRef.current
         });
 
         autocomplete.addListener('place_changed', () => {
@@ -60,6 +68,9 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
           
           setInputValue(displayName);
           onChange(displayName, lat, lng);
+          
+          // Create a new session token for the next search
+          sessionTokenRef.current = new google.maps.places.AutocompleteSessionToken();
         });
 
         autocompleteRef.current = autocomplete;
@@ -72,6 +83,8 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
           description: "Could not initialize location search. Please try again.",
           variant: "destructive"
         });
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -82,6 +95,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
+    // Don't call onChange here - let the Places Autocomplete handle it
   };
 
   const handleGetCurrentLocation = async () => {
@@ -108,7 +122,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
       await waitForGoogleMapsToLoad();
       
       const { latitude, longitude } = position.coords;
-      const geocoder = new window.google.maps.Geocoder();
+      const geocoder = new google.maps.Geocoder();
       
       const geocodeWithRetry = async (retryCount = 0, maxRetries = 3) => {
         try {
@@ -165,8 +179,13 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
           ref={inputRef}
           placeholder={placeholder || "Search for a location"}
           className="pl-8 pr-10"
-          disabled={!isInitialized}
+          disabled={!isInitialized || isLoading}
         />
+        {isLoading && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+          </div>
+        )}
       </div>
       
       <Button 
