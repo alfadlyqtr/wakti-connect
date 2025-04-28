@@ -20,10 +20,10 @@ const LocationInput: React.FC<LocationInputProps> = ({
           <LocationPicker
             value={location}
             onChange={onLocationChange}
-            placeholder="Search for a location or place"
+            placeholder="Enter a location or use your current location"
           />
           <p className="text-xs text-muted-foreground mt-1">
-            Enter an address or use your current location
+            Enter an address manually or use your current location
           </p>
         </div>
       </div>
