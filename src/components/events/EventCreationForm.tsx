@@ -7,7 +7,7 @@ import FormHeader from "./creation/FormHeader";
 import FormTabs from "./creation/FormTabs";
 import FormActions from "./creation/FormActions";
 import { InvitationRecipient } from "@/types/invitation.types";
-import useEditEventEffect from "./hooks/useEditEventEffect";
+import useEditEventEffect from "@/hooks/events/hooks/useEditEventEffect";
 import { Event, EventCustomization } from "@/types/event.types";
 import { useEventSubmission } from "@/hooks/events/useEventSubmission";
 import { ShareTab, SHARE_TABS } from "@/types/form.types";
@@ -95,14 +95,14 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
     setIsAllDay,
     setStartTime,
     setEndTime,
-    setLocation: (loc) => handleLocationChange(loc),
+    setLocation: (loc) => handleLocationChange(loc, undefined, undefined, undefined),
     setLocationType: (type) => {
-      // This is just a placeholder as we handle location type inside handleLocationChange
-      // but we need to satisfy the interface
+      // We need to adapt to the useEventLocation structure
+      // This is a placeholder function that works with the interface
     },
     setMapsUrl: (url) => {
-      // This is just a placeholder as we handle maps URL inside handleLocationChange
-      // but we need to satisfy the interface
+      // We need to adapt to the useEventLocation structure
+      // This is a placeholder function that works with the interface
     },
     setCustomization: (newCustomization: EventCustomization) => setCustomization(newCustomization)
   });

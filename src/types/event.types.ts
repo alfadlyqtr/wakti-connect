@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 
 // Define text alignment type
@@ -213,4 +214,6 @@ export interface Event {
   customization: EventCustomization;
   invitations?: EventInvitation[];
   is_recalled?: boolean;
+  location_type?: 'manual' | 'google_maps';
+  maps_url?: string;
 }

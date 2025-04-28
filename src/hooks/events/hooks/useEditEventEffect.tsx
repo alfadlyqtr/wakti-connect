@@ -96,7 +96,7 @@ const useEditEventEffect = ({
           id: inv.id || `email-${Date.now()}`,
           name: inv.email || "",
           email: inv.email || "",
-          type: 'email'
+          type: inv.email ? 'email' as const : 'user' as const
         }));
         
         setRecipients(recipients);
