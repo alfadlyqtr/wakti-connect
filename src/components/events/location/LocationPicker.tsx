@@ -26,7 +26,6 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   const [inputValue, setInputValue] = useState(value);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const sessionTokenRef = useRef<google.maps.places.AutocompleteSessionToken | null>(null);
 
   useEffect(() => {
     setInputValue(value);
@@ -36,22 +35,28 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
     const initializeGoogleMaps = async () => {
       try {
         setIsLoading(true);
+        console.log('Initializing Google Maps...');
+        
         await loadGoogleMapsApi();
         await waitForGoogleMapsToLoad();
         
-        if (!inputRef.current) return;
+        console.log('Google Maps loaded, initializing Places Autocomplete...');
+        
+        if (!inputRef.current) {
+          console.error('Input reference not available');
+          return;
+        }
 
-        // Create a new session token
-        sessionTokenRef.current = new google.maps.places.AutocompleteSessionToken();
-
+        // Initialize Places Autocomplete
         const autocomplete = new google.maps.places.Autocomplete(inputRef.current, {
           fields: ['formatted_address', 'geometry', 'name', 'place_id'],
           types: ['geocode', 'establishment'],
-          sessionToken: sessionTokenRef.current
+          componentRestrictions: { country: ['US', 'CA'] } // Add more countries as needed
         });
 
         autocomplete.addListener('place_changed', () => {
           const place = autocomplete.getPlace();
+          console.log('Place selected:', place);
           
           if (!place.geometry?.location) {
             toast({
@@ -68,14 +73,11 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
           
           setInputValue(displayName);
           onChange(displayName, lat, lng);
-          
-          // Create a new session token for the next search
-          sessionTokenRef.current = new google.maps.places.AutocompleteSessionToken();
         });
 
         autocompleteRef.current = autocomplete;
         setIsInitialized(true);
-        console.log('Google Maps initialized successfully');
+        console.log('Places Autocomplete initialized successfully');
       } catch (error) {
         console.error('Error initializing Google Maps:', error);
         toast({
