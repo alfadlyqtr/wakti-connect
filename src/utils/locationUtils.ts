@@ -27,21 +27,27 @@ export const extractLocationFromMapsUrl = (url: string): string => {
     if (decodedUrl.includes('/place/')) {
       const placeMatch = decodedUrl.match(/\/place\/([^/]+)/);
       if (placeMatch) {
-        return placeMatch[1].replace(/\+/g, ' ').replace(/@.*$/, '');
+        return placeMatch[1]
+          .replace(/\+/g, ' ')
+          .replace(/@.*$/, '')
+          .replace(/\d+\.\d+,\d+\.\d+/, '') // Remove coordinates
+          .replace(/,/g, ', '); // Add spaces after commas
       }
     }
     
-    // Extract from search query
+    // Extract from query parameters
     const searchParams = new URL(url).searchParams;
     const query = searchParams.get('query') || searchParams.get('q');
     if (query) {
-      return decodeURIComponent(query);
+      return decodeURIComponent(query).replace(/\+/g, ' ');
     }
     
-    // Extract from coordinates format
+    // Extract coordinates and try to make them more readable
     const coordsMatch = decodedUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
     if (coordsMatch) {
-      return `${coordsMatch[1]}, ${coordsMatch[2]}`;
+      const lat = parseFloat(coordsMatch[1]).toFixed(6);
+      const lng = parseFloat(coordsMatch[2]).toFixed(6);
+      return `Location (${lat}, ${lng})`;
     }
     
     return 'Location on Google Maps';
@@ -53,20 +59,14 @@ export const extractLocationFromMapsUrl = (url: string): string => {
 export const generateMapsUrl = (location: string): string => {
   if (!location) return '';
   if (isValidMapsUrl(location)) return location;
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
-};
-
-export const formatLocation = (location: string): string => {
-  if (!location) return '';
   
-  try {
-    if (isValidMapsUrl(location)) {
-      return extractLocationFromMapsUrl(location).replace(/[+_]/g, ' ');
-    }
-    return location;
-  } catch {
-    return location;
+  // If it's coordinates, format them properly
+  const coordsMatch = location.match(/\((-?\d+\.\d+),\s*(-?\d+\.\d+)\)/);
+  if (coordsMatch) {
+    return `https://www.google.com/maps/search/?api=1&query=${coordsMatch[1]},${coordsMatch[2]}`;
   }
+  
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
 };
 
 export const generateDirectionsUrl = (location: string): string => {
@@ -94,3 +94,18 @@ export const generateDirectionsUrl = (location: string): string => {
   return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(location)}`;
 };
 
+export const formatLocation = (location: string): string => {
+  if (!location) return '';
+  
+  try {
+    if (isValidMapsUrl(location)) {
+      return extractLocationFromMapsUrl(location)
+        .replace(/\+/g, ' ')
+        .replace(/%20/g, ' ')
+        .replace(/([a-z])([A-Z])/g, '$1 $2'); // Add spaces between camelCase
+    }
+    return location;
+  } catch {
+    return location;
+  }
+};

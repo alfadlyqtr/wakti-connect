@@ -3,13 +3,13 @@ import { Event } from '@/types/event.types';
 import { Card } from '@/components/ui/card';
 import { formatDateShort, formatTimeRange } from '@/utils/dateUtils';
 import { formatLocation, generateMapsUrl, generateDirectionsUrl } from '@/utils/locationUtils';
-import { MapPin, Navigation, ExternalLink } from 'lucide-react';
+import { MapPin, Navigation } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface EventCardProps {
   event: Event;
   onClick?: () => void;
-  onCardClick?: () => void; // Added for compatibility with DashboardEvents
+  onCardClick?: () => void;
   onDelete?: (eventId: string) => Promise<void>;
   onEdit?: (event: Event) => void;
   onViewResponses?: (eventId: string) => void;
@@ -72,7 +72,7 @@ const EventCard = ({
   };
 
   const handleViewOnMap = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent card click
+    e.stopPropagation();
     if (event.location) {
       const url = event.maps_url || generateMapsUrl(event.location);
       window.open(url, '_blank', 'noopener,noreferrer');
@@ -80,7 +80,7 @@ const EventCard = ({
   };
   
   const handleGetDirections = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent card click
+    e.stopPropagation();
     if (event.location) {
       const url = generateDirectionsUrl(event.location);
       window.open(url, '_blank', 'noopener,noreferrer');
@@ -116,7 +116,7 @@ const EventCard = ({
               <div className="flex items-start space-x-2">
                 <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <div className="line-clamp-1 text-sm">
+                  <div className="line-clamp-1">
                     {formattedLocation}
                   </div>
                   <div className="flex gap-2 mt-1.5">

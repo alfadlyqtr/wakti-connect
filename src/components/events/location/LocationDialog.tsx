@@ -4,7 +4,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from '@/components/ui/use-toast';
-import { isValidMapsUrl } from '@/utils/locationUtils';
+import { isValidMapsUrl, formatLocation } from '@/utils/locationUtils';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MapPin, Navigation } from 'lucide-react';
@@ -24,7 +24,7 @@ const LocationDialog = ({ open, onOpenChange, onLocationSelect }: LocationDialog
     if (!isValidMapsUrl(mapUrl)) {
       toast({
         title: "Invalid URL",
-        description: "Please enter a valid Google Maps URL (maps.google.com or maps.app.goo.gl)",
+        description: "Please enter a valid Google Maps URL",
         variant: "destructive"
       });
       return;
@@ -105,6 +105,13 @@ const LocationDialog = ({ open, onOpenChange, onLocationSelect }: LocationDialog
                   Paste
                 </Button>
               </div>
+              
+              {mapUrl && isValidMapsUrl(mapUrl) && (
+                <div className="p-3 bg-muted rounded-md">
+                  <p className="text-sm font-medium">Preview:</p>
+                  <p className="text-sm mt-1">{formatLocation(mapUrl)}</p>
+                </div>
+              )}
               
               <div className="text-xs text-muted-foreground">
                 <p className="mb-1">Examples of valid Google Maps URLs:</p>
