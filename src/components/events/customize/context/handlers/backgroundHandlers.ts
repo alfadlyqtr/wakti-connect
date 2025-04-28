@@ -6,6 +6,7 @@ export const createBackgroundHandlers = (
   onCustomizationChange: (customization: EventCustomization) => void
 ) => {
   // Updated to handle the UI type 'color' to internal type 'solid' conversion
+  // Also handles advanced gradient types (with noise, radial)
   const handleBackgroundChange = (type: 'color' | 'gradient' | 'image', value: string) => {
     // Convert 'color' to 'solid' for internal representation
     const backgroundType: BackgroundType = type === 'color' ? 'solid' : (type as BackgroundType);

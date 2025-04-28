@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useCustomization } from '../context';
 import { Card } from '@/components/ui/card';
@@ -10,11 +9,15 @@ const EventCardPreview = () => {
     const { type, value, angle = 90, direction = 'to right' } = customization.background;
     
     if (type === 'gradient') {
+      if (value.includes('url(') && value.includes('svg+xml')) {
+        return value;
+      } else if (value.startsWith('radial-gradient')) {
+        return value;
+      }
       return value || `linear-gradient(${angle}deg, rgba(99,102,241,1) 0%, rgba(139,92,246,1) 100%)`;
     } else if (type === 'image') {
       return `url(${value})`;
     }
-    // Default to solid color
     return value || '#ffffff';
   };
 
