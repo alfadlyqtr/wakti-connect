@@ -1,6 +1,6 @@
 
 import React from "react";
-import { GradientGenerator, GradientGeneratorProps } from "@/components/ui/gradient-generator";
+import { GradientGenerator } from "@/components/ui/gradient-generator";
 import { GradientTabProps } from "./types";
 
 export const GradientTab: React.FC<GradientTabProps> = ({
