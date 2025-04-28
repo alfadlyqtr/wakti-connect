@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, Navigation, Loader2 } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
-import { loadGoogleMapsApi, waitForGoogleMapsToLoad } from '@/utils/googleMapsLoader';
+import { loadGoogleMapsApi, waitForGoogleMapsToLoad, isGoogleMapsLoaded } from '@/utils/googleMapsLoader';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 interface LocationPickerProps {
