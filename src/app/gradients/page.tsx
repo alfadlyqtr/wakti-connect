@@ -1,5 +1,4 @@
 
-import Image from "next/image";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { GradientGenerator } from "@/components/ui/gradient-generator";
 
@@ -8,11 +7,9 @@ export default function Gradients() {
     <div className="relative">
       <div className="my-40">
         <div>
-          <Image
+          <img
             src="https://res.cloudinary.com/deelfmnhg/image/upload/v1737474221/grad_mscerb.png"
             alt="Gradient Background"
-            height={700}
-            width={700}
             className="absolute -top-28 -z-10 min-h-screen w-full object-cover"
           />
           <p className="px-6 text-center text-lg font-light uppercase tracking-widest text-white lg:text-xl">
