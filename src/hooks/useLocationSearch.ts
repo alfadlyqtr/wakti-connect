@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { useDebouncedCallback } from '@/hooks/useDebouncedCallback';
 
@@ -15,7 +15,7 @@ export const useLocationSearch = () => {
   const [error, setError] = useState<string | null>(null);
 
   const debouncedSearch = useDebouncedCallback(async (query: string) => {
-    if (!query.trim()) {
+    if (!query?.trim()) {
       setSearchResults([]);
       setError(null);
       return;
@@ -56,20 +56,20 @@ export const useLocationSearch = () => {
     } catch (error) {
       console.error('Error searching location:', error);
       setError('Failed to search location');
+      setSearchResults([]);
       toast({
         title: 'Error',
         description: 'Failed to search location. Please try again.',
         variant: 'destructive',
       });
-      setSearchResults([]);
     } finally {
       setIsSearching(false);
     }
-  }, 300); // 300ms debounce
+  }, 300);
 
-  const searchLocation = (query: string) => {
+  const searchLocation = useCallback((query: string) => {
     debouncedSearch(query);
-  };
+  }, [debouncedSearch]);
 
   return {
     searchLocation,

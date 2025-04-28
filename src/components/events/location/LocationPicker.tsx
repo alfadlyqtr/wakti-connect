@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Navigation, Loader2 } from 'lucide-react';
+import { Navigation } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { useLocationSearch } from '@/hooks/useLocationSearch';
@@ -129,32 +128,30 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
         {open && (
           <PopoverContent className="w-[400px] p-0" align="start">
             <Command>
-              <CommandInput 
+              <CommandInput
                 placeholder="Search for a location..."
                 value={inputValue}
                 onValueChange={handleInputChange}
               />
-              {isSearching ? (
-                <div className="flex items-center justify-center p-4">
-                  <LoadingSpinner size="sm" />
-                </div>
-              ) : (
-                <CommandGroup>
-                  {searchResults.length === 0 ? (
-                    <CommandEmpty>No locations found</CommandEmpty>
-                  ) : (
-                    searchResults.map((result, index) => (
-                      <CommandItem
-                        key={index}
-                        onSelect={() => handleSelectLocation(result.display_name, result.lat, result.lon)}
-                        className="px-4 py-2 cursor-pointer hover:bg-accent"
-                      >
-                        {result.display_name}
-                      </CommandItem>
-                    ))
-                  )}
-                </CommandGroup>
-              )}
+              <CommandGroup>
+                {isSearching ? (
+                  <div className="flex items-center justify-center p-4">
+                    <LoadingSpinner size="sm" />
+                  </div>
+                ) : searchResults && searchResults.length > 0 ? (
+                  searchResults.map((result, index) => (
+                    <CommandItem
+                      key={`${result.display_name}-${index}`}
+                      onSelect={() => handleSelectLocation(result.display_name, result.lat, result.lon)}
+                      className="px-4 py-2 cursor-pointer hover:bg-accent"
+                    >
+                      {result.display_name}
+                    </CommandItem>
+                  ))
+                ) : (
+                  <CommandEmpty className="p-4 text-center">No locations found</CommandEmpty>
+                )}
+              </CommandGroup>
             </Command>
           </PopoverContent>
         )}
