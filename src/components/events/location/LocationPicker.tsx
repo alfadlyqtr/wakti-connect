@@ -93,8 +93,10 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
     // Clean up on unmount
     return () => {
       if (autocompleteRef.current) {
-        // Cleanup listeners if possible
-        google.maps.event.clearInstanceListeners(autocompleteRef.current);
+        // Safely clear listeners if Google Maps is loaded
+        if (window.google && window.google.maps) {
+          google.maps.event.clearInstanceListeners(autocompleteRef.current);
+        }
       }
     };
   }, [onChange]);
