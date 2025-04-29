@@ -6,17 +6,17 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface NonWaktiUserPopupProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (name: string) => void;
-  type: 'accept' | 'decline';
+  type: 'accepted' | 'declined';
   eventTitle: string;
 }
 
@@ -28,23 +28,33 @@ const NonWaktiUserPopup: React.FC<NonWaktiUserPopupProps> = ({
   eventTitle
 }) => {
   const [name, setName] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (name.trim()) {
-      onSubmit(name.trim());
+    if (!name.trim()) return;
+    
+    setIsSubmitting(true);
+    try {
+      await onSubmit(name.trim());
+    } catch (error) {
+      console.error('Error submitting response:', error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
-
+  
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
-            {type === 'accept' ? 'You\'ve accepted this event!' : 'You\'ve declined this event'}
+            {type === 'accepted' ? 'You're attending!' : 'Response recorded'}
           </DialogTitle>
           <DialogDescription>
-            Please provide your name so the organizer knows who responded
+            {type === 'accepted' 
+              ? `Thank you for accepting "${eventTitle}". Please provide your name so the organizer knows you're attending.` 
+              : `Please provide your name so the organizer knows you've declined "${eventTitle}".`}
           </DialogDescription>
         </DialogHeader>
         
@@ -58,31 +68,36 @@ const NonWaktiUserPopup: React.FC<NonWaktiUserPopupProps> = ({
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Enter your name"
                 className="col-span-3"
+                autoFocus
                 required
+                placeholder="Enter your name"
               />
             </div>
           </div>
           
-          <div className="bg-muted/30 p-4 rounded-md mb-4">
-            <h4 className="text-sm font-medium mb-2">Enhance Your Experience with WAKTI</h4>
-            <p className="text-xs text-muted-foreground mb-2">
-              Create a free WAKTI account to manage all your events in one place, get reminders, and more.
+          <div className="mt-4 mb-2 p-4 bg-blue-50 rounded-md text-sm">
+            <p className="font-medium text-blue-700 mb-1">Get more from WAKTI!</p>
+            <p className="text-blue-600">
+              Create a free WAKTI account to manage your events, get reminders, and connect with others.
             </p>
-            <Button 
-              type="button" 
-              variant="outline"
-              className="w-full"
-              onClick={() => window.open('https://wakti.qa', '_blank')}
+            <a 
+              href="https://wakti.qa" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-blue-700 hover:text-blue-800 mt-2 inline-block font-medium"
             >
-              Visit WAKTI.qa
-            </Button>
+              Visit wakti.qa →
+            </a>
           </div>
           
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit">{type === 'accept' ? 'Confirm' : 'Submit'}</Button>
+            <Button variant="outline" onClick={onClose} type="button">
+              Cancel
+            </Button>
+            <Button type="submit" disabled={!name.trim() || isSubmitting}>
+              {isSubmitting ? 'Submitting...' : 'Submit Response'}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

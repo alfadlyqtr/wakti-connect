@@ -6,7 +6,6 @@ import FeaturesTab from "../tabs/FeaturesTab";
 const FeaturesTabContent: React.FC = () => {
   const {
     customization,
-    handleToggleChatbot,
     handleToggleCalendar,
     handleToggleButtons,
     handleBrandingChange,
@@ -18,7 +17,6 @@ const FeaturesTabContent: React.FC = () => {
   return (
     <FeaturesTab 
       customization={customization}
-      onToggleChatbot={handleToggleChatbot}
       onToggleCalendar={handleToggleCalendar}
       onToggleButtons={handleToggleButtons}
       onBrandingChange={handleBrandingChange}
