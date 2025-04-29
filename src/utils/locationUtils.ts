@@ -4,6 +4,8 @@
  */
 
 export const isValidMapsUrl = (url: string): boolean => {
+  if (!url) return false;
+  
   try {
     const urlObj = new URL(url);
     return (
@@ -31,7 +33,7 @@ export const extractLocationFromMapsUrl = (url: string): string => {
           .replace(/\+/g, ' ')
           .replace(/@.*$/, '')
           .replace(/\d+\.\d+,\d+\.\d+/, '') // Remove coordinates
-          .replace(/,/g, ', '); // Add spaces after commas
+          .replace(/,/g, ', '); // Add spaces after commas for better readability
       }
     }
     
@@ -80,7 +82,7 @@ export const generateDirectionsUrl = (location: string): string => {
       return `https://www.google.com/maps/dir/?api=1&destination_place_id=${placeId}`;
     }
     
-    const query = url.searchParams.get('query');
+    const query = url.searchParams.get('query') || url.searchParams.get('q');
     if (query) {
       return `https://www.google.com/maps/dir/?api=1&destination=${query}`;
     }

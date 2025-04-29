@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Event } from '@/types/event.types';
 import { Card } from '@/components/ui/card';

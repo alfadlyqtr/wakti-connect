@@ -2,7 +2,7 @@
 import React from 'react';
 import { useCustomization } from '../context';
 import { Card } from '@/components/ui/card';
-import { MapPin } from 'lucide-react';
+import { MapPin, Navigation } from 'lucide-react';
 
 const EventCardPreview = () => {
   const { customization } = useCustomization();
@@ -45,6 +45,29 @@ const EventCardPreview = () => {
             <MapPin className="h-4 w-4 flex-shrink-0" />
             <span className="opacity-70">1234 Main St, San Francisco, CA</span>
           </div>
+        </div>
+
+        <div className="flex gap-2 mt-2">
+          <button 
+            className="px-3 py-1.5 text-xs rounded flex items-center gap-1"
+            style={{
+              backgroundColor: 'rgba(0,0,0,0.1)',
+              color: customization.font.color
+            }}
+          >
+            <MapPin className="h-3 w-3" />
+            <span>View Map</span>
+          </button>
+          <button 
+            className="px-3 py-1.5 text-xs rounded flex items-center gap-1"
+            style={{
+              backgroundColor: 'rgba(0,0,0,0.1)',
+              color: customization.font.color
+            }}
+          >
+            <Navigation className="h-3 w-3" />
+            <span>Directions</span>
+          </button>
         </div>
 
         <div className="flex gap-2 mt-4">
