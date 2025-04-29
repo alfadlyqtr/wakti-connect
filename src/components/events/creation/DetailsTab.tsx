@@ -12,58 +12,56 @@ import { TimePicker } from "@/components/ui/time-picker";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface DetailsTabProps {
-  register: any;
-  errors: any;
+  register?: any;
+  errors?: any;
   selectedDate: Date;
-  setSelectedDate: (date: Date) => void;
   startTime: string;
-  setStartTime: (time: string) => void;
   endTime: string;
-  setEndTime: (time: string) => void;
   isAllDay: boolean;
-  setIsAllDay: (isAllDay: boolean) => void;
   location: string;
-  locationType: 'manual' | 'google_maps';
+  locationType?: 'manual' | 'google_maps';
   mapsUrl?: string;
-  handleLocationChange: (location: string, type?: 'manual' | 'google_maps', url?: string) => void;
   handleNextTab: () => void;
   title: string;
   description: string;
-  setTitle: (title: string) => void;
-  setDescription: (description: string) => void;
+  onTitleChange: (title: string) => void;
+  onDescriptionChange: (description: string) => void;
+  onDateChange: (date: Date) => void;
+  onLocationChange: (location: string, type?: 'manual' | 'google_maps', url?: string) => void;
+  onStartTimeChange: (time: string) => void;
+  onEndTimeChange: (time: string) => void;
+  onIsAllDayChange: (isAllDay: boolean) => void;
+  getCurrentLocation?: () => void;
+  isGettingLocation?: boolean;
   isEdit?: boolean;
 }
 
 const DetailsTab: React.FC<DetailsTabProps> = ({
   register,
-  errors,
+  errors = {},
   selectedDate,
-  setSelectedDate,
   startTime,
-  setStartTime,
   endTime,
-  setEndTime,
   isAllDay,
-  setIsAllDay,
   location,
-  handleLocationChange,
+  onLocationChange,
   handleNextTab,
   title,
   description,
-  setTitle,
-  setDescription,
+  onTitleChange,
+  onDescriptionChange,
+  onDateChange,
+  onStartTimeChange,
+  onEndTimeChange,
+  onIsAllDayChange,
+  getCurrentLocation,
+  isGettingLocation = false,
+  locationType,
+  mapsUrl,
   isEdit = false
 }) => {
   const isMobile = useIsMobile();
   
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTitle(e.target.value);
-  };
-
-  const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setDescription(e.target.value);
-  };
-
   const canProceedToNext = title.trim() !== '';
 
   return (
@@ -76,7 +74,7 @@ const DetailsTab: React.FC<DetailsTabProps> = ({
             placeholder="Enter event title"
             className="w-full mt-1" 
             value={title}
-            onChange={handleTitleChange}
+            onChange={(e) => onTitleChange(e.target.value)}
             required
           />
           {errors.title && (
@@ -94,7 +92,7 @@ const DetailsTab: React.FC<DetailsTabProps> = ({
             placeholder="Enter event details"
             className="w-full mt-1 min-h-[100px]"
             value={description}
-            onChange={handleDescriptionChange}
+            onChange={(e) => onDescriptionChange(e.target.value)}
           />
         </div>
       </div>
@@ -104,7 +102,7 @@ const DetailsTab: React.FC<DetailsTabProps> = ({
         <div className="mt-2 space-y-4">
           <DatePicker 
             date={selectedDate} 
-            setDate={setSelectedDate}
+            setDate={onDateChange}
             placeholder={isMobile ? "Select date" : "Select event date"}
           />
           
@@ -113,7 +111,7 @@ const DetailsTab: React.FC<DetailsTabProps> = ({
             <Switch 
               id="all-day" 
               checked={isAllDay} 
-              onCheckedChange={setIsAllDay} 
+              onCheckedChange={onIsAllDayChange} 
             />
           </div>
           
@@ -123,14 +121,14 @@ const DetailsTab: React.FC<DetailsTabProps> = ({
                 <Label htmlFor="start-time" className="text-sm">Start Time</Label>
                 <TimePicker
                   value={startTime}
-                  onChange={setStartTime}
+                  onChange={onStartTimeChange}
                 />
               </div>
               <div>
                 <Label htmlFor="end-time" className="text-sm">End Time</Label>
                 <TimePicker
                   value={endTime}
-                  onChange={setEndTime}
+                  onChange={onEndTimeChange}
                   minTime={startTime}
                 />
               </div>
@@ -144,7 +142,7 @@ const DetailsTab: React.FC<DetailsTabProps> = ({
         <div className="mt-2">
           <LocationInput
             location={location}
-            onLocationChange={handleLocationChange}
+            onLocationChange={onLocationChange}
           />
         </div>
       </div>

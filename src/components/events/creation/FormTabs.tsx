@@ -124,6 +124,7 @@ const FormTabs: React.FC<FormTabsProps> = ({
           removeRecipient={removeRecipient}
           activeTab={shareTab}
           setActiveTab={setShareTab}
+          eventTitle={title}
           onSendEmail={onSendEmail}
         />
       </TabsContent>

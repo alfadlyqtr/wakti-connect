@@ -16,9 +16,9 @@ export interface ShareTabContentProps {
   recipients: InvitationRecipient[];
   addRecipient: (recipient: InvitationRecipient) => void;
   removeRecipient: (index: number) => void;
-  shareTab: ShareTab;
-  setShareTab: (tab: ShareTab) => void;
-  eventTitle: string;
+  activeTab: ShareTab;
+  setActiveTab: (tab: ShareTab) => void;
+  eventTitle?: string;
   onSendEmail: (email: string) => void;
 }
 
@@ -26,9 +26,9 @@ const ShareTabContent: React.FC<ShareTabContentProps> = ({
   recipients,
   addRecipient,
   removeRecipient,
-  shareTab,
-  setShareTab,
-  eventTitle,
+  activeTab,
+  setActiveTab,
+  eventTitle = '',
   onSendEmail
 }) => {
   const [email, setEmail] = React.useState('');
@@ -67,7 +67,7 @@ const ShareTabContent: React.FC<ShareTabContentProps> = ({
   
   return (
     <div className="space-y-6">
-      <Tabs value={shareTab} onValueChange={(value) => setShareTab(value as ShareTab)} className="w-full">
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as ShareTab)} className="w-full">
         <div className="flex justify-center mb-6">
           <TabsList>
             <TabsTrigger value={SHARE_TABS.RECIPIENTS}>Recipients</TabsTrigger>
