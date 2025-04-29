@@ -4,6 +4,7 @@ import { useCustomization } from "../context";
 import BackgroundSelector from "../BackgroundSelector";
 import { BackgroundType } from "@/types/event.types";
 import { toast } from "@/components/ui/use-toast";
+import { handleImageGeneration } from "@/hooks/ai/utils/imageHandling";
 
 interface BackgroundTabContentProps {
   title?: string;
@@ -23,23 +24,43 @@ const BackgroundTabContent: React.FC<BackgroundTabContentProps> = ({ title, desc
     return type === 'solid' ? 'color' : 'image';
   };
 
-  // Add the ability to handle AI generated backgrounds
+  // Add the ability to handle AI generated backgrounds using WAKTI AI system
   const handleAIBackgroundGeneration = async () => {
-    // This would connect to an AI image generation service in a real implementation
-    // For now, we'll just simulate it with a timeout and a placeholder image
-    toast({
-      title: "Generating background",
-      description: "Please wait while we create a custom background for your event..."
-    });
-    
-    // Simulate delay and then set a placeholder image
-    setTimeout(() => {
-      handleBackgroundChange('image', 'https://source.unsplash.com/random/800x600/?event');
+    try {
+      // Generate prompt based on the event title and description
+      const prompt = `Create a beautiful event background image${title ? ` for "${title}"` : ''}${description ? ` with theme: ${description}` : ''}`;
+      
       toast({
-        title: "Background generated",
-        description: "Your AI generated background has been applied"
+        title: "Generating background",
+        description: "Please wait while we create a custom background for your event..."
       });
-    }, 2000);
+      
+      // Use the same handleImageGeneration function that WAKTI AI uses
+      const result = await handleImageGeneration(prompt);
+      
+      if (result.success && result.imageUrl) {
+        // Update the background with the generated image
+        handleBackgroundChange('image', result.imageUrl);
+        
+        toast({
+          title: "Background generated",
+          description: "Your AI generated background has been applied"
+        });
+      } else {
+        throw new Error(result.error || "Failed to generate image");
+      }
+    } catch (error) {
+      console.error("AI background generation failed:", error);
+      
+      toast({
+        title: "Generation failed",
+        description: error.message || "Could not generate image background. Please try again.",
+        variant: "destructive"
+      });
+      
+      // Fallback to a placeholder image when AI generation fails
+      handleBackgroundChange('image', 'https://source.unsplash.com/random/800x600/?event');
+    }
   };
 
   return (
