@@ -80,7 +80,11 @@ const ImageTab: React.FC<ImageTabProps> = ({
   };
 
   // Generate an AI image based on prompt
-  const handleGenerateAIImage = async () => {
+  const handleGenerateAIImage = async (e: React.MouseEvent) => {
+    // Prevent event propagation to resolve click-through issues
+    e.preventDefault();
+    e.stopPropagation();
+    
     try {
       let prompt = aiPrompt;
       
@@ -147,18 +151,22 @@ const ImageTab: React.FC<ImageTabProps> = ({
           <Label className="block">Choose From Gallery</Label>
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-1">
+              <Button variant="outline" size="sm" className="gap-1" onClick={(e) => e.stopPropagation()}>
                 <Wand2 className="h-3.5 w-3.5" />
                 <span>AI Generate</span>
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-80">
+            <PopoverContent className="w-80 z-[100]" onClick={(e) => e.stopPropagation()}>
               <div className="space-y-4">
                 <h4 className="text-sm font-medium">Generate AI Background</h4>
                 <Textarea
                   placeholder={`Describe the background you want to generate${title ? ` for "${title}"` : ''}`}
                   value={aiPrompt}
-                  onChange={(e) => setAiPrompt(e.target.value)}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    setAiPrompt(e.target.value);
+                  }}
+                  onClick={(e) => e.stopPropagation()}
                   rows={3}
                 />
                 <Button 
@@ -179,7 +187,8 @@ const ImageTab: React.FC<ImageTabProps> = ({
               className={`h-24 rounded-md border cursor-pointer overflow-hidden ${
                 value === image || selectedPreset === image ? 'ring-2 ring-primary' : ''
               }`}
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 onChange(image);
                 setSelectedPreset(image);
                 clearGeneratedImage();

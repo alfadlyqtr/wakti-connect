@@ -41,7 +41,9 @@ export const TextColorPicker: React.FC<TextColorPickerProps> = ({
   };
   
   // Handle preset color selection
-  const handlePresetClick = (presetColor: string) => {
+  const handlePresetClick = (presetColor: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     setColor(presetColor);
     onChange(presetColor);
   };
@@ -60,8 +62,9 @@ export const TextColorPicker: React.FC<TextColorPickerProps> = ({
           <PopoverTrigger asChild>
             <Button
               variant="outline"
-              className="w-10 h-10 p-1 border-2"
+              className="w-10 h-10 p-1 border-2 relative z-10"
               style={{ backgroundColor: color }}
+              onClick={(e) => e.stopPropagation()}
             >
               <span className="sr-only">Pick a color</span>
             </Button>
@@ -88,7 +91,7 @@ export const TextColorPicker: React.FC<TextColorPickerProps> = ({
                       color === presetColor ? 'ring-2 ring-primary ring-offset-1' : ''
                     }`}
                     style={{ backgroundColor: presetColor }}
-                    onClick={() => handlePresetClick(presetColor)}
+                    onClick={(e) => handlePresetClick(presetColor, e)}
                   />
                 ))}
               </div>

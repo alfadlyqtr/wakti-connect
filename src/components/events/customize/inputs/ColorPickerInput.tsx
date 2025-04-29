@@ -43,7 +43,9 @@ export const ColorPickerInput: React.FC<ColorPickerInputProps> = ({
     onChange(newColor);
   };
   
-  const handlePresetClick = (presetColor: string) => {
+  const handlePresetClick = (presetColor: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     setColor(presetColor);
     onChange(presetColor);
   };
@@ -64,6 +66,7 @@ export const ColorPickerInput: React.FC<ColorPickerInputProps> = ({
               variant="outline" 
               className="w-10 h-10 p-0 border-2"
               style={{ backgroundColor: color }}
+              onClick={(e) => e.stopPropagation()}
             >
               <span className="sr-only">Pick a color</span>
             </Button>
@@ -89,7 +92,7 @@ export const ColorPickerInput: React.FC<ColorPickerInputProps> = ({
                       color === presetColor ? 'ring-2 ring-primary ring-offset-1' : ''
                     }`}
                     style={{ backgroundColor: presetColor }}
-                    onClick={() => handlePresetClick(presetColor)}
+                    onClick={(e) => handlePresetClick(presetColor, e)}
                   />
                 ))}
               </div>

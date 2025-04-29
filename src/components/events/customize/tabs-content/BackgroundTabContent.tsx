@@ -135,7 +135,13 @@ const BackgroundTabContent: React.FC<BackgroundTabContentProps> = ({ title, desc
   };
 
   // Enhanced AI background generation using optimized prompt construction
-  const handleAIBackgroundGeneration = async () => {
+  const handleAIBackgroundGeneration = async (e?: React.MouseEvent) => {
+    // Make sure to stop propagation if event is provided
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+    
     try {
       setIsGenerating(true);
       

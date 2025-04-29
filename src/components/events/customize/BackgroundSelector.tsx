@@ -12,7 +12,7 @@ interface BackgroundSelectorProps {
   backgroundType: string;
   backgroundValue: string;
   onBackgroundChange: (type: 'color' | 'image', value: string) => void;
-  onGenerateAIBackground?: () => void;
+  onGenerateAIBackground?: (e?: React.MouseEvent) => void;
   title?: string;
   description?: string;
   isGenerating?: boolean;
@@ -57,9 +57,13 @@ const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
   };
 
   // Handler for AI background generation
-  const handleGenerateAIBackground = () => {
+  const handleGenerateAIBackground = (e: React.MouseEvent) => {
+    // Prevent click-through by stopping event propagation
+    e.stopPropagation();
+    e.preventDefault();
+    
     if (onGenerateAIBackground) {
-      onGenerateAIBackground();
+      onGenerateAIBackground(e);
     } else {
       // Fallback implementation if no handler is provided
       toast({
@@ -97,7 +101,7 @@ const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
           <div className="mt-4 border-t pt-4">
             <Button 
               variant="outline" 
-              className="w-full flex items-center justify-center gap-2" 
+              className="w-full flex items-center justify-center gap-2 relative z-10" 
               onClick={handleGenerateAIBackground}
               disabled={isGenerating}
             >
