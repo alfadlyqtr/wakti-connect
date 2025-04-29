@@ -3,8 +3,13 @@ import React from 'react';
 import { useCustomization } from '../context';
 import { Card } from '@/components/ui/card';
 import { MapPin, Navigation } from 'lucide-react';
+import { formatLocation, generateMapsUrl, generateDirectionsUrl } from '@/utils/locationUtils';
 
-const EventCardPreview = () => {
+interface EventCardPreviewProps {
+  location?: string;
+}
+
+const EventCardPreview = ({ location = '' }: EventCardPreviewProps) => {
   const { customization } = useCustomization();
 
   const getBackgroundStyle = () => {
@@ -30,6 +35,22 @@ const EventCardPreview = () => {
     overflow: 'hidden'
   };
 
+  const formattedLocation = location ? formatLocation(location) : '';
+  
+  const handleViewOnMap = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (location) {
+      window.open(generateMapsUrl(location), '_blank', 'noopener,noreferrer');
+    }
+  };
+  
+  const handleGetDirections = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (location) {
+      window.open(generateDirectionsUrl(location), '_blank', 'noopener,noreferrer');
+    }
+  };
+
   return (
     <div className="w-full p-4 bg-muted/50 rounded-lg">
       <h3 className="mb-4 text-sm font-medium">Live Preview</h3>
@@ -43,7 +64,9 @@ const EventCardPreview = () => {
           <p>A preview of how your event card will appear to recipients.</p>
           <div className="flex items-center gap-2 mt-2 text-sm">
             <MapPin className="h-4 w-4 flex-shrink-0" />
-            <span className="opacity-70">1234 Main St, San Francisco, CA</span>
+            <span className="opacity-70">
+              {formattedLocation || '1234 Main St, San Francisco, CA'}
+            </span>
           </div>
         </div>
 
@@ -54,6 +77,8 @@ const EventCardPreview = () => {
               backgroundColor: 'rgba(0,0,0,0.1)',
               color: customization.font.color
             }}
+            onClick={handleViewOnMap}
+            disabled={!location}
           >
             <MapPin className="h-3 w-3" />
             <span>View Map</span>
@@ -64,6 +89,8 @@ const EventCardPreview = () => {
               backgroundColor: 'rgba(0,0,0,0.1)',
               color: customization.font.color
             }}
+            onClick={handleGetDirections}
+            disabled={!location}
           >
             <Navigation className="h-3 w-3" />
             <span>Directions</span>
