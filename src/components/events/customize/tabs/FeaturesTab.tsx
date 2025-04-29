@@ -14,7 +14,7 @@ interface FeaturesTabProps {
   onToggleCalendar: (checked: boolean) => void;
   onToggleButtons: (checked: boolean) => void;
   onBrandingChange: (property: 'logo' | 'slogan', value: string) => void;
-  onMapDisplayChange: (value: 'button' | 'both') => void;
+  onMapDisplayChange: (value: 'button' | 'both' | 'qrcode') => void;
   onUtilityButtonStyleChange?: (buttonType: 'calendar' | 'map' | 'qr', property: 'background' | 'color' | 'shape', value: string) => void;
   onPoweredByColorChange?: (color: string) => void;
 }
@@ -56,7 +56,7 @@ const FeaturesTab: React.FC<FeaturesTabProps> = ({
       
       <MapDisplayOptions 
         mapDisplay={customization.mapDisplay || 'button'}
-        onMapDisplayChange={(value) => onMapDisplayChange(value as 'button' | 'both')}
+        onMapDisplayChange={onMapDisplayChange}
       />
     </div>
   );

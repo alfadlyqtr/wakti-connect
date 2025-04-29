@@ -4,8 +4,8 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface MapDisplayOptionsProps {
-  mapDisplay: 'button' | 'both';
-  onMapDisplayChange: (value: 'button' | 'both') => void;
+  mapDisplay: 'button' | 'both' | 'qrcode';
+  onMapDisplayChange: (value: 'button' | 'both' | 'qrcode') => void;
 }
 
 export const MapDisplayOptions: React.FC<MapDisplayOptionsProps> = ({
@@ -18,7 +18,7 @@ export const MapDisplayOptions: React.FC<MapDisplayOptionsProps> = ({
       
       <RadioGroup 
         value={mapDisplay}
-        onValueChange={(value) => onMapDisplayChange(value as 'button' | 'both')}
+        onValueChange={(value) => onMapDisplayChange(value as 'button' | 'both' | 'qrcode')}
         className="space-y-2"
       >
         <div className="flex items-center space-x-2">
@@ -29,6 +29,11 @@ export const MapDisplayOptions: React.FC<MapDisplayOptionsProps> = ({
         <div className="flex items-center space-x-2">
           <RadioGroupItem value="both" id="map-both" />
           <Label htmlFor="map-both">Map preview with button</Label>
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <RadioGroupItem value="qrcode" id="map-qrcode" />
+          <Label htmlFor="map-qrcode">QR code</Label>
         </div>
       </RadioGroup>
     </div>
