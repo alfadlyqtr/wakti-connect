@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useCustomization } from "../context";
 import BackgroundSelector from "../BackgroundSelector";
@@ -30,68 +29,93 @@ const detectEventType = (title: string = "", description: string = ""): string =
   return "event";
 };
 
-// Helper function to suggest a visual style based on event type
-const suggestVisualStyle = (eventType: string): string => {
+// Helper function to suggest keywords for the detected event type
+const getEventKeywords = (eventType: string): string[] => {
   switch (eventType) {
-    case "wedding": return "elegant and romantic";
-    case "birthday celebration": return "festive and colorful";
-    case "conference": return "professional and clean";
-    case "party": return "vibrant and energetic";
-    case "dining event": return "warm and inviting";
-    case "concert": return "dynamic and atmospheric";
-    case "travel event": return "scenic and adventurous";
-    case "graduation ceremony": return "formal and celebratory";
-    case "outdoor nature event": return "natural and serene";
-    default: return "polished and appropriate";
+    case "wedding":
+      return ["romantic", "elegant", "floral", "celebration", "ceremonial", "love"];
+    case "birthday celebration":
+      return ["festive", "colorful", "joyful", "balloons", "celebration", "party"];
+    case "conference":
+      return ["professional", "business", "formal", "networking", "corporate"];
+    case "party":
+      return ["fun", "vibrant", "celebration", "festive", "lively", "energetic"];
+    case "dining event":
+      return ["culinary", "elegant", "gourmet", "cozy", "atmospheric", "food"];
+    case "concert":
+      return ["music", "excitement", "stage", "performance", "entertainment"];
+    case "travel event":
+      return ["scenic", "adventure", "exploration", "landscape", "journey"];
+    case "graduation ceremony":
+      return ["achievement", "academic", "formal", "celebration", "milestone"];
+    case "outdoor nature event":
+      return ["natural", "scenic", "peaceful", "lush", "organic", "greenery"];
+    default:
+      return ["professional", "appropriate", "engaging", "elegant"];
   }
 };
 
-// Helper function to suggest color palette based on event type
-const suggestColorPalette = (eventType: string): string => {
+// Create a direct, concise prompt that works well with AI image generation
+const createOptimizedPrompt = (eventType: string, title: string = "", description: string = ""): string => {
+  const keywords = getEventKeywords(eventType);
+  
+  // Select random keywords (between 2-4) to avoid overwhelming the model
+  const shuffled = [...keywords].sort(() => 0.5 - Math.random());
+  const selectedKeywords = shuffled.slice(0, Math.floor(Math.random() * 3) + 2);
+  
+  // Base prompts optimized for different event types
+  let basePrompt = "";
+  
   switch (eventType) {
-    case "wedding": return "with soft pastel colors";
-    case "birthday celebration": return "with bright, festive colors";
-    case "conference": return "with professional blue and gray tones";
-    case "party": return "with vibrant, high-energy colors";
-    case "dining event": return "with warm amber and burgundy tones";
-    case "concert": return "with dramatic contrasting colors";
-    case "travel event": return "with natural earth tones and blues";
-    case "graduation ceremony": return "with formal colors and gold accents";
-    case "outdoor nature event": return "with earthy greens and natural tones";
-    default: return "with balanced, harmonious colors";
+    case "outdoor nature event":
+      basePrompt = "Beautiful scenic landscape with natural elements.";
+      break;
+    case "wedding":
+      basePrompt = "Elegant wedding scene with soft romantic atmosphere.";
+      break;
+    case "birthday celebration":
+      basePrompt = "Festive birthday celebration background with vibrant colors.";
+      break;
+    case "conference":
+      basePrompt = "Professional conference or business meeting setting.";
+      break;
+    case "party":
+      basePrompt = "Festive party atmosphere with dynamic lighting.";
+      break;
+    case "dining event":
+      basePrompt = "Elegant dining atmosphere with warm ambient lighting.";
+      break;
+    case "concert":
+      basePrompt = "Concert venue with atmospheric lighting and stage elements.";
+      break;
+    case "travel event":
+      basePrompt = "Beautiful destination landscape with scenic views.";
+      break;
+    case "graduation ceremony":
+      basePrompt = "Formal graduation ceremony with academic elements.";
+      break;
+    default:
+      basePrompt = "Elegant event background with professional aesthetic.";
   }
-};
-
-// Helper function to suggest mood/atmosphere based on event type
-const suggestMood = (eventType: string): string => {
-  switch (eventType) {
-    case "wedding": return "romantic and celebratory";
-    case "birthday celebration": return "joyful and festive";
-    case "conference": return "professional and focused";
-    case "party": return "exciting and social";
-    case "dining event": return "inviting and appetizing";
-    case "concert": return "energetic and immersive";
-    case "travel event": return "inspiring and adventurous";
-    case "graduation ceremony": return "proud and accomplished";
-    case "outdoor nature event": return "peaceful and refreshing";
-    default: return "engaging and appropriate";
+  
+  // Create a concise, direct prompt with enough detail but not too verbose
+  let prompt = `${basePrompt} ${selectedKeywords.join(", ")}.`;
+  
+  // Add title if available (but keep it short)
+  if (title) {
+    prompt += ` For event: "${title.substring(0, 30)}"`;
   }
-};
-
-// Helper function to suggest composition based on event type
-const suggestComposition = (eventType: string): string => {
-  switch (eventType) {
-    case "wedding": return "elegant floral arrangements or architectural details";
-    case "birthday celebration": return "festive decorations and celebration elements";
-    case "conference": return "abstract geometric patterns or blurred city skyline";
-    case "party": return "dynamic abstract patterns with festive elements";
-    case "dining event": return "soft-focus table settings or culinary elements";
-    case "concert": return "dramatic lighting effects or musical elements";
-    case "travel event": return "panoramic landscapes or iconic landmarks";
-    case "graduation ceremony": return "academic symbolism with elegant framing";
-    case "outdoor nature event": return "panoramic natural landscape with gentle depth of field";
-    default: return "balanced composition with subtle visual interest";
+  
+  // Add a very brief mention of description if available
+  if (description && description.length > 5) {
+    const shortDesc = description.substring(0, 40);
+    prompt += ` Theme: ${shortDesc}${shortDesc.length < description.length ? '...' : ''}`;
   }
+  
+  // Add specific instructions for image generation
+  prompt += " Perfect as event invitation background with space for text.";
+  
+  return prompt;
 };
 
 const BackgroundTabContent: React.FC<BackgroundTabContentProps> = ({ title, description }) => {
@@ -107,26 +131,14 @@ const BackgroundTabContent: React.FC<BackgroundTabContentProps> = ({ title, desc
     return type === 'solid' ? 'color' : 'image';
   };
 
-  // Enhanced AI background generation using sophisticated prompt construction
+  // Enhanced AI background generation using optimized prompt construction
   const handleAIBackgroundGeneration = async () => {
     try {
       // Detect the event type from title and description
       const eventType = detectEventType(title, description);
       
-      // Build a rich prompt with context about the event
-      const visualStyle = suggestVisualStyle(eventType);
-      const colorPalette = suggestColorPalette(eventType);
-      const mood = suggestMood(eventType);
-      const composition = suggestComposition(eventType);
-      
-      // Construct an enhanced prompt
-      const enhancedPrompt = [
-        `Create a ${visualStyle} background image for a ${eventType}`,
-        title ? `titled "${title}"` : "",
-        description ? `with theme: ${description}` : "",
-        `The image should be ${mood}, ${colorPalette}, featuring ${composition}.`,
-        "Make it suitable for an event invitation with space for text overlay."
-      ].filter(Boolean).join(" ");
+      // Build an optimized prompt for image generation
+      const enhancedPrompt = createOptimizedPrompt(eventType, title, description);
       
       toast({
         title: "Generating background",
