@@ -81,7 +81,7 @@ serve(async (req) => {
             "CFGScale": 12.0, // Increased from 7.5 to 12.0 for stronger adherence to prompt
             "scheduler": "FlowMatchEulerDiscreteScheduler", // Changed scheduler for better scenic imagery
             "strength": 0.9, // Increased from 0.75 for stronger effect
-            "promptWeighting": "none"
+            // Remove promptWeighting to avoid the API validation error
           }
         ];
         

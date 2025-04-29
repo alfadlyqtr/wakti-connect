@@ -29,11 +29,15 @@ export const ColorPickerInput: React.FC<ColorPickerInputProps> = ({
   ];
   
   const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
     setColor(e.target.value);
     onChange(e.target.value);
   };
 
   const handleHexInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
     const newColor = e.target.value;
     setColor(newColor);
     onChange(newColor);
@@ -42,6 +46,11 @@ export const ColorPickerInput: React.FC<ColorPickerInputProps> = ({
   const handlePresetClick = (presetColor: string) => {
     setColor(presetColor);
     onChange(presetColor);
+  };
+
+  // Prevent click propagation for the whole popover content
+  const handlePopoverClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
   };
 
   return (
@@ -59,13 +68,18 @@ export const ColorPickerInput: React.FC<ColorPickerInputProps> = ({
               <span className="sr-only">Pick a color</span>
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-3">
+          <PopoverContent 
+            className="w-auto p-3 z-[100] bg-popover" 
+            onClick={handlePopoverClick}
+            onPointerDownOutside={(e) => e.preventDefault()}
+          >
             <div className="flex flex-col gap-3">
               <input
                 type="color"
                 value={color}
                 onChange={handleColorChange}
                 className="w-32 h-32 cursor-pointer"
+                onClick={(e) => e.stopPropagation()}
               />
               <div className="grid grid-cols-8 gap-1">
                 {colorPresets.map((presetColor) => (
@@ -89,6 +103,7 @@ export const ColorPickerInput: React.FC<ColorPickerInputProps> = ({
           onChange={handleHexInputChange}
           className="w-28"
           placeholder="#000000"
+          onClick={(e) => e.stopPropagation()}
         />
       </div>
     </div>

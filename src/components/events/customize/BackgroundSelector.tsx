@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import ColorTab from "./background-tabs/ColorTab";
 import ImageTab from "./background-tabs/ImageTab";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Loader2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 
 interface BackgroundSelectorProps {
@@ -15,6 +15,7 @@ interface BackgroundSelectorProps {
   onGenerateAIBackground?: () => void;
   title?: string;
   description?: string;
+  isGenerating?: boolean;
 }
 
 const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
@@ -23,7 +24,8 @@ const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
   onBackgroundChange,
   onGenerateAIBackground,
   title,
-  description
+  description,
+  isGenerating = false
 }) => {
   const [activeTab, setActiveTab] = useState<string>(backgroundType || 'color');
 
@@ -97,9 +99,19 @@ const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
               variant="outline" 
               className="w-full flex items-center justify-center gap-2" 
               onClick={handleGenerateAIBackground}
+              disabled={isGenerating}
             >
-              <Sparkles className="h-4 w-4" />
-              Generate AI Background
+              {isGenerating ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4" />
+                  Generate AI Background
+                </>
+              )}
             </Button>
             <p className="text-xs text-muted-foreground mt-2 text-center">
               Create a unique background based on your event details

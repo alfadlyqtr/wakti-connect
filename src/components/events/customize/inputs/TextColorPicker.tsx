@@ -33,6 +33,7 @@ export const TextColorPicker: React.FC<TextColorPickerProps> = ({
   
   // Handle local color change
   const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
     e.stopPropagation();
     const newColor = e.target.value;
     setColor(newColor);
@@ -40,10 +41,14 @@ export const TextColorPicker: React.FC<TextColorPickerProps> = ({
   };
   
   // Handle preset color selection
-  const handlePresetClick = (presetColor: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handlePresetClick = (presetColor: string) => {
     setColor(presetColor);
     onChange(presetColor);
+  };
+
+  // Prevent click propagation for the whole popover content
+  const handlePopoverClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
   };
 
   return (
@@ -61,8 +66,12 @@ export const TextColorPicker: React.FC<TextColorPickerProps> = ({
               <span className="sr-only">Pick a color</span>
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-3 z-50">
-            <div className="flex flex-col gap-4" onClick={(e) => e.stopPropagation()}>
+          <PopoverContent 
+            className="w-auto p-3 z-[100]" 
+            onClick={handlePopoverClick}
+            onPointerDownOutside={(e) => e.preventDefault()}
+          >
+            <div className="flex flex-col gap-4">
               <input
                 type="color"
                 value={color}
@@ -79,7 +88,7 @@ export const TextColorPicker: React.FC<TextColorPickerProps> = ({
                       color === presetColor ? 'ring-2 ring-primary ring-offset-1' : ''
                     }`}
                     style={{ backgroundColor: presetColor }}
-                    onClick={(e) => handlePresetClick(presetColor, e)}
+                    onClick={() => handlePresetClick(presetColor)}
                   />
                 ))}
               </div>

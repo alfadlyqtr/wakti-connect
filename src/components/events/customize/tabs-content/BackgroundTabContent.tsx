@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { useState } from "react";
 import { useCustomization } from "../context";
 import BackgroundSelector from "../BackgroundSelector";
 import { BackgroundType } from "@/types/event.types";
@@ -125,6 +126,8 @@ const BackgroundTabContent: React.FC<BackgroundTabContentProps> = ({ title, desc
     handleAnimationChange
   } = useCustomization();
 
+  const [isGenerating, setIsGenerating] = useState(false);
+
   // Convert between type values used in UI and the internal values
   const convertBackgroundTypeToUI = (type: BackgroundType): "color" | "image" => {
     // Map 'solid' to 'color' for compatibility with BackgroundSelector component
@@ -134,6 +137,8 @@ const BackgroundTabContent: React.FC<BackgroundTabContentProps> = ({ title, desc
   // Enhanced AI background generation using optimized prompt construction
   const handleAIBackgroundGeneration = async () => {
     try {
+      setIsGenerating(true);
+      
       // Detect the event type from title and description
       const eventType = detectEventType(title, description);
       
@@ -158,7 +163,10 @@ const BackgroundTabContent: React.FC<BackgroundTabContentProps> = ({ title, desc
           title: "Background generated",
           description: "Your AI generated background has been applied"
         });
+        
+        console.log("Background image applied:", result.imageUrl);
       } else {
+        console.error("Failed to generate image:", result.error);
         throw new Error(result.error || "Failed to generate image");
       }
     } catch (error) {
@@ -169,9 +177,8 @@ const BackgroundTabContent: React.FC<BackgroundTabContentProps> = ({ title, desc
         description: error.message || "Could not generate image background. Please try again.",
         variant: "destructive"
       });
-      
-      // Fallback to a placeholder image when AI generation fails
-      handleBackgroundChange('image', 'https://source.unsplash.com/random/800x600/?event');
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -184,6 +191,7 @@ const BackgroundTabContent: React.FC<BackgroundTabContentProps> = ({ title, desc
         title={title}
         description={description}
         onGenerateAIBackground={handleAIBackgroundGeneration}
+        isGenerating={isGenerating}
       />
     </>
   );
