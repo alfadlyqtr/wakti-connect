@@ -15,6 +15,7 @@ interface UseEventSubmissionProps {
   startTime: string;
   endTime: string;
   location: string;
+  locationTitle?: string; // Added locationTitle property
   locationType: 'manual' | 'google_maps';
   mapsUrl: string;
   customization: EventCustomization;
@@ -32,6 +33,7 @@ export const useEventSubmission = ({
   startTime,
   endTime,
   location,
+  locationTitle, // Added locationTitle parameter
   locationType,
   mapsUrl,
   customization,
@@ -90,6 +92,7 @@ export const useEventSubmission = ({
       startDate: selectedDate,
       isAllDay: isAllDay,
       location: location,
+      location_title: locationTitle, // Added location_title to form data
       start_time: startDateTime.toISOString(),
       end_time: endDateTime.toISOString(),
       is_all_day: isAllDay,

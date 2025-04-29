@@ -154,7 +154,7 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
     startTime,
     endTime,
     location,
-    locationTitle,
+    locationTitle, // Pass the locationTitle to the hook
     locationType,
     mapsUrl,
     customization,
