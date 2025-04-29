@@ -15,6 +15,7 @@ interface FormTabsProps {
   description: string;
   selectedDate: Date;
   location: string;
+  locationTitle?: string;
   startTime: string;
   endTime: string;
   isAllDay: boolean;
@@ -26,7 +27,7 @@ interface FormTabsProps {
   onTitleChange: (title: string) => void;
   onDescriptionChange: (description: string) => void;
   onDateChange: (date: Date) => void;
-  onLocationChange: (location: string, type?: 'manual' | 'google_maps', url?: string) => void;
+  onLocationChange: (location: string, type?: 'manual' | 'google_maps', url?: string, title?: string) => void;
   onStartTimeChange: (time: string) => void;
   onEndTimeChange: (time: string) => void;
   onIsAllDayChange: (isAllDay: boolean) => void;
@@ -46,6 +47,7 @@ const FormTabs: React.FC<FormTabsProps> = ({
   description,
   selectedDate,
   location,
+  locationTitle,
   startTime,
   endTime,
   isAllDay,
@@ -89,6 +91,7 @@ const FormTabs: React.FC<FormTabsProps> = ({
           title={title}
           description={description}
           location={location}
+          locationTitle={locationTitle}
           selectedDate={selectedDate}
           startTime={startTime}
           endTime={endTime}
@@ -114,6 +117,7 @@ const FormTabs: React.FC<FormTabsProps> = ({
           onCustomizationChange={onCustomizationChange}
           handleNextTab={handleNextFromCustomize}
           location={location}
+          locationTitle={locationTitle}
         />
       </TabsContent>
 

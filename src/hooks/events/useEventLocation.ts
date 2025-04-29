@@ -5,6 +5,7 @@ import { generateGoogleMapsUrl } from "@/config/maps";
 
 export const useEventLocation = () => {
   const [location, setLocation] = useState<string>('');
+  const [locationTitle, setLocationTitle] = useState<string>('');
   const [locationType, setLocationType] = useState<'manual' | 'google_maps'>('manual');
   const [mapsUrl, setMapsUrl] = useState<string>('');
   const [isGettingLocation, setIsGettingLocation] = useState(false);
@@ -21,10 +22,15 @@ export const useEventLocation = () => {
   const handleLocationChange = useCallback((
     location: string, 
     type?: 'manual' | 'google_maps',
-    url?: string
+    url?: string,
+    title?: string
   ) => {
     setLocation(location);
     setDisplayLocation(location);
+    
+    if (title !== undefined) {
+      setLocationTitle(title);
+    }
     
     if (type) {
       setLocationType(type);
@@ -51,10 +57,15 @@ export const useEventLocation = () => {
     displayLocation: string,
     lat?: number,
     lng?: number,
-    mapsUrl?: string
+    mapsUrl?: string,
+    title?: string
   ) => {
     setLocation(displayLocation);
     setDisplayLocation(displayLocation);
+    
+    if (title !== undefined) {
+      setLocationTitle(title);
+    }
     
     if (mapsUrl?.includes('google.com/maps')) {
       setLocationType('google_maps');
@@ -73,6 +84,7 @@ export const useEventLocation = () => {
 
   return {
     location,
+    locationTitle,
     displayLocation,
     locationType,
     mapsUrl,

@@ -7,7 +7,8 @@ import LocationDialog from './LocationDialog';
 
 interface LocationPickerProps {
   value: string;
-  onChange: (location: string, type?: 'manual' | 'google_maps', url?: string) => void;
+  onChange: (location: string, type?: 'manual' | 'google_maps', url?: string, title?: string) => void;
+  locationTitle?: string;
   className?: string;
   placeholder?: string;
 }
@@ -15,6 +16,7 @@ interface LocationPickerProps {
 const LocationPicker: React.FC<LocationPickerProps> = ({
   value,
   onChange,
+  locationTitle,
   className = '',
   placeholder = "Add location",
 }) => {
@@ -31,7 +33,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
       >
         <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
         <span className="text-left">
-          {formattedLocation || placeholder}
+          {locationTitle || formattedLocation || placeholder}
         </span>
       </Button>
 

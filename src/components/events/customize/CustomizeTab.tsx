@@ -20,13 +20,15 @@ export interface CustomizeTabProps {
   onCustomizationChange: (customization: EventCustomization) => void;
   handleNextTab?: () => void;
   location?: string;
+  locationTitle?: string;
 }
 
 const CustomizeTab: React.FC<CustomizeTabProps> = ({ 
   customization, 
   onCustomizationChange,
   handleNextTab,
-  location
+  location,
+  locationTitle
 }) => {
   const [activeTab, setActiveTab] = React.useState('background');
 
@@ -69,7 +71,7 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
           </div>
 
           <div className="order-first md:order-last sticky top-4">
-            <EventCardPreview location={location} />
+            <EventCardPreview location={location} locationTitle={locationTitle} />
           </div>
         </div>
         

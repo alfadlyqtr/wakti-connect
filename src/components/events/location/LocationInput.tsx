@@ -6,11 +6,13 @@ import { formatLocation } from '@/utils/locationUtils';
 
 interface LocationInputProps {
   location: string;
-  onLocationChange: (location: string, type?: 'manual' | 'google_maps', url?: string) => void;
+  locationTitle?: string;
+  onLocationChange: (location: string, type?: 'manual' | 'google_maps', url?: string, title?: string) => void;
 }
 
 const LocationInput: React.FC<LocationInputProps> = ({
   location,
+  locationTitle,
   onLocationChange,
 }) => {
   const formattedLocation = formatLocation(location);
@@ -22,12 +24,16 @@ const LocationInput: React.FC<LocationInputProps> = ({
         <div className="flex-1">
           <LocationPicker
             value={location}
+            locationTitle={locationTitle}
             onChange={onLocationChange}
           />
           
           {location && (
             <div className="mt-2 text-sm p-2 bg-muted/50 rounded-md">
               <p className="font-medium">Selected location:</p>
+              {locationTitle && (
+                <p className="text-sm font-medium">{locationTitle}</p>
+              )}
               <p className="text-muted-foreground">{formattedLocation}</p>
             </div>
           )}

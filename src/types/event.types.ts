@@ -9,6 +9,7 @@ export const eventSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
   location: z.string().optional(),
+  location_title: z.string().optional(), // Added location_title field
   startDate: z.date().optional(),
   endDate: z.date().optional(),
   isAllDay: z.boolean().optional().default(false)
@@ -40,6 +41,7 @@ export interface EventFormData {
   title: string;
   description?: string;
   location?: string;
+  location_title?: string; // Added location_title field
   startDate: Date;
   endDate?: Date;
   isAllDay: boolean;
@@ -202,6 +204,7 @@ export interface Event {
   title: string;
   description?: string;
   location?: string;
+  location_title?: string; // Added location_title field
   start_time: string;
   end_time: string;
   is_all_day: boolean;

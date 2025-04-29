@@ -12,12 +12,13 @@ import { MapPin, Navigation } from 'lucide-react';
 interface LocationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onLocationSelect: (location: string, type?: 'manual' | 'google_maps', url?: string) => void;
+  onLocationSelect: (location: string, type?: 'manual' | 'google_maps', url?: string, title?: string) => void;
 }
 
 const LocationDialog = ({ open, onOpenChange, onLocationSelect }: LocationDialogProps) => {
   const [mapUrl, setMapUrl] = useState('');
   const [manualLocation, setManualLocation] = useState('');
+  const [locationTitle, setLocationTitle] = useState('');
   const [activeTab, setActiveTab] = useState('maps');
 
   const handleAddMapsUrl = () => {
@@ -30,9 +31,10 @@ const LocationDialog = ({ open, onOpenChange, onLocationSelect }: LocationDialog
       return;
     }
     
-    onLocationSelect(mapUrl, 'google_maps', mapUrl);
+    onLocationSelect(mapUrl, 'google_maps', mapUrl, locationTitle);
     onOpenChange(false);
     setMapUrl('');
+    setLocationTitle('');
   };
   
   const handleAddManualLocation = () => {
@@ -45,9 +47,10 @@ const LocationDialog = ({ open, onOpenChange, onLocationSelect }: LocationDialog
       return;
     }
     
-    onLocationSelect(manualLocation, 'manual');
+    onLocationSelect(manualLocation, 'manual', undefined, locationTitle);
     onOpenChange(false);
     setManualLocation('');
+    setLocationTitle('');
   };
   
   const handlePasteFromClipboard = async () => {
@@ -79,6 +82,19 @@ const LocationDialog = ({ open, onOpenChange, onLocationSelect }: LocationDialog
             <h2 className="text-lg font-semibold mb-2">Add Location</h2>
           </div>
           
+          <div className="space-y-2">
+            <Label htmlFor="locationTitle">Location Title (Optional)</Label>
+            <Input 
+              id="locationTitle"
+              placeholder="e.g. My House, Office, etc."
+              value={locationTitle}
+              onChange={(e) => setLocationTitle(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              A friendly name for this location that will be displayed on the event card
+            </p>
+          </div>
+
           <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid grid-cols-2 mb-4">
               <TabsTrigger value="maps">Google Maps</TabsTrigger>

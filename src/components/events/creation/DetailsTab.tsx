@@ -19,6 +19,7 @@ interface DetailsTabProps {
   endTime: string;
   isAllDay: boolean;
   location: string;
+  locationTitle?: string;
   locationType?: 'manual' | 'google_maps';
   mapsUrl?: string;
   handleNextTab: () => void;
@@ -27,7 +28,7 @@ interface DetailsTabProps {
   onTitleChange: (title: string) => void;
   onDescriptionChange: (description: string) => void;
   onDateChange: (date: Date) => void;
-  onLocationChange: (location: string, type?: 'manual' | 'google_maps', url?: string) => void;
+  onLocationChange: (location: string, type?: 'manual' | 'google_maps', url?: string, title?: string) => void;
   onStartTimeChange: (time: string) => void;
   onEndTimeChange: (time: string) => void;
   onIsAllDayChange: (isAllDay: boolean) => void;
@@ -44,6 +45,7 @@ const DetailsTab: React.FC<DetailsTabProps> = ({
   endTime,
   isAllDay,
   location,
+  locationTitle,
   onLocationChange,
   handleNextTab,
   title,
@@ -142,6 +144,7 @@ const DetailsTab: React.FC<DetailsTabProps> = ({
         <div className="mt-2">
           <LocationInput
             location={location}
+            locationTitle={locationTitle}
             onLocationChange={onLocationChange}
           />
         </div>

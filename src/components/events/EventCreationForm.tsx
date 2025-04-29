@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -37,6 +38,7 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
   // Use enhanced location hook for advanced location features
   const {
     location,
+    locationTitle,
     locationType,
     mapsUrl,
     isGettingLocation,
@@ -76,6 +78,7 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
       title: "",
       description: "",
       location: "",
+      location_title: "",
       startDate: selectedDate,
       endDate: undefined,
       isAllDay: false,
@@ -118,10 +121,12 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
   const handleAdvancedLocationChange = (
     location: string,
     type?: 'manual' | 'google_maps', 
-    url?: string
+    url?: string,
+    title?: string
   ) => {
-    handleLocationChange(location, type, url);
+    handleLocationChange(location, type, url, title);
     form.setValue("location", location);
+    form.setValue("location_title", title || "");
   };
 
   // Handler for sending email invitations
@@ -149,6 +154,7 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
     startTime,
     endTime,
     location,
+    locationTitle,
     locationType,
     mapsUrl,
     customization,
@@ -171,6 +177,7 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
   
   const handleSubmitForm = () => {
     form.setValue("location", location);
+    form.setValue("location_title", locationTitle || "");
     form.setValue("isAllDay", isAllDay);
     const formData = form.getValues();
     onSubmit(formData);
@@ -201,6 +208,7 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
           description={description}
           selectedDate={selectedDate}
           location={location}
+          locationTitle={locationTitle}
           startTime={startTime}
           endTime={endTime}
           customization={customization}
