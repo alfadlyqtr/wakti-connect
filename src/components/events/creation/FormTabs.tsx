@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { EventFormTab } from '@/types/event.types';
 import DetailsTab from '@/components/events/creation/DetailsTab'; // Fixed import path
@@ -6,9 +5,12 @@ import CustomizeTab from '../customize/CustomizeTab';
 import ShareLinksTab from '@/components/events/creation/ShareLinksTab'; // Fixed import and component name
 import { ShareTab as ShareTabType } from '@/types/form.types';
 
-interface FormTabsProps {
+interface FormTabsBaseProps {
   activeTab: EventFormTab;
   setActiveTab: (tab: EventFormTab) => void;
+}
+
+interface FormTabsProps extends FormTabsBaseProps {
   title: string;
   description: string;
   selectedDate: Date;
@@ -16,26 +18,27 @@ interface FormTabsProps {
   locationTitle?: string;
   startTime: string;
   endTime: string;
-  customization: any;
-  onCustomizationChange: (customization: any) => void;
-  recipients: any[];
-  addRecipient: (recipient: any) => void;
+  customization: EventCustomization;
+  onCustomizationChange: (customization: EventCustomization) => void;
+  recipients: InvitationRecipient[];
+  addRecipient: (recipient: InvitationRecipient) => void;
   removeRecipient: (index: number) => void;
-  onTitleChange: (value: string) => void;
-  onDescriptionChange: (value: string) => void;
-  onDateChange: (value: Date) => void;
+  onTitleChange: (title: string) => void;
+  onDescriptionChange: (description: string) => void;
+  onDateChange: (date: Date) => void;
   onLocationChange: (location: string, type?: 'manual' | 'google_maps', url?: string, title?: string) => void;
-  onStartTimeChange: (value: string) => void;
-  onEndTimeChange: (value: string) => void;
-  onIsAllDayChange: (value: boolean) => void;
+  onStartTimeChange: (time: string) => void;
+  onEndTimeChange: (time: string) => void;
+  onIsAllDayChange: (isAllDay: boolean) => void;
   isAllDay: boolean;
   locationType: 'manual' | 'google_maps';
-  mapsUrl?: string;
+  mapsUrl: string;
   getCurrentLocation: () => void;
   isGettingLocation: boolean;
-  shareTab: ShareTabType;
-  setShareTab: (tab: ShareTabType) => void;
+  shareTab: ShareTab;
+  setShareTab: (tab: ShareTab) => void;
   onSendEmail: (email: string) => void;
+  handleSaveDraft?: () => void;
 }
 
 export const FormTabs: React.FC<FormTabsProps> = ({
@@ -67,11 +70,12 @@ export const FormTabs: React.FC<FormTabsProps> = ({
   isGettingLocation,
   shareTab,
   setShareTab,
-  onSendEmail
+  onSendEmail,
+  handleSaveDraft
 }) => {
   const renderActiveTab = () => {
     switch (activeTab) {
-      case "details":
+      case 'details':
         return (
           <DetailsTab
             title={title}
@@ -96,12 +100,13 @@ export const FormTabs: React.FC<FormTabsProps> = ({
             handleNextTab={() => setActiveTab("customize")}
           />
         );
-      case "customize":
+      case 'customize':
         return (
           <CustomizeTab 
             customization={customization}
             onCustomizationChange={onCustomizationChange}
             handleNextTab={() => setActiveTab("share")}
+            handleSaveDraft={handleSaveDraft}
             location={location}
             locationTitle={locationTitle}
             title={title}
@@ -109,7 +114,7 @@ export const FormTabs: React.FC<FormTabsProps> = ({
             selectedDate={selectedDate}
           />
         );
-      case "share":
+      case 'share':
         return (
           <ShareLinksTab
             onSendEmail={onSendEmail}

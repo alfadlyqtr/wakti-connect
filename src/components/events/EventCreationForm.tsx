@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,6 +11,7 @@ import { Event, EventCustomization } from "@/types/event.types";
 import { useEventSubmission } from "@/hooks/events/useEventSubmission";
 import { ShareTab, SHARE_TABS } from "@/types/form.types";
 import { useEventLocation } from "@/hooks/events/useEventLocation";
+import { toast } from "react-toastify";
 
 interface EventCreationFormProps {
   editEvent?: Event | null;
@@ -192,7 +192,23 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
     if (activeTab === "details") setActiveTab("customize");
     if (activeTab === "customize") setActiveTab("share");
   };
-  
+
+  // Handle save as draft functionality
+  const handleSaveDraft = () => {
+    // Use the same submission but explicitly set status to draft
+    const formData = form.getValues();
+    const draftData = {
+      ...formData,
+      status: 'draft' as EventStatus
+    };
+    onSubmit(draftData);
+    
+    toast({
+      title: "Draft saved",
+      description: "Your event has been saved as a draft"
+    });
+  };
+
   return (
     <div className="container mx-auto mt-10">
       <FormHeader 
@@ -230,11 +246,12 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
           isAllDay={isAllDay}
           locationType={locationType}
           mapsUrl={mapsUrl}
-          getCurrentLocation={() => {}}  // Empty function as we don't need this anymore
+          getCurrentLocation={() => {}}
           isGettingLocation={isGettingLocation}
           shareTab={shareTab}
           setShareTab={setShareTab}
           onSendEmail={handleSendEmail}
+          handleSaveDraft={handleSaveDraft}
         />
         
         <FormActions 

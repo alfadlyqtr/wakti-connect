@@ -33,13 +33,15 @@ export const TextColorPicker: React.FC<TextColorPickerProps> = ({
   
   // Handle local color change
   const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation();
     const newColor = e.target.value;
     setColor(newColor);
     onChange(newColor);
   };
   
   // Handle preset color selection
-  const handlePresetClick = (presetColor: string) => {
+  const handlePresetClick = (presetColor: string, e: React.MouseEvent) => {
+    e.stopPropagation();
     setColor(presetColor);
     onChange(presetColor);
   };
@@ -59,13 +61,14 @@ export const TextColorPicker: React.FC<TextColorPickerProps> = ({
               <span className="sr-only">Pick a color</span>
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-3">
-            <div className="flex flex-col gap-4">
+          <PopoverContent className="w-auto p-3 z-50">
+            <div className="flex flex-col gap-4" onClick={(e) => e.stopPropagation()}>
               <input
                 type="color"
                 value={color}
                 onChange={handleColorChange}
                 className="w-32 h-32 cursor-pointer"
+                onClick={(e) => e.stopPropagation()}
               />
               
               <div className="grid grid-cols-8 gap-1">
@@ -76,7 +79,7 @@ export const TextColorPicker: React.FC<TextColorPickerProps> = ({
                       color === presetColor ? 'ring-2 ring-primary ring-offset-1' : ''
                     }`}
                     style={{ backgroundColor: presetColor }}
-                    onClick={() => handlePresetClick(presetColor)}
+                    onClick={(e) => handlePresetClick(presetColor, e)}
                   />
                 ))}
               </div>
@@ -89,6 +92,7 @@ export const TextColorPicker: React.FC<TextColorPickerProps> = ({
           value={color}
           onChange={handleColorChange}
           className="w-28"
+          onClick={(e) => e.stopPropagation()}
         />
       </div>
     </div>

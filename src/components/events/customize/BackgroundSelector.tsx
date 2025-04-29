@@ -9,12 +9,16 @@ interface BackgroundSelectorProps {
   backgroundType: string;
   backgroundValue: string;
   onBackgroundChange: (type: 'color' | 'image', value: string) => void;
+  title?: string;
+  description?: string;
 }
 
 const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
   backgroundType,
   backgroundValue,
-  onBackgroundChange
+  onBackgroundChange,
+  title,
+  description
 }) => {
   const [activeTab, setActiveTab] = useState<string>(backgroundType || 'color');
 
@@ -65,7 +69,9 @@ const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
         <TabsContent value="image" className="pt-4">
           <ImageTab 
             value={backgroundType === 'image' ? backgroundValue : ''} 
-            onChange={handleImageChange} 
+            onChange={handleImageChange}
+            title={title}
+            description={description}
           />
         </TabsContent>
       </Tabs>

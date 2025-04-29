@@ -68,6 +68,27 @@ const EventCardPreview = ({
 
   // Apply header style according to customization
   const renderHeader = () => {
+    // Set banner style with header image if available
+    if (customization.headerStyle === 'banner' && customization.headerImage) {
+      return (
+        <div className="mb-4 -mx-8 -mt-8 p-4 pt-6 pb-6 relative" 
+             style={{ 
+               borderBottom: '1px solid rgba(0,0,0,0.05)',
+               fontFamily: customization.headerFont?.family,
+               color: customization.headerFont?.color || customization.font.color,
+             }}>
+          <div 
+            className="absolute inset-0 bg-cover bg-center z-0 opacity-90" 
+            style={{ backgroundImage: `url(${customization.headerImage})` }}
+          ></div>
+          <div className="relative z-10 bg-black/30 p-4 rounded backdrop-blur-sm">
+            <h2 className="text-2xl font-semibold text-center text-white">{title}</h2>
+            <p className="text-sm opacity-90 text-center text-white">{formattedDate}</p>
+          </div>
+        </div>
+      );
+    }
+    
     switch(customization.headerStyle) {
       case 'banner':
         return (
@@ -110,6 +131,41 @@ const EventCardPreview = ({
     }
   };
 
+  // Add calendar preview option
+  const renderAddToCalendarButton = () => {
+    if (customization.showAddToCalendarButton) {
+      return (
+        <div className="mt-4">
+          <div className="flex gap-2">
+            <Button 
+              className="px-3 py-1.5 text-xs rounded flex items-center gap-1"
+              style={{
+                backgroundColor: customization.utilityButtons?.calendar?.background || 'rgba(0,0,0,0.1)',
+                color: customization.utilityButtons?.calendar?.color || customization.font.color
+              }}
+            >
+              <Calendar className="h-3 w-3" />
+              <span>Add to Calendar</span>
+            </Button>
+            {customization.enableAddToCalendar && (
+              <div className="relative">
+                <div className="absolute top-full mt-1 left-0 w-48 bg-white shadow-lg rounded-md border p-2 text-xs">
+                  <div className="flex flex-col gap-1">
+                    <div className="p-1 hover:bg-gray-100 rounded cursor-pointer">Google Calendar</div>
+                    <div className="p-1 hover:bg-gray-100 rounded cursor-pointer">Apple Calendar</div>
+                    <div className="p-1 hover:bg-gray-100 rounded cursor-pointer">Outlook</div>
+                    <div className="p-1 hover:bg-gray-100 rounded cursor-pointer">Yahoo</div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
+  
   return (
     <div className="w-full p-4 bg-muted/50 rounded-lg">
       <h3 className="mb-4 text-sm font-medium">Live Preview</h3>
@@ -149,6 +205,8 @@ const EventCardPreview = ({
             <div className="text-sm text-gray-500">Map Preview</div>
           </div>
         )}
+        
+        {renderAddToCalendarButton()}
 
         {location && (
           <div className="flex gap-2 mt-2">
@@ -203,6 +261,19 @@ const EventCardPreview = ({
         )}
       </Card>
     </div>
+  );
+};
+
+// Add Button component since it might be missing from imports
+const Button = ({ children, className, style, onClick }: any) => {
+  return (
+    <button 
+      className={className}
+      style={style}
+      onClick={onClick}
+    >
+      {children}
+    </button>
   );
 };
 

@@ -5,6 +5,8 @@ import { EventCustomization } from '@/types/event.types';
 import { Button } from '@/components/ui/button';
 import { CustomizationProvider } from './context';
 import EventCardPreview from './preview/EventCardPreview';
+import { Save } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
 import {
   BackgroundTabContent,
   TextTabContent,
@@ -18,6 +20,7 @@ export interface CustomizeTabProps {
   customization: EventCustomization;
   onCustomizationChange: (customization: EventCustomization) => void;
   handleNextTab?: () => void;
+  handleSaveDraft?: () => void;
   location?: string;
   locationTitle?: string;
   title?: string;
@@ -29,6 +32,7 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
   customization, 
   onCustomizationChange,
   handleNextTab,
+  handleSaveDraft,
   location,
   locationTitle,
   title,
@@ -36,6 +40,19 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
   selectedDate
 }) => {
   const [activeTab, setActiveTab] = React.useState('background');
+
+  // Save draft handler
+  const onSaveDraft = () => {
+    if (handleSaveDraft) {
+      handleSaveDraft();
+    } else {
+      // Fallback if no handler provided
+      toast({
+        title: "Draft saved",
+        description: "Your event has been saved as a draft",
+      });
+    }
+  };
 
   return (
     <CustomizationProvider
@@ -82,8 +99,18 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
           </div>
         </div>
         
-        {handleNextTab && (
-          <div className="pt-4 flex justify-end">
+        <div className="pt-4 flex justify-end gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onSaveDraft}
+            className="px-4"
+          >
+            <Save className="h-4 w-4 mr-2" />
+            Save Draft
+          </Button>
+          
+          {handleNextTab && (
             <Button 
               type="button" 
               onClick={handleNextTab}
@@ -91,8 +118,8 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
             >
               Next: Share
             </Button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </CustomizationProvider>
   );

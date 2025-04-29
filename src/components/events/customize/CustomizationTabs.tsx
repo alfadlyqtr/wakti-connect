@@ -13,11 +13,15 @@ import {
 interface CustomizationTabsProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
+  title?: string;
+  description?: string;
 }
 
 const CustomizationTabs: React.FC<CustomizationTabsProps> = ({ 
   activeTab, 
-  setActiveTab 
+  setActiveTab,
+  title,
+  description
 }) => {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -31,7 +35,7 @@ const CustomizationTabs: React.FC<CustomizationTabsProps> = ({
       </TabsList>
       
       <TabsContent value="background" className="space-y-4">
-        <BackgroundTabContent />
+        <BackgroundTabContent title={title} description={description} />
       </TabsContent>
       
       <TabsContent value="text" className="space-y-4">

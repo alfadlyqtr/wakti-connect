@@ -4,7 +4,12 @@ import { useCustomization } from "../context";
 import BackgroundSelector from "../BackgroundSelector";
 import { BackgroundType } from "@/types/event.types";
 
-const BackgroundTabContent = () => {
+interface BackgroundTabContentProps {
+  title?: string;
+  description?: string;
+}
+
+const BackgroundTabContent: React.FC<BackgroundTabContentProps> = ({ title, description }) => {
   const {
     customization,
     handleBackgroundChange,
@@ -22,6 +27,8 @@ const BackgroundTabContent = () => {
       backgroundType={convertBackgroundTypeToUI(customization.background.type)}
       backgroundValue={customization.background.value}
       onBackgroundChange={handleBackgroundChange}
+      title={title}
+      description={description}
     />
   );
 };

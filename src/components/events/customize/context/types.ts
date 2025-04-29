@@ -17,7 +17,7 @@ export interface CustomizationContextType {
   handleToggleButtons: (checked: boolean) => void;
   handleBrandingChange: (property: 'logo' | 'slogan', value: string) => void;
   handleAnimationChange: (value: 'fade' | 'slide' | 'pop') => void;
-  handleMapDisplayChange: (value: 'button' | 'both') => void;
+  handleMapDisplayChange: (value: 'button' | 'both' | 'qrcode') => void;
   handleCardEffectChange: (cardEffect: any) => void;
   handleElementAnimationsChange: (elementAnimations: any) => void;
   handleUtilityButtonStyleChange: (buttonType: 'calendar' | 'map' | 'qr', property: 'background' | 'color' | 'shape', value: string) => void;

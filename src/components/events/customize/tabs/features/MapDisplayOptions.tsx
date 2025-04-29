@@ -30,11 +30,6 @@ export const MapDisplayOptions: React.FC<MapDisplayOptionsProps> = ({
           <RadioGroupItem value="both" id="map-both" />
           <Label htmlFor="map-both">Map preview with button</Label>
         </div>
-        
-        <div className="flex items-center space-x-2">
-          <RadioGroupItem value="qrcode" id="map-qrcode" />
-          <Label htmlFor="map-qrcode">QR code</Label>
-        </div>
       </RadioGroup>
     </div>
   );
