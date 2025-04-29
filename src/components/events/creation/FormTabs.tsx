@@ -1,9 +1,9 @@
 
 import React from 'react';
 import { EventFormTab } from '@/types/event.types';
-import DetailsTab from '../details/DetailsTab'; // Changed import path
+import DetailsTab from '@/components/events/creation/DetailsTab'; // Fixed import path
 import CustomizeTab from '../customize/CustomizeTab';
-import ShareTab from '../share/ShareTab';
+import ShareLinksTab from '@/components/events/creation/ShareLinksTab'; // Fixed import and component name
 import { ShareTab as ShareTabType } from '@/types/form.types';
 
 interface FormTabsProps {
@@ -111,12 +111,7 @@ export const FormTabs: React.FC<FormTabsProps> = ({
         );
       case "share":
         return (
-          <ShareTab
-            recipients={recipients}
-            addRecipient={addRecipient}
-            removeRecipient={removeRecipient}
-            activeTab={shareTab}
-            setActiveTab={setShareTab}
+          <ShareLinksTab
             onSendEmail={onSendEmail}
           />
         );

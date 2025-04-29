@@ -56,7 +56,7 @@ const FeaturesTab: React.FC<FeaturesTabProps> = ({
       
       <MapDisplayOptions 
         mapDisplay={customization.mapDisplay || 'button'}
-        onMapDisplayChange={onMapDisplayChange}
+        onMapDisplayChange={(value) => onMapDisplayChange(value as 'button' | 'both')}
       />
     </div>
   );

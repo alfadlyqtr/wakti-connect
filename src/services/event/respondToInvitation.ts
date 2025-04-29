@@ -94,8 +94,8 @@ export const respondToInvitation = async (
           end_time: eventData.end_time,
           is_all_day: eventData.is_all_day,
           location: eventData.location,
-          // location_title is missing from the schema
-          location_title: eventData.location_title || ""
+          // Use optional chaining to safely access location_title if it exists
+          location_title: (eventData as any).location_title || ""
         });
       }
     }
