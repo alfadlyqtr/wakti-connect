@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { EventFormTab } from '@/types/event.types';
-import { DetailsTab } from '../details/DetailsTab';
+import DetailsTab from '../details/DetailsTab'; // Changed import path
 import CustomizeTab from '../customize/CustomizeTab';
 import ShareTab from '../share/ShareTab';
 import { ShareTab as ShareTabType } from '@/types/form.types';
