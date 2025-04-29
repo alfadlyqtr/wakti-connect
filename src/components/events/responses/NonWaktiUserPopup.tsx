@@ -49,7 +49,7 @@ const NonWaktiUserPopup: React.FC<NonWaktiUserPopupProps> = ({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
-            {type === 'accepted' ? 'You're attending!' : 'Response recorded'}
+            {type === 'accepted' ? "You're attending!" : "Response recorded"}
           </DialogTitle>
           <DialogDescription>
             {type === 'accepted' 

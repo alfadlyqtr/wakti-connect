@@ -20,6 +20,9 @@ export interface CustomizeTabProps {
   handleNextTab?: () => void;
   location?: string;
   locationTitle?: string;
+  title?: string;
+  description?: string;
+  selectedDate?: Date;
 }
 
 const CustomizeTab: React.FC<CustomizeTabProps> = ({ 
@@ -27,7 +30,10 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
   onCustomizationChange,
   handleNextTab,
   location,
-  locationTitle
+  locationTitle,
+  title,
+  description,
+  selectedDate
 }) => {
   const [activeTab, setActiveTab] = React.useState('background');
 
@@ -46,12 +52,11 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
               className="w-full"
             >
               <div className="flex justify-center mb-6">
-                <TabsList className="grid grid-cols-3 sm:grid-cols-6">
+                <TabsList className="grid grid-cols-3 sm:grid-cols-5">
                   <TabsTrigger value="background">Background</TabsTrigger>
                   <TabsTrigger value="text">Text</TabsTrigger>
                   <TabsTrigger value="buttons">Buttons</TabsTrigger>
                   <TabsTrigger value="header" className="hidden sm:inline-flex">Header</TabsTrigger>
-                  <TabsTrigger value="effects" className="hidden sm:inline-flex">Effects</TabsTrigger>
                   <TabsTrigger value="features" className="hidden sm:inline-flex">Features</TabsTrigger>
                 </TabsList>
               </div>
@@ -61,14 +66,19 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
                 {activeTab === 'text' && <TextTabContent />}
                 {activeTab === 'buttons' && <ButtonsTabContent />}
                 {activeTab === 'header' && <HeaderTabContent />}
-                {activeTab === 'effects' && <CardEffectTabContent />}
                 {activeTab === 'features' && <FeaturesTabContent />}
               </div>
             </Tabs>
           </div>
 
           <div className="order-first md:order-last sticky top-4">
-            <EventCardPreview location={location} locationTitle={locationTitle} />
+            <EventCardPreview 
+              location={location} 
+              locationTitle={locationTitle}
+              title={title} 
+              description={description}
+              date={selectedDate}
+            />
           </div>
         </div>
         
