@@ -32,7 +32,7 @@ export const createFeatureHandlers = (
     });
   };
 
-  const handleMapDisplayChange = (value: 'button' | 'both' | 'qrcode') => {
+  const handleMapDisplayChange = (value: 'button' | 'both') => {
     onCustomizationChange({
       ...customization,
       mapDisplay: value

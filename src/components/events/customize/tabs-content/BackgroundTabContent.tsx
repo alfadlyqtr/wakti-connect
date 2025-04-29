@@ -3,6 +3,7 @@ import React from "react";
 import { useCustomization } from "../context";
 import BackgroundSelector from "../BackgroundSelector";
 import { BackgroundType } from "@/types/event.types";
+import { toast } from "@/components/ui/use-toast";
 
 interface BackgroundTabContentProps {
   title?: string;
