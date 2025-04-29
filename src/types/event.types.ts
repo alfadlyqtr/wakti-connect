@@ -1,4 +1,3 @@
-
 import { z } from 'zod';
 
 // Define text alignment type
@@ -170,7 +169,7 @@ export interface EventCustomization {
   };
   
   // Other features
-  mapDisplay?: 'button' | 'qrcode' | 'both';
+  mapDisplay?: 'button' | 'both';
   poweredByColor?: string;
 }
 

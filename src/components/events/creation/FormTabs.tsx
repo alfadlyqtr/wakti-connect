@@ -1,9 +1,10 @@
 import React from 'react';
-import { EventFormTab } from '@/types/event.types';
+import { EventFormTab, EventCustomization } from '@/types/event.types';
 import DetailsTab from '@/components/events/creation/DetailsTab'; // Fixed import path
 import CustomizeTab from '../customize/CustomizeTab';
 import ShareLinksTab from '@/components/events/creation/ShareLinksTab'; // Fixed import and component name
-import { ShareTab as ShareTabType } from '@/types/form.types';
+import { ShareTab } from '@/types/form.types';
+import { InvitationRecipient } from '@/types/invitation.types';
 
 interface FormTabsBaseProps {
   activeTab: EventFormTab;

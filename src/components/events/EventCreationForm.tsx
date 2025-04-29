@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { eventSchema, EventFormValues, EventFormTab, BackgroundType, AnimationType, ButtonShape } from "@/types/event.types";
+import { eventSchema, EventFormValues, EventFormTab, BackgroundType, AnimationType, ButtonShape, EventStatus } from "@/types/event.types";
 import FormHeader from "./creation/FormHeader";
 import FormTabs from "./creation/FormTabs";
 import FormActions from "./creation/FormActions";
@@ -11,7 +11,7 @@ import { Event, EventCustomization } from "@/types/event.types";
 import { useEventSubmission } from "@/hooks/events/useEventSubmission";
 import { ShareTab, SHARE_TABS } from "@/types/form.types";
 import { useEventLocation } from "@/hooks/events/useEventLocation";
-import { toast } from "react-toastify";
+import { toast } from "@/components/ui/use-toast";
 
 interface EventCreationFormProps {
   editEvent?: Event | null;

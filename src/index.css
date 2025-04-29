@@ -1,8 +1,9 @@
+
+@import "./styles/ai-assistant-glassmorphism.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import "./styles/ai-assistant-glassmorphism.css";
 
 @layer base {
   :root {
