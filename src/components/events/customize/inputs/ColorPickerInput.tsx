@@ -20,6 +20,14 @@ export const ColorPickerInput: React.FC<ColorPickerInputProps> = ({
 }) => {
   const [color, setColor] = useState(value || '#ffffff');
   
+  // Common color presets
+  const colorPresets = [
+    '#000000', '#333333', '#555555', '#777777', '#999999', '#CCCCCC', '#FFFFFF',
+    '#FF0000', '#FF6600', '#FFCC00', '#33CC00', '#00CCFF', '#0066FF', '#3300FF',
+    '#9900FF', '#FF00FF', '#FF0099', '#8B5CF6', '#6366F1', '#3B82F6', '#0EA5E9', 
+    '#14B8A6', '#10B981', '#84CC16', '#EAB308', '#F97316', '#EF4444', '#EC4899'
+  ];
+  
   const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setColor(e.target.value);
     onChange(e.target.value);
@@ -29,6 +37,11 @@ export const ColorPickerInput: React.FC<ColorPickerInputProps> = ({
     const newColor = e.target.value;
     setColor(newColor);
     onChange(newColor);
+  };
+  
+  const handlePresetClick = (presetColor: string) => {
+    setColor(presetColor);
+    onChange(presetColor);
   };
 
   return (
@@ -46,13 +59,27 @@ export const ColorPickerInput: React.FC<ColorPickerInputProps> = ({
               <span className="sr-only">Pick a color</span>
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-2">
-            <input
-              type="color"
-              value={color}
-              onChange={handleColorChange}
-              className="w-32 h-32 cursor-pointer"
-            />
+          <PopoverContent className="w-auto p-3">
+            <div className="flex flex-col gap-3">
+              <input
+                type="color"
+                value={color}
+                onChange={handleColorChange}
+                className="w-32 h-32 cursor-pointer"
+              />
+              <div className="grid grid-cols-8 gap-1">
+                {colorPresets.map((presetColor) => (
+                  <div
+                    key={presetColor}
+                    className={`w-6 h-6 rounded-sm cursor-pointer border ${
+                      color === presetColor ? 'ring-2 ring-primary ring-offset-1' : ''
+                    }`}
+                    style={{ backgroundColor: presetColor }}
+                    onClick={() => handlePresetClick(presetColor)}
+                  />
+                ))}
+              </div>
+            </div>
           </PopoverContent>
         </Popover>
         

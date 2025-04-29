@@ -10,7 +10,6 @@ import {
   TextTabContent,
   ButtonsTabContent,
   HeaderTabContent,
-  AnimationsTabContent,
   CardEffectTabContent,
   FeaturesTabContent
 } from './tabs-content';
@@ -47,13 +46,12 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
               className="w-full"
             >
               <div className="flex justify-center mb-6">
-                <TabsList className="grid grid-cols-3 sm:grid-cols-7">
+                <TabsList className="grid grid-cols-3 sm:grid-cols-6">
                   <TabsTrigger value="background">Background</TabsTrigger>
                   <TabsTrigger value="text">Text</TabsTrigger>
                   <TabsTrigger value="buttons">Buttons</TabsTrigger>
                   <TabsTrigger value="header" className="hidden sm:inline-flex">Header</TabsTrigger>
                   <TabsTrigger value="effects" className="hidden sm:inline-flex">Effects</TabsTrigger>
-                  <TabsTrigger value="animations" className="hidden sm:inline-flex">Animations</TabsTrigger>
                   <TabsTrigger value="features" className="hidden sm:inline-flex">Features</TabsTrigger>
                 </TabsList>
               </div>
@@ -63,7 +61,6 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
                 {activeTab === 'text' && <TextTabContent />}
                 {activeTab === 'buttons' && <ButtonsTabContent />}
                 {activeTab === 'header' && <HeaderTabContent />}
-                {activeTab === 'animations' && <AnimationsTabContent />}
                 {activeTab === 'effects' && <CardEffectTabContent />}
                 {activeTab === 'features' && <FeaturesTabContent />}
               </div>

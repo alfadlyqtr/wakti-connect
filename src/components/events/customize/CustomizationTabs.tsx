@@ -8,7 +8,6 @@ import {
   HeaderTabContent,
   FeaturesTabContent,
   CardEffectTabContent,
-  AnimationsTabContent
 } from "./tabs-content";
 
 interface CustomizationTabsProps {
@@ -29,7 +28,6 @@ const CustomizationTabs: React.FC<CustomizationTabsProps> = ({
         <TabsTrigger value="header" className="px-2.5 py-1.5 text-xs sm:text-sm">Header</TabsTrigger>
         <TabsTrigger value="features" className="px-2.5 py-1.5 text-xs sm:text-sm">Features</TabsTrigger>
         <TabsTrigger value="effects" className="px-2.5 py-1.5 text-xs sm:text-sm">Card Effect</TabsTrigger>
-        <TabsTrigger value="animations" className="px-2.5 py-1.5 text-xs sm:text-sm">Animations</TabsTrigger>
       </TabsList>
       
       <TabsContent value="background" className="space-y-4">
@@ -55,17 +53,12 @@ const CustomizationTabs: React.FC<CustomizationTabsProps> = ({
       <TabsContent value="effects" className="space-y-6">
         <CardEffectTabContent />
       </TabsContent>
-      
-      <TabsContent value="animations" className="space-y-6">
-        <AnimationsTabContent />
-      </TabsContent>
 
       <TabsContent value="more" className="space-y-6 sm:hidden">
         <Tabs defaultValue="features">
-          <TabsList className="grid grid-cols-3 mb-4 w-full">
+          <TabsList className="grid grid-cols-2 mb-4 w-full">
             <TabsTrigger value="features">Features</TabsTrigger>
             <TabsTrigger value="effects">Card Effect</TabsTrigger>
-            <TabsTrigger value="animations">Animations</TabsTrigger>
           </TabsList>
           
           <TabsContent value="features" className="space-y-6">
@@ -74,10 +67,6 @@ const CustomizationTabs: React.FC<CustomizationTabsProps> = ({
           
           <TabsContent value="effects" className="space-y-6">
             <CardEffectTabContent />
-          </TabsContent>
-          
-          <TabsContent value="animations" className="space-y-6">
-            <AnimationsTabContent />
           </TabsContent>
         </Tabs>
       </TabsContent>

@@ -11,18 +11,16 @@ import {
 
 interface FeaturesTabProps {
   customization: EventCustomization;
-  onToggleChatbot: (checked: boolean) => void;
   onToggleCalendar: (checked: boolean) => void;
   onToggleButtons: (checked: boolean) => void;
   onBrandingChange: (property: 'logo' | 'slogan', value: string) => void;
-  onMapDisplayChange: (value: 'button' | 'qrcode' | 'both') => void;
+  onMapDisplayChange: (value: 'button' | 'both') => void;
   onUtilityButtonStyleChange?: (buttonType: 'calendar' | 'map' | 'qr', property: 'background' | 'color' | 'shape', value: string) => void;
   onPoweredByColorChange?: (color: string) => void;
 }
 
 const FeaturesTab: React.FC<FeaturesTabProps> = ({
   customization,
-  onToggleChatbot,
   onToggleCalendar,
   onToggleButtons,
   onBrandingChange,
@@ -35,10 +33,8 @@ const FeaturesTab: React.FC<FeaturesTabProps> = ({
       <InteractiveFeatures 
         showButtons={customization.showAcceptDeclineButtons !== false}
         showCalendar={customization.showAddToCalendarButton !== false}
-        enableChatbot={customization.enableChatbot || false}
         onToggleButtons={onToggleButtons}
         onToggleCalendar={onToggleCalendar}
-        onToggleChatbot={onToggleChatbot}
       />
 
       <Separator />

@@ -204,7 +204,7 @@ export interface Event {
   title: string;
   description?: string;
   location?: string;
-  location_title?: string; // Added location_title field
+  location_title?: string;
   start_time: string;
   end_time: string;
   is_all_day: boolean;
@@ -217,4 +217,14 @@ export interface Event {
   is_recalled?: boolean;
   location_type?: 'manual' | 'google_maps';
   maps_url?: string;
+  sender_name?: string;
+}
+
+// New type for guest responses (non-WAKTI users)
+export interface EventGuestResponse {
+  id: string;
+  event_id: string;
+  name: string;
+  response: 'accepted' | 'declined';
+  created_at: string;
 }

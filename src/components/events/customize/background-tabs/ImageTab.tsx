@@ -16,14 +16,18 @@ const ImageTab: React.FC<ImageTabProps> = ({
 }) => {
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
 
-  // Sample background images
+  // Enhanced background images with themed options
   const backgroundImages = [
     "https://images.unsplash.com/photo-1508615039623-a25605d2b022?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
     "https://images.unsplash.com/photo-1557682260-96773eb01377?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
     "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
     "https://images.unsplash.com/photo-1528293519244-4e0acd3c9df6?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-    "https://images.unsplash.com/photo-1511300636408-a63a89df3482?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-    "https://images.unsplash.com/photo-1579546929662-711aa81148cf?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80"
+    // Birthday themed backgrounds
+    "https://images.unsplash.com/photo-1558636508-e0db3814bd1d?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+    "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+    // Dinner/lunch themed backgrounds
+    "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+    "https://images.unsplash.com/photo-1592861956120-e524fc739696?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80"
   ];
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -82,7 +86,7 @@ const ImageTab: React.FC<ImageTabProps> = ({
       </div>
       
       <div className="space-y-2">
-        <Label className="block">Or Choose From Gallery</Label>
+        <Label className="block">Choose From Gallery</Label>
         <div className="grid grid-cols-2 gap-2">
           {backgroundImages.map((image, index) => (
             <div
@@ -95,7 +99,13 @@ const ImageTab: React.FC<ImageTabProps> = ({
                 setSelectedPreset(image);
               }}
             >
-              <img src={image} alt={`Background ${index + 1}`} className="w-full h-full object-cover" />
+              <img 
+                src={image} 
+                alt={index < 4 ? `Background ${index + 1}` : 
+                     index < 6 ? `Birthday theme ${index - 3}` : 
+                     `Dining theme ${index - 5}`} 
+                className="w-full h-full object-cover" 
+              />
             </div>
           ))}
         </div>
@@ -103,7 +113,7 @@ const ImageTab: React.FC<ImageTabProps> = ({
 
       {value && (
         <div className="mt-4">
-          <Label className="block mb-2">Current Background Preview</Label>
+          <Label className="block mb-2">Background Preview</Label>
           <div className="h-40 rounded-md border overflow-hidden">
             <img src={value} alt="Background preview" className="w-full h-full object-cover" />
           </div>

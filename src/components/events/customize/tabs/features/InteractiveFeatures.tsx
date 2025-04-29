@@ -6,19 +6,15 @@ import { Switch } from "@/components/ui/switch";
 interface InteractiveFeaturesProps {
   showButtons: boolean;
   showCalendar: boolean;
-  enableChatbot: boolean;
   onToggleButtons: (checked: boolean) => void;
   onToggleCalendar: (checked: boolean) => void;
-  onToggleChatbot: (checked: boolean) => void;
 }
 
 export const InteractiveFeatures: React.FC<InteractiveFeaturesProps> = ({
   showButtons,
   showCalendar,
-  enableChatbot,
   onToggleButtons,
   onToggleCalendar,
-  onToggleChatbot,
 }) => {
   return (
     <div>
@@ -40,15 +36,6 @@ export const InteractiveFeatures: React.FC<InteractiveFeaturesProps> = ({
             id="show-calendar" 
             checked={showCalendar}
             onCheckedChange={onToggleCalendar}
-          />
-        </div>
-        
-        <div className="flex items-center justify-between">
-          <Label htmlFor="enable-chatbot" className="cursor-pointer">Enable Chatbot</Label>
-          <Switch 
-            id="enable-chatbot" 
-            checked={enableChatbot}
-            onCheckedChange={onToggleChatbot}
           />
         </div>
       </div>

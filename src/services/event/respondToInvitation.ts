@@ -2,22 +2,53 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 
+interface ResponseOptions {
+  name?: string;  // For non-WAKTI users
+  addToCalendar?: boolean; // Default to true for 'accept' responses
+}
+
 /**
  * Responds to an event invitation with accept or decline
  */
 export const respondToInvitation = async (
   eventId: string,
-  response: 'accepted' | 'declined'
+  response: 'accepted' | 'declined',
+  options?: ResponseOptions
 ): Promise<void> => {
   try {
     // Get the current user's ID
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session?.user?.id) {
-      console.error("No authenticated user for responding to invitation");
-      throw new Error("Authentication required to respond to invitations");
+      // Handle non-WAKTI users
+      if (!options?.name) {
+        console.error("Name required for non-authenticated users");
+        throw new Error("Please provide your name to respond to this invitation");
+      }
+      
+      // For non-WAKTI users, we'll store their response with their name
+      const { error } = await supabase
+        .from("event_guest_responses")
+        .insert({
+          event_id: eventId,
+          name: options.name,
+          response: response
+        });
+
+      if (error) {
+        console.error("Error saving guest response:", error);
+        throw new Error(`Failed to save your response: ${error.message}`);
+      }
+
+      toast({
+        title: response === 'accepted' ? "Event Accepted" : "Event Declined",
+        description: `Thank you, ${options.name}! Your response has been recorded.`,
+      });
+      
+      return;
     }
     
+    // For authenticated WAKTI users
     // Find the invitation for this user and event
     const { data: invitation, error: findError } = await supabase
       .from("event_invitations")
@@ -44,6 +75,39 @@ export const respondToInvitation = async (
     if (error) {
       console.error("Error updating invitation:", error);
       throw new Error(`Failed to update invitation: ${error.message}`);
+    }
+
+    // If accepting, add to calendar if requested (default is true)
+    const addToCalendar = options?.addToCalendar !== false && response === 'accepted';
+    
+    if (addToCalendar) {
+      // Get event details to add to calendar
+      const { data: eventData, error: eventError } = await supabase
+        .from("events")
+        .select("*")
+        .eq("id", eventId)
+        .single();
+        
+      if (!eventError && eventData) {
+        // Add to user's calendar
+        const { error: calendarError } = await supabase
+          .from("user_calendar")
+          .insert({
+            user_id: session.user.id,
+            event_id: eventId,
+            title: eventData.title,
+            start_time: eventData.start_time,
+            end_time: eventData.end_time,
+            is_all_day: eventData.is_all_day,
+            location: eventData.location,
+            location_title: eventData.location_title
+          });
+          
+        if (calendarError) {
+          console.error("Error adding to calendar:", calendarError);
+          // Don't throw here, just log the error as this is not critical
+        }
+      }
     }
 
     toast({

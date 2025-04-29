@@ -6,7 +6,7 @@ import { Switch } from "@/components/ui/switch";
 
 interface MapDisplayOptionsProps {
   mapDisplay: string;
-  onMapDisplayChange: (value: 'button' | 'qrcode' | 'both') => void;
+  onMapDisplayChange: (value: 'button' | 'both') => void;
   showMap?: boolean;
   onShowMapChange?: (value: boolean) => void;
 }
@@ -20,7 +20,7 @@ export const MapDisplayOptions: React.FC<MapDisplayOptionsProps> = ({
   const safeMapDisplay = mapDisplay || 'button';
   
   const handleValueChange = (value: string) => {
-    onMapDisplayChange(value as 'button' | 'qrcode' | 'both');
+    onMapDisplayChange(value as 'button' | 'both');
   };
   
   return (
@@ -38,13 +38,8 @@ export const MapDisplayOptions: React.FC<MapDisplayOptionsProps> = ({
           </div>
           
           <div className="flex items-center space-x-2">
-            <RadioGroupItem value="qrcode" id="map-qrcode" />
-            <Label htmlFor="map-qrcode" className="cursor-pointer">Show QR code only</Label>
-          </div>
-          
-          <div className="flex items-center space-x-2">
             <RadioGroupItem value="both" id="map-both" />
-            <Label htmlFor="map-both" className="cursor-pointer">Show both options</Label>
+            <Label htmlFor="map-both" className="cursor-pointer">Show button with preview</Label>
           </div>
         </RadioGroup>
       </div>

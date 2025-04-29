@@ -16,6 +16,7 @@ interface EventCardProps {
   onViewResponses?: (eventId: string) => void;
   onAccept?: (eventId: string) => Promise<void>;
   onDecline?: (eventId: string) => Promise<void>;
+  senderName?: string;
 }
 
 const EventCard = ({ 
@@ -26,7 +27,8 @@ const EventCard = ({
   onEdit,
   onViewResponses,
   onAccept,
-  onDecline
+  onDecline,
+  senderName
 }: EventCardProps) => {
   const { 
     title, 
@@ -112,6 +114,12 @@ const EventCard = ({
             <span>•</span>
             <span>{timeDisplay}</span>
           </div>
+          
+          {senderName && (
+            <div className="mt-1 text-xs font-medium">
+              From: {senderName}
+            </div>
+          )}
           
           {event.location && (
             <div className="mt-2">

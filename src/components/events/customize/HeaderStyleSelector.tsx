@@ -12,21 +12,24 @@ const HeaderStyleSelector: React.FC<HeaderStyleSelectorProps> = ({
   value,
   onChange
 }) => {
+  // Ensure a valid value is selected
+  const safeValue = value || 'simple';
+  
   return (
     <div className="space-y-3">
       <Label className="text-base">Header Style</Label>
       
       <ToggleGroup 
         type="single" 
-        value={value} 
+        value={safeValue} 
         onValueChange={(val) => {
           if (val) onChange(val as 'banner' | 'simple' | 'minimal');
         }}
         className="grid grid-cols-3 gap-2"
       >
-        <HeaderStyleOption value="banner" current={value} />
-        <HeaderStyleOption value="simple" current={value} />
-        <HeaderStyleOption value="minimal" current={value} />
+        <HeaderStyleOption value="banner" current={safeValue} />
+        <HeaderStyleOption value="simple" current={safeValue} />
+        <HeaderStyleOption value="minimal" current={safeValue} />
       </ToggleGroup>
     </div>
   );

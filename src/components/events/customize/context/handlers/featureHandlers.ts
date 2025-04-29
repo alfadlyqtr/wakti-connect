@@ -5,13 +5,6 @@ export const createFeatureHandlers = (
   customization: EventCustomization,
   onCustomizationChange: (customization: EventCustomization) => void
 ) => {
-  const handleToggleChatbot = (checked: boolean) => {
-    onCustomizationChange({
-      ...customization,
-      enableChatbot: checked
-    });
-  };
-
   const handleToggleCalendar = (checked: boolean) => {
     onCustomizationChange({
       ...customization,
@@ -39,7 +32,7 @@ export const createFeatureHandlers = (
     });
   };
 
-  const handleMapDisplayChange = (value: 'button' | 'qrcode' | 'both') => {
+  const handleMapDisplayChange = (value: 'button' | 'both') => {
     onCustomizationChange({
       ...customization,
       mapDisplay: value
@@ -54,7 +47,6 @@ export const createFeatureHandlers = (
   };
 
   return {
-    handleToggleChatbot,
     handleToggleCalendar,
     handleToggleButtons,
     handleBrandingChange,
