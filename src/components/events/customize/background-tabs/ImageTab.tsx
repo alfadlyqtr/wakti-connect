@@ -44,6 +44,9 @@ const ImageTab: React.FC<ImageTabProps> = ({
   ];
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     const file = e.target.files?.[0];
     if (!file) return;
     
@@ -126,11 +129,12 @@ const ImageTab: React.FC<ImageTabProps> = ({
     }
   }, [generatedImage, onChange]);
 
+  // This container prevents click-through for the entire component
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" onClick={(e) => e.stopPropagation()}>
       <div className="space-y-2">
-        <Label className="block">Upload Your Own Image</Label>
-        <div className="border-2 border-dashed rounded-md p-4 text-center bg-muted/50">
+        <Label className="block" onClick={(e) => e.stopPropagation()}>Upload Your Own Image</Label>
+        <div className="border-2 border-dashed rounded-md p-4 text-center bg-muted/50" onClick={(e) => e.stopPropagation()}>
           <input
             type="file"
             id="backgroundImage"
@@ -138,7 +142,11 @@ const ImageTab: React.FC<ImageTabProps> = ({
             onChange={handleImageUpload}
             className="hidden"
           />
-          <Label htmlFor="backgroundImage" className="cursor-pointer flex flex-col items-center justify-center gap-2">
+          <Label 
+            htmlFor="backgroundImage" 
+            className="cursor-pointer flex flex-col items-center justify-center gap-2"
+            onClick={(e) => e.stopPropagation()}
+          >
             <ImagePlus className="h-8 w-8 text-muted-foreground" />
             <span className="text-sm font-medium">Upload Background Image (Max 2MB)</span>
             <span className="text-xs text-muted-foreground">JPG, PNG or WebP</span>
@@ -147,26 +155,54 @@ const ImageTab: React.FC<ImageTabProps> = ({
       </div>
       
       <div className="space-y-2">
-        <div className="flex justify-between items-center">
-          <Label className="block">Choose From Gallery</Label>
+        <div className="flex justify-between items-center" onClick={(e) => e.stopPropagation()}>
+          <Label className="block" onClick={(e) => e.stopPropagation()}>Choose From Gallery</Label>
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-1" onClick={(e) => e.stopPropagation()}>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="gap-1" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+              >
                 <Wand2 className="h-3.5 w-3.5" />
                 <span>AI Generate</span>
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-80 z-[100]" onClick={(e) => e.stopPropagation()}>
-              <div className="space-y-4">
+            <PopoverContent 
+              className="w-80 z-[9999]" 
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              onPointerDownOutside={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+            >
+              <div 
+                className="space-y-4" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+              >
                 <h4 className="text-sm font-medium">Generate AI Background</h4>
                 <Textarea
                   placeholder={`Describe the background you want to generate${title ? ` for "${title}"` : ''}`}
                   value={aiPrompt}
                   onChange={(e) => {
+                    e.preventDefault();
                     e.stopPropagation();
                     setAiPrompt(e.target.value);
                   }}
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
                   rows={3}
                 />
                 <Button 
@@ -180,7 +216,7 @@ const ImageTab: React.FC<ImageTabProps> = ({
             </PopoverContent>
           </Popover>
         </div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2" onClick={(e) => e.stopPropagation()}>
           {backgroundImages.map((image, index) => (
             <div
               key={index}
@@ -188,6 +224,7 @@ const ImageTab: React.FC<ImageTabProps> = ({
                 value === image || selectedPreset === image ? 'ring-2 ring-primary' : ''
               }`}
               onClick={(e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 onChange(image);
                 setSelectedPreset(image);
@@ -197,7 +234,8 @@ const ImageTab: React.FC<ImageTabProps> = ({
               <img 
                 src={image} 
                 alt={`Background ${index + 1}`} 
-                className="w-full h-full object-cover" 
+                className="w-full h-full object-cover"
+                onClick={(e) => e.stopPropagation()} 
               />
             </div>
           ))}
@@ -205,10 +243,15 @@ const ImageTab: React.FC<ImageTabProps> = ({
       </div>
 
       {value && (
-        <div className="mt-4">
-          <Label className="block mb-2">Background Preview</Label>
-          <div className="h-40 rounded-md border overflow-hidden">
-            <img src={value} alt="Background preview" className="w-full h-full object-cover" />
+        <div className="mt-4" onClick={(e) => e.stopPropagation()}>
+          <Label className="block mb-2" onClick={(e) => e.stopPropagation()}>Background Preview</Label>
+          <div className="h-40 rounded-md border overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <img 
+              src={value} 
+              alt="Background preview" 
+              className="w-full h-full object-cover" 
+              onClick={(e) => e.stopPropagation()}
+            />
           </div>
         </div>
       )}

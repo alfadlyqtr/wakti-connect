@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useCustomization } from "../context";
 import BackgroundSelector from "../BackgroundSelector";
@@ -138,8 +137,8 @@ const BackgroundTabContent: React.FC<BackgroundTabContentProps> = ({ title, desc
   const handleAIBackgroundGeneration = async (e?: React.MouseEvent) => {
     // Make sure to stop propagation if event is provided
     if (e) {
-      e.stopPropagation();
       e.preventDefault();
+      e.stopPropagation();
     }
     
     try {
@@ -189,7 +188,7 @@ const BackgroundTabContent: React.FC<BackgroundTabContentProps> = ({ title, desc
   };
 
   return (
-    <>
+    <div onClick={(e) => e.stopPropagation()}>
       <BackgroundSelector
         backgroundType={convertBackgroundTypeToUI(customization.background.type)}
         backgroundValue={customization.background.value}
@@ -199,7 +198,7 @@ const BackgroundTabContent: React.FC<BackgroundTabContentProps> = ({ title, desc
         onGenerateAIBackground={handleAIBackgroundGeneration}
         isGenerating={isGenerating}
       />
-    </>
+    </div>
   );
 };
 

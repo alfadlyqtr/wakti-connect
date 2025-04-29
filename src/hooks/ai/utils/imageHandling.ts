@@ -37,9 +37,10 @@ export async function handleImageGeneration(prompt: string): Promise<GeneratedIm
       prompt: prompt,
       success: true
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error('[imageHandling] Image generation failed:', error);
     
+    // Only show toast if it's not coming from a component that will handle the error itself
     toast({
       title: "Image Generation Failed",
       description: error.message || "Could not generate image. Please try again.",

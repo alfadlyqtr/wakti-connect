@@ -50,37 +50,47 @@ export const TextColorPicker: React.FC<TextColorPickerProps> = ({
 
   // Prevent click propagation for the whole popover content
   const handlePopoverClick = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
       {label && <Label className="text-sm">{label}</Label>}
       
-      <div className="flex gap-2 items-center">
+      <div className="flex gap-2 items-center" onClick={(e) => e.stopPropagation()}>
         <Popover>
           <PopoverTrigger asChild>
             <Button
               variant="outline"
-              className="w-10 h-10 p-1 border-2 relative z-10"
+              className="w-10 h-10 p-1 border-2 relative"
               style={{ backgroundColor: color }}
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
             >
               <span className="sr-only">Pick a color</span>
             </Button>
           </PopoverTrigger>
           <PopoverContent 
-            className="w-auto p-3 z-[100]" 
+            className="w-auto p-3 z-[9999]" 
             onClick={handlePopoverClick}
-            onPointerDownOutside={(e) => e.preventDefault()}
+            onPointerDownOutside={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
           >
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4" onClick={handlePopoverClick}>
               <input
                 type="color"
                 value={color}
                 onChange={handleColorChange}
                 className="w-32 h-32 cursor-pointer"
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
               />
               
               <div className="grid grid-cols-8 gap-1">
@@ -104,7 +114,10 @@ export const TextColorPicker: React.FC<TextColorPickerProps> = ({
           value={color}
           onChange={handleColorChange}
           className="w-28"
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
         />
       </div>
     </div>

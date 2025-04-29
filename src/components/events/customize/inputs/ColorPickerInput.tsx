@@ -52,39 +52,49 @@ export const ColorPickerInput: React.FC<ColorPickerInputProps> = ({
 
   // Prevent click propagation for the whole popover content
   const handlePopoverClick = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
   };
 
   return (
-    <div className={className}>
-      {label && <Label className="mb-2 block">{label}</Label>}
+    <div className={className} onClick={(e) => e.stopPropagation()}>
+      {label && <Label className="mb-2 block" onClick={(e) => e.stopPropagation()}>{label}</Label>}
       
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
         <Popover>
           <PopoverTrigger asChild>
             <Button 
               variant="outline" 
               className="w-10 h-10 p-0 border-2"
               style={{ backgroundColor: color }}
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
             >
               <span className="sr-only">Pick a color</span>
             </Button>
           </PopoverTrigger>
           <PopoverContent 
-            className="w-auto p-3 z-[100] bg-popover" 
+            className="w-auto p-3 z-[9999] bg-popover" 
             onClick={handlePopoverClick}
-            onPointerDownOutside={(e) => e.preventDefault()}
+            onPointerDownOutside={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
           >
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3" onClick={handlePopoverClick}>
               <input
                 type="color"
                 value={color}
                 onChange={handleColorChange}
                 className="w-32 h-32 cursor-pointer"
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
               />
-              <div className="grid grid-cols-8 gap-1">
+              <div className="grid grid-cols-8 gap-1" onClick={handlePopoverClick}>
                 {colorPresets.map((presetColor) => (
                   <div
                     key={presetColor}
@@ -106,7 +116,10 @@ export const ColorPickerInput: React.FC<ColorPickerInputProps> = ({
           onChange={handleHexInputChange}
           className="w-28"
           placeholder="#000000"
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
         />
       </div>
     </div>

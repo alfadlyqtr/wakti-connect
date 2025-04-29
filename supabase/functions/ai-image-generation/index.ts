@@ -78,10 +78,9 @@ serve(async (req) => {
             "height": 1024,
             "numberResults": 1,
             "outputFormat": "WEBP",
-            "CFGScale": 12.0, // Increased from 7.5 to 12.0 for stronger adherence to prompt
-            "scheduler": "FlowMatchEulerDiscreteScheduler", // Changed scheduler for better scenic imagery
-            "strength": 0.9, // Increased from 0.75 for stronger effect
-            // Remove promptWeighting to avoid the API validation error
+            "CFGScale": 12.0,
+            "scheduler": "FlowMatchEulerDiscreteScheduler",
+            "strength": 0.9,
           }
         ];
         
@@ -109,11 +108,17 @@ serve(async (req) => {
         const runwareData = await runwareResponse.json();
         console.log("Runware API response received");
         
+        if (!runwareData || !runwareData.data) {
+          console.error("Invalid Runware API response:", runwareData);
+          throw new Error("Invalid response from Runware API");
+        }
+        
         const imageResult = runwareData.data.find(item => 
           item.taskType === "imageInference" || item.taskType === "imageToImage"
         );
         
         if (!imageResult || !imageResult.imageURL) {
+          console.error("No image URL in Runware response:", runwareData);
           throw new Error("No image URL in Runware response");
         }
         

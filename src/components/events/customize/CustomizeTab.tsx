@@ -41,8 +41,11 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
 }) => {
   const [activeTab, setActiveTab] = React.useState('background');
 
-  // Save draft handler
-  const onSaveDraft = () => {
+  // Save draft handler with click propagation prevention
+  const onSaveDraft = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     if (handleSaveDraft) {
       handleSaveDraft();
     } else {
@@ -51,6 +54,16 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
         title: "Draft saved",
         description: "Your event has been saved as a draft",
       });
+    }
+  };
+
+  // Event handler for next button with click propagation prevention
+  const onNextTab = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (handleNextTab) {
+      handleNextTab();
     }
   };
 
@@ -79,7 +92,7 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
               </div>
               
               <div className="mt-6 p-2">
-                {activeTab === 'background' && <BackgroundTabContent />}
+                {activeTab === 'background' && <BackgroundTabContent title={title} description={description} />}
                 {activeTab === 'text' && <TextTabContent />}
                 {activeTab === 'buttons' && <ButtonsTabContent />}
                 {activeTab === 'header' && <HeaderTabContent />}
@@ -113,7 +126,7 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
           {handleNextTab && (
             <Button 
               type="button" 
-              onClick={handleNextTab}
+              onClick={onNextTab}
               className="px-6"
             >
               Next: Share

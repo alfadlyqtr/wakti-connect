@@ -56,11 +56,11 @@ const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
     onBackgroundChange('image', value);
   };
 
-  // Handler for AI background generation
+  // Handler for AI background generation - improved to prevent click-through
   const handleGenerateAIBackground = (e: React.MouseEvent) => {
     // Prevent click-through by stopping event propagation
-    e.stopPropagation();
     e.preventDefault();
+    e.stopPropagation();
     
     if (onGenerateAIBackground) {
       onGenerateAIBackground(e);
@@ -73,24 +73,30 @@ const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
     }
   };
 
+  // This wrapper prevents click-through for the entire component
   return (
-    <div className="space-y-4">
-      <Label>Background</Label>
+    <div className="space-y-4" onClick={(e) => e.stopPropagation()}>
+      <Label onClick={(e) => e.stopPropagation()}>Background</Label>
       
-      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="grid grid-cols-2 w-full">
-          <TabsTrigger value="color">Solid Color</TabsTrigger>
-          <TabsTrigger value="image">Image</TabsTrigger>
+      <Tabs 
+        value={activeTab} 
+        onValueChange={handleTabChange} 
+        className="w-full"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <TabsList className="grid grid-cols-2 w-full" onClick={(e) => e.stopPropagation()}>
+          <TabsTrigger value="color" onClick={(e) => e.stopPropagation()}>Solid Color</TabsTrigger>
+          <TabsTrigger value="image" onClick={(e) => e.stopPropagation()}>Image</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="color" className="pt-4">
+        <TabsContent value="color" className="pt-4" onClick={(e) => e.stopPropagation()}>
           <ColorTab 
             value={backgroundType === 'color' ? backgroundValue : '#ffffff'} 
             onChange={handleColorChange} 
           />
         </TabsContent>
         
-        <TabsContent value="image" className="pt-4">
+        <TabsContent value="image" className="pt-4" onClick={(e) => e.stopPropagation()}>
           <ImageTab 
             value={backgroundType === 'image' ? backgroundValue : ''} 
             onChange={handleImageChange}
@@ -98,10 +104,13 @@ const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
             description={description}
           />
           
-          <div className="mt-4 border-t pt-4">
+          <div 
+            className="mt-4 border-t pt-4" 
+            onClick={(e) => e.stopPropagation()}
+          >
             <Button 
               variant="outline" 
-              className="w-full flex items-center justify-center gap-2 relative z-10" 
+              className="w-full flex items-center justify-center gap-2 relative z-50" 
               onClick={handleGenerateAIBackground}
               disabled={isGenerating}
             >
@@ -117,7 +126,10 @@ const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
                 </>
               )}
             </Button>
-            <p className="text-xs text-muted-foreground mt-2 text-center">
+            <p 
+              className="text-xs text-muted-foreground mt-2 text-center"
+              onClick={(e) => e.stopPropagation()}
+            >
               Create a unique background based on your event details
             </p>
           </div>
