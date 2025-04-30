@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { SimpleInvitation } from '@/types/invitation.types';
+import { SimpleInvitation, BackgroundType } from '@/types/invitation.types';
 
 /**
  * List all simple invitations for the current user
@@ -38,9 +38,10 @@ export async function listSimpleInvitations(isEvent?: boolean): Promise<SimpleIn
       time: item.datetime ? new Date(item.datetime).toISOString().split('T')[1].substring(0, 5) : undefined,
       createdAt: item.created_at,
       userId: item.user_id,
+      shareId: item.share_link,
       customization: {
         background: {
-          type: (item.background_type || 'solid') as 'solid' | 'gradient' | 'image' | 'ai',
+          type: (item.background_type || 'solid') as BackgroundType,
           value: item.background_value || '#ffffff',
         },
         font: {
@@ -89,9 +90,10 @@ export async function getSimpleInvitationById(id: string): Promise<SimpleInvitat
       time: data.datetime ? new Date(data.datetime).toISOString().split('T')[1].substring(0, 5) : undefined,
       createdAt: data.created_at,
       userId: data.user_id,
+      shareId: data.share_link,
       customization: {
         background: {
-          type: (data.background_type || 'solid') as 'solid' | 'gradient' | 'image' | 'ai',
+          type: (data.background_type || 'solid') as BackgroundType,
           value: data.background_value || '#ffffff',
         },
         font: {
@@ -138,9 +140,10 @@ export async function createSimpleInvitation(data: any): Promise<SimpleInvitatio
       time: createdInvitation.datetime ? new Date(createdInvitation.datetime).toISOString().split('T')[1].substring(0, 5) : undefined,
       createdAt: createdInvitation.created_at,
       userId: createdInvitation.user_id,
+      shareId: createdInvitation.share_link,
       customization: {
         background: {
-          type: (createdInvitation.background_type || 'solid') as 'solid' | 'gradient' | 'image' | 'ai',
+          type: (createdInvitation.background_type || 'solid') as BackgroundType,
           value: createdInvitation.background_value || '#ffffff',
         },
         font: {
@@ -188,9 +191,10 @@ export async function updateSimpleInvitation(id: string, data: any): Promise<Sim
       time: updatedInvitation.datetime ? new Date(updatedInvitation.datetime).toISOString().split('T')[1].substring(0, 5) : undefined,
       createdAt: updatedInvitation.created_at,
       userId: updatedInvitation.user_id,
+      shareId: updatedInvitation.share_link,
       customization: {
         background: {
-          type: (updatedInvitation.background_type || 'solid') as 'solid' | 'gradient' | 'image' | 'ai',
+          type: (updatedInvitation.background_type || 'solid') as BackgroundType,
           value: updatedInvitation.background_value || '#ffffff',
         },
         font: {

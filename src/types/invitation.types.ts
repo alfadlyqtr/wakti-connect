@@ -1,3 +1,4 @@
+
 export type ContactRequestStatusValue = 'pending' | 'accepted' | 'rejected' | null;
 
 export interface ContactRequestStatus {
