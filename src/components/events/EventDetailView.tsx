@@ -1,10 +1,9 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Event } from "@/types/event.types";
 import { CalendarDays, Clock, MapPin, Users, Share2, Calendar, Edit, Trash2, Check, X } from "lucide-react";
-import { formatDate, getRelativeDateLabel } from "@/utils/dateUtils";
+import { formatDate, formatTime, formatDateAndTime, getRelativeDateLabel } from "@/utils/dateUtils";
 import { formatLocation, generateMapsUrl } from "@/utils/locationUtils";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";

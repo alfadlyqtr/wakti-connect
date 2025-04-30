@@ -9,6 +9,7 @@ import { Loader2 } from 'lucide-react';
 import { toast } from "sonner";
 import { useEvents } from '@/hooks/useEvents';
 import { Separator } from '@/components/ui/separator';
+import { EventStatus } from '@/types/event.types';
 
 interface CreateEventDialogProps {
   open: boolean;
@@ -61,7 +62,7 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
         location: eventData.location,
         startDate: eventData.date,
         isAllDay: eventData.isAllDay,
-        status: 'draft',
+        status: 'draft' as EventStatus, // Fix: Type cast to EventStatus
         // Add default customization
         customization: {
           background: {

@@ -39,3 +39,31 @@ export const formatTime = (dateString: string): string => {
 export const formatDateAndTime = (dateString: string): string => {
   return `${formatDate(dateString)} at ${formatTime(dateString)}`;
 };
+
+// Alias for formatDateAndTime to fix imports
+export const formatDateTime = formatDateAndTime;
+
+// Function to get relative date label
+export const getRelativeDateLabel = (date: Date): string => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  
+  const comparableDate = new Date(date);
+  comparableDate.setHours(0, 0, 0, 0);
+  
+  if (comparableDate.getTime() === today.getTime()) {
+    return "Today";
+  } else if (comparableDate.getTime() === tomorrow.getTime()) {
+    return "Tomorrow";
+  } else if (comparableDate.getTime() === yesterday.getTime()) {
+    return "Yesterday";
+  } else {
+    return formatDate(date.toISOString());
+  }
+};

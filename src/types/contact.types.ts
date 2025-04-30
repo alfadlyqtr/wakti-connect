@@ -4,5 +4,6 @@ export type {
   UserContact, 
   UserSearchResult, 
   ContactRequestStatus,
-  ContactRequestStatusValue 
+  ContactRequestStatusValue,
+  ContactsRequestsResponse
 } from './invitation.types';
