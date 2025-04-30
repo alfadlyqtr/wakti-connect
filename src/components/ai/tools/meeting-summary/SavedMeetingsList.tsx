@@ -2,7 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Trash2, Download, MapPin, File, Map } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { formatDateAndTime } from '@/utils/dateUtils';
+import { formatDateTime } from '@/utils/dateUtils';
 import { differenceInDays } from 'date-fns';
 
 export interface SavedMeeting {
@@ -103,7 +103,7 @@ const SavedMeetingsList: React.FC<SavedMeetingsListProps> = ({
               <div className="flex flex-wrap items-center text-sm text-muted-foreground gap-2 mb-1">
                 <span>
                   <span className="font-medium">Created:</span>{' '}
-                  {formatDateAndTime(meeting.created_at || meeting.date)}
+                  {formatDateTime(meeting.created_at || meeting.date)}
                 </span>
                 {typeof meeting.duration === 'number' && meeting.duration > 0 && (
                   <>

@@ -7,12 +7,11 @@ export interface GeneratedImageResult {
   prompt: string;
   success: boolean;
   error?: string;
-  provider?: string;
 }
 
 /**
  * Handles image generation requests based on the user's prompt
- * Uses Runware API exclusively for optimal background generation
+ * Uses the consolidated ai-image-generation edge function
  */
 export async function handleImageGeneration(prompt: string): Promise<GeneratedImageResult> {
   try {
@@ -22,19 +21,12 @@ export async function handleImageGeneration(prompt: string): Promise<GeneratedIm
       throw new Error('Prompt cannot be empty');
     }
     
-    // Generate image using Runware service with optimized settings for backgrounds
-    console.log('[imageHandling] Calling Runware API with prompt:', prompt);
+    // Generate image using the consolidated ai-image-generation edge function
     const result = await runwareService.generateImage({
-      positivePrompt: prompt,
-      model: "runware:100@1", // Explicitly request Runware model
-      CFGScale: 12.0, 
-      scheduler: "FlowMatchEulerDiscreteScheduler",
-      strength: 0.9
+      positivePrompt: prompt
     });
     
-    // Add detailed logging for debugging
-    console.log('[imageHandling] Image generation successful with provider:', result.provider || 'Runware');
-    console.log('[imageHandling] Image URL:', result.imageURL);
+    console.log('[imageHandling] Image generation successful');
     
     if (!result.imageURL) {
       throw new Error('No image URL returned from service');
@@ -43,18 +35,16 @@ export async function handleImageGeneration(prompt: string): Promise<GeneratedIm
     return {
       imageUrl: result.imageURL,
       prompt: prompt,
-      success: true,
-      provider: 'runware'
+      success: true
     };
-  } catch (error: any) {
+  } catch (error) {
     console.error('[imageHandling] Image generation failed:', error);
     
-    // Log more detailed error information
-    if (error.response) {
-      console.error('[imageHandling] Error response:', error.response);
-    }
-    
-    // Toast is handled by the calling component now
+    toast({
+      title: "Image Generation Failed",
+      description: error.message || "Could not generate image. Please try again.",
+      variant: "destructive"
+    });
     
     return {
       imageUrl: '',

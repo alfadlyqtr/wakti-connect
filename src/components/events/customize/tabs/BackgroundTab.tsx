@@ -1,32 +1,28 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { ColorPickerInput } from "../inputs/ColorPickerInput";
-import { AnimationType, BackgroundType, GradientDirection } from "@/types/event.types";
-import { GradientGenerator } from "@/components/ui/gradient-generator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
+import { AnimationType, BackgroundType } from "@/types/event.types";
 
 interface BackgroundTabProps {
-  backgroundType: BackgroundType;
+  backgroundType: "gradient" | "image" | "color";
   backgroundValue: string;
   backgroundAngle?: number;
-  backgroundDirection?: GradientDirection;
+  backgroundDirection?: string;
   headerImage?: string;
   animation?: AnimationType;
-  onBackgroundChange: (type: BackgroundType, value: string) => void;
+  onBackgroundChange: (type: "gradient" | "image" | "color", value: string) => void;
   onBackgroundAngleChange: (angle: number) => void;
-  onBackgroundDirectionChange: (direction: GradientDirection) => void;
+  onBackgroundDirectionChange: (direction: string) => void;
   onHeaderImageChange: (imageUrl: string) => void;
-  onAnimationChange: (value: AnimationType) => void;
-  onGradientChange?: (gradient: string) => void;
+  onAnimationChange: (value: "fade" | "slide" | "pop") => void;
 }
 
 const backgroundOptions = [
-  { id: "solid", label: "Solid" },
+  { id: "color", label: "Solid" },
   { id: "gradient", label: "Gradient" },
   { id: "image", label: "Image" },
 ];
@@ -38,7 +34,7 @@ const animationOptions = [
   { id: "pop", label: "Pop" },
 ];
 
-const gradientDirections: { id: GradientDirection; label: string }[] = [
+const gradientDirections = [
   { id: "to-r", label: "→ Right" },
   { id: "to-l", label: "← Left" },
   { id: "to-b", label: "↓ Bottom" },
@@ -60,21 +56,15 @@ const BackgroundTab: React.FC<BackgroundTabProps> = ({
   onBackgroundAngleChange,
   onBackgroundDirectionChange,
   onHeaderImageChange,
-  onAnimationChange,
-  onGradientChange
+  onAnimationChange
 }) => {
-  const [gradientTab, setGradientTab] = useState<'simple' | 'advanced'>('simple');
-  
-  // Function to handle gradient CSS from the generator
-  const handleGradientCss = (css: string) => {
-    // Extract the gradient portion from the CSS string
-    const match = css.match(/background: (.*);/);
-    if (match && match[1]) {
-      const gradientValue = match[1];
-      onBackgroundChange("gradient", gradientValue);
-      if (onGradientChange) onGradientChange(gradientValue);
-    }
+  // Convert BackgroundType to the string types expected by the handler
+  const getDisplayType = (type: string): "color" | "gradient" | "image" => {
+    if (type === "solid") return "color";
+    return type as "gradient" | "image";
   };
+
+  const displayType = getDisplayType(backgroundType);
 
   return (
     <div className="space-y-6">
@@ -85,10 +75,10 @@ const BackgroundTab: React.FC<BackgroundTabProps> = ({
         </p>
         
         <RadioGroup
-          value={backgroundType}
+          value={displayType}
           onValueChange={(value) => {
-            onBackgroundChange(value as BackgroundType, 
-              value === "solid" ? "#ffffff" : 
+            onBackgroundChange(value as "color" | "gradient" | "image", 
+              value === "color" ? "#ffffff" : 
               value === "gradient" ? "linear-gradient(135deg, #6366f1, #8b5cf6)" : 
               "https://example.com/placeholder.jpg"
             );
@@ -105,109 +95,53 @@ const BackgroundTab: React.FC<BackgroundTabProps> = ({
       </div>
 
       {/* Conditional fields based on selected background type */}
-      {backgroundType === "solid" && (
+      {displayType === "color" && (
         <div className="space-y-4">
           <Label>Background Color</Label>
           <ColorPickerInput
             value={backgroundValue}
-            onChange={(value) => onBackgroundChange("solid", value)}
+            onChange={(value) => onBackgroundChange("color", value)}
           />
         </div>
       )}
 
-      {backgroundType === "gradient" && (
+      {displayType === "gradient" && (
         <div className="space-y-4">
-          <Tabs value={gradientTab} onValueChange={(v) => setGradientTab(v as 'simple' | 'advanced')}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="simple">Simple</TabsTrigger>
-              <TabsTrigger value="advanced">Advanced</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="simple" className="space-y-4">
-              <div>
-                <Label>Gradient Angle</Label>
-                <div className="flex items-center space-x-2 mt-2">
-                  <Slider
-                    value={[backgroundAngle]}
-                    min={0}
-                    max={360}
-                    step={1}
-                    onValueChange={(value) => onBackgroundAngleChange(value[0])}
-                  />
-                  <span className="text-sm font-medium w-12 text-right">
-                    {backgroundAngle}°
-                  </span>
-                </div>
-              </div>
+          <div>
+            <Label>Gradient Angle</Label>
+            <div className="flex items-center space-x-2 mt-2">
+              <Slider
+                value={[backgroundAngle]}
+                min={0}
+                max={360}
+                step={1}
+                onValueChange={(value) => onBackgroundAngleChange(value[0])}
+              />
+              <span className="text-sm font-medium w-12 text-right">
+                {backgroundAngle}°
+              </span>
+            </div>
+          </div>
 
-              <div>
-                <Label>Gradient Direction</Label>
-                <RadioGroup
-                  value={backgroundDirection}
-                  onValueChange={(v) => onBackgroundDirectionChange(v as GradientDirection)}
-                  className="grid grid-cols-2 gap-2 mt-2"
-                >
-                  {gradientDirections.map((direction) => (
-                    <div key={direction.id} className="flex items-center space-x-2">
-                      <RadioGroupItem value={direction.id} id={`direction-${direction.id}`} />
-                      <Label htmlFor={`direction-${direction.id}`}>{direction.label}</Label>
-                    </div>
-                  ))}
-                </RadioGroup>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <Label>Start Color</Label>
-                  <ColorPickerInput
-                    value="#6366f1"
-                    onChange={(value) => {
-                      const endColor = backgroundValue.includes('gradient') ? 
-                        backgroundValue.split(',').pop()?.trim().replace(')', '') : 
-                        "#8b5cf6";
-                      onBackgroundChange("gradient", `linear-gradient(${backgroundAngle}deg, ${value}, ${endColor})`);
-                    }}
-                  />
+          <div>
+            <Label>Gradient Direction</Label>
+            <RadioGroup
+              value={backgroundDirection}
+              onValueChange={onBackgroundDirectionChange}
+              className="grid grid-cols-2 gap-2 mt-2"
+            >
+              {gradientDirections.map((direction) => (
+                <div key={direction.id} className="flex items-center space-x-2">
+                  <RadioGroupItem value={direction.id} id={`direction-${direction.id}`} />
+                  <Label htmlFor={`direction-${direction.id}`}>{direction.label}</Label>
                 </div>
-                
-                <div>
-                  <Label>End Color</Label>
-                  <ColorPickerInput
-                    value="#8b5cf6"
-                    onChange={(value) => {
-                      const startColor = backgroundValue.includes('gradient') ? 
-                        backgroundValue.split(',')[1]?.trim() : 
-                        "#6366f1";
-                      onBackgroundChange("gradient", `linear-gradient(${backgroundAngle}deg, ${startColor}, ${value})`);
-                    }}
-                  />
-                </div>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="advanced">
-              <div className="space-y-2">
-                <Label>Advanced Gradient Generator</Label>
-                <p className="text-sm text-muted-foreground">Create complex gradients with multiple color stops</p>
-                <GradientGenerator />
-                <Button 
-                  onClick={() => {
-                    const gradientCSS = document.getElementById('css') as HTMLInputElement;
-                    if (gradientCSS && gradientCSS.value) {
-                      handleGradientCss(gradientCSS.value);
-                    }
-                  }}
-                  className="w-full mt-2"
-                >
-                  Apply Gradient
-                </Button>
-              </div>
-            </TabsContent>
-          </Tabs>
+              ))}
+            </RadioGroup>
+          </div>
         </div>
       )}
 
-      {backgroundType === "image" && (
+      {displayType === "image" && (
         <div className="space-y-4">
           <Label>Image URL</Label>
           <Input
@@ -216,33 +150,16 @@ const BackgroundTab: React.FC<BackgroundTabProps> = ({
             placeholder="Enter image URL"
           />
           
-          <Label>Header Image (Optional)</Label>
-          <Input
-            value={headerImage || ""}
-            onChange={(e) => onHeaderImageChange(e.target.value)}
-            placeholder="Enter header image URL"
-          />
-          
-          <div className="space-y-2">
-            <Label>Upload Image</Label>
-            <Input
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  const reader = new FileReader();
-                  reader.onload = () => {
-                    if (reader.result) {
-                      onBackgroundChange("image", reader.result as string);
-                    }
-                  };
-                  reader.readAsDataURL(file);
-                }
-              }}
-            />
-            <p className="text-xs text-muted-foreground">Max size: 2MB</p>
-          </div>
+          {headerImage && (
+            <div className="flex flex-col space-y-2">
+              <Label>Header Image</Label>
+              <Input
+                value={headerImage}
+                onChange={(e) => onHeaderImageChange(e.target.value)}
+                placeholder="Enter header image URL"
+              />
+            </div>
+          )}
         </div>
       )}
 
@@ -257,9 +174,7 @@ const BackgroundTab: React.FC<BackgroundTabProps> = ({
           value={animation || "none"}
           onValueChange={(value) => {
             if (value !== "none") {
-              onAnimationChange(value as AnimationType);
-            } else {
-              onAnimationChange("none");
+              onAnimationChange(value as "fade" | "slide" | "pop");
             }
           }}
           className="grid grid-cols-2 gap-4"

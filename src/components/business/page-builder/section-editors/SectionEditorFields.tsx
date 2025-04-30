@@ -30,14 +30,7 @@ const SectionEditorFields: React.FC = () => {
         return <HeaderEditor contentData={contentData} handleInputChange={handleInputChange} />;
         
       case 'contact':
-        return <ContactEditor 
-          data={contentData} 
-          onChange={(updatedData) => {
-            Object.keys(updatedData).forEach(key => {
-              updateContentField(key, updatedData[key]);
-            });
-          }} 
-        />;
+        return <ContactEditor contentData={contentData} handleInputChange={handleInputChange} />;
         
       case 'hours':
         return <HoursEditor contentData={contentData} handleInputChange={handleInputChange} />;

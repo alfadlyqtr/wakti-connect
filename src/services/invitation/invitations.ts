@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { InvitationRequest, InvitationResponse, InvitationRecipient } from "@/types/invitation.types";
@@ -21,32 +20,8 @@ export const sendInvitation = async (
     const results: InvitationResponse[] = [];
     
     for (const invitation of invitations) {
-      // Process each recipient - use recipientIds, recipientEmails, or recipients based on what's available
-      let recipientsToProcess: InvitationRecipient[] = [];
-      
-      if (invitation.recipients) {
-        recipientsToProcess = invitation.recipients;
-      } else {
-        // Convert recipientIds to recipients of type 'user'
-        const userRecipients: InvitationRecipient[] = (invitation.recipientIds || []).map(id => ({ 
-          id, 
-          type: 'user' as const, 
-          name: '' 
-        }));
-        
-        // Convert recipientEmails to recipients of type 'email'
-        const emailRecipients: InvitationRecipient[] = (invitation.recipientEmails || []).map(email => ({ 
-          id: email, 
-          email, 
-          type: 'email' as const, 
-          name: '' 
-        }));
-        
-        // Combine both types of recipients
-        recipientsToProcess = [...userRecipients, ...emailRecipients];
-      }
-      
-      const invitationData = recipientsToProcess.map(recipient => ({
+      // Process each recipient
+      const invitationData = invitation.recipients.map(recipient => ({
         event_id: eventId,
         invited_user_id: recipient.type === 'user' ? recipient.id : null,
         email: recipient.type === 'email' ? recipient.email : null,
@@ -66,12 +41,11 @@ export const sendInvitation = async (
       }
       
       // Prepare response
+      const successful = data.map(inv => inv.invited_user_id || inv.email || '');
       results.push({
-        success: true,
-        message: "Invitations sent successfully",
-        invitationIds: data.map(inv => inv.id),
+        id: `invitation-batch-${Date.now()}`,
         status: 'sent',
-        recipients: recipientsToProcess,
+        recipients: invitation.recipients,
         failedRecipients: [],
         createdAt: new Date().toISOString()
       });

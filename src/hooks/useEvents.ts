@@ -1,196 +1,136 @@
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { Event, EventTab, EventsResult, EventFormData } from "@/types/event.types";
-import { getEvents } from "@/services/event/getEvents";
+import { useState, useEffect, useCallback } from 'react';
+import { Event, EventStatus, EventFormData, EventTab, EventsResult } from '@/types/event.types';
+import { createEvent as createEventService } from '@/services/event/createService';
+import { updateEvent as updateEventService } from '@/services/event/updateService';
+import { deleteEvent as deleteEventService } from '@/services/event/deleteService';
+import { getEvents } from '@/services/event/getEvents';
+import { respondToInvitation as respondService } from '@/services/event/respondToInvitation';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/components/ui/use-toast';
+import { format } from 'date-fns';
 
-export const useEvents = (tab: EventTab = "my-events") => {
-  const queryClient = useQueryClient();
+export const useEvents = (tab?: EventTab) => {
+  const [events, setEvents] = useState<Event[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterDate, setFilterDate] = useState<Date | undefined>(undefined);
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [canCreateEvents, setCanCreateEvents] = useState(false);
+  const [userRole, setUserRole] = useState<'free' | 'individual' | 'business'>('free');
 
-  const { 
-    data = { events: [], userRole: 'free', canCreateEvents: false }, 
-    isLoading, 
-    error,
-    refetch
-  } = useQuery({
-    queryKey: ['events', tab],
-    queryFn: async () => {
-      try {
-        const result = await getEvents(tab);
-        return result;
-      } catch (error) {
-        console.error("Error fetching events:", error);
-        toast.error("Failed to load events");
-        throw error;
-      }
+  const fetchEvents = useCallback(async () => {
+    if (!user) {
+      setEvents([]);
+      setIsLoading(false);
+      return;
     }
+
+    try {
+      setIsLoading(true);
+      const result = await getEvents(tab || 'my-events');
+      setEvents(result.events);
+      setUserRole(result.userRole);
+      setCanCreateEvents(result.canCreateEvents);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load events. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user, tab, toast]);
+
+  useEffect(() => {
+    fetchEvents();
+  }, [fetchEvents]);
+
+  // Filter events based on search query, status, and date
+  const filteredEvents = events.filter(event => {
+    const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (event.description && event.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (event.location && event.location.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    const matchesStatus = filterStatus === 'all' || event.status === filterStatus;
+    
+    let matchesDate = true;
+    if (filterDate) {
+      const eventDate = new Date(event.start_time);
+      const filterDateString = format(filterDate, 'yyyy-MM-dd');
+      const eventDateString = format(eventDate, 'yyyy-MM-dd');
+      matchesDate = filterDateString === eventDateString;
+    }
+    
+    return matchesSearch && matchesStatus && matchesDate;
   });
 
-  const createEvent = useMutation({
-    mutationFn: async (eventData: EventFormData) => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.user) {
-          throw new Error("Not authenticated");
-        }
-
-        // Format dates for the database and prepare the formatted data
-        const formattedData = {
-          title: eventData.title,
-          description: eventData.description || null,
-          location: eventData.location || null,
-          location_title: eventData.location_title || null,
-          start_time: eventData.startDate.toISOString(),
-          end_time: eventData.endDate ? eventData.endDate.toISOString() : eventData.startDate.toISOString(),
-          is_all_day: eventData.isAllDay || false,
-          // Convert status to a string literal type that matches the database expectations
-          status: (eventData.status || 'published') as 'draft' | 'sent' | 'accepted' | 'declined' | 'recalled',
-          user_id: session.user.id
-        };
-
-        // Handle customization as a separate object we'll stringify for the database
-        let customizationJson = null;
-        if (eventData.customization) {
-          customizationJson = JSON.stringify(eventData.customization);
-        }
-
-        // Insert the event with the stringified customization
-        const { data, error } = await supabase
-          .from('events')
-          .insert([{
-            ...formattedData,
-            customization: customizationJson
-          }])
-          .select();
-
-        if (error) {
-          console.error("Error creating event:", error);
-          throw error;
-        }
-
-        if (!data || data.length === 0) {
-          throw new Error("No data returned after creating event");
-        }
-
-        const createdEvent = data[0];
-
-        // Handle invitations if present
-        if (eventData.invitations && eventData.invitations.length > 0) {
-          const invitationData = eventData.invitations.map(invite => ({
-            event_id: createdEvent.id,
-            invited_user_id: invite.invited_user_id || null,
-            email: invite.email || null,
-            status: invite.status || 'pending',
-            shared_as_link: invite.shared_as_link || false,
-          }));
-
-          const { error: inviteError } = await supabase
-            .from('event_invitations')
-            .insert(invitationData);
-
-          if (inviteError) {
-            console.error("Error creating invitations:", inviteError);
-          }
-        }
-
-        return createdEvent;
-      } catch (error) {
-        console.error("Error in createEvent:", error);
-        throw error;
-      }
-    },
-    onSuccess: () => {
-      toast.success("Event created successfully");
-      queryClient.invalidateQueries({ queryKey: ['events'] });
-    },
-    onError: (error) => {
-      console.error("Error creating event:", error);
-      toast.error("Failed to create event");
+  // Create event
+  const createEvent = useCallback(async (eventData: EventFormData): Promise<Event> => {
+    try {
+      const result = await createEventService(eventData);
+      await fetchEvents();  // Refresh events after creation
+      return result;
+    } catch (error) {
+      console.error('Error creating event:', error);
+      throw error;
     }
-  });
+  }, [fetchEvents]);
 
-  const updateEvent = useMutation({
-    mutationFn: async ({ id, eventData }: { id: string; eventData: Partial<EventFormData> }) => {
-      try {
-        // Format dates for database if present
-        const formattedData: any = { ...eventData };
-        if (eventData.startDate) {
-          formattedData.start_time = eventData.startDate.toISOString();
-          delete formattedData.startDate;
-        }
-        if (eventData.endDate) {
-          formattedData.end_time = eventData.endDate.toISOString();
-          delete formattedData.endDate;
-        }
-        if ('isAllDay' in eventData) {
-          formattedData.is_all_day = eventData.isAllDay;
-          delete formattedData.isAllDay;
-        }
-        
-        // Handle customization if present
-        if (formattedData.customization) {
-          formattedData.customization = JSON.stringify(formattedData.customization);
-        }
-        
-        // Ensure status is compatible with database expectations if it's being updated
-        if (formattedData.status) {
-          // Cast to allowed types in the database
-          formattedData.status = formattedData.status as 'draft' | 'sent' | 'accepted' | 'declined' | 'recalled';
-        }
-        
-        const { data, error } = await supabase
-          .from('events')
-          .update(formattedData)
-          .eq('id', id)
-          .select();
-
-        if (error) throw error;
-        return data ? data[0] : null;
-      } catch (error) {
-        console.error("Error updating event:", error);
-        throw error;
-      }
-    },
-    onSuccess: () => {
-      toast.success("Event updated successfully");
-      queryClient.invalidateQueries({ queryKey: ['events'] });
-    },
-    onError: (error) => {
-      toast.error("Failed to update event");
-      console.error("Error updating event:", error);
+  // Update event
+  const updateEvent = useCallback(async (eventId: string, eventData: EventFormData): Promise<Event> => {
+    try {
+      const result = await updateEventService(eventId, eventData);
+      await fetchEvents();  // Refresh events after update
+      return result;
+    } catch (error) {
+      console.error('Error updating event:', error);
+      throw error;
     }
-  });
+  }, [fetchEvents]);
 
-  const deleteEvent = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('events')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-      return id;
-    },
-    onSuccess: (id) => {
-      toast.success("Event deleted successfully");
-      queryClient.invalidateQueries({ queryKey: ['events'] });
-    },
-    onError: (error) => {
-      toast.error("Failed to delete event");
-      console.error("Error deleting event:", error);
+  // Delete event
+  const deleteEvent = useCallback(async (eventId: string): Promise<void> => {
+    try {
+      await deleteEventService(eventId);
+      await fetchEvents();  // Refresh events after deletion
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      throw error;
     }
-  });
+  }, [fetchEvents]);
+
+  // Respond to invitation
+  const respondToInvitation = useCallback(async (eventId: string, response: 'accepted' | 'declined'): Promise<void> => {
+    try {
+      await respondService(eventId, response);
+      await fetchEvents();  // Refresh events after responding
+    } catch (error) {
+      console.error('Error responding to invitation:', error);
+      throw error;
+    }
+  }, [fetchEvents]);
 
   return {
-    events: data.events,
-    userRole: data.userRole,
-    canCreateEvents: data.canCreateEvents,
+    events,
+    filteredEvents,
     isLoading,
-    error,
+    searchQuery,
+    setSearchQuery,
+    filterStatus,
+    setFilterStatus,
+    filterDate,
+    setFilterDate,
+    canCreateEvents,
+    userRole,
     createEvent,
     updateEvent,
     deleteEvent,
-    refreshEvents: refetch
+    respondToInvitation,
+    refetch: fetchEvents
   };
 };

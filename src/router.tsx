@@ -1,129 +1,251 @@
 
-import { createBrowserRouter } from 'react-router-dom';
-import App from './App';
-import CreateInvitationPage from './pages/invitations/CreateInvitationPage';
-import InvitationsListPage from './pages/invitations/InvitationsListPage';
-import SharedInvitationPage from './pages/invitations/SharedInvitationPage';
-import ProtectedRoute from './components/auth/ProtectedRoute';
-import PublicLayout from './components/layout/PublicLayout';
+import React from "react";
+import { createBrowserRouter, RouteObject, Outlet } from "react-router-dom";
+import { publicRoutes } from "./routes/publicRoutes";
+import { authRoutes } from "./routes/authRoutes";
+import { businessRoutes, bookingRoutes } from "./routes/businessRoutes";
+import { superadminRoutes } from "./routes/superadminRoutes";
+import NotFound from "./pages/NotFound";
+import PublicLayout from "./components/layout/PublicLayout";
+import DashboardLayout from "./components/dashboard/DashboardLayout";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
+import SuperAdminGuard from "./components/auth/SuperAdminGuard";
+import SuperAdminLayout from "./components/superadmin/SuperAdminLayout";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import ScrollToTop from "./components/ui/scroll-to-top";
+import { TaskProvider } from "@/contexts/TaskContext";
+import NotificationListener from "./components/notifications/NotificationListener";
+import ErrorBoundary from "./components/ui/ErrorBoundary";
 
-// Placeholder component for missing dashboard components
-const PlaceholderComponent = () => <div className="p-8"><h1 className="text-2xl font-bold mb-4">Page coming soon</h1><p>This dashboard section is under development.</p></div>;
+// Lazy load dashboard pages
+import { lazy, Suspense } from "react";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
+
+// Dashboard pages with lazy loading
+const DashboardHome = lazy(() => import("@/pages/dashboard/DashboardHome"));
+const DashboardTasks = lazy(() => import("@/pages/dashboard/DashboardTasks"));
+const DashboardEvents = lazy(() => import("@/pages/dashboard/DashboardEvents"));
+const DashboardServiceManagement = lazy(() => import("@/pages/dashboard/DashboardServiceManagement"));
+const DashboardStaffManagement = lazy(() => import("@/pages/dashboard/DashboardStaffManagement"));
+const DashboardBookings = lazy(() => import("@/pages/dashboard/DashboardBookings"));
+const DashboardMessages = lazy(() => import("@/pages/dashboard/DashboardMessages"));
+const DashboardNotifications = lazy(() => import("@/pages/dashboard/DashboardNotifications"));
+const DashboardAIAssistant = lazy(() => import("@/pages/dashboard/DashboardAIAssistant"));
+const DashboardSettings = lazy(() => import("@/pages/dashboard/DashboardSettings"));
+const DashboardHelp = lazy(() => import("@/pages/dashboard/DashboardHelp"));
+const DashboardContacts = lazy(() => import("@/pages/dashboard/DashboardContacts"));
+const StaffDashboard = lazy(() => import("@/pages/dashboard/StaffDashboard"));
+const DashboardJobs = lazy(() => import("@/pages/dashboard/DashboardJobs"));
+const DashboardJobCards = lazy(() => import("@/pages/dashboard/DashboardJobCards"));
+const DashboardMeetingSummary = lazy(() => import("@/pages/dashboard/MeetingSummary"));
+const MessagesConversation = lazy(() => import("@/pages/dashboard/MessagesConversation"));
+
+// Wrap components with Suspense for lazy loading
+const withSuspense = (Component: React.ComponentType) => (
+  <Suspense fallback={<LoadingSpinner />}>
+    <Component />
+  </Suspense>
+);
+
+// Define dashboard routes
+const dashboardRoutes: RouteObject[] = [
+  {
+    index: true,
+    element: withSuspense(DashboardHome),
+  },
+  {
+    path: "tasks/*",
+    element: withSuspense(DashboardTasks),
+  },
+  {
+    path: "events",
+    element: withSuspense(DashboardEvents),
+  },
+  {
+    path: "services",
+    element: withSuspense(DashboardServiceManagement),
+  },
+  {
+    path: "staff",
+    element: withSuspense(DashboardStaffManagement),
+  },
+  {
+    path: "staff-dashboard",
+    element: withSuspense(StaffDashboard),
+  },
+  {
+    path: "bookings",
+    element: withSuspense(DashboardBookings),
+  },
+  {
+    path: "messages",
+    element: withSuspense(DashboardMessages),
+  },
+  {
+    path: "messages/:userId",
+    element: withSuspense(MessagesConversation),
+  },
+  {
+    path: "notifications",
+    element: withSuspense(DashboardNotifications),
+  },
+  {
+    path: "ai-assistant",
+    element: withSuspense(DashboardAIAssistant),
+  },
+  {
+    path: "settings",
+    element: withSuspense(DashboardSettings),
+  },
+  {
+    path: "help",
+    element: withSuspense(DashboardHelp),
+  },
+  {
+    path: "contacts",
+    element: withSuspense(DashboardContacts),
+  },
+  {
+    path: "jobs",
+    element: withSuspense(DashboardJobs),
+  },
+  {
+    path: "job-cards",
+    element: withSuspense(DashboardJobCards),
+  },
+  {
+    path: "meeting-summary",
+    element: withSuspense(DashboardMeetingSummary),
+  },
+];
 
 export const router = createBrowserRouter([
+  // Auth routes
   {
-    path: '/',
-    element: <App />,
-    children: [
-      {
-        path: "/",
-        element: <PublicLayout />,
-        children: [
-          {
-            index: true,
-            element: <div className="p-8"><h1 className="text-2xl font-bold">Welcome to the homepage</h1></div>,
-          },
-        ]
-      },
-      {
-        path: "dashboard",
-        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
-      },
-      {
-        path: "dashboard/tasks",
-        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
-      },
-      {
-        path: "dashboard/events",
-        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
-      },
-      {
-        path: "dashboard/events/:eventId",
-        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
-      },
-      {
-        path: "dashboard/events/:eventId/edit",
-        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
-      },
-      {
-        path: "dashboard/bookings",
-        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
-      },
-      {
-        path: "dashboard/jobs",
-        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
-      },
-      {
-        path: "dashboard/services",
-        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
-      },
-      {
-        path: "dashboard/staff",
-        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
-      },
-      {
-        path: "dashboard/business-page",
-        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
-      },
-      {
-        path: "dashboard/analytics",
-        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
-      },
-      {
-        path: "dashboard/reports",
-        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
-      },
-      {
-        path: "dashboard/settings",
-        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
-      },
-      {
-        path: "dashboard/help",
-        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
-      },
-      {
-        path: "dashboard/ai-assistant",
-        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
-      },
-      {
-        path: "dashboard/meeting-summary",
-        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
-      },
-      {
-        path: "dashboard/notifications",
-        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
-      },
-      {
-        path: "dashboard/messages",
-        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
-      },
-      {
-        path: "dashboard/contacts",
-        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
-      },
-      {
-        path: "dashboard/staff-dashboard",
-        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
-      },
-      {
-        path: "dashboard/work-management",
-        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
-      },
-      
-      // Add new invitation routes
-      {
-        path: "invitations",
-        element: <ProtectedRoute><InvitationsListPage /></ProtectedRoute>,
-      },
-      {
-        path: "invitations/new",
-        element: <ProtectedRoute><CreateInvitationPage /></ProtectedRoute>,
-      },
-    ],
+    path: "/auth",
+    element: (
+      <ErrorBoundary>
+        <TooltipProvider>
+          <ScrollToTop />
+          <Toaster />
+          <Sonner />
+          <Outlet />
+        </TooltipProvider>
+      </ErrorBoundary>
+    ),
+    children: authRoutes,
   },
-  // Public shared invitation route - outside of main layout
+  
+  // Public routes wrapped in PublicLayout
   {
-    path: "/i/:shareId",
-    element: <SharedInvitationPage />,
-  }
+    path: "/",
+    element: (
+      <ErrorBoundary>
+        <TooltipProvider>
+          <TaskProvider>
+            <ScrollToTop />
+            <NotificationListener />
+            <Toaster />
+            <Sonner />
+            <PublicLayout />
+          </TaskProvider>
+        </TooltipProvider>
+      </ErrorBoundary>
+    ),
+    children: publicRoutes,
+  },
+  
+  // Booking routes
+  {
+    path: "/booking",
+    element: (
+      <ErrorBoundary>
+        <TooltipProvider>
+          <TaskProvider>
+            <ScrollToTop />
+            <NotificationListener />
+            <Toaster />
+            <Sonner />
+          </TaskProvider>
+        </TooltipProvider>
+      </ErrorBoundary>
+    ),
+    children: bookingRoutes,
+  },
+  
+  // Business routes
+  {
+    path: "/business",
+    element: (
+      <ErrorBoundary>
+        <TooltipProvider>
+          <TaskProvider>
+            <ScrollToTop />
+            <NotificationListener />
+            <Toaster />
+            <Sonner />
+          </TaskProvider>
+        </TooltipProvider>
+      </ErrorBoundary>
+    ),
+    children: businessRoutes,
+  },
+  
+  // Dashboard routes with role-based protection
+  {
+    path: "/dashboard",
+    element: (
+      <ProtectedRoute>
+        <ErrorBoundary>
+          <TooltipProvider>
+            <TaskProvider>
+              <ScrollToTop />
+              <NotificationListener />
+              <Toaster />
+              <Sonner />
+              <DashboardLayout />
+            </TaskProvider>
+          </TooltipProvider>
+        </ErrorBoundary>
+      </ProtectedRoute>
+    ),
+    children: dashboardRoutes,
+  },
+  
+  // Super Admin Dashboard routes
+  {
+    path: "/gohabsgo",
+    element: (
+      <SuperAdminGuard>
+        <ErrorBoundary>
+          <TooltipProvider>
+            <TaskProvider>
+              <ScrollToTop />
+              <NotificationListener />
+              <Toaster />
+              <Sonner />
+              <SuperAdminLayout>
+                <></>
+              </SuperAdminLayout>
+            </TaskProvider>
+          </TooltipProvider>
+        </ErrorBoundary>
+      </SuperAdminGuard>
+    ),
+    children: superadminRoutes as RouteObject[],
+  },
+  
+  // 404 page
+  {
+    path: "*",
+    element: (
+      <ErrorBoundary>
+        <TooltipProvider>
+          <NotFound />
+        </TooltipProvider>
+      </ErrorBoundary>
+    ),
+  },
 ]);

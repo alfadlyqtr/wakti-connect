@@ -28,22 +28,12 @@ export class RunwareService {
   async generateImage(params: GenerateImageParams): Promise<GeneratedImage> {
     try {
       console.log("Requesting image generation through ai-image-generation edge function");
-      console.log("Params:", {
-        prompt: params.positivePrompt,
-        model: params.model || "runware:100@1",
-        CFGScale: params.CFGScale || 12.0,
-        scheduler: params.scheduler || "FlowMatchEulerDiscreteScheduler" 
-      });
       
       // Call the consolidated ai-image-generation edge function
       const { data, error } = await supabase.functions.invoke('ai-image-generation', {
         body: { 
           prompt: params.positivePrompt, 
-          imageUrl: params.inputImage,
-          model: params.model || "runware:100@1",
-          CFGScale: params.CFGScale || 12.0,
-          scheduler: params.scheduler || "FlowMatchEulerDiscreteScheduler",
-          strength: params.strength || 0.9
+          imageUrl: params.inputImage 
         }
       });
       
@@ -55,10 +45,6 @@ export class RunwareService {
       if (!data || !data.imageUrl) {
         throw new Error('No image was generated');
       }
-
-      // Add debug information
-      console.log("Generation successful! Provider:", data.provider);
-      console.log("Image URL:", data.imageUrl);
 
       return {
         imageURL: data.imageUrl,

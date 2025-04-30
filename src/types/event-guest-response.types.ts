@@ -18,8 +18,3 @@ export interface EventWithResponses {
   sender_name?: string;
   guest_responses?: EventGuestResponse[];
 }
-
-export interface EventResponseFormValues {
-  name: string;
-  response: 'accepted' | 'declined';
-}

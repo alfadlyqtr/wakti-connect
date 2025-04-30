@@ -56,7 +56,6 @@ export const IndividualDashboardStats = () => {
     <>
       <SectionHeading 
         title="My Productivity"
-        subtitle="Track your personal progress"
         centered={false}
         className="mt-8 mb-4"
       />

@@ -1,137 +1,441 @@
 
-import React, { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { CalendarDays, Grid, List, PlusCircle } from "lucide-react";
-import { useEvents } from "@/hooks/useEvents";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { EventTab } from "@/types/event.types";
-import { EventList } from "@/components/events/EventList";
-import { EventGrid } from "@/components/events/EventGrid";
-import { CreateEventDialog } from "@/components/events/CreateEventDialog";
-import { Skeleton } from "@/components/ui/skeleton";
-import SectionContainer from "@/components/ui/section-container";
+import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { 
+  Calendar as CalendarIcon, 
+  Filter, 
+  Plus, 
+  Search,
+  X,
+  SlidersHorizontal
+} from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Calendar } from "@/components/ui/calendar";
+import { 
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
+import { useEvents } from '@/hooks/useEvents';
+import { Event, EventTab } from '@/types/event.types';
+import { EventCard } from '@/components/events';
+import { useToast } from '@/components/ui/use-toast';
+import { EventCreationForm } from '@/components/events';
+import { Badge } from '@/components/ui/badge';
+import EmptyState from '@/components/shared/EmptyState';
+import { EventViewResponses } from '@/components/events';
 
-const DashboardEvents = () => {
-  const { events, isLoading, error, refreshEvents } = useEvents();
-  const [activeTab, setActiveTab] = useState<EventTab>("my-events");
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+export default function DashboardEvents() {
+  const [openDialog, setOpenDialog] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [viewResponsesEvent, setViewResponsesEvent] = useState<Event | null>(null);
+  const [viewType, setViewType] = useState<'grid' | 'list'>('grid');
+  const [currentTab, setCurrentTab] = useState<EventTab>('my-events');
+  const { toast } = useToast();
+  
+  // Get events with filtering functionality
+  const { 
+    filteredEvents, 
+    isLoading, 
+    searchQuery, 
+    setSearchQuery,
+    filterStatus,
+    setFilterStatus,
+    filterDate,
+    setFilterDate,
+    canCreateEvents,
+    userRole,
+    deleteEvent,
+    respondToInvitation,
+    refetch
+  } = useEvents(currentTab);
+  
+  // Clear filters handler
+  const handleClearFilters = () => {
+    setSearchQuery('');
+    setFilterStatus('all');
+    setFilterDate(undefined);
+  };
+  
+  // Delete event handler
+  const handleDeleteEvent = async (eventId: string) => {
+    try {
+      await deleteEvent(eventId);
+      toast({
+        title: "Event Deleted",
+        description: "Success",
+      });
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      toast({
+        title: "Error",
+        description: "Error",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Edit event handler
+  const handleEditEvent = (event: Event) => {
+    setEditingEvent(event);
+    setOpenDialog(true);
+  };
+  
+  // Dialog close handler
+  const handleDialogClose = () => {
+    setOpenDialog(false);
+    setEditingEvent(null);
+    setViewResponsesEvent(null);
+  };
+  
+  // Dialog success handler
+  const handleDialogSuccess = () => {
+    // Refresh events
+    refetch();
+    setOpenDialog(false);
+    setEditingEvent(null);
+    setViewResponsesEvent(null);
+  };
+  
+  // View responses handler
+  const handleViewResponses = (eventId: string) => {
+    const event = filteredEvents.find(e => e.id === eventId);
+    if (event) {
+      setViewResponsesEvent(event);
+      setOpenDialog(true);
+    }
+  };
+  
+  // Accept invitation handler
+  const handleAcceptInvitation = async (eventId: string) => {
+    try {
+      await respondToInvitation(eventId, 'accepted');
+      toast({
+        title: "Invitation Accepted",
+        description: "Success"
+      });
+    } catch (error) {
+      console.error('Error accepting invitation:', error);
+      toast({
+        title: "Error",
+        description: "Error",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Decline invitation handler
+  const handleDeclineInvitation = async (eventId: string) => {
+    try {
+      await respondToInvitation(eventId, 'declined');
+      toast({
+        title: "Invitation Declined",
+        description: "Success"
+      });
+    } catch (error) {
+      console.error('Error declining invitation:', error);
+      toast({
+        title: "Error",
+        description: "Error",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
-    <SectionContainer>
-      <div className="flex justify-between items-center mb-6">
+    <div className="container mx-auto p-4 max-w-7xl">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
         <div>
-          <h1 className="text-2xl font-bold mb-1">Events</h1>
-          <p className="text-muted-foreground">Create and manage your events</p>
+          <h1 className="text-2xl font-bold tracking-tight">Events</h1>
+          <p className="text-muted-foreground">Create and manage your events and invitations</p>
         </div>
         
-        <Button onClick={() => setIsCreateDialogOpen(true)}>
-          <PlusCircle className="h-4 w-4 mr-2" />
-          Create Event
+        <Button onClick={() => setOpenDialog(true)} disabled={!canCreateEvents}>
+          <Plus className="mr-2 h-4 w-4" />
+          New Event
         </Button>
       </div>
-
+      
       <div className="mb-6">
-        <Tabs defaultValue="my-events" value={activeTab} onValueChange={(value) => setActiveTab(value as EventTab)}>
-          <div className="flex justify-between items-center mb-4">
-            <TabsList>
-              <TabsTrigger value="my-events">My Events</TabsTrigger>
-              <TabsTrigger value="invited-events">Invitations</TabsTrigger>
-              <TabsTrigger value="draft-events">Drafts</TabsTrigger>
-            </TabsList>
-            
-            <div className="flex space-x-2 items-center">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setViewMode('grid')}
-                className={viewMode === 'grid' ? "bg-primary/10" : ""}
-              >
-                <Grid className="h-4 w-4" />
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setViewMode('list')}
-                className={viewMode === 'list' ? "bg-primary/10" : ""}
-              >
-                <List className="h-4 w-4" />
-              </Button>
-            </div>
+        <div className="flex flex-col sm:flex-row gap-4 mb-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search events..."
+              className="pl-8"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
           
-          <TabsContent value="my-events" className="mt-0">
-            {isLoading ? (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {[1, 2, 3].map((i) => (
-                  <Card key={i} className="overflow-hidden">
-                    <CardContent className="p-0">
-                      <div className="h-40 bg-muted" />
-                      <div className="p-4">
-                        <Skeleton className="h-4 w-3/4 mb-2" />
-                        <Skeleton className="h-3 w-1/2" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : events && events.length > 0 ? (
-              viewMode === 'grid' ? <EventGrid events={events} /> : <EventList events={events} />
-            ) : (
-              <div className="flex flex-col items-center justify-center p-12 text-center bg-muted/30 rounded-lg border border-dashed">
-                <CalendarDays className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-1">No events found</h3>
-                <p className="text-muted-foreground mb-4 max-w-md">
-                  You haven't created any events yet. Get started by creating your first event.
-                </p>
-                <Button onClick={() => setIsCreateDialogOpen(true)}>
-                  <PlusCircle className="h-4 w-4 mr-2" />
-                  Create Event
+          <div className="flex gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full sm:w-auto justify-start">
+                  <Filter className="mr-2 h-4 w-4" />
+                  Filter
+                  {(filterStatus !== 'all' || filterDate) && (
+                    <Badge variant="secondary" className="ml-2 rounded-sm px-1 font-normal">
+                      {filterStatus !== 'all' && filterDate ? '2' : '1'}
+                    </Badge>
+                  )}
                 </Button>
-              </div>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="invited-events" className="mt-0">
-            <div className="flex flex-col items-center justify-center p-12 text-center bg-muted/30 rounded-lg border border-dashed">
-              <CalendarDays className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium mb-1">No invitations</h3>
-              <p className="text-muted-foreground mb-4 max-w-md">
-                You don't have any event invitations right now.
-              </p>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="draft-events" className="mt-0">
-            <div className="flex flex-col items-center justify-center p-12 text-center bg-muted/30 rounded-lg border border-dashed">
-              <CalendarDays className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium mb-1">No draft events</h3>
-              <p className="text-muted-foreground mb-4 max-w-md">
-                You don't have any draft events. Start creating an event to save it as a draft.
-              </p>
-              <Button onClick={() => setIsCreateDialogOpen(true)}>
-                <PlusCircle className="h-4 w-4 mr-2" />
-                Create Event
-              </Button>
-            </div>
-          </TabsContent>
-        </Tabs>
+              </PopoverTrigger>
+              <PopoverContent className="w-80">
+                <div className="grid gap-4">
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Filter</h4>
+                    <div className="grid gap-2">
+                      <div className="grid gap-1">
+                        <Label htmlFor="status">Status</Label>
+                        <select 
+                          id="status"
+                          className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors"
+                          value={filterStatus}
+                          onChange={(e) => setFilterStatus(e.target.value)}
+                        >
+                          <option value="all">All Status</option>
+                          <option value="draft">Draft</option>
+                          <option value="published">Published</option>
+                          <option value="cancelled">Cancelled</option>
+                          <option value="accepted">Accepted</option>
+                          <option value="declined">Declined</option>
+                        </select>
+                      </div>
+                      <div className="grid gap-1">
+                        <Label htmlFor="date">Date</Label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              id="date"
+                              variant={"outline"}
+                              className={cn(
+                                "w-full justify-start text-left font-normal",
+                                !filterDate && "text-muted-foreground"
+                              )}
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {filterDate ? format(filterDate, "PPP") : "Select date"}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={filterDate}
+                              onSelect={setFilterDate}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                    </div>
+                  </div>
+                  <Button 
+                    variant="outline"
+                    onClick={handleClearFilters}
+                    disabled={filterStatus === 'all' && !filterDate}
+                  >
+                    <X className="mr-2 h-4 w-4" />
+                    Clear filters
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" className="w-10 h-10">
+                  <SlidersHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setViewType('grid')}>
+                  Grid View
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setViewType('list')}>
+                  List View
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
       </div>
       
-      <CreateEventDialog 
-        open={isCreateDialogOpen} 
-        onOpenChange={(open) => {
-          setIsCreateDialogOpen(open);
-          if (!open) {
-            // Refresh events list when dialog closes
-            refreshEvents();
-          }
-        }} 
-      />
-    </SectionContainer>
+      <Tabs defaultValue="my-events" value={currentTab} onValueChange={(value) => setCurrentTab(value as EventTab)}>
+        <TabsList className="mb-6">
+          <TabsTrigger value="my-events">My Events</TabsTrigger>
+          <TabsTrigger value="invited-events">Invitations</TabsTrigger>
+          <TabsTrigger value="draft-events">Drafts</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="my-events">
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="h-64 bg-muted rounded-lg"></div>
+              ))}
+            </div>
+          ) : filteredEvents.length > 0 ? (
+            <div className={cn(
+              viewType === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"
+            )}>
+              {filteredEvents.map(event => (
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  onCardClick={() => handleEditEvent(event)}
+                  onDelete={handleDeleteEvent}
+                  onEdit={handleEditEvent}
+                  onViewResponses={handleViewResponses}
+                />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              title="No events found"
+              description={
+                canCreateEvents
+                  ? "Create your first event by clicking the button below."
+                  : "Upgrade to create events and invitations."
+              }
+              icon={<CalendarIcon className="h-12 w-12 text-muted-foreground" />}
+              action={
+                canCreateEvents && (
+                  <Button onClick={() => setOpenDialog(true)}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    New Event
+                  </Button>
+                )
+              }
+            />
+          )}
+        </TabsContent>
+        
+        <TabsContent value="invited-events">
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="h-64 bg-muted rounded-lg"></div>
+              ))}
+            </div>
+          ) : filteredEvents.length > 0 ? (
+            <div className={cn(
+              viewType === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"
+            )}>
+              {filteredEvents.map(event => (
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  onAccept={handleAcceptInvitation}
+                  onDecline={handleDeclineInvitation}
+                />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              title="No invitations"
+              description="You haven't received any invitations yet."
+              icon={<CalendarIcon className="h-12 w-12 text-muted-foreground" />}
+            />
+          )}
+        </TabsContent>
+        
+        <TabsContent value="draft-events">
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="h-64 bg-muted rounded-lg"></div>
+              ))}
+            </div>
+          ) : filteredEvents.length > 0 ? (
+            <div className={cn(
+              viewType === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"
+            )}>
+              {filteredEvents.map(event => (
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  onCardClick={() => handleEditEvent(event)}
+                  onDelete={handleDeleteEvent}
+                  onEdit={handleEditEvent}
+                />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              title="No draft events"
+              description="Start creating an event now!"
+              icon={<CalendarIcon className="h-12 w-12 text-muted-foreground" />}
+              action={
+                canCreateEvents && (
+                  <Button onClick={() => setOpenDialog(true)}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    New Event
+                  </Button>
+                )
+              }
+            />
+          )}
+        </TabsContent>
+      </Tabs>
+      
+      <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-auto">
+          {editingEvent ? (
+            <DialogHeader>
+              <DialogTitle>Edit Event</DialogTitle>
+              <DialogDescription>
+                Make changes to your event and save them.
+              </DialogDescription>
+            </DialogHeader>
+          ) : viewResponsesEvent ? (
+            <DialogHeader>
+              <DialogTitle>Event Responses</DialogTitle>
+              <DialogDescription>
+                View responses from invited participants.
+              </DialogDescription>
+            </DialogHeader>
+          ) : (
+            <DialogHeader>
+              <DialogTitle>Create New Event</DialogTitle>
+              <DialogDescription>
+                Create a new event and send invitations.
+              </DialogDescription>
+            </DialogHeader>
+          )}
+          
+          {viewResponsesEvent ? (
+            <EventViewResponses 
+              event={viewResponsesEvent} 
+              onClose={handleDialogClose}
+            />
+          ) : (
+            <EventCreationForm 
+              editEvent={editingEvent}
+              onCancel={handleDialogClose}
+              onSuccess={handleDialogSuccess}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
   );
-};
-
-export default DashboardEvents;
+}

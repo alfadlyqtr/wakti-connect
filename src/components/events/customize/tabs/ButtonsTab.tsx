@@ -1,224 +1,91 @@
 
 import React from "react";
+import ButtonStyleSelector from "../ButtonStyleSelector";
+import { EventCustomization } from "@/types/event.types";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Input } from "@/components/ui/input";
-import { ColorPickerInput } from "../inputs/ColorPickerInput";
-import { ButtonShape } from "@/types/event.types";
 import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
 
 interface ButtonsTabProps {
-  acceptButton: {
-    background: string;
-    color: string;
-    shape: ButtonShape;
-    text?: string;
-  };
-  declineButton: {
-    background: string;
-    color: string;
-    shape: ButtonShape;
-    text?: string;
-    isVisible: boolean;
-  };
-  buttonsPosition: "left" | "center" | "right" | "spaced";
-  showAcceptDeclineButtons: boolean;
-  showAddToCalendarButton: boolean;
-  
-  onButtonChange: (
-    type: "accept" | "decline",
-    property: "background" | "color" | "shape" | "text",
-    value: string
-  ) => void;
-  onButtonVisibilityChange: (
-    type: "accept" | "decline" | "calendar",
-    visible: boolean
-  ) => void;
-  onButtonsPositionChange: (position: "left" | "center" | "right" | "spaced") => void;
+  customization: EventCustomization;
+  onButtonStyleChange: (type: 'accept' | 'decline', property: 'background' | 'color' | 'shape', value: string) => void;
+  onToggleButtons?: (checked: boolean) => void;
+  onToggleCalendarButton?: (checked: boolean) => void;
 }
 
-const buttonShapes: { id: ButtonShape, label: string }[] = [
-  { id: "rounded", label: "Rounded" },
-  { id: "pill", label: "Pill" },
-  { id: "square", label: "Square" },
-];
-
-const buttonPositions = [
-  { id: "left", label: "Left" },
-  { id: "center", label: "Center" },
-  { id: "right", label: "Right" },
-  { id: "spaced", label: "Spaced" },
-];
-
 const ButtonsTab: React.FC<ButtonsTabProps> = ({
-  acceptButton,
-  declineButton,
-  buttonsPosition,
-  showAcceptDeclineButtons,
-  showAddToCalendarButton,
-  onButtonChange,
-  onButtonVisibilityChange,
-  onButtonsPositionChange,
+  customization,
+  onButtonStyleChange,
+  onToggleButtons,
+  onToggleCalendarButton
 }) => {
   return (
-    <div className="space-y-8">
-      {/* Button Visibility */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-medium">Button Visibility</h3>
-        <p className="text-sm text-muted-foreground mb-4">
-          Choose which buttons to display on your event card
-        </p>
-        
-        <div className="space-y-2">
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="show-accept-decline"
-              checked={showAcceptDeclineButtons}
-              onCheckedChange={(checked) => {
-                onButtonVisibilityChange("accept", checked);
-                if (declineButton.isVisible) {
-                  onButtonVisibilityChange("decline", checked);
-                }
-              }}
-            />
-            <Label htmlFor="show-accept-decline">Show Accept/Decline Buttons</Label>
-          </div>
-          
-          {showAcceptDeclineButtons && (
-            <div className="flex items-center space-x-2 ml-6 mt-2">
-              <Switch
-                id="show-decline"
-                checked={declineButton.isVisible}
-                onCheckedChange={(checked) => onButtonVisibilityChange("decline", checked)}
-              />
-              <Label htmlFor="show-decline">Show Decline Button</Label>
-            </div>
-          )}
-          
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="show-calendar"
-              checked={showAddToCalendarButton}
-              onCheckedChange={(checked) => onButtonVisibilityChange("calendar", checked)}
-            />
-            <Label htmlFor="show-calendar">Show Add to Calendar Button</Label>
-          </div>
-        </div>
-        
-        <div className="space-y-2">
-          <Label>Buttons Position</Label>
-          <RadioGroup
-            value={buttonsPosition}
-            onValueChange={(value) => onButtonsPositionChange(value as "left" | "center" | "right" | "spaced")}
-            className="grid grid-cols-2 gap-4"
-          >
-            {buttonPositions.map((position) => (
-              <div key={position.id} className="flex items-center space-x-2">
-                <RadioGroupItem value={position.id} id={`position-${position.id}`} />
-                <Label htmlFor={`position-${position.id}`}>{position.label}</Label>
-              </div>
-            ))}
-          </RadioGroup>
-        </div>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <Label htmlFor="show-buttons" className="text-base font-medium">Show Accept/Decline Buttons</Label>
+        <Switch 
+          id="show-buttons" 
+          checked={customization.showAcceptDeclineButtons !== false}
+          onCheckedChange={(checked) => onToggleButtons && onToggleButtons(checked)}
+        />
+      </div>
+
+      <div className="flex items-center justify-between">
+        <Label htmlFor="show-calendar" className="text-base font-medium">Show Add to Calendar Button</Label>
+        <Switch 
+          id="show-calendar" 
+          checked={customization.showAddToCalendarButton !== false}
+          onCheckedChange={(checked) => onToggleCalendarButton && onToggleCalendarButton(checked)}
+        />
       </div>
       
-      {/* Accept Button */}
-      {showAcceptDeclineButtons && (
-        <div className="space-y-4 pt-4 border-t">
-          <h3 className="text-lg font-medium">Accept Button</h3>
-          <div className="space-y-2">
-            <Label>Button Text</Label>
-            <Input
-              value={acceptButton.text || "Accept"}
-              onChange={(e) => onButtonChange("accept", "text", e.target.value)}
-              placeholder="Accept"
-            />
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Background Color</Label>
-              <ColorPickerInput
-                value={acceptButton.background}
-                onChange={(value) => onButtonChange("accept", "background", value)}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label>Text Color</Label>
-              <ColorPickerInput
-                value={acceptButton.color}
-                onChange={(value) => onButtonChange("accept", "color", value)}
-              />
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label>Button Shape</Label>
-            <RadioGroup
-              value={acceptButton.shape}
-              onValueChange={(value) => onButtonChange("accept", "shape", value)}
-              className="grid grid-cols-3 gap-4"
-            >
-              {buttonShapes.map((shape) => (
-                <div key={shape.id} className="flex items-center space-x-2">
-                  <RadioGroupItem value={shape.id} id={`accept-shape-${shape.id}`} />
-                  <Label htmlFor={`accept-shape-${shape.id}`}>{shape.label}</Label>
-                </div>
-              ))}
-            </RadioGroup>
-          </div>
-        </div>
-      )}
+      <Separator className="my-4" />
       
-      {/* Decline Button */}
-      {showAcceptDeclineButtons && declineButton.isVisible && (
-        <div className="space-y-4 pt-4 border-t">
-          <h3 className="text-lg font-medium">Decline Button</h3>
-          <div className="space-y-2">
-            <Label>Button Text</Label>
-            <Input
-              value={declineButton.text || "Decline"}
-              onChange={(e) => onButtonChange("decline", "text", e.target.value)}
-              placeholder="Decline"
-            />
-          </div>
+      <div className={customization.showAcceptDeclineButtons === false ? 'opacity-50 pointer-events-none' : ''}>
+        <h3 className="font-medium text-base mb-4">Button Styles</h3>
+        <ButtonStyleSelector 
+          acceptButton={customization.buttons.accept}
+          declineButton={customization.buttons.decline}
+          onButtonStyleChange={onButtonStyleChange}
+        />
+      </div>
+
+      <div className="p-4 rounded-md bg-muted/50 mt-4">
+        <h4 className="font-medium mb-2">Preview</h4>
+        <div className="flex justify-center gap-3 mb-4">
+          <button 
+            className="py-2 px-4 flex items-center gap-1"
+            style={{
+              backgroundColor: customization.buttons.accept.background,
+              color: customization.buttons.accept.color,
+              borderRadius: customization.buttons.accept.shape === 'rounded' ? '0.375rem' : 
+                             customization.buttons.accept.shape === 'pill' ? '9999px' : '0'
+            }}
+          >
+            Accept
+          </button>
           
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Background Color</Label>
-              <ColorPickerInput
-                value={declineButton.background}
-                onChange={(value) => onButtonChange("decline", "background", value)}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label>Text Color</Label>
-              <ColorPickerInput
-                value={declineButton.color}
-                onChange={(value) => onButtonChange("decline", "color", value)}
-              />
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label>Button Shape</Label>
-            <RadioGroup
-              value={declineButton.shape}
-              onValueChange={(value) => onButtonChange("decline", "shape", value)}
-              className="grid grid-cols-3 gap-4"
-            >
-              {buttonShapes.map((shape) => (
-                <div key={shape.id} className="flex items-center space-x-2">
-                  <RadioGroupItem value={shape.id} id={`decline-shape-${shape.id}`} />
-                  <Label htmlFor={`decline-shape-${shape.id}`}>{shape.label}</Label>
-                </div>
-              ))}
-            </RadioGroup>
-          </div>
+          <button
+            className="py-2 px-4 flex items-center gap-1"
+            style={{
+              backgroundColor: customization.buttons.decline.background,
+              color: customization.buttons.decline.color,
+              borderRadius: customization.buttons.decline.shape === 'rounded' ? '0.375rem' : 
+                             customization.buttons.decline.shape === 'pill' ? '9999px' : '0'
+            }}
+          >
+            Decline
+          </button>
         </div>
-      )}
+        
+        {customization.showAddToCalendarButton !== false && (
+          <div className="flex justify-center">
+            <button className="text-xs py-1 px-2 border rounded">
+              Add to Calendar
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

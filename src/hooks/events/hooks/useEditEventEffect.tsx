@@ -19,7 +19,6 @@ interface UseEditEventEffectProps {
   setLocation: (location: string) => void;
   setLocationType: (type: 'manual' | 'google_maps') => void;
   setMapsUrl: (url: string) => void;
-  setLocationTitle: (title: string) => void;
   setCustomization: (customization: EventCustomization) => void;
 }
 
@@ -37,7 +36,6 @@ const useEditEventEffect = ({
   setLocation,
   setLocationType,
   setMapsUrl,
-  setLocationTitle,
   setCustomization
 }: UseEditEventEffectProps) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -45,7 +43,7 @@ const useEditEventEffect = ({
   // Use this hook to load data from editEvent into form and state
   useEffect(() => {
     if (editEvent) {
-      const { title, description, location, customization, is_all_day, start_time, end_time, location_type, maps_url, location_title } = editEvent;
+      const { title, description, location, customization, is_all_day, start_time, end_time, location_type, maps_url } = editEvent;
       
       setIsEditMode(true);
       
@@ -62,12 +60,6 @@ const useEditEventEffect = ({
       if (location) {
         setLocation(location);
         form.setValue("location", location);
-      }
-      
-      // Set location title if available
-      if (location_title) {
-        setLocationTitle(location_title);
-        form.setValue("location_title", location_title);
       }
       
       // If we have start_time, use it for the date
@@ -123,7 +115,7 @@ const useEditEventEffect = ({
     }
   }, [editEvent, form, setIsEditMode, setTitle, setDescription, setSelectedDate, 
       setStartTime, setEndTime, setIsAllDay, setLocation, setCustomization, 
-      setRecipients, setLocationType, setMapsUrl, setLocationTitle]);
+      setRecipients, setLocationType, setMapsUrl]);
 
   // Return loading state - you can expand this as needed
   return {

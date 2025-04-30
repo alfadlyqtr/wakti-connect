@@ -1,70 +1,82 @@
 
-export const formatDate = (dateString: string): string => {
-  const date = new Date(dateString);
-  
-  // Check if the date is valid
-  if (isNaN(date.getTime())) {
+import { format, formatDistanceToNow, isValid } from "date-fns";
+
+/**
+ * Format a time string to display time in a readable format
+ */
+export const formatTime = (isoString: string): string => {
+  try {
+    const date = new Date(isoString);
+    if (isNaN(date.getTime())) return "Invalid date";
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  } catch (e) {
+    console.error("Error formatting time:", e);
     return "Invalid date";
   }
-  
-  // Options for date formatting
-  const options: Intl.DateTimeFormatOptions = {
-    weekday: 'short',
-    month: 'short', 
-    day: 'numeric',
-    year: 'numeric'
-  };
-  
-  return date.toLocaleDateString('en-US', options);
 };
 
-export const formatTime = (dateString: string): string => {
-  const date = new Date(dateString);
-  
-  // Check if the date is valid
-  if (isNaN(date.getTime())) {
-    return "";
+/**
+ * Format a date string to a readable format
+ */
+export const formatDate = (isoString: string): string => {
+  try {
+    const date = new Date(isoString);
+    if (isNaN(date.getTime())) return "Invalid date";
+    return date.toLocaleDateString();
+  } catch (e) {
+    console.error("Error formatting date:", e);
+    return "Invalid date";
   }
-  
-  // Options for time formatting
-  const options: Intl.DateTimeFormatOptions = {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
-  };
-  
-  return date.toLocaleTimeString('en-US', options);
 };
 
-export const formatDateAndTime = (dateString: string): string => {
-  return `${formatDate(dateString)} at ${formatTime(dateString)}`;
+/**
+ * Format a date string to a shorter readable format
+ */
+export const formatDateShort = (date: Date): string => {
+  try {
+    if (!isValid(date)) return "Invalid date";
+    return format(date, "MMM d, yyyy");
+  } catch (e) {
+    console.error("Error formatting date:", e);
+    return "Invalid date";
+  }
 };
 
-// Alias for formatDateAndTime to fix imports
-export const formatDateTime = formatDateAndTime;
+/**
+ * Format a time range between two dates
+ */
+export const formatTimeRange = (startDate: Date, endDate: Date): string => {
+  try {
+    if (!isValid(startDate) || !isValid(endDate)) return "Invalid time range";
+    const startTime = format(startDate, "h:mm a");
+    const endTime = format(endDate, "h:mm a");
+    return `${startTime} - ${endTime}`;
+  } catch (e) {
+    console.error("Error formatting time range:", e);
+    return "Invalid time range";
+  }
+};
 
-// Function to get relative date label - updated to ensure it accepts a Date object
-export const getRelativeDateLabel = (date: Date): string => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
-  
-  // Ensure we're working with a proper Date object
-  const comparableDate = new Date(date);
-  comparableDate.setHours(0, 0, 0, 0);
-  
-  if (comparableDate.getTime() === today.getTime()) {
-    return "Today";
-  } else if (comparableDate.getTime() === tomorrow.getTime()) {
-    return "Tomorrow";
-  } else if (comparableDate.getTime() === yesterday.getTime()) {
-    return "Yesterday";
-  } else {
-    return formatDate(date.toISOString());
+/**
+ * Format a date/time string to a readable format with both date and time
+ */
+export const formatDateTime = (isoString: string): string => {
+  try {
+    if (!isoString) return "No date";
+    const date = new Date(isoString);
+    if (isNaN(date.getTime())) return "Invalid date";
+    
+    return date.toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+      second: 'numeric',
+      hour12: true
+    });
+  } catch (e) {
+    console.error("Error formatting datetime:", e, "for string:", isoString);
+    return "Invalid date";
   }
 };

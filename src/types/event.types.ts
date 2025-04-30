@@ -8,7 +8,7 @@ export const eventSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
   location: z.string().optional(),
-  location_title: z.string().optional(),
+  location_title: z.string().optional(), // Added location_title field
   startDate: z.date().optional(),
   endDate: z.date().optional(),
   isAllDay: z.boolean().optional().default(false)
@@ -19,9 +19,6 @@ export type EventFormValues = z.infer<typeof eventSchema>;
 
 // Event status types - updated to match database values
 export type EventStatus = "draft" | "published" | "cancelled" | "accepted" | "declined" | "sent" | "recalled";
-
-// Database event status - must match what's in the database
-export type DbEventStatus = "draft" | "sent" | "accepted" | "declined" | "recalled";
 
 // Event tab types
 export type EventTab = "my-events" | "invited-events" | "draft-events";
@@ -43,7 +40,7 @@ export interface EventFormData {
   title: string;
   description?: string;
   location?: string;
-  location_title?: string;
+  location_title?: string; // Added location_title field
   startDate: Date;
   endDate?: Date;
   isAllDay: boolean;
@@ -62,17 +59,8 @@ export interface EventFormData {
   }>;
 }
 
-// Background type definition - expanded to include gradient
-export type BackgroundType = "solid" | "gradient" | "image";
-
-// Gradient direction type
-export type GradientDirection = "to-r" | "to-l" | "to-b" | "to-t" | "to-br" | "to-bl" | "to-tr" | "to-tl";
-
-// Gradient color stop
-export interface GradientColorStop {
-  color: string;
-  position: number;
-}
+// Background type definition - only solid and image
+export type BackgroundType = "solid" | "image";
 
 // Font weight type
 export type FontWeight = "normal" | "medium" | "bold" | "light";
@@ -82,17 +70,10 @@ export type AnimationDelay = "none" | "staggered" | "sequence";
 
 // Event customization interface
 export interface EventCustomization {
-  // Background - updated to support gradients
+  // Background - no gradient-related properties
   background: {
     type: BackgroundType;
     value: string;
-    // Gradient specific properties
-    gradient?: {
-      angle?: number;
-      direction?: GradientDirection;
-      colorStops?: GradientColorStop[];
-      isRadial?: boolean;
-    };
   };
   
   // Font styles
@@ -100,7 +81,7 @@ export interface EventCustomization {
     family: string;
     size: string;
     color: string;
-    weight?: FontWeight;
+    weight?: string;
     alignment?: TextAlign;
   };
   
@@ -109,31 +90,21 @@ export interface EventCustomization {
     family: string;
     size: string;
     color: string;
-    weight?: FontWeight;
-    alignment?: TextAlign;
+    weight?: string;
   };
   
   descriptionFont?: {
     family: string;
     size: string;
     color: string;
-    weight?: FontWeight;
-    alignment?: TextAlign;
+    weight?: string;
   };
   
   dateTimeFont?: {
     family: string;
     size: string;
     color: string;
-    weight?: FontWeight;
-    alignment?: TextAlign;
-  };
-  
-  locationFont?: {
-    family: string;
-    size: string;
-    color: string;
-    weight?: FontWeight;
+    weight?: string;
   };
   
   // Button styles
@@ -142,19 +113,15 @@ export interface EventCustomization {
       background: string;
       color: string;
       shape: ButtonShape;
-      text?: string;
     };
     decline: {
       background: string;
       color: string;
       shape: ButtonShape;
-      text?: string;
-      isVisible?: boolean;
     };
     style?: string;
     color?: string;
     borderRadius?: string;
-    position?: "left" | "center" | "right" | "spaced";
   };
   
   // Utility buttons (map, calendar, etc)
@@ -167,16 +134,8 @@ export interface EventCustomization {
   };
   
   // Header styling
-  headerStyle?: 'banner' | 'simple' | 'minimal' | 'custom';
+  headerStyle?: 'banner' | 'simple' | 'minimal';
   headerImage?: string;
-  headerHeight?: string;
-  headerAlignment?: TextAlign;
-  
-  // Footer styling
-  footerStyle?: 'simple' | 'detailed' | 'minimal' | 'none';
-  footerText?: string;
-  footerBackground?: string;
-  footerTextColor?: string;
   
   // Animation settings
   animation?: AnimationType;
@@ -210,17 +169,8 @@ export interface EventCustomization {
   };
   
   // Other features
-  mapDisplay?: 'button' | 'embedded' | 'both' | 'none';
+  mapDisplay?: 'button' | 'both';
   poweredByColor?: string;
-  
-  // Share options
-  shareOptions?: {
-    whatsapp?: boolean;
-    email?: boolean;
-    sms?: boolean;
-    copyLink?: boolean;
-    qrCode?: boolean;
-  };
 }
 
 // Events result interface
