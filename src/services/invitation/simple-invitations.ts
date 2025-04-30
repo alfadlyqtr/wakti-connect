@@ -1,329 +1,203 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/components/ui/use-toast';
-import { v4 as uuidv4 } from 'uuid';
-import { SimpleInvitation as UISimpleInvitation } from '@/types/invitation.types';
+import { SimpleInvitation } from '@/types/invitation.types';
 
-// Define the SimpleInvitation interface explicitly matched to database columns
-export interface SimpleInvitation {
-  id: string;
-  created_at?: string;
-  updated_at?: string;
-  title: string;
-  description?: string;
-  location?: string;
-  location_url?: string;
-  datetime?: string;
-  user_id: string;
-  background_type: string;
-  background_value: string;
-  font_family: string;
-  font_size: string;
-  text_color: string;
-  share_link?: string;
-  shareId?: string;
-  isPublic?: boolean;
+/**
+ * List all simple invitations for the current user
+ * @param isEvent - Optional filter to only return invitations that are events (true) or not events (false)
+ */
+export async function listSimpleInvitations(isEvent?: boolean): Promise<SimpleInvitation[]> {
+  try {
+    let query = supabase
+      .from('invitations')
+      .select('*');
+      
+    // If isEvent is provided, filter by is_event field
+    if (isEvent !== undefined) {
+      query = query.eq('is_event', isEvent);
+    }
+
+    // Add ordering by creation date (newest first)
+    query = query.order('created_at', { ascending: false });
+
+    const { data, error } = await query;
+    
+    if (error) {
+      console.error('Error fetching invitations:', error);
+      throw error;
+    }
+
+    // Transform data to match SimpleInvitation type
+    const invitations: SimpleInvitation[] = data.map(item => ({
+      id: item.id,
+      title: item.title,
+      description: item.description || '',
+      location: item.location || '',
+      locationTitle: item.locationTitle || '',
+      date: item.datetime ? new Date(item.datetime).toISOString().split('T')[0] : undefined,
+      time: item.datetime ? new Date(item.datetime).toISOString().split('T')[1].substring(0, 5) : undefined,
+      customization: {
+        background: {
+          type: item.background_type || 'solid',
+          value: item.background_value || '#ffffff',
+        },
+        font: {
+          family: item.font_family || 'system-ui, sans-serif',
+          size: item.font_size || 'medium',
+          color: item.text_color || '#000000',
+          alignment: 'center',
+        },
+      },
+      isEvent: item.is_event || false
+    }));
+    
+    return invitations;
+  } catch (error) {
+    console.error('Error in listSimpleInvitations:', error);
+    return [];
+  }
 }
 
-// Function to convert a database SimpleInvitation to UI SimpleInvitation
-export function mapDbInvitationToUI(dbInvitation: SimpleInvitation): UISimpleInvitation {
-  return {
-    id: dbInvitation.id,
-    title: dbInvitation.title,
-    description: dbInvitation.description || '',
-    location: dbInvitation.location || '',
-    locationTitle: '',  // Not stored in DB directly
-    date: dbInvitation.datetime ? new Date(dbInvitation.datetime).toISOString().split('T')[0] : '',
-    time: dbInvitation.datetime ? new Date(dbInvitation.datetime).toISOString().split('T')[1].substring(0, 5) : '',
-    createdAt: dbInvitation.created_at || '',
-    updatedAt: dbInvitation.updated_at,
-    userId: dbInvitation.user_id,
-    shareId: dbInvitation.share_link?.split('/').pop(),
-    isPublic: dbInvitation.isPublic,
-    customization: {
-      background: {
-        type: dbInvitation.background_type as any,
-        value: dbInvitation.background_value,
-      },
-      font: {
-        family: dbInvitation.font_family,
-        size: dbInvitation.font_size,
-        color: dbInvitation.text_color,
-      }
+/**
+ * Get a simple invitation by ID
+ */
+export async function getSimpleInvitationById(id: string): Promise<SimpleInvitation | null> {
+  try {
+    const { data, error } = await supabase
+      .from('invitations')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) {
+      console.error('Error fetching invitation:', error);
+      throw error;
     }
-  };
+    
+    if (!data) return null;
+    
+    // Transform to SimpleInvitation type
+    const invitation: SimpleInvitation = {
+      id: data.id,
+      title: data.title,
+      description: data.description || '',
+      location: data.location || '',
+      locationTitle: data.locationTitle || '',
+      date: data.datetime ? new Date(data.datetime).toISOString().split('T')[0] : undefined,
+      time: data.datetime ? new Date(data.datetime).toISOString().split('T')[1].substring(0, 5) : undefined,
+      customization: {
+        background: {
+          type: data.background_type || 'solid',
+          value: data.background_value || '#ffffff',
+        },
+        font: {
+          family: data.font_family || 'system-ui, sans-serif',
+          size: data.font_size || 'medium',
+          color: data.text_color || '#000000',
+          alignment: 'center',
+        },
+      },
+      isEvent: data.is_event || false
+    };
+    
+    return invitation;
+  } catch (error) {
+    console.error('Error in getSimpleInvitationById:', error);
+    return null;
+  }
 }
 
 /**
  * Create a new simple invitation
  */
-export const createSimpleInvitation = async (invitation: Omit<SimpleInvitation, 'id' | 'created_at' | 'updated_at' | 'user_id'>): Promise<UISimpleInvitation | null> => {
+export async function createSimpleInvitation(data: any): Promise<SimpleInvitation | null> {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: createdInvitation, error } = await supabase
+      .from('invitations')
+      .insert([data])
+      .select()
+      .single();
     
-    if (!session) {
-      throw new Error("Authentication required");
+    if (error) {
+      console.error('Error creating invitation:', error);
+      throw error;
     }
     
-    const shareId = uuidv4();
-    
-    const newInvitation = {
-      id: uuidv4(),
-      user_id: session.user.id,
-      created_at: new Date().toISOString(),
-      // Add all fields from the invitation parameter
-      ...invitation,
-      // Override or ensure these fields have values
-      title: invitation.title || 'Untitled Invitation',
-      background_type: invitation.background_type || 'solid',
-      background_value: invitation.background_value || '#ffffff',
-      font_family: invitation.font_family || 'Inter, sans-serif',
-      font_size: invitation.font_size || '16px',
-      text_color: invitation.text_color || '#000000',
-      // Add shareId as a separate column if it exists
-      share_link: `${window.location.origin}/i/${shareId}`
+    // Transform to SimpleInvitation type
+    const invitation: SimpleInvitation = {
+      id: createdInvitation.id,
+      title: createdInvitation.title,
+      description: createdInvitation.description || '',
+      location: createdInvitation.location || '',
+      locationTitle: createdInvitation.locationTitle || '',
+      date: createdInvitation.datetime ? new Date(createdInvitation.datetime).toISOString().split('T')[0] : undefined,
+      time: createdInvitation.datetime ? new Date(createdInvitation.datetime).toISOString().split('T')[1].substring(0, 5) : undefined,
+      customization: {
+        background: {
+          type: createdInvitation.background_type || 'solid',
+          value: createdInvitation.background_value || '#ffffff',
+        },
+        font: {
+          family: createdInvitation.font_family || 'system-ui, sans-serif',
+          size: createdInvitation.font_size || 'medium',
+          color: createdInvitation.text_color || '#000000',
+          alignment: 'center',
+        },
+      },
+      isEvent: createdInvitation.is_event || false
     };
     
-    const tableName = 'invitations';
-    
-    const { data, error } = await supabase
-      .from(tableName)
-      .insert(newInvitation)
-      .select()
-      .single();
-    
-    if (error) {
-      console.error('Insert error:', error);
-      throw error;
-    }
-    
-    toast({
-      title: "Invitation Created",
-      description: "Your invitation has been created successfully.",
-    });
-    
-    return data ? mapDbInvitationToUI(data as SimpleInvitation) : null;
+    return invitation;
   } catch (error) {
-    console.error('Error creating invitation:', error);
-    toast({
-      title: "Failed to Create Invitation",
-      description: error instanceof Error ? error.message : "An unknown error occurred",
-      variant: "destructive",
-    });
+    console.error('Error in createSimpleInvitation:', error);
     return null;
   }
-};
+}
 
 /**
- * Update an existing invitation
+ * Update an existing simple invitation
  */
-export const updateSimpleInvitation = async (id: string, updates: Partial<Omit<SimpleInvitation, 'id' | 'user_id'>>): Promise<UISimpleInvitation | null> => {
+export async function updateSimpleInvitation(id: string, data: any): Promise<SimpleInvitation | null> {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session) {
-      throw new Error("Authentication required");
-    }
-    
-    const tableName = 'invitations';
-    
-    const { data, error } = await supabase
-      .from(tableName)
-      .update({
-        ...updates,
-        updated_at: new Date().toISOString()
-      })
+    const { data: updatedInvitation, error } = await supabase
+      .from('invitations')
+      .update(data)
       .eq('id', id)
-      .eq('user_id', session.user.id) // Ensure user owns this invitation
       .select()
       .single();
     
     if (error) {
+      console.error('Error updating invitation:', error);
       throw error;
     }
     
-    toast({
-      title: "Invitation Updated",
-      description: "Your invitation has been updated successfully.",
-    });
-    
-    return data ? mapDbInvitationToUI(data as SimpleInvitation) : null;
-  } catch (error) {
-    console.error('Error updating invitation:', error);
-    toast({
-      title: "Failed to Update Invitation",
-      description: error instanceof Error ? error.message : "An unknown error occurred",
-      variant: "destructive",
-    });
-    return null;
-  }
-};
-
-/**
- * Get a single invitation by ID
- */
-export const getSimpleInvitationById = async (id: string): Promise<UISimpleInvitation | null> => {
-  try {
-    const tableName = 'invitations';
-    
-    const { data, error } = await supabase
-      .from(tableName)
-      .select()
-      .eq('id', id)
-      .single();
-    
-    if (error) {
-      throw error;
-    }
-    
-    return data ? mapDbInvitationToUI(data as SimpleInvitation) : null;
-  } catch (error) {
-    console.error('Error fetching invitation:', error);
-    return null;
-  }
-};
-
-/**
- * Get a shared invitation by its shareId
- */
-export const getSharedInvitation = async (shareId: string): Promise<SimpleInvitation | null> => {
-  try {
-    const tableName = 'invitations';
-    
-    const { data, error } = await supabase
-      .from(tableName)
-      .select()
-      .eq('share_link', `${window.location.origin}/i/${shareId}`)
-      .single();
-    
-    if (error) {
-      throw error;
-    }
-    
-    return data as SimpleInvitation;
-  } catch (error) {
-    console.error('Error fetching shared invitation:', error);
-    return null;
-  }
-};
-
-/**
- * List all invitations for the current user
- */
-export const listSimpleInvitations = async (): Promise<UISimpleInvitation[]> => {
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session) {
-      throw new Error("Authentication required");
-    }
-    
-    const tableName = 'invitations';
-    
-    const { data, error } = await supabase
-      .from(tableName)
-      .select()
-      .eq('user_id', session.user.id)
-      .order('created_at', { ascending: false });
-    
-    if (error) {
-      throw error;
-    }
-    
-    return data ? data.map(invitation => mapDbInvitationToUI(invitation as SimpleInvitation)) : [];
-  } catch (error) {
-    console.error('Error listing invitations:', error);
-    return [];
-  }
-};
-
-/**
- * Delete an invitation
- */
-export const deleteSimpleInvitation = async (id: string): Promise<boolean> => {
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session) {
-      throw new Error("Authentication required");
-    }
-    
-    const tableName = 'invitations';
-    
-    const { error } = await supabase
-      .from(tableName)
-      .delete()
-      .eq('id', id)
-      .eq('user_id', session.user.id); // Ensure user owns this invitation
-    
-    if (error) {
-      throw error;
-    }
-    
-    toast({
-      title: "Invitation Deleted",
-      description: "Your invitation has been deleted.",
-    });
-    
-    return true;
-  } catch (error) {
-    console.error('Error deleting invitation:', error);
-    toast({
-      title: "Failed to Delete Invitation",
-      description: error instanceof Error ? error.message : "An unknown error occurred",
-      variant: "destructive",
-    });
-    return false;
-  }
-};
-
-/**
- * Toggle invitation public status
- */
-export const toggleInvitationPublicStatus = async (id: string, isPublic: boolean): Promise<UISimpleInvitation | null> => {
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session) {
-      throw new Error("Authentication required");
-    }
-    
-    const tableName = 'invitations';
-    
-    // Create appropriate column mapping for the public status
-    const updateData = {
-      updated_at: new Date().toISOString()
-      // The isPublic field will need to be mapped to the correct column in the database
-      // If needed, add the correct column name here based on your database schema
+    // Transform to SimpleInvitation type
+    const invitation: SimpleInvitation = {
+      id: updatedInvitation.id,
+      title: updatedInvitation.title,
+      description: updatedInvitation.description || '',
+      location: updatedInvitation.location || '',
+      locationTitle: updatedInvitation.locationTitle || '',
+      date: updatedInvitation.datetime ? new Date(updatedInvitation.datetime).toISOString().split('T')[0] : undefined,
+      time: updatedInvitation.datetime ? new Date(updatedInvitation.datetime).toISOString().split('T')[1].substring(0, 5) : undefined,
+      customization: {
+        background: {
+          type: updatedInvitation.background_type || 'solid',
+          value: updatedInvitation.background_value || '#ffffff',
+        },
+        font: {
+          family: updatedInvitation.font_family || 'system-ui, sans-serif',
+          size: updatedInvitation.font_size || 'medium',
+          color: updatedInvitation.text_color || '#000000',
+          alignment: 'center',
+        },
+      },
+      isEvent: updatedInvitation.is_event || false
     };
     
-    const { data, error } = await supabase
-      .from(tableName)
-      .update(updateData)
-      .eq('id', id)
-      .eq('user_id', session.user.id) // Ensure user owns this invitation
-      .select()
-      .single();
-    
-    if (error) {
-      throw error;
-    }
-    
-    toast({
-      title: isPublic ? "Invitation Published" : "Invitation Unpublished",
-      description: isPublic 
-        ? "Your invitation is now publicly accessible via link" 
-        : "Your invitation is no longer publicly accessible",
-    });
-    
-    return data ? mapDbInvitationToUI(data as SimpleInvitation) : null;
+    return invitation;
   } catch (error) {
-    console.error('Error toggling invitation public status:', error);
-    toast({
-      title: "Failed to Update Invitation",
-      description: error instanceof Error ? error.message : "An unknown error occurred",
-      variant: "destructive",
-    });
+    console.error('Error in updateSimpleInvitation:', error);
     return null;
   }
-};
+}
