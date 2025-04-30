@@ -1,47 +1,83 @@
 
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { MapPin } from 'lucide-react';
-import { formatLocation } from '@/utils/locationUtils';
-import LocationDialog from './LocationDialog';
+import { isValidMapsUrl } from "@/utils/locationUtils";
 
 interface LocationPickerProps {
-  value: string;
-  onChange: (location: string, type?: 'manual' | 'google_maps', url?: string, title?: string) => void;
-  locationTitle?: string;
-  className?: string;
-  placeholder?: string;
+  location: string;
+  locationTitle: string;
+  onLocationChange: (location: string, locationTitle: string) => void;
 }
 
 const LocationPicker: React.FC<LocationPickerProps> = ({
-  value,
-  onChange,
+  location,
   locationTitle,
-  className = '',
-  placeholder = "Add location",
+  onLocationChange
 }) => {
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const formattedLocation = formatLocation(value);
-
+  const [locationInput, setLocationInput] = useState(location);
+  const [titleInput, setTitleInput] = useState(locationTitle);
+  const [isValidUrl, setIsValidUrl] = useState(isValidMapsUrl(location));
+  
+  const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newLocation = e.target.value;
+    setLocationInput(newLocation);
+    setIsValidUrl(isValidMapsUrl(newLocation));
+    onLocationChange(newLocation, titleInput);
+  };
+  
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newTitle = e.target.value;
+    setTitleInput(newTitle);
+    onLocationChange(locationInput, newTitle);
+  };
+  
   return (
-    <div className={`${className}`}>
-      <Button
-        type="button"
-        variant="outline"
-        className={`w-full flex items-start justify-start gap-2 h-auto py-2 px-3 ${!value ? 'text-muted-foreground' : ''}`}
-        onClick={() => setDialogOpen(true)}
-      >
-        <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
-        <span className="text-left">
-          {locationTitle || formattedLocation || placeholder}
-        </span>
-      </Button>
-
-      <LocationDialog 
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        onLocationSelect={onChange}
-      />
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="location-url">Google Maps URL</Label>
+        <div className="flex space-x-2">
+          <Input
+            id="location-url"
+            value={locationInput}
+            onChange={handleLocationChange}
+            placeholder="Paste a Google Maps URL"
+            className={`flex-1 ${!isValidUrl && locationInput ? 'border-red-500' : ''}`}
+          />
+          {isValidUrl && (
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => window.open(locationInput, '_blank')}
+              className="whitespace-nowrap"
+            >
+              <MapPin className="mr-2 h-4 w-4" />
+              Test Link
+            </Button>
+          )}
+        </div>
+        {!isValidUrl && locationInput && (
+          <p className="text-sm text-red-500">Please enter a valid Google Maps URL</p>
+        )}
+        <p className="text-xs text-muted-foreground">
+          Copy and paste a Google Maps URL to provide directions to your event location
+        </p>
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="location-title">Location Title (Optional)</Label>
+        <Input
+          id="location-title"
+          value={titleInput}
+          onChange={handleTitleChange}
+          placeholder="e.g., Company HQ, Main Entrance, etc."
+        />
+        <p className="text-xs text-muted-foreground">
+          Add a friendly name for the location that will be displayed to attendees
+        </p>
+      </div>
     </div>
   );
 };
