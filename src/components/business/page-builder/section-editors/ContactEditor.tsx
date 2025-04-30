@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useSectionEditor } from "@/hooks/useSectionEditor";
 import { Input } from "@/components/ui/input";
@@ -42,6 +43,11 @@ const ContactEditor: React.FC<ContactEditorProps> = ({ contentData, handleInputC
   // Modified handlers for standard inputs to match the expected function signature
   const handleStandardInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     handleInputChange(e.target.name || e.target.id, e.target.value);
+  };
+
+  // Create an adapter function for LocationPicker's onChange
+  const handleLocationChange = (location: string, locationTitle: string) => {
+    handleInputChange('address', location);
   };
 
   return (
@@ -125,9 +131,7 @@ const ContactEditor: React.FC<ContactEditorProps> = ({ contentData, handleInputC
             <LocationPicker 
               location={contentData.address || ''} 
               locationTitle="" 
-              onLocationChange={(location) => handleInputChange('address', location)}
-              value={contentData.address}
-              onChange={handleInputChange}
+              onLocationChange={handleLocationChange}
               className="mt-2" 
             />
           </div>
