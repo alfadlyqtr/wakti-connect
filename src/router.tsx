@@ -1,251 +1,135 @@
-
-import React from "react";
-import { createBrowserRouter, RouteObject, Outlet } from "react-router-dom";
-import { publicRoutes } from "./routes/publicRoutes";
-import { authRoutes } from "./routes/authRoutes";
-import { businessRoutes, bookingRoutes } from "./routes/businessRoutes";
-import { superadminRoutes } from "./routes/superadminRoutes";
-import NotFound from "./pages/NotFound";
-import PublicLayout from "./components/layout/PublicLayout";
-import DashboardLayout from "./components/dashboard/DashboardLayout";
-import ProtectedRoute from "./components/auth/ProtectedRoute";
-import SuperAdminGuard from "./components/auth/SuperAdminGuard";
-import SuperAdminLayout from "./components/superadmin/SuperAdminLayout";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import ScrollToTop from "./components/ui/scroll-to-top";
-import { TaskProvider } from "@/contexts/TaskContext";
-import NotificationListener from "./components/notifications/NotificationListener";
-import ErrorBoundary from "./components/ui/ErrorBoundary";
-
-// Lazy load dashboard pages
-import { lazy, Suspense } from "react";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
-
-// Dashboard pages with lazy loading
-const DashboardHome = lazy(() => import("@/pages/dashboard/DashboardHome"));
-const DashboardTasks = lazy(() => import("@/pages/dashboard/DashboardTasks"));
-const DashboardEvents = lazy(() => import("@/pages/dashboard/DashboardEvents"));
-const DashboardServiceManagement = lazy(() => import("@/pages/dashboard/DashboardServiceManagement"));
-const DashboardStaffManagement = lazy(() => import("@/pages/dashboard/DashboardStaffManagement"));
-const DashboardBookings = lazy(() => import("@/pages/dashboard/DashboardBookings"));
-const DashboardMessages = lazy(() => import("@/pages/dashboard/DashboardMessages"));
-const DashboardNotifications = lazy(() => import("@/pages/dashboard/DashboardNotifications"));
-const DashboardAIAssistant = lazy(() => import("@/pages/dashboard/DashboardAIAssistant"));
-const DashboardSettings = lazy(() => import("@/pages/dashboard/DashboardSettings"));
-const DashboardHelp = lazy(() => import("@/pages/dashboard/DashboardHelp"));
-const DashboardContacts = lazy(() => import("@/pages/dashboard/DashboardContacts"));
-const StaffDashboard = lazy(() => import("@/pages/dashboard/StaffDashboard"));
-const DashboardJobs = lazy(() => import("@/pages/dashboard/DashboardJobs"));
-const DashboardJobCards = lazy(() => import("@/pages/dashboard/DashboardJobCards"));
-const DashboardMeetingSummary = lazy(() => import("@/pages/dashboard/MeetingSummary"));
-const MessagesConversation = lazy(() => import("@/pages/dashboard/MessagesConversation"));
-
-// Wrap components with Suspense for lazy loading
-const withSuspense = (Component: React.ComponentType) => (
-  <Suspense fallback={<LoadingSpinner />}>
-    <Component />
-  </Suspense>
-);
-
-// Define dashboard routes
-const dashboardRoutes: RouteObject[] = [
-  {
-    index: true,
-    element: withSuspense(DashboardHome),
-  },
-  {
-    path: "tasks/*",
-    element: withSuspense(DashboardTasks),
-  },
-  {
-    path: "events",
-    element: withSuspense(DashboardEvents),
-  },
-  {
-    path: "services",
-    element: withSuspense(DashboardServiceManagement),
-  },
-  {
-    path: "staff",
-    element: withSuspense(DashboardStaffManagement),
-  },
-  {
-    path: "staff-dashboard",
-    element: withSuspense(StaffDashboard),
-  },
-  {
-    path: "bookings",
-    element: withSuspense(DashboardBookings),
-  },
-  {
-    path: "messages",
-    element: withSuspense(DashboardMessages),
-  },
-  {
-    path: "messages/:userId",
-    element: withSuspense(MessagesConversation),
-  },
-  {
-    path: "notifications",
-    element: withSuspense(DashboardNotifications),
-  },
-  {
-    path: "ai-assistant",
-    element: withSuspense(DashboardAIAssistant),
-  },
-  {
-    path: "settings",
-    element: withSuspense(DashboardSettings),
-  },
-  {
-    path: "help",
-    element: withSuspense(DashboardHelp),
-  },
-  {
-    path: "contacts",
-    element: withSuspense(DashboardContacts),
-  },
-  {
-    path: "jobs",
-    element: withSuspense(DashboardJobs),
-  },
-  {
-    path: "job-cards",
-    element: withSuspense(DashboardJobCards),
-  },
-  {
-    path: "meeting-summary",
-    element: withSuspense(DashboardMeetingSummary),
-  },
-];
+import { createBrowserRouter } from 'react-router-dom';
+import App from './App';
+import CreateInvitationPage from './pages/invitations/CreateInvitationPage';
+import InvitationsListPage from './pages/invitations/InvitationsListPage';
+import SharedInvitationPage from './pages/invitations/SharedInvitationPage';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+import Dashboard from './pages/dashboard/Dashboard';
+import DashboardTasks from './pages/dashboard/DashboardTasks';
+import DashboardEvents from './pages/dashboard/DashboardEvents';
+import DashboardBookings from './pages/dashboard/DashboardBookings';
+import DashboardJobs from './pages/dashboard/DashboardJobs';
+import DashboardServices from './pages/dashboard/DashboardServices';
+import DashboardStaff from './pages/dashboard/DashboardStaff';
+import DashboardBusinessPage from './pages/dashboard/DashboardBusinessPage';
+import DashboardAnalytics from './pages/dashboard/DashboardAnalytics';
+import DashboardReports from './pages/dashboard/DashboardReports';
+import DashboardSettings from './pages/dashboard/DashboardSettings';
+import DashboardHelp from './pages/dashboard/DashboardHelp';
+import AiAssistant from './pages/dashboard/AiAssistant';
+import MeetingSummary from './pages/dashboard/MeetingSummary';
+import NotificationsPage from './pages/dashboard/NotificationsPage';
+import MessagesPage from './pages/dashboard/MessagesPage';
+import ContactsPage from './pages/dashboard/ContactsPage';
+import StaffDashboard from './pages/dashboard/StaffDashboard';
+import DashboardWorkManagement from './pages/dashboard/DashboardWorkManagement';
+import EventDetailPage from './pages/events/EventDetailPage';
+import EditEventPage from './pages/events/EditEventPage';
 
 export const router = createBrowserRouter([
-  // Auth routes
   {
-    path: "/auth",
-    element: (
-      <ErrorBoundary>
-        <TooltipProvider>
-          <ScrollToTop />
-          <Toaster />
-          <Sonner />
-          <Outlet />
-        </TooltipProvider>
-      </ErrorBoundary>
-    ),
-    children: authRoutes,
+    path: '/',
+    element: <App />,
+    children: [
+      {
+        path: "dashboard",
+        element: <ProtectedRoute><Dashboard /></ProtectedRoute>,
+      },
+      {
+        path: "dashboard/tasks",
+        element: <ProtectedRoute><DashboardTasks /></ProtectedRoute>,
+      },
+      {
+        path: "dashboard/events",
+        element: <ProtectedRoute><DashboardEvents /></ProtectedRoute>,
+      },
+      {
+        path: "dashboard/events/:eventId",
+        element: <ProtectedRoute><EventDetailPage /></ProtectedRoute>,
+      },
+      {
+        path: "dashboard/events/:eventId/edit",
+        element: <ProtectedRoute><EditEventPage /></ProtectedRoute>,
+      },
+      {
+        path: "dashboard/bookings",
+        element: <ProtectedRoute><DashboardBookings /></ProtectedRoute>,
+      },
+      {
+        path: "dashboard/jobs",
+        element: <ProtectedRoute><DashboardJobs /></ProtectedRoute>,
+      },
+      {
+        path: "dashboard/services",
+        element: <ProtectedRoute><DashboardServices /></ProtectedRoute>,
+      },
+      {
+        path: "dashboard/staff",
+        element: <ProtectedRoute><DashboardStaff /></ProtectedRoute>,
+      },
+      {
+        path: "dashboard/business-page",
+        element: <ProtectedRoute><DashboardBusinessPage /></ProtectedRoute>,
+      },
+      {
+        path: "dashboard/analytics",
+        element: <ProtectedRoute><DashboardAnalytics /></ProtectedRoute>,
+      },
+      {
+        path: "dashboard/reports",
+        element: <ProtectedRoute><DashboardReports /></ProtectedRoute>,
+      },
+      {
+        path: "dashboard/settings",
+        element: <ProtectedRoute><DashboardSettings /></ProtectedRoute>,
+      },
+      {
+        path: "dashboard/help",
+        element: <ProtectedRoute><DashboardHelp /></ProtectedRoute>,
+      },
+      {
+        path: "dashboard/ai-assistant",
+        element: <ProtectedRoute><AiAssistant /></ProtectedRoute>,
+      },
+      {
+        path: "dashboard/meeting-summary",
+        element: <ProtectedRoute><MeetingSummary /></ProtectedRoute>,
+      },
+      {
+        path: "dashboard/notifications",
+        element: <ProtectedRoute><NotificationsPage /></ProtectedRoute>,
+      },
+      {
+        path: "dashboard/messages",
+        element: <ProtectedRoute><MessagesPage /></ProtectedRoute>,
+      },
+      {
+        path: "dashboard/contacts",
+        element: <ProtectedRoute><ContactsPage /></ProtectedRoute>,
+      },
+      {
+        path: "dashboard/staff-dashboard",
+        element: <ProtectedRoute><StaffDashboard /></ProtectedRoute>,
+      },
+      {
+        path: "dashboard/work-management",
+        element: <ProtectedRoute><DashboardWorkManagement /></ProtectedRoute>,
+      },
+      
+      // Add new invitation routes
+      {
+        path: "invitations",
+        element: <ProtectedRoute><InvitationsListPage /></ProtectedRoute>,
+      },
+      {
+        path: "invitations/new",
+        element: <ProtectedRoute><CreateInvitationPage /></ProtectedRoute>,
+      },
+    ],
   },
-  
-  // Public routes wrapped in PublicLayout
+  // Public shared invitation route - outside of main layout
   {
-    path: "/",
-    element: (
-      <ErrorBoundary>
-        <TooltipProvider>
-          <TaskProvider>
-            <ScrollToTop />
-            <NotificationListener />
-            <Toaster />
-            <Sonner />
-            <PublicLayout />
-          </TaskProvider>
-        </TooltipProvider>
-      </ErrorBoundary>
-    ),
-    children: publicRoutes,
-  },
-  
-  // Booking routes
-  {
-    path: "/booking",
-    element: (
-      <ErrorBoundary>
-        <TooltipProvider>
-          <TaskProvider>
-            <ScrollToTop />
-            <NotificationListener />
-            <Toaster />
-            <Sonner />
-          </TaskProvider>
-        </TooltipProvider>
-      </ErrorBoundary>
-    ),
-    children: bookingRoutes,
-  },
-  
-  // Business routes
-  {
-    path: "/business",
-    element: (
-      <ErrorBoundary>
-        <TooltipProvider>
-          <TaskProvider>
-            <ScrollToTop />
-            <NotificationListener />
-            <Toaster />
-            <Sonner />
-          </TaskProvider>
-        </TooltipProvider>
-      </ErrorBoundary>
-    ),
-    children: businessRoutes,
-  },
-  
-  // Dashboard routes with role-based protection
-  {
-    path: "/dashboard",
-    element: (
-      <ProtectedRoute>
-        <ErrorBoundary>
-          <TooltipProvider>
-            <TaskProvider>
-              <ScrollToTop />
-              <NotificationListener />
-              <Toaster />
-              <Sonner />
-              <DashboardLayout />
-            </TaskProvider>
-          </TooltipProvider>
-        </ErrorBoundary>
-      </ProtectedRoute>
-    ),
-    children: dashboardRoutes,
-  },
-  
-  // Super Admin Dashboard routes
-  {
-    path: "/gohabsgo",
-    element: (
-      <SuperAdminGuard>
-        <ErrorBoundary>
-          <TooltipProvider>
-            <TaskProvider>
-              <ScrollToTop />
-              <NotificationListener />
-              <Toaster />
-              <Sonner />
-              <SuperAdminLayout>
-                <></>
-              </SuperAdminLayout>
-            </TaskProvider>
-          </TooltipProvider>
-        </ErrorBoundary>
-      </SuperAdminGuard>
-    ),
-    children: superadminRoutes as RouteObject[],
-  },
-  
-  // 404 page
-  {
-    path: "*",
-    element: (
-      <ErrorBoundary>
-        <TooltipProvider>
-          <NotFound />
-        </TooltipProvider>
-      </ErrorBoundary>
-    ),
-  },
+    path: "/i/:shareId",
+    element: <SharedInvitationPage />,
+  }
 ]);

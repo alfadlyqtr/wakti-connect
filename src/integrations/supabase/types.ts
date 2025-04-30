@@ -1334,6 +1334,60 @@ export type Database = {
         }
         Relationships: []
       }
+      invitations: {
+        Row: {
+          background_type: string
+          background_value: string
+          created_at: string
+          datetime: string | null
+          description: string | null
+          font_family: string
+          font_size: string
+          id: string
+          location: string | null
+          location_url: string | null
+          share_link: string | null
+          text_color: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          background_type?: string
+          background_value?: string
+          created_at?: string
+          datetime?: string | null
+          description?: string | null
+          font_family?: string
+          font_size?: string
+          id?: string
+          location?: string | null
+          location_url?: string | null
+          share_link?: string | null
+          text_color?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          background_type?: string
+          background_value?: string
+          created_at?: string
+          datetime?: string | null
+          description?: string | null
+          font_family?: string
+          font_size?: string
+          id?: string
+          location?: string | null
+          location_url?: string | null
+          share_link?: string | null
+          text_color?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       job_cards: {
         Row: {
           created_at: string
