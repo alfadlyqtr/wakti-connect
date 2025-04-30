@@ -38,7 +38,7 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
   description,
   selectedDate
 }) => {
-  const [activeTab, setActiveTab] = React.useState('background');
+  const [activeTab, setActiveTab] = useState('background');
   const [isSaving, setIsSaving] = useState(false);
   const [lastSavedState, setLastSavedState] = useState<string>('');
   
@@ -50,25 +50,28 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
       buttons: {
         accept: customization.buttons?.accept?.background,
         decline: customization.buttons?.decline?.background
-      }
+      },
+      headerStyle: customization.headerStyle
     });
-    console.log("Customization updated:", customizationSummary);
+    
+    console.log("[CustomizeTab] Customization updated");
     
     // Update last saved state if current state differs
     if (lastSavedState && lastSavedState !== customizationSummary) {
-      console.log("Customization changed since last save");
+      console.log("[CustomizeTab] Customization changed since last save");
     }
   }, [customization, lastSavedState]);
 
-  // Improved save draft handler with state synchronization
+  // Enhanced save draft handler with improved state synchronization and error handling
   const onSaveDraft = useCallback(async () => {
     try {
       setIsSaving(true);
       
-      console.log("Saving draft with customization:", {
+      console.log("[CustomizeTab] Saving draft with customization:", {
         background: customization.background,
         font: customization.font,
-        buttons: customization.buttons
+        buttons: customization.buttons,
+        headerStyle: customization.headerStyle
       });
       
       // Create a snapshot of current state for comparison
@@ -78,10 +81,10 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
         buttons: {
           accept: customization.buttons?.accept?.background,
           decline: customization.buttons?.decline?.background
-        }
+        },
+        headerStyle: customization.headerStyle
       });
       
-      // Make sure customization is fully captured before saving
       if (handleSaveDraft) {
         // Show feedback to user
         toast({
@@ -89,18 +92,23 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
           description: "Your event customization is being saved"
         });
         
-        // Call the provided handler with current state
-        await Promise.resolve(handleSaveDraft());
-        
-        // Update last saved state after successful save
-        setLastSavedState(customizationSnapshot);
-        
-        // Show success message
-        toast({
-          title: "Draft saved",
-          description: "Your event has been saved as a draft",
-          variant: "success"
-        });
+        try {
+          // Call the provided handler with current state
+          await Promise.resolve(handleSaveDraft());
+          
+          // Update last saved state after successful save
+          setLastSavedState(customizationSnapshot);
+          
+          // Show success message
+          toast({
+            title: "Draft saved",
+            description: "Your event has been saved as a draft",
+            variant: "success"
+          });
+        } catch (error) {
+          console.error("Error in handleSaveDraft:", error);
+          throw error;
+        }
       } else {
         // Fallback if no handler provided
         toast({
@@ -123,19 +131,41 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
     }
   }, [customization, handleSaveDraft]);
 
-  // Event handler for next button
-  const onNextTab = () => {
-    if (handleNextTab) {
-      handleNextTab();
+  // Event handler for next button with error handling
+  const onNextTab = useCallback(() => {
+    try {
+      if (handleNextTab) {
+        handleNextTab();
+      }
+    } catch (error) {
+      console.error("Error navigating to next tab:", error);
+      toast({
+        title: "Navigation error",
+        description: "There was a problem moving to the next tab",
+        variant: "destructive"
+      });
     }
-  };
+  }, [handleNextTab]);
+
+  // Universal event stopper
+  const stopPropagation = useCallback((e: React.UIEvent) => {
+    e.stopPropagation();
+    if ('nativeEvent' in e) {
+      e.nativeEvent.stopImmediatePropagation();
+    }
+  }, []);
 
   return (
     <CustomizationProvider
       customization={customization}
       onCustomizationChange={onCustomizationChange}
     >
-      <div className="space-y-6">
+      <div 
+        className="space-y-6"
+        onClick={stopPropagation}
+        onMouseDown={stopPropagation}
+        onPointerDown={stopPropagation}
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-6">
             <Tabs 
@@ -179,7 +209,11 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
           <Button
             type="button"
             variant="outline"
-            onClick={onSaveDraft}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onSaveDraft();
+            }}
             className="px-4"
             disabled={isSaving}
           >
@@ -190,7 +224,11 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
           {handleNextTab && (
             <Button 
               type="button" 
-              onClick={onNextTab}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onNextTab();
+              }}
               className="px-6"
             >
               Next: Share

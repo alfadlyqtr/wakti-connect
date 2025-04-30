@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -32,38 +32,49 @@ export const TextColorPicker: React.FC<TextColorPickerProps> = ({
     '#9900FF', '#FF00FF', '#FF0099'
   ];
   
-  // Handle local color change
-  const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle local color change with proper event handling
+  const handleColorChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
     e.stopPropagation();
     const newColor = e.target.value;
     setColor(newColor);
     onChange(newColor);
-  };
+  }, [onChange]);
   
-  // Handle preset color selection
-  const handlePresetClick = (presetColor: string, e: React.MouseEvent) => {
+  // Handle preset color selection with proper event handling
+  const handlePresetClick = useCallback((presetColor: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setColor(presetColor);
     onChange(presetColor);
-  };
+  }, [onChange]);
   
   // Handle popover open state
-  const handleOpenChange = (open: boolean) => {
+  const handleOpenChange = useCallback((open: boolean) => {
     setIsOpen(open);
-  };
+  }, []);
 
-  // Stop propagation on container to prevent clicking through
-  const handleContainerClick = (e: React.MouseEvent) => {
+  // Handler for container click to prevent propagation
+  const stopPropagation = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-  };
+    e.nativeEvent.stopImmediatePropagation();
+  }, []);
 
   return (
-    <div className="space-y-2" onClick={handleContainerClick}>
+    <div 
+      className="space-y-2" 
+      onClick={stopPropagation}
+      onMouseDown={stopPropagation}
+      onPointerDown={stopPropagation}
+    >
       {label && <Label className="text-sm">{label}</Label>}
       
-      <div className="flex gap-2 items-center relative" onClick={handleContainerClick}>
+      <div 
+        className="flex gap-2 items-center relative"
+        onClick={stopPropagation}
+        onMouseDown={stopPropagation}
+        onPointerDown={stopPropagation}
+      >
         <Popover open={isOpen} onOpenChange={handleOpenChange}>
           <PopoverTrigger asChild>
             <Button
@@ -73,26 +84,36 @@ export const TextColorPicker: React.FC<TextColorPickerProps> = ({
               style={{ backgroundColor: color }}
               onClick={(e) => {
                 e.stopPropagation();
+                e.nativeEvent.stopImmediatePropagation();
               }}
+              onMouseDown={stopPropagation}
+              onPointerDown={stopPropagation}
             >
               <span className="sr-only">Pick a color</span>
             </Button>
           </PopoverTrigger>
           <PopoverContent 
             className="w-auto p-3 border-2 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-            onPointerDown={(e) => e.stopPropagation()}
-            onPointerDownOutside={(e) => e.stopPropagation()}
-            onInteractOutside={(e) => e.stopPropagation()}
+            onClick={stopPropagation}
+            onPointerDown={stopPropagation}
+            onKeyDown={(e) => e.stopPropagation()}
+            style={{ zIndex: 99999 }}
           >
-            <div className="flex flex-col gap-4" onClick={(e) => e.stopPropagation()}>
+            <div 
+              className="flex flex-col gap-4" 
+              onClick={stopPropagation}
+              onMouseDown={stopPropagation}
+              onPointerDown={stopPropagation}
+            >
               <input
                 type="color"
                 value={color}
                 onChange={handleColorChange}
                 className="w-32 h-32 cursor-pointer"
-                onClick={(e) => e.stopPropagation()}
-                onPointerDown={(e) => e.stopPropagation()}
+                onClick={stopPropagation}
+                onMouseDown={stopPropagation}
+                onPointerDown={stopPropagation}
+                onKeyDown={(e) => e.stopPropagation()}
               />
               
               <div className="grid grid-cols-8 gap-1">
@@ -104,7 +125,8 @@ export const TextColorPicker: React.FC<TextColorPickerProps> = ({
                     }`}
                     style={{ backgroundColor: presetColor }}
                     onClick={(e) => handlePresetClick(presetColor, e)}
-                    onMouseDown={(e) => e.stopPropagation()}
+                    onMouseDown={stopPropagation}
+                    onPointerDown={stopPropagation}
                   />
                 ))}
               </div>
@@ -117,7 +139,10 @@ export const TextColorPicker: React.FC<TextColorPickerProps> = ({
           value={color}
           onChange={handleColorChange}
           className="w-28"
-          onClick={(e) => e.stopPropagation()}
+          onClick={stopPropagation}
+          onMouseDown={stopPropagation}
+          onPointerDown={stopPropagation}
+          onKeyDown={(e) => e.stopPropagation()}
         />
       </div>
     </div>

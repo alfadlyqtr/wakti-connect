@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -32,53 +32,52 @@ const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
   // Update active tab when backgroundType changes from parent
   useEffect(() => {
     if (backgroundType) {
-      setActiveTab(backgroundType);
+      const tabType = backgroundType === 'solid' ? 'color' : backgroundType;
+      setActiveTab(tabType);
     }
   }, [backgroundType]);
 
-  const handleTabChange = (value: string) => {
+  const handleTabChange = useCallback((value: string) => {
     setActiveTab(value);
+    
     // Set a default value when changing tabs
     if (value === 'color') {
-      onBackgroundChange('color', '#ffffff');
-    } else if (value === 'image' && !backgroundValue.startsWith('data:') && !backgroundValue.startsWith('http')) {
-      onBackgroundChange('image', '');
+      onBackgroundChange('color', backgroundValue === '' ? '#ffffff' : backgroundValue);
+    } else if (value === 'image') {
+      if (!backgroundValue || (!backgroundValue.startsWith('data:') && !backgroundValue.startsWith('http'))) {
+        onBackgroundChange('image', '');
+      }
     }
-  };
+  }, [backgroundValue, onBackgroundChange]);
 
-  // Handler for color tab changes
-  const handleColorChange = (value: string) => {
+  // Handler for color tab changes with strict event handling
+  const handleColorChange = useCallback((value: string) => {
     onBackgroundChange('color', value);
-  };
+  }, [onBackgroundChange]);
 
-  // Handler for image tab changes
-  const handleImageChange = (value: string) => {
+  // Handler for image tab changes with strict event handling
+  const handleImageChange = useCallback((value: string) => {
     onBackgroundChange('image', value);
-  };
+  }, [onBackgroundChange]);
 
-  // Completely rewritten AI background generation handler to guarantee event capturing
-  const handleGenerateAIBackground = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  // AI background generation with explicit event control
+  const handleGenerateAIBackground = useCallback((e: React.MouseEvent) => {
+    // Prevent default and stop propagation on all levels
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      e.nativeEvent.stopImmediatePropagation();
+    }
     
-    console.log("Generating AI background with explicit event handling...");
+    console.log("AI Background generation triggered with strict event control");
     
-    // Make sure to activate the image tab first
+    // First make sure we're on the image tab
     if (activeTab !== 'image') {
       setActiveTab('image');
-      
-      // Allow tab change to complete before triggering generation
-      setTimeout(() => {
-        if (onGenerateAIBackground) {
-          onGenerateAIBackground();
-        } else {
-          toast({
-            title: "AI Background Generation",
-            description: "This feature is not available yet."
-          });
-        }
-      }, 50);
-    } else {
+    }
+    
+    // Trigger generation with a slight delay to ensure tab change is complete
+    setTimeout(() => {
       if (onGenerateAIBackground) {
         onGenerateAIBackground();
       } else {
@@ -87,11 +86,24 @@ const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
           description: "This feature is not available yet."
         });
       }
+    }, 50);
+  }, [activeTab, onGenerateAIBackground]);
+
+  // Universal event stopper
+  const stopPropagation = useCallback((e: React.UIEvent) => {
+    e.stopPropagation();
+    if ('nativeEvent' in e) {
+      e.nativeEvent.stopImmediatePropagation();
     }
-  };
+  }, []);
 
   return (
-    <div className="space-y-4" onClick={(e) => e.stopPropagation()}>
+    <div 
+      className="space-y-4" 
+      onClick={stopPropagation}
+      onMouseDown={stopPropagation}
+      onPointerDown={stopPropagation}
+    >
       <Label>Background</Label>
       
       <Tabs 
@@ -99,18 +111,33 @@ const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
         onValueChange={handleTabChange} 
         className="w-full relative"
       >
-        <TabsList className="grid grid-cols-2 w-full">
-          <TabsTrigger value="color" onClick={(e) => e.stopPropagation()}>
+        <TabsList 
+          className="grid grid-cols-2 w-full"
+          onClick={stopPropagation}
+        >
+          <TabsTrigger 
+            value="color" 
+            onClick={(e) => {
+              stopPropagation(e);
+              handleTabChange('color');
+            }}
+          >
             Solid Color
           </TabsTrigger>
-          <TabsTrigger value="image" onClick={(e) => e.stopPropagation()}>
+          <TabsTrigger 
+            value="image" 
+            onClick={(e) => {
+              stopPropagation(e);
+              handleTabChange('image');
+            }}
+          >
             Image
           </TabsTrigger>
         </TabsList>
         
         <TabsContent value="color" className="pt-4">
           <ColorTab 
-            value={backgroundType === 'color' ? backgroundValue : '#ffffff'} 
+            value={backgroundType === 'color' || backgroundType === 'solid' ? backgroundValue : '#ffffff'} 
             onChange={handleColorChange} 
           />
         </TabsContent>
@@ -123,11 +150,20 @@ const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
             description={description}
           />
           
-          <div className="mt-4 border-t pt-4" onClick={(e) => e.stopPropagation()}>
+          <div 
+            className="mt-4 border-t pt-4"
+            onClick={stopPropagation}
+            onMouseDown={stopPropagation}
+            onPointerDown={stopPropagation}
+          >
             <Button 
               variant="outline" 
               className="w-full flex items-center justify-center gap-2"
-              onClick={handleGenerateAIBackground}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleGenerateAIBackground(e);
+              }}
               disabled={isGenerating}
               type="button"
             >

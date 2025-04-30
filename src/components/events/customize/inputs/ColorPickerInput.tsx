@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -20,7 +20,6 @@ export const ColorPickerInput: React.FC<ColorPickerInputProps> = ({
 }) => {
   const [color, setColor] = useState(value || '#ffffff');
   const [isOpen, setIsOpen] = useState(false);
-  const colorRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
     if (value !== color) {
@@ -36,48 +35,63 @@ export const ColorPickerInput: React.FC<ColorPickerInputProps> = ({
     '#14B8A6', '#10B981', '#84CC16', '#EAB308', '#F97316', '#EF4444', '#EC4899'
   ];
   
-  const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle color change with proper event stopping
+  const handleColorChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
     e.stopPropagation();
+    e.nativeEvent.stopImmediatePropagation();
     const newColor = e.target.value;
     setColor(newColor);
     onChange(newColor);
-  };
+  }, [onChange]);
 
-  const handleHexInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle text input with proper event stopping
+  const handleHexInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
     e.stopPropagation();
+    e.nativeEvent.stopImmediatePropagation();
     const newColor = e.target.value;
     setColor(newColor);
     onChange(newColor);
-  };
+  }, [onChange]);
   
-  const handlePresetClick = (presetColor: string, e: React.MouseEvent) => {
+  // Handle preset click with proper event stopping
+  const handlePresetClick = useCallback((presetColor: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    e.nativeEvent.stopImmediatePropagation();
     setColor(presetColor);
     onChange(presetColor);
-  };
+  }, [onChange]);
   
   // Handle popover open state
-  const handleOpenChange = (open: boolean) => {
+  const handleOpenChange = useCallback((open: boolean) => {
     setIsOpen(open);
-  };
+  }, []);
 
-  // Stop propagation on container to prevent clicking through
-  const handleContainerClick = (e: React.MouseEvent) => {
+  // Universal event stopper
+  const stopPropagation = useCallback((e: React.UIEvent) => {
     e.stopPropagation();
-  };
+    if ('nativeEvent' in e) {
+      e.nativeEvent.stopImmediatePropagation();
+    }
+  }, []);
 
   return (
     <div 
       className={className}
-      ref={colorRef}
-      onClick={handleContainerClick}
+      onClick={stopPropagation}
+      onMouseDown={stopPropagation}
+      onPointerDown={stopPropagation}
     >
       {label && <Label className="mb-2 block">{label}</Label>}
       
-      <div className="flex items-center space-x-2" onClick={handleContainerClick}>
+      <div 
+        className="flex items-center space-x-2" 
+        onClick={stopPropagation}
+        onMouseDown={stopPropagation}
+        onPointerDown={stopPropagation}
+      >
         <Popover open={isOpen} onOpenChange={handleOpenChange}>
           <PopoverTrigger asChild>
             <Button 
@@ -85,29 +99,35 @@ export const ColorPickerInput: React.FC<ColorPickerInputProps> = ({
               variant="outline" 
               className="w-10 h-10 p-0 border-2"
               style={{ backgroundColor: color }}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-              }}
+              onClick={stopPropagation}
+              onMouseDown={stopPropagation}
+              onPointerDown={stopPropagation}
             >
               <span className="sr-only">Pick a color</span>
             </Button>
           </PopoverTrigger>
           <PopoverContent 
             className="w-auto p-3 border-2 shadow-xl" 
-            onClick={(e) => e.stopPropagation()}
-            onMouseDown={(e) => e.stopPropagation()}
-            onPointerDownOutside={(e) => e.stopPropagation()}
-            onInteractOutside={(e) => e.stopPropagation()}
+            onClick={stopPropagation}
+            onMouseDown={stopPropagation}
+            onPointerDown={stopPropagation}
+            onKeyDown={(e) => e.stopPropagation()}
+            style={{ zIndex: 99999 }}
           >
-            <div className="flex flex-col gap-3" onClick={(e) => e.stopPropagation()}>
+            <div 
+              className="flex flex-col gap-3" 
+              onClick={stopPropagation}
+              onMouseDown={stopPropagation}
+              onPointerDown={stopPropagation}
+            >
               <input
                 type="color"
                 value={color}
                 onChange={handleColorChange}
                 className="w-32 h-32 cursor-pointer"
-                onClick={(e) => e.stopPropagation()}
-                onPointerDown={(e) => e.stopPropagation()}
+                onClick={stopPropagation}
+                onMouseDown={stopPropagation}
+                onPointerDown={stopPropagation}
               />
               <div className="grid grid-cols-8 gap-1">
                 {colorPresets.map((presetColor) => (
@@ -118,7 +138,8 @@ export const ColorPickerInput: React.FC<ColorPickerInputProps> = ({
                     }`}
                     style={{ backgroundColor: presetColor }}
                     onClick={(e) => handlePresetClick(presetColor, e)}
-                    onMouseDown={(e) => e.stopPropagation()}
+                    onMouseDown={stopPropagation}
+                    onPointerDown={stopPropagation}
                   />
                 ))}
               </div>
@@ -132,7 +153,9 @@ export const ColorPickerInput: React.FC<ColorPickerInputProps> = ({
           onChange={handleHexInputChange}
           className="w-28"
           placeholder="#000000"
-          onClick={(e) => e.stopPropagation()}
+          onClick={stopPropagation}
+          onMouseDown={stopPropagation}
+          onPointerDown={stopPropagation}
         />
       </div>
     </div>

@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useCallback } from "react";
 import { Label } from "@/components/ui/label";
 
 interface ColorTabProps {
@@ -45,8 +45,40 @@ const ColorTab: React.FC<ColorTabProps> = ({
     "#0FA0CE"  // Bright Blue
   ];
 
+  // Enhanced handlers with proper event isolation
+  const handleColorInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onChange(e.target.value);
+  }, [onChange]);
+
+  const handleTextInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onChange(e.target.value);
+  }, [onChange]);
+
+  const handleColorButtonClick = useCallback((color: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onChange(color);
+  }, [onChange]);
+
+  // Universal event stopper
+  const stopPropagation = useCallback((e: React.UIEvent) => {
+    e.stopPropagation();
+    if ('nativeEvent' in e) {
+      e.nativeEvent.stopImmediatePropagation();
+    }
+  }, []);
+
   return (
-    <div className="space-y-4">
+    <div 
+      className="space-y-4" 
+      onClick={stopPropagation}
+      onMouseDown={stopPropagation}
+      onPointerDown={stopPropagation}
+    >
       <div>
         <Label htmlFor="color-picker" className="block mb-2">Choose Color</Label>
         <div className="flex gap-2">
@@ -54,15 +86,21 @@ const ColorTab: React.FC<ColorTabProps> = ({
             type="color"
             id="color-picker"
             value={value}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={handleColorInputChange}
             className="w-12 h-10 p-1 cursor-pointer rounded-md border"
+            onClick={stopPropagation}
+            onMouseDown={stopPropagation}
+            onPointerDown={stopPropagation}
           />
           <input
             type="text"
             value={value}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={handleTextInputChange}
             className="flex-1 h-10 px-3 py-2 border rounded-md"
             placeholder="#000000"
+            onClick={stopPropagation}
+            onMouseDown={stopPropagation}
+            onPointerDown={stopPropagation}
           />
         </div>
       </div>
@@ -78,7 +116,9 @@ const ColorTab: React.FC<ColorTabProps> = ({
                 value === color ? 'ring-2 ring-primary' : ''
               }`}
               style={{ backgroundColor: color }}
-              onClick={() => onChange(color)}
+              onClick={(e) => handleColorButtonClick(color, e)}
+              onMouseDown={stopPropagation}
+              onPointerDown={stopPropagation}
               aria-label={`Select color ${color}`}
             />
           ))}
@@ -96,7 +136,9 @@ const ColorTab: React.FC<ColorTabProps> = ({
                 value === color ? 'ring-2 ring-primary' : ''
               }`}
               style={{ backgroundColor: color }}
-              onClick={() => onChange(color)}
+              onClick={(e) => handleColorButtonClick(color, e)}
+              onMouseDown={stopPropagation}
+              onPointerDown={stopPropagation}
               aria-label={`Select color ${color}`}
             />
           ))}

@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { useCustomization } from "../context";
 import BackgroundSelector from "../BackgroundSelector";
 import { BackgroundType } from "@/types/event.types";
@@ -30,40 +30,8 @@ const detectEventType = (title: string = "", description: string = ""): string =
   return "event";
 };
 
-// Helper function to suggest keywords for the detected event type
-const getEventKeywords = (eventType: string): string[] => {
-  switch (eventType) {
-    case "wedding":
-      return ["romantic", "elegant", "floral", "celebration", "ceremonial", "love"];
-    case "birthday celebration":
-      return ["festive", "colorful", "joyful", "balloons", "celebration", "party"];
-    case "conference":
-      return ["professional", "business", "formal", "networking", "corporate"];
-    case "party":
-      return ["fun", "vibrant", "celebration", "festive", "lively", "energetic"];
-    case "dining event":
-      return ["culinary", "elegant", "gourmet", "cozy", "atmospheric", "food"];
-    case "concert":
-      return ["music", "excitement", "stage", "performance", "entertainment"];
-    case "travel event":
-      return ["scenic", "adventure", "exploration", "landscape", "journey"];
-    case "graduation ceremony":
-      return ["achievement", "academic", "formal", "celebration", "milestone"];
-    case "outdoor nature event":
-      return ["natural", "scenic", "peaceful", "lush", "organic", "greenery"];
-    default:
-      return ["professional", "appropriate", "engaging", "elegant"];
-  }
-};
-
 // Create an optimized prompt specifically for Runware
 const createRunwarePrompt = (eventType: string, title: string = "", description: string = ""): string => {
-  const keywords = getEventKeywords(eventType);
-  
-  // Select random keywords (between 2-4) to avoid overwhelming the model
-  const shuffled = [...keywords].sort(() => 0.5 - Math.random());
-  const selectedKeywords = shuffled.slice(0, Math.floor(Math.random() * 3) + 2);
-  
   // Base prompts optimized for Runware
   let basePrompt = "";
   
@@ -99,24 +67,21 @@ const createRunwarePrompt = (eventType: string, title: string = "", description:
       basePrompt = "Elegant event background with professional aesthetic for a digital card, 5.78\" x 2.82\".";
   }
   
-  // Create a concise, direct prompt with enough detail but not too verbose
-  let prompt = `${basePrompt} ${selectedKeywords.join(", ")}.`;
-  
-  // Add title if available (but keep it short)
+  // Add title if available
   if (title) {
-    prompt += ` For event: "${title.substring(0, 30)}"`;
+    basePrompt += ` For event: "${title.substring(0, 30)}"`;
   }
   
   // Add a very brief mention of description if available
   if (description && description.length > 5) {
     const shortDesc = description.substring(0, 40);
-    prompt += ` Theme: ${shortDesc}${shortDesc.length < description.length ? '...' : ''}`;
+    basePrompt += ` Theme: ${shortDesc}${shortDesc.length < description.length ? '...' : ''}`;
   }
   
-  // Add specific instructions for Runware image generation
-  prompt += " Perfect as event invitation background with space for text. Digital card format.";
+  // Add specific instructions for card background
+  basePrompt += " Digital invitation card background, landscape orientation, wide format with space for text overlay.";
   
-  return prompt;
+  return basePrompt;
 }
 
 const BackgroundTabContent: React.FC<BackgroundTabContentProps> = ({ title, description }) => {
@@ -133,15 +98,21 @@ const BackgroundTabContent: React.FC<BackgroundTabContentProps> = ({ title, desc
     return type === 'solid' ? 'color' : 'image';
   };
 
-  // Enhanced AI background generation using optimized prompt construction
-  const handleAIBackgroundGeneration = async (e?: React.MouseEvent) => {
+  // Enhanced AI background generation with proper error handling and state management
+  const handleAIBackgroundGeneration = useCallback(async (e?: React.MouseEvent) => {
     // Make sure to stop propagation if event is provided
     if (e) {
       e.preventDefault();
       e.stopPropagation();
+      
+      // Extra insurance against event bubbling
+      if (e.nativeEvent) {
+        e.nativeEvent.stopImmediatePropagation();
+      }
     }
     
     try {
+      // Show generating state
       setIsGenerating(true);
       
       // Detect the event type from title and description
@@ -152,12 +123,12 @@ const BackgroundTabContent: React.FC<BackgroundTabContentProps> = ({ title, desc
       
       toast({
         title: "Generating background",
-        description: "Please wait while we create a custom background for your event..."
+        description: "Please wait while we create a background for your event..."
       });
       
       console.log("Enhanced Runware prompt:", enhancedPrompt);
       
-      // Use the handleImageGeneration function with our Runware-optimized prompt
+      // Call the image generation with Runware-optimized settings
       const result = await handleImageGeneration(enhancedPrompt);
       
       if (result.success && result.imageUrl) {
@@ -184,10 +155,22 @@ const BackgroundTabContent: React.FC<BackgroundTabContentProps> = ({ title, desc
     } finally {
       setIsGenerating(false);
     }
-  };
+  }, [title, description, handleBackgroundChange]);
+
+  // Universal event stopper
+  const stopPropagation = useCallback((e: React.UIEvent) => {
+    e.stopPropagation();
+    if ('nativeEvent' in e) {
+      e.nativeEvent.stopImmediatePropagation();
+    }
+  }, []);
 
   return (
-    <div onClick={(e) => e.stopPropagation()}>
+    <div 
+      onClick={stopPropagation}
+      onMouseDown={stopPropagation}
+      onPointerDown={stopPropagation}
+    >
       <BackgroundSelector
         backgroundType={convertBackgroundTypeToUI(customization.background.type)}
         backgroundValue={customization.background.value}

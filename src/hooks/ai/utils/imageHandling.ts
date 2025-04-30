@@ -12,7 +12,7 @@ export interface GeneratedImageResult {
 
 /**
  * Handles image generation requests based on the user's prompt
- * Uses Runware API as the primary service, with no fallback
+ * Uses Runware API exclusively for optimal background generation
  */
 export async function handleImageGeneration(prompt: string): Promise<GeneratedImageResult> {
   try {
@@ -22,12 +22,12 @@ export async function handleImageGeneration(prompt: string): Promise<GeneratedIm
       throw new Error('Prompt cannot be empty');
     }
     
-    // Generate image using Runware service
+    // Generate image using Runware service with optimized settings for backgrounds
     console.log('[imageHandling] Calling Runware API with prompt:', prompt);
     const result = await runwareService.generateImage({
       positivePrompt: prompt,
       model: "runware:100@1", // Explicitly request Runware model
-      CFGScale: 12.0,
+      CFGScale: 12.0, 
       scheduler: "FlowMatchEulerDiscreteScheduler",
       strength: 0.9
     });
@@ -54,12 +54,7 @@ export async function handleImageGeneration(prompt: string): Promise<GeneratedIm
       console.error('[imageHandling] Error response:', error.response);
     }
     
-    // Only show toast if it's not coming from a component that will handle the error itself
-    toast({
-      title: "Image Generation Failed",
-      description: error.message || "Could not generate image with Runware. Please try again.",
-      variant: "destructive"
-    });
+    // Toast is handled by the calling component now
     
     return {
       imageUrl: '',

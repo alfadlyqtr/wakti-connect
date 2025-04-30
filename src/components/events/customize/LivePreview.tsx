@@ -45,37 +45,47 @@ const LivePreview: React.FC<LivePreviewProps> = ({
     return { backgroundColor: value || '#ffffff' };
   };
 
-  const cardStyle = {
+  // Card style enforces exact dimensions
+  const cardStyle: React.CSSProperties = {
     ...getBackgroundStyle(),
     color: customization.font?.color || '#333333',
     fontFamily: customization.font?.family || 'system-ui, sans-serif',
     fontSize: customization.font?.size || 'medium',
     padding: '1.5rem',
-    // Use exact dimensions for the card
     width: `${CARD_WIDTH_PX}px`,
     height: `${CARD_HEIGHT_PX}px`,
     display: 'flex',
-    flexDirection: 'column' as const,
+    flexDirection: 'column',
     gap: '0.75rem',
-    position: 'relative' as const,
+    position: 'relative',
     overflow: 'hidden',
-    // Set a max-width and max-height to ensure the card is responsive
+    // Prevent resizing while maintaining aspect ratio
     maxWidth: '100%',
-    maxHeight: '100%',
+    objectFit: 'contain',
+    transformOrigin: 'center',
+    transform: 'scale(1)',
+    boxSizing: 'border-box'
   };
 
-  // Responsive container style
-  const containerStyle = {
+  // Responsive container style to maintain aspect ratio
+  const containerStyle: React.CSSProperties = {
     width: '100%',
-    height: '100%',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    overflow: 'hidden',
+    position: 'relative',
+    aspectRatio: `${CARD_WIDTH_PX} / ${CARD_HEIGHT_PX}`,
+    overflow: 'hidden'
   };
 
   // Apply header style according to customization
   const renderHeader = () => {
+    const headerStyle = {
+      fontFamily: customization.headerFont?.family || 'system-ui, sans-serif',
+      color: customization.headerFont?.color || customization.font?.color,
+      fontWeight: customization.headerFont?.weight || 'bold',
+    };
+
     switch(customization.headerStyle) {
       case 'banner':
         return (
@@ -83,7 +93,7 @@ const LivePreview: React.FC<LivePreviewProps> = ({
                style={{ 
                  background: 'rgba(0,0,0,0.1)', 
                  borderBottom: '1px solid rgba(0,0,0,0.05)',
-                 fontFamily: customization.headerFont?.family
+                 ...headerStyle
                }}>
             <h2 className="text-xl font-semibold text-center">{title}</h2>
             <p className="text-xs opacity-80 text-center">{date}</p>
@@ -92,7 +102,7 @@ const LivePreview: React.FC<LivePreviewProps> = ({
       case 'minimal':
         return (
           <div className="flex flex-col items-center mb-2" 
-               style={{ fontFamily: customization.headerFont?.family }}>
+               style={headerStyle}>
             <div className="w-10 h-10 bg-gray-300 rounded-full mb-2 flex items-center justify-center">
               📅
             </div>
@@ -103,20 +113,32 @@ const LivePreview: React.FC<LivePreviewProps> = ({
       case 'simple':
       default:
         return (
-          <div style={{ fontFamily: customization.headerFont?.family }}>
+          <div style={headerStyle}>
             <h2 className="text-xl font-semibold">{title}</h2>
             <p className="text-xs opacity-80">{date}</p>
           </div>
         );
     }
   };
+  
+  const descriptionStyle = {
+    fontFamily: customization.descriptionFont?.family || customization.font?.family,
+    color: customization.descriptionFont?.color || customization.font?.color,
+    fontSize: customization.descriptionFont?.size || customization.font?.size
+  };
 
   return (
     <div style={containerStyle} className="preview-container">
-      <Card style={cardStyle} className="shadow-lg scale-[0.95] sm:scale-100 transform-gpu">
+      <Card 
+        style={cardStyle} 
+        className="shadow-lg transform-gpu"
+      >
         {renderHeader()}
         
-        <div style={{ fontFamily: customization.descriptionFont?.family }} className="flex-1 text-sm">
+        <div 
+          style={descriptionStyle} 
+          className="flex-1 text-sm"
+        >
           <p>{description}</p>
           {locationTitle ? (
             <div className="text-xs mt-2 opacity-70">
