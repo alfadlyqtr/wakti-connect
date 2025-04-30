@@ -1,35 +1,50 @@
 
 import React, { useState } from 'react';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { BackgroundType, ButtonShape, EventFormTab } from '@/types/event.types';
+import { Label } from '@/components/ui/label';
+import { Calendar } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { DatePicker } from '@/components/ui/date-picker';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { eventSchema, EventFormValues } from '@/types/event.types';
-import { createEvent } from '@/services/event/createService';
+import { Switch } from '@/components/ui/switch';
 import { toast } from '@/components/ui/use-toast';
-import { useNavigate } from 'react-router-dom';
-import LocationPicker from '../location/LocationPicker';
-import CustomizeTab from '../customize/CustomizeTab';
+import CalendarIntegrationButtons from '../calendar/CalendarIntegrationButtons';
 
-const EventCreationForm: React.FC = () => {
-  const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('details');
+interface EventCreationFormProps {
+  onCancel?: () => void;
+  onSuccess?: () => void;
+}
+
+const EventCreationForm: React.FC<EventCreationFormProps> = ({ onCancel, onSuccess }) => {
+  const [activeTab, setActiveTab] = useState<EventFormTab>("details");
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [startDate, setStartDate] = useState<Date>(new Date());
+  const [endDate, setEndDate] = useState<Date>(() => {
+    const date = new Date();
+    date.setHours(date.getHours() + 1);
+    return date;
+  });
+  const [isAllDay, setIsAllDay] = useState(false);
+  const [startTime, setStartTime] = useState("09:00");
+  const [endTime, setEndTime] = useState("10:00");
+  const [location, setLocation] = useState("");
+  const [locationTitle, setLocationTitle] = useState("");
+  const [locationType, setLocationType] = useState<'manual' | 'google_maps'>('manual');
+  const [mapsUrl, setMapsUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Default values for customization
-  const defaultCustomization = {
+  // Default customization state
+  const [customization, setCustomization] = useState({
     background: {
-      type: 'solid',
-      value: '#ffffff'
+      type: 'solid' as BackgroundType,
+      value: '#ffffff',
     },
     font: {
-      family: 'Inter, sans-serif',
-      size: '16px',
-      color: '#000000',
+      family: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      size: 'medium',
+      color: '#333333',
       weight: 'normal',
       alignment: 'left'
     },
@@ -37,251 +52,305 @@ const EventCreationForm: React.FC = () => {
       accept: {
         background: '#4CAF50',
         color: '#ffffff',
-        shape: 'rounded'
+        shape: 'rounded' as ButtonShape,
       },
       decline: {
         background: '#f44336',
         color: '#ffffff',
-        shape: 'rounded'
+        shape: 'rounded' as ButtonShape,
       }
     }
-  };
-  
-  const form = useForm<EventFormValues>({
-    resolver: zodResolver(eventSchema),
-    defaultValues: {
-      title: '',
-      description: '',
-      startDate: new Date(),
-      isAllDay: false,
-      location: '',
-      location_title: ''
-    }
   });
-  
-  // State for customization
-  const [customization, setCustomization] = useState(defaultCustomization);
-  
-  const handleNextTab = () => {
-    if (activeTab === 'details') {
-      setActiveTab('customize');
-    } else if (activeTab === 'customize') {
-      setActiveTab('share');
-    }
+
+  const handleLocationChange = (
+    newLocation: string,
+    type?: 'manual' | 'google_maps',
+    url?: string,
+    title?: string
+  ) => {
+    setLocation(newLocation);
+    if (type) setLocationType(type);
+    if (url) setMapsUrl(url);
+    if (title !== undefined) setLocationTitle(title);
   };
-  
-  const handlePrevTab = () => {
-    if (activeTab === 'customize') {
-      setActiveTab('details');
-    } else if (activeTab === 'share') {
-      setActiveTab('customize');
-    }
+
+  const handleCustomizationChange = (newCustomization: any) => {
+    setCustomization(newCustomization);
   };
-  
-  const onSubmit = async (formData: EventFormValues) => {
-    try {
-      setIsSubmitting(true);
-      
-      // Create the event data
-      const eventData = {
-        title: formData.title,
-        description: formData.description,
-        startDate: formData.startDate,
-        endDate: formData.endDate || formData.startDate,
-        isAllDay: formData.isAllDay || false,
-        location: formData.location,
-        location_title: formData.location_title,
-        customization
-      };
-      
-      const event = await createEvent(eventData);
-      
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!title.trim()) {
       toast({
-        title: "Event Created",
-        description: "Your event has been created successfully",
-      });
-      
-      // Navigate to the event view page
-      navigate(`/events/${event.id}`);
-    } catch (error) {
-      console.error('Error creating event:', error);
-      
-      toast({
-        title: "Failed to Create Event",
-        description: "There was an error creating your event. Please try again.",
+        title: "Error",
+        description: "Title is required",
         variant: "destructive",
       });
-    } finally {
-      setIsSubmitting(false);
+      return;
     }
+    
+    setIsSubmitting(true);
+    
+    // Prepare event data
+    const eventData = {
+      title,
+      description,
+      startDate,
+      endDate,
+      isAllDay,
+      location,
+      location_title: locationTitle,
+      customization
+    };
+    
+    // Mock submission (replace with actual API call)
+    setTimeout(() => {
+      console.log('Submitting event:', eventData);
+      
+      // Show success message
+      toast({
+        title: "Success!",
+        description: "Your event has been created",
+      });
+      
+      // Reset form or redirect
+      if (onSuccess) {
+        onSuccess();
+      }
+      
+      setIsSubmitting(false);
+    }, 1000);
   };
   
-  return (
-    <div className="space-y-6">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid grid-cols-3 w-full">
-          <TabsTrigger value="details">Details</TabsTrigger>
-          <TabsTrigger value="customize">Customize</TabsTrigger>
-          <TabsTrigger value="share">Share</TabsTrigger>
-        </TabsList>
-        
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <TabsContent value="details" className="space-y-6">
-              {/* Title */}
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Title</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Event title" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+  const renderActiveTab = () => {
+    switch (activeTab) {
+      case 'details':
+        return (
+          <div className="space-y-6">
+            {/* Title */}
+            <div className="space-y-2">
+              <Label htmlFor="title">Event Title *</Label>
+              <Input
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Enter event title"
               />
-              
-              {/* Description */}
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Event description" 
-                        className="min-h-[100px]"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              {/* Date/Time */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="startDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Start Date</FormLabel>
-                      <FormControl>
-                        <DatePicker date={field.value} setDate={field.onChange} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="endDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>End Date (Optional)</FormLabel>
-                      <FormControl>
-                        <DatePicker 
-                          date={field.value} 
-                          setDate={field.onChange}
-                          placeholder="Select end date" 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              {/* All Day Toggle */}
-              <FormField
-                control={form.control}
-                name="isAllDay"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center space-x-2">
-                    <FormControl>
-                      <Switch 
-                        checked={field.value} 
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <FormLabel className="!mt-0">All Day Event</FormLabel>
-                  </FormItem>
-                )}
-              />
-              
-              {/* Location */}
-              <div className="space-y-2">
-                <FormLabel>Location</FormLabel>
-                <LocationPicker 
-                  location={form.watch("location") || ""}
-                  locationTitle={form.watch("location_title") || ""}
-                  onLocationChange={(location, title) => {
-                    form.setValue("location", location);
-                    form.setValue("location_title", title);
-                  }}
-                />
-              </div>
-              
-              <div className="flex justify-end">
-                <Button 
-                  type="button" 
-                  onClick={handleNextTab}
-                >
-                  Next: Customize
-                </Button>
-              </div>
-            </TabsContent>
+            </div>
             
-            <TabsContent value="customize">
-              <CustomizeTab
-                customization={customization}
-                onCustomizationChange={setCustomization}
-                handleNextTab={handleNextTab}
-                handleSaveDraft={() => {
-                  toast({
-                    title: "Draft Saved",
-                    description: "Your event draft has been saved",
-                  });
-                }}
-                location={form.watch("location")}
-                locationTitle={form.watch("location_title")}
-                title={form.watch("title")}
-                description={form.watch("description")}
-                selectedDate={form.watch("startDate")}
+            {/* Description */}
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Add details about your event"
+                rows={4}
               />
-            </TabsContent>
+            </div>
             
-            <TabsContent value="share" className="space-y-6">
-              {/* Share content will be added here */}
-              <p className="text-center text-muted-foreground">
-                Finalize your event and share it with others.
+            {/* Date and Time */}
+            <div className="space-y-2">
+              <Label>Date *</Label>
+              <div>
+                <DatePicker 
+                  date={startDate} 
+                  setDate={setStartDate}
+                />
+              </div>
+            </div>
+            
+            {/* All Day Switch */}
+            <div className="flex items-center space-x-2">
+              <Switch 
+                id="all-day"
+                checked={isAllDay}
+                onCheckedChange={setIsAllDay}
+              />
+              <Label htmlFor="all-day">All day event</Label>
+            </div>
+            
+            {/* Time selection (if not all day) */}
+            {!isAllDay && (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="start-time">Start Time *</Label>
+                  <Input
+                    id="start-time"
+                    type="time"
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="end-time">End Time *</Label>
+                  <Input
+                    id="end-time"
+                    type="time"
+                    value={endTime}
+                    onChange={(e) => setEndTime(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
+            
+            {/* Location */}
+            <div className="space-y-2">
+              <Label htmlFor="location">Location</Label>
+              <Input
+                id="location"
+                value={location}
+                onChange={(e) => handleLocationChange(e.target.value, 'manual')}
+                placeholder="Enter location"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="location-title">Location Title (Optional)</Label>
+              <Input
+                id="location-title"
+                value={locationTitle}
+                onChange={(e) => setLocationTitle(e.target.value)}
+                placeholder="e.g., Conference Room A"
+              />
+            </div>
+          </div>
+        );
+      
+      case 'customize':
+        return (
+          <div className="space-y-6">
+            <h3 className="text-lg font-medium">Customize your event (Coming soon)</h3>
+            <p className="text-muted-foreground">
+              This section will allow you to customize the appearance of your event invitation.
+            </p>
+          </div>
+        );
+      
+      case 'share':
+        return (
+          <div className="space-y-6">
+            <h3 className="text-lg font-medium">Shareable Event</h3>
+            <p className="text-muted-foreground">
+              After creating your event, you'll be able to share it with others.
+            </p>
+            
+            <div className="border rounded-md p-4">
+              <h4 className="font-medium mb-2">Calendar Integration</h4>
+              <p className="text-sm text-muted-foreground mb-4">
+                Add this event to your calendar:
               </p>
               
-              <div className="flex justify-between">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={handlePrevTab}
-                >
-                  Back
-                </Button>
-                
-                <Button 
-                  type="submit" 
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? "Creating..." : "Create Event"}
-                </Button>
-              </div>
-            </TabsContent>
-          </form>
-        </Form>
-      </Tabs>
+              {/* Preview of calendar integration buttons */}
+              {startDate && endDate && (
+                <CalendarIntegrationButtons
+                  event={{
+                    id: 'preview',
+                    title,
+                    description,
+                    location,
+                    location_title: locationTitle,
+                    start_time: startDate.toISOString(),
+                    end_time: endDate.toISOString(),
+                    is_all_day: isAllDay,
+                    user_id: 'current-user',
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                    status: 'published',
+                    customization: customization as any
+                  }}
+                />
+              )}
+            </div>
+          </div>
+        );
+      
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="container mx-auto max-w-3xl p-6">
+      <h2 className="text-2xl font-bold mb-6">Create New Event</h2>
+      
+      <form onSubmit={handleSubmit}>
+        <div className="mb-8">
+          <div className="flex border-b">
+            <button
+              type="button"
+              className={`px-4 py-2 font-medium ${
+                activeTab === "details"
+                  ? "border-b-2 border-primary text-primary"
+                  : "text-gray-500"
+              }`}
+              onClick={() => setActiveTab("details")}
+            >
+              Details
+            </button>
+            <button
+              type="button"
+              className={`px-4 py-2 font-medium ${
+                activeTab === "customize"
+                  ? "border-b-2 border-primary text-primary"
+                  : "text-gray-500"
+              }`}
+              onClick={() => setActiveTab("customize")}
+            >
+              Customize
+            </button>
+            <button
+              type="button"
+              className={`px-4 py-2 font-medium ${
+                activeTab === "share"
+                  ? "border-b-2 border-primary text-primary"
+                  : "text-gray-500"
+              }`}
+              onClick={() => setActiveTab("share")}
+            >
+              Share
+            </button>
+          </div>
+          
+          <div className="py-6">{renderActiveTab()}</div>
+        </div>
+        
+        <div className="flex justify-between pt-4 border-t">
+          {onCancel && (
+            <Button variant="outline" onClick={onCancel} type="button">
+              Cancel
+            </Button>
+          )}
+          
+          <div className="flex space-x-2">
+            {activeTab !== "details" && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setActiveTab(activeTab === "customize" ? "details" : "customize")}
+              >
+                Previous
+              </Button>
+            )}
+            
+            {activeTab !== "share" ? (
+              <Button
+                type="button"
+                onClick={() => setActiveTab(activeTab === "details" ? "customize" : "share")}
+              >
+                Next
+              </Button>
+            ) : (
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Creating..." : "Create Event"}
+                <Calendar className="ml-2 h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+      </form>
     </div>
   );
 };

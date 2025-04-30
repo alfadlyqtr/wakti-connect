@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,12 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   const [locationInput, setLocationInput] = useState(location);
   const [titleInput, setTitleInput] = useState(locationTitle);
   const [isValidUrl, setIsValidUrl] = useState(isValidMapsUrl(location));
+  
+  useEffect(() => {
+    setLocationInput(location);
+    setTitleInput(locationTitle);
+    setIsValidUrl(isValidMapsUrl(location));
+  }, [location, locationTitle]);
   
   const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newLocation = e.target.value;

@@ -1,37 +1,56 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from '@/components/ui/button';
+import { isValidMapsUrl } from '@/utils/locationUtils';
+import LocationPicker from './LocationPicker';
 
 interface LocationDialogProps {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onLocationSelect: (location: string, type?: 'manual' | 'google_maps', url?: string, title?: string) => void;
+  onClose: () => void;
+  location: string;
+  locationTitle: string;
+  onLocationChange: (location: string, locationTitle: string) => void;
 }
 
 const LocationDialog: React.FC<LocationDialogProps> = ({
   open,
-  onOpenChange,
-  onLocationSelect
+  onClose,
+  location,
+  locationTitle,
+  onLocationChange
 }) => {
+  const handleSave = () => {
+    onClose();
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
-        <DialogTitle>Select Location</DialogTitle>
-        <div className="p-4">
-          <p className="text-center text-muted-foreground">
-            Location selection has been deprecated
-          </p>
-          <div className="mt-4 flex justify-end">
-            <button 
-              className="px-4 py-2 bg-primary text-white rounded" 
-              onClick={() => {
-                onLocationSelect('');
-                onOpenChange(false);
-              }}
-            >
-              Close
-            </button>
-          </div>
+        <DialogHeader>
+          <DialogTitle>Add Location</DialogTitle>
+        </DialogHeader>
+        
+        <div className="py-4">
+          <LocationPicker
+            location={location}
+            locationTitle={locationTitle}
+            onLocationChange={onLocationChange}
+          />
+        </div>
+        
+        <div className="flex justify-end space-x-2">
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button onClick={handleSave}>
+            Save Location
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

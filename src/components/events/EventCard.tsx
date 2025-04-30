@@ -18,7 +18,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, onEdit, onShare }) => {
   const startDate = event.start_time ? new Date(event.start_time) : null;
   const endDate = event.end_time ? new Date(event.end_time) : null;
   
-  // Get custom styling from event
+  // Get custom styling from event with default values if customization is missing
   const customization = event.customization || {};
   const background = customization.background || { type: 'solid', value: '#ffffff' };
   const textColor = customization.font?.color || '#000000';
