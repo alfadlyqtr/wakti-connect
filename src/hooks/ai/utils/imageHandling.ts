@@ -11,7 +11,7 @@ export interface GeneratedImageResult {
 
 /**
  * Handles image generation requests based on the user's prompt
- * Uses the consolidated ai-image-generation edge function
+ * Uses Runware API as the primary service, with fallback to OpenAI
  */
 export async function handleImageGeneration(prompt: string): Promise<GeneratedImageResult> {
   try {
@@ -21,12 +21,18 @@ export async function handleImageGeneration(prompt: string): Promise<GeneratedIm
       throw new Error('Prompt cannot be empty');
     }
     
-    // Generate image using the consolidated ai-image-generation edge function
+    // Generate image using the edge function that prioritizes Runware
     const result = await runwareService.generateImage({
-      positivePrompt: prompt
+      positivePrompt: prompt,
+      model: "runware:100@1", // Explicitly request Runware model
+      CFGScale: 12.0,
+      scheduler: "FlowMatchEulerDiscreteScheduler",
+      strength: 0.9
     });
     
-    console.log('[imageHandling] Image generation successful:', result);
+    // Add detailed logging for debugging
+    console.log('[imageHandling] Image generation successful with provider:', result.provider || 'unknown');
+    console.log('[imageHandling] Image URL:', result.imageURL);
     
     if (!result.imageURL) {
       throw new Error('No image URL returned from service');
@@ -40,10 +46,15 @@ export async function handleImageGeneration(prompt: string): Promise<GeneratedIm
   } catch (error: any) {
     console.error('[imageHandling] Image generation failed:', error);
     
+    // Log more detailed error information
+    if (error.response) {
+      console.error('[imageHandling] Error response:', error.response);
+    }
+    
     // Only show toast if it's not coming from a component that will handle the error itself
     toast({
       title: "Image Generation Failed",
-      description: error.message || "Could not generate image. Please try again.",
+      description: error.message || "Could not generate image with Runware. Please try again.",
       variant: "destructive"
     });
     

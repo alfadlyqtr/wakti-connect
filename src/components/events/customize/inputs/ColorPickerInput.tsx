@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -19,6 +19,14 @@ export const ColorPickerInput: React.FC<ColorPickerInputProps> = ({
   className
 }) => {
   const [color, setColor] = useState(value || '#ffffff');
+  const [isOpen, setIsOpen] = useState(false);
+  const colorRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    if (value !== color) {
+      setColor(value);
+    }
+  }, [value]);
   
   // Common color presets
   const colorPresets = [
@@ -29,52 +37,45 @@ export const ColorPickerInput: React.FC<ColorPickerInputProps> = ({
   ];
   
   const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.preventDefault();
     e.stopPropagation();
-    setColor(e.target.value);
-    onChange(e.target.value);
+    const newColor = e.target.value;
+    setColor(newColor);
+    onChange(newColor);
   };
 
   const handleHexInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.preventDefault();
     e.stopPropagation();
     const newColor = e.target.value;
     setColor(newColor);
     onChange(newColor);
   };
   
-  const handlePresetClick = (presetColor: string, e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handlePresetClick = (presetColor: string) => {
     setColor(presetColor);
     onChange(presetColor);
+  };
+  
+  // Handle popover open state
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
   };
 
   return (
     <div 
       className={className}
-      onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-      }}
+      ref={colorRef}
     >
       {label && <Label className="mb-2 block">{label}</Label>}
       
-      <div
-        className="flex items-center space-x-2"
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-        }}
-      >
-        <Popover>
+      <div className="flex items-center space-x-2">
+        <Popover open={isOpen} onOpenChange={handleOpenChange}>
           <PopoverTrigger asChild>
             <Button 
+              type="button"
               variant="outline" 
               className="w-10 h-10 p-0 border-2"
               style={{ backgroundColor: color }}
               onClick={(e) => {
-                e.preventDefault();
                 e.stopPropagation();
               }}
             >
@@ -82,30 +83,18 @@ export const ColorPickerInput: React.FC<ColorPickerInputProps> = ({
             </Button>
           </PopoverTrigger>
           <PopoverContent 
-            className="w-auto p-3 bg-popover" 
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-            onPointerDownOutside={(e) => e.preventDefault()}
-            onInteractOutside={(e) => e.preventDefault()}
+            className="w-auto p-3 border-2 shadow-xl" 
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
           >
-            <div 
-              className="flex flex-col gap-3" 
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-              }}
-            >
+            <div className="flex flex-col gap-3">
               <input
                 type="color"
                 value={color}
                 onChange={handleColorChange}
                 className="w-32 h-32 cursor-pointer"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
+                onClick={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
               />
               <div className="grid grid-cols-8 gap-1">
                 {colorPresets.map((presetColor) => (
@@ -115,7 +104,11 @@ export const ColorPickerInput: React.FC<ColorPickerInputProps> = ({
                       color === presetColor ? 'ring-2 ring-primary ring-offset-1' : ''
                     }`}
                     style={{ backgroundColor: presetColor }}
-                    onClick={(e) => handlePresetClick(presetColor, e)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePresetClick(presetColor);
+                    }}
+                    onMouseDown={(e) => e.stopPropagation()}
                   />
                 ))}
               </div>
@@ -129,10 +122,7 @@ export const ColorPickerInput: React.FC<ColorPickerInputProps> = ({
           onChange={handleHexInputChange}
           className="w-28"
           placeholder="#000000"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-          }}
+          onClick={(e) => e.stopPropagation()}
         />
       </div>
     </div>

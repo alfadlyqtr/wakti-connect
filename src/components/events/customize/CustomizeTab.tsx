@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { EventCustomization } from '@/types/event.types';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,6 @@ import {
   TextTabContent,
   ButtonsTabContent,
   HeaderTabContent,
-  CardEffectTabContent,
   FeaturesTabContent
 } from './tabs-content';
 
@@ -40,34 +39,57 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
   selectedDate
 }) => {
   const [activeTab, setActiveTab] = React.useState('background');
+  
+  // Debug customization state changes
+  useEffect(() => {
+    console.log("Customization updated:", JSON.stringify(customization).substring(0, 100) + "...");
+  }, [customization]);
 
-  // Improved save draft handler with explicit sync
-  const onSaveDraft = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    console.log("Saving draft with customization:", customization);
-    
-    // Make sure customization is fully captured before saving
-    if (handleSaveDraft) {
-      // Small delay to ensure all state updates have been processed
-      setTimeout(() => {
-        handleSaveDraft();
-      }, 100);
-    } else {
-      // Fallback if no handler provided
+  // Improved save draft handler with state synchronization
+  const onSaveDraft = async () => {
+    try {
+      console.log("Saving draft with customization:", {
+        background: customization.background,
+        font: customization.font,
+        buttons: customization.buttons
+      });
+      
+      // Make sure customization is fully captured before saving
+      if (handleSaveDraft) {
+        // Show feedback to user
+        toast({
+          title: "Saving draft...",
+          description: "Your event customization is being saved"
+        });
+        
+        // Call the provided handler
+        await Promise.resolve(handleSaveDraft());
+        
+        // Show success message
+        toast({
+          title: "Draft saved",
+          description: "Your event has been saved as a draft",
+          variant: "success"
+        });
+      } else {
+        // Fallback if no handler provided
+        toast({
+          title: "Draft saved",
+          description: "Your event has been saved as a draft",
+        });
+      }
+    } catch (error) {
+      console.error("Error saving draft:", error);
       toast({
-        title: "Draft saved",
-        description: "Your event has been saved as a draft",
+        title: "Save failed",
+        description: "There was a problem saving your draft",
+        variant: "destructive"
       });
     }
   };
 
-  // Event handler for next button with click propagation prevention
-  const onNextTab = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
+  // Event handler for next button
+  const onNextTab = () => {
     if (handleNextTab) {
       handleNextTab();
     }

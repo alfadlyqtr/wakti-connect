@@ -22,7 +22,7 @@ const PopoverContent = React.forwardRef<
         className
       )}
       onInteractOutside={(e) => {
-        // Prevent any outside interaction from bubbling up when popover is open
+        // Prevent closing when clicking outside to avoid click-through issues
         e.preventDefault();
       }}
       onOpenAutoFocus={(e) => {
@@ -32,6 +32,10 @@ const PopoverContent = React.forwardRef<
       onCloseAutoFocus={(e) => {
         // Prevent auto focus from bubbling on close
         e.preventDefault();
+      }}
+      // Increases z-index to make sure it's always on top
+      style={{
+        zIndex: 99999
       }}
       {...props}
     />

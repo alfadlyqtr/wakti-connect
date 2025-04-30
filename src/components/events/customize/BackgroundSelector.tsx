@@ -56,36 +56,39 @@ const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
     onBackgroundChange('image', value);
   };
 
-  // Improved AI background generation handler with guaranteed event handling
-  const handleGenerateAIBackground = (e: React.MouseEvent) => {
-    // Always prevent default and stop propagation
-    e.preventDefault();
-    e.stopPropagation();
+  // Improved AI background generation handler with guaranteed event capturing
+  const handleGenerateAIBackground = () => {
+    console.log("Generating AI background...");
     
     // Make sure to activate the image tab first
     if (activeTab !== 'image') {
       setActiveTab('image');
-    }
-    
-    if (onGenerateAIBackground) {
-      onGenerateAIBackground(e);
+      
+      // Allow tab change to complete before triggering generation
+      setTimeout(() => {
+        if (onGenerateAIBackground) {
+          onGenerateAIBackground();
+        } else {
+          toast({
+            title: "AI Background Generation",
+            description: "This feature is not available yet."
+          });
+        }
+      }, 50);
     } else {
-      // Fallback implementation if no handler is provided
-      toast({
-        title: "AI Background Generation",
-        description: "This feature is not available yet."
-      });
+      if (onGenerateAIBackground) {
+        onGenerateAIBackground();
+      } else {
+        toast({
+          title: "AI Background Generation",
+          description: "This feature is not available yet."
+        });
+      }
     }
   };
 
   return (
-    <div 
-      className="space-y-4" 
-      onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-      }}
-    >
+    <div className="space-y-4">
       <Label>Background</Label>
       
       <Tabs 
@@ -93,38 +96,23 @@ const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
         onValueChange={handleTabChange} 
         className="w-full relative"
       >
-        <TabsList 
-          className="grid grid-cols-2 w-full"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <TabsTrigger 
-            value="color" 
-            onClick={(e) => e.stopPropagation()}
-          >
+        <TabsList className="grid grid-cols-2 w-full">
+          <TabsTrigger value="color">
             Solid Color
           </TabsTrigger>
-          <TabsTrigger 
-            value="image" 
-            onClick={(e) => e.stopPropagation()}
-          >
+          <TabsTrigger value="image">
             Image
           </TabsTrigger>
         </TabsList>
         
-        <TabsContent 
-          value="color" 
-          className="pt-4" 
-        >
+        <TabsContent value="color" className="pt-4">
           <ColorTab 
             value={backgroundType === 'color' ? backgroundValue : '#ffffff'} 
             onChange={handleColorChange} 
           />
         </TabsContent>
         
-        <TabsContent 
-          value="image" 
-          className="pt-4"
-        >
+        <TabsContent value="image" className="pt-4">
           <ImageTab 
             value={backgroundType === 'image' ? backgroundValue : ''} 
             onChange={handleImageChange}
@@ -132,10 +120,10 @@ const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
             description={description}
           />
           
-          <div className="mt-4 border-t pt-4 relative">
+          <div className="mt-4 border-t pt-4">
             <Button 
               variant="outline" 
-              className="w-full flex items-center justify-center gap-2 relative"
+              className="w-full flex items-center justify-center gap-2"
               onClick={handleGenerateAIBackground}
               disabled={isGenerating}
               type="button"

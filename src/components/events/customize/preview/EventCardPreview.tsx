@@ -30,7 +30,13 @@ const EventCardPreview: React.FC<EventCardPreviewProps> = ({
       <h3 className="text-lg font-medium">Preview</h3>
       
       <Card className="overflow-hidden shadow-lg relative">
-        <CardContent className="p-0">
+        <CardContent className="p-0" style={{ 
+          // Set dimensions that match 5.78" × 2.82" at 96dpi (standard web)
+          width: "556px", 
+          height: "271px",
+          maxWidth: "100%",
+          aspectRatio: "556 / 271" 
+        }}>
           <LivePreview 
             customization={customization}
             title={title}
