@@ -102,3 +102,21 @@ export function formatStructuredAddress(address: {
   
   return formattedAddress;
 }
+
+/**
+ * Check if a URL is a valid Google Maps URL
+ */
+export function isValidMapsUrl(url: string): boolean {
+  if (!url) return false;
+  
+  // Check for common Google Maps URL patterns
+  const googleMapsPatterns = [
+    'google.com/maps',
+    'goo.gl/maps',
+    'maps.app.goo.gl',
+    'maps.google.com'
+  ];
+  
+  return googleMapsPatterns.some(pattern => url.includes(pattern));
+}
+
