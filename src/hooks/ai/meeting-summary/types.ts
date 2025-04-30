@@ -30,6 +30,8 @@ export interface IntakeData {
   date?: string;
   location?: string;
   language?: string;
+  attendees?: string;
+  notes?: string;
 }
 
 export interface MeetingSummaryPDFOptions {

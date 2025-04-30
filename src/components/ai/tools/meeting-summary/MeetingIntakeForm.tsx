@@ -10,15 +10,10 @@ import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { IntakeData } from "@/hooks/ai/meeting-summary/types";
 
 interface MeetingIntakeFormProps {
-  onSubmit: (data: {
-    title: string;
-    date: Date;
-    attendees: string;
-    notes: string;
-    location: string;
-  }) => void;
+  onSubmit: (data: IntakeData) => void;
   onSkip?: () => void;
 }
 
@@ -35,7 +30,7 @@ const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, onSkip 
     
     onSubmit({
       title,
-      date,
+      date: date.toISOString(),
       attendees,
       notes,
       location
@@ -81,6 +76,7 @@ const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, onSkip 
                   selected={date}
                   onSelect={setDate}
                   initialFocus
+                  className={cn("p-3 pointer-events-auto")}
                 />
               </PopoverContent>
             </Popover>

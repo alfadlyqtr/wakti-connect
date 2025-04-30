@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Card } from "@/components/ui/card";
-import { Container } from "@/components/ui/container";
+import Container from "@/components/ui/container";
 import { FeatureCallToAction } from "@/components/features/FeatureCallToAction";
 import { FeatureSection } from "@/components/ui/feature-section";
 import { CalendarDays, MessageSquare, Users, BarChart4, Sparkles, CheckCircle } from "lucide-react";

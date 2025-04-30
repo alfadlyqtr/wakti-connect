@@ -72,6 +72,7 @@ export const BusinessDashboardStats = () => {
     <>
       <SectionHeading
         title="Business Analytics"
+        subtitle="Your business performance at a glance"
         centered={false}
         className="mt-8 mb-4"
       />
