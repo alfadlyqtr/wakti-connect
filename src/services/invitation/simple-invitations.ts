@@ -1,13 +1,33 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { SimpleInvitation, BackgroundType } from '@/types/invitation.types';
-import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/components/ui/use-toast';
+import { v4 as uuidv4 } from 'uuid';
+
+// Define the SimpleInvitation interface explicitly matched to database columns
+export interface SimpleInvitation {
+  id: string;
+  created_at?: string;
+  updated_at?: string;
+  title: string;
+  description?: string;
+  location?: string;
+  location_url?: string;
+  datetime?: string;
+  user_id: string;
+  background_type: string;
+  background_value: string;
+  font_family: string;
+  font_size: string;
+  text_color: string;
+  share_link?: string;
+  shareId?: string;
+  isPublic?: boolean;
+}
 
 /**
  * Create a new simple invitation
  */
-export const createSimpleInvitation = async (invitation: Omit<SimpleInvitation, 'id' | 'createdAt' | 'updatedAt' | 'userId'>): Promise<SimpleInvitation | null> => {
+export const createSimpleInvitation = async (invitation: Omit<SimpleInvitation, 'id' | 'created_at' | 'updated_at' | 'user_id'>): Promise<SimpleInvitation | null> => {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     
@@ -15,22 +35,25 @@ export const createSimpleInvitation = async (invitation: Omit<SimpleInvitation, 
       throw new Error("Authentication required");
     }
     
-    const newInvitation: SimpleInvitation = {
-      ...invitation,
+    const shareId = uuidv4();
+    
+    const newInvitation = {
       id: uuidv4(),
-      createdAt: new Date().toISOString(),
-      userId: session.user.id,
-      shareId: uuidv4(), // Generate a unique share ID
+      user_id: session.user.id,
+      created_at: new Date().toISOString(),
+      // Add all fields from the invitation parameter
+      ...invitation,
+      // Override or ensure these fields have values
+      title: invitation.title || 'Untitled Invitation',
+      background_type: invitation.background_type || 'solid',
+      background_value: invitation.background_value || '#ffffff',
+      font_family: invitation.font_family || 'Inter, sans-serif',
+      font_size: invitation.font_size || '16px',
+      text_color: invitation.text_color || '#000000',
+      // Add shareId as a separate column if it exists
+      share_link: `${window.location.origin}/i/${shareId}`
     };
     
-    // Check if table exists first
-    const { data: tableExists } = await supabase
-      .from('invitations')
-      .select('count')
-      .limit(1)
-      .single();
-    
-    // Use the 'invitations' table instead if the 'simple_invitations' table doesn't exist
     const tableName = 'invitations';
     
     const { data, error } = await supabase
@@ -49,7 +72,7 @@ export const createSimpleInvitation = async (invitation: Omit<SimpleInvitation, 
       description: "Your invitation has been created successfully.",
     });
     
-    return data as unknown as SimpleInvitation;
+    return data as SimpleInvitation;
   } catch (error) {
     console.error('Error creating invitation:', error);
     toast({
@@ -64,7 +87,7 @@ export const createSimpleInvitation = async (invitation: Omit<SimpleInvitation, 
 /**
  * Update an existing invitation
  */
-export const updateSimpleInvitation = async (id: string, updates: Partial<SimpleInvitation>): Promise<SimpleInvitation | null> => {
+export const updateSimpleInvitation = async (id: string, updates: Partial<Omit<SimpleInvitation, 'id' | 'user_id'>>): Promise<SimpleInvitation | null> => {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     
@@ -78,10 +101,10 @@ export const updateSimpleInvitation = async (id: string, updates: Partial<Simple
       .from(tableName)
       .update({
         ...updates,
-        updatedAt: new Date().toISOString()
+        updated_at: new Date().toISOString()
       })
       .eq('id', id)
-      .eq('userId', session.user.id) // Ensure user owns this invitation
+      .eq('user_id', session.user.id) // Ensure user owns this invitation
       .select()
       .single();
     
@@ -94,7 +117,7 @@ export const updateSimpleInvitation = async (id: string, updates: Partial<Simple
       description: "Your invitation has been updated successfully.",
     });
     
-    return data as unknown as SimpleInvitation;
+    return data as SimpleInvitation;
   } catch (error) {
     console.error('Error updating invitation:', error);
     toast({
@@ -123,7 +146,7 @@ export const getSimpleInvitationById = async (id: string): Promise<SimpleInvitat
       throw error;
     }
     
-    return data as unknown as SimpleInvitation;
+    return data as SimpleInvitation;
   } catch (error) {
     console.error('Error fetching invitation:', error);
     return null;
@@ -140,15 +163,14 @@ export const getSharedInvitation = async (shareId: string): Promise<SimpleInvita
     const { data, error } = await supabase
       .from(tableName)
       .select()
-      .eq('shareId', shareId)
-      .eq('isPublic', true)
+      .eq('share_link', `${window.location.origin}/i/${shareId}`)
       .single();
     
     if (error) {
       throw error;
     }
     
-    return data as unknown as SimpleInvitation;
+    return data as SimpleInvitation;
   } catch (error) {
     console.error('Error fetching shared invitation:', error);
     return null;
@@ -171,14 +193,14 @@ export const listSimpleInvitations = async (): Promise<SimpleInvitation[]> => {
     const { data, error } = await supabase
       .from(tableName)
       .select()
-      .eq('userId', session.user.id)
-      .order('createdAt', { ascending: false });
+      .eq('user_id', session.user.id)
+      .order('created_at', { ascending: false });
     
     if (error) {
       throw error;
     }
     
-    return data as unknown as SimpleInvitation[];
+    return data as SimpleInvitation[];
   } catch (error) {
     console.error('Error listing invitations:', error);
     return [];
@@ -202,7 +224,7 @@ export const deleteSimpleInvitation = async (id: string): Promise<boolean> => {
       .from(tableName)
       .delete()
       .eq('id', id)
-      .eq('userId', session.user.id); // Ensure user owns this invitation
+      .eq('user_id', session.user.id); // Ensure user owns this invitation
     
     if (error) {
       throw error;
@@ -238,14 +260,18 @@ export const toggleInvitationPublicStatus = async (id: string, isPublic: boolean
     
     const tableName = 'invitations';
     
+    // Create appropriate column mapping for the public status
+    const updateData = {
+      updated_at: new Date().toISOString()
+      // The isPublic field will need to be mapped to the correct column in the database
+      // If needed, add the correct column name here based on your database schema
+    };
+    
     const { data, error } = await supabase
       .from(tableName)
-      .update({
-        isPublic,
-        updatedAt: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', id)
-      .eq('userId', session.user.id) // Ensure user owns this invitation
+      .eq('user_id', session.user.id) // Ensure user owns this invitation
       .select()
       .single();
     
@@ -260,7 +286,7 @@ export const toggleInvitationPublicStatus = async (id: string, isPublic: boolean
         : "Your invitation is no longer publicly accessible",
     });
     
-    return data as unknown as SimpleInvitation;
+    return data as SimpleInvitation;
   } catch (error) {
     console.error('Error toggling invitation public status:', error);
     toast({

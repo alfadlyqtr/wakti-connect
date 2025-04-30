@@ -10,7 +10,6 @@ import {
   Brain,
   Mic,
   CheckSquare,
-  Calendar,
   Building2,
   ScrollText,
   Headphones,
@@ -30,12 +29,6 @@ export const navItems = [
     path: "tasks",
     label: "Tasks",
     icon: CheckSquare,
-    showFor: ["individual", "business"],
-  },
-  {
-    path: "events",
-    label: "Events",
-    icon: Calendar,
     showFor: ["individual", "business"],
   },
   {
