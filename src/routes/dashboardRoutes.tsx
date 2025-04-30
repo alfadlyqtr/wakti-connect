@@ -5,6 +5,7 @@ import SimpleInvitationCreator from '@/components/invitations/SimpleInvitationCr
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getSimpleInvitationById } from '@/services/invitation/simple-invitations';
+import DashboardEvents from '@/pages/dashboard/DashboardEvents';
 
 const InvitationEdit = () => {
   const { id } = useParams<{ id: string }>();
@@ -37,6 +38,10 @@ export const dashboardRoutes = [
   {
     path: "invitations/edit/:id",
     element: <InvitationEdit />,
+  },
+  {
+    path: "events",
+    element: <DashboardEvents />,
   },
 ];
 

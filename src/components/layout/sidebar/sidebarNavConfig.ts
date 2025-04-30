@@ -1,3 +1,4 @@
+
 import {
   Home,
   CalendarDays,
@@ -29,6 +30,12 @@ export const navItems = [
     path: "tasks",
     label: "Tasks",
     icon: CheckSquare,
+    showFor: ["individual", "business"],
+  },
+  {
+    path: "events",
+    label: "Events",
+    icon: CalendarDays,
     showFor: ["individual", "business"],
   },
   {
