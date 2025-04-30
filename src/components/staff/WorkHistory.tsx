@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2 } from "lucide-react";
-// Update import to use formatDateAndTime instead of formatDateTime
+// Update import to use formatDateAndTime
 import { formatDateAndTime } from "@/utils/dateUtils";
 
 interface WorkHistoryProps {

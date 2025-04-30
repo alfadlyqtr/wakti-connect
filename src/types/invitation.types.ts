@@ -48,14 +48,21 @@ export interface ContactsRequestsResponse {
 export interface InvitationRequest {
   recipientIds?: string[];
   recipientEmails?: string[];
+  recipients?: InvitationRecipient[];
   event_id: string;
   message?: string;
+  shared_as_link?: boolean;
 }
 
 export interface InvitationResponse {
   success: boolean;
   message: string;
   invitationIds?: string[];
+  id?: string;
+  status?: string;
+  recipients?: InvitationRecipient[];
+  failedRecipients?: InvitationRecipient[];
+  createdAt?: string;
 }
 
 export interface InvitationCustomization {

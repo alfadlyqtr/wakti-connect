@@ -9,7 +9,7 @@ import { Loader2 } from 'lucide-react';
 import { toast } from "sonner";
 import { useEvents } from '@/hooks/useEvents';
 import { Separator } from '@/components/ui/separator';
-import { EventStatus } from '@/types/event.types';
+import { EventStatus, BackgroundType } from '@/types/event.types';
 
 interface CreateEventDialogProps {
   open: boolean;
@@ -55,18 +55,18 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
     try {
       setIsSubmitting(true);
       
-      // Create a simplified event object for creation
+      // Create a simplified event object for creation with proper type casting
       const eventToCreate = {
         title: eventData.title || "Untitled Event",
         description: eventData.description,
         location: eventData.location,
         startDate: eventData.date,
         isAllDay: eventData.isAllDay,
-        status: 'draft' as EventStatus, // Fix: Type cast to EventStatus
-        // Add default customization
+        status: 'draft' as EventStatus,
+        // Add default customization with correct type annotations
         customization: {
           background: {
-            type: 'solid',
+            type: 'solid' as BackgroundType,
             value: '#ffffff'
           },
           font: {

@@ -43,7 +43,7 @@ export const formatDateAndTime = (dateString: string): string => {
 // Alias for formatDateAndTime to fix imports
 export const formatDateTime = formatDateAndTime;
 
-// Function to get relative date label
+// Function to get relative date label - updated to ensure it accepts a Date object
 export const getRelativeDateLabel = (date: Date): string => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -54,6 +54,7 @@ export const getRelativeDateLabel = (date: Date): string => {
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
   
+  // Ensure we're working with a proper Date object
   const comparableDate = new Date(date);
   comparableDate.setHours(0, 0, 0, 0);
   

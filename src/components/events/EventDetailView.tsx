@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -85,7 +86,8 @@ export const EventDetailView: React.FC<EventDetailViewProps> = ({
         <CardHeader>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Badge className="bg-primary/10 text-primary hover:bg-primary/20">
-              {getRelativeDateLabel(event.start_time)}
+              {/* Convert string to Date object for getRelativeDateLabel */}
+              {getRelativeDateLabel(new Date(event.start_time))}
             </Badge>
           </div>
           <CardTitle style={fontStyle}>{event.title}</CardTitle>

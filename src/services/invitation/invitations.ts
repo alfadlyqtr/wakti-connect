@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { InvitationRequest, InvitationResponse, InvitationRecipient } from "@/types/invitation.types";
@@ -20,8 +21,12 @@ export const sendInvitation = async (
     const results: InvitationResponse[] = [];
     
     for (const invitation of invitations) {
-      // Process each recipient
-      const invitationData = invitation.recipients.map(recipient => ({
+      // Process each recipient - use recipientIds, recipientEmails, or recipients based on what's available
+      const recipientsToProcess = invitation.recipients || 
+        (invitation.recipientIds?.map(id => ({ id, type: 'user' as const, name: '' })) || [])
+          .concat(invitation.recipientEmails?.map(email => ({ id: email, email, type: 'email' as const, name: '' })) || []);
+      
+      const invitationData = recipientsToProcess.map(recipient => ({
         event_id: eventId,
         invited_user_id: recipient.type === 'user' ? recipient.id : null,
         email: recipient.type === 'email' ? recipient.email : null,
@@ -41,11 +46,12 @@ export const sendInvitation = async (
       }
       
       // Prepare response
-      const successful = data.map(inv => inv.invited_user_id || inv.email || '');
       results.push({
-        id: `invitation-batch-${Date.now()}`,
+        success: true,
+        message: "Invitations sent successfully",
+        invitationIds: data.map(inv => inv.id),
         status: 'sent',
-        recipients: invitation.recipients,
+        recipients: recipientsToProcess,
         failedRecipients: [],
         createdAt: new Date().toISOString()
       });
