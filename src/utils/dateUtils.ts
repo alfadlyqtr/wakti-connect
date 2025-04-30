@@ -83,3 +83,21 @@ export const getRelativeDateLabel = (dateString: string): string => {
     return formatDate(dateString, 'date');
   }
 };
+
+/**
+ * Format time from date string
+ * This was missing and causing the errors
+ */
+export const formatTime = (dateString: string): string => {
+  if (!dateString) return '';
+  return formatDate(dateString, 'time');
+};
+
+/**
+ * Format date and time together
+ * This was missing and causing the errors
+ */
+export const formatDateTime = (dateString: string): string => {
+  if (!dateString) return '';
+  return formatDate(dateString, 'full');
+};

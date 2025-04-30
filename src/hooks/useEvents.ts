@@ -49,6 +49,11 @@ export const useEvents = (tab: EventTab = "my-events") => {
           user_id: session.user.id
         };
 
+        // Convert the customization object to a JSON string if needed
+        if (formattedData.customization) {
+          formattedData.customization = JSON.stringify(formattedData.customization);
+        }
+
         const { data, error } = await supabase
           .from('events')
           .insert([formattedData])
