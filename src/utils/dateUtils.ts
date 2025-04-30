@@ -1,82 +1,85 @@
 
-import { format, formatDistanceToNow, isValid } from "date-fns";
-
 /**
- * Format a time string to display time in a readable format
+ * Format date utility for event display
  */
-export const formatTime = (isoString: string): string => {
-  try {
-    const date = new Date(isoString);
-    if (isNaN(date.getTime())) return "Invalid date";
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  } catch (e) {
-    console.error("Error formatting time:", e);
-    return "Invalid date";
+export const formatDate = (
+  dateString: string, 
+  format: 'full' | 'date' | 'time' | 'day' = 'full'
+): string => {
+  if (!dateString) return '';
+  
+  const date = new Date(dateString);
+  
+  // Check if date is valid
+  if (isNaN(date.getTime())) return '';
+  
+  // Format options
+  const dateOptions: Intl.DateTimeFormatOptions = { 
+    month: 'short', 
+    day: 'numeric', 
+    year: 'numeric' 
+  };
+  
+  const timeOptions: Intl.DateTimeFormatOptions = { 
+    hour: 'numeric', 
+    minute: '2-digit',
+    hour12: true
+  };
+  
+  const dayOptions: Intl.DateTimeFormatOptions = {
+    weekday: 'long'
+  };
+  
+  // Format based on requested type
+  switch (format) {
+    case 'date':
+      return date.toLocaleDateString(undefined, dateOptions);
+    case 'time':
+      return date.toLocaleTimeString(undefined, timeOptions);
+    case 'day':
+      return date.toLocaleDateString(undefined, dayOptions);
+    case 'full':
+    default:
+      return `${date.toLocaleDateString(undefined, dateOptions)} at ${date.toLocaleTimeString(undefined, timeOptions)}`;
   }
 };
 
 /**
- * Format a date string to a readable format
+ * Check if a date is today
  */
-export const formatDate = (isoString: string): string => {
-  try {
-    const date = new Date(isoString);
-    if (isNaN(date.getTime())) return "Invalid date";
-    return date.toLocaleDateString();
-  } catch (e) {
-    console.error("Error formatting date:", e);
-    return "Invalid date";
-  }
+export const isToday = (date: Date): boolean => {
+  const today = new Date();
+  return date.getDate() === today.getDate() &&
+    date.getMonth() === today.getMonth() &&
+    date.getFullYear() === today.getFullYear();
 };
 
 /**
- * Format a date string to a shorter readable format
+ * Get relative date description (Today, Tomorrow, Yesterday, or formatted date)
  */
-export const formatDateShort = (date: Date): string => {
-  try {
-    if (!isValid(date)) return "Invalid date";
-    return format(date, "MMM d, yyyy");
-  } catch (e) {
-    console.error("Error formatting date:", e);
-    return "Invalid date";
-  }
-};
-
-/**
- * Format a time range between two dates
- */
-export const formatTimeRange = (startDate: Date, endDate: Date): string => {
-  try {
-    if (!isValid(startDate) || !isValid(endDate)) return "Invalid time range";
-    const startTime = format(startDate, "h:mm a");
-    const endTime = format(endDate, "h:mm a");
-    return `${startTime} - ${endTime}`;
-  } catch (e) {
-    console.error("Error formatting time range:", e);
-    return "Invalid time range";
-  }
-};
-
-/**
- * Format a date/time string to a readable format with both date and time
- */
-export const formatDateTime = (isoString: string): string => {
-  try {
-    if (!isoString) return "No date";
-    const date = new Date(isoString);
-    if (isNaN(date.getTime())) return "Invalid date";
-    
-    return date.toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'numeric',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: 'numeric',
-      second: 'numeric',
-      hour12: true
-    });
-  } catch (e) {
-    console.error("Error formatting datetime:", e, "for string:", isoString);
-    return "Invalid date";
+export const getRelativeDateLabel = (dateString: string): string => {
+  const date = new Date(dateString);
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  
+  if (isToday(date)) {
+    return 'Today';
+  } else if (
+    date.getDate() === tomorrow.getDate() &&
+    date.getMonth() === tomorrow.getMonth() &&
+    date.getFullYear() === tomorrow.getFullYear()
+  ) {
+    return 'Tomorrow';
+  } else if (
+    date.getDate() === yesterday.getDate() &&
+    date.getMonth() === yesterday.getMonth() &&
+    date.getFullYear() === yesterday.getFullYear()
+  ) {
+    return 'Yesterday';
+  } else {
+    return formatDate(dateString, 'date');
   }
 };

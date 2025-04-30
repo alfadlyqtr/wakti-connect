@@ -25,7 +25,7 @@ export const getEvents = async (tab: EventTab): Promise<EventsResult> => {
       
     const userRole = userProfile?.account_type || 'free';
     const canCreateEvents = userRole !== 'free';
-      
+    
     // Different queries based on tab
     let eventQuery;
     
@@ -137,5 +137,65 @@ export const getEvents = async (tab: EventTab): Promise<EventsResult> => {
       userRole: 'free',
       canCreateEvents: false
     };
+  }
+};
+
+/**
+ * Get a single event by ID
+ */
+export const getEventById = async (eventId: string): Promise<Event | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('events')
+      .select(`
+        *,
+        event_invitations (
+          id,
+          email,
+          invited_user_id,
+          status,
+          shared_as_link,
+          created_at,
+          updated_at
+        )
+      `)
+      .eq('id', eventId)
+      .single();
+      
+    if (error) {
+      console.error('Error fetching event by ID:', error);
+      throw error;
+    }
+    
+    if (!data) {
+      return null;
+    }
+    
+    // Parse customization if needed
+    let customization = data.customization;
+    if (typeof customization === 'string') {
+      try {
+        customization = JSON.parse(customization);
+      } catch (e) {
+        console.warn('Failed to parse customization:', e);
+        customization = {
+          background: { type: 'solid', value: '#ffffff' },
+          font: { family: 'system-ui, sans-serif', size: 'medium', color: '#333333' },
+          buttons: {
+            accept: { background: '#4CAF50', color: '#ffffff', shape: 'rounded' },
+            decline: { background: '#f44336', color: '#ffffff', shape: 'rounded' }
+          }
+        };
+      }
+    }
+    
+    return {
+      ...data,
+      customization
+    };
+    
+  } catch (error) {
+    console.error('Error in getEventById:', error);
+    return null;
   }
 };
