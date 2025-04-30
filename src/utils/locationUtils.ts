@@ -1,113 +1,104 @@
 
+// Location utilities for event creation and display
+
 /**
- * Location formatting and map URL generation utilities
+ * Format a location string for display
+ * Trims long addresses and formats them nicely for display
  */
-
-export const isValidMapsUrl = (url: string): boolean => {
-  if (!url) return false;
-  
-  try {
-    const urlObj = new URL(url);
-    return (
-      urlObj.hostname.includes('google.com/maps') ||
-      urlObj.hostname.includes('maps.google.com') ||
-      urlObj.hostname.includes('maps.app.goo.gl') ||
-      urlObj.hostname.includes('goo.gl/maps')
-    );
-  } catch {
-    return false;
-  }
-};
-
-export const extractLocationFromMapsUrl = (url: string): string => {
-  try {
-    if (!isValidMapsUrl(url)) return url;
-    
-    const decodedUrl = decodeURIComponent(url);
-    
-    // Handle different Google Maps URL formats
-    if (decodedUrl.includes('/place/')) {
-      const placeMatch = decodedUrl.match(/\/place\/([^/]+)/);
-      if (placeMatch) {
-        return placeMatch[1]
-          .replace(/\+/g, ' ')
-          .replace(/@.*$/, '')
-          .replace(/\d+\.\d+,\d+\.\d+/, '') // Remove coordinates
-          .replace(/,/g, ', '); // Add spaces after commas for better readability
-      }
-    }
-    
-    // Extract from query parameters
-    const searchParams = new URL(url).searchParams;
-    const query = searchParams.get('query') || searchParams.get('q');
-    if (query) {
-      return decodeURIComponent(query).replace(/\+/g, ' ');
-    }
-    
-    // Extract coordinates and try to make them more readable
-    const coordsMatch = decodedUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-    if (coordsMatch) {
-      const lat = parseFloat(coordsMatch[1]).toFixed(6);
-      const lng = parseFloat(coordsMatch[2]).toFixed(6);
-      return `Location (${lat}, ${lng})`;
-    }
-    
-    return 'Location on Google Maps';
-  } catch {
-    return url;
-  }
-};
-
-export const generateMapsUrl = (location: string): string => {
-  if (!location) return '';
-  if (isValidMapsUrl(location)) return location;
-  
-  // If it's coordinates, format them properly
-  const coordsMatch = location.match(/\((-?\d+\.\d+),\s*(-?\d+\.\d+)\)/);
-  if (coordsMatch) {
-    return `https://www.google.com/maps/search/?api=1&query=${coordsMatch[1]},${coordsMatch[2]}`;
-  }
-  
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
-};
-
-export const generateDirectionsUrl = (location: string): string => {
+export function formatLocation(location: string): string {
   if (!location) return '';
   
-  if (isValidMapsUrl(location)) {
-    const url = new URL(location);
-    const placeId = url.searchParams.get('place_id');
-    
-    if (placeId) {
-      return `https://www.google.com/maps/dir/?api=1&destination_place_id=${placeId}`;
-    }
-    
-    const query = url.searchParams.get('query') || url.searchParams.get('q');
-    if (query) {
-      return `https://www.google.com/maps/dir/?api=1&destination=${query}`;
-    }
-    
-    const coordsMatch = location.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-    if (coordsMatch) {
-      return `https://www.google.com/maps/dir/?api=1&destination=${coordsMatch[1]},${coordsMatch[2]}`;
-    }
+  // Check if it's already a short location
+  if (location.length < 60) return location;
+  
+  // Split the location by commas
+  const parts = location.split(',');
+  
+  if (parts.length <= 2) return location;
+  
+  // For longer addresses, format more concisely
+  const street = parts[0].trim();
+  const city = parts[1]?.trim() || '';
+  const stateAndPostal = parts[2]?.trim() || '';
+  const country = parts[parts.length - 1]?.trim() || '';
+  
+  if (country && stateAndPostal) {
+    return `${street}, ${city}, ${stateAndPostal}, ${country}`;
   }
   
-  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(location)}`;
-};
+  return location;
+}
 
-export const formatLocation = (location: string): string => {
+/**
+ * Create a Google Maps URL for a location string
+ */
+export function generateMapsUrl(location: string): string {
   if (!location) return '';
   
-  try {
-    if (isValidMapsUrl(location)) {
-      return extractLocationFromMapsUrl(location)
-        .replace(/\+/g, ' ')
-        .replace(/%20/g, ' ')
-        .replace(/([a-z])([A-Z])/g, '$1 $2'); // Add spaces between camelCase
-    }
-    return location;
-  } catch {
-    return location;
+  const encodedLocation = encodeURIComponent(location);
+  return `https://www.google.com/maps/search/?api=1&query=${encodedLocation}`;
+}
+
+/**
+ * Create a Google Maps directions URL for a location string
+ */
+export function generateDirectionsUrl(location: string): string {
+  if (!location) return '';
+  
+  const encodedLocation = encodeURIComponent(location);
+  return `https://www.google.com/maps/dir/?api=1&destination=${encodedLocation}`;
+}
+
+/**
+ * Extract only the relevant parts of an address (for display)
+ */
+export function extractAddressParts(fullAddress: string) {
+  if (!fullAddress) return { street: '', city: '', state: '', postalCode: '', country: '' };
+  
+  const parts = fullAddress.split(',').map(part => part.trim());
+  
+  // Very basic parsing - could be enhanced for different address formats
+  return {
+    street: parts[0] || '',
+    city: parts[1] || '',
+    state: parts[2]?.split(' ')?.[0] || '',
+    postalCode: parts[2]?.split(' ')?.[1] || '',
+    country: parts[parts.length - 1] || ''
+  };
+}
+
+/**
+ * Format a structured address for display on an event card
+ */
+export function formatStructuredAddress(address: {
+  street?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  country?: string;
+}) {
+  const { street, city, state, postalCode, country } = address;
+  
+  let formattedAddress = '';
+  
+  if (street) formattedAddress += street;
+  
+  if (city) {
+    if (formattedAddress) formattedAddress += ', ';
+    formattedAddress += city;
   }
-};
+  
+  if (state || postalCode) {
+    if (formattedAddress) formattedAddress += ', ';
+    if (state) formattedAddress += state;
+    if (state && postalCode) formattedAddress += ' ';
+    if (postalCode) formattedAddress += postalCode;
+  }
+  
+  if (country) {
+    if (formattedAddress) formattedAddress += ', ';
+    formattedAddress += country;
+  }
+  
+  return formattedAddress;
+}

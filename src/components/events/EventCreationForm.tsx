@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { eventSchema, EventFormValues, EventFormTab, BackgroundType, AnimationType, ButtonShape, EventStatus } from "@/types/event.types";
+import { eventSchema, EventFormValues, EventFormTab, EventStatus } from "@/types/event.types";
 import FormHeader from "./creation/FormHeader";
 import FormTabs from "./creation/FormTabs";
 import FormActions from "./creation/FormActions";
@@ -12,6 +13,7 @@ import { useEventSubmission } from "@/hooks/events/useEventSubmission";
 import { ShareTab, SHARE_TABS } from "@/types/form.types";
 import { useEventLocation } from "@/hooks/events/useEventLocation";
 import { toast } from "@/components/ui/use-toast";
+import { defaultCustomization } from "@/hooks/useEventCustomization";
 
 interface EventCreationFormProps {
   editEvent?: Event | null;
@@ -34,6 +36,7 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("10:00");
   const [shareTab, setShareTab] = useState<ShareTab>(SHARE_TABS.RECIPIENTS);
+  const [customization, setCustomization] = useState<EventCustomization>(defaultCustomization);
   
   // Use enhanced location hook for advanced location features
   const {
@@ -42,35 +45,9 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
     locationType,
     mapsUrl,
     isGettingLocation,
-    handleLocationChange
+    handleLocationChange,
+    getCurrentLocation
   } = useEventLocation();
-  
-  // Default customization state
-  const [customization, setCustomization] = useState<EventCustomization>({
-    background: {
-      type: 'solid' as BackgroundType,
-      value: '#ffffff',
-    },
-    font: {
-      family: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      size: 'medium',
-      color: '#333333',
-    },
-    buttons: {
-      accept: {
-        background: '#4CAF50',
-        color: '#ffffff',
-        shape: 'rounded' as ButtonShape,
-      },
-      decline: {
-        background: '#f44336',
-        color: '#ffffff',
-        shape: 'rounded' as ButtonShape,
-      }
-    },
-    headerStyle: 'simple',
-    animation: 'fade' as AnimationType,
-  });
   
   const form = useForm<EventFormValues>({
     resolver: zodResolver(eventSchema),
@@ -99,7 +76,8 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
     setEndTime,
     setLocation: (loc) => handleLocationChange(loc),
     setLocationType: (type) => handleLocationChange(location, type),
-    setMapsUrl: (url) => handleLocationChange(location, 'google_maps', url),
+    setMapsUrl: (url) => handleLocationChange(location, locationType, url),
+    setLocationTitle: (title) => handleLocationChange(location, locationType, mapsUrl, title),
     setCustomization: (newCustomization: EventCustomization) => setCustomization(newCustomization)
   });
 
@@ -154,7 +132,7 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
     startTime,
     endTime,
     location,
-    locationTitle, // Pass the locationTitle to the hook
+    locationTitle,
     locationType,
     mapsUrl,
     customization,
@@ -169,13 +147,15 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
       handleLocationChange("", undefined);
       setRecipients([]);
       setActiveTab("details");
+      setCustomization(defaultCustomization);
       form.reset();
     },
     editEvent,
     onSuccess
   });
   
-  const handleSubmitForm = () => {
+  const handleSubmitForm = (e: React.FormEvent) => {
+    e.preventDefault();
     form.setValue("location", location);
     form.setValue("location_title", locationTitle || "");
     form.setValue("isAllDay", isAllDay);
@@ -196,27 +176,27 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
   // Handle save as draft functionality
   const handleSaveDraft = () => {
     // Use the same submission but explicitly set status to draft
+    form.setValue("location", location);
+    form.setValue("location_title", locationTitle || "");
+    form.setValue("isAllDay", isAllDay);
+    
     const formData = form.getValues();
     const draftData = {
       ...formData,
       status: 'draft' as EventStatus
     };
-    onSubmit(draftData);
     
-    toast({
-      title: "Draft saved",
-      description: "Your event has been saved as a draft"
-    });
+    return onSubmit(draftData);
   };
 
   return (
-    <div className="container mx-auto mt-10">
+    <div className="container mx-auto mt-10 px-4">
       <FormHeader 
         isEdit={isEditMode} 
         onCancel={onCancel}
       />
       
-      <form onSubmit={form.handleSubmit(handleSubmitForm)}>
+      <form onSubmit={handleSubmitForm}>
         <FormTabs 
           activeTab={activeTab} 
           setActiveTab={setActiveTab} 
@@ -246,7 +226,7 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
           isAllDay={isAllDay}
           locationType={locationType}
           mapsUrl={mapsUrl}
-          getCurrentLocation={() => {}}
+          getCurrentLocation={getCurrentLocation}
           isGettingLocation={isGettingLocation}
           shareTab={shareTab}
           setShareTab={setShareTab}
@@ -260,6 +240,8 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
           isSubmitting={isSubmitting}
           showSubmit={activeTab === "share"}
           submitLabel={isEditMode ? "Update Event" : "Create Event"}
+          activeTab={activeTab}
+          isEditMode={isEditMode}
         />
       </form>
     </div>

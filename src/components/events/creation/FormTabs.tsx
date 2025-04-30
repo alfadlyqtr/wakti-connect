@@ -1,24 +1,24 @@
-import React from 'react';
-import { EventFormTab, EventCustomization } from '@/types/event.types';
-import DetailsTab from '@/components/events/creation/DetailsTab'; // Fixed import path
-import CustomizeTab from '../customize/CustomizeTab';
-import ShareLinksTab from '@/components/events/creation/ShareLinksTab'; // Fixed import and component name
-import { ShareTab } from '@/types/form.types';
-import { InvitationRecipient } from '@/types/invitation.types';
 
-interface FormTabsBaseProps {
+import React from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { EventFormTab, EventCustomization } from "@/types/event.types";
+import { InvitationRecipient } from "@/types/invitation.types";
+import EventDetailsTab from "./tabs/EventDetailsTab";
+import CustomizeEventTab from "../customize/CustomizeEventTab";
+import EventShareTab from "./tabs/EventShareTab";
+import { ShareTab } from "@/types/form.types";
+
+interface FormTabsProps {
   activeTab: EventFormTab;
   setActiveTab: (tab: EventFormTab) => void;
-}
-
-interface FormTabsProps extends FormTabsBaseProps {
   title: string;
   description: string;
   selectedDate: Date;
-  location: string;
-  locationTitle?: string;
   startTime: string;
   endTime: string;
+  location: string;
+  locationTitle?: string;
   customization: EventCustomization;
   onCustomizationChange: (customization: EventCustomization) => void;
   recipients: InvitationRecipient[];
@@ -27,13 +27,18 @@ interface FormTabsProps extends FormTabsBaseProps {
   onTitleChange: (title: string) => void;
   onDescriptionChange: (description: string) => void;
   onDateChange: (date: Date) => void;
-  onLocationChange: (location: string, type?: 'manual' | 'google_maps', url?: string, title?: string) => void;
+  onLocationChange: (
+    location: string, 
+    locationType?: 'manual' | 'google_maps', 
+    mapsUrl?: string,
+    title?: string
+  ) => void;
   onStartTimeChange: (time: string) => void;
   onEndTimeChange: (time: string) => void;
   onIsAllDayChange: (isAllDay: boolean) => void;
   isAllDay: boolean;
-  locationType: 'manual' | 'google_maps';
-  mapsUrl: string;
+  locationType?: 'manual' | 'google_maps';
+  mapsUrl?: string;
   getCurrentLocation: () => void;
   isGettingLocation: boolean;
   shareTab: ShareTab;
@@ -42,16 +47,16 @@ interface FormTabsProps extends FormTabsBaseProps {
   handleSaveDraft?: () => void;
 }
 
-export const FormTabs: React.FC<FormTabsProps> = ({
+const FormTabs: React.FC<FormTabsProps> = ({
   activeTab,
   setActiveTab,
   title,
   description,
   selectedDate,
-  location,
-  locationTitle,
   startTime,
   endTime,
+  location,
+  locationTitle,
   customization,
   onCustomizationChange,
   recipients,
@@ -74,98 +79,77 @@ export const FormTabs: React.FC<FormTabsProps> = ({
   onSendEmail,
   handleSaveDraft
 }) => {
-  const renderActiveTab = () => {
-    switch (activeTab) {
-      case 'details':
-        return (
-          <DetailsTab
-            title={title}
-            description={description}
-            selectedDate={selectedDate}
-            location={location}
-            locationTitle={locationTitle}
-            startTime={startTime}
-            endTime={endTime}
-            onTitleChange={onTitleChange}
-            onDescriptionChange={onDescriptionChange}
-            onDateChange={onDateChange}
-            onLocationChange={onLocationChange}
-            onStartTimeChange={onStartTimeChange}
-            onEndTimeChange={onEndTimeChange}
-            onIsAllDayChange={onIsAllDayChange}
-            isAllDay={isAllDay}
-            locationType={locationType}
-            mapsUrl={mapsUrl}
-            getCurrentLocation={getCurrentLocation}
-            isGettingLocation={isGettingLocation}
-            handleNextTab={() => setActiveTab("customize")}
-          />
-        );
-      case 'customize':
-        return (
-          <CustomizeTab 
-            customization={customization}
-            onCustomizationChange={onCustomizationChange}
-            handleNextTab={() => setActiveTab("share")}
-            handleSaveDraft={handleSaveDraft}
-            location={location}
-            locationTitle={locationTitle}
-            title={title}
-            description={description}
-            selectedDate={selectedDate}
-          />
-        );
-      case 'share':
-        return (
-          <ShareLinksTab
-            onSendEmail={onSendEmail}
-          />
-        );
-      default:
-        return null;
-    }
+  const handleNextTab = () => {
+    if (activeTab === "details") setActiveTab("customize");
+    if (activeTab === "customize") setActiveTab("share");
+  };
+
+  const handlePreviousTab = () => {
+    if (activeTab === "share") setActiveTab("customize");
+    if (activeTab === "customize") setActiveTab("details");
   };
 
   return (
-    <div className="mt-8">
-      <div className="flex border-b">
-        <button
-          type="button"
-          className={`px-4 py-2 font-medium ${
-            activeTab === "details"
-              ? "border-b-2 border-primary text-primary"
-              : "text-gray-500"
-          }`}
-          onClick={() => setActiveTab("details")}
-        >
-          Details
-        </button>
-        <button
-          type="button"
-          className={`px-4 py-2 font-medium ${
-            activeTab === "customize"
-              ? "border-b-2 border-primary text-primary"
-              : "text-gray-500"
-          }`}
-          onClick={() => setActiveTab("customize")}
-        >
-          Customize
-        </button>
-        <button
-          type="button"
-          className={`px-4 py-2 font-medium ${
-            activeTab === "share"
-              ? "border-b-2 border-primary text-primary"
-              : "text-gray-500"
-          }`}
-          onClick={() => setActiveTab("share")}
-        >
-          Share
-        </button>
-      </div>
-      
-      <div className="py-6">{renderActiveTab()}</div>
-    </div>
+    <Card className="mt-4">
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as EventFormTab)} className="w-full">
+        <TabsList className="grid grid-cols-3 w-full">
+          <TabsTrigger value="details">Details</TabsTrigger>
+          <TabsTrigger value="customize">Customize</TabsTrigger>
+          <TabsTrigger value="share">Share</TabsTrigger>
+        </TabsList>
+        <CardContent className="pt-6">
+          <TabsContent value="details">
+            <EventDetailsTab
+              title={title}
+              description={description}
+              selectedDate={selectedDate}
+              startTime={startTime}
+              endTime={endTime}
+              location={location}
+              locationTitle={locationTitle}
+              onTitleChange={onTitleChange}
+              onDescriptionChange={onDescriptionChange}
+              onDateChange={onDateChange}
+              onLocationChange={onLocationChange}
+              onStartTimeChange={onStartTimeChange}
+              onEndTimeChange={onEndTimeChange}
+              onIsAllDayChange={onIsAllDayChange}
+              isAllDay={isAllDay}
+              locationType={locationType}
+              mapsUrl={mapsUrl}
+              getCurrentLocation={getCurrentLocation}
+              isGettingLocation={isGettingLocation}
+              handleNextTab={handleNextTab}
+            />
+          </TabsContent>
+          <TabsContent value="customize">
+            <CustomizeEventTab
+              customization={customization}
+              onCustomizationChange={onCustomizationChange}
+              handleNextTab={handleNextTab}
+              handleSaveDraft={handleSaveDraft}
+              location={location}
+              locationTitle={locationTitle}
+              title={title}
+              description={description}
+              selectedDate={selectedDate}
+            />
+          </TabsContent>
+          <TabsContent value="share">
+            <EventShareTab
+              recipients={recipients}
+              addRecipient={addRecipient}
+              removeRecipient={removeRecipient}
+              shareTab={shareTab}
+              setShareTab={setShareTab}
+              onSendEmail={onSendEmail}
+              eventTitle={title}
+              handlePreviousTab={handlePreviousTab}
+            />
+          </TabsContent>
+        </CardContent>
+      </Tabs>
+    </Card>
   );
 };
 
