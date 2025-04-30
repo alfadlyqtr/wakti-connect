@@ -98,36 +98,43 @@ export const getEvents = async (tab: EventTab): Promise<EventsResult> => {
     
     // Parse customization from JSON if needed and transform data
     const events: Event[] = (data || []).map((event: any) => {
+      // Create default customization as a fallback
+      const defaultCustomization: EventCustomization = {
+        background: { type: 'solid', value: '#ffffff' },
+        font: { family: 'system-ui, sans-serif', size: 'medium', color: '#333333' },
+        buttons: {
+          accept: { background: '#4CAF50', color: '#ffffff', shape: 'rounded' },
+          decline: { background: '#f44336', color: '#ffffff', shape: 'rounded' }
+        }
+      };
+      
       // Parse customization if it's a string
-      let customization: EventCustomization;
+      let customization: EventCustomization = defaultCustomization;
       
       if (typeof event.customization === 'string' && event.customization) {
         try {
-          customization = JSON.parse(event.customization) as EventCustomization;
+          const parsed = JSON.parse(event.customization);
+          // Validate that the parsed object has the required structure
+          if (parsed && 
+              typeof parsed === 'object' && 
+              !Array.isArray(parsed) &&
+              parsed.background && 
+              parsed.font && 
+              parsed.buttons) {
+            customization = parsed as EventCustomization;
+          }
         } catch (e) {
           console.warn('Failed to parse customization:', e);
-          // Set default customization if parsing fails
-          customization = {
-            background: { type: 'solid', value: '#ffffff' },
-            font: { family: 'system-ui, sans-serif', size: 'medium', color: '#333333' },
-            buttons: {
-              accept: { background: '#4CAF50', color: '#ffffff', shape: 'rounded' },
-              decline: { background: '#f44336', color: '#ffffff', shape: 'rounded' }
-            }
-          };
+          // Use default customization if parsing fails
         }
-      } else if (typeof event.customization === 'object' && event.customization !== null) {
+      } else if (event.customization && 
+                typeof event.customization === 'object' && 
+                !Array.isArray(event.customization) &&
+                event.customization.background && 
+                event.customization.font && 
+                event.customization.buttons) {
+        // Make sure it has the required structure before casting
         customization = event.customization as EventCustomization;
-      } else {
-        // Default customization if none exists
-        customization = {
-          background: { type: 'solid', value: '#ffffff' },
-          font: { family: 'system-ui, sans-serif', size: 'medium', color: '#333333' },
-          buttons: {
-            accept: { background: '#4CAF50', color: '#ffffff', shape: 'rounded' },
-            decline: { background: '#f44336', color: '#ffffff', shape: 'rounded' }
-          }
-        };
       }
       
       return {
@@ -183,35 +190,43 @@ export const getEventById = async (eventId: string): Promise<Event | null> => {
       return null;
     }
     
+    // Create default customization as a fallback
+    const defaultCustomization: EventCustomization = {
+      background: { type: 'solid', value: '#ffffff' },
+      font: { family: 'system-ui, sans-serif', size: 'medium', color: '#333333' },
+      buttons: {
+        accept: { background: '#4CAF50', color: '#ffffff', shape: 'rounded' },
+        decline: { background: '#f44336', color: '#ffffff', shape: 'rounded' }
+      }
+    };
+    
     // Parse customization if needed
-    let customization: EventCustomization;
+    let customization: EventCustomization = defaultCustomization;
     
     if (typeof data.customization === 'string' && data.customization) {
       try {
-        customization = JSON.parse(data.customization) as EventCustomization;
+        const parsed = JSON.parse(data.customization);
+        // Validate that the parsed object has the required structure
+        if (parsed && 
+            typeof parsed === 'object' && 
+            !Array.isArray(parsed) &&
+            parsed.background && 
+            parsed.font && 
+            parsed.buttons) {
+          customization = parsed as EventCustomization;
+        }
       } catch (e) {
         console.warn('Failed to parse customization:', e);
-        customization = {
-          background: { type: 'solid', value: '#ffffff' },
-          font: { family: 'system-ui, sans-serif', size: 'medium', color: '#333333' },
-          buttons: {
-            accept: { background: '#4CAF50', color: '#ffffff', shape: 'rounded' },
-            decline: { background: '#f44336', color: '#ffffff', shape: 'rounded' }
-          }
-        };
+        // Use default customization if parsing fails
       }
-    } else if (typeof data.customization === 'object' && data.customization !== null) {
+    } else if (data.customization && 
+              typeof data.customization === 'object' && 
+              !Array.isArray(data.customization) &&
+              data.customization.background && 
+              data.customization.font && 
+              data.customization.buttons) {
+      // Make sure it has the required structure before casting
       customization = data.customization as EventCustomization;
-    } else {
-      // Default customization if none exists
-      customization = {
-        background: { type: 'solid', value: '#ffffff' },
-        font: { family: 'system-ui, sans-serif', size: 'medium', color: '#333333' },
-        buttons: {
-          accept: { background: '#4CAF50', color: '#ffffff', shape: 'rounded' },
-          decline: { background: '#f44336', color: '#ffffff', shape: 'rounded' }
-        }
-      };
     }
     
     return {
