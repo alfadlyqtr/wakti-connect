@@ -1,30 +1,13 @@
+
 import { createBrowserRouter } from 'react-router-dom';
 import App from './App';
 import CreateInvitationPage from './pages/invitations/CreateInvitationPage';
 import InvitationsListPage from './pages/invitations/InvitationsListPage';
 import SharedInvitationPage from './pages/invitations/SharedInvitationPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
-import Dashboard from './pages/dashboard/Dashboard';
-import DashboardTasks from './pages/dashboard/DashboardTasks';
-import DashboardEvents from './pages/dashboard/DashboardEvents';
-import DashboardBookings from './pages/dashboard/DashboardBookings';
-import DashboardJobs from './pages/dashboard/DashboardJobs';
-import DashboardServices from './pages/dashboard/DashboardServices';
-import DashboardStaff from './pages/dashboard/DashboardStaff';
-import DashboardBusinessPage from './pages/dashboard/DashboardBusinessPage';
-import DashboardAnalytics from './pages/dashboard/DashboardAnalytics';
-import DashboardReports from './pages/dashboard/DashboardReports';
-import DashboardSettings from './pages/dashboard/DashboardSettings';
-import DashboardHelp from './pages/dashboard/DashboardHelp';
-import AiAssistant from './pages/dashboard/AiAssistant';
-import MeetingSummary from './pages/dashboard/MeetingSummary';
-import NotificationsPage from './pages/dashboard/NotificationsPage';
-import MessagesPage from './pages/dashboard/MessagesPage';
-import ContactsPage from './pages/dashboard/ContactsPage';
-import StaffDashboard from './pages/dashboard/StaffDashboard';
-import DashboardWorkManagement from './pages/dashboard/DashboardWorkManagement';
-import EventDetailPage from './pages/events/EventDetailPage';
-import EditEventPage from './pages/events/EditEventPage';
+
+// Placeholder component for missing dashboard components
+const PlaceholderComponent = () => <div>Page coming soon</div>;
 
 export const router = createBrowserRouter([
   {
@@ -33,87 +16,87 @@ export const router = createBrowserRouter([
     children: [
       {
         path: "dashboard",
-        element: <ProtectedRoute><Dashboard /></ProtectedRoute>,
+        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
       },
       {
         path: "dashboard/tasks",
-        element: <ProtectedRoute><DashboardTasks /></ProtectedRoute>,
+        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
       },
       {
         path: "dashboard/events",
-        element: <ProtectedRoute><DashboardEvents /></ProtectedRoute>,
+        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
       },
       {
         path: "dashboard/events/:eventId",
-        element: <ProtectedRoute><EventDetailPage /></ProtectedRoute>,
+        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
       },
       {
         path: "dashboard/events/:eventId/edit",
-        element: <ProtectedRoute><EditEventPage /></ProtectedRoute>,
+        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
       },
       {
         path: "dashboard/bookings",
-        element: <ProtectedRoute><DashboardBookings /></ProtectedRoute>,
+        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
       },
       {
         path: "dashboard/jobs",
-        element: <ProtectedRoute><DashboardJobs /></ProtectedRoute>,
+        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
       },
       {
         path: "dashboard/services",
-        element: <ProtectedRoute><DashboardServices /></ProtectedRoute>,
+        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
       },
       {
         path: "dashboard/staff",
-        element: <ProtectedRoute><DashboardStaff /></ProtectedRoute>,
+        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
       },
       {
         path: "dashboard/business-page",
-        element: <ProtectedRoute><DashboardBusinessPage /></ProtectedRoute>,
+        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
       },
       {
         path: "dashboard/analytics",
-        element: <ProtectedRoute><DashboardAnalytics /></ProtectedRoute>,
+        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
       },
       {
         path: "dashboard/reports",
-        element: <ProtectedRoute><DashboardReports /></ProtectedRoute>,
+        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
       },
       {
         path: "dashboard/settings",
-        element: <ProtectedRoute><DashboardSettings /></ProtectedRoute>,
+        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
       },
       {
         path: "dashboard/help",
-        element: <ProtectedRoute><DashboardHelp /></ProtectedRoute>,
+        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
       },
       {
         path: "dashboard/ai-assistant",
-        element: <ProtectedRoute><AiAssistant /></ProtectedRoute>,
+        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
       },
       {
         path: "dashboard/meeting-summary",
-        element: <ProtectedRoute><MeetingSummary /></ProtectedRoute>,
+        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
       },
       {
         path: "dashboard/notifications",
-        element: <ProtectedRoute><NotificationsPage /></ProtectedRoute>,
+        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
       },
       {
         path: "dashboard/messages",
-        element: <ProtectedRoute><MessagesPage /></ProtectedRoute>,
+        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
       },
       {
         path: "dashboard/contacts",
-        element: <ProtectedRoute><ContactsPage /></ProtectedRoute>,
+        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
       },
       {
         path: "dashboard/staff-dashboard",
-        element: <ProtectedRoute><StaffDashboard /></ProtectedRoute>,
+        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
       },
       {
         path: "dashboard/work-management",
-        element: <ProtectedRoute><DashboardWorkManagement /></ProtectedRoute>,
+        element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
       },
       
       // Add new invitation routes
