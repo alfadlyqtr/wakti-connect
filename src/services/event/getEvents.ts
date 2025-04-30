@@ -129,12 +129,57 @@ export const getEvents = async (tab: EventTab): Promise<EventsResult> => {
         }
       } else if (event.customization && 
                 typeof event.customization === 'object' && 
-                !Array.isArray(event.customization) &&
-                event.customization.background && 
-                event.customization.font && 
-                event.customization.buttons) {
-        // Make sure it has the required structure before casting
-        customization = event.customization as EventCustomization;
+                !Array.isArray(event.customization)) {
+        // Handle case where customization is already an object from Supabase
+        const customObj = event.customization as Record<string, any>;
+        
+        // Check if it has the required structure before using it
+        if (customObj.background && 
+            customObj.font && 
+            customObj.buttons) {
+          // Use type assertion with unknown as intermediate step
+          customization = {
+            background: {
+              type: customObj.background.type || 'solid',
+              value: customObj.background.value || '#ffffff'
+            },
+            font: {
+              family: customObj.font.family || 'system-ui, sans-serif',
+              size: customObj.font.size || 'medium',
+              color: customObj.font.color || '#333333',
+              weight: customObj.font.weight,
+              alignment: customObj.font.alignment
+            },
+            buttons: {
+              accept: {
+                background: customObj.buttons.accept?.background || '#4CAF50',
+                color: customObj.buttons.accept?.color || '#ffffff',
+                shape: customObj.buttons.accept?.shape || 'rounded'
+              },
+              decline: {
+                background: customObj.buttons.decline?.background || '#f44336',
+                color: customObj.buttons.decline?.color || '#ffffff',
+                shape: customObj.buttons.decline?.shape || 'rounded'
+              }
+            },
+            headerFont: customObj.headerFont,
+            descriptionFont: customObj.descriptionFont,
+            dateTimeFont: customObj.dateTimeFont,
+            utilityButtons: customObj.utilityButtons,
+            headerStyle: customObj.headerStyle,
+            headerImage: customObj.headerImage,
+            animation: customObj.animation,
+            cardEffect: customObj.cardEffect,
+            elementAnimations: customObj.elementAnimations,
+            enableChatbot: customObj.enableChatbot,
+            enableAddToCalendar: customObj.enableAddToCalendar,
+            showAcceptDeclineButtons: customObj.showAcceptDeclineButtons,
+            showAddToCalendarButton: customObj.showAddToCalendarButton,
+            branding: customObj.branding,
+            mapDisplay: customObj.mapDisplay,
+            poweredByColor: customObj.poweredByColor
+          };
+        }
       }
       
       return {
@@ -221,12 +266,57 @@ export const getEventById = async (eventId: string): Promise<Event | null> => {
       }
     } else if (data.customization && 
               typeof data.customization === 'object' && 
-              !Array.isArray(data.customization) &&
-              data.customization.background && 
-              data.customization.font && 
-              data.customization.buttons) {
-      // Make sure it has the required structure before casting
-      customization = data.customization as EventCustomization;
+              !Array.isArray(data.customization)) {
+      // Handle case where customization is already an object from Supabase
+      const customObj = data.customization as Record<string, any>;
+      
+      // Check if it has the required structure before using it
+      if (customObj.background && 
+          customObj.font && 
+          customObj.buttons) {
+        // Use type assertion with explicit property mapping
+        customization = {
+          background: {
+            type: customObj.background.type || 'solid',
+            value: customObj.background.value || '#ffffff'
+          },
+          font: {
+            family: customObj.font.family || 'system-ui, sans-serif',
+            size: customObj.font.size || 'medium',
+            color: customObj.font.color || '#333333',
+            weight: customObj.font.weight,
+            alignment: customObj.font.alignment
+          },
+          buttons: {
+            accept: {
+              background: customObj.buttons.accept?.background || '#4CAF50',
+              color: customObj.buttons.accept?.color || '#ffffff',
+              shape: customObj.buttons.accept?.shape || 'rounded'
+            },
+            decline: {
+              background: customObj.buttons.decline?.background || '#f44336',
+              color: customObj.buttons.decline?.color || '#ffffff',
+              shape: customObj.buttons.decline?.shape || 'rounded'
+            }
+          },
+          headerFont: customObj.headerFont,
+          descriptionFont: customObj.descriptionFont,
+          dateTimeFont: customObj.dateTimeFont,
+          utilityButtons: customObj.utilityButtons,
+          headerStyle: customObj.headerStyle,
+          headerImage: customObj.headerImage,
+          animation: customObj.animation,
+          cardEffect: customObj.cardEffect,
+          elementAnimations: customObj.elementAnimations,
+          enableChatbot: customObj.enableChatbot,
+          enableAddToCalendar: customObj.enableAddToCalendar,
+          showAcceptDeclineButtons: customObj.showAcceptDeclineButtons,
+          showAddToCalendarButton: customObj.showAddToCalendarButton,
+          branding: customObj.branding,
+          mapDisplay: customObj.mapDisplay,
+          poweredByColor: customObj.poweredByColor
+        };
+      }
     }
     
     return {
