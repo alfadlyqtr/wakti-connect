@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useCustomization } from "../context";
 import BackgroundSelector from "../BackgroundSelector";
@@ -55,15 +56,15 @@ const getEventKeywords = (eventType: string): string[] => {
   }
 };
 
-// Create a direct, concise prompt that works well with AI image generation
-const createOptimizedPrompt = (eventType: string, title: string = "", description: string = ""): string => {
+// Create an optimized prompt specifically for Runware
+const createRunwarePrompt = (eventType: string, title: string = "", description: string = ""): string => {
   const keywords = getEventKeywords(eventType);
   
   // Select random keywords (between 2-4) to avoid overwhelming the model
   const shuffled = [...keywords].sort(() => 0.5 - Math.random());
   const selectedKeywords = shuffled.slice(0, Math.floor(Math.random() * 3) + 2);
   
-  // Base prompts optimized for different event types
+  // Base prompts optimized for Runware
   let basePrompt = "";
   
   switch (eventType) {
@@ -112,11 +113,11 @@ const createOptimizedPrompt = (eventType: string, title: string = "", descriptio
     prompt += ` Theme: ${shortDesc}${shortDesc.length < description.length ? '...' : ''}`;
   }
   
-  // Add specific instructions for image generation
+  // Add specific instructions for Runware image generation
   prompt += " Perfect as event invitation background with space for text. Digital card format.";
   
   return prompt;
-};
+}
 
 const BackgroundTabContent: React.FC<BackgroundTabContentProps> = ({ title, description }) => {
   const {
@@ -146,29 +147,28 @@ const BackgroundTabContent: React.FC<BackgroundTabContentProps> = ({ title, desc
       // Detect the event type from title and description
       const eventType = detectEventType(title, description);
       
-      // Build an optimized prompt for image generation
-      const enhancedPrompt = createOptimizedPrompt(eventType, title, description);
+      // Build an optimized prompt for Runware image generation
+      const enhancedPrompt = createRunwarePrompt(eventType, title, description);
       
       toast({
         title: "Generating background",
         description: "Please wait while we create a custom background for your event..."
       });
       
-      console.log("Enhanced AI prompt:", enhancedPrompt);
+      console.log("Enhanced Runware prompt:", enhancedPrompt);
       
-      // Use the handleImageGeneration function with our enhanced prompt
+      // Use the handleImageGeneration function with our Runware-optimized prompt
       const result = await handleImageGeneration(enhancedPrompt);
       
       if (result.success && result.imageUrl) {
         // Update the background with the generated image
+        console.log("Applying background image:", result.imageUrl);
         handleBackgroundChange('image', result.imageUrl);
         
         toast({
           title: "Background generated",
           description: "Your AI generated background has been applied"
         });
-        
-        console.log("Background image applied:", result.imageUrl);
       } else {
         console.error("Failed to generate image:", result.error);
         throw new Error(result.error || "Failed to generate image");
@@ -187,7 +187,7 @@ const BackgroundTabContent: React.FC<BackgroundTabContentProps> = ({ title, desc
   };
 
   return (
-    <div>
+    <div onClick={(e) => e.stopPropagation()}>
       <BackgroundSelector
         backgroundType={convertBackgroundTypeToUI(customization.background.type)}
         backgroundValue={customization.background.value}

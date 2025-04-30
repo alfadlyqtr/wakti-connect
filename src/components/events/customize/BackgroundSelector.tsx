@@ -56,9 +56,12 @@ const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
     onBackgroundChange('image', value);
   };
 
-  // Improved AI background generation handler with guaranteed event capturing
-  const handleGenerateAIBackground = () => {
-    console.log("Generating AI background...");
+  // Completely rewritten AI background generation handler to guarantee event capturing
+  const handleGenerateAIBackground = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    console.log("Generating AI background with explicit event handling...");
     
     // Make sure to activate the image tab first
     if (activeTab !== 'image') {
@@ -88,7 +91,7 @@ const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" onClick={(e) => e.stopPropagation()}>
       <Label>Background</Label>
       
       <Tabs 
@@ -97,10 +100,10 @@ const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
         className="w-full relative"
       >
         <TabsList className="grid grid-cols-2 w-full">
-          <TabsTrigger value="color">
+          <TabsTrigger value="color" onClick={(e) => e.stopPropagation()}>
             Solid Color
           </TabsTrigger>
-          <TabsTrigger value="image">
+          <TabsTrigger value="image" onClick={(e) => e.stopPropagation()}>
             Image
           </TabsTrigger>
         </TabsList>
@@ -120,7 +123,7 @@ const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
             description={description}
           />
           
-          <div className="mt-4 border-t pt-4">
+          <div className="mt-4 border-t pt-4" onClick={(e) => e.stopPropagation()}>
             <Button 
               variant="outline" 
               className="w-full flex items-center justify-center gap-2"

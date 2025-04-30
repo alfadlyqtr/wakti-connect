@@ -29,20 +29,24 @@ const LivePreview: React.FC<LivePreviewProps> = ({
 }) => {
   const getBackgroundStyle = () => {
     if (!customization?.background) {
-      return '#ffffff';
+      return { backgroundColor: '#ffffff' };
     }
 
     const { type, value } = customization.background;
     
-    if (type === 'image') {
-      return `url(${value})`;
+    if (type === 'image' && value) {
+      return { 
+        backgroundImage: `url(${value})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      };
     }
     
-    return value || '#ffffff';
+    return { backgroundColor: value || '#ffffff' };
   };
 
   const cardStyle = {
-    background: getBackgroundStyle(),
+    ...getBackgroundStyle(),
     color: customization.font?.color || '#333333',
     fontFamily: customization.font?.family || 'system-ui, sans-serif',
     fontSize: customization.font?.size || 'medium',
@@ -55,8 +59,6 @@ const LivePreview: React.FC<LivePreviewProps> = ({
     gap: '0.75rem',
     position: 'relative' as const,
     overflow: 'hidden',
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
     // Set a max-width and max-height to ensure the card is responsive
     maxWidth: '100%',
     maxHeight: '100%',

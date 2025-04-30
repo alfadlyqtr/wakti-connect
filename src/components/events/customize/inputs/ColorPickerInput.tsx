@@ -37,6 +37,7 @@ export const ColorPickerInput: React.FC<ColorPickerInputProps> = ({
   ];
   
   const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
     e.stopPropagation();
     const newColor = e.target.value;
     setColor(newColor);
@@ -44,13 +45,16 @@ export const ColorPickerInput: React.FC<ColorPickerInputProps> = ({
   };
 
   const handleHexInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
     e.stopPropagation();
     const newColor = e.target.value;
     setColor(newColor);
     onChange(newColor);
   };
   
-  const handlePresetClick = (presetColor: string) => {
+  const handlePresetClick = (presetColor: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     setColor(presetColor);
     onChange(presetColor);
   };
@@ -60,14 +64,20 @@ export const ColorPickerInput: React.FC<ColorPickerInputProps> = ({
     setIsOpen(open);
   };
 
+  // Stop propagation on container to prevent clicking through
+  const handleContainerClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+
   return (
     <div 
       className={className}
       ref={colorRef}
+      onClick={handleContainerClick}
     >
       {label && <Label className="mb-2 block">{label}</Label>}
       
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-2" onClick={handleContainerClick}>
         <Popover open={isOpen} onOpenChange={handleOpenChange}>
           <PopoverTrigger asChild>
             <Button 
@@ -76,6 +86,7 @@ export const ColorPickerInput: React.FC<ColorPickerInputProps> = ({
               className="w-10 h-10 p-0 border-2"
               style={{ backgroundColor: color }}
               onClick={(e) => {
+                e.preventDefault();
                 e.stopPropagation();
               }}
             >
@@ -86,8 +97,10 @@ export const ColorPickerInput: React.FC<ColorPickerInputProps> = ({
             className="w-auto p-3 border-2 shadow-xl" 
             onClick={(e) => e.stopPropagation()}
             onMouseDown={(e) => e.stopPropagation()}
+            onPointerDownOutside={(e) => e.stopPropagation()}
+            onInteractOutside={(e) => e.stopPropagation()}
           >
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3" onClick={(e) => e.stopPropagation()}>
               <input
                 type="color"
                 value={color}
@@ -104,10 +117,7 @@ export const ColorPickerInput: React.FC<ColorPickerInputProps> = ({
                       color === presetColor ? 'ring-2 ring-primary ring-offset-1' : ''
                     }`}
                     style={{ backgroundColor: presetColor }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handlePresetClick(presetColor);
-                    }}
+                    onClick={(e) => handlePresetClick(presetColor, e)}
                     onMouseDown={(e) => e.stopPropagation()}
                   />
                 ))}

@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { EventCustomization } from '@/types/event.types';
 import { Button } from '@/components/ui/button';
@@ -39,19 +39,46 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
   selectedDate
 }) => {
   const [activeTab, setActiveTab] = React.useState('background');
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastSavedState, setLastSavedState] = useState<string>('');
   
   // Debug customization state changes
   useEffect(() => {
-    console.log("Customization updated:", JSON.stringify(customization).substring(0, 100) + "...");
-  }, [customization]);
+    const customizationSummary = JSON.stringify({
+      background: customization.background,
+      font: customization.font?.color,
+      buttons: {
+        accept: customization.buttons?.accept?.background,
+        decline: customization.buttons?.decline?.background
+      }
+    });
+    console.log("Customization updated:", customizationSummary);
+    
+    // Update last saved state if current state differs
+    if (lastSavedState && lastSavedState !== customizationSummary) {
+      console.log("Customization changed since last save");
+    }
+  }, [customization, lastSavedState]);
 
   // Improved save draft handler with state synchronization
-  const onSaveDraft = async () => {
+  const onSaveDraft = useCallback(async () => {
     try {
+      setIsSaving(true);
+      
       console.log("Saving draft with customization:", {
         background: customization.background,
         font: customization.font,
         buttons: customization.buttons
+      });
+      
+      // Create a snapshot of current state for comparison
+      const customizationSnapshot = JSON.stringify({
+        background: customization.background,
+        font: customization.font?.color,
+        buttons: {
+          accept: customization.buttons?.accept?.background,
+          decline: customization.buttons?.decline?.background
+        }
       });
       
       // Make sure customization is fully captured before saving
@@ -62,8 +89,11 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
           description: "Your event customization is being saved"
         });
         
-        // Call the provided handler
+        // Call the provided handler with current state
         await Promise.resolve(handleSaveDraft());
+        
+        // Update last saved state after successful save
+        setLastSavedState(customizationSnapshot);
         
         // Show success message
         toast({
@@ -77,6 +107,9 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
           title: "Draft saved",
           description: "Your event has been saved as a draft",
         });
+        
+        // Update last saved state
+        setLastSavedState(customizationSnapshot);
       }
     } catch (error) {
       console.error("Error saving draft:", error);
@@ -85,8 +118,10 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
         description: "There was a problem saving your draft",
         variant: "destructive"
       });
+    } finally {
+      setIsSaving(false);
     }
-  };
+  }, [customization, handleSaveDraft]);
 
   // Event handler for next button
   const onNextTab = () => {
@@ -146,9 +181,10 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
             variant="outline"
             onClick={onSaveDraft}
             className="px-4"
+            disabled={isSaving}
           >
             <Save className="h-4 w-4 mr-2" />
-            Save Draft
+            {isSaving ? 'Saving...' : 'Save Draft'}
           </Button>
           
           {handleNextTab && (

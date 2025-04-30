@@ -7,11 +7,12 @@ export interface GeneratedImageResult {
   prompt: string;
   success: boolean;
   error?: string;
+  provider?: string;
 }
 
 /**
  * Handles image generation requests based on the user's prompt
- * Uses Runware API as the primary service, with fallback to OpenAI
+ * Uses Runware API as the primary service, with no fallback
  */
 export async function handleImageGeneration(prompt: string): Promise<GeneratedImageResult> {
   try {
@@ -21,7 +22,8 @@ export async function handleImageGeneration(prompt: string): Promise<GeneratedIm
       throw new Error('Prompt cannot be empty');
     }
     
-    // Generate image using the edge function that prioritizes Runware
+    // Generate image using Runware service
+    console.log('[imageHandling] Calling Runware API with prompt:', prompt);
     const result = await runwareService.generateImage({
       positivePrompt: prompt,
       model: "runware:100@1", // Explicitly request Runware model
@@ -31,7 +33,7 @@ export async function handleImageGeneration(prompt: string): Promise<GeneratedIm
     });
     
     // Add detailed logging for debugging
-    console.log('[imageHandling] Image generation successful with provider:', result.provider || 'unknown');
+    console.log('[imageHandling] Image generation successful with provider:', result.provider || 'Runware');
     console.log('[imageHandling] Image URL:', result.imageURL);
     
     if (!result.imageURL) {
@@ -41,7 +43,8 @@ export async function handleImageGeneration(prompt: string): Promise<GeneratedIm
     return {
       imageUrl: result.imageURL,
       prompt: prompt,
-      success: true
+      success: true,
+      provider: 'runware'
     };
   } catch (error: any) {
     console.error('[imageHandling] Image generation failed:', error);
