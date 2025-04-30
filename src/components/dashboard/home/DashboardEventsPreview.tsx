@@ -6,8 +6,9 @@ import { Calendar, Clock, PlusCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { UserRole } from "@/types/user";
-import { useEvents } from "@/hooks/useEvents";
+import { useQuery } from '@tanstack/react-query';
 import { format } from "date-fns";
+import { listSimpleInvitations } from '@/services/invitation/simple-invitations';
 
 interface DashboardEventsPreviewProps {
   userRole: UserRole;
@@ -15,16 +16,17 @@ interface DashboardEventsPreviewProps {
 
 const DashboardEventsPreview: React.FC<DashboardEventsPreviewProps> = ({ userRole }) => {
   const navigate = useNavigate();
-  const { 
-    events,
-    filteredEvents, 
-    isLoading
-  } = useEvents();
   
-  // Get only upcoming events (events with start_time in the future)
-  const upcomingEvents = (filteredEvents || events || []).filter(event => {
-    const eventDate = new Date(event.start_time);
-    return eventDate > new Date();
+  // Replace useEvents with direct query to the simple invitations list with isEvent=true filter
+  const { data: events, isLoading } = useQuery({
+    queryKey: ['simple-invitations-events'],
+    queryFn: () => listSimpleInvitations(true), // Pass true to get only events
+  });
+  
+  // Get only upcoming events (events with date in the future)
+  const upcomingEvents = (events || []).filter(event => {
+    const eventDate = event.date ? new Date(event.date) : null;
+    return eventDate && eventDate > new Date();
   }).slice(0, 3); // Limit to 3 events
 
   return (
@@ -50,21 +52,21 @@ const DashboardEventsPreview: React.FC<DashboardEventsPreviewProps> = ({ userRol
                   <div className="flex justify-between">
                     <div>
                       <h4 className="font-medium">{event.title}</h4>
-                      {event.location && (
-                        <p className="text-sm text-muted-foreground">{event.location}</p>
+                      {event.locationTitle && (
+                        <p className="text-sm text-muted-foreground">{event.locationTitle}</p>
                       )}
                     </div>
                     <div className="flex items-center text-sm text-muted-foreground">
                       <Clock className="h-3.5 w-3.5 mr-1" />
-                      {format(new Date(event.start_time), 'h:mm a')}
+                      {event.time}
                     </div>
                   </div>
                   <div className="mt-2 flex justify-between items-center">
                     <div className="text-xs bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-300 px-2 py-0.5 rounded-full">
-                      {event.status}
+                      Event
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      {format(new Date(event.start_time), 'MMM d, yyyy')}
+                      {event.date && format(new Date(event.date), 'MMM d, yyyy')}
                     </div>
                   </div>
                 </div>
