@@ -25,3 +25,4 @@ const FeatureCallToAction = () => {
 };
 
 export default FeatureCallToAction;
+export { FeatureCallToAction };

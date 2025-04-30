@@ -1,8 +1,10 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { Event, EventStatus, EventFormData, EventTab, EventsResult } from '@/types/event.types';
 import { toast } from '@/components/ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
+import { useToast } from '@/components/ui/use-toast';
 
 export const useEvents = (tab?: EventTab) => {
   const [events, setEvents] = useState<Event[]>([]);

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { MeetingIntakeForm } from './MeetingIntakeForm';
+import MeetingIntakeForm from './MeetingIntakeForm';
 import { IntakeData } from '@/hooks/ai/meeting-summary/types';
 
 interface MeetingIntakeDialogProps {

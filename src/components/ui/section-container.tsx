@@ -4,35 +4,21 @@ import { cn } from "@/lib/utils";
 
 interface SectionContainerProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
-  className?: string;
-  as?: React.ElementType;
-  fullWidth?: boolean;
-  noPadding?: boolean;
 }
 
-const SectionContainer = ({
+export const SectionContainer = ({
   children,
   className,
-  as: Component = "section",
-  fullWidth = false,
-  noPadding = false,
   ...props
 }: SectionContainerProps) => {
   return (
-    <Component 
-      className={cn(
-        noPadding ? "" : "py-8 sm:py-12 md:py-16 px-4", 
-        className
-      )} 
+    <section
+      className={cn("w-full", className)}
       {...props}
     >
-      <div className={cn(
-        fullWidth ? "w-full" : "container mx-auto max-w-5xl",
-      )}>
+      <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-7xl">
         {children}
       </div>
-    </Component>
+    </section>
   );
 };
-
-export { SectionContainer };

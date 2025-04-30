@@ -2,8 +2,11 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CalendarDays } from "lucide-react";
+import { useEvents } from "@/hooks/useEvents";
 
 const DashboardEvents = () => {
+  const { isLoading } = useEvents();
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Events</h1>

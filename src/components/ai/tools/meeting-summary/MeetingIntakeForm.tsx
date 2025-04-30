@@ -19,9 +19,10 @@ interface MeetingIntakeFormProps {
     notes: string;
     location: string;
   }) => void;
+  onSkip?: () => void;
 }
 
-const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit }) => {
+const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, onSkip }) => {
   const [title, setTitle] = useState("");
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [attendees, setAttendees] = useState("");
@@ -117,7 +118,14 @@ const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit }) => {
             />
           </div>
 
-          <Button type="submit" className="w-full">Generate Summary</Button>
+          <div className="flex gap-3">
+            <Button type="submit" className="flex-1">Generate Summary</Button>
+            {onSkip && (
+              <Button type="button" variant="outline" onClick={onSkip}>
+                Skip
+              </Button>
+            )}
+          </div>
         </form>
       </CardContent>
     </Card>

@@ -4,43 +4,40 @@ import { cn } from "@/lib/utils";
 
 interface SectionHeadingProps {
   title: string;
-  subtitle?: string;
-  centered?: boolean;
+  subtitle: string;
   className?: string;
+  titleClassName?: string;
   subtitleClassName?: string;
+  centered?: boolean;
 }
 
-const SectionHeading = ({
+export function SectionHeading({
   title,
   subtitle,
-  centered = true,
   className,
+  titleClassName,
   subtitleClassName,
-}: SectionHeadingProps) => {
+  centered = true,
+}: SectionHeadingProps) {
   return (
     <div className={cn(
-      "mb-8 sm:mb-12",
+      "mb-10",
       centered && "text-center",
-      "animate-fade-in",
       className
     )}>
       <h2 className={cn(
-        "text-2xl sm:text-3xl md:text-4xl font-bold mb-2 sm:mb-4",
-        centered && "mx-auto max-w-3xl"
+        "text-3xl font-bold tracking-tight mb-3",
+        titleClassName
       )}>
         {title}
       </h2>
-      {subtitle && (
-        <p className={cn(
-          "text-base sm:text-lg text-muted-foreground",
-          centered && "max-w-2xl mx-auto",
-          subtitleClassName
-        )}>
-          {subtitle}
-        </p>
-      )}
+      <p className={cn(
+        "text-muted-foreground text-lg max-w-3xl",
+        centered && "mx-auto",
+        subtitleClassName
+      )}>
+        {subtitle}
+      </p>
     </div>
   );
-};
-
-export { SectionHeading };
+}
