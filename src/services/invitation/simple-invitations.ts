@@ -199,12 +199,14 @@ export const listSimpleInvitations = async (isEvent = false): Promise<SimpleInvi
       return [];
     }
 
-    // Explicitly define the type and mapping to avoid recursive inference issues
-    const result: SimpleInvitation[] = [];
-    for (const item of data) {
-      result.push(mapDatabaseToSimpleInvitation(item));
+    // Create a new array and explicitly map each item without chaining
+    const invitations: SimpleInvitation[] = [];
+    
+    for (let i = 0; i < data.length; i++) {
+      invitations.push(mapDatabaseToSimpleInvitation(data[i]));
     }
-    return result;
+    
+    return invitations;
   } catch (error) {
     console.error("Error in listSimpleInvitations:", error);
     toast({
