@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { SimpleInvitation, CreateSimpleInvitationRequest } from "@/types/invitation-simple.types";
+import { BackgroundType } from "@/types/invitation.types";
 import { toast } from "sonner";
 import { nanoid } from "nanoid";
 
@@ -37,7 +38,10 @@ export const createSimpleInvitation = async (
     }
     
     toast.success("Invitation created successfully!");
-    return data as SimpleInvitation;
+    return {
+      ...data,
+      background_type: data.background_type as BackgroundType
+    } as SimpleInvitation;
   } catch (error) {
     console.error('Error creating invitation:', error);
     toast.error(error instanceof Error ? error.message : "Failed to create invitation");
@@ -65,7 +69,10 @@ export const updateSimpleInvitation = async (
     }
     
     toast.success("Invitation updated successfully!");
-    return data as SimpleInvitation;
+    return {
+      ...data,
+      background_type: data.background_type as BackgroundType
+    } as SimpleInvitation;
   } catch (error) {
     console.error('Error updating invitation:', error);
     toast.error(error instanceof Error ? error.message : "Failed to update invitation");
@@ -87,7 +94,10 @@ export const getSimpleInvitations = async (): Promise<SimpleInvitation[]> => {
       throw error;
     }
     
-    return data as SimpleInvitation[];
+    return data.map(item => ({
+      ...item,
+      background_type: item.background_type as BackgroundType
+    })) as SimpleInvitation[];
   } catch (error) {
     console.error('Error fetching invitations:', error);
     toast.error(error instanceof Error ? error.message : "Failed to fetch invitations");
@@ -110,7 +120,10 @@ export const getSimpleInvitationById = async (id: string): Promise<SimpleInvitat
       throw error;
     }
     
-    return data as SimpleInvitation;
+    return {
+      ...data,
+      background_type: data.background_type as BackgroundType
+    } as SimpleInvitation;
   } catch (error) {
     console.error('Error fetching invitation:', error);
     return null;
@@ -155,7 +168,10 @@ export const getSharedInvitation = async (shareId: string): Promise<SimpleInvita
       throw error;
     }
     
-    return data as SimpleInvitation;
+    return {
+      ...data,
+      background_type: data.background_type as BackgroundType
+    } as SimpleInvitation;
   } catch (error) {
     console.error('Error fetching shared invitation:', error);
     return null;

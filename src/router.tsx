@@ -5,15 +5,26 @@ import CreateInvitationPage from './pages/invitations/CreateInvitationPage';
 import InvitationsListPage from './pages/invitations/InvitationsListPage';
 import SharedInvitationPage from './pages/invitations/SharedInvitationPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import PublicLayout from './components/layout/PublicLayout';
 
 // Placeholder component for missing dashboard components
-const PlaceholderComponent = () => <div>Page coming soon</div>;
+const PlaceholderComponent = () => <div className="p-8"><h1 className="text-2xl font-bold mb-4">Page coming soon</h1><p>This dashboard section is under development.</p></div>;
 
 export const router = createBrowserRouter([
   {
     path: '/',
     element: <App />,
     children: [
+      {
+        path: "/",
+        element: <PublicLayout />,
+        children: [
+          {
+            index: true,
+            element: <div className="p-8"><h1 className="text-2xl font-bold">Welcome to the homepage</h1></div>,
+          },
+        ]
+      },
       {
         path: "dashboard",
         element: <ProtectedRoute><PlaceholderComponent /></ProtectedRoute>,
