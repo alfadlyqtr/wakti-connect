@@ -106,7 +106,7 @@ export interface SimpleInvitation {
   time?: string;
   createdAt: string;
   updatedAt?: string;
-  userId: string;
+  userId: string; // Match the database column name
   shareId?: string;
   isPublic?: boolean;
   customization: SimpleInvitationCustomization;

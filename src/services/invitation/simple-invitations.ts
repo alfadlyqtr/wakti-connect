@@ -1,267 +1,259 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { SimpleInvitation, BackgroundType } from '@/types/invitation.types';
+import { supabase } from "@/integrations/supabase/client";
+import { SimpleInvitation, SimpleInvitationCustomization } from "@/types/invitation.types";
+import { toast } from "@/components/ui/use-toast";
 
-/**
- * List all simple invitations for the current user
- * @param isEvent - Optional filter to only return invitations that are events (true) or not events (false)
- */
-export async function listSimpleInvitations(isEvent?: boolean): Promise<SimpleInvitation[]> {
-  try {
-    let query = supabase
-      .from('invitations')
-      .select('*');
-      
-    // If isEvent is provided, filter by is_event field
-    if (isEvent !== undefined) {
-      query = query.eq('is_event', isEvent);
-    }
-
-    // Add ordering by creation date (newest first)
-    query = query.order('created_at', { ascending: false });
-
-    const { data, error } = await query;
-    
-    if (error) {
-      console.error('Error fetching invitations:', error);
-      throw error;
-    }
-
-    // Transform data to match SimpleInvitation type
-    const invitations: SimpleInvitation[] = data.map(item => ({
-      id: item.id,
-      title: item.title,
-      description: item.description || '',
-      location: item.location || '',
-      locationTitle: item.location_url || '', // Using location_url for locationTitle
-      date: item.datetime ? new Date(item.datetime).toISOString().split('T')[0] : undefined,
-      time: item.datetime ? new Date(item.datetime).toISOString().split('T')[1].substring(0, 5) : undefined,
-      createdAt: item.created_at,
-      userId: item.user_id,
-      shareId: item.share_link,
-      customization: {
-        background: {
-          type: (item.background_type || 'solid') as BackgroundType,
-          value: item.background_value || '#ffffff',
-        },
-        font: {
-          family: item.font_family || 'system-ui, sans-serif',
-          size: item.font_size || 'medium',
-          color: item.text_color || '#000000',
-          alignment: 'center',
-        },
-      },
-      isEvent: Boolean(item.is_event) || false
-    }));
-    
-    return invitations;
-  } catch (error) {
-    console.error('Error in listSimpleInvitations:', error);
-    return [];
-  }
-}
-
-/**
- * Get a simple invitation by ID
- */
-export async function getSimpleInvitationById(id: string): Promise<SimpleInvitation | null> {
-  try {
-    const { data, error } = await supabase
-      .from('invitations')
-      .select('*')
-      .eq('id', id)
-      .single();
-    
-    if (error) {
-      console.error('Error fetching invitation:', error);
-      throw error;
-    }
-    
-    if (!data) return null;
-    
-    // Transform to SimpleInvitation type
-    const invitation: SimpleInvitation = {
-      id: data.id,
-      title: data.title,
-      description: data.description || '',
-      location: data.location || '',
-      locationTitle: data.location_url || '', // Using location_url for locationTitle
-      date: data.datetime ? new Date(data.datetime).toISOString().split('T')[0] : undefined,
-      time: data.datetime ? new Date(data.datetime).toISOString().split('T')[1].substring(0, 5) : undefined,
-      createdAt: data.created_at,
-      userId: data.user_id,
-      shareId: data.share_link,
-      customization: {
-        background: {
-          type: (data.background_type || 'solid') as BackgroundType,
-          value: data.background_value || '#ffffff',
-        },
-        font: {
-          family: data.font_family || 'system-ui, sans-serif',
-          size: data.font_size || 'medium',
-          color: data.text_color || '#000000',
-          alignment: 'center',
-        },
-      },
-      isEvent: Boolean(data.is_event) || false
-    };
-    
-    return invitation;
-  } catch (error) {
-    console.error('Error in getSimpleInvitationById:', error);
-    return null;
-  }
+interface InvitationData {
+  title: string;
+  description: string;
+  location?: string;
+  location_url?: string;
+  location_title?: string;
+  datetime?: string;
+  background_type: string;
+  background_value: string;
+  font_family: string;
+  font_size: string;
+  text_color: string;
+  is_event?: boolean;
+  user_id: string;
 }
 
 /**
  * Create a new simple invitation
  */
-export async function createSimpleInvitation(data: any): Promise<SimpleInvitation | null> {
+export const createSimpleInvitation = async (invitationData: InvitationData): Promise<SimpleInvitation | null> => {
   try {
-    const { data: createdInvitation, error } = await supabase
+    const { data, error } = await supabase
       .from('invitations')
-      .insert([data])
+      .insert(invitationData)
       .select()
       .single();
-    
+
     if (error) {
-      console.error('Error creating invitation:', error);
+      console.error("Error creating invitation:", error);
       throw error;
     }
-    
-    // Transform to SimpleInvitation type
-    const invitation: SimpleInvitation = {
-      id: createdInvitation.id,
-      title: createdInvitation.title,
-      description: createdInvitation.description || '',
-      location: createdInvitation.location || '',
-      locationTitle: createdInvitation.location_url || '', // Using location_url for locationTitle
-      date: createdInvitation.datetime ? new Date(createdInvitation.datetime).toISOString().split('T')[0] : undefined,
-      time: createdInvitation.datetime ? new Date(createdInvitation.datetime).toISOString().split('T')[1].substring(0, 5) : undefined,
-      createdAt: createdInvitation.created_at,
-      userId: createdInvitation.user_id,
-      shareId: createdInvitation.share_link,
-      customization: {
-        background: {
-          type: (createdInvitation.background_type || 'solid') as BackgroundType,
-          value: createdInvitation.background_value || '#ffffff',
-        },
-        font: {
-          family: createdInvitation.font_family || 'system-ui, sans-serif',
-          size: createdInvitation.font_size || 'medium',
-          color: createdInvitation.text_color || '#000000',
-          alignment: 'center',
-        },
-      },
-      isEvent: Boolean(createdInvitation.is_event) || false
-    };
-    
-    return invitation;
+
+    if (!data) {
+      throw new Error("No data returned from invitation creation");
+    }
+
+    // Map database response to our SimpleInvitation type
+    return mapDatabaseToSimpleInvitation(data);
   } catch (error) {
-    console.error('Error in createSimpleInvitation:', error);
-    return null;
+    console.error("Error in createSimpleInvitation:", error);
+    toast({
+      title: "Error",
+      description: "Failed to create invitation",
+      variant: "destructive",
+    });
+    throw error;
   }
-}
+};
 
 /**
  * Update an existing simple invitation
  */
-export async function updateSimpleInvitation(id: string, data: any): Promise<SimpleInvitation | null> {
+export const updateSimpleInvitation = async (id: string, invitationData: Partial<InvitationData>): Promise<SimpleInvitation | null> => {
   try {
-    const { data: updatedInvitation, error } = await supabase
+    const { data, error } = await supabase
       .from('invitations')
-      .update(data)
+      .update(invitationData)
       .eq('id', id)
       .select()
       .single();
-    
+
     if (error) {
-      console.error('Error updating invitation:', error);
+      console.error("Error updating invitation:", error);
       throw error;
     }
-    
-    // Transform to SimpleInvitation type
-    const invitation: SimpleInvitation = {
-      id: updatedInvitation.id,
-      title: updatedInvitation.title,
-      description: updatedInvitation.description || '',
-      location: updatedInvitation.location || '',
-      locationTitle: updatedInvitation.location_url || '', // Using location_url for locationTitle
-      date: updatedInvitation.datetime ? new Date(updatedInvitation.datetime).toISOString().split('T')[0] : undefined,
-      time: updatedInvitation.datetime ? new Date(updatedInvitation.datetime).toISOString().split('T')[1].substring(0, 5) : undefined,
-      createdAt: updatedInvitation.created_at,
-      userId: updatedInvitation.user_id,
-      shareId: updatedInvitation.share_link,
-      customization: {
-        background: {
-          type: (updatedInvitation.background_type || 'solid') as BackgroundType,
-          value: updatedInvitation.background_value || '#ffffff',
-        },
-        font: {
-          family: updatedInvitation.font_family || 'system-ui, sans-serif',
-          size: updatedInvitation.font_size || 'medium',
-          color: updatedInvitation.text_color || '#000000',
-          alignment: 'center',
-        },
-      },
-      isEvent: Boolean(updatedInvitation.is_event) || false
-    };
-    
-    return invitation;
+
+    if (!data) {
+      throw new Error("No data returned from invitation update");
+    }
+
+    // Map database response to our SimpleInvitation type
+    return mapDatabaseToSimpleInvitation(data);
   } catch (error) {
-    console.error('Error in updateSimpleInvitation:', error);
-    return null;
+    console.error("Error in updateSimpleInvitation:", error);
+    toast({
+      title: "Error",
+      description: "Failed to update invitation",
+      variant: "destructive",
+    });
+    throw error;
   }
-}
+};
 
 /**
- * Get a shared invitation by share ID
+ * Delete a simple invitation
  */
-export async function getSharedInvitation(shareId: string): Promise<SimpleInvitation | null> {
+export const deleteSimpleInvitation = async (id: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('invitations')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error("Error deleting invitation:", error);
+      throw error;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error in deleteSimpleInvitation:", error);
+    toast({
+      title: "Error",
+      description: "Failed to delete invitation",
+      variant: "destructive",
+    });
+    return false;
+  }
+};
+
+/**
+ * Get a simple invitation by ID
+ */
+export const getSimpleInvitationById = async (id: string): Promise<SimpleInvitation | null> => {
   try {
     const { data, error } = await supabase
       .from('invitations')
       .select('*')
-      .eq('share_link', shareId)
+      .eq('id', id)
       .single();
-    
+
     if (error) {
-      console.error('Error fetching shared invitation:', error);
+      console.error("Error fetching invitation:", error);
       throw error;
     }
-    
-    if (!data) return null;
-    
-    // Transform to SimpleInvitation type
-    const invitation: SimpleInvitation = {
-      id: data.id,
-      title: data.title,
-      description: data.description || '',
-      location: data.location || '',
-      locationTitle: data.location_url || '',
-      date: data.datetime ? new Date(data.datetime).toISOString().split('T')[0] : undefined,
-      time: data.datetime ? new Date(data.datetime).toISOString().split('T')[1].substring(0, 5) : undefined,
-      createdAt: data.created_at,
-      userId: data.user_id,
-      shareId: data.share_link,
-      customization: {
-        background: {
-          type: (data.background_type || 'solid') as BackgroundType,
-          value: data.background_value || '#ffffff',
-        },
-        font: {
-          family: data.font_family || 'system-ui, sans-serif',
-          size: data.font_size || 'medium',
-          color: data.text_color || '#000000',
-          alignment: 'center',
-        },
-      },
-      isEvent: Boolean(data.is_event) || false
-    };
-    
-    return invitation;
+
+    if (!data) {
+      return null;
+    }
+
+    // Map database response to our SimpleInvitation type
+    return mapDatabaseToSimpleInvitation(data);
   } catch (error) {
-    console.error('Error in getSharedInvitation:', error);
+    console.error("Error in getSimpleInvitationById:", error);
+    toast({
+      title: "Error",
+      description: "Failed to retrieve invitation",
+      variant: "destructive",
+    });
     return null;
   }
+};
+
+/**
+ * Get a simple invitation by share ID
+ */
+export const getSharedInvitation = async (shareId: string): Promise<SimpleInvitation | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('invitations')
+      .select('*')
+      .eq('share_id', shareId)
+      .single();
+
+    if (error) {
+      console.error("Error fetching shared invitation:", error);
+      throw error;
+    }
+
+    if (!data) {
+      return null;
+    }
+
+    // Map database response to our SimpleInvitation type
+    return mapDatabaseToSimpleInvitation(data);
+  } catch (error) {
+    console.error("Error in getSharedInvitation:", error);
+    toast({
+      title: "Error",
+      description: "Failed to retrieve shared invitation",
+      variant: "destructive",
+    });
+    return null;
+  }
+};
+
+/**
+ * List all simple invitations for the current user
+ */
+export const listSimpleInvitations = async (isEvent = false): Promise<SimpleInvitation[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('invitations')
+      .select('*')
+      .eq('is_event', isEvent)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error("Error fetching invitations:", error);
+      throw error;
+    }
+
+    if (!data || data.length === 0) {
+      return [];
+    }
+
+    // Map database response to our SimpleInvitation type
+    return data.map(mapDatabaseToSimpleInvitation);
+  } catch (error) {
+    console.error("Error in listSimpleInvitations:", error);
+    toast({
+      title: "Error",
+      description: "Failed to retrieve invitations",
+      variant: "destructive",
+    });
+    return [];
+  }
+};
+
+/**
+ * Helper function to map database response to SimpleInvitation type
+ */
+function mapDatabaseToSimpleInvitation(data: any): SimpleInvitation {
+  // Parse datetime if present
+  let date: string | undefined;
+  let time: string | undefined;
+  
+  if (data.datetime) {
+    const dateObj = new Date(data.datetime);
+    date = dateObj.toISOString().split('T')[0];
+    time = dateObj.toTimeString().split(' ')[0].substring(0, 5);
+  }
+  
+  // Create customization object
+  const customization: SimpleInvitationCustomization = {
+    background: {
+      type: data.background_type as any,
+      value: data.background_value || '#ffffff',
+    },
+    font: {
+      family: data.font_family || 'system-ui, sans-serif',
+      size: data.font_size || 'medium',
+      color: data.text_color || '#000000',
+      alignment: data.text_align || 'left',
+    },
+  };
+  
+  return {
+    id: data.id,
+    title: data.title,
+    description: data.description || '',
+    location: data.location_url || data.location || '',
+    locationTitle: data.location_title || '',
+    date,
+    time,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+    userId: data.user_id,
+    shareId: data.share_id || undefined,
+    isPublic: data.is_public || false,
+    isEvent: data.is_event || false,
+    customization,
+  };
 }

@@ -10,6 +10,7 @@ import InvitationForm from './InvitationForm';
 import InvitationStyler from './InvitationStyler';
 import InvitationPreview from './InvitationPreview';
 import { toast } from '@/components/ui/use-toast';
+import { useAuth } from '@/features/auth/context/AuthContext';
 
 interface SimpleInvitationCreatorProps {
   existingInvitation?: SimpleInvitation;
@@ -23,6 +24,7 @@ export default function SimpleInvitationCreator({
   isEvent = false 
 }: SimpleInvitationCreatorProps) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<string>('details');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -66,6 +68,15 @@ export default function SimpleInvitationCreator({
   };
 
   const handleSubmit = async () => {
+    if (!user) {
+      toast({
+        title: 'Authentication required',
+        description: 'Please log in to save your ' + entityType.toLowerCase(),
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       
@@ -75,6 +86,7 @@ export default function SimpleInvitationCreator({
         description: formData.description || '',
         location: formData.location || '',
         location_url: formData.location || '', // Using location as location_url
+        location_title: formData.locationTitle || '',
         datetime: formData.date && formData.time ? new Date(`${formData.date}T${formData.time}`).toISOString() : undefined,
         
         // Map from our customization model to the database fields
@@ -84,6 +96,7 @@ export default function SimpleInvitationCreator({
         font_size: customization.font.size,
         text_color: customization.font.color,
         is_event: isEvent, // Add flag to identify if this is an event
+        user_id: user.id, // Add the user's ID to comply with RLS
       };
 
       let result;
@@ -131,6 +144,13 @@ export default function SimpleInvitationCreator({
       setActiveTab('details');
     }
   };
+
+  // Check if user is authenticated
+  React.useEffect(() => {
+    if (!user) {
+      console.warn('User is not authenticated');
+    }
+  }, [user]);
 
   return (
     <div className="container mx-auto p-4 max-w-5xl">
