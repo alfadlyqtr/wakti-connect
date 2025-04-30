@@ -1,6 +1,5 @@
-
 import { useState } from 'react';
-import { EventCustomization } from '@/types/event.types';
+import { EventCustomization, GradientDirection } from '@/types/event.types';
 import React, { createContext, useContext } from 'react';
 
 // Default customization for new events
@@ -8,6 +7,15 @@ export const defaultCustomization: EventCustomization = {
   background: {
     type: "solid",
     value: "#f3f4f6",
+    gradient: {
+      angle: 135,
+      direction: "to-r" as GradientDirection,
+      colorStops: [
+        { color: "#6366f1", position: 0 },
+        { color: "#8b5cf6", position: 100 }
+      ],
+      isRadial: false
+    }
   },
   font: {
     family: "Inter",
@@ -21,6 +29,7 @@ export const defaultCustomization: EventCustomization = {
     size: "1.5rem",
     color: "#111827",
     weight: "medium",
+    alignment: "center",
   },
   descriptionFont: {
     family: "Inter", 
@@ -34,17 +43,27 @@ export const defaultCustomization: EventCustomization = {
     color: "#374151",
     weight: "normal",
   },
+  locationFont: {
+    family: "Inter",
+    size: "1rem",
+    color: "#374151",
+    weight: "normal",
+  },
   buttons: {
     accept: {
       background: "#4f46e5",
       color: "#ffffff",
       shape: "rounded",
+      text: "Accept"
     },
     decline: {
       background: "#ef4444",
       color: "#ffffff",
       shape: "rounded",
+      text: "Decline",
+      isVisible: true
     },
+    position: "center",
   },
   utilityButtons: {
     calendar: {
@@ -58,7 +77,12 @@ export const defaultCustomization: EventCustomization = {
       shape: "rounded",
     },
   },
-  headerStyle: "simple" as "simple" | "banner" | "minimal",
+  headerStyle: "simple" as "simple" | "banner" | "minimal" | "custom",
+  headerHeight: "120px",
+  headerAlignment: "center",
+  footerStyle: "simple",
+  footerBackground: "#f9fafb",
+  footerTextColor: "#6b7280",
   showAcceptDeclineButtons: true,
   showAddToCalendarButton: true,
   enableAddToCalendar: true,
@@ -77,6 +101,12 @@ export const defaultCustomization: EventCustomization = {
   },
   mapDisplay: "button",
   poweredByColor: "#6b7280",
+  shareOptions: {
+    whatsapp: true,
+    email: true,
+    copyLink: true,
+    qrCode: true,
+  }
 };
 
 // Define the context interface
@@ -97,6 +127,7 @@ interface EventCustomizationContextProps {
   setHeaderFontColor: (color: string) => void;
   setHeaderFontSize: (size: string) => void;
   setHeaderFontWeight: (weight: string) => void;
+  setHeaderAlignment: (alignment: "left" | "center" | "right" | "justify") => void;
   
   // Description font handlers
   setDescriptionFontFamily: (family: string) => void;
@@ -107,15 +138,36 @@ interface EventCustomizationContextProps {
   // Button handlers
   setAcceptButtonSettings: (background: string, color: string, shape: "rounded" | "pill" | "square") => void;
   setDeclineButtonSettings: (background: string, color: string, shape: "rounded" | "pill" | "square") => void;
+  setButtonVisibility: (buttonType: "accept" | "decline" | "calendar", isVisible: boolean) => void;
+  setButtonText: (buttonType: "accept" | "decline", text: string) => void;
+  setButtonsPosition: (position: "left" | "center" | "right" | "spaced") => void;
   
   // Header style handler
-  setHeaderStyle: (style: "simple" | "banner" | "minimal") => void;
+  setHeaderStyle: (style: "simple" | "banner" | "minimal" | "custom") => void;
+  setHeaderImage: (imageUrl: string) => void;
+  setHeaderHeight: (height: string) => void;
+  
+  // Footer style handlers
+  setFooterStyle: (style: "simple" | "detailed" | "minimal" | "none") => void;
+  setFooterText: (text: string) => void;
+  setFooterBackground: (color: string) => void;
+  setFooterTextColor: (color: string) => void;
   
   // Feature toggles
   toggleFeature: (feature: string, enabled: boolean) => void;
   
   // Background handler
-  setBackground: (type: "solid" | "image", value: string) => void;
+  setBackground: (type: "solid" | "gradient" | "image", value: string) => void;
+  setGradientSettings: (angle: number, direction: GradientDirection, colorStops: any[], isRadial: boolean) => void;
+  
+  // Branding handlers
+  setBrandingLogo: (logo: string) => void;
+  setBrandingSlogan: (slogan: string) => void;
+  setShowPoweredBy: (show: boolean) => void;
+  setPoweredByColor: (color: string) => void;
+  
+  // Share options
+  setShareOption: (option: string, enabled: boolean) => void;
 }
 
 // Create the context
@@ -301,29 +353,181 @@ export const EventCustomizationProvider: React.FC<{
     }));
   };
   
-  // Header style handler
-  const setHeaderStyle = (style: "simple" | "banner" | "minimal") => {
+  // Header alignment handler
+  const setHeaderAlignment = (alignment: "left" | "center" | "right" | "justify") => {
     setCustomization(prev => ({
       ...prev,
-      headerStyle: style,
+      headerAlignment: alignment
     }));
   };
   
-  // Feature toggles
-  const toggleFeature = (feature: string, enabled: boolean) => {
+  // Button visibility handler
+  const setButtonVisibility = (buttonType: "accept" | "decline" | "calendar", isVisible: boolean) => {
+    if (buttonType === "accept" || buttonType === "decline") {
+      setCustomization(prev => ({
+        ...prev,
+        buttons: {
+          ...prev.buttons,
+          [buttonType]: {
+            ...prev.buttons[buttonType],
+            isVisible
+          }
+        }
+      }));
+    } else if (buttonType === "calendar") {
+      setCustomization(prev => ({
+        ...prev,
+        showAddToCalendarButton: isVisible
+      }));
+    }
+  };
+  
+  // Button text handler
+  const setButtonText = (buttonType: "accept" | "decline", text: string) => {
     setCustomization(prev => ({
       ...prev,
-      [feature]: enabled,
+      buttons: {
+        ...prev.buttons,
+        [buttonType]: {
+          ...prev.buttons[buttonType],
+          text
+        }
+      }
+    }));
+  };
+  
+  // Buttons position handler
+  const setButtonsPosition = (position: "left" | "center" | "right" | "spaced") => {
+    setCustomization(prev => ({
+      ...prev,
+      buttons: {
+        ...prev.buttons,
+        position
+      }
+    }));
+  };
+  
+  // Header handlers
+  const setHeaderStyle = (style: "simple" | "banner" | "minimal" | "custom") => {
+    setCustomization(prev => ({
+      ...prev,
+      headerStyle: style
+    }));
+  };
+  
+  const setHeaderImage = (imageUrl: string) => {
+    setCustomization(prev => ({
+      ...prev,
+      headerImage: imageUrl
+    }));
+  };
+  
+  const setHeaderHeight = (height: string) => {
+    setCustomization(prev => ({
+      ...prev,
+      headerHeight: height
+    }));
+  };
+  
+  // Footer handlers
+  const setFooterStyle = (style: "simple" | "detailed" | "minimal" | "none") => {
+    setCustomization(prev => ({
+      ...prev,
+      footerStyle: style
+    }));
+  };
+  
+  const setFooterText = (text: string) => {
+    setCustomization(prev => ({
+      ...prev,
+      footerText: text
+    }));
+  };
+  
+  const setFooterBackground = (color: string) => {
+    setCustomization(prev => ({
+      ...prev,
+      footerBackground: color
+    }));
+  };
+  
+  const setFooterTextColor = (color: string) => {
+    setCustomization(prev => ({
+      ...prev,
+      footerTextColor: color
+    }));
+  };
+  
+  // Gradient settings handler
+  const setGradientSettings = (angle: number, direction: GradientDirection, colorStops: any[], isRadial: boolean) => {
+    setCustomization(prev => ({
+      ...prev,
+      background: {
+        ...prev.background,
+        gradient: {
+          angle,
+          direction,
+          colorStops,
+          isRadial
+        }
+      }
     }));
   };
   
   // Background handler
-  const setBackground = (type: "solid" | "image", value: string) => {
+  const setBackground = (type: "solid" | "gradient" | "image", value: string) => {
     setCustomization(prev => ({
       ...prev,
       background: {
+        ...prev.background,
         type,
         value,
+      }
+    }));
+  };
+  
+  // Branding handlers
+  const setBrandingLogo = (logo: string) => {
+    setCustomization(prev => ({
+      ...prev,
+      branding: {
+        ...prev.branding,
+        logo
+      }
+    }));
+  };
+  
+  const setBrandingSlogan = (slogan: string) => {
+    setCustomization(prev => ({
+      ...prev,
+      branding: {
+        ...prev.branding,
+        slogan
+      }
+    }));
+  };
+  
+  const setShowPoweredBy = (show: boolean) => {
+    setCustomization(prev => ({
+      ...prev,
+      showPoweredBy: show
+    }));
+  };
+  
+  const setPoweredByColor = (color: string) => {
+    setCustomization(prev => ({
+      ...prev,
+      poweredByColor: color
+    }));
+  };
+  
+  // Share options handler
+  const setShareOption = (option: string, enabled: boolean) => {
+    setCustomization(prev => ({
+      ...prev,
+      shareOptions: {
+        ...prev.shareOptions,
+        [option]: enabled
       }
     }));
   };
@@ -341,15 +545,31 @@ export const EventCustomizationProvider: React.FC<{
     setHeaderFontColor,
     setHeaderFontSize,
     setHeaderFontWeight,
+    setHeaderAlignment,
     setDescriptionFontFamily,
     setDescriptionFontColor,
     setDescriptionFontSize,
     setDescriptionFontWeight,
     setAcceptButtonSettings,
     setDeclineButtonSettings,
+    setButtonVisibility,
+    setButtonText,
+    setButtonsPosition,
     setHeaderStyle,
+    setHeaderImage,
+    setHeaderHeight,
+    setFooterStyle,
+    setFooterText,
+    setFooterBackground,
+    setFooterTextColor,
     toggleFeature,
     setBackground,
+    setGradientSettings,
+    setBrandingLogo,
+    setBrandingSlogan,
+    setShowPoweredBy,
+    setPoweredByColor,
+    setShareOption
   };
 
   return (

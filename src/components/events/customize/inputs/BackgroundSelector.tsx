@@ -8,6 +8,8 @@ import { EventSafeColorPicker } from "./EventSafeColorPicker";
 import { Sparkles, ImageIcon, Loader2 } from "lucide-react";
 import { generateEventBackground } from "@/hooks/ai/utils/eventBackgroundGenerator";
 import { toast } from "@/components/ui/use-toast";
+import { GradientGenerator } from "@/components/ui/gradient-generator";
+import { BackgroundType } from "@/types/event.types";
 
 // Color presets for the event backgrounds
 const COLOR_PRESETS = [
@@ -21,6 +23,39 @@ const COLOR_PRESETS = [
   "#fff3cd", "#ffc107", "#d0d0f0",
   "#3f51b5", "#9c27b0", "#9b87f5"
 ];
+
+interface GradientTabProps {
+  value: string;
+  onChange: (value: string) => void;
+}
+
+const GradientTab: React.FC<GradientTabProps> = ({ value, onChange }) => {
+  // This function will be called from the parent when the "Apply Gradient" button is clicked
+  const handleGradientApply = (gradientCSS: string) => {
+    // Extract the gradient portion from the CSS string
+    const match = gradientCSS.match(/background: (.*);/);
+    if (match && match[1]) {
+      onChange(match[1]);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <GradientGenerator />
+      <Button 
+        onClick={() => {
+          const gradientCSS = document.getElementById('css') as HTMLInputElement;
+          if (gradientCSS && gradientCSS.value) {
+            handleGradientApply(gradientCSS.value);
+          }
+        }}
+        className="w-full mt-2"
+      >
+        Apply Gradient
+      </Button>
+    </div>
+  );
+};
 
 interface ImageTabProps {
   value: string;
@@ -178,9 +213,9 @@ const ImageTab: React.FC<ImageTabProps> = ({
 };
 
 interface BackgroundSelectorProps {
-  backgroundType: 'solid' | 'image';
+  backgroundType: BackgroundType;
   backgroundValue: string;
-  onBackgroundChange: (type: 'solid' | 'image', value: string) => void;
+  onBackgroundChange: (type: BackgroundType, value: string) => void;
   title?: string;
   description?: string;
 }
@@ -197,7 +232,7 @@ export const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
   
   // Update active tab when backgroundType changes
   useEffect(() => {
-    const tabType = backgroundType === 'solid' ? 'solid' : 'image';
+    const tabType = backgroundType || 'solid';
     setActiveTab(tabType);
   }, [backgroundType]);
   
@@ -208,6 +243,8 @@ export const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
     // Set default values when changing tabs
     if (value === 'solid' && backgroundType !== 'solid') {
       onBackgroundChange('solid', backgroundValue === '' ? '#ffffff' : backgroundValue);
+    } else if (value === 'gradient' && backgroundType !== 'gradient') {
+      onBackgroundChange('gradient', 'linear-gradient(135deg, #6366f1, #8b5cf6)');
     } else if (value === 'image' && backgroundType !== 'image') {
       onBackgroundChange('image', '');
     }
@@ -216,6 +253,11 @@ export const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
   // Handler for color changes
   const handleColorChange = useCallback((value: string) => {
     onBackgroundChange('solid', value);
+  }, [onBackgroundChange]);
+  
+  // Handler for gradient changes
+  const handleGradientChange = useCallback((value: string) => {
+    onBackgroundChange('gradient', value);
   }, [onBackgroundChange]);
   
   // Handler for image changes
@@ -289,7 +331,7 @@ export const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
         className="w-full"
       >
         <TabsList 
-          className="grid grid-cols-2 w-full"
+          className="grid grid-cols-3 w-full"
           onClick={stopPropagation}
         >
           <TabsTrigger 
@@ -297,6 +339,12 @@ export const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
             onClick={stopPropagation}
           >
             Solid Color
+          </TabsTrigger>
+          <TabsTrigger 
+            value="gradient" 
+            onClick={stopPropagation}
+          >
+            Gradient
           </TabsTrigger>
           <TabsTrigger 
             value="image" 
@@ -315,6 +363,17 @@ export const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
             value={backgroundType === 'solid' ? backgroundValue : '#ffffff'} 
             onChange={handleColorChange}
             presets={COLOR_PRESETS}
+          />
+        </TabsContent>
+        
+        <TabsContent 
+          value="gradient" 
+          className="pt-4"
+          onClick={stopPropagation}
+        >
+          <GradientTab 
+            value={backgroundType === 'gradient' ? backgroundValue : 'linear-gradient(135deg, #6366f1, #8b5cf6)'} 
+            onChange={handleGradientChange}
           />
         </TabsContent>
         

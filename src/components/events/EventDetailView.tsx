@@ -15,13 +15,17 @@ interface EventDetailViewProps {
   onClose: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
+  onAccept?: () => void;
+  onDecline?: () => void;
 }
 
 export const EventDetailView: React.FC<EventDetailViewProps> = ({ 
   event, 
   onClose,
   onEdit,
-  onDelete
+  onDelete,
+  onAccept,
+  onDecline
 }) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   
@@ -45,12 +49,31 @@ export const EventDetailView: React.FC<EventDetailViewProps> = ({
   // Extract styling from event customization
   const backgroundStyle = event.customization?.background?.type === 'image'
     ? { backgroundImage: `url(${event.customization.background.value})` }
+    : event.customization?.background?.type === 'gradient'
+    ? { background: event.customization.background.value }
     : { backgroundColor: event.customization?.background?.value || '#ffffff' };
   
   const fontStyle = {
     fontFamily: event.customization?.font?.family || 'inherit',
     color: event.customization?.font?.color || 'inherit'
   };
+  
+  // Determine button visibility based on customization
+  const showDeclineButton = event.customization?.buttons?.decline?.isVisible !== false;
+  const acceptButtonStyle = event.customization?.buttons?.accept || { background: '#4f46e5', color: '#ffffff', shape: 'rounded' };
+  const declineButtonStyle = event.customization?.buttons?.decline || { background: '#ef4444', color: '#ffffff', shape: 'rounded' };
+  
+  const getBorderRadiusClass = (shape: string) => {
+    switch (shape) {
+      case 'pill': return 'rounded-full';
+      case 'square': return 'rounded-none';
+      case 'rounded':
+      default: return 'rounded-md';
+    }
+  };
+  
+  const acceptButtonClasses = `bg-[${acceptButtonStyle.background}] text-[${acceptButtonStyle.color}] ${getBorderRadiusClass(acceptButtonStyle.shape)}`;
+  const declineButtonClasses = `bg-[${declineButtonStyle.background}] text-[${declineButtonStyle.color}] ${getBorderRadiusClass(declineButtonStyle.shape)}`;
   
   return (
     <>
@@ -127,10 +150,12 @@ export const EventDetailView: React.FC<EventDetailViewProps> = ({
             </div>
             
             <div className="flex gap-2">
-              <Button size="sm" variant="outline" onClick={handleAddToCalendar}>
-                <Calendar className="h-4 w-4 mr-2" />
-                Add to Calendar
-              </Button>
+              {event.customization?.showAddToCalendarButton !== false && (
+                <Button size="sm" variant="outline" onClick={handleAddToCalendar}>
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Add to Calendar
+                </Button>
+              )}
               
               <Button size="sm" variant="outline">
                 <Share2 className="h-4 w-4" />
@@ -156,16 +181,37 @@ export const EventDetailView: React.FC<EventDetailViewProps> = ({
               </Button>
             </div>
           ) : (
-            <div className="flex gap-2">
-              <Button variant="success" size="sm">
-                <Check className="h-4 w-4 mr-2" />
-                Accept
-              </Button>
-              <Button variant="destructive" size="sm">
-                <X className="h-4 w-4 mr-2" />
-                Decline
-              </Button>
-            </div>
+            event.customization?.showAcceptDeclineButtons !== false && (
+              <div className="flex gap-2">
+                <Button 
+                  size="sm"
+                  style={{
+                    backgroundColor: acceptButtonStyle.background,
+                    color: acceptButtonStyle.color
+                  }}
+                  className={getBorderRadiusClass(acceptButtonStyle.shape)}
+                  onClick={onAccept}
+                >
+                  <Check className="h-4 w-4 mr-2" />
+                  {acceptButtonStyle.text || "Accept"}
+                </Button>
+                
+                {showDeclineButton && (
+                  <Button 
+                    size="sm"
+                    style={{
+                      backgroundColor: declineButtonStyle.background,
+                      color: declineButtonStyle.color
+                    }}
+                    className={getBorderRadiusClass(declineButtonStyle.shape)}
+                    onClick={onDecline}
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    {declineButtonStyle.text || "Decline"}
+                  </Button>
+                )}
+              </div>
+            )
           )}
           
           <Button variant="ghost" size="sm" onClick={onClose}>
