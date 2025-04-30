@@ -12,6 +12,7 @@ interface LocationPickerProps {
   value?: string; // Added to support legacy usage
   onChange?: (value: any) => void; // Added to support legacy usage
   onLocationChange: (location: string, locationTitle: string) => void;
+  className?: string; // Added className prop
 }
 
 const LocationPicker: React.FC<LocationPickerProps> = ({
@@ -19,7 +20,8 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   locationTitle,
   value, // Support legacy props
   onChange, // Support legacy props
-  onLocationChange
+  onLocationChange,
+  className = '' // Default to empty string
 }) => {
   // Use either the legacy value or the location prop
   const actualLocation = value || location;
@@ -53,7 +55,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   };
   
   return (
-    <div className="space-y-4">
+    <div className={`space-y-4 ${className}`}>
       <div className="space-y-2">
         <Label htmlFor="location-url">Google Maps URL</Label>
         <div className="flex space-x-2">
