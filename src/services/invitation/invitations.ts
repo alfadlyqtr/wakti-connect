@@ -22,9 +22,29 @@ export const sendInvitation = async (
     
     for (const invitation of invitations) {
       // Process each recipient - use recipientIds, recipientEmails, or recipients based on what's available
-      const recipientsToProcess = invitation.recipients || 
-        (invitation.recipientIds?.map(id => ({ id, type: 'user' as const, name: '' })) || [])
-          .concat(invitation.recipientEmails?.map(email => ({ id: email, email, type: 'email' as const, name: '' })) || []);
+      let recipientsToProcess: InvitationRecipient[] = [];
+      
+      if (invitation.recipients) {
+        recipientsToProcess = invitation.recipients;
+      } else {
+        // Convert recipientIds to recipients of type 'user'
+        const userRecipients: InvitationRecipient[] = (invitation.recipientIds || []).map(id => ({ 
+          id, 
+          type: 'user' as const, 
+          name: '' 
+        }));
+        
+        // Convert recipientEmails to recipients of type 'email'
+        const emailRecipients: InvitationRecipient[] = (invitation.recipientEmails || []).map(email => ({ 
+          id: email, 
+          email, 
+          type: 'email' as const, 
+          name: '' 
+        }));
+        
+        // Combine both types of recipients
+        recipientsToProcess = [...userRecipients, ...emailRecipients];
+      }
       
       const invitationData = recipientsToProcess.map(recipient => ({
         event_id: eventId,

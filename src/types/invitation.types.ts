@@ -58,7 +58,6 @@ export interface InvitationResponse {
   success: boolean;
   message: string;
   invitationIds?: string[];
-  id?: string;
   status?: string;
   recipients?: InvitationRecipient[];
   failedRecipients?: InvitationRecipient[];
@@ -77,3 +76,9 @@ export interface InvitationCustomization {
     color?: string;
   };
 }
+
+// Define ButtonShape as a type to ensure proper type checking
+export type ButtonShape = 'rounded' | 'pill' | 'square';
+
+// Define BackgroundType for proper type checking
+export type BackgroundType = 'solid' | 'gradient' | 'image';

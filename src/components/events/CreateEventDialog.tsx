@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -9,7 +8,7 @@ import { Loader2 } from 'lucide-react';
 import { toast } from "sonner";
 import { useEvents } from '@/hooks/useEvents';
 import { Separator } from '@/components/ui/separator';
-import { EventStatus, BackgroundType } from '@/types/event.types';
+import { EventStatus, BackgroundType, ButtonShape } from '@/types/event.types';
 
 interface CreateEventDialogProps {
   open: boolean;
@@ -78,13 +77,13 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
             accept: {
               background: '#3b82f6',
               color: '#ffffff',
-              shape: 'rounded',
+              shape: 'rounded' as ButtonShape,
               text: 'Accept'
             },
             decline: {
               background: '#ef4444',
               color: '#ffffff',
-              shape: 'rounded',
+              shape: 'rounded' as ButtonShape,
               text: 'Decline',
               isVisible: true
             }
