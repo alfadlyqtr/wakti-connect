@@ -1,271 +1,127 @@
-import React, { useRef } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { MapPin, ArrowRight } from 'lucide-react';
-import { toast } from "sonner";
-import { useEventLocation } from '@/hooks/events/useEventLocation';
-import MeetingFormLayout from './MeetingFormLayout';
-import { getFormattedAddress } from '../maps-helpers';
-import { waitForGoogleMapsToLoad } from '@/utils/googleMapsLoader';
 
-const formSchema = z.object({
-  sessionType: z.string().optional(),
-  hostedBy: z.string().optional(),
-  location: z.string().optional(),
-  attendees: z.string().optional(),
-  agenda: z.string().optional(),
-  language: z.string().min(1, 'Please select a language'),
-});
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 interface MeetingIntakeFormProps {
-  onSubmit: (data: z.infer<typeof formSchema>) => void;
-  onSkip: () => void;
+  onSubmit: (data: {
+    title: string;
+    date: Date;
+    attendees: string;
+    notes: string;
+    location: string;
+  }) => void;
 }
 
-export const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit, onSkip }) => {
-  const { handleLocationChange, location, isGettingLocation } = useEventLocation();
-  const [mapPreviewUrl, setMapPreviewUrl] = React.useState<string>('');
-  const locationInputRef = useRef<HTMLInputElement>(null);
-  const autoCompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
-  
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      sessionType: '',
-      hostedBy: '',
-      location: '',
-      attendees: '',
-      agenda: '',
-      language: 'auto',
-    },
-  });
+const MeetingIntakeForm: React.FC<MeetingIntakeFormProps> = ({ onSubmit }) => {
+  const [title, setTitle] = useState("");
+  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [attendees, setAttendees] = useState("");
+  const [notes, setNotes] = useState("");
+  const [location, setLocation] = useState("");
 
-  React.useEffect(() => {
-    const initAutocomplete = async () => {
-      try {
-        await waitForGoogleMapsToLoad();
-        
-        if (!locationInputRef.current) return;
-
-        const autocomplete = new window.google.maps.places.Autocomplete(locationInputRef.current, {
-          fields: ['formatted_address', 'geometry']
-        });
-
-        autocomplete.addListener('place_changed', () => {
-          const place = autocomplete.getPlace();
-          if (place.formatted_address) {
-            form.setValue('location', place.formatted_address);
-            handleLocationChange(place.formatted_address, 'manual');
-          }
-        });
-
-        autoCompleteRef.current = autocomplete;
-      } catch (error) {
-        console.error('Error initializing Google Maps:', error);
-      }
-    };
-
-    initAutocomplete();
-  }, [handleLocationChange]);
-
-  React.useEffect(() => {
-    if (location) {
-      form.setValue('location', location);
-    }
-  }, [location, form]);
-
-  const handleGetCurrentLocation = async () => {
-    if (!navigator.geolocation) {
-      toast.error("Geolocation is not supported by your browser");
-      return;
-    }
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!date) return;
     
-    try {
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject);
-      });
-
-      const { latitude, longitude } = position.coords;
-      const formattedAddress = await getFormattedAddress(latitude, longitude);
-      
-      handleLocationChange(formattedAddress, 'manual');
-      form.setValue('location', formattedAddress);
-      
-    } catch (error: any) {
-      console.error("Error getting location:", error);
-      toast.error(error.message || "Could not get your location");
-    }
+    onSubmit({
+      title,
+      date,
+      attendees,
+      notes,
+      location
+    });
   };
 
   return (
-    <MeetingFormLayout>
-      <div className="p-6 space-y-6">
-        <div className="flex items-center gap-4 pb-4 border-b border-wakti-navy/10">
-          <div className="h-10 w-10 rounded-lg bg-wakti-navy text-wakti-beige flex items-center justify-center">
-            <MapPin className="h-5 w-5" />
-          </div>
-          <div>
-            <h2 className="text-lg font-semibold text-wakti-navy">Meeting Details</h2>
-            <p className="text-sm text-wakti-navy/70">
-              Let WAKTI AI know about your meeting context
-            </p>
-          </div>
-        </div>
-
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="language"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-wakti-navy font-medium">Meeting Language</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="h-10 bg-white border-wakti-navy/20">
-                        <SelectValue placeholder="Select meeting language" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="auto">Auto-detect</SelectItem>
-                      <SelectItem value="en">English</SelectItem>
-                      <SelectItem value="ar">Arabic</SelectItem>
-                      <SelectItem value="mixed">Mixed (English & Arabic)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )}
+    <Card>
+      <CardHeader>
+        <CardTitle>Meeting Details</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="title">Meeting Title</Label>
+            <Input
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Quarterly Review"
+              required
             />
+          </div>
 
-            <div className="grid gap-4">
-              <FormField
-                control={form.control}
-                name="sessionType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-wakti-navy font-medium">Session Type</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="e.g., Staff meeting or English lecture" 
-                        {...field}
-                        className="h-10 bg-white border-wakti-navy/20"
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+          <div className="space-y-2">
+            <Label>Date</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !date && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {date ? format(date, "PPP") : "Pick a date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={setDate}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
 
-              <FormField
-                control={form.control}
-                name="location"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-wakti-navy font-medium">Location</FormLabel>
-                    <div className="flex gap-2">
-                      <FormControl>
-                        <Input 
-                          placeholder="Search for a location..." 
-                          {...field}
-                          ref={(e) => {
-                            locationInputRef.current = e;
-                            field.ref(e);
-                          }}
-                          className="h-10 bg-white border-wakti-navy/20"
-                        />
-                      </FormControl>
-                      <Button 
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        className="h-10 w-10 shrink-0 border-wakti-navy/20 hover:bg-wakti-beige"
-                        onClick={handleGetCurrentLocation}
-                        disabled={isGettingLocation}
-                      >
-                        <MapPin className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </FormItem>
-                )}
-              />
+          <div className="space-y-2">
+            <Label htmlFor="location">Location</Label>
+            <Input
+              id="location"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="Conference Room A"
+            />
+          </div>
 
-              <FormField
-                control={form.control}
-                name="hostedBy"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-wakti-navy font-medium">Hosted By</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="e.g., Jabor Abdullah" 
-                        {...field}
-                        className="h-10 bg-white border-wakti-navy/20"
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+          <div className="space-y-2">
+            <Label htmlFor="attendees">Attendees</Label>
+            <Textarea
+              id="attendees"
+              value={attendees}
+              onChange={(e) => setAttendees(e.target.value)}
+              placeholder="John Doe (john@example.com), Jane Smith (jane@example.com)"
+            />
+          </div>
 
-              <FormField
-                control={form.control}
-                name="attendees"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-wakti-navy font-medium">Attendees</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="e.g., John, Alanoud, Mozah, Hassan" 
-                        {...field}
-                        className="h-10 bg-white border-wakti-navy/20"
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+          <div className="space-y-2">
+            <Label htmlFor="notes">Meeting Notes</Label>
+            <Textarea
+              id="notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Paste your meeting transcript or notes here"
+              rows={10}
+              required
+            />
+          </div>
 
-              <FormField
-                control={form.control}
-                name="agenda"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-wakti-navy font-medium">Agenda</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="e.g., Project deadline, Final exams" 
-                        {...field}
-                        className="h-20 min-h-[80px] bg-white border-wakti-navy/20 resize-none"
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="flex justify-between gap-4 pt-4">
-              <Button 
-                type="submit" 
-                className="flex-1 bg-wakti-navy text-white hover:bg-wakti-navy/90 h-10"
-              >
-                Start Recording
-              </Button>
-              <Button 
-                type="button" 
-                variant="outline"
-                onClick={onSkip}
-                className="flex-1 border-wakti-navy/20 text-wakti-navy hover:bg-wakti-beige h-10"
-              >
-                Skip
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </div>
-    </MeetingFormLayout>
+          <Button type="submit" className="w-full">Generate Summary</Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 };
+
+export default MeetingIntakeForm;

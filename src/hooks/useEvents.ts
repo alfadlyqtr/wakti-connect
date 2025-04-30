@@ -1,13 +1,7 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { Event, EventStatus, EventFormData, EventTab, EventsResult } from '@/types/event.types';
-import { createEvent as createEventService } from '@/services/event/createService';
-import { updateEvent as updateEventService } from '@/services/event/updateService';
-import { deleteEvent as deleteEventService } from '@/services/event/deleteService';
-import { getEvents } from '@/services/event/getEvents';
-import { respondToInvitation as respondService } from '@/services/event/respondToInvitation';
+import { toast } from '@/components/ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/components/ui/use-toast';
 import { format } from 'date-fns';
 
 export const useEvents = (tab?: EventTab) => {
@@ -30,10 +24,11 @@ export const useEvents = (tab?: EventTab) => {
 
     try {
       setIsLoading(true);
-      const result = await getEvents(tab || 'my-events');
-      setEvents(result.events);
-      setUserRole(result.userRole);
-      setCanCreateEvents(result.canCreateEvents);
+      // This is a placeholder for the actual API call
+      // In the future, this would call getEvents(tab || 'my-events')
+      setEvents([]);
+      setUserRole('free');
+      setCanCreateEvents(false);
     } catch (error) {
       console.error('Error fetching events:', error);
       toast({
@@ -72,9 +67,10 @@ export const useEvents = (tab?: EventTab) => {
   // Create event
   const createEvent = useCallback(async (eventData: EventFormData): Promise<Event> => {
     try {
-      const result = await createEventService(eventData);
+      // This is a placeholder for the actual API call
+      // In the future, this would call createEventService(eventData)
       await fetchEvents();  // Refresh events after creation
-      return result;
+      throw new Error('Event creation is not implemented yet');
     } catch (error) {
       console.error('Error creating event:', error);
       throw error;
@@ -84,9 +80,10 @@ export const useEvents = (tab?: EventTab) => {
   // Update event
   const updateEvent = useCallback(async (eventId: string, eventData: EventFormData): Promise<Event> => {
     try {
-      const result = await updateEventService(eventId, eventData);
+      // This is a placeholder for the actual API call
+      // In the future, this would call updateEventService(eventId, eventData)
       await fetchEvents();  // Refresh events after update
-      return result;
+      throw new Error('Event update is not implemented yet');
     } catch (error) {
       console.error('Error updating event:', error);
       throw error;
@@ -96,8 +93,10 @@ export const useEvents = (tab?: EventTab) => {
   // Delete event
   const deleteEvent = useCallback(async (eventId: string): Promise<void> => {
     try {
-      await deleteEventService(eventId);
+      // This is a placeholder for the actual API call
+      // In the future, this would call deleteEventService(eventId)
       await fetchEvents();  // Refresh events after deletion
+      throw new Error('Event deletion is not implemented yet');
     } catch (error) {
       console.error('Error deleting event:', error);
       throw error;
@@ -107,8 +106,10 @@ export const useEvents = (tab?: EventTab) => {
   // Respond to invitation
   const respondToInvitation = useCallback(async (eventId: string, response: 'accepted' | 'declined'): Promise<void> => {
     try {
-      await respondService(eventId, response);
+      // This is a placeholder for the actual API call
+      // In the future, this would call respondService(eventId, response)
       await fetchEvents();  // Refresh events after responding
+      throw new Error('Invitation response is not implemented yet');
     } catch (error) {
       console.error('Error responding to invitation:', error);
       throw error;

@@ -1,202 +1,125 @@
 
-import React from "react";
-import { useSectionEditor } from "@/hooks/useSectionEditor";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { FormDescription } from "@/components/ui/form";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash } from "lucide-react";
-import LocationPicker from "@/components/events/location/LocationPicker";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
+import { MapPin } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface ContactEditorProps {
-  contentData: Record<string, any>;
-  handleInputChange: (name: string, value: any) => void;
+  data: any;
+  onChange: (data: any) => void;
 }
 
-const ContactEditor: React.FC<ContactEditorProps> = ({ contentData, handleInputChange }) => {
-  const handleAddSocialMedia = () => {
-    const currentSocial = contentData.socialMedia || [];
-    handleInputChange('socialMedia', [
-      ...currentSocial,
-      { platform: '', url: '' }
-    ]);
+const ContactEditor: React.FC<ContactEditorProps> = ({ data, onChange }) => {
+  const [showLocation, setShowLocation] = useState(Boolean(data?.location));
+  
+  const handleChange = (field: string, value: any) => {
+    onChange({
+      ...data,
+      [field]: value,
+    });
   };
 
-  const handleRemoveSocialMedia = (index: number) => {
-    const currentSocial = [...(contentData.socialMedia || [])];
-    currentSocial.splice(index, 1);
-    handleInputChange('socialMedia', currentSocial);
-  };
-
-  const handleSocialMediaChange = (index: number, field: string, value: string) => {
-    const currentSocial = [...(contentData.socialMedia || [])];
-    currentSocial[index] = {
-      ...currentSocial[index],
-      [field]: value
-    };
-    handleInputChange('socialMedia', currentSocial);
-  };
-
-  // Modified handlers for standard inputs to match the expected function signature
-  const handleStandardInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    handleInputChange(e.target.name || e.target.id, e.target.value);
+  const handleLocationChange = (location: string) => {
+    handleChange("location", location);
   };
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
+      <div className="space-y-4">
         <Label htmlFor="title">Section Title</Label>
         <Input
           id="title"
-          name="title"
-          value={contentData.title || ''}
-          onChange={handleStandardInputChange}
+          value={data?.title || ""}
+          onChange={(e) => handleChange("title", e.target.value)}
           placeholder="Contact Us"
         />
-        <FormDescription>
-          The main heading for your contact section
-        </FormDescription>
       </div>
-
-      <div className="space-y-2">
+      
+      <div className="space-y-4">
         <Label htmlFor="subtitle">Subtitle</Label>
         <Input
           id="subtitle"
-          name="subtitle"
-          value={contentData.subtitle || ''}
-          onChange={handleStandardInputChange}
-          placeholder="Get in touch with us"
+          value={data?.subtitle || ""}
+          onChange={(e) => handleChange("subtitle", e.target.value)}
+          placeholder="Get in touch with our team"
         />
-        <FormDescription>
-          A short subtitle that appears below the main heading
-        </FormDescription>
       </div>
-
-      <div className="space-y-2">
+      
+      <div className="space-y-4">
         <Label htmlFor="description">Description</Label>
         <Textarea
           id="description"
-          name="description"
-          value={contentData.description || ''}
-          onChange={handleStandardInputChange}
+          value={data?.description || ""}
+          onChange={(e) => handleChange("description", e.target.value)}
           placeholder="We'd love to hear from you. Send us a message and we'll respond as soon as possible."
-          rows={3}
+          rows={4}
         />
-        <FormDescription>
-          A brief description of how customers can contact you
-        </FormDescription>
       </div>
-
-      <Tabs defaultValue="contact" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="contact">Contact Info</TabsTrigger>
-          <TabsTrigger value="social">Social Media</TabsTrigger>
-        </TabsList>
+      
+      <Separator />
+      
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <Label htmlFor="show-location">Show Location</Label>
+          <Switch
+            id="show-location"
+            checked={showLocation}
+            onCheckedChange={(checked) => {
+              setShowLocation(checked);
+              if (!checked) handleChange("location", "");
+            }}
+          />
+        </div>
         
-        <TabsContent value="contact" className="space-y-4 pt-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email Address</Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              value={contentData.email || ''}
-              onChange={handleStandardInputChange}
-              placeholder="your@email.com"
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="phone">Phone Number</Label>
-            <Input
-              id="phone"
-              name="phone"
-              type="tel"
-              value={contentData.phone || ''}
-              onChange={handleStandardInputChange}
-              placeholder="+1 (555) 123-4567"
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="address">Address</Label>
-            <LocationPicker
-              value={contentData.address || ''}
-              onChange={(value) => handleInputChange('address', value)}
-              className="w-full"
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="hours">Business Hours</Label>
-            <Textarea
-              id="hours"
-              name="hours"
-              value={contentData.hours || ''}
-              onChange={handleStandardInputChange}
-              placeholder="Monday - Friday: 9am - 5pm&#10;Saturday: 10am - 4pm&#10;Sunday: Closed"
-              rows={4}
-            />
-            <FormDescription>
-              Enter each day on a new line
-            </FormDescription>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="social" className="space-y-4 pt-4">
-          {(contentData.socialMedia || []).map((social: any, index: number) => (
-            <Card key={index} className="border border-input">
-              <CardContent className="pt-4 px-4 pb-2">
-                <div className="flex items-center justify-between mb-2">
-                  <Label>Social Media Platform {index + 1}</Label>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleRemoveSocialMedia(index)}
-                  >
-                    <Trash className="h-4 w-4" />
-                  </Button>
+        {showLocation && (
+          <Card className="mt-4">
+            <CardContent className="pt-6">
+              <div className="space-y-4">
+                <Label htmlFor="location">Location Address</Label>
+                <Input
+                  id="location"
+                  value={data?.location || ""}
+                  onChange={(e) => handleLocationChange(e.target.value)}
+                  placeholder="123 Business Ave, City, State"
+                  className="w-full"
+                />
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <MapPin className="h-4 w-4 mr-2" />
+                  <span>Enter a full address to enable map display</span>
                 </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor={`platform-${index}`}>Platform</Label>
-                    <Input
-                      id={`platform-${index}`}
-                      value={social.platform || ''}
-                      onChange={(e) => handleSocialMediaChange(index, 'platform', e.target.value)}
-                      placeholder="Instagram"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor={`url-${index}`}>URL</Label>
-                    <Input
-                      id={`url-${index}`}
-                      value={social.url || ''}
-                      onChange={(e) => handleSocialMediaChange(index, 'url', e.target.value)}
-                      placeholder="https://instagram.com/yourbusiness"
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-          
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full"
-            onClick={handleAddSocialMedia}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Social Media
-          </Button>
-        </TabsContent>
-      </Tabs>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+      
+      <Separator />
+      
+      <div className="space-y-4">
+        <Label htmlFor="email">Contact Email</Label>
+        <Input
+          id="email"
+          value={data?.email || ""}
+          onChange={(e) => handleChange("email", e.target.value)}
+          placeholder="contact@example.com"
+          type="email"
+        />
+      </div>
+      
+      <div className="space-y-4">
+        <Label htmlFor="phone">Contact Phone</Label>
+        <Input
+          id="phone"
+          value={data?.phone || ""}
+          onChange={(e) => handleChange("phone", e.target.value)}
+          placeholder="(123) 456-7890"
+        />
+      </div>
     </div>
   );
 };
