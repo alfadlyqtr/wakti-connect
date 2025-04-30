@@ -1,10 +1,10 @@
-
 import React from "react";
 import { createBrowserRouter, RouteObject, Outlet } from "react-router-dom";
 import { publicRoutes } from "./routes/publicRoutes";
 import { authRoutes } from "./routes/authRoutes";
 import { businessRoutes, bookingRoutes } from "./routes/businessRoutes";
 import { superadminRoutes } from "./routes/superadminRoutes";
+import { dashboardRoutes } from "./routes/dashboardRoutes";
 import NotFound from "./pages/NotFound";
 import PublicLayout from "./components/layout/PublicLayout";
 import DashboardLayout from "./components/dashboard/DashboardLayout";
@@ -211,7 +211,7 @@ export const router = createBrowserRouter([
         </ErrorBoundary>
       </ProtectedRoute>
     ),
-    children: dashboardRoutes,
+    children: [...dashboardRoutes, ...dashboardRoutes],
   },
   
   // Super Admin Dashboard routes

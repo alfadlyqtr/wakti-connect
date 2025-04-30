@@ -92,3 +92,51 @@ export interface InvitationTemplate {
   customization?: Record<string, any>;
   isDefault?: boolean;
 }
+
+// Simple Invitation System Types
+export type BackgroundType = 'solid' | 'gradient' | 'image' | 'ai';
+
+export interface SimpleInvitation {
+  id: string;
+  title: string;
+  description: string;
+  location?: string;
+  locationTitle?: string;
+  date?: string;
+  time?: string;
+  createdAt: string;
+  updatedAt?: string;
+  userId: string;
+  shareId?: string;
+  isPublic?: boolean;
+  customization: SimpleInvitationCustomization;
+}
+
+export interface SimpleInvitationCustomization {
+  background: {
+    type: BackgroundType;
+    value: string; // Color, gradient, imageURL, or AI prompt
+  };
+  font: {
+    family: string;
+    size: string;
+    color: string;
+    weight?: string;
+    alignment?: string;
+  };
+  buttons?: {
+    accept: {
+      background: string;
+      color: string;
+      shape: string;
+    };
+    decline: {
+      background: string;
+      color: string;
+      shape: string;
+    };
+  };
+  headerStyle?: string;
+  animation?: string;
+  cardEffect?: string;
+}

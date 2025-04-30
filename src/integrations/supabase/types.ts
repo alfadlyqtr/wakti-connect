@@ -1153,6 +1153,38 @@ export type Database = {
         }
         Relationships: []
       }
+      event_guest_responses: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          name: string
+          response: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          name: string
+          response: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          name?: string
+          response?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_guest_responses_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_invitations: {
         Row: {
           created_at: string | null
@@ -1299,6 +1331,60 @@ export type Database = {
           locked_by?: string | null
           status?: Database["public"]["Enums"]["feature_lock_status"]
           updated_at?: string
+        }
+        Relationships: []
+      }
+      invitations: {
+        Row: {
+          background_type: string
+          background_value: string
+          created_at: string
+          datetime: string | null
+          description: string | null
+          font_family: string
+          font_size: string
+          id: string
+          location: string | null
+          location_url: string | null
+          share_link: string | null
+          text_color: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          background_type?: string
+          background_value?: string
+          created_at?: string
+          datetime?: string | null
+          description?: string | null
+          font_family?: string
+          font_size?: string
+          id?: string
+          location?: string | null
+          location_url?: string | null
+          share_link?: string | null
+          text_color?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          background_type?: string
+          background_value?: string
+          created_at?: string
+          datetime?: string | null
+          description?: string | null
+          font_family?: string
+          font_size?: string
+          id?: string
+          location?: string | null
+          location_url?: string | null
+          share_link?: string | null
+          text_color?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

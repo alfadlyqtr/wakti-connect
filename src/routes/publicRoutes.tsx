@@ -1,58 +1,58 @@
 
 import React from 'react';
-import CreateSuperAdmin from '@/components/admin/CreateSuperAdmin';
-import LandingPage from '@/pages/public/LandingPage';
-import PricingPage from '@/pages/public/PricingPage';
-import FeaturesPage from '@/pages/public/FeaturesPage';
-import ContactPage from '@/pages/public/ContactPage';
-import AboutPage from '@/pages/public/AboutPage';
-import PrivacyPage from '@/pages/public/PrivacyPage';
-import TermsPage from '@/pages/public/TermsPage';
-import FaqPage from '@/pages/public/FaqPage';
-import Index from '@/pages/Index';
-
-// Placeholder component for the Helpdesk page
-const HelpdeskPage = () => <div>Helpdesk Page</div>;
+import { Route } from 'react-router-dom';
+import Home from '@/pages/Home';
+import AboutPage from '@/pages/About';
+import ContactPage from '@/pages/Contact';
+import FeaturesPage from '@/pages/Features';
+import PricingPage from '@/pages/Pricing';
+import PrivacyPage from '@/pages/Privacy';
+import TermsPage from '@/pages/Terms';
+import NotFoundPage from '@/pages/NotFound';
+import FaqPage from '@/pages/Faq';
+import SharedInvitationView from '@/components/invitations/SharedInvitationView';
 
 export const publicRoutes = [
   {
-    path: '',
-    element: <Index />
-  },
-  {
-    path: 'privacy',
-    element: <PrivacyPage />
-  },
-  {
-    path: 'terms',
-    element: <TermsPage />
-  },
-  {
-    path: 'help',
-    element: <HelpdeskPage />
+    index: true,
+    element: <Home />,
   },
   {
     path: 'about',
-    element: <AboutPage />
+    element: <AboutPage />,
   },
   {
     path: 'contact',
-    element: <ContactPage />
-  },
-  {
-    path: 'pricing',
-    element: <PricingPage />
+    element: <ContactPage />,
   },
   {
     path: 'features',
-    element: <FeaturesPage />
+    element: <FeaturesPage />,
+  },
+  {
+    path: 'pricing',
+    element: <PricingPage />,
+  },
+  {
+    path: 'privacy',
+    element: <PrivacyPage />,
+  },
+  {
+    path: 'terms',
+    element: <TermsPage />,
   },
   {
     path: 'faq',
-    element: <FaqPage />
+    element: <FaqPage />,
   },
   {
-    path: 'create-super-admin',
-    element: <CreateSuperAdmin />
-  }
+    path: 'i/:shareId',
+    element: <SharedInvitationView />,
+  },
+  {
+    path: '*',
+    element: <NotFoundPage />,
+  },
 ];
+
+export default publicRoutes;
