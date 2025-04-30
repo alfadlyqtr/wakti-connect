@@ -24,6 +24,35 @@ export interface InvitationDbRecord {
   is_public?: boolean;
 }
 
+// Intermediate type for breaking the deep type inference chain
+export type SimpleInvitationResult = {
+  id: string;
+  title: string;
+  description: string;
+  location: string;
+  locationTitle: string;
+  date?: string;
+  time?: string;
+  createdAt: string;
+  updatedAt?: string;
+  userId: string;
+  shareId?: string;
+  isPublic: boolean;
+  isEvent: boolean;
+  customization: {
+    background: {
+      type: BackgroundType;
+      value: string;
+    };
+    font: {
+      family: string;
+      size: string;
+      color: string;
+      alignment: string;
+    };
+  };
+}
+
 // Type for creating a new invitation
 export interface InvitationData {
   title: string;

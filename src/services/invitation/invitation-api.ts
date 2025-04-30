@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { SimpleInvitation } from "@/types/invitation.types";
 import { toast } from "@/components/ui/use-toast";
-import { InvitationData } from "./invitation-types";
+import { InvitationData, InvitationDbRecord } from "./invitation-types";
 import { mapDatabaseToSimpleInvitation } from "./invitation-mappers";
 
 /**
@@ -181,10 +181,17 @@ export const listSimpleInvitations = async (isEvent = false): Promise<SimpleInvi
       return [];
     }
 
-    // Create a new array and map each item with explicit type
+    // Use explicit typing and manual iteration to break type inference chain
     const invitations: SimpleInvitation[] = [];
-    for (let i = 0; i < data.length; i++) {
-      invitations.push(mapDatabaseToSimpleInvitation(data[i]));
+    
+    // Explicitly cast database records to our known type
+    const records = data as InvitationDbRecord[];
+    
+    // Manual loop with explicit mapping and type assertions
+    for (let i = 0; i < records.length; i++) {
+      // Map each record one at a time with explicit typing
+      const invitation: SimpleInvitation = mapDatabaseToSimpleInvitation(records[i]);
+      invitations.push(invitation);
     }
     
     return invitations;
