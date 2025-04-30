@@ -1344,6 +1344,7 @@ export type Database = {
           font_family: string
           font_size: string
           id: string
+          is_event: boolean | null
           location: string | null
           location_url: string | null
           share_link: string | null
@@ -1361,6 +1362,7 @@ export type Database = {
           font_family?: string
           font_size?: string
           id?: string
+          is_event?: boolean | null
           location?: string | null
           location_url?: string | null
           share_link?: string | null
@@ -1378,6 +1380,7 @@ export type Database = {
           font_family?: string
           font_size?: string
           id?: string
+          is_event?: boolean | null
           location?: string | null
           location_url?: string | null
           share_link?: string | null

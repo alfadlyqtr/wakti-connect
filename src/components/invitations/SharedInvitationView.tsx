@@ -6,6 +6,7 @@ import { getSharedInvitation } from '@/services/invitation/simple-invitations';
 import { Card } from '@/components/ui/card';
 import { toast } from '@/components/ui/use-toast';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import InvitationPreview from './InvitationPreview';
 
 export default function SharedInvitationView() {
   const { shareId } = useParams<{ shareId: string }>();
@@ -42,43 +43,20 @@ export default function SharedInvitationView() {
     );
   }
 
-  // Format the datetime if available
-  const formattedDateTime = invitation.datetime ? new Date(invitation.datetime).toLocaleString() : null;
-
   return (
     <div className="container mx-auto px-4 py-16">
       <div className="max-w-2xl mx-auto">
-        <Card className="p-6 shadow-lg">
-          <div className="text-center space-y-4" style={{ 
-            color: invitation.text_color,
-            fontFamily: invitation.font_family,
-            fontSize: invitation.font_size
-          }}>
-            <h1 className="text-2xl font-bold">{invitation.title}</h1>
-            {invitation.description && (
-              <p>{invitation.description}</p>
-            )}
-            {formattedDateTime && (
-              <p className="font-semibold">{formattedDateTime}</p>
-            )}
-            {invitation.location && (
-              <div className="mt-4 p-4 bg-muted/20 rounded-md">
-                <p className="font-medium">Location:</p>
-                <p>{invitation.location}</p>
-                {invitation.location_url && (
-                  <a 
-                    href={invitation.location_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-500 hover:underline block mt-2"
-                  >
-                    View on Map
-                  </a>
-                )}
-              </div>
-            )}
-          </div>
-        </Card>
+        <InvitationPreview
+          title={invitation.title}
+          description={invitation.description}
+          location={invitation.location}
+          locationTitle={invitation.locationTitle}
+          date={invitation.date}
+          time={invitation.time}
+          customization={invitation.customization}
+          isEvent={invitation.isEvent}
+          showActions={true}
+        />
       </div>
     </div>
   );

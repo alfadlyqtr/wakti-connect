@@ -12,7 +12,7 @@ export async function listSimpleInvitations(isEvent?: boolean): Promise<SimpleIn
       .from('invitations')
       .select('*');
       
-    // If isEvent is provided, filter by is_event field if it exists
+    // If isEvent is provided, filter by is_event field
     if (isEvent !== undefined) {
       query = query.eq('is_event', isEvent);
     }
@@ -217,7 +217,7 @@ export async function updateSimpleInvitation(id: string, data: any): Promise<Sim
 /**
  * Get a shared invitation by share ID
  */
-export async function getSharedInvitation(shareId: string): Promise<any | null> {
+export async function getSharedInvitation(shareId: string): Promise<SimpleInvitation | null> {
   try {
     const { data, error } = await supabase
       .from('invitations')
@@ -230,7 +230,36 @@ export async function getSharedInvitation(shareId: string): Promise<any | null> 
       throw error;
     }
     
-    return data;
+    if (!data) return null;
+    
+    // Transform to SimpleInvitation type
+    const invitation: SimpleInvitation = {
+      id: data.id,
+      title: data.title,
+      description: data.description || '',
+      location: data.location || '',
+      locationTitle: data.location_url || '',
+      date: data.datetime ? new Date(data.datetime).toISOString().split('T')[0] : undefined,
+      time: data.datetime ? new Date(data.datetime).toISOString().split('T')[1].substring(0, 5) : undefined,
+      createdAt: data.created_at,
+      userId: data.user_id,
+      shareId: data.share_link,
+      customization: {
+        background: {
+          type: (data.background_type || 'solid') as BackgroundType,
+          value: data.background_value || '#ffffff',
+        },
+        font: {
+          family: data.font_family || 'system-ui, sans-serif',
+          size: data.font_size || 'medium',
+          color: data.text_color || '#000000',
+          alignment: 'center',
+        },
+      },
+      isEvent: Boolean(data.is_event) || false
+    };
+    
+    return invitation;
   } catch (error) {
     console.error('Error in getSharedInvitation:', error);
     return null;
