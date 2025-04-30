@@ -199,9 +199,12 @@ export const listSimpleInvitations = async (isEvent = false): Promise<SimpleInvi
       return [];
     }
 
-    // Map database response to our SimpleInvitation type
-    // Fixed: Using explicit Array.map instead of potential recursive call
-    return data.map(item => mapDatabaseToSimpleInvitation(item));
+    // Explicitly define the type and mapping to avoid recursive inference issues
+    const result: SimpleInvitation[] = [];
+    for (const item of data) {
+      result.push(mapDatabaseToSimpleInvitation(item));
+    }
+    return result;
   } catch (error) {
     console.error("Error in listSimpleInvitations:", error);
     toast({
