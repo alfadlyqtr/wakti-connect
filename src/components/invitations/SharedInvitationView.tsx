@@ -42,6 +42,9 @@ export default function SharedInvitationView() {
     );
   }
 
+  // Format the datetime if available
+  const formattedDateTime = invitation.datetime ? new Date(invitation.datetime).toLocaleString() : null;
+
   return (
     <div className="container mx-auto px-4 py-16">
       <div className="max-w-2xl mx-auto">
@@ -55,10 +58,8 @@ export default function SharedInvitationView() {
             {invitation.description && (
               <p>{invitation.description}</p>
             )}
-            {invitation.datetime && (
-              <p className="font-semibold">
-                {new Date(invitation.datetime).toLocaleString()}
-              </p>
+            {formattedDateTime && (
+              <p className="font-semibold">{formattedDateTime}</p>
             )}
             {invitation.location && (
               <div className="mt-4 p-4 bg-muted/20 rounded-md">

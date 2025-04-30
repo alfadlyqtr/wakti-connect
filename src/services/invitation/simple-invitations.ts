@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import { v4 as uuidv4 } from 'uuid';
+import { SimpleInvitation as UISimpleInvitation } from '@/types/invitation.types';
 
 // Define the SimpleInvitation interface explicitly matched to database columns
 export interface SimpleInvitation {
@@ -24,10 +25,39 @@ export interface SimpleInvitation {
   isPublic?: boolean;
 }
 
+// Function to convert a database SimpleInvitation to UI SimpleInvitation
+export function mapDbInvitationToUI(dbInvitation: SimpleInvitation): UISimpleInvitation {
+  return {
+    id: dbInvitation.id,
+    title: dbInvitation.title,
+    description: dbInvitation.description || '',
+    location: dbInvitation.location || '',
+    locationTitle: '',  // Not stored in DB directly
+    date: dbInvitation.datetime ? new Date(dbInvitation.datetime).toISOString().split('T')[0] : '',
+    time: dbInvitation.datetime ? new Date(dbInvitation.datetime).toISOString().split('T')[1].substring(0, 5) : '',
+    createdAt: dbInvitation.created_at || '',
+    updatedAt: dbInvitation.updated_at,
+    userId: dbInvitation.user_id,
+    shareId: dbInvitation.share_link?.split('/').pop(),
+    isPublic: dbInvitation.isPublic,
+    customization: {
+      background: {
+        type: dbInvitation.background_type as any,
+        value: dbInvitation.background_value,
+      },
+      font: {
+        family: dbInvitation.font_family,
+        size: dbInvitation.font_size,
+        color: dbInvitation.text_color,
+      }
+    }
+  };
+}
+
 /**
  * Create a new simple invitation
  */
-export const createSimpleInvitation = async (invitation: Omit<SimpleInvitation, 'id' | 'created_at' | 'updated_at' | 'user_id'>): Promise<SimpleInvitation | null> => {
+export const createSimpleInvitation = async (invitation: Omit<SimpleInvitation, 'id' | 'created_at' | 'updated_at' | 'user_id'>): Promise<UISimpleInvitation | null> => {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     
@@ -72,7 +102,7 @@ export const createSimpleInvitation = async (invitation: Omit<SimpleInvitation, 
       description: "Your invitation has been created successfully.",
     });
     
-    return data as SimpleInvitation;
+    return data ? mapDbInvitationToUI(data as SimpleInvitation) : null;
   } catch (error) {
     console.error('Error creating invitation:', error);
     toast({
@@ -87,7 +117,7 @@ export const createSimpleInvitation = async (invitation: Omit<SimpleInvitation, 
 /**
  * Update an existing invitation
  */
-export const updateSimpleInvitation = async (id: string, updates: Partial<Omit<SimpleInvitation, 'id' | 'user_id'>>): Promise<SimpleInvitation | null> => {
+export const updateSimpleInvitation = async (id: string, updates: Partial<Omit<SimpleInvitation, 'id' | 'user_id'>>): Promise<UISimpleInvitation | null> => {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     
@@ -117,7 +147,7 @@ export const updateSimpleInvitation = async (id: string, updates: Partial<Omit<S
       description: "Your invitation has been updated successfully.",
     });
     
-    return data as SimpleInvitation;
+    return data ? mapDbInvitationToUI(data as SimpleInvitation) : null;
   } catch (error) {
     console.error('Error updating invitation:', error);
     toast({
@@ -132,7 +162,7 @@ export const updateSimpleInvitation = async (id: string, updates: Partial<Omit<S
 /**
  * Get a single invitation by ID
  */
-export const getSimpleInvitationById = async (id: string): Promise<SimpleInvitation | null> => {
+export const getSimpleInvitationById = async (id: string): Promise<UISimpleInvitation | null> => {
   try {
     const tableName = 'invitations';
     
@@ -146,7 +176,7 @@ export const getSimpleInvitationById = async (id: string): Promise<SimpleInvitat
       throw error;
     }
     
-    return data as SimpleInvitation;
+    return data ? mapDbInvitationToUI(data as SimpleInvitation) : null;
   } catch (error) {
     console.error('Error fetching invitation:', error);
     return null;
@@ -180,7 +210,7 @@ export const getSharedInvitation = async (shareId: string): Promise<SimpleInvita
 /**
  * List all invitations for the current user
  */
-export const listSimpleInvitations = async (): Promise<SimpleInvitation[]> => {
+export const listSimpleInvitations = async (): Promise<UISimpleInvitation[]> => {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     
@@ -200,7 +230,7 @@ export const listSimpleInvitations = async (): Promise<SimpleInvitation[]> => {
       throw error;
     }
     
-    return data as SimpleInvitation[];
+    return data ? data.map(invitation => mapDbInvitationToUI(invitation as SimpleInvitation)) : [];
   } catch (error) {
     console.error('Error listing invitations:', error);
     return [];
@@ -250,7 +280,7 @@ export const deleteSimpleInvitation = async (id: string): Promise<boolean> => {
 /**
  * Toggle invitation public status
  */
-export const toggleInvitationPublicStatus = async (id: string, isPublic: boolean): Promise<SimpleInvitation | null> => {
+export const toggleInvitationPublicStatus = async (id: string, isPublic: boolean): Promise<UISimpleInvitation | null> => {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     
@@ -286,7 +316,7 @@ export const toggleInvitationPublicStatus = async (id: string, isPublic: boolean
         : "Your invitation is no longer publicly accessible",
     });
     
-    return data as SimpleInvitation;
+    return data ? mapDbInvitationToUI(data as SimpleInvitation) : null;
   } catch (error) {
     console.error('Error toggling invitation public status:', error);
     toast({

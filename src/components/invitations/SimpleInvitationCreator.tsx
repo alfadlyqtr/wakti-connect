@@ -61,14 +61,20 @@ export default function SimpleInvitationCreator({ existingInvitation, onSuccess 
     try {
       setIsSubmitting(true);
       
+      // Map our form data to the database structure
       const invitationData = {
         title: formData.title,
-        description: formData.description,
-        location: formData.location,
-        locationTitle: formData.locationTitle,
-        date: formData.date,
-        time: formData.time,
-        customization,
+        description: formData.description || '',
+        location: formData.location || '',
+        location_url: formData.location || '', // Using location as location_url
+        datetime: formData.date && formData.time ? new Date(`${formData.date}T${formData.time}`).toISOString() : undefined,
+        
+        // Map from our customization model to the database fields
+        background_type: customization.background.type,
+        background_value: customization.background.value,
+        font_family: customization.font.family,
+        font_size: customization.font.size,
+        text_color: customization.font.color,
       };
 
       let result;
@@ -84,7 +90,7 @@ export default function SimpleInvitationCreator({ existingInvitation, onSuccess 
         if (onSuccess) {
           onSuccess();
         } else {
-          navigate('/invitations');
+          navigate('/dashboard/invitations');
         }
       }
     } catch (error) {
@@ -171,7 +177,7 @@ export default function SimpleInvitationCreator({ existingInvitation, onSuccess 
           <div className="flex justify-between mt-6">
             <Button
               variant="outline"
-              onClick={() => navigate('/invitations')}
+              onClick={() => navigate('/dashboard/invitations')}
               disabled={isSubmitting}
             >
               Cancel
