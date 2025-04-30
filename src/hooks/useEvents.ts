@@ -44,7 +44,8 @@ export const useEvents = (tab: EventTab = "my-events") => {
           start_time: eventData.startDate.toISOString(),
           end_time: eventData.endDate ? eventData.endDate.toISOString() : eventData.startDate.toISOString(),
           is_all_day: eventData.isAllDay || false,
-          status: eventData.status || 'published',
+          // Convert status to a string literal type that matches the database expectations
+          status: (eventData.status || 'published') as 'draft' | 'sent' | 'accepted' | 'declined' | 'recalled',
           user_id: session.user.id
         };
 
@@ -125,6 +126,17 @@ export const useEvents = (tab: EventTab = "my-events") => {
         if ('isAllDay' in eventData) {
           formattedData.is_all_day = eventData.isAllDay;
           delete formattedData.isAllDay;
+        }
+        
+        // Handle customization if present
+        if (formattedData.customization) {
+          formattedData.customization = JSON.stringify(formattedData.customization);
+        }
+        
+        // Ensure status is compatible with database expectations if it's being updated
+        if (formattedData.status) {
+          // Cast to allowed types in the database
+          formattedData.status = formattedData.status as 'draft' | 'sent' | 'accepted' | 'declined' | 'recalled';
         }
         
         const { data, error } = await supabase

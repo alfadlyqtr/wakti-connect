@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 
 // Define text alignment type
@@ -19,6 +20,9 @@ export type EventFormValues = z.infer<typeof eventSchema>;
 
 // Event status types - updated to match database values
 export type EventStatus = "draft" | "published" | "cancelled" | "accepted" | "declined" | "sent" | "recalled";
+
+// Database event status - must match what's in the database
+export type DbEventStatus = "draft" | "sent" | "accepted" | "declined" | "recalled";
 
 // Event tab types
 export type EventTab = "my-events" | "invited-events" | "draft-events";

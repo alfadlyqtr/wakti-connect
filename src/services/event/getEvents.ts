@@ -1,5 +1,5 @@
 
-import { Event, EventTab, EventsResult } from '@/types/event.types';
+import { Event, EventTab, EventsResult, EventCustomization } from '@/types/event.types';
 import { supabase } from '@/integrations/supabase/client';
 
 /**
@@ -99,11 +99,11 @@ export const getEvents = async (tab: EventTab): Promise<EventsResult> => {
     // Parse customization from JSON if needed and transform data
     const events: Event[] = (data || []).map((event: any) => {
       // Parse customization if it's a string
-      let customization = null;
+      let customization: EventCustomization;
       
       if (typeof event.customization === 'string' && event.customization) {
         try {
-          customization = JSON.parse(event.customization);
+          customization = JSON.parse(event.customization) as EventCustomization;
         } catch (e) {
           console.warn('Failed to parse customization:', e);
           // Set default customization if parsing fails
@@ -116,8 +116,8 @@ export const getEvents = async (tab: EventTab): Promise<EventsResult> => {
             }
           };
         }
-      } else if (typeof event.customization === 'object') {
-        customization = event.customization;
+      } else if (typeof event.customization === 'object' && event.customization !== null) {
+        customization = event.customization as EventCustomization;
       } else {
         // Default customization if none exists
         customization = {
@@ -184,11 +184,11 @@ export const getEventById = async (eventId: string): Promise<Event | null> => {
     }
     
     // Parse customization if needed
-    let customization = null;
+    let customization: EventCustomization;
     
     if (typeof data.customization === 'string' && data.customization) {
       try {
-        customization = JSON.parse(data.customization);
+        customization = JSON.parse(data.customization) as EventCustomization;
       } catch (e) {
         console.warn('Failed to parse customization:', e);
         customization = {
@@ -200,8 +200,8 @@ export const getEventById = async (eventId: string): Promise<Event | null> => {
           }
         };
       }
-    } else if (typeof data.customization === 'object') {
-      customization = data.customization;
+    } else if (typeof data.customization === 'object' && data.customization !== null) {
+      customization = data.customization as EventCustomization;
     } else {
       // Default customization if none exists
       customization = {
