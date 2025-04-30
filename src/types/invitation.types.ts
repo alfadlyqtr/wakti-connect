@@ -1,4 +1,3 @@
-
 export type ContactRequestStatusValue = 'pending' | 'accepted' | 'rejected' | null;
 
 export interface ContactRequestStatus {
@@ -110,6 +109,7 @@ export interface SimpleInvitation {
   shareId?: string;
   isPublic?: boolean;
   customization: SimpleInvitationCustomization;
+  isEvent?: boolean;
 }
 
 export interface SimpleInvitationCustomization {

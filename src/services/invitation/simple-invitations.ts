@@ -12,7 +12,7 @@ export async function listSimpleInvitations(isEvent?: boolean): Promise<SimpleIn
       .from('invitations')
       .select('*');
       
-    // If isEvent is provided, filter by is_event field
+    // If isEvent is provided, filter by is_event field if it exists
     if (isEvent !== undefined) {
       query = query.eq('is_event', isEvent);
     }
@@ -33,12 +33,14 @@ export async function listSimpleInvitations(isEvent?: boolean): Promise<SimpleIn
       title: item.title,
       description: item.description || '',
       location: item.location || '',
-      locationTitle: item.locationTitle || '',
+      locationTitle: item.location_url || '', // Using location_url for locationTitle
       date: item.datetime ? new Date(item.datetime).toISOString().split('T')[0] : undefined,
       time: item.datetime ? new Date(item.datetime).toISOString().split('T')[1].substring(0, 5) : undefined,
+      createdAt: item.created_at,
+      userId: item.user_id,
       customization: {
         background: {
-          type: item.background_type || 'solid',
+          type: (item.background_type || 'solid') as 'solid' | 'gradient' | 'image' | 'ai',
           value: item.background_value || '#ffffff',
         },
         font: {
@@ -48,7 +50,7 @@ export async function listSimpleInvitations(isEvent?: boolean): Promise<SimpleIn
           alignment: 'center',
         },
       },
-      isEvent: item.is_event || false
+      isEvent: Boolean(item.is_event) || false
     }));
     
     return invitations;
@@ -82,12 +84,14 @@ export async function getSimpleInvitationById(id: string): Promise<SimpleInvitat
       title: data.title,
       description: data.description || '',
       location: data.location || '',
-      locationTitle: data.locationTitle || '',
+      locationTitle: data.location_url || '', // Using location_url for locationTitle
       date: data.datetime ? new Date(data.datetime).toISOString().split('T')[0] : undefined,
       time: data.datetime ? new Date(data.datetime).toISOString().split('T')[1].substring(0, 5) : undefined,
+      createdAt: data.created_at,
+      userId: data.user_id,
       customization: {
         background: {
-          type: data.background_type || 'solid',
+          type: (data.background_type || 'solid') as 'solid' | 'gradient' | 'image' | 'ai',
           value: data.background_value || '#ffffff',
         },
         font: {
@@ -97,7 +101,7 @@ export async function getSimpleInvitationById(id: string): Promise<SimpleInvitat
           alignment: 'center',
         },
       },
-      isEvent: data.is_event || false
+      isEvent: Boolean(data.is_event) || false
     };
     
     return invitation;
@@ -129,12 +133,14 @@ export async function createSimpleInvitation(data: any): Promise<SimpleInvitatio
       title: createdInvitation.title,
       description: createdInvitation.description || '',
       location: createdInvitation.location || '',
-      locationTitle: createdInvitation.locationTitle || '',
+      locationTitle: createdInvitation.location_url || '', // Using location_url for locationTitle
       date: createdInvitation.datetime ? new Date(createdInvitation.datetime).toISOString().split('T')[0] : undefined,
       time: createdInvitation.datetime ? new Date(createdInvitation.datetime).toISOString().split('T')[1].substring(0, 5) : undefined,
+      createdAt: createdInvitation.created_at,
+      userId: createdInvitation.user_id,
       customization: {
         background: {
-          type: createdInvitation.background_type || 'solid',
+          type: (createdInvitation.background_type || 'solid') as 'solid' | 'gradient' | 'image' | 'ai',
           value: createdInvitation.background_value || '#ffffff',
         },
         font: {
@@ -144,7 +150,7 @@ export async function createSimpleInvitation(data: any): Promise<SimpleInvitatio
           alignment: 'center',
         },
       },
-      isEvent: createdInvitation.is_event || false
+      isEvent: Boolean(createdInvitation.is_event) || false
     };
     
     return invitation;
@@ -177,12 +183,14 @@ export async function updateSimpleInvitation(id: string, data: any): Promise<Sim
       title: updatedInvitation.title,
       description: updatedInvitation.description || '',
       location: updatedInvitation.location || '',
-      locationTitle: updatedInvitation.locationTitle || '',
+      locationTitle: updatedInvitation.location_url || '', // Using location_url for locationTitle
       date: updatedInvitation.datetime ? new Date(updatedInvitation.datetime).toISOString().split('T')[0] : undefined,
       time: updatedInvitation.datetime ? new Date(updatedInvitation.datetime).toISOString().split('T')[1].substring(0, 5) : undefined,
+      createdAt: updatedInvitation.created_at,
+      userId: updatedInvitation.user_id,
       customization: {
         background: {
-          type: updatedInvitation.background_type || 'solid',
+          type: (updatedInvitation.background_type || 'solid') as 'solid' | 'gradient' | 'image' | 'ai',
           value: updatedInvitation.background_value || '#ffffff',
         },
         font: {
@@ -192,12 +200,35 @@ export async function updateSimpleInvitation(id: string, data: any): Promise<Sim
           alignment: 'center',
         },
       },
-      isEvent: updatedInvitation.is_event || false
+      isEvent: Boolean(updatedInvitation.is_event) || false
     };
     
     return invitation;
   } catch (error) {
     console.error('Error in updateSimpleInvitation:', error);
+    return null;
+  }
+}
+
+/**
+ * Get a shared invitation by share ID
+ */
+export async function getSharedInvitation(shareId: string): Promise<any | null> {
+  try {
+    const { data, error } = await supabase
+      .from('invitations')
+      .select('*')
+      .eq('share_link', shareId)
+      .single();
+    
+    if (error) {
+      console.error('Error fetching shared invitation:', error);
+      throw error;
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error in getSharedInvitation:', error);
     return null;
   }
 }
