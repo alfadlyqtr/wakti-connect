@@ -35,7 +35,7 @@ export const useEvents = (tab: EventTab = "my-events") => {
           throw new Error("Not authenticated");
         }
 
-        // Format dates for the database
+        // Format dates for the database and prepare the formatted data
         const formattedData = {
           title: eventData.title,
           description: eventData.description || null,
@@ -45,18 +45,22 @@ export const useEvents = (tab: EventTab = "my-events") => {
           end_time: eventData.endDate ? eventData.endDate.toISOString() : eventData.startDate.toISOString(),
           is_all_day: eventData.isAllDay || false,
           status: eventData.status || 'published',
-          customization: eventData.customization || null,
           user_id: session.user.id
         };
 
-        // Convert the customization object to a JSON string if needed
-        if (formattedData.customization) {
-          formattedData.customization = JSON.stringify(formattedData.customization);
+        // Handle customization as a separate object we'll stringify for the database
+        let customizationJson = null;
+        if (eventData.customization) {
+          customizationJson = JSON.stringify(eventData.customization);
         }
 
+        // Insert the event with the stringified customization
         const { data, error } = await supabase
           .from('events')
-          .insert([formattedData])
+          .insert([{
+            ...formattedData,
+            customization: customizationJson
+          }])
           .select();
 
         if (error) {

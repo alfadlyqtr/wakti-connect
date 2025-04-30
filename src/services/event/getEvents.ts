@@ -99,11 +99,11 @@ export const getEvents = async (tab: EventTab): Promise<EventsResult> => {
     // Parse customization from JSON if needed and transform data
     const events: Event[] = (data || []).map((event: any) => {
       // Parse customization if it's a string
-      let customization = event.customization;
+      let customization = null;
       
-      if (typeof customization === 'string') {
+      if (typeof event.customization === 'string' && event.customization) {
         try {
-          customization = JSON.parse(customization);
+          customization = JSON.parse(event.customization);
         } catch (e) {
           console.warn('Failed to parse customization:', e);
           // Set default customization if parsing fails
@@ -116,6 +116,18 @@ export const getEvents = async (tab: EventTab): Promise<EventsResult> => {
             }
           };
         }
+      } else if (typeof event.customization === 'object') {
+        customization = event.customization;
+      } else {
+        // Default customization if none exists
+        customization = {
+          background: { type: 'solid', value: '#ffffff' },
+          font: { family: 'system-ui, sans-serif', size: 'medium', color: '#333333' },
+          buttons: {
+            accept: { background: '#4CAF50', color: '#ffffff', shape: 'rounded' },
+            decline: { background: '#f44336', color: '#ffffff', shape: 'rounded' }
+          }
+        };
       }
       
       return {
@@ -172,10 +184,11 @@ export const getEventById = async (eventId: string): Promise<Event | null> => {
     }
     
     // Parse customization if needed
-    let customization = data.customization;
-    if (typeof customization === 'string') {
+    let customization = null;
+    
+    if (typeof data.customization === 'string' && data.customization) {
       try {
-        customization = JSON.parse(customization);
+        customization = JSON.parse(data.customization);
       } catch (e) {
         console.warn('Failed to parse customization:', e);
         customization = {
@@ -187,6 +200,18 @@ export const getEventById = async (eventId: string): Promise<Event | null> => {
           }
         };
       }
+    } else if (typeof data.customization === 'object') {
+      customization = data.customization;
+    } else {
+      // Default customization if none exists
+      customization = {
+        background: { type: 'solid', value: '#ffffff' },
+        font: { family: 'system-ui, sans-serif', size: 'medium', color: '#333333' },
+        buttons: {
+          accept: { background: '#4CAF50', color: '#ffffff', shape: 'rounded' },
+          decline: { background: '#f44336', color: '#ffffff', shape: 'rounded' }
+        }
+      };
     }
     
     return {

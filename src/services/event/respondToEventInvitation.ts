@@ -29,7 +29,7 @@ export const respondToEventInvitation = async (
     else if (guestInfo) {
       // Create a guest response entry
       const { error } = await supabase
-        .from('event_guest_responses') // Make sure this table exists
+        .from('event_guest_responses')
         .insert([{
           event_id: eventId,
           name: guestInfo.name,
