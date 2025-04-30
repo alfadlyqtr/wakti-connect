@@ -4,6 +4,13 @@ import { Route } from 'react-router-dom';
 import NotFoundPage from '@/pages/NotFound';
 import SharedInvitationView from '@/components/invitations/SharedInvitationView';
 
+// Import actual implemented pages
+import ContactPage from '@/pages/public/ContactPage';
+import FeaturesPage from '@/pages/public/FeaturesPage';
+import PricingPage from '@/pages/public/PricingPage';
+import AboutPage from '@/pages/public/AboutPage';
+import LandingPage from '@/pages/public/LandingPage';
+
 // Temporary placeholder component for missing pages
 const PlaceholderPage = ({ title }: { title: string }) => (
   <div className="container mx-auto px-4 py-16 text-center">
@@ -12,12 +19,7 @@ const PlaceholderPage = ({ title }: { title: string }) => (
   </div>
 );
 
-// Placeholder components for missing pages
-const Home = () => <PlaceholderPage title="Home" />;
-const AboutPage = () => <PlaceholderPage title="About" />;
-const ContactPage = () => <PlaceholderPage title="Contact" />;
-const FeaturesPage = () => <PlaceholderPage title="Features" />;
-const PricingPage = () => <PlaceholderPage title="Pricing" />;
+// Placeholder only for pages that don't have implementations yet
 const PrivacyPage = () => <PlaceholderPage title="Privacy" />;
 const TermsPage = () => <PlaceholderPage title="Terms" />;
 const FaqPage = () => <PlaceholderPage title="FAQ" />;
@@ -25,7 +27,7 @@ const FaqPage = () => <PlaceholderPage title="FAQ" />;
 export const publicRoutes = [
   {
     index: true,
-    element: <Home />,
+    element: <LandingPage />,
   },
   {
     path: 'about',

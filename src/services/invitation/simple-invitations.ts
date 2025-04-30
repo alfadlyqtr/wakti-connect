@@ -200,7 +200,7 @@ export const listSimpleInvitations = async (isEvent = false): Promise<SimpleInvi
     }
 
     // Map database response to our SimpleInvitation type
-    return data.map(mapDatabaseToSimpleInvitation);
+    return data.map((item) => mapDatabaseToSimpleInvitation(item));
   } catch (error) {
     console.error("Error in listSimpleInvitations:", error);
     toast({
