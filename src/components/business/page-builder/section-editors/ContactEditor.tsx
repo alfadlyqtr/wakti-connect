@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useSectionEditor } from "@/hooks/useSectionEditor";
 import { Input } from "@/components/ui/input";
@@ -123,10 +122,13 @@ const ContactEditor: React.FC<ContactEditorProps> = ({ contentData, handleInputC
           
           <div className="space-y-2">
             <Label htmlFor="address">Address</Label>
-            <LocationPicker
-              value={contentData.address || ''}
-              onChange={(value) => handleInputChange('address', value)}
-              className="w-full"
+            <LocationPicker 
+              location={contentData.address || ''} 
+              locationTitle="" 
+              onLocationChange={(location) => handleInputChange('address', location)}
+              value={contentData.address}
+              onChange={handleInputChange}
+              className="mt-2" 
             />
           </div>
           

@@ -9,29 +9,41 @@ import { isValidMapsUrl } from "@/utils/locationUtils";
 interface LocationPickerProps {
   location: string;
   locationTitle: string;
+  value?: string; // Added to support legacy usage
+  onChange?: (value: any) => void; // Added to support legacy usage
   onLocationChange: (location: string, locationTitle: string) => void;
 }
 
 const LocationPicker: React.FC<LocationPickerProps> = ({
   location,
   locationTitle,
+  value, // Support legacy props
+  onChange, // Support legacy props
   onLocationChange
 }) => {
-  const [locationInput, setLocationInput] = useState(location);
+  // Use either the legacy value or the location prop
+  const actualLocation = value || location;
+  
+  const [locationInput, setLocationInput] = useState(actualLocation);
   const [titleInput, setTitleInput] = useState(locationTitle);
-  const [isValidUrl, setIsValidUrl] = useState(isValidMapsUrl(location));
+  const [isValidUrl, setIsValidUrl] = useState(isValidMapsUrl(actualLocation));
   
   useEffect(() => {
-    setLocationInput(location);
+    setLocationInput(actualLocation);
     setTitleInput(locationTitle);
-    setIsValidUrl(isValidMapsUrl(location));
-  }, [location, locationTitle]);
+    setIsValidUrl(isValidMapsUrl(actualLocation));
+  }, [actualLocation, locationTitle]);
   
   const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newLocation = e.target.value;
     setLocationInput(newLocation);
     setIsValidUrl(isValidMapsUrl(newLocation));
     onLocationChange(newLocation, titleInput);
+    
+    // Support legacy onChange if provided
+    if (onChange) {
+      onChange(newLocation);
+    }
   };
   
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

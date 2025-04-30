@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -144,8 +143,12 @@ const DetailsTab: React.FC<DetailsTabProps> = ({
         <div className="mt-2">
           <LocationInput
             location={location}
-            locationTitle={locationTitle}
-            onLocationChange={onLocationChange}
+            locationTitle={locationTitle || ''}
+            locationType={locationType}
+            mapsUrl={mapsUrl}
+            onChange={onLocationChange}
+            getCurrentLocation={getCurrentLocation}
+            isGettingLocation={isGettingLocation}
           />
         </div>
       </div>

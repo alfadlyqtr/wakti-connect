@@ -25,19 +25,22 @@ const EventCardPreview: React.FC<EventCardPreviewProps> = ({
   const { customization } = useCustomization();
   const hasLocation = !!location;
   
-  // Generate background style
+  // Generate background style with fallbacks for missing properties
   const cardStyle: React.CSSProperties = {
     color: customization.font?.color || '#000000',
   };
   
   if (customization.background?.type === 'solid') {
-    cardStyle.backgroundColor = customization.background.value;
-  } else if (customization.background?.type === 'image' && customization.background.value) {
+    cardStyle.backgroundColor = customization.background?.value || '#ffffff';
+  } else if (customization.background?.type === 'image' && customization.background?.value) {
     cardStyle.backgroundImage = `url(${customization.background.value})`;
     cardStyle.backgroundSize = 'cover';
     cardStyle.backgroundPosition = 'center';
     cardStyle.backgroundColor = 'rgba(0, 0, 0, 0.5)'; // Darken the image a bit
     cardStyle.color = '#ffffff'; // Default text color on images
+  } else {
+    // Fallback if background is missing
+    cardStyle.backgroundColor = '#ffffff';
   }
   
   // Format dates for display

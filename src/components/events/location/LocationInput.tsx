@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MapPin } from 'lucide-react';
 import LocationPicker from './LocationPicker';
+import { Input } from "@/components/ui/input";
 
 interface LocationInputProps {
   location: string;
@@ -54,9 +55,8 @@ const LocationInput: React.FC<LocationInputProps> = ({
           <div className="space-y-2">
             <Label htmlFor="location">Event Location</Label>
             <div className="flex space-x-2">
-              <input 
+              <Input 
                 id="location"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 placeholder="Enter location"
                 value={location}
                 onChange={(e) => onChange(e.target.value, 'manual', undefined, locationTitle)}
@@ -77,9 +77,8 @@ const LocationInput: React.FC<LocationInputProps> = ({
 
             <div className="space-y-2 mt-4">
               <Label htmlFor="location-title">Location Title (Optional)</Label>
-              <input 
+              <Input 
                 id="location-title"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 placeholder="e.g., Conference Room A, Building 5"
                 value={locationTitle}
                 onChange={(e) => onChange(location, 'manual', undefined, e.target.value)}
