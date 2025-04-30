@@ -119,4 +119,3 @@ export function isValidMapsUrl(url: string): boolean {
   
   return googleMapsPatterns.some(pattern => url.includes(pattern));
 }
-
