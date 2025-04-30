@@ -41,13 +41,19 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
 }) => {
   const [activeTab, setActiveTab] = React.useState('background');
 
-  // Save draft handler with click propagation prevention
+  // Improved save draft handler with explicit sync
   const onSaveDraft = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
+    console.log("Saving draft with customization:", customization);
+    
+    // Make sure customization is fully captured before saving
     if (handleSaveDraft) {
-      handleSaveDraft();
+      // Small delay to ensure all state updates have been processed
+      setTimeout(() => {
+        handleSaveDraft();
+      }, 100);
     } else {
       // Fallback if no handler provided
       toast({

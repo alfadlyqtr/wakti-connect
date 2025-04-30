@@ -68,34 +68,34 @@ const createOptimizedPrompt = (eventType: string, title: string = "", descriptio
   
   switch (eventType) {
     case "outdoor nature event":
-      basePrompt = "Beautiful scenic landscape with natural elements.";
+      basePrompt = "Beautiful scenic landscape with natural elements for a digital card, 5.78\" x 2.82\".";
       break;
     case "wedding":
-      basePrompt = "Elegant wedding scene with soft romantic atmosphere.";
+      basePrompt = "Elegant wedding scene with soft romantic atmosphere for a digital card, 5.78\" x 2.82\".";
       break;
     case "birthday celebration":
-      basePrompt = "Festive birthday celebration background with vibrant colors.";
+      basePrompt = "Festive birthday celebration background with vibrant colors for a digital card, 5.78\" x 2.82\".";
       break;
     case "conference":
-      basePrompt = "Professional conference or business meeting setting.";
+      basePrompt = "Professional conference or business meeting setting for a digital card, 5.78\" x 2.82\".";
       break;
     case "party":
-      basePrompt = "Festive party atmosphere with dynamic lighting.";
+      basePrompt = "Festive party atmosphere with dynamic lighting for a digital card, 5.78\" x 2.82\".";
       break;
     case "dining event":
-      basePrompt = "Elegant dining atmosphere with warm ambient lighting.";
+      basePrompt = "Elegant dining atmosphere with warm ambient lighting for a digital card, 5.78\" x 2.82\".";
       break;
     case "concert":
-      basePrompt = "Concert venue with atmospheric lighting and stage elements.";
+      basePrompt = "Concert venue with atmospheric lighting and stage elements for a digital card, 5.78\" x 2.82\".";
       break;
     case "travel event":
-      basePrompt = "Beautiful destination landscape with scenic views.";
+      basePrompt = "Beautiful destination landscape with scenic views for a digital card, 5.78\" x 2.82\".";
       break;
     case "graduation ceremony":
-      basePrompt = "Formal graduation ceremony with academic elements.";
+      basePrompt = "Formal graduation ceremony with academic elements for a digital card, 5.78\" x 2.82\".";
       break;
     default:
-      basePrompt = "Elegant event background with professional aesthetic.";
+      basePrompt = "Elegant event background with professional aesthetic for a digital card, 5.78\" x 2.82\".";
   }
   
   // Create a concise, direct prompt with enough detail but not too verbose
@@ -113,7 +113,7 @@ const createOptimizedPrompt = (eventType: string, title: string = "", descriptio
   }
   
   // Add specific instructions for image generation
-  prompt += " Perfect as event invitation background with space for text.";
+  prompt += " Perfect as event invitation background with space for text. Digital card format.";
   
   return prompt;
 };
@@ -121,8 +121,7 @@ const createOptimizedPrompt = (eventType: string, title: string = "", descriptio
 const BackgroundTabContent: React.FC<BackgroundTabContentProps> = ({ title, description }) => {
   const {
     customization,
-    handleBackgroundChange,
-    handleAnimationChange
+    handleBackgroundChange
   } = useCustomization();
 
   const [isGenerating, setIsGenerating] = useState(false);
@@ -174,7 +173,7 @@ const BackgroundTabContent: React.FC<BackgroundTabContentProps> = ({ title, desc
         console.error("Failed to generate image:", result.error);
         throw new Error(result.error || "Failed to generate image");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("AI background generation failed:", error);
       
       toast({
@@ -188,7 +187,7 @@ const BackgroundTabContent: React.FC<BackgroundTabContentProps> = ({ title, desc
   };
 
   return (
-    <div onClick={(e) => e.stopPropagation()}>
+    <div>
       <BackgroundSelector
         backgroundType={convertBackgroundTypeToUI(customization.background.type)}
         backgroundValue={customization.background.value}

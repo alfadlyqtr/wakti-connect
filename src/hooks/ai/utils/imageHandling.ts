@@ -26,7 +26,7 @@ export async function handleImageGeneration(prompt: string): Promise<GeneratedIm
       positivePrompt: prompt
     });
     
-    console.log('[imageHandling] Image generation successful');
+    console.log('[imageHandling] Image generation successful:', result);
     
     if (!result.imageURL) {
       throw new Error('No image URL returned from service');

@@ -31,34 +31,44 @@ export const TextColorPicker: React.FC<TextColorPickerProps> = ({
     '#9900FF', '#FF00FF', '#FF0099'
   ];
   
-  // Handle local color change
+  // Handle local color change with proper event handling
   const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     const newColor = e.target.value;
     setColor(newColor);
     onChange(newColor);
   };
   
-  // Handle preset color selection
+  // Handle preset color selection with proper event handling
   const handlePresetClick = (presetColor: string, e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     setColor(presetColor);
     onChange(presetColor);
   };
 
-  // Prevent click propagation for the whole popover content
-  const handlePopoverClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
   return (
-    <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
+    <div 
+      className="space-y-2" 
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }}
+    >
       {label && <Label className="text-sm">{label}</Label>}
       
-      <div className="flex gap-2 items-center" onClick={(e) => e.stopPropagation()}>
+      <div 
+        className="flex gap-2 items-center" 
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        }}
+      >
         <Popover>
           <PopoverTrigger asChild>
             <Button
@@ -74,14 +84,25 @@ export const TextColorPicker: React.FC<TextColorPickerProps> = ({
             </Button>
           </PopoverTrigger>
           <PopoverContent 
-            className="w-auto p-3 z-[9999]" 
-            onClick={handlePopoverClick}
-            onPointerDownOutside={(e) => {
+            className="w-auto p-3"
+            onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
             }}
+            onPointerDownOutside={(e) => {
+              e.preventDefault();
+            }}
+            onInteractOutside={(e) => {
+              e.preventDefault();
+            }}
           >
-            <div className="flex flex-col gap-4" onClick={handlePopoverClick}>
+            <div 
+              className="flex flex-col gap-4" 
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+            >
               <input
                 type="color"
                 value={color}

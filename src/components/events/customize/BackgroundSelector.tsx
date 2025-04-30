@@ -56,11 +56,16 @@ const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
     onBackgroundChange('image', value);
   };
 
-  // Handler for AI background generation - improved to prevent click-through
+  // Improved AI background generation handler with guaranteed event handling
   const handleGenerateAIBackground = (e: React.MouseEvent) => {
-    // Prevent click-through by stopping event propagation
+    // Always prevent default and stop propagation
     e.preventDefault();
     e.stopPropagation();
+    
+    // Make sure to activate the image tab first
+    if (activeTab !== 'image') {
+      setActiveTab('image');
+    }
     
     if (onGenerateAIBackground) {
       onGenerateAIBackground(e);
@@ -73,30 +78,53 @@ const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
     }
   };
 
-  // This wrapper prevents click-through for the entire component
   return (
-    <div className="space-y-4" onClick={(e) => e.stopPropagation()}>
-      <Label onClick={(e) => e.stopPropagation()}>Background</Label>
+    <div 
+      className="space-y-4" 
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }}
+    >
+      <Label>Background</Label>
       
       <Tabs 
         value={activeTab} 
         onValueChange={handleTabChange} 
-        className="w-full"
-        onClick={(e) => e.stopPropagation()}
+        className="w-full relative"
       >
-        <TabsList className="grid grid-cols-2 w-full" onClick={(e) => e.stopPropagation()}>
-          <TabsTrigger value="color" onClick={(e) => e.stopPropagation()}>Solid Color</TabsTrigger>
-          <TabsTrigger value="image" onClick={(e) => e.stopPropagation()}>Image</TabsTrigger>
+        <TabsList 
+          className="grid grid-cols-2 w-full"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <TabsTrigger 
+            value="color" 
+            onClick={(e) => e.stopPropagation()}
+          >
+            Solid Color
+          </TabsTrigger>
+          <TabsTrigger 
+            value="image" 
+            onClick={(e) => e.stopPropagation()}
+          >
+            Image
+          </TabsTrigger>
         </TabsList>
         
-        <TabsContent value="color" className="pt-4" onClick={(e) => e.stopPropagation()}>
+        <TabsContent 
+          value="color" 
+          className="pt-4" 
+        >
           <ColorTab 
             value={backgroundType === 'color' ? backgroundValue : '#ffffff'} 
             onChange={handleColorChange} 
           />
         </TabsContent>
         
-        <TabsContent value="image" className="pt-4" onClick={(e) => e.stopPropagation()}>
+        <TabsContent 
+          value="image" 
+          className="pt-4"
+        >
           <ImageTab 
             value={backgroundType === 'image' ? backgroundValue : ''} 
             onChange={handleImageChange}
@@ -104,15 +132,13 @@ const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
             description={description}
           />
           
-          <div 
-            className="mt-4 border-t pt-4" 
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="mt-4 border-t pt-4 relative">
             <Button 
               variant="outline" 
-              className="w-full flex items-center justify-center gap-2 relative z-50" 
+              className="w-full flex items-center justify-center gap-2 relative"
               onClick={handleGenerateAIBackground}
               disabled={isGenerating}
+              type="button"
             >
               {isGenerating ? (
                 <>
@@ -126,10 +152,7 @@ const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
                 </>
               )}
             </Button>
-            <p 
-              className="text-xs text-muted-foreground mt-2 text-center"
-              onClick={(e) => e.stopPropagation()}
-            >
+            <p className="text-xs text-muted-foreground mt-2 text-center">
               Create a unique background based on your event details
             </p>
           </div>
