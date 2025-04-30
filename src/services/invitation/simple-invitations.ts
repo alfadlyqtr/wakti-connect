@@ -23,13 +23,24 @@ export const createSimpleInvitation = async (invitation: Omit<SimpleInvitation, 
       shareId: uuidv4(), // Generate a unique share ID
     };
     
+    // Check if table exists first
+    const { data: tableExists } = await supabase
+      .from('invitations')
+      .select('count')
+      .limit(1)
+      .single();
+    
+    // Use the 'invitations' table instead if the 'simple_invitations' table doesn't exist
+    const tableName = 'invitations';
+    
     const { data, error } = await supabase
-      .from('simple_invitations')
+      .from(tableName)
       .insert(newInvitation)
       .select()
       .single();
     
     if (error) {
+      console.error('Insert error:', error);
       throw error;
     }
     
@@ -38,7 +49,7 @@ export const createSimpleInvitation = async (invitation: Omit<SimpleInvitation, 
       description: "Your invitation has been created successfully.",
     });
     
-    return data as SimpleInvitation;
+    return data as unknown as SimpleInvitation;
   } catch (error) {
     console.error('Error creating invitation:', error);
     toast({
@@ -61,8 +72,10 @@ export const updateSimpleInvitation = async (id: string, updates: Partial<Simple
       throw new Error("Authentication required");
     }
     
+    const tableName = 'invitations';
+    
     const { data, error } = await supabase
-      .from('simple_invitations')
+      .from(tableName)
       .update({
         ...updates,
         updatedAt: new Date().toISOString()
@@ -81,7 +94,7 @@ export const updateSimpleInvitation = async (id: string, updates: Partial<Simple
       description: "Your invitation has been updated successfully.",
     });
     
-    return data as SimpleInvitation;
+    return data as unknown as SimpleInvitation;
   } catch (error) {
     console.error('Error updating invitation:', error);
     toast({
@@ -98,8 +111,10 @@ export const updateSimpleInvitation = async (id: string, updates: Partial<Simple
  */
 export const getSimpleInvitationById = async (id: string): Promise<SimpleInvitation | null> => {
   try {
+    const tableName = 'invitations';
+    
     const { data, error } = await supabase
-      .from('simple_invitations')
+      .from(tableName)
       .select()
       .eq('id', id)
       .single();
@@ -108,7 +123,7 @@ export const getSimpleInvitationById = async (id: string): Promise<SimpleInvitat
       throw error;
     }
     
-    return data as SimpleInvitation;
+    return data as unknown as SimpleInvitation;
   } catch (error) {
     console.error('Error fetching invitation:', error);
     return null;
@@ -120,8 +135,10 @@ export const getSimpleInvitationById = async (id: string): Promise<SimpleInvitat
  */
 export const getSharedInvitation = async (shareId: string): Promise<SimpleInvitation | null> => {
   try {
+    const tableName = 'invitations';
+    
     const { data, error } = await supabase
-      .from('simple_invitations')
+      .from(tableName)
       .select()
       .eq('shareId', shareId)
       .eq('isPublic', true)
@@ -131,7 +148,7 @@ export const getSharedInvitation = async (shareId: string): Promise<SimpleInvita
       throw error;
     }
     
-    return data as SimpleInvitation;
+    return data as unknown as SimpleInvitation;
   } catch (error) {
     console.error('Error fetching shared invitation:', error);
     return null;
@@ -149,8 +166,10 @@ export const listSimpleInvitations = async (): Promise<SimpleInvitation[]> => {
       throw new Error("Authentication required");
     }
     
+    const tableName = 'invitations';
+    
     const { data, error } = await supabase
-      .from('simple_invitations')
+      .from(tableName)
       .select()
       .eq('userId', session.user.id)
       .order('createdAt', { ascending: false });
@@ -159,7 +178,7 @@ export const listSimpleInvitations = async (): Promise<SimpleInvitation[]> => {
       throw error;
     }
     
-    return data as SimpleInvitation[];
+    return data as unknown as SimpleInvitation[];
   } catch (error) {
     console.error('Error listing invitations:', error);
     return [];
@@ -177,8 +196,10 @@ export const deleteSimpleInvitation = async (id: string): Promise<boolean> => {
       throw new Error("Authentication required");
     }
     
+    const tableName = 'invitations';
+    
     const { error } = await supabase
-      .from('simple_invitations')
+      .from(tableName)
       .delete()
       .eq('id', id)
       .eq('userId', session.user.id); // Ensure user owns this invitation
@@ -215,8 +236,10 @@ export const toggleInvitationPublicStatus = async (id: string, isPublic: boolean
       throw new Error("Authentication required");
     }
     
+    const tableName = 'invitations';
+    
     const { data, error } = await supabase
-      .from('simple_invitations')
+      .from(tableName)
       .update({
         isPublic,
         updatedAt: new Date().toISOString()
@@ -237,7 +260,7 @@ export const toggleInvitationPublicStatus = async (id: string, isPublic: boolean
         : "Your invitation is no longer publicly accessible",
     });
     
-    return data as SimpleInvitation;
+    return data as unknown as SimpleInvitation;
   } catch (error) {
     console.error('Error toggling invitation public status:', error);
     toast({

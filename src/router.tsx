@@ -1,10 +1,11 @@
+
 import React from "react";
 import { createBrowserRouter, RouteObject, Outlet } from "react-router-dom";
 import { publicRoutes } from "./routes/publicRoutes";
 import { authRoutes } from "./routes/authRoutes";
 import { businessRoutes, bookingRoutes } from "./routes/businessRoutes";
 import { superadminRoutes } from "./routes/superadminRoutes";
-import { dashboardRoutes } from "./routes/dashboardRoutes";
+import { dashboardRoutes as importedDashboardRoutes } from "./routes/dashboardRoutes";
 import NotFound from "./pages/NotFound";
 import PublicLayout from "./components/layout/PublicLayout";
 import DashboardLayout from "./components/dashboard/DashboardLayout";
@@ -50,7 +51,7 @@ const withSuspense = (Component: React.ComponentType) => (
 );
 
 // Define dashboard routes
-const dashboardRoutes: RouteObject[] = [
+const localDashboardRoutes: RouteObject[] = [
   {
     index: true,
     element: withSuspense(DashboardHome),
@@ -120,6 +121,9 @@ const dashboardRoutes: RouteObject[] = [
     element: withSuspense(DashboardMeetingSummary),
   },
 ];
+
+// Combine dashboard routes from both sources
+const combinedDashboardRoutes = [...localDashboardRoutes, ...importedDashboardRoutes];
 
 export const router = createBrowserRouter([
   // Auth routes
@@ -211,7 +215,7 @@ export const router = createBrowserRouter([
         </ErrorBoundary>
       </ProtectedRoute>
     ),
-    children: [...dashboardRoutes, ...dashboardRoutes],
+    children: combinedDashboardRoutes,
   },
   
   // Super Admin Dashboard routes
