@@ -1,10 +1,11 @@
+
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EventFormTab, EventCustomization } from "@/types/event.types";
 import { InvitationRecipient } from "@/types/invitation.types";
 import EventDetailsTab from "./tabs/EventDetailsTab";
-import CustomizeEventTab from "../customize/CustomizeEventTab";
+import CustomizeEventTab from "./tabs/CustomizeEventTab";
 import EventShareTab from "./tabs/EventShareTab";
 import { ShareTab } from "@/types/form.types";
 

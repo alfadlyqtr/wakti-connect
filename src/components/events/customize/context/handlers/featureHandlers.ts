@@ -20,6 +20,13 @@ export const createFeatureHandlers = (
     });
   };
 
+  const handleToggleFeature = (feature: string, checked: boolean) => {
+    onCustomizationChange({
+      ...customization,
+      [feature]: checked
+    });
+  };
+
   const handleBrandingChange = (property: 'logo' | 'slogan', value: string) => {
     const updatedBranding = {
       ...customization.branding,
@@ -49,6 +56,7 @@ export const createFeatureHandlers = (
   return {
     handleToggleCalendar,
     handleToggleButtons,
+    handleToggleFeature,
     handleBrandingChange,
     handleMapDisplayChange,
     handlePoweredByColorChange
