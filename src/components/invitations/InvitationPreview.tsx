@@ -3,8 +3,10 @@ import React from 'react';
 import { SimpleInvitationCustomization } from '@/types/invitation.types';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CalendarIcon, MapPin } from 'lucide-react';
+import { CalendarIcon, MapPin, Download, Calendar } from 'lucide-react';
 import { formatLocation, generateDirectionsUrl } from '@/utils/locationUtils';
+import { createGoogleCalendarUrl, createICSFile } from '@/utils/calendarUtils';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 interface InvitationPreviewProps {
   title?: string;
@@ -15,6 +17,7 @@ interface InvitationPreviewProps {
   time?: string;
   customization: SimpleInvitationCustomization;
   showActions?: boolean;
+  isEvent?: boolean;
 }
 
 export default function InvitationPreview({
@@ -25,7 +28,8 @@ export default function InvitationPreview({
   date,
   time,
   customization,
-  showActions = false
+  showActions = true,
+  isEvent = false
 }: InvitationPreviewProps) {
   
   const getBackgroundStyle = () => {
@@ -133,6 +137,34 @@ export default function InvitationPreview({
     }
   };
 
+  const handleAddToCalendar = (type: 'google' | 'ics') => {
+    if (!date) return;
+    
+    try {
+      const startDate = new Date(`${date}T${time || '00:00:00'}`);
+      const endDate = new Date(startDate);
+      endDate.setHours(endDate.getHours() + 1); // Default to 1 hour duration
+      
+      const eventData = {
+        title: title || 'Untitled Event',
+        description: description || '',
+        location: location || '',
+        start: startDate,
+        end: endDate,
+        isAllDay: !time
+      };
+      
+      if (type === 'google') {
+        const googleUrl = createGoogleCalendarUrl(eventData);
+        window.open(googleUrl, '_blank');
+      } else if (type === 'ics') {
+        createICSFile(eventData);
+      }
+    } catch (error) {
+      console.error('Error adding to calendar:', error);
+    }
+  };
+
   return (
     <Card style={cardStyle} className="w-full shadow-lg">
       {customization.background.type === 'image' && <div style={overlayStyle}></div>}
@@ -164,22 +196,49 @@ export default function InvitationPreview({
           )}
         </div>
         
-        {showActions && location && (
-          <div className="mt-4">
-            <Button 
-              size="sm"
-              variant="outline"
-              className="bg-white/70 backdrop-blur-sm hover:bg-white/90 text-foreground"
-              asChild
-            >
-              <a 
-                href={generateDirectionsUrl(location)}
-                target="_blank"
-                rel="noopener noreferrer"
+        {showActions && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {location && (
+              <Button 
+                size="sm"
+                variant="outline"
+                className="bg-white/70 backdrop-blur-sm hover:bg-white/90 text-foreground"
+                asChild
               >
-                Get Directions
-              </a>
-            </Button>
+                <a 
+                  href={generateDirectionsUrl(location)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <MapPin className="h-4 w-4 mr-1" />
+                  Get Directions
+                </a>
+              </Button>
+            )}
+            
+            {isEvent && date && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    className="bg-white/70 backdrop-blur-sm hover:bg-white/90 text-foreground"
+                  >
+                    <Calendar className="h-4 w-4 mr-1" />
+                    Add to Calendar
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={() => handleAddToCalendar('google')}>
+                    Google Calendar
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleAddToCalendar('ics')}>
+                    <Download className="h-4 w-4 mr-1" />
+                    Download .ics (Apple/Outlook)
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         )}
       </div>

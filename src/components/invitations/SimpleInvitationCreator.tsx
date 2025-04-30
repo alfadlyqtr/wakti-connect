@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { SimpleInvitation, SimpleInvitationCustomization, BackgroundType } from '@/types/invitation.types';
 import { createSimpleInvitation, updateSimpleInvitation } from '@/services/invitation/simple-invitations';
@@ -15,12 +14,21 @@ import { toast } from '@/components/ui/use-toast';
 interface SimpleInvitationCreatorProps {
   existingInvitation?: SimpleInvitation;
   onSuccess?: () => void;
+  isEvent?: boolean;
 }
 
-export default function SimpleInvitationCreator({ existingInvitation, onSuccess }: SimpleInvitationCreatorProps) {
+export default function SimpleInvitationCreator({ 
+  existingInvitation, 
+  onSuccess,
+  isEvent = false 
+}: SimpleInvitationCreatorProps) {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>('details');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Determine paths based on whether this is for events or invitations
+  const basePath = isEvent ? '/dashboard/events' : '/dashboard/invitations';
+  const entityType = isEvent ? 'Event' : 'Invitation';
 
   const [formData, setFormData] = useState({
     title: existingInvitation?.title || '',
@@ -75,6 +83,7 @@ export default function SimpleInvitationCreator({ existingInvitation, onSuccess 
         font_family: customization.font.family,
         font_size: customization.font.size,
         text_color: customization.font.color,
+        is_event: isEvent, // Add flag to identify if this is an event
       };
 
       let result;
@@ -87,17 +96,21 @@ export default function SimpleInvitationCreator({ existingInvitation, onSuccess 
       }
 
       if (result) {
+        toast({
+          title: 'Success',
+          description: `${entityType} successfully ${existingInvitation ? 'updated' : 'created'}!`,
+        });
         if (onSuccess) {
           onSuccess();
         } else {
-          navigate('/dashboard/invitations');
+          navigate(basePath);
         }
       }
     } catch (error) {
-      console.error('Error saving invitation:', error);
+      console.error(`Error saving ${entityType.toLowerCase()}:`, error);
       toast({
-        title: 'Failed to save invitation',
-        description: 'There was an error while saving your invitation.',
+        title: `Failed to save ${entityType.toLowerCase()}`,
+        description: `There was an error while saving your ${entityType.toLowerCase()}.`,
         variant: 'destructive',
       });
     } finally {
@@ -123,18 +136,20 @@ export default function SimpleInvitationCreator({ existingInvitation, onSuccess 
     <div className="container mx-auto p-4 max-w-5xl">
       <div className="mb-6">
         <h1 className="text-2xl font-bold mb-2">
-          {existingInvitation ? 'Edit Invitation' : 'Create New Invitation'}
+          {existingInvitation 
+            ? `Edit ${entityType}` 
+            : `Create New ${entityType}`}
         </h1>
         <p className="text-muted-foreground">
           {existingInvitation 
-            ? 'Update your invitation details and styling' 
-            : 'Fill in the details and customize your invitation'}
+            ? `Update your ${entityType.toLowerCase()} details and styling` 
+            : `Fill in the details and customize your ${entityType.toLowerCase()}`}
         </p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="details">Invitation Details</TabsTrigger>
+          <TabsTrigger value="details">{entityType} Details</TabsTrigger>
           <TabsTrigger value="customize">Customize Style</TabsTrigger>
         </TabsList>
 
@@ -145,6 +160,7 @@ export default function SimpleInvitationCreator({ existingInvitation, onSuccess 
                 <InvitationForm 
                   formData={formData}
                   onChange={handleFormChange}
+                  isEvent={isEvent}
                 />
               </TabsContent>
 
@@ -169,6 +185,7 @@ export default function SimpleInvitationCreator({ existingInvitation, onSuccess 
                   date={formData.date}
                   time={formData.time}
                   customization={customization}
+                  isEvent={isEvent}
                 />
               </div>
             </div>
@@ -177,7 +194,7 @@ export default function SimpleInvitationCreator({ existingInvitation, onSuccess 
           <div className="flex justify-between mt-6">
             <Button
               variant="outline"
-              onClick={() => navigate('/dashboard/invitations')}
+              onClick={() => navigate(basePath)}
               disabled={isSubmitting}
             >
               Cancel
@@ -190,7 +207,9 @@ export default function SimpleInvitationCreator({ existingInvitation, onSuccess 
                 </Button>
               )}
               <Button onClick={handleNextTab} disabled={isSubmitting}>
-                {activeTab === 'details' ? 'Next: Customize' : 'Save Invitation'}
+                {activeTab === 'details' 
+                  ? 'Next: Customize' 
+                  : `Save ${entityType}`}
               </Button>
             </div>
           </div>
