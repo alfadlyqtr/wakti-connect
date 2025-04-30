@@ -1,5 +1,5 @@
 
-export type ContactRequestStatusValue = 'pending' | 'accepted' | 'rejected' | null;
+export type ContactRequestStatusValue = "pending" | "accepted" | "rejected" | null;
 
 export interface ContactRequestStatus {
   requestExists: boolean;
@@ -16,79 +16,23 @@ export interface UserSearchResult {
   businessName?: string;
 }
 
-export interface UserContact {
-  id: string;
-  user_id: string;
-  contact_id: string;
-  status: 'pending' | 'accepted' | 'rejected';
-  staff_relation_id: string | null;
-  created_at: string;
-  contactProfile?: {
-    id: string;
-    fullName: string;
-    displayName: string;
-    email: string;
-    avatarUrl: string;
-    accountType: string;
-    businessName?: string;
-  };
-}
-
-export interface ContactsRequestsResponse {
-  incoming: UserContact[];
-  outgoing: UserContact[];
-}
-
-// Add missing types needed by the events system
 export interface InvitationRecipient {
   id: string;
   name: string;
   email?: string;
   userId?: string;
   type: 'user' | 'email';
-  status?: 'pending' | 'accepted' | 'declined';
 }
 
 export interface InvitationCustomization {
-  backgroundType: string;
-  backgroundValue: string;
-  fontFamily: string;
-  fontSize: string;
-  textColor: string;
-  textAlign: string;
-  buttonStyles: {
-    style: string;
-    color: string;
+  backgroundType?: string;
+  backgroundValue?: string;
+  fontFamily?: string;
+  fontSize?: string;
+  textColor?: string;
+  textAlign?: string;
+  buttonStyles?: {
+    style?: string;
+    color?: string;
   };
-  layoutSize: string;
-  customEffects: Record<string, any>;
-}
-
-export interface InvitationRequest {
-  eventId: string;
-  recipients: InvitationRecipient[];
-  customizationId?: string;
-  shared_as_link?: boolean;
-}
-
-export interface InvitationResponse {
-  id: string;
-  status: 'sent' | 'failed';
-  recipients: InvitationRecipient[];
-  failedRecipients?: string[];
-  createdAt?: string;
-}
-
-export interface InvitationTemplate {
-  id: string;
-  name: string;
-  description?: string;
-  content?: string;
-  customizationId?: string;
-  createdAt: string;
-  updatedAt?: string;
-  previewImage?: string;
-  defaultStyles?: Record<string, any>;
-  customization?: Record<string, any>;
-  isDefault?: boolean;
 }

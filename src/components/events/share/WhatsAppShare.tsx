@@ -3,6 +3,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Event } from "@/types/event.types";
 import { formatDate } from "@/utils/dateUtils";
+import { Share } from "lucide-react";
 
 interface WhatsAppShareProps {
   event: Event;
@@ -33,7 +34,9 @@ RSVP here: ${shareUrl}`;
       className={className}
       variant="outline"
       type="button"
+      size="sm"
     >
+      <Share className="h-4 w-4 mr-2" />
       Share via WhatsApp
     </Button>
   );

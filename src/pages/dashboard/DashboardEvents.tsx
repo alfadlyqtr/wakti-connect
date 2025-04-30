@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import SectionContainer from "@/components/ui/section-container";
 
 const DashboardEvents = () => {
-  const { events, isLoading, error } = useEvents();
+  const { events, isLoading, error, refreshEvents } = useEvents();
   const [activeTab, setActiveTab] = useState<EventTab>("my-events");
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -77,7 +77,7 @@ const DashboardEvents = () => {
                   </Card>
                 ))}
               </div>
-            ) : events.length > 0 ? (
+            ) : events && events.length > 0 ? (
               viewMode === 'grid' ? <EventGrid events={events} /> : <EventList events={events} />
             ) : (
               <div className="flex flex-col items-center justify-center p-12 text-center bg-muted/30 rounded-lg border border-dashed">
@@ -95,7 +95,6 @@ const DashboardEvents = () => {
           </TabsContent>
           
           <TabsContent value="invited-events" className="mt-0">
-            {/* Similar content for invited events */}
             <div className="flex flex-col items-center justify-center p-12 text-center bg-muted/30 rounded-lg border border-dashed">
               <CalendarDays className="h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium mb-1">No invitations</h3>
@@ -106,7 +105,6 @@ const DashboardEvents = () => {
           </TabsContent>
           
           <TabsContent value="draft-events" className="mt-0">
-            {/* Similar content for draft events */}
             <div className="flex flex-col items-center justify-center p-12 text-center bg-muted/30 rounded-lg border border-dashed">
               <CalendarDays className="h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium mb-1">No draft events</h3>
@@ -122,7 +120,16 @@ const DashboardEvents = () => {
         </Tabs>
       </div>
       
-      <CreateEventDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
+      <CreateEventDialog 
+        open={isCreateDialogOpen} 
+        onOpenChange={(open) => {
+          setIsCreateDialogOpen(open);
+          if (!open) {
+            // Refresh events list when dialog closes
+            refreshEvents();
+          }
+        }} 
+      />
     </SectionContainer>
   );
 };

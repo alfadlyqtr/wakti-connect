@@ -36,3 +36,15 @@ export interface EventCreationFormProps {
   onCancel?: () => void;
   onSuccess?: () => void;
 }
+
+// New simplified event customization options
+export interface SimpleEventCustomization {
+  background: string;
+  textColor: string;
+  buttonColor: string;
+  headerStyle: 'simple' | 'banner' | 'minimal';
+  headerImage?: string;
+  enableQRCode?: boolean;
+  enableWhatsAppShare?: boolean;
+  enableSocialShare?: boolean;
+}

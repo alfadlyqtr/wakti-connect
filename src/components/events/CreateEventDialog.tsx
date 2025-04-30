@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { EventFormTab } from '@/types/form.types';
 import { EventDetailsForm } from './event-forms/EventDetailsForm';
-import { EventCustomizeForm } from './event-forms/EventCustomizeForm';
-import { EventShareForm } from './event-forms/EventShareForm';
 import { Loader2 } from 'lucide-react';
+import { toast } from "sonner";
+import { useEvents } from '@/hooks/useEvents';
+import { Separator } from '@/components/ui/separator';
 
 interface CreateEventDialogProps {
   open: boolean;
@@ -23,6 +24,7 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
   const [activeTab, setActiveTab] = useState<EventFormTab>('details');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [eventData, setEventData] = useState<any>({});
+  const { createEvent } = useEvents();
   
   const handleTabChange = (tab: EventFormTab) => {
     setActiveTab(tab);
@@ -30,17 +32,13 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
   
   const handleNext = () => {
     if (activeTab === 'details') {
-      setActiveTab('customize');
-    } else if (activeTab === 'customize') {
       setActiveTab('share');
     }
   };
   
   const handlePrev = () => {
-    if (activeTab === 'customize') {
+    if (activeTab === 'share') {
       setActiveTab('details');
-    } else if (activeTab === 'share') {
-      setActiveTab('customize');
     }
   };
   
@@ -52,34 +50,61 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
     handleNext();
   };
   
-  const handleCustomizationSubmit = (data: any) => {
-    setEventData((prev: any) => ({
-      ...prev,
-      customization: data
-    }));
-    handleNext();
-  };
-  
-  const handleShareSubmit = async (data: any) => {
-    setIsSubmitting(true);
-    
+  const handleCreateEvent = async () => {
     try {
-      // Combine all data and create event
-      const fullEventData = {
-        ...eventData,
-        invitations: data.invitations
+      setIsSubmitting(true);
+      
+      // Create a simplified event object for creation
+      const eventToCreate = {
+        title: eventData.title || "Untitled Event",
+        description: eventData.description,
+        location: eventData.location,
+        startDate: eventData.date,
+        isAllDay: eventData.isAllDay,
+        status: 'draft',
+        // Add default customization
+        customization: {
+          background: {
+            type: 'solid',
+            value: '#ffffff'
+          },
+          font: {
+            family: 'Inter, sans-serif',
+            size: '16px',
+            color: '#000000'
+          },
+          buttons: {
+            accept: {
+              background: '#3b82f6',
+              color: '#ffffff',
+              shape: 'rounded',
+              text: 'Accept'
+            },
+            decline: {
+              background: '#ef4444',
+              color: '#ffffff',
+              shape: 'rounded',
+              text: 'Decline',
+              isVisible: true
+            }
+          },
+          showAcceptDeclineButtons: true,
+          showAddToCalendarButton: true
+        }
       };
       
-      console.log('Creating event with data:', fullEventData);
-      // TODO: Implement event creation with Supabase
+      const result = await createEvent.mutateAsync(eventToCreate);
       
-      // Close dialog on success
-      setTimeout(() => {
-        setIsSubmitting(false);
-        onOpenChange(false);
-      }, 1000);
+      toast.success("Event created successfully!");
+      onOpenChange(false);
+      
+      // Optionally navigate to the event detail page
+      // navigate(`/events/${result.id}`);
+      
     } catch (error) {
       console.error('Error creating event:', error);
+      toast.error("Failed to create event");
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -93,18 +118,12 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
         
         <Tabs value={activeTab} className="flex flex-col h-full">
           <div className="px-6">
-            <TabsList className="grid grid-cols-3 mb-4">
+            <TabsList className="grid grid-cols-2 mb-4">
               <TabsTrigger 
                 value="details" 
                 onClick={() => handleTabChange('details')}
               >
                 Details
-              </TabsTrigger>
-              <TabsTrigger 
-                value="customize" 
-                onClick={() => handleTabChange('customize')}
-              >
-                Customize
               </TabsTrigger>
               <TabsTrigger 
                 value="share" 
@@ -123,20 +142,40 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
               />
             </TabsContent>
             
-            <TabsContent value="customize" className="mt-0 px-6">
-              <EventCustomizeForm 
-                onSubmit={handleCustomizationSubmit} 
-                initialData={eventData?.customization}
-                eventTitle={eventData?.title}
-                eventDescription={eventData?.description}
-              />
-            </TabsContent>
-            
             <TabsContent value="share" className="mt-0 px-6">
-              <EventShareForm 
-                onSubmit={handleShareSubmit}
-                initialData={eventData}
-              />
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">Share Event</h3>
+                <p className="text-muted-foreground text-sm">
+                  Your event sharing options will be available after the event is created.
+                </p>
+                
+                <Separator className="my-6" />
+                
+                <div className="flex justify-end">
+                  <Button
+                    variant="outline"
+                    onClick={handlePrev}
+                    className="mr-2"
+                    disabled={isSubmitting}
+                  >
+                    Back to Details
+                  </Button>
+                  
+                  <Button 
+                    onClick={handleCreateEvent}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Creating...
+                      </>
+                    ) : (
+                      'Create Event'
+                    )}
+                  </Button>
+                </div>
+              </div>
             </TabsContent>
           </div>
           
@@ -153,16 +192,16 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
               <div></div>
             )}
             
-            {activeTab !== 'share' ? (
+            {activeTab === 'details' ? (
               <Button
                 onClick={handleNext}
-                disabled={isSubmitting}
+                disabled={isSubmitting || !eventData.title}
               >
                 Next
               </Button>
             ) : (
               <Button 
-                onClick={() => handleShareSubmit({})}
+                onClick={handleCreateEvent}
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
