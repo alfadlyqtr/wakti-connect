@@ -2,7 +2,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { SimpleInvitation } from "@/types/invitation.types";
 import { toast } from "@/components/ui/use-toast";
 import { InvitationData, InvitationDbRecord } from "./invitation-types";
-import { mapDatabaseToSimpleInvitation } from "./invitation-mappers";
 
 /**
  * Create a new simple invitation
@@ -23,8 +22,51 @@ export const createSimpleInvitation = async (invitationData: InvitationData): Pr
     if (!data) {
       throw new Error("No data returned from invitation creation");
     }
+    
+    // Direct mapping to avoid deep type instantiation
+    const record = data as InvitationDbRecord;
+    
+    // Parse datetime if present
+    let date: string | undefined;
+    let time: string | undefined;
+    
+    if (record.datetime) {
+      const dateObj = new Date(record.datetime);
+      date = dateObj.toISOString().split('T')[0];
+      time = dateObj.toTimeString().split(' ')[0].substring(0, 5);
+    }
+    
+    // Map directly to SimpleInvitation with explicit properties
+    const invitation: SimpleInvitation = {
+      id: record.id,
+      title: record.title,
+      description: record.description || '',
+      location: record.location_url || record.location || '',
+      locationTitle: record.location_title || '',
+      date,
+      time,
+      createdAt: record.created_at,
+      updatedAt: record.updated_at,
+      userId: record.user_id,
+      shareId: record.share_id,
+      isPublic: record.is_public || false,
+      isEvent: record.is_event || false,
+      customization: {
+        background: {
+          type: (record.background_type || 'solid') as 'solid' | 'gradient' | 'image' | 'ai',
+          value: record.background_value || '#ffffff',
+        },
+        font: {
+          family: record.font_family || 'system-ui, sans-serif',
+          size: record.font_size || 'medium',
+          color: record.text_color || '#000000',
+          alignment: record.text_align || 'left',
+          weight: 'normal',
+        }
+      }
+    };
 
-    return mapDatabaseToSimpleInvitation(data);
+    return invitation;
   } catch (error) {
     console.error("Error in createSimpleInvitation:", error);
     toast({
@@ -56,8 +98,51 @@ export const updateSimpleInvitation = async (id: string, invitationData: Partial
     if (!data) {
       throw new Error("No data returned from invitation update");
     }
+    
+    // Direct mapping to avoid deep type instantiation
+    const record = data as InvitationDbRecord;
+    
+    // Parse datetime if present
+    let date: string | undefined;
+    let time: string | undefined;
+    
+    if (record.datetime) {
+      const dateObj = new Date(record.datetime);
+      date = dateObj.toISOString().split('T')[0];
+      time = dateObj.toTimeString().split(' ')[0].substring(0, 5);
+    }
+    
+    // Map directly to SimpleInvitation with explicit properties
+    const invitation: SimpleInvitation = {
+      id: record.id,
+      title: record.title,
+      description: record.description || '',
+      location: record.location_url || record.location || '',
+      locationTitle: record.location_title || '',
+      date,
+      time,
+      createdAt: record.created_at,
+      updatedAt: record.updated_at,
+      userId: record.user_id,
+      shareId: record.share_id,
+      isPublic: record.is_public || false,
+      isEvent: record.is_event || false,
+      customization: {
+        background: {
+          type: (record.background_type || 'solid') as 'solid' | 'gradient' | 'image' | 'ai',
+          value: record.background_value || '#ffffff',
+        },
+        font: {
+          family: record.font_family || 'system-ui, sans-serif',
+          size: record.font_size || 'medium',
+          color: record.text_color || '#000000',
+          alignment: record.text_align || 'left',
+          weight: 'normal',
+        }
+      }
+    };
 
-    return mapDatabaseToSimpleInvitation(data);
+    return invitation;
   } catch (error) {
     console.error("Error in updateSimpleInvitation:", error);
     toast({
@@ -115,8 +200,51 @@ export const getSimpleInvitationById = async (id: string): Promise<SimpleInvitat
     if (!data) {
       return null;
     }
+    
+    // Direct mapping to avoid deep type instantiation
+    const record = data as InvitationDbRecord;
+    
+    // Parse datetime if present
+    let date: string | undefined;
+    let time: string | undefined;
+    
+    if (record.datetime) {
+      const dateObj = new Date(record.datetime);
+      date = dateObj.toISOString().split('T')[0];
+      time = dateObj.toTimeString().split(' ')[0].substring(0, 5);
+    }
+    
+    // Map directly to SimpleInvitation with explicit properties
+    const invitation: SimpleInvitation = {
+      id: record.id,
+      title: record.title,
+      description: record.description || '',
+      location: record.location_url || record.location || '',
+      locationTitle: record.location_title || '',
+      date,
+      time,
+      createdAt: record.created_at,
+      updatedAt: record.updated_at,
+      userId: record.user_id,
+      shareId: record.share_id,
+      isPublic: record.is_public || false,
+      isEvent: record.is_event || false,
+      customization: {
+        background: {
+          type: (record.background_type || 'solid') as 'solid' | 'gradient' | 'image' | 'ai',
+          value: record.background_value || '#ffffff',
+        },
+        font: {
+          family: record.font_family || 'system-ui, sans-serif',
+          size: record.font_size || 'medium',
+          color: record.text_color || '#000000',
+          alignment: record.text_align || 'left',
+          weight: 'normal',
+        }
+      }
+    };
 
-    return mapDatabaseToSimpleInvitation(data);
+    return invitation;
   } catch (error) {
     console.error("Error in getSimpleInvitationById:", error);
     toast({
@@ -147,8 +275,51 @@ export const getSharedInvitation = async (shareId: string): Promise<SimpleInvita
     if (!data) {
       return null;
     }
+    
+    // Direct mapping to avoid deep type instantiation
+    const record = data as InvitationDbRecord;
+    
+    // Parse datetime if present
+    let date: string | undefined;
+    let time: string | undefined;
+    
+    if (record.datetime) {
+      const dateObj = new Date(record.datetime);
+      date = dateObj.toISOString().split('T')[0];
+      time = dateObj.toTimeString().split(' ')[0].substring(0, 5);
+    }
+    
+    // Map directly to SimpleInvitation with explicit properties
+    const invitation: SimpleInvitation = {
+      id: record.id,
+      title: record.title,
+      description: record.description || '',
+      location: record.location_url || record.location || '',
+      locationTitle: record.location_title || '',
+      date,
+      time,
+      createdAt: record.created_at,
+      updatedAt: record.updated_at,
+      userId: record.user_id,
+      shareId: record.share_id,
+      isPublic: record.is_public || false,
+      isEvent: record.is_event || false,
+      customization: {
+        background: {
+          type: (record.background_type || 'solid') as 'solid' | 'gradient' | 'image' | 'ai',
+          value: record.background_value || '#ffffff',
+        },
+        font: {
+          family: record.font_family || 'system-ui, sans-serif',
+          size: record.font_size || 'medium',
+          color: record.text_color || '#000000',
+          alignment: record.text_align || 'left',
+          weight: 'normal',
+        }
+      }
+    };
 
-    return mapDatabaseToSimpleInvitation(data);
+    return invitation;
   } catch (error) {
     console.error("Error in getSharedInvitation:", error);
     toast({

@@ -1,9 +1,11 @@
 
 import { SimpleInvitation, SimpleInvitationCustomization, BackgroundType } from '@/types/invitation.types';
-import { InvitationDbRecord, SimpleInvitationResult } from './invitation-types';
+import { InvitationDbRecord } from './invitation-types';
 
 /**
- * Create customization object from database record
+ * @deprecated - Use direct mapping with explicit properties instead
+ * This function has been kept for reference only and should not be used due to
+ * TypeScript "excessively deep instantiation" errors when used with complex types.
  */
 export function createCustomizationObject(data: InvitationDbRecord): SimpleInvitationCustomization {
   // Always provide default values for all properties to avoid type issues
@@ -16,58 +18,19 @@ export function createCustomizationObject(data: InvitationDbRecord): SimpleInvit
       family: data.font_family || 'system-ui, sans-serif',
       size: data.font_size || 'medium',
       color: data.text_color || '#000000',
-      alignment: data.text_align || 'left', // Always provide a default value
-      weight: 'normal', // Default weight if missing
+      alignment: data.text_align || 'left', 
+      weight: 'normal',
     },
   };
 }
 
 /**
- * Maps a database record to the SimpleInvitation application model
+ * @deprecated - Use direct mapping with explicit properties instead
+ * This function has been kept for reference only and should not be used due to
+ * TypeScript "excessively deep instantiation" errors when used with complex types.
  */
 export function mapDatabaseToSimpleInvitation(data: InvitationDbRecord): SimpleInvitation {
-  // Parse datetime if present
-  let date: string | undefined;
-  let time: string | undefined;
-  
-  if (data.datetime) {
-    const dateObj = new Date(data.datetime);
-    date = dateObj.toISOString().split('T')[0];
-    time = dateObj.toTimeString().split(' ')[0].substring(0, 5);
-  }
-  
-  // Create customization object with all required properties
-  const customization = createCustomizationObject(data);
-  
-  // Use a direct approach without intermediate types to avoid deep nesting
-  const invitation: SimpleInvitation = {
-    id: data.id,
-    title: data.title,
-    description: data.description || '',
-    location: data.location_url || data.location || '',
-    locationTitle: data.location_title || '',
-    date,
-    time,
-    createdAt: data.created_at,
-    updatedAt: data.updated_at,
-    userId: data.user_id,
-    shareId: data.share_id || undefined,
-    isPublic: data.is_public || false,
-    isEvent: data.is_event || false,
-    customization: {
-      background: {
-        type: customization.background.type,
-        value: customization.background.value
-      },
-      font: {
-        family: customization.font.family,
-        size: customization.font.size,
-        color: customization.font.color,
-        alignment: customization.font.alignment || 'left',
-        weight: customization.font.weight || 'normal'
-      }
-    }
-  };
-  
-  return invitation;
+  // This function is deprecated and should not be used.
+  // Instead, use direct mapping with explicit property assignments as shown in invitation-api.ts
+  throw new Error("This function causes TypeScript instantiation depth errors. Use direct mapping instead.");
 }
