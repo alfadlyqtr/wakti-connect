@@ -19,6 +19,9 @@ interface ButtonPositionSelectorProps {
   onChange: (buttonType: string, property: string, value: any) => void;
   showDirections?: boolean;
   showCalendar?: boolean;
+  // Add these props to support the way it's used in InvitationStyler
+  position?: ButtonPosition;
+  onPositionChange?: (position: ButtonPosition) => void;
 }
 
 export default function ButtonPositionSelector({
@@ -38,8 +41,45 @@ export default function ButtonPositionSelector({
   },
   onChange,
   showDirections = false,
-  showCalendar = false
+  showCalendar = false,
+  position,
+  onPositionChange
 }: ButtonPositionSelectorProps) {
+  // If position and onPositionChange are provided, render a simplified version
+  if (position && onPositionChange) {
+    return (
+      <div className="space-y-4">
+        <h3 className="font-medium">Button Position</h3>
+        <div>
+          <Label className="text-sm text-muted-foreground mb-2 block">Position</Label>
+          <RadioGroup
+            value={position}
+            onValueChange={(value) => onPositionChange(value as ButtonPosition)}
+            className="flex flex-wrap gap-4"
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="bottom-right" id="pos-bottom-right" />
+              <Label htmlFor="pos-bottom-right">Bottom Right</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="bottom-left" id="pos-bottom-left" />
+              <Label htmlFor="pos-bottom-left">Bottom Left</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="bottom-center" id="pos-bottom-center" />
+              <Label htmlFor="pos-bottom-center">Bottom Center</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="top-right" id="pos-top-right" />
+              <Label htmlFor="pos-top-right">Top Right</Label>
+            </div>
+          </RadioGroup>
+        </div>
+      </div>
+    );
+  }
+
+  // Original component implementation
   return (
     <div className="space-y-4">
       <h3 className="font-medium">Button Settings</h3>

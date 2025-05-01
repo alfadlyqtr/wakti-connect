@@ -21,6 +21,9 @@ interface FontSelectorProps {
   showAlignment?: boolean;
   showWeight?: boolean;
   previewText?: string;
+  // Add this prop to match how it's used in SimpleInvitationCreator
+  value?: FontProps;
+  onChange?: (property: string, value: string) => void;
 }
 
 export default function FontSelector({
@@ -28,8 +31,21 @@ export default function FontSelector({
   onFontChange,
   showAlignment = false,
   showWeight = false,
-  previewText = "The quick brown fox jumps over the lazy dog"
+  previewText = "The quick brown fox jumps over the lazy dog",
+  value,
+  onChange
 }: FontSelectorProps) {
+  // Use provided props or fallback to direct props
+  const effectiveFont = value || font;
+  
+  const handleFontChange = (property: string, newValue: string) => {
+    if (onChange) {
+      onChange(property, newValue);
+    } else if (onFontChange) {
+      onFontChange(property, newValue);
+    }
+  };
+  
   const fontFamilies = [
     { value: 'system-ui, sans-serif', label: 'System Default' },
     { value: 'Arial, sans-serif', label: 'Arial' },
@@ -52,8 +68,8 @@ export default function FontSelector({
       <div>
         <Label htmlFor="font-family" className="block mb-2">Font Family</Label>
         <Select 
-          value={font.family} 
-          onValueChange={(value) => onFontChange('family', value)}
+          value={effectiveFont.family} 
+          onValueChange={(value) => handleFontChange('family', value)}
         >
           <SelectTrigger id="font-family">
             <SelectValue placeholder="Select a font" />
@@ -75,8 +91,8 @@ export default function FontSelector({
       <div>
         <Label htmlFor="font-size" className="block mb-2">Font Size</Label>
         <Select 
-          value={font.size} 
-          onValueChange={(value) => onFontChange('size', value)}
+          value={effectiveFont.size} 
+          onValueChange={(value) => handleFontChange('size', value)}
         >
           <SelectTrigger id="font-size">
             <SelectValue placeholder="Select a size" />
@@ -92,8 +108,8 @@ export default function FontSelector({
       <div>
         <Label htmlFor="font-color" className="block mb-2">Text Color</Label>
         <HexColorPicker
-          color={font.color}
-          onChange={(color) => onFontChange('color', color)}
+          color={effectiveFont.color}
+          onChange={(color) => handleFontChange('color', color)}
           label="Text Color"
         />
       </div>
@@ -102,8 +118,8 @@ export default function FontSelector({
         <div>
           <Label className="block mb-2">Font Weight</Label>
           <RadioGroup 
-            value={font.weight || 'normal'} 
-            onValueChange={(value) => onFontChange('weight', value)}
+            value={effectiveFont.weight || 'normal'} 
+            onValueChange={(value) => handleFontChange('weight', value)}
             className="flex flex-wrap gap-x-4 gap-y-2"
           >
             <div className="flex items-center space-x-2">
@@ -127,9 +143,9 @@ export default function FontSelector({
           <Label className="block mb-2">Text Alignment</Label>
           <ToggleGroup 
             type="single" 
-            value={font.alignment || 'center'} 
+            value={effectiveFont.alignment || 'center'} 
             onValueChange={(value) => {
-              if (value) onFontChange('alignment', value);
+              if (value) handleFontChange('alignment', value);
             }}
             className="flex justify-start"
           >
@@ -154,11 +170,11 @@ export default function FontSelector({
         <p 
           className="break-words"
           style={{ 
-            fontFamily: font.family,
-            fontSize: font.size === 'small' ? '0.875rem' : font.size === 'medium' ? '1rem' : '1.25rem',
-            color: font.color,
-            fontWeight: font.weight === 'bold' ? 'bold' : font.weight === 'medium' ? '500' : 'normal',
-            textAlign: font.alignment as any || 'center'
+            fontFamily: effectiveFont.family,
+            fontSize: effectiveFont.size === 'small' ? '0.875rem' : effectiveFont.size === 'medium' ? '1rem' : '1.25rem',
+            color: effectiveFont.color,
+            fontWeight: effectiveFont.weight === 'bold' ? 'bold' : effectiveFont.weight === 'medium' ? '500' : 'normal',
+            textAlign: effectiveFont.alignment as any || 'center'
           }}
         >
           {previewText}

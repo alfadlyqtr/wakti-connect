@@ -12,14 +12,28 @@ interface TextPositionSelectorProps {
   spacing: 'compact' | 'normal' | 'spacious';
   onPositionChange: (position: TextPosition) => void;
   onSpacingChange: (spacing: 'compact' | 'normal' | 'spacious') => void;
+  // Add this prop to match how it's used in SimpleInvitationCreator
+  onChange?: (property: string, value: string) => void;
 }
 
 export default function TextPositionSelector({
   contentPosition,
   spacing,
   onPositionChange,
-  onSpacingChange
+  onSpacingChange,
+  onChange
 }: TextPositionSelectorProps) {
+  // Handle both callback patterns
+  const handlePositionChange = (position: TextPosition) => {
+    onPositionChange(position);
+    if (onChange) onChange('position', position);
+  };
+
+  const handleSpacingChange = (spacing: 'compact' | 'normal' | 'spacious') => {
+    onSpacingChange(spacing);
+    if (onChange) onChange('spacing', spacing);
+  };
+
   return (
     <div className="space-y-4">
       <h3 className="text-base font-medium">Text Position</h3>
@@ -30,7 +44,7 @@ export default function TextPositionSelector({
           <div className="flex justify-center">
             <RadioGroup
               value={contentPosition}
-              onValueChange={(value) => onPositionChange(value as TextPosition)}
+              onValueChange={(value) => handlePositionChange(value as TextPosition)}
               className="flex flex-col gap-2 bg-muted/40 p-3 rounded-lg border"
             >
               <Card className={`p-2 cursor-pointer hover:bg-primary/10 ${contentPosition === 'top' ? 'bg-primary/20 ring-1 ring-primary' : 'bg-card'}`}>
@@ -73,7 +87,7 @@ export default function TextPositionSelector({
           <Label htmlFor="text-spacing" className="text-sm">Content Spacing</Label>
           <Select 
             value={spacing} 
-            onValueChange={(value) => onSpacingChange(value as 'compact' | 'normal' | 'spacious')}
+            onValueChange={(value) => handleSpacingChange(value as 'compact' | 'normal' | 'spacious')}
           >
             <SelectTrigger id="text-spacing" className="w-full">
               <SelectValue placeholder="Select spacing" />

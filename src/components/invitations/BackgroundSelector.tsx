@@ -18,6 +18,9 @@ interface BackgroundSelectorProps {
   title?: string;
   description?: string;
   isGeneratingImage?: boolean;
+  // Add these props to support how it's used in SimpleInvitationCreator
+  value?: { type: BackgroundType; value: string };
+  onChange?: (type: BackgroundType, value: string) => void;
 }
 
 export default function BackgroundSelector({
@@ -27,9 +30,23 @@ export default function BackgroundSelector({
   onGenerateAIBackground,
   title,
   description,
-  isGeneratingImage = false
+  isGeneratingImage = false,
+  value,
+  onChange
 }: BackgroundSelectorProps) {
-  const [activeTab, setActiveTab] = useState<string>(backgroundType);
+  // Use provided props or fallback to direct props
+  const effectiveBackgroundType = value?.type || backgroundType;
+  const effectiveBackgroundValue = value?.value || backgroundValue;
+  
+  const handleBackgroundChange = (type: BackgroundType, newValue: string) => {
+    if (onChange) {
+      onChange(type, newValue);
+    } else if (onBackgroundChange) {
+      onBackgroundChange(type, newValue);
+    }
+  };
+  
+  const [activeTab, setActiveTab] = useState<string>(effectiveBackgroundType);
   const [gradientPresets, setGradientPresets] = useState<string[]>([
     "linear-gradient(to right, #ee9ca7, #ffdde1)",
     "linear-gradient(to right, #2193b0, #6dd5ed)",
@@ -57,21 +74,21 @@ export default function BackgroundSelector({
 
   // Update active tab when backgroundType changes from parent
   useEffect(() => {
-    if (backgroundType) {
-      setActiveTab(backgroundType);
+    if (effectiveBackgroundType) {
+      setActiveTab(effectiveBackgroundType);
     }
-  }, [backgroundType]);
+  }, [effectiveBackgroundType]);
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     
     // Set default values when changing tabs
     if (value === "solid") {
-      onBackgroundChange("solid" as BackgroundType, "#ffffff");
+      handleBackgroundChange("solid" as BackgroundType, "#ffffff");
     } else if (value === "gradient") {
-      onBackgroundChange("gradient" as BackgroundType, gradientPresets[0]);
-    } else if (value === "image" && backgroundType !== "image") {
-      onBackgroundChange("image" as BackgroundType, "");
+      handleBackgroundChange("gradient" as BackgroundType, gradientPresets[0]);
+    } else if (value === "image" && effectiveBackgroundType !== "image") {
+      handleBackgroundChange("image" as BackgroundType, "");
     }
   };
 
@@ -91,7 +108,7 @@ export default function BackgroundSelector({
     const reader = new FileReader();
     reader.onload = (e) => {
       const result = e.target?.result as string;
-      onBackgroundChange("image" as BackgroundType, result);
+      handleBackgroundChange("image" as BackgroundType, result);
     };
     reader.readAsDataURL(file);
   };
@@ -124,8 +141,8 @@ export default function BackgroundSelector({
             <Label htmlFor="background-color">Select Color</Label>
             <ColorInput
               id="background-color"
-              value={backgroundType === "solid" ? backgroundValue : "#ffffff"}
-              onChange={(color) => onBackgroundChange("solid" as BackgroundType, color)}
+              value={effectiveBackgroundType === "solid" ? effectiveBackgroundValue : "#ffffff"}
+              onChange={(color) => handleBackgroundChange("solid" as BackgroundType, color)}
               className="w-full"
             />
           </div>
@@ -139,10 +156,10 @@ export default function BackgroundSelector({
                 <div
                   key={index}
                   className={`h-16 rounded-md cursor-pointer border-2 ${
-                    backgroundValue === gradient ? "border-primary" : "border-transparent"
+                    effectiveBackgroundValue === gradient ? "border-primary" : "border-transparent"
                   }`}
                   style={{ background: gradient }}
-                  onClick={() => onBackgroundChange("gradient" as BackgroundType, gradient)}
+                  onClick={() => handleBackgroundChange("gradient" as BackgroundType, gradient)}
                 />
               ))}
             </div>
@@ -151,8 +168,8 @@ export default function BackgroundSelector({
               <Label htmlFor="custom-gradient">Custom Gradient (CSS)</Label>
               <Input
                 id="custom-gradient"
-                value={backgroundType === "gradient" ? backgroundValue : ""}
-                onChange={(e) => onBackgroundChange("gradient" as BackgroundType, e.target.value)}
+                value={effectiveBackgroundType === "gradient" ? effectiveBackgroundValue : ""}
+                onChange={(e) => handleBackgroundChange("gradient" as BackgroundType, e.target.value)}
                 placeholder="linear-gradient(direction, color1, color2)"
                 className="mt-1"
               />
@@ -165,11 +182,11 @@ export default function BackgroundSelector({
         
         <TabsContent value="image" className="pt-4">
           <div className="space-y-4">
-            {backgroundType === "image" && backgroundValue ? (
+            {effectiveBackgroundType === "image" && effectiveBackgroundValue ? (
               <div className="space-y-2">
                 <div className="relative aspect-video rounded-md overflow-hidden border">
                   <img 
-                    src={backgroundValue} 
+                    src={effectiveBackgroundValue} 
                     alt="Background Preview" 
                     className="w-full h-full object-cover"
                   />
@@ -177,7 +194,7 @@ export default function BackgroundSelector({
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={() => onBackgroundChange("image" as BackgroundType, "")}
+                  onClick={() => handleBackgroundChange("image" as BackgroundType, "")}
                 >
                   Remove Image
                 </Button>

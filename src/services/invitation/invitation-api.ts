@@ -9,6 +9,16 @@ import { InvitationData, InvitationDbRecord, SimpleInvitationResult } from './in
  */
 export const createSimpleInvitation = async (invitationData: InvitationData): Promise<SimpleInvitation | null> => {
   try {
+    // Make sure user_id is present
+    if (!invitationData.user_id) {
+      // Get user_id from session if not provided
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        throw new Error('User not authenticated');
+      }
+      invitationData.user_id = sessionData.session.user.id;
+    }
+
     const { data, error } = await supabase
       .from('invitations')
       .insert(invitationData)
