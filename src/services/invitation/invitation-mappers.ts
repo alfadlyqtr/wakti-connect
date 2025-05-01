@@ -3,7 +3,7 @@ import { SimpleInvitation, SimpleInvitationCustomization, BackgroundType } from 
 import { InvitationDbRecord } from './invitation-types';
 
 /**
- * @deprecated - Use direct mapping with explicit properties instead
+ * @deprecated - This function is no longer used. Direct mapping with explicit property assignments is used instead.
  * This function has been kept for reference only and should not be used due to
  * TypeScript "excessively deep instantiation" errors when used with complex types.
  */
@@ -25,7 +25,7 @@ export function createCustomizationObject(data: InvitationDbRecord): SimpleInvit
 }
 
 /**
- * @deprecated - Use direct mapping with explicit properties instead
+ * @deprecated - This function is no longer used. Direct mapping with explicit property assignments is used instead.
  * This function has been kept for reference only and should not be used due to
  * TypeScript "excessively deep instantiation" errors when used with complex types.
  */
