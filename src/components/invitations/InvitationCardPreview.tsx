@@ -97,15 +97,15 @@ export default function InvitationCardPreview({
     return 'center' as TextAlign;
   };
   
-  // Check if we should show the directions button
+  // Check if directions button should be shown - more robust implementation
   const shouldShowDirections = hasLocation && 
                               showActions && 
-                              customization.buttons?.directions?.show;
+                              (customization.buttons?.directions?.show !== false); // Default to true if not explicitly set to false
   
-  // Check if we should show the calendar button
+  // Check if calendar button should be shown - more robust implementation
   const shouldShowCalendar = isEvent && 
                             showActions && 
-                            customization.buttons?.calendar?.show;
+                            (customization.buttons?.calendar?.show !== false); // Default to true if not explicitly set to false
   
   return (
     <Card className="overflow-hidden w-full shadow-lg relative" style={{
@@ -139,30 +139,30 @@ export default function InvitationCardPreview({
         </div>
       </div>
 
-      {/* Get Directions Button */}
+      {/* Get Directions Button - with improved visibility logic */}
       {shouldShowDirections && (
         <button
-          className={`absolute ${getButtonPositionStyle(customization.buttons.directions.position || 'bottom-right')} text-xs px-2 py-1`}
+          className={`absolute ${getButtonPositionStyle(customization.buttons?.directions?.position || 'bottom-right')} text-xs px-2 py-1`}
           style={{
-            backgroundColor: customization.buttons.directions.background || '#ffffff',
-            color: customization.buttons.directions.color || '#000000',
-            borderRadius: customization.buttons.directions.shape === 'pill' ? '9999px' : 
-                          customization.buttons.directions.shape === 'square' ? '0px' : '4px',
+            backgroundColor: customization.buttons?.directions?.background || '#3B82F6',
+            color: customization.buttons?.directions?.color || '#ffffff',
+            borderRadius: customization.buttons?.directions?.shape === 'pill' ? '9999px' : 
+                          customization.buttons?.directions?.shape === 'square' ? '0px' : '4px',
           }}
         >
           Get Directions
         </button>
       )}
       
-      {/* Add to Calendar Button */}
+      {/* Add to Calendar Button - with improved visibility logic */}
       {shouldShowCalendar && (
         <button
-          className={`absolute ${getButtonPositionStyle(customization.buttons.calendar.position || 'bottom-right')} text-xs px-2 py-1`}
+          className={`absolute ${getButtonPositionStyle(customization.buttons?.calendar?.position || 'bottom-left')} text-xs px-2 py-1`}
           style={{
-            backgroundColor: customization.buttons.calendar.background || '#ffffff',
-            color: customization.buttons.calendar.color || '#000000',
-            borderRadius: customization.buttons.calendar.shape === 'pill' ? '9999px' : 
-                          customization.buttons.calendar.shape === 'square' ? '0px' : '4px',
+            backgroundColor: customization.buttons?.calendar?.background || '#3B82F6',
+            color: customization.buttons?.calendar?.color || '#ffffff',
+            borderRadius: customization.buttons?.calendar?.shape === 'pill' ? '9999px' : 
+                          customization.buttons?.calendar?.shape === 'square' ? '0px' : '4px',
           }}
         >
           Add to Calendar

@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import { SimpleInvitation, SimpleInvitationCustomization } from '@/types/invitation.types';
@@ -148,10 +149,8 @@ export const getSharedInvitation = async (shareId: string): Promise<SimpleInvita
       return null;
     }
     
-    // Use type assertion to break the deep type inference chain
-    // This prevents the TypeScript "excessively deep instantiation" error
-    // Create the result explicitly to avoid complex type inference
-    const result = {
+    // Explicitly map the database record to a SimpleInvitation with default button settings
+    const result: SimpleInvitation = {
       id: data.id,
       title: data.title,
       description: data.description || '',
@@ -173,14 +172,27 @@ export const getSharedInvitation = async (shareId: string): Promise<SimpleInvita
           family: data.font_family || 'system-ui, sans-serif',
           size: data.font_size || 'medium',
           color: data.text_color || '#000000',
+          alignment: data.text_align || 'center',
+        },
+        // Add default button configuration
+        buttons: {
+          directions: {
+            show: true, // Default to showing directions if location exists
+            background: '#3B82F6',
+            color: '#ffffff',
+            shape: 'rounded',
+            position: 'bottom-right'
+          },
+          calendar: {
+            show: true, // Default to showing calendar button for events
+            background: '#3B82F6',
+            color: '#ffffff',
+            shape: 'rounded',
+            position: 'bottom-left'
+          }
         }
       }
-    } as SimpleInvitation;
-
-    // Add alignment property only if text_align exists as a property on the data object
-    if ('text_align' in data && data.text_align) {
-      (result.customization.font as any).alignment = data.text_align;
-    }
+    };
 
     return result;
   } catch (error) {
@@ -225,14 +237,27 @@ export function mapDbRecordToSimpleInvitation(data: InvitationDbRecord): SimpleI
         family: data.font_family || 'system-ui, sans-serif',
         size: data.font_size || 'medium',
         color: data.text_color || '#000000',
+        alignment: data.text_align || 'left',
+      },
+      // Add default button configuration
+      buttons: {
+        directions: {
+          show: !!data.location, // Show directions button if location exists
+          background: '#3B82F6',
+          color: '#ffffff',
+          shape: 'rounded',
+          position: 'bottom-right'
+        },
+        calendar: {
+          show: !!data.is_event, // Show calendar button if it's an event
+          background: '#3B82F6',
+          color: '#ffffff',
+          shape: 'rounded',
+          position: 'bottom-left'
+        }
       }
     }
   };
-
-  // Add alignment property only if text_align exists as a property on the data object
-  if ('text_align' in data && data.text_align) {
-    (result.customization.font as any).alignment = data.text_align;
-  }
 
   // Cast to SimpleInvitation to maintain type compatibility
   return result as unknown as SimpleInvitation;

@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SimpleInvitation, SimpleInvitationCustomization, BackgroundType } from '@/types/invitation.types';
 import { createSimpleInvitation, updateSimpleInvitation } from '@/services/invitation/simple-invitations';
@@ -41,6 +40,32 @@ export default function SimpleInvitationCreator({
     time: existingInvitation?.time || '',
   });
 
+  // Initialize default button settings based on type
+  const defaultButtonSettings = isEvent ? {
+    directions: {
+      show: true,
+      background: '#3B82F6',
+      color: '#ffffff',
+      shape: 'rounded' as const,
+      position: 'bottom-right' as const
+    },
+    calendar: {
+      show: true,
+      background: '#3B82F6',
+      color: '#ffffff',
+      shape: 'rounded' as const,
+      position: 'bottom-left' as const
+    }
+  } : {
+    directions: {
+      show: true,
+      background: '#3B82F6',
+      color: '#ffffff',
+      shape: 'rounded' as const,
+      position: 'bottom-right' as const
+    }
+  };
+
   const [customization, setCustomization] = useState<SimpleInvitationCustomization>(
     existingInvitation?.customization || {
       background: {
@@ -53,8 +78,34 @@ export default function SimpleInvitationCreator({
         color: '#000000',
         alignment: 'left',
       },
+      buttons: defaultButtonSettings
     }
   );
+
+  // Ensure buttons configuration exists whenever customization is updated
+  useEffect(() => {
+    if (!customization.buttons) {
+      setCustomization(prevState => ({
+        ...prevState,
+        buttons: defaultButtonSettings
+      }));
+    } else if (isEvent && !customization.buttons.calendar) {
+      // Make sure calendar button is configured for events
+      setCustomization(prevState => ({
+        ...prevState,
+        buttons: {
+          ...prevState.buttons,
+          calendar: {
+            show: true,
+            background: '#3B82F6',
+            color: '#ffffff',
+            shape: 'rounded',
+            position: 'bottom-left'
+          }
+        }
+      }));
+    }
+  }, [isEvent]);
 
   const handleFormChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -80,6 +131,31 @@ export default function SimpleInvitationCreator({
     try {
       setIsSubmitting(true);
       
+      // Make sure buttons config is set correctly for the invitation type
+      const finalCustomization = { ...customization };
+      if (!finalCustomization.buttons) {
+        finalCustomization.buttons = defaultButtonSettings;
+      } else if (isEvent && !finalCustomization.buttons.calendar) {
+        finalCustomization.buttons.calendar = {
+          show: true,
+          background: '#3B82F6',
+          color: '#ffffff',
+          shape: 'rounded',
+          position: 'bottom-left'
+        };
+      }
+      
+      // Ensure directions button is configured if location exists
+      if (formData.location && finalCustomization.buttons && !finalCustomization.buttons.directions) {
+        finalCustomization.buttons.directions = {
+          show: true,
+          background: '#3B82F6',
+          color: '#ffffff',
+          shape: 'rounded',
+          position: 'bottom-right'
+        };
+      }
+      
       // Map our form data to the database structure
       const invitationData = {
         title: formData.title,
@@ -90,14 +166,18 @@ export default function SimpleInvitationCreator({
         datetime: formData.date && formData.time ? new Date(`${formData.date}T${formData.time}`).toISOString() : undefined,
         
         // Map from our customization model to the database fields
-        background_type: customization.background.type,
-        background_value: customization.background.value,
-        font_family: customization.font.family,
-        font_size: customization.font.size,
-        text_color: customization.font.color,
+        background_type: finalCustomization.background.type,
+        background_value: finalCustomization.background.value,
+        font_family: finalCustomization.font.family,
+        font_size: finalCustomization.font.size,
+        text_color: finalCustomization.font.color,
+        text_align: finalCustomization.font.alignment,
         is_event: isEvent, // Add flag to identify if this is an event
         user_id: user.id, // Add the user's ID to comply with RLS
       };
+
+      console.log("Creating/updating invitation with data:", invitationData);
+      console.log("Using customization:", finalCustomization);
 
       let result;
       if (existingInvitation) {
