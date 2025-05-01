@@ -40,8 +40,9 @@ const LivePreview: React.FC<LivePreviewProps> = ({
     fontFamily: customization.font?.family || 'system-ui, sans-serif',
     fontSize: customization.font?.size || 'medium',
     padding: '2rem',
-    minHeight: '200px',
-    display: 'flex',
+    minHeight: '500px', // Increased for better preview
+    height: '100%',
+    display: 'flex' as const,
     flexDirection: 'column' as const,
     gap: '1rem',
     position: 'relative' as const,

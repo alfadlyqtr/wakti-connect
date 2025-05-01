@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { SimpleInvitationCustomization } from '@/types/invitation.types';
 import { Card } from '@/components/ui/card';
@@ -61,7 +60,8 @@ export default function InvitationPreview({
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     padding: '2rem',
-    minHeight: '300px',
+    minHeight: '500px', // Increased for better preview
+    height: '100%',
     display: 'flex' as const,
     flexDirection: 'column' as const,
     gap: '1rem',

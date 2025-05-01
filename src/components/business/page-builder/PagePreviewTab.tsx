@@ -38,6 +38,10 @@ const PagePreviewTab: React.FC<PagePreviewTabProps> = ({ getPublicPageUrl }) => 
     }, 500);
   };
 
+  // iPhone 14 dimensions (approximate)
+  const mobileWidth = viewMode === 'mobile' ? '390px' : '100%';
+  const mobileHeight = '844px';
+
   return (
     <Card>
       <CardHeader>
@@ -80,14 +84,20 @@ const PagePreviewTab: React.FC<PagePreviewTabProps> = ({ getPublicPageUrl }) => 
       <CardContent className="pb-6">
         <div className="flex justify-center">
           <div 
-            className={`border rounded-lg overflow-hidden transition-all duration-300 ${
-              viewMode === 'mobile' ? 'w-[375px]' : 'w-full'
-            }`}
+            className={`border rounded-lg overflow-hidden transition-all duration-300`}
+            style={{ 
+              width: mobileWidth,
+              maxWidth: '100%'
+            }}
           >
             {previewUrl && (
               <iframe
                 src={previewUrl}
-                className="w-full h-[600px]"
+                style={{
+                  width: '100%',
+                  height: mobileHeight,
+                  maxHeight: 'calc(100vh - 300px)'
+                }}
                 title="Page Preview"
                 key={previewUrl} // Force iframe reload when URL changes
               />

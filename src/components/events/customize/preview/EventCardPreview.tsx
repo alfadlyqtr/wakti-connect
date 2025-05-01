@@ -28,6 +28,10 @@ const EventCardPreview: React.FC<EventCardPreviewProps> = ({
   // Generate background style with fallbacks for missing properties
   const cardStyle: React.CSSProperties = {
     color: customization.font?.color || '#000000',
+    width: '100%',
+    minHeight: '500px', // Increased for better preview
+    display: 'flex',
+    flexDirection: 'column',
   };
   
   if (customization.background?.type === 'solid') {
@@ -63,7 +67,7 @@ const EventCardPreview: React.FC<EventCardPreviewProps> = ({
         </div>
       </CardHeader>
       
-      <CardContent>
+      <CardContent className="flex-grow">
         <p className="text-sm mb-3">{description}</p>
         
         {hasLocation && (
@@ -74,7 +78,7 @@ const EventCardPreview: React.FC<EventCardPreviewProps> = ({
         )}
       </CardContent>
       
-      <CardFooter className="pt-2 flex justify-between">
+      <CardFooter className="pt-2 flex justify-between mt-auto">
         <div className="flex space-x-2">
           {hasLocation && (
             <Button 
