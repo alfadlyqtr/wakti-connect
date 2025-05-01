@@ -208,11 +208,20 @@ export async function fetchSimpleInvitations(userId: string, isEvent?: boolean):
     }
     
     console.log('[fetchSimpleInvitations] Fetched invitations:', records?.length || 0);
-    const invitations = records
-      ?.map(record => mapDbRecordToSimpleInvitation(record as InvitationDbRecord))
-      .filter(Boolean) as SimpleInvitation[];
-      
-    return invitations || [];
+    
+    // Map records to SimpleInvitation objects, using explicit typing and filtering
+    const invitations: SimpleInvitation[] = [];
+    
+    if (records && records.length > 0) {
+      for (const record of records) {
+        const invitation = mapDbRecordToSimpleInvitation(record as InvitationDbRecord);
+        if (invitation) {
+          invitations.push(invitation);
+        }
+      }
+    }
+    
+    return invitations;
   } catch (error) {
     console.error('[fetchSimpleInvitations] Error fetching invitations:', error);
     return [];
