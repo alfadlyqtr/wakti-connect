@@ -1,17 +1,12 @@
 
-// Re-export all functions from the core files
+// Export all functions from the consolidated invitation-crud.ts file
 export { 
   mapDbRecordToSimpleInvitation,
   createSimpleInvitation, 
   updateSimpleInvitation, 
   getSimpleInvitationById,
-  getSharedInvitation
-} from './invitation-crud';
-
-export { 
+  getSharedInvitation,
   fetchSimpleInvitations,
-  listSimpleInvitations
-} from './invitation-fetch';
-
-// Re-export delete function
-export { deleteSimpleInvitation } from './simple-invitations';
+  listSimpleInvitations,
+  deleteSimpleInvitation
+} from './invitation-crud';

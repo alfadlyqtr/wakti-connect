@@ -7,11 +7,16 @@ import { useAuth } from '@/lib/auth';
 import { SimpleInvitation, SimpleInvitationCustomization } from '@/types/invitation.types';
 import { createSimpleInvitation } from '@/services/invitation/invitation-crud';
 
-const SimpleInvitationCreator: React.FC = () => {
+interface SimpleInvitationCreatorProps {
+  existingInvitation?: SimpleInvitation;
+  isEvent?: boolean;
+}
+
+const SimpleInvitationCreator: React.FC<SimpleInvitationCreatorProps> = ({ existingInvitation, isEvent = false }) => {
   const { user } = useAuth?.() || { user: null };
   const navigate = useNavigate();
 
-  const [invitation, setInvitation] = useState<Partial<SimpleInvitation>>({
+  const [invitation, setInvitation] = useState<Partial<SimpleInvitation>>(existingInvitation || {
     title: '',
     description: '',
     location: '',
@@ -108,7 +113,7 @@ const SimpleInvitationCreator: React.FC = () => {
         font_size: invitation.customization.font.size,
         text_color: invitation.customization.font.color,
         text_align: invitation.customization.font.alignment || 'center',
-        is_event: true,
+        is_event: isEvent,
         user_id: user.id,
       };
 
@@ -171,7 +176,7 @@ const SimpleInvitationCreator: React.FC = () => {
         font_size: invitation.customization.font.size,
         text_color: invitation.customization.font.color,
         text_align: invitation.customization.font.alignment || 'center',
-        is_event: true,
+        is_event: isEvent,
         user_id: user.id,
         is_public: true,
       };
@@ -205,9 +210,9 @@ const SimpleInvitationCreator: React.FC = () => {
   return (
     <div className="container mx-auto py-6 px-4 sm:px-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">Create New Invitation</h1>
+        <h1 className="text-2xl font-bold">Create New {isEvent ? 'Event' : 'Invitation'}</h1>
         <p className="text-muted-foreground">
-          Design your invitation card with our simple drag-and-drop editor
+          Design your {isEvent ? 'event' : 'invitation'} card with our simple drag-and-drop editor
         </p>
       </div>
       
@@ -217,6 +222,7 @@ const SimpleInvitationCreator: React.FC = () => {
         onCustomizationChange={handleCustomizationChange}
         onSaveDraft={handleSaveDraft}
         onSave={handleSave}
+        isEvent={isEvent}
       />
     </div>
   );

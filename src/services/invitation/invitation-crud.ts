@@ -17,8 +17,8 @@ export function mapDbRecordToSimpleInvitation(record: InvitationDbRecord): Simpl
     time = dateObj.toISOString().split('T')[1].substring(0, 5); // HH:MM format
   }
   
-  // Create the SimpleInvitation without complex type checking
-  return {
+  // Create the SimpleInvitation with explicit types to avoid deep instantiation
+  const invitation: SimpleInvitation = {
     id: record.id,
     title: record.title,
     description: record.description || '',
@@ -75,6 +75,8 @@ export function mapDbRecordToSimpleInvitation(record: InvitationDbRecord): Simpl
       }
     }
   };
+
+  return invitation;
 }
 
 /**
@@ -199,5 +201,63 @@ export async function getSharedInvitation(shareId: string): Promise<SimpleInvita
   } catch (error) {
     console.error('[getSharedInvitation] Error getting shared invitation:', error);
     return null;
+  }
+}
+
+/**
+ * Fetch a list of simple invitations for a user
+ */
+export async function fetchSimpleInvitations(userId: string, isEvent = false): Promise<SimpleInvitation[]> {
+  try {
+    console.log('[fetchSimpleInvitations] Fetching invitations for user:', userId, 'isEvent:', isEvent);
+    
+    const { data: records, error } = await supabase
+      .from('invitations')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('is_event', isEvent)
+      .order('created_at', { ascending: false });
+      
+    if (error) {
+      console.error('[fetchSimpleInvitations] Error:', error);
+      throw error;
+    }
+    
+    console.log('[fetchSimpleInvitations] Fetched invitations:', records?.length);
+    // Map each record to a SimpleInvitation object
+    return (records || []).map(record => mapDbRecordToSimpleInvitation(record as InvitationDbRecord));
+  } catch (error) {
+    console.error('[fetchSimpleInvitations] Error fetching invitations:', error);
+    return [];
+  }
+}
+
+/**
+ * List all simple invitations for a user - alias for fetchSimpleInvitations
+ */
+export const listSimpleInvitations = fetchSimpleInvitations;
+
+/**
+ * Deletes a simple invitation by ID
+ */
+export async function deleteSimpleInvitation(id: string): Promise<boolean> {
+  try {
+    console.log('[deleteSimpleInvitation] Deleting invitation:', id);
+    
+    const { error } = await supabase
+      .from('invitations')
+      .delete()
+      .eq('id', id);
+      
+    if (error) {
+      console.error('[deleteSimpleInvitation] Error:', error);
+      throw error;
+    }
+    
+    console.log('[deleteSimpleInvitation] Invitation deleted successfully');
+    return true;
+  } catch (error) {
+    console.error('[deleteSimpleInvitation] Error deleting invitation:', error);
+    return false;
   }
 }
