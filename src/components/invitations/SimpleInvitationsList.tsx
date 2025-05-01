@@ -1,13 +1,16 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlusCircle, Calendar, Loader2, Search } from 'lucide-react';
+import { PlusCircle, Calendar, Loader2, Search, Trash2 } from 'lucide-react';
 import { SimpleInvitation } from '@/types/invitation.types';
 import { format } from 'date-fns';
 import { Input } from '@/components/ui/input';
-import { fetchSimpleInvitations } from '@/services/invitation/simple-invitations';
-import { useQuery } from '@tanstack/react-query';
+import { fetchSimpleInvitations, deleteSimpleInvitation } from '@/services/invitation/simple-invitations';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
+import { toast } from '@/components/ui/use-toast';
 
 interface SimpleInvitationsListProps {
   isEventsList?: boolean;
@@ -15,7 +18,9 @@ interface SimpleInvitationsListProps {
 
 export default function SimpleInvitationsList({ isEventsList = false }: SimpleInvitationsListProps) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
+  const [deletingInvitation, setDeletingInvitation] = useState<SimpleInvitation | null>(null);
   
   const entityType = isEventsList ? 'event' : 'invitation';
   const entityTypeCaps = isEventsList ? 'Event' : 'Invitation';
@@ -23,6 +28,25 @@ export default function SimpleInvitationsList({ isEventsList = false }: SimpleIn
   const { data: invitations, isLoading, error } = useQuery({
     queryKey: ['simple-invitations', isEventsList],
     queryFn: () => fetchSimpleInvitations(isEventsList),
+  });
+  
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: deleteSimpleInvitation,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['simple-invitations', isEventsList] });
+      toast({
+        title: `${entityTypeCaps} deleted`,
+        description: `The ${entityType} has been successfully deleted.`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: `Failed to delete ${entityType}`,
+        description: error instanceof Error ? error.message : `An error occurred while deleting the ${entityType}`,
+        variant: "destructive"
+      });
+    }
   });
   
   // Filter invitations based on search term
@@ -44,6 +68,18 @@ export default function SimpleInvitationsList({ isEventsList = false }: SimpleIn
       navigate(`/dashboard/events/edit/${id}`);
     } else {
       navigate(`/dashboard/invitations/edit/${id}`);
+    }
+  };
+
+  const handleDeleteItem = (invitation: SimpleInvitation, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click (navigation to edit)
+    setDeletingInvitation(invitation);
+  };
+
+  const confirmDelete = () => {
+    if (deletingInvitation) {
+      deleteMutation.mutate(deletingInvitation.id);
+      setDeletingInvitation(null);
     }
   };
   
@@ -100,7 +136,7 @@ export default function SimpleInvitationsList({ isEventsList = false }: SimpleIn
           {filteredInvitations.map((invitation) => (
             <Card 
               key={invitation.id}
-              className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+              className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer relative"
               onClick={() => handleEditItem(invitation.id)}
             >
               <div 
@@ -117,18 +153,31 @@ export default function SimpleInvitationsList({ isEventsList = false }: SimpleIn
               </div>
               
               <CardContent className="p-4">
-                <h3 className="font-medium text-lg mb-1 line-clamp-1">{invitation.title}</h3>
-                {invitation.date && (
-                  <p className="text-sm text-muted-foreground mb-1">
-                    {format(new Date(invitation.date), 'MMMM d, yyyy')}
-                    {invitation.time && ` at ${invitation.time}`}
-                  </p>
-                )}
-                {invitation.locationTitle && (
-                  <p className="text-sm text-muted-foreground">
-                    Location: {invitation.locationTitle}
-                  </p>
-                )}
+                <div className="flex justify-between items-start">
+                  <div className="pr-8">
+                    <h3 className="font-medium text-lg mb-1 line-clamp-1">{invitation.title}</h3>
+                    {invitation.date && (
+                      <p className="text-sm text-muted-foreground mb-1">
+                        {format(new Date(invitation.date), 'MMMM d, yyyy')}
+                        {invitation.time && ` at ${invitation.time}`}
+                      </p>
+                    )}
+                    {invitation.locationTitle && (
+                      <p className="text-sm text-muted-foreground">
+                        Location: {invitation.locationTitle}
+                      </p>
+                    )}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-2 right-2 bg-background/80 hover:bg-background"
+                    onClick={(e) => handleDeleteItem(invitation, e)}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                    <span className="sr-only">Delete</span>
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}
@@ -151,6 +200,18 @@ export default function SimpleInvitationsList({ isEventsList = false }: SimpleIn
           </CardContent>
         </Card>
       )}
+
+      {/* Confirmation Dialog for Delete */}
+      <ConfirmationDialog
+        open={!!deletingInvitation}
+        onOpenChange={(open) => !open && setDeletingInvitation(null)}
+        title={`Delete ${entityTypeCaps}`}
+        description={`Are you sure you want to delete "${deletingInvitation?.title}"? This action cannot be undone.`}
+        onConfirm={confirmDelete}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        isLoading={deleteMutation.isPending}
+      />
     </div>
   );
 }
