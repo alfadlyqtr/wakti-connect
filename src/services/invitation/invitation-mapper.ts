@@ -1,71 +1,85 @@
 
 import { InvitationDbRecord } from './invitation-types';
-import { SimpleInvitation, BackgroundType, ButtonPosition } from '@/types/invitation.types';
+import { SimpleInvitation, BackgroundType, TextPosition, ButtonPosition, ButtonShape } from '@/types/invitation.types';
 
 /**
  * Maps a database record to a SimpleInvitation object
- * Uses a simplified approach to avoid TypeScript "excessively deep instantiation" errors
  */
-export function mapDbRecordToSimpleInvitation(data: InvitationDbRecord): SimpleInvitation | null {
-  if (!data) return null;
-
-  // Create the base invitation object with primitive properties first
-  const invitation: SimpleInvitation = {
-    id: data.id,
-    title: data.title,
-    description: data.description || '',
-    location: data.location || '',
-    locationTitle: data.location_title || '',
-    createdAt: data.created_at,
-    updatedAt: data.updated_at,
-    userId: data.user_id,
-    shareId: data.share_id,
-    isPublic: data.is_public || false,
-    isEvent: !!data.is_event,
-    // Handle date properties
-    date: data.datetime ? new Date(data.datetime).toISOString().split('T')[0] : undefined,
-    time: data.datetime ? new Date(data.datetime).toISOString().split('T')[1].substring(0, 5) : undefined,
-    
-    // Initialize customization with explicit type
+export function mapDbRecordToSimpleInvitation(record: InvitationDbRecord): SimpleInvitation {
+  // Convert datetime string to date and time
+  let date: string | undefined;
+  let time: string | undefined;
+  
+  if (record.datetime) {
+    const dateObj = new Date(record.datetime);
+    date = dateObj.toISOString().split('T')[0]; // YYYY-MM-DD format
+    time = dateObj.toISOString().split('T')[1].substring(0, 5); // HH:MM format
+  }
+  
+  // Simple validation to ensure background_type is valid
+  const backgroundType = (
+    record.background_type === 'solid' || 
+    record.background_type === 'gradient' || 
+    record.background_type === 'image' || 
+    record.background_type === 'ai'
+  ) ? record.background_type as BackgroundType : 'solid';
+  
+  // Create the SimpleInvitation
+  return {
+    id: record.id,
+    title: record.title,
+    description: record.description || '',
+    location: record.location || '',
+    locationTitle: record.location_title || '',
+    date,
+    time,
+    createdAt: record.created_at,
+    updatedAt: record.updated_at,
+    userId: record.user_id,
+    shareId: record.share_id,
+    isPublic: record.is_public,
+    isEvent: record.is_event,
     customization: {
       background: {
-        type: (data.background_type || 'solid') as BackgroundType,
-        value: data.background_value || '#ffffff'
+        type: backgroundType,
+        value: record.background_value || '#ffffff'
       },
       font: {
-        family: data.font_family || 'system-ui, sans-serif',
-        size: data.font_size || 'medium',
-        color: data.text_color || '#000000',
-        alignment: data.text_align || 'left',
+        family: record.font_family || 'system-ui, sans-serif',
+        size: record.font_size || 'medium',
+        color: record.text_color || '#000000',
+        alignment: record.text_align || 'center'
       },
       buttons: {
         accept: {
           background: '#3B82F6',
           color: '#ffffff',
-          shape: 'rounded',
+          shape: 'rounded' as ButtonShape
         },
         decline: {
           background: '#EF4444',
           color: '#ffffff',
-          shape: 'rounded',
+          shape: 'rounded' as ButtonShape
         },
         directions: {
-          show: !!data.location,
+          show: true,
           background: '#3B82F6',
           color: '#ffffff',
-          shape: 'rounded',
+          shape: 'rounded' as ButtonShape,
           position: 'bottom-right' as ButtonPosition
         },
         calendar: {
-          show: !!data.is_event,
+          show: true,
           background: '#3B82F6',
           color: '#ffffff',
-          shape: 'rounded',
+          shape: 'rounded' as ButtonShape,
           position: 'bottom-left' as ButtonPosition
         }
+      },
+      textLayout: {
+        contentPosition: 'middle' as TextPosition,
+        spacing: 'normal'
       }
     }
   };
-
-  return invitation;
 }

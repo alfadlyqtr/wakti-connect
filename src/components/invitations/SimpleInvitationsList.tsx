@@ -1,104 +1,86 @@
 
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { fetchSimpleInvitations } from '@/services/invitation/simple-invitations';
+import { fetchSimpleInvitations } from '@/services/invitation/invitation-api';
 import { useAuth } from '@/lib/auth';
-import { Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
+import { Card } from '@/components/ui/card';
 
 interface SimpleInvitationsListProps {
   isEventsList?: boolean;
 }
 
-export default function SimpleInvitationsList({ isEventsList = false }: SimpleInvitationsListProps) {
-  const navigate = useNavigate();
+const SimpleInvitationsList: React.FC<SimpleInvitationsListProps> = ({ isEventsList = false }) => {
   const { user } = useAuth?.() || { user: null };
   
   const { data: invitations, isLoading, error } = useQuery({
     queryKey: ['simple-invitations', user?.id, isEventsList],
     queryFn: () => fetchSimpleInvitations(user?.id || '', isEventsList),
-    enabled: !!user?.id,
+    enabled: !!user?.id
   });
-  
-  const handleCreateNew = () => {
-    navigate(isEventsList ? '/dashboard/events/new' : '/dashboard/invitations/new');
-  };
-  
-  const handleEdit = (id: string) => {
-    navigate(isEventsList ? `/dashboard/events/edit/${id}` : `/dashboard/invitations/edit/${id}`);
-  };
+
+  if (isLoading) {
+    return <div className="p-8 text-center">Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="p-8 text-center">Error loading {isEventsList ? 'events' : 'invitations'}</div>;
+  }
+
+  if (!invitations || invitations.length === 0) {
+    return (
+      <div className="p-8 text-center">
+        <h3 className="text-lg font-medium mb-2">No {isEventsList ? 'events' : 'invitations'} found</h3>
+        <p className="text-muted-foreground mb-6">
+          Create your first {isEventsList ? 'event' : 'invitation'} to get started.
+        </p>
+        <Link to={isEventsList ? "/invitations/create?isEvent=true" : "/invitations/create"}>
+          <Button>
+            Create {isEventsList ? 'Event' : 'Invitation'}
+          </Button>
+        </Link>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="space-y-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">{isEventsList ? 'Events' : 'Invitations'}</h1>
-        <Button onClick={handleCreateNew}>
-          <Plus className="mr-2 h-4 w-4" />
-          Create New {isEventsList ? 'Event' : 'Invitation'}
-        </Button>
+        <h2 className="text-2xl font-bold">My {isEventsList ? 'Events' : 'Invitations'}</h2>
+        <Link to={isEventsList ? "/invitations/create?isEvent=true" : "/invitations/create"}>
+          <Button>Create New {isEventsList ? 'Event' : 'Invitation'}</Button>
+        </Link>
       </div>
-      
-      {isLoading ? (
-        <div className="text-center py-8">Loading...</div>
-      ) : error ? (
-        <div className="text-center py-8 text-red-500">
-          Error loading {isEventsList ? 'events' : 'invitations'}. Please try again.
-        </div>
-      ) : invitations && invitations.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {invitations.map((invitation) => (
-            <Card key={invitation.id} className="overflow-hidden">
-              <div 
-                className="h-32 bg-cover bg-center" 
-                style={{ 
-                  background: 
-                    invitation.customization.background.type === 'image' 
-                      ? `url(${invitation.customization.background.value}) center/cover` 
-                      : invitation.customization.background.type === 'gradient'
-                      ? invitation.customization.background.value
-                      : invitation.customization.background.value
-                }}
-              />
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xl">{invitation.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm line-clamp-3">{invitation.description}</p>
-                {(invitation.date || invitation.location) && (
-                  <div className="mt-4 text-xs text-muted-foreground">
-                    {invitation.date && (
-                      <p>{new Date(invitation.date).toLocaleDateString()}</p>
-                    )}
-                    {invitation.location && (
-                      <p>{invitation.locationTitle || invitation.location}</p>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-              <CardFooter>
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => handleEdit(invitation.id)}
-                >
-                  Edit
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-12">
-          <p className="text-lg text-muted-foreground mb-4">
-            No {isEventsList ? 'events' : 'invitations'} found
-          </p>
-          <Button onClick={handleCreateNew}>
-            Create Your First {isEventsList ? 'Event' : 'Invitation'}
-          </Button>
-        </div>
-      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {invitations.map((invitation) => (
+          <Card key={invitation.id} className="p-4 hover:shadow-md transition-shadow">
+            <h3 className="text-lg font-medium truncate">{invitation.title}</h3>
+            <p className="text-muted-foreground text-sm truncate mb-3">
+              {invitation.description || 'No description'}
+            </p>
+            {invitation.date && (
+              <p className="text-sm">
+                {new Date(invitation.date).toLocaleDateString()}
+                {invitation.time && ` at ${invitation.time}`}
+              </p>
+            )}
+            <div className="flex gap-2 mt-4">
+              <Link to={`/invitations/edit/${invitation.id}`} className="flex-1">
+                <Button variant="outline" className="w-full">Edit</Button>
+              </Link>
+              {invitation.shareId && (
+                <Link to={`/invitation/${invitation.shareId}`} className="flex-1">
+                  <Button variant="secondary" className="w-full">View</Button>
+                </Link>
+              )}
+            </div>
+          </Card>
+        ))}
+      </div>
     </div>
   );
-}
+};
+
+export default SimpleInvitationsList;

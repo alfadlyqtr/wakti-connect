@@ -24,8 +24,7 @@ export async function createSimpleInvitation(data: InvitationData): Promise<Simp
     
     console.log('[createSimpleInvitation] Created invitation:', record);
     // Use the mapper function to create the SimpleInvitation object
-    const invitation = mapDbRecordToSimpleInvitation(record as InvitationDbRecord);
-    return invitation;
+    return mapDbRecordToSimpleInvitation(record as InvitationDbRecord);
   } catch (error) {
     console.error('[createSimpleInvitation] Error creating invitation:', error);
     return null;
@@ -53,8 +52,7 @@ export async function updateSimpleInvitation(id: string, data: Partial<Invitatio
     
     console.log('[updateSimpleInvitation] Updated invitation:', record);
     // Use the mapper function to create the SimpleInvitation object
-    const invitation = mapDbRecordToSimpleInvitation(record as InvitationDbRecord);
-    return invitation;
+    return mapDbRecordToSimpleInvitation(record as InvitationDbRecord);
   } catch (error) {
     console.error('[updateSimpleInvitation] Error updating invitation:', error);
     return null;
@@ -81,8 +79,7 @@ export async function getSimpleInvitationById(id: string): Promise<SimpleInvitat
     
     console.log('[getSimpleInvitationById] Got invitation:', record);
     // Use the mapper function to create the SimpleInvitation object
-    const invitation = mapDbRecordToSimpleInvitation(record as InvitationDbRecord);
-    return invitation;
+    return mapDbRecordToSimpleInvitation(record as InvitationDbRecord);
   } catch (error) {
     console.error('[getSimpleInvitationById] Error getting invitation:', error);
     return null;
@@ -109,8 +106,7 @@ export async function getSharedInvitation(shareId: string): Promise<SimpleInvita
     
     console.log('[getSharedInvitation] Got shared invitation:', record);
     // Use the mapper function to create the SimpleInvitation object
-    const invitation = mapDbRecordToSimpleInvitation(record as InvitationDbRecord);
-    return invitation;
+    return mapDbRecordToSimpleInvitation(record as InvitationDbRecord);
   } catch (error) {
     console.error('[getSharedInvitation] Error getting shared invitation:', error);
     return null;

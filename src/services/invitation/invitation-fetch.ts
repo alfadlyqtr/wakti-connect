@@ -5,52 +5,27 @@ import { SimpleInvitation } from '@/types/invitation.types';
 import { mapDbRecordToSimpleInvitation } from './invitation-mapper';
 
 /**
- * Fetch all simple invitations for a user
+ * Fetch a list of simple invitations for a user
  */
-export async function fetchSimpleInvitations(userId: string, isEvent?: boolean): Promise<SimpleInvitation[]> {
+export async function fetchSimpleInvitations(userId: string, isEvent = false): Promise<SimpleInvitation[]> {
   try {
-    console.log(`[fetchSimpleInvitations] Fetching ${isEvent ? 'events' : 'invitations'} for user:`, userId);
+    console.log('[fetchSimpleInvitations] Fetching invitations for user:', userId, 'isEvent:', isEvent);
     
-    if (!userId) {
-      console.warn('[fetchSimpleInvitations] No userId provided, returning empty array');
-      return [];
-    }
-    
-    // Start with the base query
-    let query = supabase
+    const { data: records, error } = await supabase
       .from('invitations')
       .select('*')
       .eq('user_id', userId)
+      .eq('is_event', isEvent)
       .order('created_at', { ascending: false });
-      
-    // Add event filter if specified
-    if (isEvent !== undefined) {
-      query = query.eq('is_event', isEvent);
-    }
-    
-    const { data: records, error } = await query;
       
     if (error) {
       console.error('[fetchSimpleInvitations] Error:', error);
       throw error;
     }
     
-    console.log('[fetchSimpleInvitations] Fetched invitations:', records?.length || 0);
-    
-    // Process records with explicit typing to avoid deep instantiation errors
-    const invitations: SimpleInvitation[] = [];
-    
-    if (records && records.length > 0) {
-      for (const record of records) {
-        const typedRecord = record as InvitationDbRecord;
-        const invitation = mapDbRecordToSimpleInvitation(typedRecord);
-        if (invitation) {
-          invitations.push(invitation);
-        }
-      }
-    }
-    
-    return invitations;
+    console.log('[fetchSimpleInvitations] Fetched invitations:', records?.length);
+    // Map each record to a SimpleInvitation object
+    return (records || []).map(record => mapDbRecordToSimpleInvitation(record as InvitationDbRecord));
   } catch (error) {
     console.error('[fetchSimpleInvitations] Error fetching invitations:', error);
     return [];
@@ -58,6 +33,6 @@ export async function fetchSimpleInvitations(userId: string, isEvent?: boolean):
 }
 
 /**
- * Alias for backward compatibility
+ * List all simple invitations for a user - alias for fetchSimpleInvitations
  */
 export const listSimpleInvitations = fetchSimpleInvitations;
