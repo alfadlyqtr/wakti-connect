@@ -12,7 +12,8 @@ import DashboardEvents from './pages/dashboard/DashboardEvents';
 import SimpleInvitationCreator from './pages/invitations/SimpleInvitationCreator';
 
 const App = () => {
-  const { isAuthenticated } = useAuth?.() || { isAuthenticated: false };
+  const { isAuthenticated, isLoggedIn } = useAuth?.() || { isAuthenticated: false, isLoggedIn: false };
+  // We're adding isLoggedIn for backward compatibility
 
   return (
     <Router>

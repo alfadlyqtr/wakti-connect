@@ -43,11 +43,16 @@ export async function updateSimpleInvitation(id: string, data: Partial<Invitatio
       .update(data)
       .eq('id', id)
       .select('*')
-      .single();
+      .maybeSingle();
       
     if (error) {
       console.error('[updateSimpleInvitation] Error:', error);
       throw error;
+    }
+    
+    if (!record) {
+      console.error('[updateSimpleInvitation] No record found with id:', id);
+      return null;
     }
     
     console.log('[updateSimpleInvitation] Updated invitation:', record);
@@ -70,11 +75,16 @@ export async function getSimpleInvitationById(id: string): Promise<SimpleInvitat
       .from('invitations')
       .select('*')
       .eq('id', id)
-      .single();
+      .maybeSingle();
       
     if (error) {
       console.error('[getSimpleInvitationById] Error:', error);
       throw error;
+    }
+    
+    if (!record) {
+      console.error('[getSimpleInvitationById] No record found with id:', id);
+      return null;
     }
     
     console.log('[getSimpleInvitationById] Got invitation:', record);
@@ -97,11 +107,16 @@ export async function getSharedInvitation(shareId: string): Promise<SimpleInvita
       .from('invitations')
       .select('*')
       .eq('share_id', shareId)
-      .single();
+      .maybeSingle();
       
     if (error) {
       console.error('[getSharedInvitation] Error:', error);
       throw error;
+    }
+    
+    if (!record) {
+      console.error('[getSharedInvitation] No record found with share_id:', shareId);
+      return null;
     }
     
     console.log('[getSharedInvitation] Got shared invitation:', record);
