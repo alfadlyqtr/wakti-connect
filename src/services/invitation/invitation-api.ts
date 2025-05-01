@@ -10,7 +10,7 @@ import { SimpleInvitation, BackgroundType, ButtonPosition } from '@/types/invita
 export function mapDbRecordToSimpleInvitation(data: InvitationDbRecord): SimpleInvitation | null {
   if (!data) return null;
 
-  // Use intermediate type to break the deep type inference chain
+  // Create a result object with explicit property assignments to break deep type inference chains
   const result: SimpleInvitationResult = {
     id: data.id,
     title: data.title,
@@ -67,8 +67,8 @@ export function mapDbRecordToSimpleInvitation(data: InvitationDbRecord): SimpleI
     }
   };
 
-  // Cast to SimpleInvitation to maintain type compatibility
-  return result as unknown as SimpleInvitation;
+  // Use a type assertion instead of a complex type conversion
+  return result as SimpleInvitation;
 }
 
 /**
