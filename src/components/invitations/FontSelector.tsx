@@ -5,7 +5,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
-import { HexColorPicker } from 'react-colorful';
+import { HexColorPicker } from '@/components/ui/color-picker';
 
 interface FontSelectorProps {
   font: {
@@ -25,13 +25,17 @@ interface FontSelectorProps {
     alignment?: string;
   };
   onChange?: (property: string, value: string) => void;
+  showWeight?: boolean;
+  showAlignment?: boolean;
 }
 
 export default function FontSelector({
   font,
   onFontChange,
   value,
-  onChange
+  onChange,
+  showWeight = true,
+  showAlignment = true
 }: FontSelectorProps) {
   // For backward compatibility, use value props if the direct props are not provided
   const fontData = font || value || {
@@ -91,22 +95,24 @@ export default function FontSelector({
         </Select>
       </div>
       
-      <div className="space-y-2">
-        <Label>Font Weight</Label>
-        <Select
-          value={fontData.weight || 'normal'}
-          onValueChange={(value) => handleChange('weight', value)}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select weight" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="normal">Normal</SelectItem>
-            <SelectItem value="medium">Medium</SelectItem>
-            <SelectItem value="bold">Bold</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      {showWeight && (
+        <div className="space-y-2">
+          <Label>Font Weight</Label>
+          <Select
+            value={fontData.weight || 'normal'}
+            onValueChange={(value) => handleChange('weight', value)}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select weight" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="normal">Normal</SelectItem>
+              <SelectItem value="medium">Medium</SelectItem>
+              <SelectItem value="bold">Bold</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
       
       <div className="space-y-2">
         <Label>Text Color</Label>
@@ -133,27 +139,29 @@ export default function FontSelector({
         </Popover>
       </div>
       
-      <div className="space-y-2">
-        <Label>Text Alignment</Label>
-        <RadioGroup
-          value={fontData.alignment || 'left'}
-          onValueChange={(value) => handleChange('alignment', value)}
-          className="flex space-x-2"
-        >
-          <div className="flex items-center space-x-1">
-            <RadioGroupItem value="left" id="align-left" />
-            <Label htmlFor="align-left">Left</Label>
-          </div>
-          <div className="flex items-center space-x-1">
-            <RadioGroupItem value="center" id="align-center" />
-            <Label htmlFor="align-center">Center</Label>
-          </div>
-          <div className="flex items-center space-x-1">
-            <RadioGroupItem value="right" id="align-right" />
-            <Label htmlFor="align-right">Right</Label>
-          </div>
-        </RadioGroup>
-      </div>
+      {showAlignment && (
+        <div className="space-y-2">
+          <Label>Text Alignment</Label>
+          <RadioGroup
+            value={fontData.alignment || 'left'}
+            onValueChange={(value) => handleChange('alignment', value)}
+            className="flex space-x-2"
+          >
+            <div className="flex items-center space-x-1">
+              <RadioGroupItem value="left" id="align-left" />
+              <Label htmlFor="align-left">Left</Label>
+            </div>
+            <div className="flex items-center space-x-1">
+              <RadioGroupItem value="center" id="align-center" />
+              <Label htmlFor="align-center">Center</Label>
+            </div>
+            <div className="flex items-center space-x-1">
+              <RadioGroupItem value="right" id="align-right" />
+              <Label htmlFor="align-right">Right</Label>
+            </div>
+          </RadioGroup>
+        </div>
+      )}
     </div>
   );
 }

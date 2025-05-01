@@ -7,11 +7,12 @@ interface HexColorPickerProps {
   color: string;
   onChange: (color: string) => void;
   label?: string;
+  className?: string;
 }
 
-export const HexColorPicker = ({ color, onChange, label }: HexColorPickerProps) => {
+export const HexColorPicker = ({ color, onChange, label, className }: HexColorPickerProps) => {
   return (
-    <div className="space-y-2">
+    <div className={`space-y-2 ${className}`}>
       {label && <Label>{label}</Label>}
       <div className="flex gap-2 items-center">
         <div className="w-8 h-8 rounded-md border" style={{ backgroundColor: color }}></div>

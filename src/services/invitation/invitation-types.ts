@@ -5,7 +5,7 @@ import { SimpleInvitation, SimpleInvitationCustomization, BackgroundType } from 
 export interface InvitationDbRecord {
   id: string;
   title: string;
-  description: string;
+  description?: string;
   location?: string;
   location_url?: string;
   location_title?: string;
@@ -15,7 +15,7 @@ export interface InvitationDbRecord {
   font_family: string;
   font_size: string;
   text_color: string;
-  text_align: string;
+  text_align: string;  // Make sure this field is included
   is_event?: boolean;
   user_id: string;
   created_at: string;
@@ -85,7 +85,7 @@ export type SimpleInvitationResult = {
 // Type for creating a new invitation
 export interface InvitationData {
   title: string;
-  description: string;
+  description?: string;
   location?: string;
   location_url?: string;
   location_title?: string;

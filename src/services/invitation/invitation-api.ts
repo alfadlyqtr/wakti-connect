@@ -1,7 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { InvitationDbRecord, InvitationData, SimpleInvitationResult } from './invitation-types';
-import { SimpleInvitation, ButtonPosition } from '@/types/invitation.types';
+import { SimpleInvitation, BackgroundType, ButtonPosition } from '@/types/invitation.types';
 
 /**
  * Map a database record to a SimpleInvitation object
@@ -27,7 +27,7 @@ export function mapDbRecordToSimpleInvitation(data: InvitationDbRecord): SimpleI
     isEvent: !!data.is_event,
     customization: {
       background: {
-        type: (data.background_type || 'solid') as any,
+        type: (data.background_type || 'solid') as BackgroundType,
         value: data.background_value || '#ffffff'
       },
       font: {
@@ -90,7 +90,7 @@ export async function createSimpleInvitation(data: InvitationData): Promise<Simp
     }
     
     console.log('[createSimpleInvitation] Created invitation:', record);
-    return mapDbRecordToSimpleInvitation(record);
+    return mapDbRecordToSimpleInvitation(record as InvitationDbRecord);
   } catch (error) {
     console.error('[createSimpleInvitation] Error creating invitation:', error);
     return null;
@@ -117,7 +117,7 @@ export async function updateSimpleInvitation(id: string, data: Partial<Invitatio
     }
     
     console.log('[updateSimpleInvitation] Updated invitation:', record);
-    return mapDbRecordToSimpleInvitation(record);
+    return mapDbRecordToSimpleInvitation(record as InvitationDbRecord);
   } catch (error) {
     console.error('[updateSimpleInvitation] Error updating invitation:', error);
     return null;
@@ -143,7 +143,7 @@ export async function getSimpleInvitationById(id: string): Promise<SimpleInvitat
     }
     
     console.log('[getSimpleInvitationById] Got invitation:', record);
-    return mapDbRecordToSimpleInvitation(record);
+    return mapDbRecordToSimpleInvitation(record as InvitationDbRecord);
   } catch (error) {
     console.error('[getSimpleInvitationById] Error getting invitation:', error);
     return null;
@@ -169,7 +169,7 @@ export async function getSharedInvitation(shareId: string): Promise<SimpleInvita
     }
     
     console.log('[getSharedInvitation] Got shared invitation:', record);
-    return mapDbRecordToSimpleInvitation(record);
+    return mapDbRecordToSimpleInvitation(record as InvitationDbRecord);
   } catch (error) {
     console.error('[getSharedInvitation] Error getting shared invitation:', error);
     return null;
@@ -182,6 +182,11 @@ export async function getSharedInvitation(shareId: string): Promise<SimpleInvita
 export async function fetchSimpleInvitations(userId: string, isEvent?: boolean): Promise<SimpleInvitation[]> {
   try {
     console.log(`[fetchSimpleInvitations] Fetching ${isEvent ? 'events' : 'invitations'} for user:`, userId);
+    
+    if (!userId) {
+      console.warn('[fetchSimpleInvitations] No userId provided, returning empty array');
+      return [];
+    }
     
     // Start with the base query
     let query = supabase
@@ -204,7 +209,7 @@ export async function fetchSimpleInvitations(userId: string, isEvent?: boolean):
     
     console.log('[fetchSimpleInvitations] Fetched invitations:', records?.length || 0);
     const invitations = records
-      ?.map(record => mapDbRecordToSimpleInvitation(record))
+      ?.map(record => mapDbRecordToSimpleInvitation(record as InvitationDbRecord))
       .filter(Boolean) as SimpleInvitation[];
       
     return invitations || [];

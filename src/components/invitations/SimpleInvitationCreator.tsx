@@ -1,148 +1,94 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+import { useQuery } from '@tanstack/react-query';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Card } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { toast } from '@/components/ui/use-toast';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/hooks/use-toast';
+import InvitationForm from './InvitationForm';
+import InvitationPreview from './InvitationPreview';
 import BackgroundSelector from './BackgroundSelector';
 import FontSelector from './FontSelector';
 import TextPositionSelector from './TextPositionSelector';
-import ButtonPositionSelector from './ButtonPositionSelector';
-import InvitationPreview from './InvitationPreview';
-import { createSimpleInvitation, updateSimpleInvitation } from '@/services/invitation/simple-invitations';
-import { SimpleInvitation, SimpleInvitationCustomization, BackgroundType } from '@/types/invitation.types';
+import { SimpleInvitation, BackgroundType, TextPosition } from '@/types/invitation.types';
+import { format } from 'date-fns';
+import { 
+  createSimpleInvitation, 
+  updateSimpleInvitation 
+} from '@/services/invitation/simple-invitations';
+import { useAuth } from '@/lib/auth'; // Updated import path
 import { InvitationData } from '@/services/invitation/invitation-types';
-import { useAuth } from '@/hooks/auth';
 
 interface SimpleInvitationCreatorProps {
-  isEvent?: boolean;
   existingInvitation?: SimpleInvitation;
+  isEvent?: boolean;
 }
 
-export default function SimpleInvitationCreator({
-  isEvent = false,
-  existingInvitation
+export default function SimpleInvitationCreator({ 
+  existingInvitation, 
+  isEvent = false 
 }: SimpleInvitationCreatorProps) {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const { user } = useAuth?.() || { user: null }; // Optional chaining for backward compatibility
+  const [activeTab, setActiveTab] = useState<'details' | 'customize' | 'preview'>('details');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [customization, setCustomization] = useState<SimpleInvitationCustomization>({
+  
+  const [formValues, setFormValues] = useState({
+    title: '',
+    description: '',
+    location: '',
+    locationTitle: '',
+    date: '',
+    time: '',
+  });
+  
+  const [customization, setCustomization] = useState({
     background: {
-      type: existingInvitation?.customization?.background?.type || 'solid',
-      value: existingInvitation?.customization?.background?.value || '#ffffff'
+      type: 'solid' as BackgroundType,
+      value: '#ffffff',
     },
     font: {
-      family: existingInvitation?.customization?.font?.family || 'system-ui, sans-serif',
-      size: existingInvitation?.customization?.font?.size || 'medium',
-      color: existingInvitation?.customization?.font?.color || '#000000',
-      alignment: existingInvitation?.customization?.font?.alignment || 'center'
-    },
-    buttons: {
-      accept: {
-        background: existingInvitation?.customization?.buttons?.accept?.background || '#3B82F6',
-        color: existingInvitation?.customization?.buttons?.accept?.color || '#ffffff',
-        shape: existingInvitation?.customization?.buttons?.accept?.shape || 'rounded'
-      },
-      decline: {
-        background: existingInvitation?.customization?.buttons?.decline?.background || '#EF4444',
-        color: existingInvitation?.customization?.buttons?.decline?.color || '#ffffff',
-        shape: existingInvitation?.customization?.buttons?.decline?.shape || 'rounded'
-      },
-      directions: {
-        show: existingInvitation?.customization?.buttons?.directions?.show ?? true,
-        background: existingInvitation?.customization?.buttons?.directions?.background || '#3B82F6',
-        color: existingInvitation?.customization?.buttons?.directions?.color || '#ffffff',
-        shape: existingInvitation?.customization?.buttons?.directions?.shape || 'rounded',
-        position: existingInvitation?.customization?.buttons?.directions?.position || 'bottom-right'
-      },
-      calendar: {
-        show: existingInvitation?.customization?.buttons?.calendar?.show ?? true,
-        background: existingInvitation?.customization?.buttons?.calendar?.background || '#3B82F6',
-        color: existingInvitation?.customization?.buttons?.calendar?.color || '#ffffff',
-        shape: existingInvitation?.customization?.buttons?.calendar?.shape || 'rounded',
-        position: existingInvitation?.customization?.buttons?.calendar?.position || 'bottom-left'
-      }
+      family: 'system-ui, sans-serif',
+      size: 'medium',
+      color: '#000000',
+      alignment: 'left',
+      weight: 'normal',
+      position: 'middle' as TextPosition,
     },
     textLayout: {
-      contentPosition: existingInvitation?.customization?.textLayout?.contentPosition || 'middle',
-      spacing: existingInvitation?.customization?.textLayout?.spacing || 'normal'
+      contentPosition: 'middle' as TextPosition,
+      spacing: 'normal' as 'compact' | 'normal' | 'spacious',
     }
   });
-
-  const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm({
-    defaultValues: {
-      title: existingInvitation?.title || '',
-      description: existingInvitation?.description || '',
-      location: existingInvitation?.location || '',
-      locationTitle: existingInvitation?.locationTitle || '',
-      date: existingInvitation?.date || '',
-      time: existingInvitation?.time || '',
-    }
-  });
-
-  const handleBackgroundChange = (type: BackgroundType, value: string) => {
-    setCustomization(prevState => ({
-      ...prevState,
-      background: { type, value }
-    }));
-  };
-
-  const handleFontChange = (property: string, value: string) => {
-    setCustomization(prevState => ({
-      ...prevState,
-      font: { ...prevState.font, [property]: value }
-    }));
-  };
-
-  const handleTextLayoutChange = (property: string, value: string) => {
-    setCustomization(prevState => ({
-      ...prevState,
-      textLayout: { ...prevState.textLayout, [property]: value }
-    }));
-  };
-
-  const handleButtonChange = (buttonType: string, property: string, value: string | boolean) => {
-    setCustomization(prevState => ({
-      ...prevState,
-      buttons: {
-        ...prevState.buttons,
-        [buttonType]: {
-          ...prevState.buttons[buttonType],
-          [property]: value
-        }
-      }
-    }));
-  };
-
-  const handleSubmit = async () => {
+  
+  // Only define one handleSubmit
+  const submitForm = async () => {
     try {
       setIsSubmitting(true);
       
-      // Get the current user's ID
-      const { user } = useAuth();
-      
       if (!user?.id) {
         toast({
-          title: 'Error',
-          description: 'You must be logged in to create an invitation',
-          variant: 'destructive',
+          title: "Authentication required",
+          description: "Please sign in to create invitations",
+          variant: "destructive",
         });
         return;
       }
       
-      // Create the datetime string from the date and time fields
-      const datetime = formData.date && formData.time 
-        ? `${formData.date}T${formData.time}:00` 
-        : undefined;
+      let datetime = '';
+      if (formValues.date) {
+        datetime = formValues.time 
+          ? `${formValues.date}T${formValues.time}:00` 
+          : `${formValues.date}T00:00:00`;
+      }
       
-      // Create the invitation data object with all required fields including user_id
       const invitationData: InvitationData = {
-        title: formData.title,
-        description: formData.description,
-        location: formData.location,
-        location_title: formData.locationTitle,
+        title: formValues.title,
+        description: formValues.description,
+        location: formValues.location,
+        location_title: formValues.locationTitle,
         datetime,
         background_type: customization.background.type,
         background_value: customization.background.value,
@@ -151,7 +97,7 @@ export default function SimpleInvitationCreator({
         text_color: customization.font.color,
         text_align: customization.font.alignment || 'left',
         is_event: isEvent,
-        user_id: user.id // Include the user ID
+        user_id: user.id,
       };
       
       let result;
@@ -164,179 +110,184 @@ export default function SimpleInvitationCreator({
       
       if (result) {
         toast({
-          title: 'Success',
-          description: existingInvitation 
-            ? 'Invitation has been updated!' 
-            : 'Invitation has been created!',
+          title: existingInvitation ? "Invitation updated" : "Invitation created",
+          description: existingInvitation
+            ? "Your invitation has been updated successfully."
+            : "Your invitation has been created successfully.",
         });
         
         navigate(isEvent ? '/dashboard/events' : '/dashboard/invitations');
       } else {
-        throw new Error('Failed to save invitation');
+        throw new Error("Failed to save invitation");
       }
     } catch (error) {
-      console.error('Error saving invitation:', error);
+      console.error("Error saving invitation:", error);
       toast({
-        title: 'Error',
-        description: existingInvitation
-          ? 'Failed to update invitation. Please try again.'
-          : 'Failed to create invitation. Please try again.',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to save invitation. Please try again.",
+        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
     }
   };
+  
+  const handleFormChange = (field: string, value: string) => {
+    setFormValues(prev => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+  
+  const handleBackgroundChange = (type: BackgroundType, value: string) => {
+    setCustomization(prev => ({
+      ...prev,
+      background: { type, value },
+    }));
+  };
+  
+  const handleFontChange = (property: string, value: string) => {
+    setCustomization(prev => ({
+      ...prev,
+      font: {
+        ...prev.font,
+        [property]: value,
+      },
+    }));
+  };
 
-  const watchedFields = watch();
+  const handleTextLayoutChange = (property: string, value: string) => {
+    setCustomization(prev => ({
+      ...prev,
+      textLayout: {
+        ...prev.textLayout,
+        [property]: value,
+      },
+    }));
+  };
+  
+  // Load existing invitation data if editing
+  useEffect(() => {
+    if (existingInvitation) {
+      setFormValues({
+        title: existingInvitation.title || '',
+        description: existingInvitation.description || '',
+        location: existingInvitation.location || '',
+        locationTitle: existingInvitation.locationTitle || '',
+        date: existingInvitation.date || '',
+        time: existingInvitation.time || '',
+      });
+      
+      setCustomization({
+        background: {
+          type: existingInvitation.customization.background.type,
+          value: existingInvitation.customization.background.value,
+        },
+        font: {
+          family: existingInvitation.customization.font.family || 'system-ui, sans-serif',
+          size: existingInvitation.customization.font.size || 'medium',
+          color: existingInvitation.customization.font.color || '#000000',
+          alignment: existingInvitation.customization.font.alignment || 'left',
+          weight: existingInvitation.customization.font.weight || 'normal',
+          position: existingInvitation.customization.font.position || 'middle',
+        },
+        textLayout: {
+          contentPosition: existingInvitation.customization.textLayout?.contentPosition || 'middle',
+          spacing: existingInvitation.customization.textLayout?.spacing || 'normal',
+        }
+      });
+    }
+  }, [existingInvitation]);
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">
-        {existingInvitation 
-          ? (isEvent ? "Edit Event" : "Edit Invitation") 
-          : (isEvent ? "Create New Event" : "Create New Invitation")}
-      </h1>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Left column - Form */}
-        <div>
-          <Card className="p-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="title">Title</Label>
-                  <Input
-                    id="title"
-                    {...register('title', { required: "Title is required" })}
-                    placeholder="Enter a title"
-                    className={errors.title ? "border-red-500" : ""}
-                  />
-                  {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title.message as string}</p>}
-                </div>
-                
-                <div>
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    {...register('description')}
-                    placeholder="Enter a description"
-                    rows={4}
-                  />
-                </div>
-                
-                {isEvent && (
-                  <>
-                    <div>
-                      <Label htmlFor="date">Date</Label>
-                      <Input
-                        id="date"
-                        type="date"
-                        {...register('date', { required: isEvent ? "Date is required for events" : false })}
-                        className={errors.date ? "border-red-500" : ""}
-                      />
-                      {errors.date && <p className="text-red-500 text-sm mt-1">{errors.date.message as string}</p>}
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="time">Time</Label>
-                      <Input
-                        id="time"
-                        type="time"
-                        {...register('time')}
-                      />
-                    </div>
-                  </>
-                )}
-                
-                <div>
-                  <Label htmlFor="location">Location</Label>
-                  <Input
-                    id="location"
-                    {...register('location')}
-                    placeholder="Enter a location"
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="locationTitle">Location Title (optional)</Label>
-                  <Input
-                    id="locationTitle"
-                    {...register('locationTitle')}
-                    placeholder="E.g. Office, Home, etc."
-                  />
-                </div>
-              </div>
-              
-              <div className="border-t pt-6 mt-6">
-                <h3 className="text-lg font-medium mb-4">Customize Style</h3>
-                
-                <div className="space-y-6">
-                  <BackgroundSelector
+    <div className="container mx-auto py-8">
+      <Card className="w-full max-w-4xl mx-auto">
+        <CardHeader>
+          <CardTitle>
+            {existingInvitation ? `Edit ${isEvent ? 'Event' : 'Invitation'}` : `Create ${isEvent ? 'Event' : 'Invitation'}`}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)}>
+            <TabsList className="grid grid-cols-3 mb-8">
+              <TabsTrigger value="details">Details</TabsTrigger>
+              <TabsTrigger value="customize">Customize</TabsTrigger>
+              <TabsTrigger value="preview">Preview</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="details">
+              <InvitationForm 
+                formData={formValues}
+                onChange={handleFormChange} 
+                isEvent={isEvent}
+              />
+            </TabsContent>
+            
+            <TabsContent value="customize">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-8">
+                  <BackgroundSelector 
                     backgroundType={customization.background.type}
                     backgroundValue={customization.background.value}
-                    onBackgroundChange={(type, value) => handleBackgroundChange(type, value)}
+                    onBackgroundChange={handleBackgroundChange}
                   />
                   
                   <FontSelector
                     font={customization.font}
                     onFontChange={handleFontChange}
-                    showAlignment
-                    showWeight
                   />
                   
                   <TextPositionSelector
-                    contentPosition={customization.textLayout?.contentPosition || 'middle'}
-                    spacing={customization.textLayout?.spacing || 'normal'}
-                    onPositionChange={(position) => handleTextLayoutChange('contentPosition', position)}
-                    onSpacingChange={(spacing) => handleTextLayoutChange('spacing', spacing)}
-                    onChange={handleTextLayoutChange}
+                    contentPosition={customization.textLayout.contentPosition}
+                    spacing={customization.textLayout.spacing}
+                    onPositionChange={(value) => handleTextLayoutChange('contentPosition', value)}
+                    onSpacingChange={(value) => handleTextLayoutChange('spacing', value)}
                   />
-                  
-                  {(isEvent || watchedFields.location) && (
-                    <ButtonPositionSelector
-                      directionsButton={customization.buttons?.directions}
-                      calendarButton={customization.buttons?.calendar}
-                      onChange={handleButtonChange}
-                      showCalendar={isEvent}
-                      showDirections={!!watchedFields.location}
-                    />
-                  )}
+                </div>
+                
+                <div>
+                  <h3 className="text-lg font-medium mb-4">Preview</h3>
+                  <InvitationPreview
+                    title={formValues.title}
+                    description={formValues.description}
+                    location={formValues.location}
+                    locationTitle={formValues.locationTitle}
+                    date={formValues.date}
+                    time={formValues.time}
+                    customization={customization}
+                    isEvent={isEvent}
+                  />
                 </div>
               </div>
-              
-              <div className="pt-4 flex justify-end space-x-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => navigate(isEvent ? '/dashboard/events' : '/dashboard/invitations')}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? "Saving..." : (existingInvitation ? "Update" : "Create")}
-                </Button>
+            </TabsContent>
+            
+            <TabsContent value="preview">
+              <div className="max-w-md mx-auto">
+                <InvitationPreview
+                  title={formValues.title}
+                  description={formValues.description}
+                  location={formValues.location}
+                  locationTitle={formValues.locationTitle}
+                  date={formValues.date}
+                  time={formValues.time}
+                  customization={customization}
+                  isEvent={isEvent}
+                  showActions={true}
+                />
               </div>
-            </form>
-          </Card>
-        </div>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
         
-        {/* Right column - Preview */}
-        <div className="lg:sticky lg:top-24 self-start">
-          <h3 className="text-lg font-medium mb-4">Preview</h3>
-          <InvitationPreview
-            title={watchedFields.title || (isEvent ? "Event Title" : "Invitation Title")}
-            description={watchedFields.description || "Description will appear here"}
-            location={watchedFields.location || undefined}
-            locationTitle={watchedFields.locationTitle || undefined}
-            date={watchedFields.date || undefined}
-            time={watchedFields.time || undefined}
-            customization={customization}
-            isEvent={isEvent}
-            showActions={true}
-          />
-        </div>
-      </div>
+        <CardFooter className="flex justify-between">
+          <Button variant="outline" onClick={() => navigate(isEvent ? '/dashboard/events' : '/dashboard/invitations')}>
+            Cancel
+          </Button>
+          <Button onClick={submitForm} disabled={isSubmitting}>
+            {isSubmitting ? 'Saving...' : existingInvitation ? 'Update' : 'Create'}
+          </Button>
+        </CardFooter>
+      </Card>
     </div>
   );
 }
