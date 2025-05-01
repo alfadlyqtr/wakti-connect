@@ -200,11 +200,14 @@ export const getSharedInvitation = async (shareId: string): Promise<SimpleInvita
           family: data.font_family || 'system-ui, sans-serif',
           size: data.font_size || 'medium',
           color: data.text_color || '#000000',
-          // Only include text_align if it exists in the data record
-          ...(typeof data.text_align !== 'undefined' ? { alignment: data.text_align } : {})
         }
       }
-    } as unknown as SimpleInvitation;
+    } as SimpleInvitation;
+
+    // Add alignment property only if text_align exists as a property on the data object
+    if ('text_align' in data && data.text_align) {
+      (result.customization.font as any).alignment = data.text_align;
+    }
 
     return result;
   } catch (error) {
@@ -249,11 +252,14 @@ export function mapDbRecordToSimpleInvitation(data: InvitationDbRecord): SimpleI
         family: data.font_family || 'system-ui, sans-serif',
         size: data.font_size || 'medium',
         color: data.text_color || '#000000',
-        // Only include text_align if it exists in the data record
-        ...(typeof data.text_align !== 'undefined' ? { alignment: data.text_align } : {})
       }
     }
   };
+
+  // Add alignment property only if text_align exists as a property on the data object
+  if ('text_align' in data && data.text_align) {
+    (result.customization.font as any).alignment = data.text_align;
+  }
 
   // Cast to SimpleInvitation to maintain type compatibility
   return result as unknown as SimpleInvitation;
