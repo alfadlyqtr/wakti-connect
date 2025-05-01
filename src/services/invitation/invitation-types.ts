@@ -24,37 +24,6 @@ export interface InvitationDbRecord {
   is_public?: boolean;
 }
 
-// Intermediate type for breaking the deep type inference chain
-// Making alignment optional to match SimpleInvitationCustomization's structure
-export type SimpleInvitationResult = {
-  id: string;
-  title: string;
-  description: string;
-  location: string;
-  locationTitle: string;
-  date?: string;
-  time?: string;
-  createdAt: string;
-  updatedAt?: string;
-  userId: string;
-  shareId?: string;
-  isPublic: boolean;
-  isEvent: boolean;
-  customization: {
-    background: {
-      type: BackgroundType;
-      value: string;
-    };
-    font: {
-      family: string;
-      size: string;
-      color: string;
-      alignment?: string;  // Optional to match the source type
-      weight?: string;     // Optional to match the source type
-    };
-  };
-}
-
 // Type for creating a new invitation
 export interface InvitationData {
   title: string;

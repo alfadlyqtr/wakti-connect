@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 // Re-export all invitation service functions for easy imports
 export * from './templates';
 export * from './customization';
-export * from './simple-invitations';
+export * from './simple-invitations'; // Now correctly imports from the .ts file
 export { 
   sendInvitation, 
   recallInvitation, 
