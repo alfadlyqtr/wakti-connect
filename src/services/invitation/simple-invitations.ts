@@ -142,10 +142,15 @@ export const fetchSimpleInvitations = async (isEvent = false): Promise<SimpleInv
       return [];
     }
 
-    return data.map(record => {
-      // Use the safer direct mapping approach here too
-      return mapDbRecordToSimpleInvitation(record);
-    }).filter(Boolean) as SimpleInvitation[];
+    // Map the data to SimpleInvitation objects, filtering out any nulls
+    const invitations: SimpleInvitation[] = [];
+    for (const record of data) {
+      const invitation = mapDbRecordToSimpleInvitation(record);
+      if (invitation) {
+        invitations.push(invitation);
+      }
+    }
+    return invitations;
   } catch (error) {
     console.error("Error fetching invitations:", error);
     toast({
@@ -235,8 +240,8 @@ export const getSharedInvitation = async (shareId: string): Promise<SimpleInvita
 export function mapDbRecordToSimpleInvitation(data: InvitationDbRecord): SimpleInvitation | null {
   if (!data) return null;
 
-  // Break the deep type inference chain by using a simple Record type
-  const customization = {
+  // Create a plain object for customization without TypeScript inference
+  const plainCustomization = {
     background: {
       type: data.background_type || 'solid',
       value: data.background_value || '#ffffff'
@@ -244,16 +249,20 @@ export function mapDbRecordToSimpleInvitation(data: InvitationDbRecord): SimpleI
     font: {
       family: data.font_family || 'system-ui, sans-serif',
       size: data.font_size || 'medium',
-      color: data.text_color || '#000000',
+      color: data.text_color || '#000000'
     }
   };
-
+  
+  // Add alignment separately, only if it exists
   if (data.text_align) {
-    customization.font.alignment = data.text_align;
+    plainCustomization.font = {
+      ...plainCustomization.font,
+      alignment: data.text_align
+    };
   }
 
-  // Create intermediate result with simple typing
-  const result = {
+  // Create a plain result object with all necessary fields
+  const plainResult = {
     id: data.id,
     title: data.title,
     description: data.description || '',
@@ -267,11 +276,11 @@ export function mapDbRecordToSimpleInvitation(data: InvitationDbRecord): SimpleI
     shareId: data.share_id,
     isPublic: data.is_public || false,
     isEvent: !!data.is_event,
-    customization: customization
+    customization: plainCustomization
   };
 
-  // Use type assertion to SimpleInvitation without deep type checking
-  return result as unknown as SimpleInvitation;
+  // Use a type assertion to convert the plain object to SimpleInvitation
+  return plainResult as SimpleInvitation;
 }
 
 // Re-export listSimpleInvitations as an alias for fetchSimpleInvitations for backward compatibility
