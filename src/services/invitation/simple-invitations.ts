@@ -142,7 +142,10 @@ export const fetchSimpleInvitations = async (isEvent = false): Promise<SimpleInv
       return [];
     }
 
-    return data.map(mapDbRecordToSimpleInvitation).filter(Boolean) as SimpleInvitation[];
+    return data.map(record => {
+      // Use the safer direct mapping approach here too
+      return mapDbRecordToSimpleInvitation(record);
+    }).filter(Boolean) as SimpleInvitation[];
   } catch (error) {
     console.error("Error fetching invitations:", error);
     toast({
@@ -232,7 +235,24 @@ export const getSharedInvitation = async (shareId: string): Promise<SimpleInvita
 export function mapDbRecordToSimpleInvitation(data: InvitationDbRecord): SimpleInvitation | null {
   if (!data) return null;
 
-  // Create an object with explicit types to prevent deep type inference chains
+  // Break the deep type inference chain by using a simple Record type
+  const customization = {
+    background: {
+      type: data.background_type || 'solid',
+      value: data.background_value || '#ffffff'
+    },
+    font: {
+      family: data.font_family || 'system-ui, sans-serif',
+      size: data.font_size || 'medium',
+      color: data.text_color || '#000000',
+    }
+  };
+
+  if (data.text_align) {
+    customization.font.alignment = data.text_align;
+  }
+
+  // Create intermediate result with simple typing
   const result = {
     id: data.id,
     title: data.title,
@@ -247,21 +267,10 @@ export function mapDbRecordToSimpleInvitation(data: InvitationDbRecord): SimpleI
     shareId: data.share_id,
     isPublic: data.is_public || false,
     isEvent: !!data.is_event,
-    customization: {
-      background: {
-        type: (data.background_type || 'solid') as any,
-        value: data.background_value || '#ffffff'
-      },
-      font: {
-        family: data.font_family || 'system-ui, sans-serif',
-        size: data.font_size || 'medium',
-        color: data.text_color || '#000000',
-        alignment: data.text_align
-      }
-    }
+    customization: customization
   };
 
-  // Cast to SimpleInvitation for type compatibility
+  // Use type assertion to SimpleInvitation without deep type checking
   return result as unknown as SimpleInvitation;
 }
 
