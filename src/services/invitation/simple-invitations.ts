@@ -235,34 +235,37 @@ export const getSharedInvitation = async (shareId: string): Promise<SimpleInvita
 
 /**
  * Map a database record to a SimpleInvitation object
- * Using explicit mapping to avoid TypeScript "excessively deep instantiation" errors
+ * Using a completely new approach to avoid TypeScript "excessively deep instantiation" errors
  */
 export function mapDbRecordToSimpleInvitation(data: InvitationDbRecord): SimpleInvitation | null {
   if (!data) return null;
-
-  // Create a plain object for customization without TypeScript inference
-  const plainCustomization = {
-    background: {
-      type: data.background_type || 'solid',
-      value: data.background_value || '#ffffff'
-    },
-    font: {
-      family: data.font_family || 'system-ui, sans-serif',
-      size: data.font_size || 'medium',
-      color: data.text_color || '#000000'
-    }
+  
+  // Create the background object
+  const background = {
+    type: data.background_type || 'solid',
+    value: data.background_value || '#ffffff'
   };
   
-  // Add alignment separately, only if it exists
+  // Create the font object with optional alignment
+  let font: any = {
+    family: data.font_family || 'system-ui, sans-serif',
+    size: data.font_size || 'medium',
+    color: data.text_color || '#000000'
+  };
+  
+  // Only add alignment if it exists in the data
   if (data.text_align) {
-    plainCustomization.font = {
-      ...plainCustomization.font,
-      alignment: data.text_align
-    };
+    font.alignment = data.text_align;
   }
-
-  // Create a plain result object with all necessary fields
-  const plainResult = {
+  
+  // Create the customization object
+  const customization = {
+    background: background,
+    font: font
+  };
+  
+  // Create the SimpleInvitation object
+  const invitation = {
     id: data.id,
     title: data.title,
     description: data.description || '',
@@ -276,11 +279,11 @@ export function mapDbRecordToSimpleInvitation(data: InvitationDbRecord): SimpleI
     shareId: data.share_id,
     isPublic: data.is_public || false,
     isEvent: !!data.is_event,
-    customization: plainCustomization
+    customization: customization
   };
-
-  // Use a type assertion to convert the plain object to SimpleInvitation
-  return plainResult as SimpleInvitation;
+  
+  // Cast the object to SimpleInvitation type and return it
+  return invitation as SimpleInvitation;
 }
 
 // Re-export listSimpleInvitations as an alias for fetchSimpleInvitations for backward compatibility
