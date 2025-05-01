@@ -1,30 +1,32 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { InvitationDbRecord, InvitationData, SimpleInvitationResult } from './invitation-types';
+import { InvitationDbRecord, InvitationData } from './invitation-types';
 import { SimpleInvitation, BackgroundType, ButtonPosition } from '@/types/invitation.types';
 
 /**
  * Map a database record to a SimpleInvitation object
- * Using explicit mapping to avoid TypeScript "excessively deep instantiation" errors
+ * Complete rewrite to avoid TypeScript "excessively deep instantiation" errors
  */
 export function mapDbRecordToSimpleInvitation(data: InvitationDbRecord): SimpleInvitation | null {
   if (!data) return null;
 
-  // Create result object with explicit property assignments
-  const result: SimpleInvitationResult = {
+  // Create invitation with basic properties
+  const invitation: SimpleInvitation = {
     id: data.id,
     title: data.title,
     description: data.description || '',
     location: data.location || '',
     locationTitle: data.location_title || '',
-    date: data.datetime ? new Date(data.datetime).toISOString().split('T')[0] : undefined,
-    time: data.datetime ? new Date(data.datetime).toISOString().split('T')[1].substring(0, 5) : undefined,
     createdAt: data.created_at,
     updatedAt: data.updated_at,
     userId: data.user_id,
     shareId: data.share_id,
     isPublic: data.is_public || false,
     isEvent: !!data.is_event,
+    // Handle date properties
+    date: data.datetime ? new Date(data.datetime).toISOString().split('T')[0] : undefined,
+    time: data.datetime ? new Date(data.datetime).toISOString().split('T')[1].substring(0, 5) : undefined,
+    // Initialize empty customization object
     customization: {
       background: {
         type: (data.background_type || 'solid') as BackgroundType,
@@ -39,8 +41,8 @@ export function mapDbRecordToSimpleInvitation(data: InvitationDbRecord): SimpleI
     }
   };
 
-  // Add button configurations that match the interface requirements
-  result.customization.buttons = {
+  // Add button configurations separately to avoid nested object issues
+  invitation.customization.buttons = {
     accept: {
       background: '#3B82F6',
       color: '#ffffff',
@@ -52,14 +54,14 @@ export function mapDbRecordToSimpleInvitation(data: InvitationDbRecord): SimpleI
       shape: 'rounded',
     },
     directions: {
-      show: !!data.location, // Show directions button if location exists
+      show: !!data.location,
       background: '#3B82F6',
       color: '#ffffff',
       shape: 'rounded',
       position: 'bottom-right' as ButtonPosition
     },
     calendar: {
-      show: !!data.is_event, // Show calendar button if it's an event
+      show: !!data.is_event,
       background: '#3B82F6',
       color: '#ffffff',
       shape: 'rounded',
@@ -67,8 +69,7 @@ export function mapDbRecordToSimpleInvitation(data: InvitationDbRecord): SimpleI
     }
   };
 
-  // Use a simple type assertion to avoid complex type inference chains
-  return result as SimpleInvitation;
+  return invitation;
 }
 
 /**
@@ -90,8 +91,6 @@ export async function createSimpleInvitation(data: InvitationData): Promise<Simp
     }
     
     console.log('[createSimpleInvitation] Created invitation:', record);
-    
-    // Use non-null assertion with type casting to avoid deep type inference
     return mapDbRecordToSimpleInvitation(record as InvitationDbRecord);
   } catch (error) {
     console.error('[createSimpleInvitation] Error creating invitation:', error);
@@ -119,8 +118,6 @@ export async function updateSimpleInvitation(id: string, data: Partial<Invitatio
     }
     
     console.log('[updateSimpleInvitation] Updated invitation:', record);
-    
-    // Use non-null assertion with type casting to avoid deep type inference
     return mapDbRecordToSimpleInvitation(record as InvitationDbRecord);
   } catch (error) {
     console.error('[updateSimpleInvitation] Error updating invitation:', error);
@@ -147,8 +144,6 @@ export async function getSimpleInvitationById(id: string): Promise<SimpleInvitat
     }
     
     console.log('[getSimpleInvitationById] Got invitation:', record);
-    
-    // Use non-null assertion with type casting to avoid deep type inference
     return mapDbRecordToSimpleInvitation(record as InvitationDbRecord);
   } catch (error) {
     console.error('[getSimpleInvitationById] Error getting invitation:', error);
@@ -175,8 +170,6 @@ export async function getSharedInvitation(shareId: string): Promise<SimpleInvita
     }
     
     console.log('[getSharedInvitation] Got shared invitation:', record);
-    
-    // Use non-null assertion with type casting to avoid deep type inference
     return mapDbRecordToSimpleInvitation(record as InvitationDbRecord);
   } catch (error) {
     console.error('[getSharedInvitation] Error getting shared invitation:', error);
@@ -217,7 +210,7 @@ export async function fetchSimpleInvitations(userId: string, isEvent?: boolean):
     
     console.log('[fetchSimpleInvitations] Fetched invitations:', records?.length || 0);
     
-    // Create a properly typed array and explicitly add items to it
+    // Process records one by one with explicit typing
     const invitations: SimpleInvitation[] = [];
     
     if (records && records.length > 0) {

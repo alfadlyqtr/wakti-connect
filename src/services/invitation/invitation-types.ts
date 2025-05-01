@@ -1,5 +1,5 @@
 
-import { SimpleInvitation, SimpleInvitationCustomization, BackgroundType } from '@/types/invitation.types';
+import { SimpleInvitation, SimpleInvitationCustomization, BackgroundType, ButtonPosition } from '@/types/invitation.types';
 
 // Database model structure for invitations
 export interface InvitationDbRecord {
@@ -15,7 +15,7 @@ export interface InvitationDbRecord {
   font_family: string;
   font_size: string;
   text_color: string;
-  text_align: string;  // Make sure this field is included
+  text_align: string;
   is_event?: boolean;
   user_id: string;
   created_at: string;
@@ -23,63 +23,6 @@ export interface InvitationDbRecord {
   share_id?: string;
   is_public?: boolean;
   share_link?: string;
-}
-
-// Intermediate type for breaking the deep type inference chain
-// Making alignment optional to match SimpleInvitationCustomization's structure
-export type SimpleInvitationResult = {
-  id: string;
-  title: string;
-  description: string;
-  location: string;
-  locationTitle: string;
-  date?: string;
-  time?: string;
-  createdAt: string;
-  updatedAt?: string;
-  userId: string;
-  shareId?: string;
-  isPublic: boolean;
-  isEvent: boolean;
-  customization: {
-    background: {
-      type: BackgroundType;
-      value: string;
-    };
-    font: {
-      family: string;
-      size: string;
-      color: string;
-      alignment?: string;
-      weight?: string;
-    };
-    buttons?: {
-      accept: {
-        background: string;
-        color: string;
-        shape: string;
-      };
-      decline: {
-        background: string;
-        color: string;
-        shape: string;
-      };
-      directions?: {
-        show: boolean;
-        background: string;
-        color: string;
-        shape: string;
-        position: string;
-      };
-      calendar?: {
-        show: boolean;
-        background: string;
-        color: string;
-        shape: string;
-        position: string;
-      };
-    };
-  };
 }
 
 // Type for creating a new invitation
