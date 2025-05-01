@@ -2,7 +2,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import SimpleInvitationsList from '@/components/invitations/SimpleInvitationsList';
-import { fetchSimpleInvitations } from '@/services/invitation/simple-invitations';
+import { fetchSimpleInvitations } from '@/services/invitation/invitation-api';
 import { useAuth } from '@/lib/auth';
 
 const DashboardEvents = () => {
