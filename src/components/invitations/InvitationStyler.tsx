@@ -8,12 +8,15 @@ import {
   TextPosition
 } from '@/types/invitation.types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
 import BackgroundSelector from './BackgroundSelector';
 import FontSelector from '@/components/events/customize/FontSelector';
 import { handleImageGeneration } from '@/hooks/ai/utils/imageHandling';
 import { toast } from '@/components/ui/use-toast';
 import ButtonStyler from './ButtonStyler';
 import TextPositionSelector from './TextPositionSelector';
+import ButtonPositionSelector from './ButtonPositionSelector';
+import InvitationCardPreview from './InvitationCardPreview';
 
 interface InvitationStylerProps {
   customization: SimpleInvitationCustomization;
@@ -79,6 +82,48 @@ export default function InvitationStyler({
       textLayout: {
         ...textLayout,
         spacing
+      }
+    });
+  };
+
+  const handleButtonPositionChange = (
+    buttonType: 'directions' | 'calendar',
+    position: ButtonPosition
+  ) => {
+    // Initialize buttons object if it doesn't exist
+    const buttons = customization.buttons || {
+      accept: { background: '#4CAF50', color: '#ffffff', shape: 'rounded' },
+      decline: { background: '#f44336', color: '#ffffff', shape: 'rounded' },
+    };
+    
+    // Initialize the specific button type if it doesn't exist
+    const buttonDefaults = {
+      directions: {
+        background: '#ffffff',
+        color: '#000000',
+        shape: 'rounded' as ButtonShape,
+        position: 'bottom-right' as ButtonPosition,
+        show: true
+      },
+      calendar: {
+        background: '#ffffff',
+        color: '#000000',
+        shape: 'rounded' as ButtonShape,
+        position: 'bottom-right' as ButtonPosition,
+        show: true
+      }
+    };
+    
+    const buttonConfig = buttons[buttonType] || buttonDefaults[buttonType];
+    
+    onChange({
+      ...customization,
+      buttons: {
+        ...buttons,
+        [buttonType]: {
+          ...buttonConfig,
+          position
+        }
       }
     });
   };
@@ -169,39 +214,69 @@ export default function InvitationStyler({
 
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="background" className="w-full">
+      {/* Live Preview Card */}
+      <div className="p-4 border rounded-md bg-muted/30">
+        <h3 className="text-sm font-medium mb-2">Preview</h3>
+        <InvitationCardPreview
+          customization={customization}
+          title={title}
+          description={description}
+          hasLocation={hasLocation}
+          isEvent={isEvent}
+        />
+      </div>
+
+      <Separator />
+      
+      <Tabs defaultValue="layout" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="background">Background</TabsTrigger>
-          <TabsTrigger value="text">Text</TabsTrigger>
+          <TabsTrigger value="layout">Layout</TabsTrigger>
+          <TabsTrigger value="style">Style</TabsTrigger>
           <TabsTrigger value="buttons">Buttons</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="background" className="mt-4">
-          <BackgroundSelector 
-            backgroundType={customization.background.type}
-            backgroundValue={customization.background.value}
-            onBackgroundChange={handleBackgroundChange}
-            onGenerateAIBackground={handleGenerateAIBackground}
-            title={title}
-            description={description}
-            isGeneratingImage={isGeneratingImage}
-          />
-        </TabsContent>
-
-        <TabsContent value="text" className="mt-4">
+        <TabsContent value="layout" className="mt-4">
           <div className="space-y-6">
-            <FontSelector
-              font={customization.font}
-              onFontChange={handleFontChange}
-              showAlignment={true}
-              previewText={title || "Your invitation title will appear here"}
-            />
-            
             <TextPositionSelector
               contentPosition={customization.textLayout?.contentPosition || 'middle'}
               spacing={customization.textLayout?.spacing || 'normal'}
               onPositionChange={handleTextPositionChange}
               onSpacingChange={handleTextSpacingChange}
+            />
+            
+            {hasLocation && (
+              <ButtonPositionSelector
+                position={customization.buttons?.directions?.position || 'bottom-right'}
+                onPositionChange={(pos) => handleButtonPositionChange('directions', pos)}
+              />
+            )}
+            
+            {isEvent && (
+              <ButtonPositionSelector
+                position={customization.buttons?.calendar?.position || 'bottom-right'}
+                onPositionChange={(pos) => handleButtonPositionChange('calendar', pos)}
+              />
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="style" className="mt-4">
+          <div className="space-y-6">
+            <BackgroundSelector 
+              backgroundType={customization.background.type}
+              backgroundValue={customization.background.value}
+              onBackgroundChange={handleBackgroundChange}
+              onGenerateAIBackground={handleGenerateAIBackground}
+              title={title}
+              description={description}
+              isGeneratingImage={isGeneratingImage}
+            />
+            
+            <FontSelector
+              font={customization.font}
+              onFontChange={handleFontChange}
+              showAlignment={true}
+              previewText={title || "Your invitation title will appear here"}
             />
           </div>
         </TabsContent>
