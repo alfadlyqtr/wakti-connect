@@ -96,6 +96,15 @@ export interface InvitationTemplate {
 // Simple Invitation System Types
 export type BackgroundType = 'solid' | 'gradient' | 'image' | 'ai';
 
+// Vertical text positioning type
+export type TextPosition = 'top' | 'middle' | 'bottom';
+
+// Button shape type
+export type ButtonShape = 'rounded' | 'pill' | 'square';
+
+// Button position type
+export type ButtonPosition = 'bottom-left' | 'bottom-center' | 'bottom-right' | 'top-right';
+
 export interface SimpleInvitation {
   id: string;
   title: string;
@@ -124,20 +133,39 @@ export interface SimpleInvitationCustomization {
     color: string;
     weight?: string;
     alignment?: string;
+    position?: TextPosition; // New property for vertical positioning
   };
   buttons?: {
     accept: {
       background: string;
       color: string;
-      shape: string;
+      shape: ButtonShape;
     };
     decline: {
       background: string;
       color: string;
-      shape: string;
+      shape: ButtonShape;
+    };
+    directions?: {  // New property for Get Directions button
+      background: string;
+      color: string;
+      shape: ButtonShape;
+      position: ButtonPosition;
+      show: boolean;
+    };
+    calendar?: {  // New property for Add to Calendar button
+      background: string;
+      color: string;
+      shape: ButtonShape;
+      position: ButtonPosition;
+      show: boolean;
     };
   };
   headerStyle?: string;
   animation?: string;
   cardEffect?: string;
+  textLayout?: {
+    contentPosition: TextPosition;  // Vertical positioning of content
+    spacing: 'compact' | 'normal' | 'spacious';
+  };
 }

@@ -1,7 +1,7 @@
+
 import React from 'react';
-import { SimpleInvitationCustomization } from '@/types/invitation.types';
+import { SimpleInvitationCustomization, TextPosition, ButtonPosition } from '@/types/invitation.types';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { CalendarIcon, MapPin, Download, Calendar } from 'lucide-react';
 import { formatLocation, generateDirectionsUrl } from '@/utils/locationUtils';
 import { createGoogleCalendarUrl, createICSFile } from '@/utils/calendarUtils';
@@ -80,14 +80,107 @@ export default function InvitationPreview({
     zIndex: 0,
   } : {};
 
-  const contentStyle = {
-    position: 'relative' as const,
-    zIndex: 1,
-    display: 'flex' as const,
-    flexDirection: 'column' as const,
-    gap: '1rem',
-    height: '100%',
-    ...fontStyle
+  // Get the vertical content positioning style
+  const getContentPositionStyle = () => {
+    const contentPosition = customization.textLayout?.contentPosition || 'middle';
+    const spacing = customization.textLayout?.spacing || 'normal';
+    
+    // Base styles
+    const style: React.CSSProperties = {
+      position: 'relative',
+      zIndex: 1,
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100%',
+      ...fontStyle
+    };
+    
+    // Set spacing between elements
+    switch(spacing) {
+      case 'compact':
+        style.gap = '0.5rem';
+        break;
+      case 'spacious':
+        style.gap = '1.5rem';
+        break;
+      case 'normal':
+      default:
+        style.gap = '1rem';
+    }
+    
+    // Set vertical content alignment
+    switch(contentPosition) {
+      case 'top':
+        style.justifyContent = 'flex-start';
+        break;
+      case 'bottom':
+        style.justifyContent = 'flex-end';
+        break;
+      case 'middle':
+      default:
+        style.justifyContent = 'center';
+    }
+    
+    return style;
+  };
+
+  // Get style for button based on position
+  const getButtonContainerStyle = (position: ButtonPosition = 'bottom-right') => {
+    const style: React.CSSProperties = {
+      position: 'absolute',
+      zIndex: 2,
+    };
+    
+    switch(position) {
+      case 'bottom-left':
+        style.bottom = '1rem';
+        style.left = '1rem';
+        break;
+      case 'bottom-center':
+        style.bottom = '1rem';
+        style.left = '50%';
+        style.transform = 'translateX(-50%)';
+        break;
+      case 'top-right':
+        style.top = '1rem';
+        style.right = '1rem';
+        break;
+      case 'bottom-right':
+      default:
+        style.bottom = '1rem';
+        style.right = '1rem';
+    }
+    
+    return style;
+  };
+
+  // Get style for custom button
+  const getButtonStyle = (buttonType: 'directions' | 'calendar') => {
+    const buttonConfig = buttonType === 'directions' 
+      ? customization.buttons?.directions
+      : customization.buttons?.calendar;
+    
+    if (!buttonConfig) return {};
+    
+    const style: React.CSSProperties = {
+      backgroundColor: buttonConfig.background || '#ffffff',
+      color: buttonConfig.color || '#000000',
+    };
+    
+    // Apply border radius based on shape
+    switch(buttonConfig.shape) {
+      case 'pill':
+        style.borderRadius = '9999px';
+        break;
+      case 'square':
+        style.borderRadius = '0';
+        break;
+      case 'rounded':
+      default:
+        style.borderRadius = '0.375rem';
+    }
+    
+    return style;
   };
 
   function getFontSize(size?: string) {
@@ -165,11 +258,14 @@ export default function InvitationPreview({
     }
   };
 
+  const showDirectionsButton = location && customization.buttons?.directions?.show !== false;
+  const showCalendarButton = isEvent && date && customization.buttons?.calendar?.show !== false;
+
   return (
     <Card style={cardStyle} className="w-full shadow-lg">
       {customization.background.type === 'image' && <div style={overlayStyle}></div>}
       
-      <div style={contentStyle}>
+      <div style={getContentPositionStyle()}>
         <div className="mb-2">
           <h2 className="text-2xl font-semibold mb-1">{title}</h2>
           {date && (
@@ -180,7 +276,7 @@ export default function InvitationPreview({
           )}
         </div>
         
-        <div className="flex-1">
+        <div className="flex-grow">
           <p className="mb-4 whitespace-pre-wrap">{description}</p>
           
           {location && (
@@ -189,59 +285,54 @@ export default function InvitationPreview({
                 <MapPin className="h-4 w-4 mt-1 flex-shrink-0" />
                 <div>
                   {locationTitle && <p className="font-medium">{locationTitle}</p>}
+                  {/* Only show formatted location, not the full URL */}
                   <p className="opacity-90">{formatLocation(location)}</p>
                 </div>
               </div>
             </div>
           )}
         </div>
-        
-        {showActions && (
-          <div className="mt-4 flex flex-wrap gap-2">
-            {location && (
-              <Button 
-                size="sm"
-                variant="outline"
-                className="bg-white/70 backdrop-blur-sm hover:bg-white/90 text-foreground"
-                asChild
-              >
-                <a 
-                  href={generateDirectionsUrl(location)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <MapPin className="h-4 w-4 mr-1" />
-                  Get Directions
-                </a>
-              </Button>
-            )}
-            
-            {isEvent && date && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    className="bg-white/70 backdrop-blur-sm hover:bg-white/90 text-foreground"
-                  >
-                    <Calendar className="h-4 w-4 mr-1" />
-                    Add to Calendar
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem onClick={() => handleAddToCalendar('google')}>
-                    Google Calendar
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleAddToCalendar('ics')}>
-                    <Download className="h-4 w-4 mr-1" />
-                    Download .ics (Apple/Outlook)
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-          </div>
-        )}
       </div>
+      
+      {/* Position Get Directions button */}
+      {showActions && showDirectionsButton && (
+        <div style={getButtonContainerStyle(customization.buttons?.directions?.position)}>
+          <button 
+            className="flex items-center px-4 py-2 text-sm font-medium backdrop-blur-sm"
+            style={getButtonStyle('directions')}
+            onClick={() => window.open(generateDirectionsUrl(location || ''), '_blank')}
+          >
+            <MapPin className="h-4 w-4 mr-1" />
+            Get Directions
+          </button>
+        </div>
+      )}
+      
+      {/* Position Calendar button */}
+      {showActions && showCalendarButton && (
+        <div style={getButtonContainerStyle(customization.buttons?.calendar?.position)}>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="flex items-center px-4 py-2 text-sm font-medium backdrop-blur-sm"
+                style={getButtonStyle('calendar')}
+              >
+                <Calendar className="h-4 w-4 mr-1" />
+                Add to Calendar
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => handleAddToCalendar('google')}>
+                Google Calendar
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleAddToCalendar('ics')}>
+                <Download className="h-4 w-4 mr-1" />
+                Download .ics (Apple/Outlook)
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
     </Card>
   );
 }
