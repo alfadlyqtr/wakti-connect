@@ -174,17 +174,27 @@ export const getSharedInvitation = async (shareId: string): Promise<SimpleInvita
           color: data.text_color || '#000000',
           alignment: data.text_align || 'center',
         },
-        // Add default button configuration
+        // Add complete button configuration that matches the interface
         buttons: {
+          accept: {
+            background: '#3B82F6',
+            color: '#ffffff',
+            shape: 'rounded',
+          },
+          decline: {
+            background: '#EF4444',
+            color: '#ffffff',
+            shape: 'rounded',
+          },
           directions: {
-            show: true, // Default to showing directions if location exists
+            show: !!data.location, // Show directions button if location exists
             background: '#3B82F6',
             color: '#ffffff',
             shape: 'rounded',
             position: 'bottom-right'
           },
           calendar: {
-            show: true, // Default to showing calendar button for events
+            show: !!data.is_event, // Show calendar button if it's an event
             background: '#3B82F6',
             color: '#ffffff',
             shape: 'rounded',
@@ -238,24 +248,35 @@ export function mapDbRecordToSimpleInvitation(data: InvitationDbRecord): SimpleI
         size: data.font_size || 'medium',
         color: data.text_color || '#000000',
         alignment: data.text_align || 'left',
-      },
-      // Add default button configuration
-      buttons: {
-        directions: {
-          show: !!data.location, // Show directions button if location exists
-          background: '#3B82F6',
-          color: '#ffffff',
-          shape: 'rounded',
-          position: 'bottom-right'
-        },
-        calendar: {
-          show: !!data.is_event, // Show calendar button if it's an event
-          background: '#3B82F6',
-          color: '#ffffff',
-          shape: 'rounded',
-          position: 'bottom-left'
-        }
       }
+    }
+  };
+
+  // Add button configurations that match the interface requirements
+  result.customization.buttons = {
+    accept: {
+      background: '#3B82F6',
+      color: '#ffffff',
+      shape: 'rounded',
+    },
+    decline: {
+      background: '#EF4444',
+      color: '#ffffff',
+      shape: 'rounded',
+    },
+    directions: {
+      show: !!data.location, // Show directions button if location exists
+      background: '#3B82F6',
+      color: '#ffffff',
+      shape: 'rounded',
+      position: 'bottom-right'
+    },
+    calendar: {
+      show: !!data.is_event, // Show calendar button if it's an event
+      background: '#3B82F6',
+      color: '#ffffff',
+      shape: 'rounded',
+      position: 'bottom-left'
     }
   };
 

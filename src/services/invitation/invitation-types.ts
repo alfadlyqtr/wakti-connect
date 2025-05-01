@@ -22,6 +22,7 @@ export interface InvitationDbRecord {
   updated_at?: string;
   share_id?: string;
   is_public?: boolean;
+  share_link?: string; // Added this property
 }
 
 // Intermediate type for breaking the deep type inference chain
@@ -51,6 +52,32 @@ export type SimpleInvitationResult = {
       color: string;
       alignment?: string;  // Optional to match the source type
       weight?: string;     // Optional to match the source type
+    };
+    buttons?: {
+      accept: {
+        background: string;
+        color: string;
+        shape: string;
+      };
+      decline: {
+        background: string;
+        color: string;
+        shape: string;
+      };
+      directions?: {
+        show: boolean;
+        background: string;
+        color: string;
+        shape: string;
+        position: string;
+      };
+      calendar?: {
+        show: boolean;
+        background: string;
+        color: string;
+        shape: string;
+        position: string;
+      };
     };
   };
 }

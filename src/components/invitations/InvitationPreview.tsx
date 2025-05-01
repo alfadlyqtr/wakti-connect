@@ -12,7 +12,7 @@ interface InvitationPreviewProps {
   time?: string;
   customization: SimpleInvitationCustomization;
   isEvent?: boolean;
-  showActions?: boolean; // Added missing prop
+  showActions?: boolean;
 }
 
 export default function InvitationPreview({
@@ -24,7 +24,7 @@ export default function InvitationPreview({
   time,
   customization,
   isEvent = false,
-  showActions = false // Added with default value
+  showActions = false
 }: InvitationPreviewProps) {
   // Format date and time if both are provided
   const formattedDateTime = date && time 
