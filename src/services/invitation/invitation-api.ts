@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import { SimpleInvitation, SimpleInvitationCustomization } from '@/types/invitation.types';
@@ -56,32 +55,6 @@ export const updateSimpleInvitation = async (id: string, invitationData: Partial
       variant: "destructive",
     });
     return null;
-  }
-};
-
-/**
- * Delete an invitation by ID
- */
-export const deleteSimpleInvitation = async (id: string): Promise<boolean> => {
-  try {
-    const { error } = await supabase
-      .from('invitations')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      throw error;
-    }
-
-    return true;
-  } catch (error) {
-    console.error("Error deleting invitation:", error);
-    toast({
-      title: "Error",
-      description: "Failed to delete invitation",
-      variant: "destructive",
-    });
-    return false;
   }
 };
 

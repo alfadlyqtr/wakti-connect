@@ -1,8 +1,8 @@
+
 // Re-export all invitation functions from the refactored files
 export {
   createSimpleInvitation,
   updateSimpleInvitation,
-  deleteSimpleInvitation,
   getSimpleInvitationById,
   getSharedInvitation,
   fetchSimpleInvitations
@@ -10,6 +10,9 @@ export {
 
 // Export the previous function as an alias for backward compatibility
 export { fetchSimpleInvitations as listSimpleInvitations } from './invitation-api';
+
+// Import the supabase client
+import { supabase } from '@/integrations/supabase/client';
 
 /**
  * Deletes a simple invitation by ID
