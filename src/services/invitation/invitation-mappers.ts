@@ -6,10 +6,10 @@ import { InvitationDbRecord, SimpleInvitationResult } from './invitation-types';
  * Create customization object from database record
  */
 export function createCustomizationObject(data: InvitationDbRecord): SimpleInvitationCustomization {
-  // Explicitly create the customization object with all properties
-  const customization: SimpleInvitationCustomization = {
+  // Always provide default values for all properties to avoid type issues
+  return {
     background: {
-      type: data.background_type as BackgroundType,
+      type: (data.background_type || 'solid') as BackgroundType,
       value: data.background_value || '#ffffff',
     },
     font: {
@@ -17,10 +17,9 @@ export function createCustomizationObject(data: InvitationDbRecord): SimpleInvit
       size: data.font_size || 'medium',
       color: data.text_color || '#000000',
       alignment: data.text_align || 'left', // Always provide a default value
+      weight: 'normal', // Default weight if missing
     },
   };
-  
-  return customization;
 }
 
 /**
@@ -37,11 +36,11 @@ export function mapDatabaseToSimpleInvitation(data: InvitationDbRecord): SimpleI
     time = dateObj.toTimeString().split(' ')[0].substring(0, 5);
   }
   
-  // Create customization object explicitly using the helper function
+  // Create customization object with all required properties
   const customization = createCustomizationObject(data);
   
-  // Create intermediate result object first
-  const result: SimpleInvitationResult = {
+  // Use a direct approach without intermediate types to avoid deep nesting
+  const invitation: SimpleInvitation = {
     id: data.id,
     title: data.title,
     description: data.description || '',
@@ -56,17 +55,19 @@ export function mapDatabaseToSimpleInvitation(data: InvitationDbRecord): SimpleI
     isPublic: data.is_public || false,
     isEvent: data.is_event || false,
     customization: {
-      background: customization.background,
+      background: {
+        type: customization.background.type,
+        value: customization.background.value
+      },
       font: {
         family: customization.font.family,
         size: customization.font.size,
         color: customization.font.color,
-        alignment: customization.font.alignment,
-        weight: customization.font.weight
+        alignment: customization.font.alignment || 'left',
+        weight: customization.font.weight || 'normal'
       }
     }
   };
   
-  // Cast the result to SimpleInvitation type to break the deep type instantiation
-  return result as unknown as SimpleInvitation;
+  return invitation;
 }

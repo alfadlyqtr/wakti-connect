@@ -161,6 +161,31 @@ export const getSharedInvitation = async (shareId: string): Promise<SimpleInvita
   }
 };
 
+// This is where the type error was occurring
+type SimplifiedInvitationRecord = {
+  id: string;
+  title: string;
+  description: string;
+  location?: string;
+  location_title?: string;
+  date?: string;
+  time?: string;
+  customization: {
+    background: {
+      type: string;
+      value: string;
+    };
+    font: {
+      family: string;
+      size: string;
+      color: string;
+      alignment?: string;
+      weight?: string;
+    };
+  };
+  [key: string]: any; // Allow other properties
+};
+
 /**
  * List all simple invitations for the current user
  */
@@ -180,20 +205,17 @@ export const listSimpleInvitations = async (isEvent = false): Promise<SimpleInvi
     if (!data || data.length === 0) {
       return [];
     }
-
-    // Use explicit typing and manual iteration to break type inference chain
-    const invitations: SimpleInvitation[] = [];
     
-    // Explicitly cast database records to our known type
-    const records = data as InvitationDbRecord[];
+    // Completely bypass TypeScript's type inference to avoid deep instantiation
+    // First convert to a simplified type using JSON serialization to break any reference chains
+    const simplifiedRecords = JSON.parse(JSON.stringify(data)) as InvitationDbRecord[];
     
-    // Manual loop with explicit mapping and type assertions
-    for (let i = 0; i < records.length; i++) {
-      // Break the deep type inference chain completely with a more aggressive casting strategy
-      const result = mapDatabaseToSimpleInvitation(records[i]);
-      const invitation = JSON.parse(JSON.stringify(result)) as SimpleInvitation;
-      invitations.push(invitation);
-    }
+    // Then map each record manually with proper type assertions
+    const invitations: SimpleInvitation[] = simplifiedRecords.map(record => {
+      // Map with our function but ensure the result is treated as a completely new object
+      const mapped = mapDatabaseToSimpleInvitation(record);
+      return mapped;
+    });
     
     return invitations;
   } catch (error) {

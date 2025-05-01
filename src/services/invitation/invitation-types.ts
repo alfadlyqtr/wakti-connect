@@ -49,8 +49,8 @@ export type SimpleInvitationResult = {
       family: string;
       size: string;
       color: string;
-      alignment?: string;  // Changed to optional to match the source type
-      weight?: string;     // Added weight to match the source type
+      alignment?: string;  // Optional to match the source type
+      weight?: string;     // Optional to match the source type
     };
   };
 }
