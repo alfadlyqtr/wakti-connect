@@ -12,6 +12,7 @@ interface InvitationCardPreviewProps {
   date?: string;
   hasLocation?: boolean;
   isEvent?: boolean;
+  showActions?: boolean;
 }
 
 export default function InvitationCardPreview({
@@ -21,7 +22,8 @@ export default function InvitationCardPreview({
   location = "Location details will appear here",
   date = "June 15, 2023",
   hasLocation = false,
-  isEvent = false
+  isEvent = false,
+  showActions = false
 }: InvitationCardPreviewProps) {
   
   const getBackgroundStyle = () => {
@@ -127,8 +129,8 @@ export default function InvitationCardPreview({
         </div>
       </div>
 
-      {/* Action Buttons */}
-      {hasLocation && customization.buttons?.directions?.show && (
+      {/* Action Buttons - Only show if hasLocation, the customization button is enabled, and showActions is true */}
+      {hasLocation && customization.buttons?.directions?.show && showActions && (
         <button
           className={`absolute ${getButtonPositionStyle(customization.buttons.directions.position || 'bottom-right')} text-xs px-2 py-1`}
           style={{
@@ -142,7 +144,8 @@ export default function InvitationCardPreview({
         </button>
       )}
       
-      {isEvent && customization.buttons?.calendar?.show && (
+      {/* Only show calendar button if it's an event, the button is enabled in customization, and showActions is true */}
+      {isEvent && customization.buttons?.calendar?.show && showActions && (
         <button
           className={`absolute ${getButtonPositionStyle(customization.buttons.calendar.position || 'bottom-right')} text-xs px-2 py-1`}
           style={{
