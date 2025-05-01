@@ -6,7 +6,8 @@ import { InvitationDbRecord, SimpleInvitationResult } from './invitation-types';
  * Create customization object from database record
  */
 export function createCustomizationObject(data: InvitationDbRecord): SimpleInvitationCustomization {
-  return {
+  // Explicitly create the customization object with all properties
+  const customization: SimpleInvitationCustomization = {
     background: {
       type: data.background_type as BackgroundType,
       value: data.background_value || '#ffffff',
@@ -15,9 +16,11 @@ export function createCustomizationObject(data: InvitationDbRecord): SimpleInvit
       family: data.font_family || 'system-ui, sans-serif',
       size: data.font_size || 'medium',
       color: data.text_color || '#000000',
-      alignment: data.text_align || 'left',
+      alignment: data.text_align || 'left', // Always provide a default value
     },
   };
+  
+  return customization;
 }
 
 /**
@@ -52,9 +55,18 @@ export function mapDatabaseToSimpleInvitation(data: InvitationDbRecord): SimpleI
     shareId: data.share_id || undefined,
     isPublic: data.is_public || false,
     isEvent: data.is_event || false,
-    customization: customization,
+    customization: {
+      background: customization.background,
+      font: {
+        family: customization.font.family,
+        size: customization.font.size,
+        color: customization.font.color,
+        alignment: customization.font.alignment,
+        weight: customization.font.weight
+      }
+    }
   };
   
   // Cast the result to SimpleInvitation type to break the deep type instantiation
-  return result as SimpleInvitation;
+  return result as unknown as SimpleInvitation;
 }

@@ -25,6 +25,7 @@ export interface InvitationDbRecord {
 }
 
 // Intermediate type for breaking the deep type inference chain
+// Making alignment optional to match SimpleInvitationCustomization's structure
 export type SimpleInvitationResult = {
   id: string;
   title: string;
@@ -48,7 +49,8 @@ export type SimpleInvitationResult = {
       family: string;
       size: string;
       color: string;
-      alignment: string;
+      alignment?: string;  // Changed to optional to match the source type
+      weight?: string;     // Added weight to match the source type
     };
   };
 }

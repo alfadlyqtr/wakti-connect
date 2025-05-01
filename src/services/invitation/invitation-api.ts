@@ -189,8 +189,9 @@ export const listSimpleInvitations = async (isEvent = false): Promise<SimpleInvi
     
     // Manual loop with explicit mapping and type assertions
     for (let i = 0; i < records.length; i++) {
-      // Map each record one at a time with explicit typing
-      const invitation: SimpleInvitation = mapDatabaseToSimpleInvitation(records[i]);
+      // Break the deep type inference chain completely with a more aggressive casting strategy
+      const result = mapDatabaseToSimpleInvitation(records[i]);
+      const invitation = JSON.parse(JSON.stringify(result)) as SimpleInvitation;
       invitations.push(invitation);
     }
     
