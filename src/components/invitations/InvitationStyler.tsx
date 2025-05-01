@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { SimpleInvitationCustomization, BackgroundType } from '@/types/invitation.types';
+import { SimpleInvitationCustomization, BackgroundType, ButtonPosition } from '@/types/invitation.types';
 import { HexColorPicker } from '@/components/ui/color-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
@@ -316,8 +316,12 @@ export default function InvitationStyler({
                   
                   <ButtonPositionSelector
                     position={directionsButton.position as ButtonPosition}
-                    onPositionChange={(position) => handleButtonChange('directions', 'position', position)}
-                    onChange={(buttonType, property, value) => handleButtonChange(buttonType, property, value)}
+                    onPositionChange={(position: ButtonPosition) => {
+                      handleButtonStyleChange('directions', 'position', position);
+                    }}
+                    onChange={(buttonType, property, value) => {
+                      handleButtonStyleChange(buttonType, property, value);
+                    }}
                   />
                 </div>
               )}
@@ -377,8 +381,12 @@ export default function InvitationStyler({
                   
                   <ButtonPositionSelector
                     position={calendarButton.position as ButtonPosition}
-                    onPositionChange={(position) => handleButtonChange('calendar', 'position', position)}
-                    onChange={(buttonType, property, value) => handleButtonChange(buttonType, property, value)}
+                    onPositionChange={(position: ButtonPosition) => {
+                      handleButtonStyleChange('calendar', 'position', position);
+                    }}
+                    onChange={(buttonType, property, value) => {
+                      handleButtonStyleChange(buttonType, property, value);
+                    }}
                   />
                 </div>
               )}

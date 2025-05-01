@@ -1,3 +1,4 @@
+
 import { SimpleInvitation, SimpleInvitationCustomization, BackgroundType } from '@/types/invitation.types';
 
 // Database model structure for invitations
@@ -14,7 +15,7 @@ export interface InvitationDbRecord {
   font_family: string;
   font_size: string;
   text_color: string;
-  text_align?: string;
+  text_align: string; // Adding this property that was missing
   is_event?: boolean;
   user_id: string;
   created_at: string;

@@ -14,6 +14,7 @@ import ButtonPositionSelector from './ButtonPositionSelector';
 import InvitationPreview from './InvitationPreview';
 import { createSimpleInvitation, updateSimpleInvitation } from '@/services/invitation/simple-invitations';
 import { SimpleInvitation, SimpleInvitationCustomization, BackgroundType } from '@/types/invitation.types';
+import { InvitationData } from '@/services/invitation/invitation-types';
 
 interface SimpleInvitationCreatorProps {
   isEvent?: boolean;
@@ -118,12 +119,19 @@ export default function SimpleInvitationCreator({
     setIsSubmitting(true);
     try {
       const formattedDateTime = data.date && data.time ? `${data.date}T${data.time}` : data.date ? `${data.date}T00:00:00` : undefined;
-      const invitationData: InvitationData = {
-        title: data.title,
-        description: data.description,
-        location: data.location,
-        location_title: data.locationTitle,
-        datetime: formattedDateTime,
+      const title = data.title;
+      const description = data.description;
+      const location = data.location;
+      const locationTitle = data.locationTitle;
+      const date = data.date;
+      const time = data.time;
+
+      const formData: InvitationData = {
+        title: title,
+        description: description,
+        location: location,
+        location_title: locationTitle,
+        datetime: date && time ? `${date}T${time}` : undefined,
         background_type: customization.background.type,
         background_value: customization.background.value,
         font_family: customization.font.family,
@@ -131,12 +139,12 @@ export default function SimpleInvitationCreator({
         text_color: customization.font.color,
         text_align: customization.font.alignment || 'center',
         is_event: isEvent,
-        user_id: '', // This will be filled in by the API if not provided
+        user_id: '' // This will be filled in by the API
       };
 
       let result;
       if (existingInvitation) {
-        result = await updateSimpleInvitation(existingInvitation.id, invitationData);
+        result = await updateSimpleInvitation(existingInvitation.id, formData);
         if (result) {
           toast({
             title: "Success",
@@ -144,7 +152,7 @@ export default function SimpleInvitationCreator({
           });
         }
       } else {
-        result = await createSimpleInvitation(invitationData);
+        result = await createSimpleInvitation(formData);
         if (result) {
           toast({
             title: "Success",
