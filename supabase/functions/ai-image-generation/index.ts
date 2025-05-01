@@ -16,7 +16,7 @@ serve(async (req) => {
   try {
     // Get request data
     const requestData = await req.json();
-    const { prompt, imageUrl } = requestData;
+    const { prompt, imageUrl, width, height, cfgScale, scheduler, outputFormat } = requestData;
 
     if (!prompt) {
       return new Response(
@@ -43,6 +43,7 @@ serve(async (req) => {
     }
 
     console.log("Processing image generation request");
+    console.log(`Dimensions: ${width}x${height}`);
     
     // Try OpenAI first if API key is available
     if (OPENAI_API_KEY) {
@@ -55,7 +56,7 @@ serve(async (req) => {
           model: "dall-e-3",
           prompt: prompt,
           n: 1,
-          size: "1024x1024",
+          size: "1024x1024", // OpenAI has fixed sizes, can't specify exact dimensions
           quality: "hd",
           style: "vivid"
         };
@@ -64,7 +65,7 @@ serve(async (req) => {
           // If this was an image transformation request, enhance the prompt
           openaiRequestBody.prompt = `Transform the following scene into a new style: ${prompt}. 
           Maintain the exact same composition, subjects, and scene but render it in a 
-          different artistic style.`;
+          different artistic style. Create in portrait orientation with aspect ratio 3:4.`;
         }
         
         console.log("Making OpenAI API request with model:", openaiRequestBody.model);
@@ -145,12 +146,12 @@ serve(async (req) => {
             "taskUUID": crypto.randomUUID(),
             "positivePrompt": simplifiedPrompt,
             "model": "runware:100@1",
-            "width": 1200,      // 4:3 aspect ratio (1200x900) for card backgrounds
-            "height": 900,      // Better matches invitation card dimensions
+            "width": width || 1200,        // Use provided width or default to 1200
+            "height": height || 1600,      // Use provided height or default to 1600
             "numberResults": 1,
-            "outputFormat": "WEBP",
-            "CFGScale": 12.0,   // Increased from 7.5 to 12.0 for stronger adherence to prompt
-            "scheduler": "FlowMatchEulerDiscreteScheduler", // Best for scenic imagery
+            "outputFormat": outputFormat || "WEBP",
+            "CFGScale": cfgScale || 12.0,  // Use provided CFGScale or default to 12.0
+            "scheduler": scheduler || "FlowMatchEulerDiscreteScheduler", // Best for scenic imagery
             "strength": 0.9,    // Increased from 0.75 for stronger effect
             "promptWeighting": "none"
           }
@@ -162,7 +163,8 @@ serve(async (req) => {
         }
         
         // Call Runware API
-        console.log("Making Runware API request with simplified prompt:", simplifiedPrompt);
+        console.log(`Making Runware API request with dimensions: ${width || 1200}x${height || 1600}`);
+        console.log("Using simplified prompt:", simplifiedPrompt);
         const runwareResponse = await fetch('https://api.runware.ai/v1', {
           method: 'POST',
           headers: {

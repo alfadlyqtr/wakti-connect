@@ -23,19 +23,21 @@ export async function handleImageGeneration(prompt: string): Promise<GeneratedIm
     }
     
     // Add parameters to ensure the generated image works well as a background
-    const enhancedPrompt = `${prompt.trim()} Make it suitable for an invitation card background with space for text overlay. Use a balanced composition, soft edges, and ensure good text contrast.`;
+    const enhancedPrompt = `${prompt.trim()} Make it suitable for an invitation card background with space for text overlay. Use a balanced composition, soft edges, and ensure good text contrast. Create with a portrait orientation (3:4 aspect ratio).`;
     
     console.log('[imageHandling] Enhanced prompt:', enhancedPrompt);
     
     // Generate image using the consolidated ai-image-generation edge function
     const result = await runwareService.generateImage({
       positivePrompt: enhancedPrompt,
-      // Configure for optimal background image
-      CFGScale: 9, // Increased from default for better prompt adherence
+      // Configure for optimal background image with correct dimensions for invitation cards
+      width: 1200,         // Set width to 1200px
+      height: 1600,        // Set height to 1600px (3:4 aspect ratio)
+      CFGScale: 9,         // Increased from default for better prompt adherence
       scheduler: "FlowMatchEulerDiscreteScheduler", // Best for scenic backgrounds
       outputFormat: "WEBP", // Better compression for web
       numberResults: 1,
-      strength: 0.85 // Slightly higher than default
+      strength: 0.85      // Slightly higher than default
     });
     
     console.log('[imageHandling] Image generation successful');

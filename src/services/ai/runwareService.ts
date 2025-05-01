@@ -13,6 +13,8 @@ export interface GenerateImageParams {
   promptWeighting?: "compel" | "sdEmbeds";
   seed?: number | null;
   lora?: string[];
+  width?: number;      // Add width parameter
+  height?: number;     // Add height parameter
   inputImage?: string; // Optional base64 image for image-to-image transformations
 }
 
@@ -30,10 +32,16 @@ export class RunwareService {
       console.log("Requesting image generation through ai-image-generation edge function");
       
       // Call the consolidated ai-image-generation edge function
+      // Pass width and height parameters to ensure consistent dimensions
       const { data, error } = await supabase.functions.invoke('ai-image-generation', {
         body: { 
           prompt: params.positivePrompt, 
-          imageUrl: params.inputImage 
+          imageUrl: params.inputImage,
+          width: params.width || 1200,   // Default to 1200px if not specified
+          height: params.height || 1600,  // Default to 1600px if not specified
+          cfgScale: params.CFGScale,
+          scheduler: params.scheduler,
+          outputFormat: params.outputFormat
         }
       });
       
