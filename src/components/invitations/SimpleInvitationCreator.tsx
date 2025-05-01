@@ -1,320 +1,315 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { SimpleInvitation, SimpleInvitationCustomization, BackgroundType } from '@/types/invitation.types';
-import { createSimpleInvitation, updateSimpleInvitation } from '@/services/invitation/simple-invitations';
+import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import InvitationForm from './InvitationForm';
-import InvitationStyler from './InvitationStyler';
-import InvitationPreview from './InvitationPreview';
+import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/use-toast';
-import { useAuth } from '@/features/auth/context/AuthContext';
+import BackgroundSelector from './BackgroundSelector';
+import FontSelector from './FontSelector';
+import TextPositionSelector from './TextPositionSelector';
+import ButtonPositionSelector from './ButtonPositionSelector';
+import InvitationPreview from './InvitationPreview';
+import { createSimpleInvitation, updateSimpleInvitation } from '@/services/invitation/simple-invitations';
+import { SimpleInvitation, SimpleInvitationCustomization, BackgroundType } from '@/types/invitation.types';
 
 interface SimpleInvitationCreatorProps {
-  existingInvitation?: SimpleInvitation;
-  onSuccess?: () => void;
   isEvent?: boolean;
+  existingInvitation?: SimpleInvitation;
 }
 
-export default function SimpleInvitationCreator({ 
-  existingInvitation, 
-  onSuccess,
-  isEvent = false 
+export default function SimpleInvitationCreator({
+  isEvent = false,
+  existingInvitation
 }: SimpleInvitationCreatorProps) {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<string>('details');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Determine paths based on whether this is for events or invitations
-  const basePath = isEvent ? '/dashboard/events' : '/dashboard/invitations';
-  const entityType = isEvent ? 'Event' : 'Invitation';
-
-  const [formData, setFormData] = useState({
-    title: existingInvitation?.title || '',
-    description: existingInvitation?.description || '',
-    location: existingInvitation?.location || '',
-    locationTitle: existingInvitation?.locationTitle || '',
-    date: existingInvitation?.date || '',
-    time: existingInvitation?.time || '',
+  const [customization, setCustomization] = useState<SimpleInvitationCustomization>({
+    background: {
+      type: existingInvitation?.customization?.background?.type || 'solid',
+      value: existingInvitation?.customization?.background?.value || '#ffffff'
+    },
+    font: {
+      family: existingInvitation?.customization?.font?.family || 'system-ui, sans-serif',
+      size: existingInvitation?.customization?.font?.size || 'medium',
+      color: existingInvitation?.customization?.font?.color || '#000000',
+      alignment: existingInvitation?.customization?.font?.alignment || 'center'
+    },
+    buttons: {
+      accept: {
+        background: existingInvitation?.customization?.buttons?.accept?.background || '#3B82F6',
+        color: existingInvitation?.customization?.buttons?.accept?.color || '#ffffff',
+        shape: existingInvitation?.customization?.buttons?.accept?.shape || 'rounded'
+      },
+      decline: {
+        background: existingInvitation?.customization?.buttons?.decline?.background || '#EF4444',
+        color: existingInvitation?.customization?.buttons?.decline?.color || '#ffffff',
+        shape: existingInvitation?.customization?.buttons?.decline?.shape || 'rounded'
+      },
+      directions: {
+        show: existingInvitation?.customization?.buttons?.directions?.show ?? true,
+        background: existingInvitation?.customization?.buttons?.directions?.background || '#3B82F6',
+        color: existingInvitation?.customization?.buttons?.directions?.color || '#ffffff',
+        shape: existingInvitation?.customization?.buttons?.directions?.shape || 'rounded',
+        position: existingInvitation?.customization?.buttons?.directions?.position || 'bottom-right'
+      },
+      calendar: {
+        show: existingInvitation?.customization?.buttons?.calendar?.show ?? true,
+        background: existingInvitation?.customization?.buttons?.calendar?.background || '#3B82F6',
+        color: existingInvitation?.customization?.buttons?.calendar?.color || '#ffffff',
+        shape: existingInvitation?.customization?.buttons?.calendar?.shape || 'rounded',
+        position: existingInvitation?.customization?.buttons?.calendar?.position || 'bottom-left'
+      }
+    },
+    textLayout: {
+      contentPosition: existingInvitation?.customization?.textLayout?.contentPosition || 'middle',
+      spacing: existingInvitation?.customization?.textLayout?.spacing || 'normal'
+    }
   });
 
-  // Initialize default button settings based on type
-  const defaultButtonSettings = isEvent ? {
-    directions: {
-      show: true,
-      background: '#3B82F6',
-      color: '#ffffff',
-      shape: 'rounded' as const,
-      position: 'bottom-right' as const
-    },
-    calendar: {
-      show: true,
-      background: '#3B82F6',
-      color: '#ffffff',
-      shape: 'rounded' as const,
-      position: 'bottom-left' as const
+  const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm({
+    defaultValues: {
+      title: existingInvitation?.title || '',
+      description: existingInvitation?.description || '',
+      location: existingInvitation?.location || '',
+      locationTitle: existingInvitation?.locationTitle || '',
+      date: existingInvitation?.date || '',
+      time: existingInvitation?.time || '',
     }
-  } : {
-    directions: {
-      show: true,
-      background: '#3B82F6',
-      color: '#ffffff',
-      shape: 'rounded' as const,
-      position: 'bottom-right' as const
-    }
-  };
+  });
 
-  const [customization, setCustomization] = useState<SimpleInvitationCustomization>(
-    existingInvitation?.customization || {
-      background: {
-        type: 'solid' as BackgroundType,
-        value: '#ffffff',
-      },
-      font: {
-        family: 'system-ui, sans-serif',
-        size: 'medium',
-        color: '#000000',
-        alignment: 'left',
-      },
-      buttons: defaultButtonSettings
-    }
-  );
-
-  // Ensure buttons configuration exists whenever customization is updated
-  useEffect(() => {
-    if (!customization.buttons) {
-      setCustomization(prevState => ({
-        ...prevState,
-        buttons: defaultButtonSettings
-      }));
-    } else if (isEvent && !customization.buttons.calendar) {
-      // Make sure calendar button is configured for events
-      setCustomization(prevState => ({
-        ...prevState,
-        buttons: {
-          ...prevState.buttons,
-          calendar: {
-            show: true,
-            background: '#3B82F6',
-            color: '#ffffff',
-            shape: 'rounded',
-            position: 'bottom-left'
-          }
-        }
-      }));
-    }
-  }, [isEvent]);
-
-  const handleFormChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value,
+  const handleBackgroundChange = (type: BackgroundType, value: string) => {
+    setCustomization(prevState => ({
+      ...prevState,
+      background: { type, value }
     }));
   };
 
-  const handleCustomizationChange = (newCustomization: SimpleInvitationCustomization) => {
-    setCustomization(newCustomization);
+  const handleFontChange = (property: string, value: string) => {
+    setCustomization(prevState => ({
+      ...prevState,
+      font: { ...prevState.font, [property]: value }
+    }));
   };
 
-  const handleSubmit = async () => {
-    if (!user) {
-      toast({
-        title: 'Authentication required',
-        description: 'Please log in to save your ' + entityType.toLowerCase(),
-        variant: 'destructive',
-      });
-      return;
-    }
+  const handleTextLayoutChange = (property: string, value: string) => {
+    setCustomization(prevState => ({
+      ...prevState,
+      textLayout: { ...prevState.textLayout, [property]: value }
+    }));
+  };
 
+  const handleButtonChange = (buttonType: string, property: string, value: string | boolean) => {
+    setCustomization(prevState => ({
+      ...prevState,
+      buttons: {
+        ...prevState.buttons,
+        [buttonType]: {
+          ...prevState.buttons[buttonType],
+          [property]: value
+        }
+      }
+    }));
+  };
+
+  const onSubmit = async (data) => {
+    setIsSubmitting(true);
     try {
-      setIsSubmitting(true);
-      
-      // Make sure buttons config is set correctly for the invitation type
-      const finalCustomization = { ...customization };
-      if (!finalCustomization.buttons) {
-        finalCustomization.buttons = defaultButtonSettings;
-      } else if (isEvent && !finalCustomization.buttons.calendar) {
-        finalCustomization.buttons.calendar = {
-          show: true,
-          background: '#3B82F6',
-          color: '#ffffff',
-          shape: 'rounded',
-          position: 'bottom-left'
-        };
-      }
-      
-      // Ensure directions button is configured if location exists
-      if (formData.location && finalCustomization.buttons && !finalCustomization.buttons.directions) {
-        finalCustomization.buttons.directions = {
-          show: true,
-          background: '#3B82F6',
-          color: '#ffffff',
-          shape: 'rounded',
-          position: 'bottom-right'
-        };
-      }
-      
-      // Map our form data to the database structure
       const invitationData = {
-        title: formData.title,
-        description: formData.description || '',
-        location: formData.location || '',
-        location_url: formData.location || '', // Using location as location_url
-        location_title: formData.locationTitle || '',
-        datetime: formData.date && formData.time ? new Date(`${formData.date}T${formData.time}`).toISOString() : undefined,
-        
-        // Map from our customization model to the database fields
-        background_type: finalCustomization.background.type,
-        background_value: finalCustomization.background.value,
-        font_family: finalCustomization.font.family,
-        font_size: finalCustomization.font.size,
-        text_color: finalCustomization.font.color,
-        text_align: finalCustomization.font.alignment,
-        is_event: isEvent, // Add flag to identify if this is an event
-        user_id: user.id, // Add the user's ID to comply with RLS
+        title: data.title,
+        description: data.description,
+        location: data.location,
+        location_title: data.locationTitle,
+        datetime: data.date && data.time ? `${data.date}T${data.time}` : data.date ? `${data.date}T00:00:00` : undefined,
+        background_type: customization.background.type,
+        background_value: customization.background.value,
+        font_family: customization.font.family,
+        font_size: customization.font.size,
+        text_color: customization.font.color,
+        text_align: customization.font.alignment,
+        is_event: isEvent
       };
-
-      console.log("Creating/updating invitation with data:", invitationData);
-      console.log("Using customization:", finalCustomization);
 
       let result;
       if (existingInvitation) {
-        // Update existing invitation
         result = await updateSimpleInvitation(existingInvitation.id, invitationData);
+        if (result) {
+          toast({
+            title: "Success",
+            description: isEvent ? "Event updated successfully" : "Invitation updated successfully",
+          });
+        }
       } else {
-        // Create new invitation
         result = await createSimpleInvitation(invitationData);
-      }
-
-      if (result) {
-        toast({
-          title: 'Success',
-          description: `${entityType} successfully ${existingInvitation ? 'updated' : 'created'}!`,
-        });
-        if (onSuccess) {
-          onSuccess();
-        } else {
-          navigate(basePath);
+        if (result) {
+          toast({
+            title: "Success",
+            description: isEvent ? "Event created successfully" : "Invitation created successfully",
+          });
         }
       }
+
+      // Navigate back to the list view
+      navigate(isEvent ? '/dashboard/events' : '/dashboard/invitations');
     } catch (error) {
-      console.error(`Error saving ${entityType.toLowerCase()}:`, error);
+      console.error('Error saving invitation:', error);
       toast({
-        title: `Failed to save ${entityType.toLowerCase()}`,
-        description: `There was an error while saving your ${entityType.toLowerCase()}.`,
-        variant: 'destructive',
+        title: "Error",
+        description: `Failed to ${existingInvitation ? 'update' : 'create'} ${isEvent ? 'event' : 'invitation'}`,
+        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleNextTab = () => {
-    if (activeTab === 'details') {
-      setActiveTab('customize');
-    } else if (activeTab === 'customize') {
-      handleSubmit();
-    }
-  };
-
-  const handlePrevTab = () => {
-    if (activeTab === 'customize') {
-      setActiveTab('details');
-    }
-  };
-
-  // Check if user is authenticated
-  React.useEffect(() => {
-    if (!user) {
-      console.warn('User is not authenticated');
-    }
-  }, [user]);
+  const watchedFields = watch();
 
   return (
-    <div className="container mx-auto p-4 max-w-5xl">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-2">
-          {existingInvitation 
-            ? `Edit ${entityType}` 
-            : `Create New ${entityType}`}
-        </h1>
-        <p className="text-muted-foreground">
-          {existingInvitation 
-            ? `Update your ${entityType.toLowerCase()} details and styling` 
-            : `Fill in the details and customize your ${entityType.toLowerCase()}`}
-        </p>
-      </div>
-
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="details">{entityType} Details</TabsTrigger>
-          <TabsTrigger value="customize">Customize Style</TabsTrigger>
-        </TabsList>
-
-        <Card className="mt-6 p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <TabsContent value="details" className="mt-0">
-                <InvitationForm 
-                  formData={formData}
-                  onChange={handleFormChange}
-                  isEvent={isEvent}
-                />
-              </TabsContent>
-
-              <TabsContent value="customize" className="mt-0">
-                <InvitationStyler
-                  customization={customization}
-                  onChange={handleCustomizationChange}
-                  title={formData.title}
-                  description={formData.description}
-                />
-              </TabsContent>
-            </div>
-
-            <div className="order-first md:order-last mb-6 md:mb-0">
-              <div className="sticky top-4">
-                <h3 className="text-sm font-medium mb-2 text-muted-foreground">Preview</h3>
-                <InvitationPreview
-                  title={formData.title}
-                  description={formData.description}
-                  location={formData.location}
-                  locationTitle={formData.locationTitle}
-                  date={formData.date}
-                  time={formData.time}
-                  customization={customization}
-                  isEvent={isEvent}
-                />
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-2xl font-bold mb-6">
+        {existingInvitation 
+          ? (isEvent ? "Edit Event" : "Edit Invitation") 
+          : (isEvent ? "Create New Event" : "Create New Invitation")}
+      </h1>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Left column - Form */}
+        <div>
+          <Card className="p-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="title">Title</Label>
+                  <Input
+                    id="title"
+                    {...register('title', { required: "Title is required" })}
+                    placeholder="Enter a title"
+                    className={errors.title ? "border-red-500" : ""}
+                  />
+                  {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title.message as string}</p>}
+                </div>
+                
+                <div>
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    {...register('description')}
+                    placeholder="Enter a description"
+                    rows={4}
+                  />
+                </div>
+                
+                {isEvent && (
+                  <>
+                    <div>
+                      <Label htmlFor="date">Date</Label>
+                      <Input
+                        id="date"
+                        type="date"
+                        {...register('date', { required: isEvent ? "Date is required for events" : false })}
+                        className={errors.date ? "border-red-500" : ""}
+                      />
+                      {errors.date && <p className="text-red-500 text-sm mt-1">{errors.date.message as string}</p>}
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="time">Time</Label>
+                      <Input
+                        id="time"
+                        type="time"
+                        {...register('time')}
+                      />
+                    </div>
+                  </>
+                )}
+                
+                <div>
+                  <Label htmlFor="location">Location</Label>
+                  <Input
+                    id="location"
+                    {...register('location')}
+                    placeholder="Enter a location"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="locationTitle">Location Title (optional)</Label>
+                  <Input
+                    id="locationTitle"
+                    {...register('locationTitle')}
+                    placeholder="E.g. Office, Home, etc."
+                  />
+                </div>
               </div>
-            </div>
-          </div>
-
-          <div className="flex justify-between mt-6">
-            <Button
-              variant="outline"
-              onClick={() => navigate(basePath)}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-
-            <div className="flex gap-2">
-              {activeTab === 'customize' && (
-                <Button variant="outline" onClick={handlePrevTab} disabled={isSubmitting}>
-                  Previous
+              
+              <div className="border-t pt-6 mt-6">
+                <h3 className="text-lg font-medium mb-4">Customize Style</h3>
+                
+                <div className="space-y-6">
+                  <BackgroundSelector
+                    value={customization.background}
+                    onChange={handleBackgroundChange}
+                  />
+                  
+                  <FontSelector
+                    value={customization.font}
+                    onChange={handleFontChange}
+                  />
+                  
+                  <TextPositionSelector
+                    contentPosition={customization.textLayout?.contentPosition || 'middle'}
+                    spacing={customization.textLayout?.spacing || 'normal'}
+                    onChange={handleTextLayoutChange}
+                  />
+                  
+                  {(isEvent || watchedFields.location) && (
+                    <ButtonPositionSelector
+                      directionsButton={customization.buttons?.directions}
+                      calendarButton={customization.buttons?.calendar}
+                      onChange={handleButtonChange}
+                      showCalendar={isEvent}
+                      showDirections={!!watchedFields.location}
+                    />
+                  )}
+                </div>
+              </div>
+              
+              <div className="pt-4 flex justify-end space-x-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => navigate(isEvent ? '/dashboard/events' : '/dashboard/invitations')}
+                >
+                  Cancel
                 </Button>
-              )}
-              <Button onClick={handleNextTab} disabled={isSubmitting}>
-                {activeTab === 'details' 
-                  ? 'Next: Customize' 
-                  : `Save ${entityType}`}
-              </Button>
-            </div>
-          </div>
-        </Card>
-      </Tabs>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? "Saving..." : (existingInvitation ? "Update" : "Create")}
+                </Button>
+              </div>
+            </form>
+          </Card>
+        </div>
+        
+        {/* Right column - Preview */}
+        <div className="lg:sticky lg:top-24 self-start">
+          <h3 className="text-lg font-medium mb-4">Preview</h3>
+          <InvitationPreview
+            title={watchedFields.title || (isEvent ? "Event Title" : "Invitation Title")}
+            description={watchedFields.description || "Description will appear here"}
+            location={watchedFields.location || undefined}
+            locationTitle={watchedFields.locationTitle || undefined}
+            date={watchedFields.date || undefined}
+            time={watchedFields.time || undefined}
+            customization={customization}
+            isEvent={isEvent}
+            showActions={true}
+          />
+        </div>
+      </div>
     </div>
   );
 }

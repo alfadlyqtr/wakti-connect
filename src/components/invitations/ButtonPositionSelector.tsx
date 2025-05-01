@@ -1,77 +1,130 @@
 
 import React from 'react';
-import { ButtonPosition } from '@/types/invitation.types';
 import { Label } from '@/components/ui/label';
-import { Card } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Switch } from '@/components/ui/switch';
+import { ButtonPosition } from '@/types/invitation.types';
+
+interface ButtonConfig {
+  show: boolean;
+  position: ButtonPosition;
+  background: string;
+  color: string;
+  shape: string;
+}
 
 interface ButtonPositionSelectorProps {
-  position: ButtonPosition;
-  onPositionChange: (position: ButtonPosition) => void;
+  directionsButton?: ButtonConfig;
+  calendarButton?: ButtonConfig;
+  onChange: (buttonType: string, property: string, value: any) => void;
+  showDirections?: boolean;
+  showCalendar?: boolean;
 }
 
 export default function ButtonPositionSelector({
-  position,
-  onPositionChange
+  directionsButton = {
+    show: true,
+    position: 'bottom-right',
+    background: '#3B82F6',
+    color: '#ffffff',
+    shape: 'rounded'
+  },
+  calendarButton = {
+    show: true,
+    position: 'bottom-left',
+    background: '#3B82F6',
+    color: '#ffffff',
+    shape: 'rounded'
+  },
+  onChange,
+  showDirections = false,
+  showCalendar = false
 }: ButtonPositionSelectorProps) {
-  const positions: ButtonPosition[] = [
-    'bottom-left',
-    'bottom-center',
-    'bottom-right',
-    'top-right'
-  ];
-
-  const getPositionLabel = (pos: ButtonPosition): string => {
-    switch(pos) {
-      case 'bottom-left': return 'Bottom Left';
-      case 'bottom-center': return 'Bottom Center';
-      case 'bottom-right': return 'Bottom Right';
-      case 'top-right': return 'Top Right';
-      default: return 'Bottom Center';
-    }
-  };
-
-  // Helper to render the placeholder buttons in the right position
-  const getButtonStyle = (pos: ButtonPosition): string => {
-    switch(pos) {
-      case 'bottom-left': return 'bottom-0 left-0';
-      case 'bottom-center': return 'bottom-0 left-1/2 -translate-x-1/2';
-      case 'bottom-right': return 'bottom-0 right-0';
-      case 'top-right': return 'top-0 right-0';
-      default: return 'bottom-0 left-1/2 -translate-x-1/2';
-    }
-  };
-
   return (
     <div className="space-y-4">
-      <h3 className="text-base font-medium">Button Position</h3>
-      <div className="grid grid-cols-2 gap-2">
-        {positions.map((pos) => (
-          <Card 
-            key={pos} 
-            className={cn(
-              "aspect-video cursor-pointer relative p-2",
-              position === pos ? "ring-2 ring-primary" : "hover:bg-muted/50"
-            )}
-            onClick={() => onPositionChange(pos)}
-          >
-            {/* Preview of card with button position */}
-            <div className="h-full w-full border border-dashed border-muted-foreground/30 rounded relative">
-              <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-3/4 h-1 bg-muted-foreground/30"></div>
-              <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-2/3 h-1 bg-muted-foreground/30"></div>
-              
-              {/* Button placeholder */}
-              <div className={`absolute ${getButtonStyle(pos)} m-1 h-2 w-8 bg-primary rounded-sm`}></div>
+      <h3 className="font-medium">Button Settings</h3>
+      
+      {showDirections && (
+        <div className="border rounded-md p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="show-directions" className="flex-1">Show Directions Button</Label>
+            <Switch
+              id="show-directions"
+              checked={directionsButton.show}
+              onCheckedChange={(checked) => onChange('directions', 'show', checked)}
+            />
+          </div>
+          
+          {directionsButton.show && (
+            <div>
+              <Label className="text-sm text-muted-foreground mb-2 block">Position</Label>
+              <RadioGroup
+                value={directionsButton.position}
+                onValueChange={(value) => onChange('directions', 'position', value)}
+                className="flex flex-wrap gap-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="bottom-right" id="dir-bottom-right" />
+                  <Label htmlFor="dir-bottom-right">Bottom Right</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="bottom-left" id="dir-bottom-left" />
+                  <Label htmlFor="dir-bottom-left">Bottom Left</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="bottom-center" id="dir-bottom-center" />
+                  <Label htmlFor="dir-bottom-center">Bottom Center</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="top-right" id="dir-top-right" />
+                  <Label htmlFor="dir-top-right">Top Right</Label>
+                </div>
+              </RadioGroup>
             </div>
-            <Label className="mt-1 text-xs block text-center">
-              {getPositionLabel(pos)}
-            </Label>
-          </Card>
-        ))}
-      </div>
-      <p className="text-xs text-muted-foreground text-center">
-        Choose where buttons appear on your invitation
-      </p>
+          )}
+        </div>
+      )}
+      
+      {showCalendar && (
+        <div className="border rounded-md p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="show-calendar" className="flex-1">Show Calendar Button</Label>
+            <Switch
+              id="show-calendar"
+              checked={calendarButton.show}
+              onCheckedChange={(checked) => onChange('calendar', 'show', checked)}
+            />
+          </div>
+          
+          {calendarButton.show && (
+            <div>
+              <Label className="text-sm text-muted-foreground mb-2 block">Position</Label>
+              <RadioGroup
+                value={calendarButton.position}
+                onValueChange={(value) => onChange('calendar', 'position', value)}
+                className="flex flex-wrap gap-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="bottom-right" id="cal-bottom-right" />
+                  <Label htmlFor="cal-bottom-right">Bottom Right</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="bottom-left" id="cal-bottom-left" />
+                  <Label htmlFor="cal-bottom-left">Bottom Left</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="bottom-center" id="cal-bottom-center" />
+                  <Label htmlFor="cal-bottom-center">Bottom Center</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="top-right" id="cal-top-right" />
+                  <Label htmlFor="cal-top-right">Top Right</Label>
+                </div>
+              </RadioGroup>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
