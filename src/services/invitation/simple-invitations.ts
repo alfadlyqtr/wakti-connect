@@ -24,7 +24,7 @@ export async function deleteSimpleInvitation(id: string): Promise<boolean> {
     console.log('[deleteSimpleInvitation] Deleting invitation:', id);
     
     const { error } = await supabase
-      .from('simple_invitations')
+      .from('invitations')
       .delete()
       .eq('id', id);
       
