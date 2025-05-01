@@ -2,6 +2,7 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { SimpleInvitationCustomization, ButtonPosition } from '@/types/invitation.types';
+import { TextAlign } from '@/types/event.types'; // Import TextAlign type
 
 interface InvitationCardPreviewProps {
   customization: SimpleInvitationCustomization;
@@ -86,6 +87,14 @@ export default function InvitationCardPreview({
     }
   };
   
+  // Convert alignment string to TextAlign type or use default
+  const getTextAlignment = (alignment?: string): TextAlign => {
+    if (alignment === 'left' || alignment === 'center' || alignment === 'right' || alignment === 'justify') {
+      return alignment as TextAlign;
+    }
+    return 'center' as TextAlign;
+  };
+  
   return (
     <Card className="overflow-hidden w-full shadow-lg relative" style={{
       ...getBackgroundStyle(),
@@ -96,7 +105,7 @@ export default function InvitationCardPreview({
       <div className={`flex flex-col h-full px-4 ${getContentPositionStyle()} ${getContentSpacingStyle()}`}>
         <div className="text-center">
           <h2 className="text-xl font-bold" style={{ 
-            textAlign: customization.font.alignment || 'center',
+            textAlign: getTextAlignment(customization.font.alignment),
             fontWeight: customization.font.weight || 'bold',
           }}>
             {title}
@@ -107,7 +116,7 @@ export default function InvitationCardPreview({
           )}
           
           <p className="mt-2" style={{ 
-            textAlign: customization.font.alignment || 'center',
+            textAlign: getTextAlignment(customization.font.alignment),
           }}>
             {description}
           </p>
