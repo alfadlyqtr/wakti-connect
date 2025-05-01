@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -118,19 +117,21 @@ export default function SimpleInvitationCreator({
   const onSubmit = async (data) => {
     setIsSubmitting(true);
     try {
-      const invitationData = {
+      const formattedDateTime = data.date && data.time ? `${data.date}T${data.time}` : data.date ? `${data.date}T00:00:00` : undefined;
+      const invitationData: InvitationData = {
         title: data.title,
         description: data.description,
         location: data.location,
         location_title: data.locationTitle,
-        datetime: data.date && data.time ? `${data.date}T${data.time}` : data.date ? `${data.date}T00:00:00` : undefined,
+        datetime: formattedDateTime,
         background_type: customization.background.type,
         background_value: customization.background.value,
         font_family: customization.font.family,
         font_size: customization.font.size,
         text_color: customization.font.color,
-        text_align: customization.font.alignment,
-        is_event: isEvent
+        text_align: customization.font.alignment || 'center',
+        is_event: isEvent,
+        user_id: '', // This will be filled in by the API if not provided
       };
 
       let result;
@@ -251,18 +252,23 @@ export default function SimpleInvitationCreator({
                 
                 <div className="space-y-6">
                   <BackgroundSelector
-                    value={customization.background}
-                    onChange={handleBackgroundChange}
+                    backgroundType={customization.background.type}
+                    backgroundValue={customization.background.value}
+                    onBackgroundChange={(type, value) => handleBackgroundChange(type, value)}
                   />
                   
                   <FontSelector
-                    value={customization.font}
-                    onChange={handleFontChange}
+                    font={customization.font}
+                    onFontChange={handleFontChange}
+                    showAlignment
+                    showWeight
                   />
                   
                   <TextPositionSelector
                     contentPosition={customization.textLayout?.contentPosition || 'middle'}
                     spacing={customization.textLayout?.spacing || 'normal'}
+                    onPositionChange={(position) => handleTextLayoutChange('contentPosition', position)}
+                    onSpacingChange={(spacing) => handleTextLayoutChange('spacing', spacing)}
                     onChange={handleTextLayoutChange}
                   />
                   

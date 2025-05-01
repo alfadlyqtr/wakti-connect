@@ -1,4 +1,3 @@
-
 import { SimpleInvitation, SimpleInvitationCustomization, BackgroundType } from '@/types/invitation.types';
 
 // Database model structure for invitations

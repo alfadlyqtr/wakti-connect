@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SimpleInvitationCustomization, BackgroundType } from '@/types/invitation.types';
@@ -315,9 +314,10 @@ export default function InvitationStyler({
                     </div>
                   </div>
                   
-                  <ButtonPositionSelector 
-                    position={directionsButton.position}
-                    onPositionChange={(position) => handleButtonPositionChange('directions', position)}
+                  <ButtonPositionSelector
+                    position={directionsButton.position as ButtonPosition}
+                    onPositionChange={(position) => handleButtonChange('directions', 'position', position)}
+                    onChange={(buttonType, property, value) => handleButtonChange(buttonType, property, value)}
                   />
                 </div>
               )}
@@ -375,9 +375,10 @@ export default function InvitationStyler({
                     </div>
                   </div>
                   
-                  <ButtonPositionSelector 
-                    position={calendarButton.position}
-                    onPositionChange={(position) => handleButtonPositionChange('calendar', position)}
+                  <ButtonPositionSelector
+                    position={calendarButton.position as ButtonPosition}
+                    onPositionChange={(position) => handleButtonChange('calendar', 'position', position)}
+                    onChange={(buttonType, property, value) => handleButtonChange(buttonType, property, value)}
                   />
                 </div>
               )}
