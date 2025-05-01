@@ -1,25 +1,18 @@
 
-import React, { useState, useEffect } from "react";
-import { BackgroundType } from "@/types/invitation.types";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { ColorInput } from "@/components/inputs/ColorInput";
-import { Sparkles, Upload, Image as ImageIcon } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
+import React from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { BackgroundType } from '@/types/invitation.types';
+import { HexColorPicker } from 'react-colorful';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Input } from '@/components/ui/input';
 
 interface BackgroundSelectorProps {
-  backgroundType: string;
+  backgroundType: BackgroundType;
   backgroundValue: string;
   onBackgroundChange: (type: BackgroundType, value: string) => void;
-  onGenerateAIBackground?: () => void;
-  title?: string;
-  description?: string;
-  isGeneratingImage?: boolean;
-  // Add these props to support how it's used in SimpleInvitationCreator
-  value?: { type: BackgroundType; value: string };
+  // For backward compatibility
+  value?: { type: BackgroundType; value: string; };
   onChange?: (type: BackgroundType, value: string) => void;
 }
 
@@ -27,228 +20,72 @@ export default function BackgroundSelector({
   backgroundType,
   backgroundValue,
   onBackgroundChange,
-  onGenerateAIBackground,
-  title,
-  description,
-  isGeneratingImage = false,
   value,
   onChange
 }: BackgroundSelectorProps) {
-  // Use provided props or fallback to direct props
-  const effectiveBackgroundType = value?.type || backgroundType;
-  const effectiveBackgroundValue = value?.value || backgroundValue;
+  // For backward compatibility, use value props if the direct props are not provided
+  const type = backgroundType || value?.type || 'solid';
+  const bgValue = backgroundValue || value?.value || '#ffffff';
   
-  const handleBackgroundChange = (type: BackgroundType, newValue: string) => {
+  // Use the appropriate handler
+  const handleTypeChange = (newType: BackgroundType) => {
+    if (onChange) {
+      onChange(newType, bgValue);
+    }
+    if (onBackgroundChange) {
+      onBackgroundChange(newType, bgValue);
+    }
+  };
+  
+  const handleValueChange = (newValue: string) => {
     if (onChange) {
       onChange(type, newValue);
-    } else if (onBackgroundChange) {
+    }
+    if (onBackgroundChange) {
       onBackgroundChange(type, newValue);
     }
   };
-  
-  const [activeTab, setActiveTab] = useState<string>(effectiveBackgroundType);
-  const [gradientPresets, setGradientPresets] = useState<string[]>([
-    "linear-gradient(to right, #ee9ca7, #ffdde1)",
-    "linear-gradient(to right, #2193b0, #6dd5ed)",
-    "linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%)",
-    "linear-gradient(to top, #a8edea 0%, #fed6e3 100%)",
-    "linear-gradient(to top, #d299c2 0%, #fef9d7 100%)"
-  ]);
-  const [customPrompt, setCustomPrompt] = useState<string>("");
-  
-  // Generate default AI prompt based on title and description
-  const getDefaultPrompt = () => {
-    let defaultPrompt = "Generate a beautiful background";
-    
-    if (title) {
-      defaultPrompt += ` for "${title}"`;
-    }
-    
-    if (description) {
-      defaultPrompt += ` with theme: ${description.substring(0, 50)}`;
-    }
-    
-    defaultPrompt += " that works well as an invitation card background with space for text";
-    return defaultPrompt;
-  };
-
-  // Update active tab when backgroundType changes from parent
-  useEffect(() => {
-    if (effectiveBackgroundType) {
-      setActiveTab(effectiveBackgroundType);
-    }
-  }, [effectiveBackgroundType]);
-
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
-    
-    // Set default values when changing tabs
-    if (value === "solid") {
-      handleBackgroundChange("solid" as BackgroundType, "#ffffff");
-    } else if (value === "gradient") {
-      handleBackgroundChange("gradient" as BackgroundType, gradientPresets[0]);
-    } else if (value === "image" && effectiveBackgroundType !== "image") {
-      handleBackgroundChange("image" as BackgroundType, "");
-    }
-  };
-
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      toast({
-        title: "Invalid File Type",
-        description: "Please upload an image file.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result as string;
-      handleBackgroundChange("image" as BackgroundType, result);
-    };
-    reader.readAsDataURL(file);
-  };
-  
-  const handleCustomAIGeneration = () => {
-    if (!onGenerateAIBackground) return;
-    if (!customPrompt.trim()) {
-      setCustomPrompt(getDefaultPrompt());
-      toast({
-        title: "Using default prompt",
-        description: "Custom prompt is empty, using generated prompt based on invitation details",
-      });
-    }
-    onGenerateAIBackground();
-  };
 
   return (
-    <div className="space-y-4">
-      <Label>Background</Label>
+    <Tabs defaultValue="color" className="w-full">
+      <TabsList className="grid w-full grid-cols-3">
+        <TabsTrigger value="color">Solid Color</TabsTrigger>
+        <TabsTrigger value="gradient">Gradient</TabsTrigger>
+        <TabsTrigger value="image">Image</TabsTrigger>
+      </TabsList>
       
-      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="grid grid-cols-3 w-full">
-          <TabsTrigger value="solid">Solid Color</TabsTrigger>
-          <TabsTrigger value="gradient">Gradient</TabsTrigger>
-          <TabsTrigger value="image">Image</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="solid" className="pt-4">
-          <div className="space-y-3">
-            <Label htmlFor="background-color">Select Color</Label>
-            <ColorInput
-              id="background-color"
-              value={effectiveBackgroundType === "solid" ? effectiveBackgroundValue : "#ffffff"}
-              onChange={(color) => handleBackgroundChange("solid" as BackgroundType, color)}
-              className="w-full"
-            />
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="gradient" className="pt-4">
-          <div className="space-y-4">
-            <Label>Select Gradient</Label>
-            <div className="grid grid-cols-2 gap-2">
-              {gradientPresets.map((gradient, index) => (
-                <div
-                  key={index}
-                  className={`h-16 rounded-md cursor-pointer border-2 ${
-                    effectiveBackgroundValue === gradient ? "border-primary" : "border-transparent"
-                  }`}
-                  style={{ background: gradient }}
-                  onClick={() => handleBackgroundChange("gradient" as BackgroundType, gradient)}
-                />
-              ))}
-            </div>
-            
-            <div className="pt-2">
-              <Label htmlFor="custom-gradient">Custom Gradient (CSS)</Label>
-              <Input
-                id="custom-gradient"
-                value={effectiveBackgroundType === "gradient" ? effectiveBackgroundValue : ""}
-                onChange={(e) => handleBackgroundChange("gradient" as BackgroundType, e.target.value)}
-                placeholder="linear-gradient(direction, color1, color2)"
-                className="mt-1"
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Example: linear-gradient(to right, #ec008c, #fc6767)
-              </p>
-            </div>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="image" className="pt-4">
-          <div className="space-y-4">
-            {effectiveBackgroundType === "image" && effectiveBackgroundValue ? (
-              <div className="space-y-2">
-                <div className="relative aspect-video rounded-md overflow-hidden border">
-                  <img 
-                    src={effectiveBackgroundValue} 
-                    alt="Background Preview" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => handleBackgroundChange("image" as BackgroundType, "")}
-                >
-                  Remove Image
-                </Button>
-              </div>
-            ) : (
-              <div className="border border-dashed rounded-md p-6 text-center">
-                <ImageIcon className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                <p className="mb-2 text-sm text-muted-foreground">
-                  Upload an image for your invitation background
-                </p>
-                <input
-                  type="file"
-                  id="background-image-upload"
-                  accept="image/*"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                />
-                <label htmlFor="background-image-upload">
-                  <Button variant="outline" className="flex items-center gap-2" asChild>
-                    <div>
-                      <Upload className="h-4 w-4" />
-                      Browse...
-                    </div>
-                  </Button>
-                </label>
-              </div>
-            )}
-            
-            <div className="mt-4 border-t pt-4 space-y-3">
-              <Label htmlFor="ai-prompt">AI Background Prompt</Label>
-              <Textarea
-                id="ai-prompt"
-                placeholder={getDefaultPrompt()}
-                value={customPrompt}
-                onChange={(e) => setCustomPrompt(e.target.value)}
-                className="min-h-20 text-sm resize-none"
-                disabled={isGeneratingImage}
-              />
-              <Button 
-                variant="outline" 
-                className="w-full flex items-center justify-center gap-2" 
-                onClick={handleCustomAIGeneration}
-                disabled={isGeneratingImage}
-              >
-                <Sparkles className="h-4 w-4" />
-                {isGeneratingImage ? "Generating..." : "Generate AI Background"}
-              </Button>
-              <p className="text-xs text-muted-foreground mt-1 text-center">
-                Creates a custom background based on your prompt or invitation details
-              </p>
-            </div>
-          </div>
-        </TabsContent>
-      </Tabs>
-    </div>
+      <TabsContent value="color" className="space-y-4 pt-4">
+        <div className="space-y-2">
+          <Label>Select Background Color</Label>
+          <HexColorPicker 
+            color={type === 'solid' ? bgValue : '#ffffff'} 
+            onChange={handleValueChange} 
+            className="w-full"
+          />
+        </div>
+      </TabsContent>
+      
+      <TabsContent value="gradient" className="space-y-4 pt-4">
+        <div className="space-y-2">
+          <Label>Gradient Code (CSS)</Label>
+          <Input 
+            placeholder="linear-gradient(to right, #e66465, #9198e5)" 
+            value={type === 'gradient' ? bgValue : ''} 
+            onChange={(e) => handleValueChange(e.target.value)}
+          />
+        </div>
+      </TabsContent>
+      
+      <TabsContent value="image" className="space-y-4 pt-4">
+        <div className="space-y-2">
+          <Label>Image URL</Label>
+          <Input 
+            placeholder="https://example.com/image.jpg" 
+            value={type === 'image' ? bgValue : ''} 
+            onChange={(e) => handleValueChange(e.target.value)}
+          />
+        </div>
+      </TabsContent>
+    </Tabs>
   );
 }

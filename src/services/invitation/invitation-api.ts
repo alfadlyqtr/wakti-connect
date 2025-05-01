@@ -1,4 +1,8 @@
 
+import { supabase } from '@/integrations/supabase/client';
+import { InvitationDbRecord, InvitationData, SimpleInvitationResult } from './invitation-types';
+import { SimpleInvitation, ButtonPosition } from '@/types/invitation.types';
+
 /**
  * Map a database record to a SimpleInvitation object
  * Using explicit mapping to avoid TypeScript "excessively deep instantiation" errors
@@ -65,4 +69,147 @@ export function mapDbRecordToSimpleInvitation(data: InvitationDbRecord): SimpleI
 
   // Cast to SimpleInvitation to maintain type compatibility
   return result as unknown as SimpleInvitation;
+}
+
+/**
+ * Create a new simple invitation
+ */
+export async function createSimpleInvitation(data: InvitationData): Promise<SimpleInvitation | null> {
+  try {
+    console.log('[createSimpleInvitation] Creating invitation with data:', data);
+    
+    const { data: record, error } = await supabase
+      .from('invitations')
+      .insert([data])
+      .select('*')
+      .single();
+      
+    if (error) {
+      console.error('[createSimpleInvitation] Error:', error);
+      throw error;
+    }
+    
+    console.log('[createSimpleInvitation] Created invitation:', record);
+    return mapDbRecordToSimpleInvitation(record);
+  } catch (error) {
+    console.error('[createSimpleInvitation] Error creating invitation:', error);
+    return null;
+  }
+}
+
+/**
+ * Update an existing simple invitation
+ */
+export async function updateSimpleInvitation(id: string, data: Partial<InvitationData>): Promise<SimpleInvitation | null> {
+  try {
+    console.log('[updateSimpleInvitation] Updating invitation:', id, data);
+    
+    const { data: record, error } = await supabase
+      .from('invitations')
+      .update(data)
+      .eq('id', id)
+      .select('*')
+      .single();
+      
+    if (error) {
+      console.error('[updateSimpleInvitation] Error:', error);
+      throw error;
+    }
+    
+    console.log('[updateSimpleInvitation] Updated invitation:', record);
+    return mapDbRecordToSimpleInvitation(record);
+  } catch (error) {
+    console.error('[updateSimpleInvitation] Error updating invitation:', error);
+    return null;
+  }
+}
+
+/**
+ * Get a simple invitation by ID
+ */
+export async function getSimpleInvitationById(id: string): Promise<SimpleInvitation | null> {
+  try {
+    console.log('[getSimpleInvitationById] Getting invitation:', id);
+    
+    const { data: record, error } = await supabase
+      .from('invitations')
+      .select('*')
+      .eq('id', id)
+      .single();
+      
+    if (error) {
+      console.error('[getSimpleInvitationById] Error:', error);
+      throw error;
+    }
+    
+    console.log('[getSimpleInvitationById] Got invitation:', record);
+    return mapDbRecordToSimpleInvitation(record);
+  } catch (error) {
+    console.error('[getSimpleInvitationById] Error getting invitation:', error);
+    return null;
+  }
+}
+
+/**
+ * Get a shared invitation by its share ID
+ */
+export async function getSharedInvitation(shareId: string): Promise<SimpleInvitation | null> {
+  try {
+    console.log('[getSharedInvitation] Getting shared invitation:', shareId);
+    
+    const { data: record, error } = await supabase
+      .from('invitations')
+      .select('*')
+      .eq('share_id', shareId)
+      .single();
+      
+    if (error) {
+      console.error('[getSharedInvitation] Error:', error);
+      throw error;
+    }
+    
+    console.log('[getSharedInvitation] Got shared invitation:', record);
+    return mapDbRecordToSimpleInvitation(record);
+  } catch (error) {
+    console.error('[getSharedInvitation] Error getting shared invitation:', error);
+    return null;
+  }
+}
+
+/**
+ * Fetch all simple invitations for a user
+ */
+export async function fetchSimpleInvitations(userId: string, isEvent?: boolean): Promise<SimpleInvitation[]> {
+  try {
+    console.log(`[fetchSimpleInvitations] Fetching ${isEvent ? 'events' : 'invitations'} for user:`, userId);
+    
+    // Start with the base query
+    let query = supabase
+      .from('invitations')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+      
+    // Add event filter if specified
+    if (isEvent !== undefined) {
+      query = query.eq('is_event', isEvent);
+    }
+    
+    const { data: records, error } = await query;
+      
+    if (error) {
+      console.error('[fetchSimpleInvitations] Error:', error);
+      throw error;
+    }
+    
+    console.log('[fetchSimpleInvitations] Fetched invitations:', records?.length || 0);
+    const invitations = records
+      ?.map(record => mapDbRecordToSimpleInvitation(record))
+      .filter(Boolean) as SimpleInvitation[];
+      
+    return invitations || [];
+  } catch (error) {
+    console.error('[fetchSimpleInvitations] Error fetching invitations:', error);
+    return [];
+  }
 }

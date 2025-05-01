@@ -1,41 +1,56 @@
-import React, { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { SimpleInvitationCustomization, BackgroundType, ButtonPosition } from '@/types/invitation.types';
-import { HexColorPicker } from '@/components/ui/color-picker';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
+import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Upload } from 'lucide-react';
-import ButtonPositionSelector from './ButtonPositionSelector';
+import { Card, CardContent } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  SimpleInvitationCustomization, 
+  BackgroundType,
+  TextPosition,
+  ButtonPosition, 
+  ButtonShape 
+} from '@/types/invitation.types';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { HexColorPicker } from 'react-colorful';
+import { Separator } from '@/components/ui/separator';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import TextPositionSelector from './TextPositionSelector';
-import FontSelector from './FontSelector';
+import ButtonPositionSelector from './ButtonPositionSelector';
 
 interface InvitationStylerProps {
   customization: SimpleInvitationCustomization;
   onChange: (customization: SimpleInvitationCustomization) => void;
-  title?: string;
-  description?: string;
+  hasLocation?: boolean;
+  isEvent?: boolean;
 }
 
-export default function InvitationStyler({
-  customization,
+export default function InvitationStyler({ 
+  customization, 
   onChange,
-  title,
-  description,
+  hasLocation = false,
+  isEvent = false
 }: InvitationStylerProps) {
-  const [activeTab, setActiveTab] = useState('background');
+  const [activeTab, setActiveTab] = React.useState('background');
   
-  const handleBackgroundChange = (type: BackgroundType, value: string) => {
+  const handleBackgroundTypeChange = (type: BackgroundType) => {
     onChange({
       ...customization,
       background: {
         ...customization.background,
-        type,
-        value,
-      },
+        type
+      }
+    });
+  };
+  
+  const handleBackgroundValueChange = (value: string) => {
+    onChange({
+      ...customization,
+      background: {
+        ...customization.background,
+        value
+      }
     });
   };
   
@@ -44,356 +59,373 @@ export default function InvitationStyler({
       ...customization,
       font: {
         ...customization.font,
-        [property]: value,
-      },
+        [property]: value
+      }
     });
   };
-
-  const handleButtonToggle = (buttonType: 'directions' | 'calendar', enabled: boolean) => {
-    // Initialize buttons object if it doesn't exist
-    const buttons = customization.buttons || {
-      accept: { background: '#4CAF50', color: '#ffffff', shape: 'rounded' },
-      decline: { background: '#f44336', color: '#ffffff', shape: 'rounded' },
-      directions: { background: '#ffffff', color: '#000000', shape: 'rounded', position: 'bottom-right', show: false },
-      calendar: { background: '#ffffff', color: '#000000', shape: 'rounded', position: 'bottom-right', show: false },
-    };
-
-    onChange({
-      ...customization,
-      buttons: {
-        ...buttons,
-        [buttonType]: {
-          ...buttons[buttonType],
-          show: enabled,
-        },
-      },
-    });
-  };
-
-  const handleButtonStyleChange = (
-    buttonType: 'directions' | 'calendar',
-    property: 'background' | 'color' | 'shape',
-    value: string
-  ) => {
-    // Initialize buttons object if it doesn't exist
-    const buttons = customization.buttons || {
-      accept: { background: '#4CAF50', color: '#ffffff', shape: 'rounded' },
-      decline: { background: '#f44336', color: '#ffffff', shape: 'rounded' },
-      directions: { background: '#ffffff', color: '#000000', shape: 'rounded', position: 'bottom-right', show: false },
-      calendar: { background: '#ffffff', color: '#000000', shape: 'rounded', position: 'bottom-right', show: false },
-    };
-
-    onChange({
-      ...customization,
-      buttons: {
-        ...buttons,
-        [buttonType]: {
-          ...buttons[buttonType],
-          [property]: value,
-        },
-      },
-    });
-  };
-
-  const handleButtonPositionChange = (buttonType: 'directions' | 'calendar', position: string) => {
-    // Initialize buttons object if it doesn't exist
-    const buttons = customization.buttons || {
-      accept: { background: '#4CAF50', color: '#ffffff', shape: 'rounded' },
-      decline: { background: '#f44336', color: '#ffffff', shape: 'rounded' },
-      directions: { background: '#ffffff', color: '#000000', shape: 'rounded', position: 'bottom-right', show: false },
-      calendar: { background: '#ffffff', color: '#000000', shape: 'rounded', position: 'bottom-right', show: false },
-    };
-
-    onChange({
-      ...customization,
-      buttons: {
-        ...buttons,
-        [buttonType]: {
-          ...buttons[buttonType],
-          position,
-        },
-      },
-    });
-  };
-
-  const handleTextLayoutChange = (property: 'contentPosition' | 'spacing', value: string) => {
-    // Initialize textLayout if it doesn't exist
-    const textLayout = customization.textLayout || { contentPosition: 'middle', spacing: 'normal' };
-    
+  
+  const handleTextPositionChange = (position: TextPosition) => {
     onChange({
       ...customization,
       textLayout: {
-        ...textLayout,
-        [property]: value,
-      },
+        ...customization.textLayout || { contentPosition: 'middle', spacing: 'normal' },
+        contentPosition: position
+      }
+    });
+  };
+  
+  const handleSpacingChange = (spacing: 'compact' | 'normal' | 'spacious') => {
+    onChange({
+      ...customization,
+      textLayout: {
+        ...customization.textLayout || { contentPosition: 'middle', spacing: 'normal' },
+        spacing
+      }
+    });
+  };
+  
+  const handleButtonStyleChange = (buttonType: 'accept' | 'decline', property: 'background' | 'color' | 'shape', value: string) => {
+    if (!customization.buttons) return;
+    
+    onChange({
+      ...customization,
+      buttons: {
+        ...customization.buttons,
+        [buttonType]: {
+          ...customization.buttons[buttonType],
+          [property]: value
+        }
+      }
+    });
+  };
+  
+  const handlePositionChange = (buttonType: 'directions' | 'calendar', position: ButtonPosition) => {
+    if (!customization.buttons) return;
+    
+    onChange({
+      ...customization,
+      buttons: {
+        ...customization.buttons,
+        [buttonType]: {
+          ...customization.buttons[buttonType],
+          position
+        }
+      }
     });
   };
 
-  // Initialize button objects if they don't exist
-  const directionsButton = customization.buttons?.directions || { 
-    background: '#ffffff', 
-    color: '#000000',
-    shape: 'rounded',
-    position: 'bottom-right',
-    show: false 
+  const handleButtonVisibilityChange = (buttonType: 'directions' | 'calendar', show: boolean) => {
+    if (!customization.buttons) return;
+    
+    onChange({
+      ...customization,
+      buttons: {
+        ...customization.buttons,
+        [buttonType]: {
+          ...customization.buttons[buttonType],
+          show
+        }
+      }
+    });
   };
+
+  // Get the current positions or default values
+  const directionsPosition = customization.buttons?.directions?.position || 'bottom-right';
+  const calendarPosition = customization.buttons?.calendar?.position || 'bottom-left';
   
-  const calendarButton = customization.buttons?.calendar || { 
-    background: '#ffffff', 
-    color: '#000000',
-    shape: 'rounded',
-    position: 'bottom-right',
-    show: false 
-  };
-
-  // Initialize text layout if it doesn't exist
-  const textLayout = customization.textLayout || {
-    contentPosition: 'middle',
-    spacing: 'normal',
-  };
-
   return (
-    <div>
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-3 w-full mb-4">
-          <TabsTrigger value="background">Background</TabsTrigger>
-          <TabsTrigger value="text">Text & Font</TabsTrigger>
-          <TabsTrigger value="buttons">Buttons</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="background" className="space-y-4">
-          <div className="space-y-4">
-            <div>
-              <Label className="block mb-2">Background Type</Label>
-              <RadioGroup
-                value={customization.background.type}
-                onValueChange={(value) => handleBackgroundChange(value as BackgroundType, customization.background.value)}
-                className="flex flex-col space-y-1"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="solid" id="solid" />
-                  <Label htmlFor="solid">Solid Color</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="gradient" id="gradient" />
-                  <Label htmlFor="gradient">Gradient</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="image" id="image" />
-                  <Label htmlFor="image">Image</Label>
-                </div>
-              </RadioGroup>
-            </div>
-
-            {customization.background.type === 'solid' && (
-              <HexColorPicker
-                color={customization.background.value}
-                onChange={(color) => handleBackgroundChange('solid', color)}
-                label="Background Color"
-              />
-            )}
-
-            {customization.background.type === 'gradient' && (
-              <div className="space-y-4">
-                <Label className="block mb-2">Gradient</Label>
-                <Select
-                  value={customization.background.value}
-                  onValueChange={(value) => handleBackgroundChange('gradient', value)}
+    <Card>
+      <CardContent className="p-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid grid-cols-3 mb-4">
+            <TabsTrigger value="background">Background</TabsTrigger>
+            <TabsTrigger value="text">Text</TabsTrigger>
+            <TabsTrigger value="buttons">Buttons</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="background">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Background Type</Label>
+                <RadioGroup
+                  value={customization.background.type}
+                  onValueChange={(value) => handleBackgroundTypeChange(value as BackgroundType)}
+                  className="flex space-x-2"
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a gradient" />
+                  <div className="flex items-center space-x-1">
+                    <RadioGroupItem value="solid" id="bg-solid" />
+                    <Label htmlFor="bg-solid">Solid</Label>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <RadioGroupItem value="gradient" id="bg-gradient" />
+                    <Label htmlFor="bg-gradient">Gradient</Label>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <RadioGroupItem value="image" id="bg-image" />
+                    <Label htmlFor="bg-image">Image</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+              
+              {customization.background.type === 'solid' && (
+                <div className="space-y-2">
+                  <Label>Background Color</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full flex justify-between">
+                        <span>Select Color</span>
+                        <div 
+                          className="w-4 h-4 rounded-full border" 
+                          style={{ backgroundColor: customization.background.value }}
+                        />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-3">
+                      <HexColorPicker 
+                        color={customization.background.value || '#ffffff'} 
+                        onChange={handleBackgroundValueChange}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              )}
+              
+              {/* Other background type controls would go here */}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="text">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Font Family</Label>
+                <Select
+                  value={customization.font.family}
+                  onValueChange={(value) => handleFontChange('family', value)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="linear-gradient(to right, #ff8177, #ff867a)">Warm Sunset</SelectItem>
-                    <SelectItem value="linear-gradient(to right, #4facfe, #00f2fe)">Blue Ocean</SelectItem>
-                    <SelectItem value="linear-gradient(to right, #43e97b, #38f9d7)">Green Meadow</SelectItem>
-                    <SelectItem value="linear-gradient(to right, #fa709a, #fee140)">Pink Lemonade</SelectItem>
-                    <SelectItem value="linear-gradient(to right, #6a11cb, #2575fc)">Purple Rain</SelectItem>
-                    <SelectItem value="linear-gradient(to right, #434343, #000000)">Dark Night</SelectItem>
-                    <SelectItem value="linear-gradient(to right, #f6d365, #fda085)">Golden Hour</SelectItem>
+                    <SelectItem value="system-ui, sans-serif">System UI</SelectItem>
+                    <SelectItem value="'Roboto', sans-serif">Roboto</SelectItem>
+                    <SelectItem value="'Open Sans', sans-serif">Open Sans</SelectItem>
+                    <SelectItem value="'Lato', sans-serif">Lato</SelectItem>
+                    <SelectItem value="'Montserrat', sans-serif">Montserrat</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-            )}
-
-            {customization.background.type === 'image' && (
+              
+              <div className="space-y-2">
+                <Label>Font Size</Label>
+                <Select
+                  value={customization.font.size}
+                  onValueChange={(value) => handleFontChange('size', value)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="small">Small</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="large">Large</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Text Color</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full flex justify-between">
+                      <span>Select Color</span>
+                      <div 
+                        className="w-4 h-4 rounded-full border" 
+                        style={{ backgroundColor: customization.font.color }}
+                      />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-3">
+                    <HexColorPicker 
+                      color={customization.font.color || '#000000'} 
+                      onChange={(color) => handleFontChange('color', color)}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Text Alignment</Label>
+                <RadioGroup
+                  value={customization.font.alignment || 'left'}
+                  onValueChange={(value) => handleFontChange('alignment', value)}
+                  className="flex space-x-2"
+                >
+                  <div className="flex items-center space-x-1">
+                    <RadioGroupItem value="left" id="align-left" />
+                    <Label htmlFor="align-left">Left</Label>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <RadioGroupItem value="center" id="align-center" />
+                    <Label htmlFor="align-center">Center</Label>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <RadioGroupItem value="right" id="align-right" />
+                    <Label htmlFor="align-right">Right</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+              
+              <Separator className="my-4" />
+              
+              <TextPositionSelector
+                contentPosition={customization.textLayout?.contentPosition || 'middle'}
+                spacing={customization.textLayout?.spacing || 'normal'}
+                onPositionChange={handleTextPositionChange}
+                onSpacingChange={handleSpacingChange}
+              />
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="buttons">
+            <div className="space-y-4">
+              {/* Basic button styling */}
               <div className="space-y-4">
-                <Label className="block mb-2">Image URL</Label>
-                <div className="flex gap-2">
-                  <Input
-                    type="text"
-                    value={customization.background.value}
-                    onChange={(e) => handleBackgroundChange('image', e.target.value)}
-                    placeholder="Enter image URL"
-                    className="flex-1"
-                  />
-                  <Button variant="outline" size="icon" className="shrink-0" type="button">
-                    <Upload className="h-4 w-4" />
-                  </Button>
+                <h3 className="font-medium">Button Colors & Style</h3>
+                
+                <div className="space-y-2">
+                  <Label>Accept Button Color</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full flex justify-between">
+                        <span>Select Color</span>
+                        <div
+                          className="w-4 h-4 rounded-full border"
+                          style={{ backgroundColor: customization.buttons?.accept?.background || '#3B82F6' }}
+                        />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-3">
+                      <HexColorPicker
+                        color={customization.buttons?.accept?.background || '#3B82F6'}
+                        onChange={(color) => handleButtonStyleChange('accept', 'background', color)}
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Enter a URL to an image or upload one.
-                </p>
-              </div>
-            )}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="text" className="space-y-6">
-          <div className="space-y-4">
-            {/* Font Selection */}
-            <FontSelector 
-              font={customization.font} 
-              onFontChange={handleFontChange} 
-              showAlignment={true} 
-              showWeight={true}
-              previewText={title || "Your Invitation Title"}
-            />
-
-            {/* Text Position */}
-            <TextPositionSelector 
-              contentPosition={textLayout.contentPosition}
-              spacing={textLayout.spacing}
-              onPositionChange={(position) => handleTextLayoutChange('contentPosition', position)}
-              onSpacingChange={(spacing) => handleTextLayoutChange('spacing', spacing)}
-            />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="buttons" className="space-y-6">
-          <div className="space-y-6">
-            <div className="space-y-4 p-4 border rounded-md">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="directions-toggle" className="font-medium">
-                  Show Directions Button
-                </Label>
-                <Switch 
-                  id="directions-toggle"
-                  checked={directionsButton.show}
-                  onCheckedChange={(checked) => handleButtonToggle('directions', checked)}
-                />
+                
+                <div className="space-y-2">
+                  <Label>Decline Button Color</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full flex justify-between">
+                        <span>Select Color</span>
+                        <div
+                          className="w-4 h-4 rounded-full border"
+                          style={{ backgroundColor: customization.buttons?.decline?.background || '#EF4444' }}
+                        />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-3">
+                      <HexColorPicker
+                        color={customization.buttons?.decline?.background || '#EF4444'}
+                        onChange={(color) => handleButtonStyleChange('decline', 'background', color)}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Button Shape</Label>
+                  <Select
+                    value={customization.buttons?.accept?.shape || 'rounded'}
+                    onValueChange={(value) => {
+                      handleButtonStyleChange('accept', 'shape', value);
+                      handleButtonStyleChange('decline', 'shape', value);
+                    }}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="rounded">Rounded</SelectItem>
+                      <SelectItem value="pill">Pill</SelectItem>
+                      <SelectItem value="square">Square</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               
-              {directionsButton.show && (
-                <div className="space-y-4 mt-4">
-                  <div className="space-y-2">
-                    <Label>Button Appearance</Label>
-                    <div className="flex gap-2 mt-1">
-                      <HexColorPicker
-                        color={directionsButton.background}
-                        onChange={(color) => handleButtonStyleChange('directions', 'background', color)}
-                        label="Background"
-                      />
-                      <HexColorPicker
-                        color={directionsButton.color}
-                        onChange={(color) => handleButtonStyleChange('directions', 'color', color)}
-                        label="Text Color"
-                      />
-                    </div>
-                    
-                    <div className="mt-4">
-                      <Label className="block mb-2">Button Shape</Label>
-                      <RadioGroup 
-                        value={directionsButton.shape}
-                        onValueChange={(value) => handleButtonStyleChange('directions', 'shape', value)}
-                        className="flex gap-4"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="rounded" id="directions-rounded" />
-                          <Label htmlFor="directions-rounded">Rounded</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="pill" id="directions-pill" />
-                          <Label htmlFor="directions-pill">Pill</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="square" id="directions-square" />
-                          <Label htmlFor="directions-square">Square</Label>
-                        </div>
-                      </RadioGroup>
-                    </div>
+              <Separator className="my-4" />
+              
+              {/* Directions button settings */}
+              {hasLocation && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="show-directions" className="text-base font-medium">Show Directions Button</Label>
+                    <Switch 
+                      id="show-directions" 
+                      checked={customization.buttons?.directions?.show !== false}
+                      onCheckedChange={(checked) => handleButtonVisibilityChange('directions', checked)}
+                    />
                   </div>
                   
-                  <ButtonPositionSelector
-                    position={directionsButton.position as ButtonPosition}
-                    onPositionChange={(position: ButtonPosition) => {
-                      handleButtonStyleChange('directions', 'position', position);
-                    }}
-                    onChange={(buttonType, property, value) => {
-                      handleButtonStyleChange(buttonType, property, value);
-                    }}
-                  />
+                  {customization.buttons?.directions?.show !== false && (
+                    <ButtonPositionSelector 
+                      showDirections={true}
+                      onChange={(buttonType, property, value) => {
+                        if (property === "position" && buttonType === "directions") {
+                          handlePositionChange('directions', value as ButtonPosition);
+                        }
+                      }}
+                      directionsButton={{
+                        show: true,
+                        position: directionsPosition,
+                        background: customization.buttons?.directions?.background || '#3B82F6',
+                        color: customization.buttons?.directions?.color || '#ffffff',
+                        shape: customization.buttons?.directions?.shape || 'rounded'
+                      }}
+                    />
+                  )}
+                </div>
+              )}
+              
+              <Separator className="my-4" />
+              
+              {/* Calendar button settings */}
+              {isEvent && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="show-calendar" className="text-base font-medium">Show Calendar Button</Label>
+                    <Switch 
+                      id="show-calendar" 
+                      checked={customization.buttons?.calendar?.show !== false}
+                      onCheckedChange={(checked) => handleButtonVisibilityChange('calendar', checked)}
+                    />
+                  </div>
+                  
+                  {customization.buttons?.calendar?.show !== false && (
+                    <ButtonPositionSelector 
+                      showCalendar={true}
+                      onChange={(buttonType, property, value) => {
+                        if (property === "position" && buttonType === "calendar") {
+                          handlePositionChange('calendar', value as ButtonPosition);
+                        }
+                      }}
+                      calendarButton={{
+                        show: true,
+                        position: calendarPosition,
+                        background: customization.buttons?.calendar?.background || '#3B82F6',
+                        color: customization.buttons?.calendar?.color || '#ffffff',
+                        shape: customization.buttons?.calendar?.shape || 'rounded'
+                      }}
+                    />
+                  )}
                 </div>
               )}
             </div>
-
-            <div className="space-y-4 p-4 border rounded-md">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="calendar-toggle" className="font-medium">
-                  Show Calendar Button
-                </Label>
-                <Switch 
-                  id="calendar-toggle"
-                  checked={calendarButton.show}
-                  onCheckedChange={(checked) => handleButtonToggle('calendar', checked)}
-                />
-              </div>
-              
-              {calendarButton.show && (
-                <div className="space-y-4 mt-4">
-                  <div className="space-y-2">
-                    <Label>Button Appearance</Label>
-                    <div className="flex gap-2 mt-1">
-                      <HexColorPicker
-                        color={calendarButton.background}
-                        onChange={(color) => handleButtonStyleChange('calendar', 'background', color)}
-                        label="Background"
-                      />
-                      <HexColorPicker
-                        color={calendarButton.color}
-                        onChange={(color) => handleButtonStyleChange('calendar', 'color', color)}
-                        label="Text Color"
-                      />
-                    </div>
-                    
-                    <div className="mt-4">
-                      <Label className="block mb-2">Button Shape</Label>
-                      <RadioGroup 
-                        value={calendarButton.shape}
-                        onValueChange={(value) => handleButtonStyleChange('calendar', 'shape', value)}
-                        className="flex gap-4"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="rounded" id="calendar-rounded" />
-                          <Label htmlFor="calendar-rounded">Rounded</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="pill" id="calendar-pill" />
-                          <Label htmlFor="calendar-pill">Pill</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="square" id="calendar-square" />
-                          <Label htmlFor="calendar-square">Square</Label>
-                        </div>
-                      </RadioGroup>
-                    </div>
-                  </div>
-                  
-                  <ButtonPositionSelector
-                    position={calendarButton.position as ButtonPosition}
-                    onPositionChange={(position: ButtonPosition) => {
-                      handleButtonStyleChange('calendar', 'position', position);
-                    }}
-                    onChange={(buttonType, property, value) => {
-                      handleButtonStyleChange(buttonType, property, value);
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-        </TabsContent>
-      </Tabs>
-    </div>
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+    </Card>
   );
 }

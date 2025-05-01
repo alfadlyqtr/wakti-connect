@@ -15,6 +15,7 @@ import InvitationPreview from './InvitationPreview';
 import { createSimpleInvitation, updateSimpleInvitation } from '@/services/invitation/simple-invitations';
 import { SimpleInvitation, SimpleInvitationCustomization, BackgroundType } from '@/types/invitation.types';
 import { InvitationData } from '@/services/invitation/invitation-types';
+import { useAuth } from '@/hooks/auth';
 
 interface SimpleInvitationCreatorProps {
   isEvent?: boolean;
@@ -115,60 +116,72 @@ export default function SimpleInvitationCreator({
     }));
   };
 
-  const onSubmit = async (data) => {
-    setIsSubmitting(true);
+  const handleSubmit = async () => {
     try {
-      const formattedDateTime = data.date && data.time ? `${data.date}T${data.time}` : data.date ? `${data.date}T00:00:00` : undefined;
-      const title = data.title;
-      const description = data.description;
-      const location = data.location;
-      const locationTitle = data.locationTitle;
-      const date = data.date;
-      const time = data.time;
-
-      const formData: InvitationData = {
-        title: title,
-        description: description,
-        location: location,
-        location_title: locationTitle,
-        datetime: date && time ? `${date}T${time}` : undefined,
+      setIsSubmitting(true);
+      
+      // Get the current user's ID
+      const { user } = useAuth();
+      
+      if (!user?.id) {
+        toast({
+          title: 'Error',
+          description: 'You must be logged in to create an invitation',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      // Create the datetime string from the date and time fields
+      const datetime = formData.date && formData.time 
+        ? `${formData.date}T${formData.time}:00` 
+        : undefined;
+      
+      // Create the invitation data object with all required fields including user_id
+      const invitationData: InvitationData = {
+        title: formData.title,
+        description: formData.description,
+        location: formData.location,
+        location_title: formData.locationTitle,
+        datetime,
         background_type: customization.background.type,
         background_value: customization.background.value,
         font_family: customization.font.family,
         font_size: customization.font.size,
         text_color: customization.font.color,
-        text_align: customization.font.alignment || 'center',
+        text_align: customization.font.alignment || 'left',
         is_event: isEvent,
-        user_id: '' // This will be filled in by the API
+        user_id: user.id // Include the user ID
       };
-
+      
       let result;
+      
       if (existingInvitation) {
-        result = await updateSimpleInvitation(existingInvitation.id, formData);
-        if (result) {
-          toast({
-            title: "Success",
-            description: isEvent ? "Event updated successfully" : "Invitation updated successfully",
-          });
-        }
+        result = await updateSimpleInvitation(existingInvitation.id, invitationData);
       } else {
-        result = await createSimpleInvitation(formData);
-        if (result) {
-          toast({
-            title: "Success",
-            description: isEvent ? "Event created successfully" : "Invitation created successfully",
-          });
-        }
+        result = await createSimpleInvitation(invitationData);
       }
-
-      // Navigate back to the list view
-      navigate(isEvent ? '/dashboard/events' : '/dashboard/invitations');
+      
+      if (result) {
+        toast({
+          title: 'Success',
+          description: existingInvitation 
+            ? 'Invitation has been updated!' 
+            : 'Invitation has been created!',
+        });
+        
+        navigate(isEvent ? '/dashboard/events' : '/dashboard/invitations');
+      } else {
+        throw new Error('Failed to save invitation');
+      }
     } catch (error) {
       console.error('Error saving invitation:', error);
       toast({
-        title: "Error",
-        description: `Failed to ${existingInvitation ? 'update' : 'create'} ${isEvent ? 'event' : 'invitation'}`,
-        variant: "destructive",
+        title: 'Error',
+        description: existingInvitation
+          ? 'Failed to update invitation. Please try again.'
+          : 'Failed to create invitation. Please try again.',
+        variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
@@ -189,7 +202,7 @@ export default function SimpleInvitationCreator({
         {/* Left column - Form */}
         <div>
           <Card className="p-6">
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="title">Title</Label>

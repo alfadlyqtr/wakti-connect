@@ -15,14 +15,14 @@ export interface InvitationDbRecord {
   font_family: string;
   font_size: string;
   text_color: string;
-  text_align: string; // Adding this property that was missing
+  text_align: string;
   is_event?: boolean;
   user_id: string;
   created_at: string;
   updated_at?: string;
   share_id?: string;
   is_public?: boolean;
-  share_link?: string; // Added this property
+  share_link?: string;
 }
 
 // Intermediate type for breaking the deep type inference chain
@@ -50,8 +50,8 @@ export type SimpleInvitationResult = {
       family: string;
       size: string;
       color: string;
-      alignment?: string;  // Optional to match the source type
-      weight?: string;     // Optional to match the source type
+      alignment?: string;
+      weight?: string;
     };
     buttons?: {
       accept: {
@@ -95,7 +95,7 @@ export interface InvitationData {
   font_family: string;
   font_size: string;
   text_color: string;
-  text_align?: string;
+  text_align: string;
   is_event?: boolean;
   user_id: string;
 }
