@@ -3,7 +3,7 @@ import React from 'react';
 import { TextPosition } from '@/types/invitation.types';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { AlignCenter, AlignTop, AlignBottom } from 'lucide-react';
+import { AlignStartVertical, AlignCenterVertical, AlignEndVertical } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -33,7 +33,7 @@ export default function TextPositionSelector({
         >
           <div className="flex flex-col items-center gap-2">
             <Card className="p-2 flex flex-col items-center cursor-pointer relative hover:bg-muted w-20 h-20">
-              <AlignTop className="h-6 w-6" />
+              <AlignStartVertical className="h-6 w-6" />
               <div className="h-8 border-2 border-primary/40 rounded w-full mt-1"></div>
               <RadioGroupItem value="top" id="position-top" className="absolute opacity-0" />
             </Card>
@@ -43,7 +43,7 @@ export default function TextPositionSelector({
           <div className="flex flex-col items-center gap-2">
             <Card className="p-2 flex flex-col items-center justify-center cursor-pointer relative hover:bg-muted w-20 h-20">
               <div className="h-4 border-2 border-primary/40 rounded w-full"></div>
-              <AlignCenter className="h-6 w-6 my-1" />
+              <AlignCenterVertical className="h-6 w-6 my-1" />
               <div className="h-4 border-2 border-primary/40 rounded w-full"></div>
               <RadioGroupItem value="middle" id="position-middle" className="absolute opacity-0" />
             </Card>
@@ -53,7 +53,7 @@ export default function TextPositionSelector({
           <div className="flex flex-col items-center gap-2">
             <Card className="p-2 flex flex-col items-center cursor-pointer relative hover:bg-muted w-20 h-20">
               <div className="h-8 border-2 border-primary/40 rounded w-full mb-1"></div>
-              <AlignBottom className="h-6 w-6" />
+              <AlignEndVertical className="h-6 w-6" />
               <RadioGroupItem value="bottom" id="position-bottom" className="absolute opacity-0" />
             </Card>
             <Label htmlFor="position-bottom" className="cursor-pointer">Bottom</Label>
