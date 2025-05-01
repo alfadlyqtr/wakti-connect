@@ -1346,6 +1346,7 @@ export type Database = {
           id: string
           is_event: boolean | null
           location: string | null
+          location_title: string | null
           location_url: string | null
           share_link: string | null
           text_color: string
@@ -1364,6 +1365,7 @@ export type Database = {
           id?: string
           is_event?: boolean | null
           location?: string | null
+          location_title?: string | null
           location_url?: string | null
           share_link?: string | null
           text_color?: string
@@ -1382,6 +1384,7 @@ export type Database = {
           id?: string
           is_event?: boolean | null
           location?: string | null
+          location_title?: string | null
           location_url?: string | null
           share_link?: string | null
           text_color?: string

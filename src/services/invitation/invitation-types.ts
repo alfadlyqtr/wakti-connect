@@ -68,6 +68,7 @@ export interface InvitationData {
   font_family: string;
   font_size: string;
   text_color: string;
+  text_align?: string;
   is_event?: boolean;
   user_id: string;
 }
