@@ -41,3 +41,32 @@ export interface InvitationData {
   is_event?: boolean;
   user_id: string;
 }
+
+// Intermediate result type to avoid deep instantiation errors
+export interface SimpleInvitationResult {
+  id: string;
+  title: string;
+  description: string;
+  location?: string;
+  locationTitle?: string;
+  date?: string;
+  time?: string;
+  createdAt: string;
+  updatedAt?: string;
+  userId: string;
+  shareId?: string;
+  isPublic?: boolean;
+  isEvent?: boolean;
+  customization: {
+    background: {
+      type: string;
+      value: string;
+    };
+    font: {
+      family: string;
+      size: string;
+      color: string;
+      alignment?: string;
+    }
+  }
+}

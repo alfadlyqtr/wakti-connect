@@ -232,7 +232,8 @@ export const getSharedInvitation = async (shareId: string): Promise<SimpleInvita
 export function mapDbRecordToSimpleInvitation(data: InvitationDbRecord): SimpleInvitation | null {
   if (!data) return null;
 
-  return {
+  // Create an object with explicit types to prevent deep type inference chains
+  const result = {
     id: data.id,
     title: data.title,
     description: data.description || '',
@@ -258,7 +259,10 @@ export function mapDbRecordToSimpleInvitation(data: InvitationDbRecord): SimpleI
         alignment: data.text_align
       }
     }
-  } as SimpleInvitation;
+  };
+
+  // Cast to SimpleInvitation for type compatibility
+  return result as unknown as SimpleInvitation;
 }
 
 // Re-export listSimpleInvitations as an alias for fetchSimpleInvitations for backward compatibility

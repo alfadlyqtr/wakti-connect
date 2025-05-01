@@ -218,7 +218,7 @@ export function mapDbRecordToSimpleInvitation(data: InvitationDbRecord): SimpleI
     isEvent: !!data.is_event,
     customization: {
       background: {
-        type: (data.background_type || 'solid') as any,
+        type: (data.background_type || 'solid'),
         value: data.background_value || '#ffffff'
       },
       font: {
