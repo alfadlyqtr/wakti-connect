@@ -200,9 +200,8 @@ export const getSharedInvitation = async (shareId: string): Promise<SimpleInvita
           family: data.font_family || 'system-ui, sans-serif',
           size: data.font_size || 'medium',
           color: data.text_color || '#000000',
-          // Only include alignment if it exists in the data
-          // This is where the error was happening - data.text_align was undefined
-          ...(data.text_align ? { alignment: data.text_align } : {})
+          // Only include text_align if it exists in the data record
+          ...(typeof data.text_align !== 'undefined' ? { alignment: data.text_align } : {})
         }
       }
     } as unknown as SimpleInvitation;
@@ -250,8 +249,8 @@ export function mapDbRecordToSimpleInvitation(data: InvitationDbRecord): SimpleI
         family: data.font_family || 'system-ui, sans-serif',
         size: data.font_size || 'medium',
         color: data.text_color || '#000000',
-        // Only include alignment if it exists in the data
-        ...(data.text_align ? { alignment: data.text_align } : {})
+        // Only include text_align if it exists in the data record
+        ...(typeof data.text_align !== 'undefined' ? { alignment: data.text_align } : {})
       }
     }
   };
