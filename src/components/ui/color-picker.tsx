@@ -1,33 +1,27 @@
 
-import React from 'react';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
+import React from "react";
+import { Input } from "./input";
 
-interface HexColorPickerProps {
-  color: string;
-  onChange: (color: string) => void;
-  label?: string;
-  className?: string;
+interface ColorPickerProps {
+  value: string;
+  onChange: (value: string) => void;
 }
 
-export const HexColorPicker = ({ color, onChange, label, className }: HexColorPickerProps) => {
+export const ColorPicker: React.FC<ColorPickerProps> = ({ value, onChange }) => {
   return (
-    <div className={`space-y-2 ${className}`}>
-      {label && <Label>{label}</Label>}
-      <div className="flex gap-2 items-center">
-        <div className="w-8 h-8 rounded-md border" style={{ backgroundColor: color }}></div>
-        <Input
-          type="color"
-          value={color}
-          onChange={(e) => onChange(e.target.value)}
-          className="w-12 h-8 p-0 overflow-hidden"
-        />
-        <Input 
-          value={color} 
-          onChange={(e) => onChange(e.target.value)} 
-          className="flex-1"
-        />
-      </div>
+    <div className="flex items-center gap-2">
+      <Input
+        type="color"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-8 h-8 p-0.5 border rounded"
+      />
+      <Input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-24 text-xs"
+      />
     </div>
   );
 };

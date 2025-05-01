@@ -9,7 +9,6 @@ import { UserRole } from "@/types/user";
 import { useQuery } from '@tanstack/react-query';
 import { format } from "date-fns";
 import { listSimpleInvitations } from '@/services/invitation/simple-invitations';
-import { useAuth } from '@/lib/auth';
 
 interface DashboardEventsPreviewProps {
   userRole: UserRole;
@@ -17,13 +16,11 @@ interface DashboardEventsPreviewProps {
 
 const DashboardEventsPreview: React.FC<DashboardEventsPreviewProps> = ({ userRole }) => {
   const navigate = useNavigate();
-  const { user } = useAuth?.() || { user: null };
   
   // Replace useEvents with direct query to the simple invitations list with isEvent=true filter
   const { data: events, isLoading } = useQuery({
-    queryKey: ['simple-invitations-events', user?.id],
-    queryFn: () => user?.id ? listSimpleInvitations(user.id, true) : [], // Pass user ID and true to get only events
-    enabled: !!user?.id
+    queryKey: ['simple-invitations-events'],
+    queryFn: () => listSimpleInvitations(true), // Pass true to get only events
   });
   
   // Get only upcoming events (events with date in the future)

@@ -43,12 +43,6 @@ export default function SharedInvitationView() {
     );
   }
 
-  // Log the invitation data to help with debugging
-  console.log("Rendering invitation:", invitation);
-  console.log("Location:", invitation.location);
-  console.log("Is event:", invitation.isEvent);
-  console.log("Button configuration:", invitation.customization?.buttons);
-
   return (
     <div className="container mx-auto px-4 py-16">
       <div className="max-w-2xl mx-auto">
@@ -61,7 +55,7 @@ export default function SharedInvitationView() {
           time={invitation.time}
           customization={invitation.customization}
           isEvent={invitation.isEvent}
-          showActions={true} 
+          showActions={true}
         />
       </div>
     </div>

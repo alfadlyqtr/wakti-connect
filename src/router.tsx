@@ -18,7 +18,6 @@ import ScrollToTop from "./components/ui/scroll-to-top";
 import { TaskProvider } from "@/contexts/TaskContext";
 import NotificationListener from "./components/notifications/NotificationListener";
 import ErrorBoundary from "./components/ui/ErrorBoundary";
-import SimpleInvitationCreator from "./components/invitations/SimpleInvitationCreator";
 
 // Lazy load dashboard pages
 import { lazy, Suspense } from "react";
@@ -190,24 +189,6 @@ export const router = createBrowserRouter([
       </ErrorBoundary>
     ),
     children: businessRoutes,
-  },
-  
-  // Add route for /invitations/create
-  {
-    path: "/invitations/create",
-    element: (
-      <ErrorBoundary>
-        <TooltipProvider>
-          <TaskProvider>
-            <ScrollToTop />
-            <NotificationListener />
-            <Toaster />
-            <Sonner />
-            <SimpleInvitationCreator />
-          </TaskProvider>
-        </TooltipProvider>
-      </ErrorBoundary>
-    ),
   },
   
   // Dashboard routes with role-based protection

@@ -1,293 +1,240 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { SimpleInvitation, SimpleInvitationCustomization, BackgroundType } from '@/types/invitation.types';
+import { createSimpleInvitation, updateSimpleInvitation } from '@/services/invitation/simple-invitations';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useToast } from '@/hooks/use-toast';
 import InvitationForm from './InvitationForm';
+import InvitationStyler from './InvitationStyler';
 import InvitationPreview from './InvitationPreview';
-import BackgroundSelector from './BackgroundSelector';
-import FontSelector from './FontSelector';
-import TextPositionSelector from './TextPositionSelector';
-import { SimpleInvitation, BackgroundType, TextPosition } from '@/types/invitation.types';
-import { format } from 'date-fns';
-import { 
-  createSimpleInvitation, 
-  updateSimpleInvitation 
-} from '@/services/invitation/simple-invitations';
-import { useAuth } from '@/lib/auth'; // Updated import path
-import { InvitationData } from '@/services/invitation/invitation-types';
+import { toast } from '@/components/ui/use-toast';
+import { useAuth } from '@/features/auth/context/AuthContext';
 
 interface SimpleInvitationCreatorProps {
   existingInvitation?: SimpleInvitation;
+  onSuccess?: () => void;
   isEvent?: boolean;
 }
 
 export default function SimpleInvitationCreator({ 
   existingInvitation, 
+  onSuccess,
   isEvent = false 
 }: SimpleInvitationCreatorProps) {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const { user } = useAuth?.() || { user: null }; // Optional chaining for backward compatibility
-  const [activeTab, setActiveTab] = useState<'details' | 'customize' | 'preview'>('details');
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<string>('details');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const [formValues, setFormValues] = useState({
-    title: '',
-    description: '',
-    location: '',
-    locationTitle: '',
-    date: '',
-    time: '',
+
+  // Determine paths based on whether this is for events or invitations
+  const basePath = isEvent ? '/dashboard/events' : '/dashboard/invitations';
+  const entityType = isEvent ? 'Event' : 'Invitation';
+
+  const [formData, setFormData] = useState({
+    title: existingInvitation?.title || '',
+    description: existingInvitation?.description || '',
+    location: existingInvitation?.location || '',
+    locationTitle: existingInvitation?.locationTitle || '',
+    date: existingInvitation?.date || '',
+    time: existingInvitation?.time || '',
   });
-  
-  const [customization, setCustomization] = useState({
-    background: {
-      type: 'solid' as BackgroundType,
-      value: '#ffffff',
-    },
-    font: {
-      family: 'system-ui, sans-serif',
-      size: 'medium',
-      color: '#000000',
-      alignment: 'left',
-      weight: 'normal',
-      position: 'middle' as TextPosition,
-    },
-    textLayout: {
-      contentPosition: 'middle' as TextPosition,
-      spacing: 'normal' as 'compact' | 'normal' | 'spacious',
+
+  const [customization, setCustomization] = useState<SimpleInvitationCustomization>(
+    existingInvitation?.customization || {
+      background: {
+        type: 'solid' as BackgroundType,
+        value: '#ffffff',
+      },
+      font: {
+        family: 'system-ui, sans-serif',
+        size: 'medium',
+        color: '#000000',
+        alignment: 'left',
+      },
     }
-  });
-  
-  // Only define one handleSubmit
-  const submitForm = async () => {
+  );
+
+  const handleFormChange = (field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleCustomizationChange = (newCustomization: SimpleInvitationCustomization) => {
+    setCustomization(newCustomization);
+  };
+
+  const handleSubmit = async () => {
+    if (!user) {
+      toast({
+        title: 'Authentication required',
+        description: 'Please log in to save your ' + entityType.toLowerCase(),
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       
-      if (!user?.id) {
-        toast({
-          title: "Authentication required",
-          description: "Please sign in to create invitations",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      let datetime = '';
-      if (formValues.date) {
-        datetime = formValues.time 
-          ? `${formValues.date}T${formValues.time}:00` 
-          : `${formValues.date}T00:00:00`;
-      }
-      
-      const invitationData: InvitationData = {
-        title: formValues.title,
-        description: formValues.description,
-        location: formValues.location,
-        location_title: formValues.locationTitle,
-        datetime,
+      // Map our form data to the database structure
+      const invitationData = {
+        title: formData.title,
+        description: formData.description || '',
+        location: formData.location || '',
+        location_url: formData.location || '', // Using location as location_url
+        location_title: formData.locationTitle || '',
+        datetime: formData.date && formData.time ? new Date(`${formData.date}T${formData.time}`).toISOString() : undefined,
+        
+        // Map from our customization model to the database fields
         background_type: customization.background.type,
         background_value: customization.background.value,
         font_family: customization.font.family,
         font_size: customization.font.size,
         text_color: customization.font.color,
-        text_align: customization.font.alignment || 'left',
-        is_event: isEvent,
-        user_id: user.id,
+        is_event: isEvent, // Add flag to identify if this is an event
+        user_id: user.id, // Add the user's ID to comply with RLS
       };
-      
+
       let result;
-      
       if (existingInvitation) {
+        // Update existing invitation
         result = await updateSimpleInvitation(existingInvitation.id, invitationData);
       } else {
+        // Create new invitation
         result = await createSimpleInvitation(invitationData);
       }
-      
+
       if (result) {
         toast({
-          title: existingInvitation ? "Invitation updated" : "Invitation created",
-          description: existingInvitation
-            ? "Your invitation has been updated successfully."
-            : "Your invitation has been created successfully.",
+          title: 'Success',
+          description: `${entityType} successfully ${existingInvitation ? 'updated' : 'created'}!`,
         });
-        
-        navigate(isEvent ? '/dashboard/events' : '/dashboard/invitations');
-      } else {
-        throw new Error("Failed to save invitation");
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          navigate(basePath);
+        }
       }
     } catch (error) {
-      console.error("Error saving invitation:", error);
+      console.error(`Error saving ${entityType.toLowerCase()}:`, error);
       toast({
-        title: "Error",
-        description: "Failed to save invitation. Please try again.",
-        variant: "destructive",
+        title: `Failed to save ${entityType.toLowerCase()}`,
+        description: `There was an error while saving your ${entityType.toLowerCase()}.`,
+        variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
     }
   };
-  
-  const handleFormChange = (field: string, value: string) => {
-    setFormValues(prev => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-  
-  const handleBackgroundChange = (type: BackgroundType, value: string) => {
-    setCustomization(prev => ({
-      ...prev,
-      background: { type, value },
-    }));
-  };
-  
-  const handleFontChange = (property: string, value: string) => {
-    setCustomization(prev => ({
-      ...prev,
-      font: {
-        ...prev.font,
-        [property]: value,
-      },
-    }));
+
+  const handleNextTab = () => {
+    if (activeTab === 'details') {
+      setActiveTab('customize');
+    } else if (activeTab === 'customize') {
+      handleSubmit();
+    }
   };
 
-  const handleTextLayoutChange = (property: string, value: string) => {
-    setCustomization(prev => ({
-      ...prev,
-      textLayout: {
-        ...prev.textLayout,
-        [property]: value,
-      },
-    }));
-  };
-  
-  // Load existing invitation data if editing
-  useEffect(() => {
-    if (existingInvitation) {
-      setFormValues({
-        title: existingInvitation.title || '',
-        description: existingInvitation.description || '',
-        location: existingInvitation.location || '',
-        locationTitle: existingInvitation.locationTitle || '',
-        date: existingInvitation.date || '',
-        time: existingInvitation.time || '',
-      });
-      
-      setCustomization({
-        background: {
-          type: existingInvitation.customization.background.type,
-          value: existingInvitation.customization.background.value,
-        },
-        font: {
-          family: existingInvitation.customization.font.family || 'system-ui, sans-serif',
-          size: existingInvitation.customization.font.size || 'medium',
-          color: existingInvitation.customization.font.color || '#000000',
-          alignment: existingInvitation.customization.font.alignment || 'left',
-          weight: existingInvitation.customization.font.weight || 'normal',
-          position: existingInvitation.customization.font.position || 'middle',
-        },
-        textLayout: {
-          contentPosition: existingInvitation.customization.textLayout?.contentPosition || 'middle',
-          spacing: existingInvitation.customization.textLayout?.spacing || 'normal',
-        }
-      });
+  const handlePrevTab = () => {
+    if (activeTab === 'customize') {
+      setActiveTab('details');
     }
-  }, [existingInvitation]);
+  };
+
+  // Check if user is authenticated
+  React.useEffect(() => {
+    if (!user) {
+      console.warn('User is not authenticated');
+    }
+  }, [user]);
 
   return (
-    <div className="container mx-auto py-8">
-      <Card className="w-full max-w-4xl mx-auto">
-        <CardHeader>
-          <CardTitle>
-            {existingInvitation ? `Edit ${isEvent ? 'Event' : 'Invitation'}` : `Create ${isEvent ? 'Event' : 'Invitation'}`}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)}>
-            <TabsList className="grid grid-cols-3 mb-8">
-              <TabsTrigger value="details">Details</TabsTrigger>
-              <TabsTrigger value="customize">Customize</TabsTrigger>
-              <TabsTrigger value="preview">Preview</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="details">
-              <InvitationForm 
-                formData={formValues}
-                onChange={handleFormChange} 
-                isEvent={isEvent}
-              />
-            </TabsContent>
-            
-            <TabsContent value="customize">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-8">
-                  <BackgroundSelector 
-                    backgroundType={customization.background.type}
-                    backgroundValue={customization.background.value}
-                    onBackgroundChange={handleBackgroundChange}
-                  />
-                  
-                  <FontSelector
-                    font={customization.font}
-                    onFontChange={handleFontChange}
-                  />
-                  
-                  <TextPositionSelector
-                    contentPosition={customization.textLayout.contentPosition}
-                    spacing={customization.textLayout.spacing}
-                    onPositionChange={(value) => handleTextLayoutChange('contentPosition', value)}
-                    onSpacingChange={(value) => handleTextLayoutChange('spacing', value)}
-                  />
-                </div>
-                
-                <div>
-                  <h3 className="text-lg font-medium mb-4">Preview</h3>
-                  <InvitationPreview
-                    title={formValues.title}
-                    description={formValues.description}
-                    location={formValues.location}
-                    locationTitle={formValues.locationTitle}
-                    date={formValues.date}
-                    time={formValues.time}
-                    customization={customization}
-                    isEvent={isEvent}
-                  />
-                </div>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="preview">
-              <div className="max-w-md mx-auto">
+    <div className="container mx-auto p-4 max-w-5xl">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold mb-2">
+          {existingInvitation 
+            ? `Edit ${entityType}` 
+            : `Create New ${entityType}`}
+        </h1>
+        <p className="text-muted-foreground">
+          {existingInvitation 
+            ? `Update your ${entityType.toLowerCase()} details and styling` 
+            : `Fill in the details and customize your ${entityType.toLowerCase()}`}
+        </p>
+      </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="details">{entityType} Details</TabsTrigger>
+          <TabsTrigger value="customize">Customize Style</TabsTrigger>
+        </TabsList>
+
+        <Card className="mt-6 p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <TabsContent value="details" className="mt-0">
+                <InvitationForm 
+                  formData={formData}
+                  onChange={handleFormChange}
+                  isEvent={isEvent}
+                />
+              </TabsContent>
+
+              <TabsContent value="customize" className="mt-0">
+                <InvitationStyler
+                  customization={customization}
+                  onChange={handleCustomizationChange}
+                  title={formData.title}
+                  description={formData.description}
+                />
+              </TabsContent>
+            </div>
+
+            <div className="order-first md:order-last mb-6 md:mb-0">
+              <div className="sticky top-4">
+                <h3 className="text-sm font-medium mb-2 text-muted-foreground">Preview</h3>
                 <InvitationPreview
-                  title={formValues.title}
-                  description={formValues.description}
-                  location={formValues.location}
-                  locationTitle={formValues.locationTitle}
-                  date={formValues.date}
-                  time={formValues.time}
+                  title={formData.title}
+                  description={formData.description}
+                  location={formData.location}
+                  locationTitle={formData.locationTitle}
+                  date={formData.date}
+                  time={formData.time}
                   customization={customization}
                   isEvent={isEvent}
-                  showActions={true}
                 />
               </div>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-        
-        <CardFooter className="flex justify-between">
-          <Button variant="outline" onClick={() => navigate(isEvent ? '/dashboard/events' : '/dashboard/invitations')}>
-            Cancel
-          </Button>
-          <Button onClick={submitForm} disabled={isSubmitting}>
-            {isSubmitting ? 'Saving...' : existingInvitation ? 'Update' : 'Create'}
-          </Button>
-        </CardFooter>
-      </Card>
+            </div>
+          </div>
+
+          <div className="flex justify-between mt-6">
+            <Button
+              variant="outline"
+              onClick={() => navigate(basePath)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+
+            <div className="flex gap-2">
+              {activeTab === 'customize' && (
+                <Button variant="outline" onClick={handlePrevTab} disabled={isSubmitting}>
+                  Previous
+                </Button>
+              )}
+              <Button onClick={handleNextTab} disabled={isSubmitting}>
+                {activeTab === 'details' 
+                  ? 'Next: Customize' 
+                  : `Save ${entityType}`}
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </Tabs>
     </div>
   );
 }
