@@ -1,22 +1,23 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { HexColorPicker } from '@/components/ui/color-picker';
-import InvitationForm from './InvitationForm';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import InvitationPreview from './InvitationPreview';
-import { SimpleInvitation, SimpleInvitationCustomization, BackgroundType, TextPosition } from '@/types/invitation.types';
+import { SimpleInvitation, SimpleInvitationCustomization, BackgroundType, TextPosition, ButtonPosition, ButtonShape } from '@/types/invitation.types';
 
-// Type imports for UI elements
-import { TextAlign } from '@/types/event.types';
+// Define text alignment type
+type TextAlign = 'left' | 'center' | 'right';
 
 interface SimpleCardEditorProps {
   invitation: Partial<SimpleInvitation>;
   onInvitationChange: (invitation: Partial<SimpleInvitation>) => void;
   onCustomizationChange: (customization: SimpleInvitationCustomization) => void;
   onSave: () => void;
-  onSaveDraft: () => void;
+  onSaveDraft?: () => void;
 }
 
 const SimpleCardEditor: React.FC<SimpleCardEditorProps> = ({
@@ -24,337 +25,487 @@ const SimpleCardEditor: React.FC<SimpleCardEditorProps> = ({
   onInvitationChange,
   onCustomizationChange,
   onSave,
-  onSaveDraft,
+  onSaveDraft
 }) => {
-  const [activeTab, setActiveTab] = useState<string>('details');
-  const [draggedItem, setDraggedItem] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('details');
 
-  const handleFieldChange = useCallback((field: string, value: string) => {
+  const handleChange = (field: string, value: string) => {
     onInvitationChange({
       ...invitation,
-      [field]: value,
+      [field]: value
     });
-  }, [invitation, onInvitationChange]);
+  };
 
   const handleBackgroundTypeChange = (type: BackgroundType) => {
-    const customization = {
-      ...invitation.customization!,
-      background: {
-        ...invitation.customization!.background,
-        type: type,
-      },
+    const updatedBackground = {
+      ...invitation.customization?.background,
+      type
     };
-    onCustomizationChange(customization);
+    handleCustomizationChange('background', updatedBackground);
   };
 
   const handleBackgroundValueChange = (value: string) => {
-    const customization = {
-      ...invitation.customization!,
-      background: {
-        ...invitation.customization!.background,
-        value: value,
-      },
+    const updatedBackground = {
+      ...invitation.customization?.background,
+      value
     };
-    onCustomizationChange(customization);
+    handleCustomizationChange('background', updatedBackground);
   };
 
-  const handleFontFamilyChange = (family: string) => {
-    const customization = {
-      ...invitation.customization!,
-      font: {
-        ...invitation.customization!.font,
-        family: family,
-      },
+  const handleFontChange = (property: string, value: string) => {
+    const updatedFont = {
+      ...invitation.customization?.font,
+      [property]: value
     };
-    onCustomizationChange(customization);
+    handleCustomizationChange('font', updatedFont);
   };
 
-  const handleFontSizeChange = (size: string) => {
-    const customization = {
-      ...invitation.customization!,
-      font: {
-        ...invitation.customization!.font,
-        size: size,
-      },
+  const handleCustomizationChange = (section: string, value: any) => {
+    if (!invitation.customization) return;
+    
+    const updatedCustomization: SimpleInvitationCustomization = {
+      ...invitation.customization,
+      [section]: value
     };
-    onCustomizationChange(customization);
+    
+    onCustomizationChange(updatedCustomization);
   };
 
-  const handleTextColorChange = (color: string) => {
-    const customization = {
-      ...invitation.customization!,
-      font: {
-        ...invitation.customization!.font,
-        color: color,
-      },
+  const handleButtonChange = (buttonType: 'accept' | 'decline' | 'directions' | 'calendar', property: string, value: any) => {
+    if (!invitation.customization?.buttons) return;
+    
+    const updatedButtons = {
+      ...invitation.customization.buttons,
+      [buttonType]: {
+        ...invitation.customization.buttons[buttonType],
+        [property]: value
+      }
     };
-    onCustomizationChange(customization);
+    
+    handleCustomizationChange('buttons', updatedButtons);
   };
 
-  const handleTextAlignChange = (align: TextAlign) => {
-    const customization = {
-      ...invitation.customization!,
-      font: {
-        ...invitation.customization!.font,
-        alignment: align,
-      },
+  const handleTextLayoutChange = (property: string, value: any) => {
+    const updatedTextLayout = {
+      ...invitation.customization?.textLayout,
+      [property]: value
     };
-    onCustomizationChange(customization);
+    handleCustomizationChange('textLayout', updatedTextLayout);
   };
 
-  const handleTextPositionChange = (position: TextPosition) => {
-    const customization = {
-      ...invitation.customization!,
-      textLayout: {
-        ...invitation.customization!.textLayout!,
-        contentPosition: position,
+  const defaultCustomization: SimpleInvitationCustomization = {
+    background: {
+      type: 'solid',
+      value: '#ffffff'
+    },
+    font: {
+      family: 'system-ui, sans-serif',
+      size: 'medium',
+      color: '#000000',
+      alignment: 'center'
+    },
+    buttons: {
+      accept: {
+        background: '#3B82F6',
+        color: '#ffffff',
+        shape: 'rounded'
       },
-    };
-    onCustomizationChange(customization);
+      decline: {
+        background: '#EF4444',
+        color: '#ffffff',
+        shape: 'rounded'
+      },
+      directions: {
+        show: false,
+        background: '#3B82F6',
+        color: '#ffffff',
+        shape: 'rounded',
+        position: 'bottom-right'
+      },
+      calendar: {
+        show: false,
+        background: '#3B82F6',
+        color: '#ffffff',
+        shape: 'rounded',
+        position: 'bottom-left'
+      }
+    },
+    textLayout: {
+      contentPosition: 'middle',
+      spacing: 'normal'
+    }
   };
 
-  const handleDragStart = (event: React.DragEvent, item: string) => {
-    setDraggedItem(item);
-    event.dataTransfer.setData('text/plain', item);
+  // Ensure customization object exists
+  const customization = invitation.customization || defaultCustomization;
+
+  const backgroundOptions: { label: string; value: BackgroundType }[] = [
+    { label: 'Solid Color', value: 'solid' },
+    { label: 'Gradient', value: 'gradient' },
+    { label: 'Image', value: 'image' }
+  ];
+
+  const backgroundPresets = {
+    solid: ['#ffffff', '#f8f9fa', '#e9ecef', '#dee2e6', '#adb5bd', '#212529'],
+    gradient: [
+      'linear-gradient(45deg, #4158D0, #C850C0, #FFCC70)',
+      'linear-gradient(to right, #8360c3, #2ebf91)',
+      'linear-gradient(to right, #ff8177, #cf556c)',
+      'linear-gradient(to right, #6a85b6, #bac8e0)',
+      'linear-gradient(to right, #00b09b, #96c93d)'
+    ]
   };
 
-  const handleDragOver = (event: React.DragEvent) => {
-    event.preventDefault();
-  };
+  const fontOptions = [
+    { label: 'System', value: 'system-ui, sans-serif' },
+    { label: 'Serif', value: 'Georgia, serif' },
+    { label: 'Mono', value: 'monospace' }
+  ];
 
-  const handleDrop = (event: React.DragEvent) => {
-    event.preventDefault();
-    // In a real implementation, we would modify the position of elements
-    // on the card based on the drop location
-    setDraggedItem(null);
-  };
+  const fontSizeOptions = [
+    { label: 'Small', value: 'small' },
+    { label: 'Medium', value: 'medium' },
+    { label: 'Large', value: 'large' }
+  ];
+
+  const buttonShapeOptions: { label: string; value: ButtonShape }[] = [
+    { label: 'Rounded', value: 'rounded' },
+    { label: 'Pill', value: 'pill' },
+    { label: 'Square', value: 'square' }
+  ];
+
+  const textPositionOptions: { label: string; value: TextPosition }[] = [
+    { label: 'Top', value: 'top' },
+    { label: 'Middle', value: 'middle' },
+    { label: 'Bottom', value: 'bottom' }
+  ];
+
+  const buttonPositionOptions: { label: string; value: ButtonPosition }[] = [
+    { label: 'Bottom Left', value: 'bottom-left' },
+    { label: 'Bottom Center', value: 'bottom-center' },
+    { label: 'Bottom Right', value: 'bottom-right' },
+    { label: 'Top Right', value: 'top-right' }
+  ];
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col md:flex-row gap-6">
-        <div className="w-full md:w-1/3">
-          <Card className="p-4">
-            <h3 className="text-lg font-medium mb-4">Elements</h3>
-            <div className="space-y-2">
-              <div 
-                draggable
-                onDragStart={(e) => handleDragStart(e, 'title')}
-                className="p-3 border rounded bg-slate-100 cursor-move hover:bg-slate-200"
-              >
-                Title
-              </div>
-              <div 
-                draggable
-                onDragStart={(e) => handleDragStart(e, 'description')}
-                className="p-3 border rounded bg-slate-100 cursor-move hover:bg-slate-200"
-              >
-                Description
-              </div>
-              <div 
-                draggable
-                onDragStart={(e) => handleDragStart(e, 'datetime')}
-                className="p-3 border rounded bg-slate-100 cursor-move hover:bg-slate-200"
-              >
-                Date & Time
-              </div>
-              <div 
-                draggable
-                onDragStart={(e) => handleDragStart(e, 'location')}
-                className="p-3 border rounded bg-slate-100 cursor-move hover:bg-slate-200"
-              >
-                Location
-              </div>
-              <div 
-                draggable
-                onDragStart={(e) => handleDragStart(e, 'button')}
-                className="p-3 border rounded bg-slate-100 cursor-move hover:bg-slate-200"
-              >
-                Button
-              </div>
-            </div>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Editor section */}
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="p-6">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid grid-cols-2 mb-6">
+                <TabsTrigger value="details">Details</TabsTrigger>
+                <TabsTrigger value="design">Design</TabsTrigger>
+              </TabsList>
 
-            <div className="mt-6">
-              <h3 className="text-lg font-medium mb-4">Invitation Details</h3>
-              <InvitationForm
-                formData={{
-                  title: invitation.title || '',
-                  description: invitation.description || '',
-                  date: invitation.date || '',
-                  time: invitation.time || '',
-                  location: invitation.location || '',
-                  locationTitle: invitation.locationTitle || '',
-                }}
-                onChange={handleFieldChange}
-                isEvent={!!invitation.isEvent}
-              />
-            </div>
-
-            <div className="mt-6">
-              <h3 className="text-lg font-medium mb-4">Background</h3>
-              <div className="space-y-4">
-                <div className="flex gap-2">
-                  <Button
-                    variant={invitation.customization?.background.type === 'solid' ? 'default' : 'outline'}
-                    onClick={() => handleBackgroundTypeChange('solid')}
-                    className="flex-1"
-                  >
-                    Solid
-                  </Button>
-                  <Button
-                    variant={invitation.customization?.background.type === 'image' ? 'default' : 'outline'}
-                    onClick={() => handleBackgroundTypeChange('image')}
-                    className="flex-1"
-                  >
-                    Image
-                  </Button>
-                  <Button
-                    variant={invitation.customization?.background.type === 'ai' ? 'default' : 'outline'}
-                    onClick={() => handleBackgroundTypeChange('ai')}
-                    className="flex-1"
-                  >
-                    AI
-                  </Button>
-                </div>
-
-                {invitation.customization?.background.type === 'solid' && (
-                  <HexColorPicker
-                    color={invitation.customization?.background.value || '#ffffff'}
-                    onChange={handleBackgroundValueChange}
-                    label="Background Color"
+              <TabsContent value="details" className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="title">Title</Label>
+                  <Input 
+                    id="title" 
+                    value={invitation.title || ''} 
+                    onChange={(e) => handleChange('title', e.target.value)} 
+                    placeholder="Enter title"
                   />
-                )}
+                </div>
 
-                {invitation.customization?.background.type === 'image' && (
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea 
+                    id="description" 
+                    value={invitation.description || ''} 
+                    onChange={(e) => handleChange('description', e.target.value)} 
+                    placeholder="Enter description"
+                    rows={4}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <input
-                      type="file"
-                      className="w-full"
-                      accept="image/*"
-                      // Image upload would be implemented here
+                    <Label htmlFor="date">Date</Label>
+                    <Input 
+                      id="date" 
+                      type="date" 
+                      value={invitation.date || ''} 
+                      onChange={(e) => handleChange('date', e.target.value)} 
                     />
-                    <p className="text-sm text-muted-foreground">
-                      Upload an image for your invitation background
-                    </p>
                   </div>
-                )}
 
-                {invitation.customization?.background.type === 'ai' && (
                   <div className="space-y-2">
-                    <textarea
-                      className="w-full p-2 border rounded"
-                      rows={3}
-                      placeholder="Describe the background you want AI to generate..."
-                    ></textarea>
-                    <Button className="w-full">Generate Background</Button>
+                    <Label htmlFor="time">Time</Label>
+                    <Input 
+                      id="time" 
+                      type="time" 
+                      value={invitation.time || ''} 
+                      onChange={(e) => handleChange('time', e.target.value)} 
+                    />
                   </div>
-                )}
-              </div>
-            </div>
+                </div>
 
-            <div className="mt-6">
-              <h3 className="text-lg font-medium mb-4">Font</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm mb-1">Font Family</label>
-                  <select
-                    className="w-full p-2 border rounded"
-                    value={invitation.customization?.font.family}
-                    onChange={(e) => handleFontFamilyChange(e.target.value)}
-                  >
-                    <option value="system-ui, sans-serif">System</option>
-                    <option value="'Helvetica', sans-serif">Helvetica</option>
-                    <option value="'Georgia', serif">Georgia</option>
-                    <option value="'Courier New', monospace">Courier</option>
-                    <option value="'Arial', sans-serif">Arial</option>
-                  </select>
+                <div className="space-y-2">
+                  <Label htmlFor="location">Location</Label>
+                  <Input 
+                    id="location" 
+                    value={invitation.location || ''} 
+                    onChange={(e) => handleChange('location', e.target.value)} 
+                    placeholder="Enter location"
+                  />
                 </div>
-                
-                <div>
-                  <label className="block text-sm mb-1">Font Size</label>
-                  <select
-                    className="w-full p-2 border rounded"
-                    value={invitation.customization?.font.size}
-                    onChange={(e) => handleFontSizeChange(e.target.value)}
-                  >
-                    <option value="small">Small</option>
-                    <option value="medium">Medium</option>
-                    <option value="large">Large</option>
-                  </select>
+              </TabsContent>
+
+              <TabsContent value="design" className="space-y-6">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Background</h3>
+                  
+                  <div className="grid grid-cols-3 gap-2">
+                    {backgroundOptions.map(option => (
+                      <Button
+                        key={option.value}
+                        type="button"
+                        variant={customization.background.type === option.value ? "default" : "outline"}
+                        onClick={() => handleBackgroundTypeChange(option.value)}
+                        className="h-auto py-2"
+                      >
+                        {option.label}
+                      </Button>
+                    ))}
+                  </div>
+
+                  {customization.background.type === 'solid' && (
+                    <div className="space-y-2">
+                      <Label>Select Color</Label>
+                      <div className="grid grid-cols-6 gap-2">
+                        {backgroundPresets.solid.map(color => (
+                          <div 
+                            key={color}
+                            className={`w-full aspect-square rounded border cursor-pointer ${customization.background.value === color ? 'ring-2 ring-primary' : ''}`}
+                            style={{ backgroundColor: color }}
+                            onClick={() => handleBackgroundValueChange(color)}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {customization.background.type === 'gradient' && (
+                    <div className="space-y-2">
+                      <Label>Select Gradient</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {backgroundPresets.gradient.map(gradient => (
+                          <div 
+                            key={gradient}
+                            className={`h-10 rounded cursor-pointer ${customization.background.value === gradient ? 'ring-2 ring-primary' : ''}`}
+                            style={{ background: gradient }}
+                            onClick={() => handleBackgroundValueChange(gradient)}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {customization.background.type === 'image' && (
+                    <div className="space-y-2">
+                      <Label htmlFor="bg-image-url">Image URL</Label>
+                      <Input 
+                        id="bg-image-url" 
+                        value={customization.background.value} 
+                        onChange={(e) => handleBackgroundValueChange(e.target.value)}
+                        placeholder="https://example.com/image.jpg"
+                      />
+                    </div>
+                  )}
                 </div>
-                
-                <HexColorPicker
-                  color={invitation.customization?.font.color || '#000000'}
-                  onChange={handleTextColorChange}
-                  label="Text Color"
-                />
-                
-                <div>
-                  <label className="block text-sm mb-1">Text Alignment</label>
-                  <div className="flex gap-2">
-                    <Button
-                      variant={invitation.customization?.font.alignment === 'left' ? 'default' : 'outline'}
-                      onClick={() => handleTextAlignChange('left' as TextAlign)}
-                      className="flex-1"
-                    >
-                      Left
-                    </Button>
-                    <Button
-                      variant={invitation.customization?.font.alignment === 'center' ? 'default' : 'outline'}
-                      onClick={() => handleTextAlignChange('center' as TextAlign)}
-                      className="flex-1"
-                    >
-                      Center
-                    </Button>
-                    <Button
-                      variant={invitation.customization?.font.alignment === 'right' ? 'default' : 'outline'}
-                      onClick={() => handleTextAlignChange('right' as TextAlign)}
-                      className="flex-1"
-                    >
-                      Right
-                    </Button>
+
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Text Style</h3>
+                  
+                  <div className="space-y-2">
+                    <Label>Font Family</Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {fontOptions.map(option => (
+                        <Button
+                          key={option.value}
+                          type="button"
+                          variant={customization.font.family === option.value ? "default" : "outline"}
+                          onClick={() => handleFontChange('family', option.value)}
+                          className="h-auto py-2"
+                          style={{ fontFamily: option.value }}
+                        >
+                          {option.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Font Size</Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {fontSizeOptions.map(option => (
+                        <Button
+                          key={option.value}
+                          type="button"
+                          variant={customization.font.size === option.value ? "default" : "outline"}
+                          onClick={() => handleFontChange('size', option.value)}
+                          className="h-auto py-2"
+                        >
+                          {option.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Text Color</Label>
+                    <div className="flex items-center space-x-2">
+                      <Input
+                        type="color"
+                        value={customization.font.color}
+                        onChange={(e) => handleFontChange('color', e.target.value)}
+                        className="w-10 h-10 p-1"
+                      />
+                      <span className="text-sm text-muted-foreground">{customization.font.color}</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Text Alignment</Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {['left', 'center', 'right'].map((align) => (
+                        <Button
+                          key={align}
+                          type="button"
+                          variant={customization.font.alignment === align ? "default" : "outline"}
+                          onClick={() => handleFontChange('alignment', align as TextAlign)}
+                          className="h-auto py-2"
+                        >
+                          {align.charAt(0).toUpperCase() + align.slice(1)}
+                        </Button>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          </Card>
-        </div>
-        
-        <div className="w-full md:w-2/3 flex flex-col">
-          <Card className="p-4 h-full relative">
-            <div 
-              className="h-[500px] overflow-hidden relative bg-slate-50 border-2 border-dashed border-slate-200 rounded-lg flex items-center justify-center"
-              onDragOver={handleDragOver}
-              onDrop={handleDrop}
-            >
-              <InvitationPreview
-                title={invitation.title}
-                description={invitation.description}
-                location={invitation.location}
-                locationTitle={invitation.locationTitle}
-                date={invitation.date}
-                time={invitation.time}
-                customization={invitation.customization!}
-                isEvent={!!invitation.isEvent}
-                showActions={true}
-              />
-              
-              {draggedItem && (
-                <div className="absolute inset-0 bg-blue-100 bg-opacity-30 flex items-center justify-center">
-                  <p className="text-lg font-medium">Drop {draggedItem} here</p>
+
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Layout</h3>
+                  
+                  <div className="space-y-2">
+                    <Label>Content Position</Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {textPositionOptions.map(option => (
+                        <Button
+                          key={option.value}
+                          type="button"
+                          variant={customization.textLayout?.contentPosition === option.value ? "default" : "outline"}
+                          onClick={() => handleTextLayoutChange('contentPosition', option.value)}
+                          className="h-auto py-2"
+                        >
+                          {option.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              )}
-            </div>
-          </Card>
+
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Utility Buttons</h3>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="directions-button"
+                        checked={customization.buttons?.directions?.show || false}
+                        onChange={(e) => handleButtonChange('directions', 'show', e.target.checked)}
+                        className="h-4 w-4"
+                      />
+                      <Label htmlFor="directions-button">Show Directions Button</Label>
+                    </div>
+                    
+                    {customization.buttons?.directions?.show && (
+                      <div className="pl-6 border-l-2 border-gray-200 mt-2 space-y-2">
+                        <Label>Button Position</Label>
+                        <div className="grid grid-cols-2 gap-2">
+                          {buttonPositionOptions.map(option => (
+                            <Button
+                              key={option.value}
+                              type="button"
+                              variant={customization.buttons?.directions?.position === option.value ? "default" : "outline"}
+                              onClick={() => handleButtonChange('directions', 'position', option.value)}
+                              className="h-auto py-1 text-xs"
+                            >
+                              {option.label}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="calendar-button"
+                        checked={customization.buttons?.calendar?.show || false}
+                        onChange={(e) => handleButtonChange('calendar', 'show', e.target.checked)}
+                        className="h-4 w-4"
+                      />
+                      <Label htmlFor="calendar-button">Show Calendar Button</Label>
+                    </div>
+                    
+                    {customization.buttons?.calendar?.show && (
+                      <div className="pl-6 border-l-2 border-gray-200 mt-2 space-y-2">
+                        <Label>Button Position</Label>
+                        <div className="grid grid-cols-2 gap-2">
+                          {buttonPositionOptions.map(option => (
+                            <Button
+                              key={option.value}
+                              type="button"
+                              variant={customization.buttons?.calendar?.position === option.value ? "default" : "outline"}
+                              onClick={() => handleButtonChange('calendar', 'position', option.value)}
+                              className="h-auto py-1 text-xs"
+                            >
+                              {option.label}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+
+        <div className="flex justify-end space-x-4">
+          {onSaveDraft && (
+            <Button variant="outline" onClick={onSaveDraft}>
+              Save Draft
+            </Button>
+          )}
+          <Button onClick={onSave}>
+            Create Invitation
+          </Button>
         </div>
       </div>
-      
-      <div className="flex justify-end gap-4">
-        <Button variant="outline" onClick={onSaveDraft}>
-          Save Draft
-        </Button>
-        <Button onClick={onSave}>
-          Create
-        </Button>
+
+      {/* Preview section */}
+      <div className="space-y-4">
+        <Card>
+          <CardContent className="p-6">
+            <h2 className="text-lg font-semibold mb-4">Preview</h2>
+            <InvitationPreview
+              title={invitation.title}
+              description={invitation.description}
+              location={invitation.location}
+              date={invitation.date}
+              time={invitation.time}
+              customization={customization}
+            />
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

@@ -9,6 +9,6 @@ export const useAuth = () => {
     user,
     isAuthenticated: true,
     isLoading: false,
-    isLoggedIn: true // Add this property for backward compatibility
+    isLoggedIn: true // Adding this property for backward compatibility
   };
 };

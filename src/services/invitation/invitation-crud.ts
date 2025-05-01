@@ -15,15 +15,19 @@ export async function createSimpleInvitation(data: InvitationData): Promise<Simp
       .from('invitations')
       .insert([data])
       .select('*')
-      .single();
+      .maybeSingle();
       
     if (error) {
       console.error('[createSimpleInvitation] Error:', error);
       throw error;
     }
     
+    if (!record) {
+      console.error('[createSimpleInvitation] No record returned after insert');
+      return null;
+    }
+    
     console.log('[createSimpleInvitation] Created invitation:', record);
-    // Use the mapper function to create the SimpleInvitation object
     return mapDbRecordToSimpleInvitation(record as InvitationDbRecord);
   } catch (error) {
     console.error('[createSimpleInvitation] Error creating invitation:', error);
@@ -56,7 +60,6 @@ export async function updateSimpleInvitation(id: string, data: Partial<Invitatio
     }
     
     console.log('[updateSimpleInvitation] Updated invitation:', record);
-    // Use the mapper function to create the SimpleInvitation object
     return mapDbRecordToSimpleInvitation(record as InvitationDbRecord);
   } catch (error) {
     console.error('[updateSimpleInvitation] Error updating invitation:', error);
@@ -88,7 +91,6 @@ export async function getSimpleInvitationById(id: string): Promise<SimpleInvitat
     }
     
     console.log('[getSimpleInvitationById] Got invitation:', record);
-    // Use the mapper function to create the SimpleInvitation object
     return mapDbRecordToSimpleInvitation(record as InvitationDbRecord);
   } catch (error) {
     console.error('[getSimpleInvitationById] Error getting invitation:', error);
@@ -120,7 +122,6 @@ export async function getSharedInvitation(shareId: string): Promise<SimpleInvita
     }
     
     console.log('[getSharedInvitation] Got shared invitation:', record);
-    // Use the mapper function to create the SimpleInvitation object
     return mapDbRecordToSimpleInvitation(record as InvitationDbRecord);
   } catch (error) {
     console.error('[getSharedInvitation] Error getting shared invitation:', error);
