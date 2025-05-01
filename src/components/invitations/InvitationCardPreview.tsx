@@ -97,6 +97,16 @@ export default function InvitationCardPreview({
     return 'center' as TextAlign;
   };
   
+  // Check if we should show the directions button
+  const shouldShowDirections = hasLocation && 
+                              showActions && 
+                              customization.buttons?.directions?.show;
+  
+  // Check if we should show the calendar button
+  const shouldShowCalendar = isEvent && 
+                            showActions && 
+                            customization.buttons?.calendar?.show;
+  
   return (
     <Card className="overflow-hidden w-full shadow-lg relative" style={{
       ...getBackgroundStyle(),
@@ -129,30 +139,30 @@ export default function InvitationCardPreview({
         </div>
       </div>
 
-      {/* Action Buttons - Only show if hasLocation, the customization button is enabled, and showActions is true */}
-      {hasLocation && customization.buttons?.directions?.show && showActions && (
+      {/* Get Directions Button */}
+      {shouldShowDirections && (
         <button
           className={`absolute ${getButtonPositionStyle(customization.buttons.directions.position || 'bottom-right')} text-xs px-2 py-1`}
           style={{
             backgroundColor: customization.buttons.directions.background || '#ffffff',
             color: customization.buttons.directions.color || '#000000',
             borderRadius: customization.buttons.directions.shape === 'pill' ? '9999px' : 
-                         customization.buttons.directions.shape === 'square' ? '0px' : '4px',
+                          customization.buttons.directions.shape === 'square' ? '0px' : '4px',
           }}
         >
           Get Directions
         </button>
       )}
       
-      {/* Only show calendar button if it's an event, the button is enabled in customization, and showActions is true */}
-      {isEvent && customization.buttons?.calendar?.show && showActions && (
+      {/* Add to Calendar Button */}
+      {shouldShowCalendar && (
         <button
           className={`absolute ${getButtonPositionStyle(customization.buttons.calendar.position || 'bottom-right')} text-xs px-2 py-1`}
           style={{
             backgroundColor: customization.buttons.calendar.background || '#ffffff',
             color: customization.buttons.calendar.color || '#000000',
             borderRadius: customization.buttons.calendar.shape === 'pill' ? '9999px' : 
-                         customization.buttons.calendar.shape === 'square' ? '0px' : '4px',
+                          customization.buttons.calendar.shape === 'square' ? '0px' : '4px',
           }}
         >
           Add to Calendar

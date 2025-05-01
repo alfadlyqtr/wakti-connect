@@ -55,7 +55,7 @@ export default function SharedInvitationView() {
           time={invitation.time}
           customization={invitation.customization}
           isEvent={invitation.isEvent}
-          showActions={true}
+          showActions={true} 
         />
       </div>
     </div>
