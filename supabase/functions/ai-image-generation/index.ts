@@ -44,7 +44,7 @@ serve(async (req) => {
 
     console.log("Processing image generation request");
     
-    // Try OpenAI first if API key is available (reverse the order to prioritize OpenAI)
+    // Try OpenAI first if API key is available
     if (OPENAI_API_KEY) {
       try {
         console.log("Using OpenAI for image generation");
@@ -134,7 +134,7 @@ serve(async (req) => {
           .replace(/Make it /g, '')
           .split('.').slice(0, 2).join('.');
         
-        // Prepare the payload for Runware API with optimized parameters
+        // Prepare the payload for Runware API with optimized parameters for invitation card backgrounds
         const runwarePayload = [
           {
             "taskType": "authentication",
@@ -145,13 +145,13 @@ serve(async (req) => {
             "taskUUID": crypto.randomUUID(),
             "positivePrompt": simplifiedPrompt,
             "model": "runware:100@1",
-            "width": 1024,
-            "height": 1024,
+            "width": 1200,      // 4:3 aspect ratio (1200x900) for card backgrounds
+            "height": 900,      // Better matches invitation card dimensions
             "numberResults": 1,
             "outputFormat": "WEBP",
-            "CFGScale": 12.0, // Increased from 7.5 to 12.0 for stronger adherence to prompt
-            "scheduler": "FlowMatchEulerDiscreteScheduler", // Changed scheduler for better scenic imagery
-            "strength": 0.9, // Increased from 0.75 for stronger effect
+            "CFGScale": 12.0,   // Increased from 7.5 to 12.0 for stronger adherence to prompt
+            "scheduler": "FlowMatchEulerDiscreteScheduler", // Best for scenic imagery
+            "strength": 0.9,    // Increased from 0.75 for stronger effect
             "promptWeighting": "none"
           }
         ];

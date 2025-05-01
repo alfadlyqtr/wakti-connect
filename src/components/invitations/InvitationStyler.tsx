@@ -24,6 +24,7 @@ export default function InvitationStyler({
   description
 }: InvitationStylerProps) {
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
 
   const handleBackgroundChange = (type: BackgroundType, value: string) => {
     onChange({
@@ -43,10 +44,10 @@ export default function InvitationStyler({
   };
 
   const handleGenerateAIBackground = async () => {
-    if (!title && !description) {
+    if (!title && !description && !aiPrompt) {
       toast({
         title: "Missing Information",
-        description: "Please add a title and description to generate an AI background.",
+        description: "Please add a title, description, or custom prompt to generate an AI background.",
         variant: "destructive"
       });
       return;
@@ -55,7 +56,12 @@ export default function InvitationStyler({
     try {
       setIsGeneratingImage(true);
       
-      const prompt = `Create a beautiful invitation background image for an event titled "${title}" with description "${description}". Make it high quality, visually appealing, and suitable for a digital invitation.`;
+      // Use custom prompt if provided, otherwise generate one based on invitation details
+      let prompt = aiPrompt || `Create a beautiful invitation background image for "${title || 'an event'}"`;
+      if (description && !aiPrompt) {
+        prompt += ` with description "${description}".`;
+      }
+      prompt += " Make it high quality, visually appealing, and suitable for a digital invitation card with aspect ratio 4:3.";
       
       const result = await handleImageGeneration(prompt);
       

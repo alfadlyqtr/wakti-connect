@@ -12,6 +12,7 @@ export interface GeneratedImageResult {
 /**
  * Handles image generation requests based on the user's prompt
  * Uses the consolidated ai-image-generation edge function
+ * Optimized for invitation card backgrounds
  */
 export async function handleImageGeneration(prompt: string): Promise<GeneratedImageResult> {
   try {
@@ -21,9 +22,20 @@ export async function handleImageGeneration(prompt: string): Promise<GeneratedIm
       throw new Error('Prompt cannot be empty');
     }
     
+    // Add parameters to ensure the generated image works well as a background
+    const enhancedPrompt = `${prompt.trim()} Make it suitable for an invitation card background with space for text overlay. Use a balanced composition, soft edges, and ensure good text contrast.`;
+    
+    console.log('[imageHandling] Enhanced prompt:', enhancedPrompt);
+    
     // Generate image using the consolidated ai-image-generation edge function
     const result = await runwareService.generateImage({
-      positivePrompt: prompt
+      positivePrompt: enhancedPrompt,
+      // Configure for optimal background image
+      CFGScale: 9, // Increased from default for better prompt adherence
+      scheduler: "FlowMatchEulerDiscreteScheduler", // Best for scenic backgrounds
+      outputFormat: "WEBP", // Better compression for web
+      numberResults: 1,
+      strength: 0.85 // Slightly higher than default
     });
     
     console.log('[imageHandling] Image generation successful');
@@ -34,7 +46,7 @@ export async function handleImageGeneration(prompt: string): Promise<GeneratedIm
     
     return {
       imageUrl: result.imageURL,
-      prompt: prompt,
+      prompt: enhancedPrompt,
       success: true
     };
   } catch (error) {

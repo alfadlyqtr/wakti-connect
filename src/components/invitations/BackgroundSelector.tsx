@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { ColorInput } from "@/components/inputs/ColorInput";
 import { Sparkles, Upload, Image as ImageIcon } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
@@ -36,6 +37,23 @@ export default function BackgroundSelector({
     "linear-gradient(to top, #a8edea 0%, #fed6e3 100%)",
     "linear-gradient(to top, #d299c2 0%, #fef9d7 100%)"
   ]);
+  const [customPrompt, setCustomPrompt] = useState<string>("");
+  
+  // Generate default AI prompt based on title and description
+  const getDefaultPrompt = () => {
+    let defaultPrompt = "Generate a beautiful background";
+    
+    if (title) {
+      defaultPrompt += ` for "${title}"`;
+    }
+    
+    if (description) {
+      defaultPrompt += ` with theme: ${description.substring(0, 50)}`;
+    }
+    
+    defaultPrompt += " that works well as an invitation card background with space for text";
+    return defaultPrompt;
+  };
 
   // Update active tab when backgroundType changes from parent
   useEffect(() => {
@@ -76,6 +94,18 @@ export default function BackgroundSelector({
       onBackgroundChange("image" as BackgroundType, result);
     };
     reader.readAsDataURL(file);
+  };
+  
+  const handleCustomAIGeneration = () => {
+    if (!onGenerateAIBackground) return;
+    if (!customPrompt.trim()) {
+      setCustomPrompt(getDefaultPrompt());
+      toast({
+        title: "Using default prompt",
+        description: "Custom prompt is empty, using generated prompt based on invitation details",
+      });
+    }
+    onGenerateAIBackground();
   };
 
   return (
@@ -176,18 +206,27 @@ export default function BackgroundSelector({
               </div>
             )}
             
-            <div className="mt-4 border-t pt-4">
+            <div className="mt-4 border-t pt-4 space-y-3">
+              <Label htmlFor="ai-prompt">AI Background Prompt</Label>
+              <Textarea
+                id="ai-prompt"
+                placeholder={getDefaultPrompt()}
+                value={customPrompt}
+                onChange={(e) => setCustomPrompt(e.target.value)}
+                className="min-h-20 text-sm resize-none"
+                disabled={isGeneratingImage}
+              />
               <Button 
                 variant="outline" 
                 className="w-full flex items-center justify-center gap-2" 
-                onClick={onGenerateAIBackground}
+                onClick={handleCustomAIGeneration}
                 disabled={isGeneratingImage}
               >
                 <Sparkles className="h-4 w-4" />
                 {isGeneratingImage ? "Generating..." : "Generate AI Background"}
               </Button>
-              <p className="text-xs text-muted-foreground mt-2 text-center">
-                Create a unique background based on your invitation details
+              <p className="text-xs text-muted-foreground mt-1 text-center">
+                Creates a custom background based on your prompt or invitation details
               </p>
             </div>
           </div>
