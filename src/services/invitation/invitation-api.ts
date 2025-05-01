@@ -10,7 +10,7 @@ import { SimpleInvitation, BackgroundType, ButtonPosition } from '@/types/invita
 export function mapDbRecordToSimpleInvitation(data: InvitationDbRecord): SimpleInvitation | null {
   if (!data) return null;
 
-  // Create a result object with explicit property assignments to break deep type inference chains
+  // Create result object with explicit property assignments
   const result: SimpleInvitationResult = {
     id: data.id,
     title: data.title,
@@ -56,18 +56,18 @@ export function mapDbRecordToSimpleInvitation(data: InvitationDbRecord): SimpleI
       background: '#3B82F6',
       color: '#ffffff',
       shape: 'rounded',
-      position: 'bottom-right'
+      position: 'bottom-right' as ButtonPosition
     },
     calendar: {
       show: !!data.is_event, // Show calendar button if it's an event
       background: '#3B82F6',
       color: '#ffffff',
       shape: 'rounded',
-      position: 'bottom-left'
+      position: 'bottom-left' as ButtonPosition
     }
   };
 
-  // Use a type assertion instead of a complex type conversion
+  // Use a simple type assertion to avoid complex type inference chains
   return result as SimpleInvitation;
 }
 
@@ -90,6 +90,8 @@ export async function createSimpleInvitation(data: InvitationData): Promise<Simp
     }
     
     console.log('[createSimpleInvitation] Created invitation:', record);
+    
+    // Use non-null assertion with type casting to avoid deep type inference
     return mapDbRecordToSimpleInvitation(record as InvitationDbRecord);
   } catch (error) {
     console.error('[createSimpleInvitation] Error creating invitation:', error);
@@ -117,6 +119,8 @@ export async function updateSimpleInvitation(id: string, data: Partial<Invitatio
     }
     
     console.log('[updateSimpleInvitation] Updated invitation:', record);
+    
+    // Use non-null assertion with type casting to avoid deep type inference
     return mapDbRecordToSimpleInvitation(record as InvitationDbRecord);
   } catch (error) {
     console.error('[updateSimpleInvitation] Error updating invitation:', error);
@@ -143,6 +147,8 @@ export async function getSimpleInvitationById(id: string): Promise<SimpleInvitat
     }
     
     console.log('[getSimpleInvitationById] Got invitation:', record);
+    
+    // Use non-null assertion with type casting to avoid deep type inference
     return mapDbRecordToSimpleInvitation(record as InvitationDbRecord);
   } catch (error) {
     console.error('[getSimpleInvitationById] Error getting invitation:', error);
@@ -169,6 +175,8 @@ export async function getSharedInvitation(shareId: string): Promise<SimpleInvita
     }
     
     console.log('[getSharedInvitation] Got shared invitation:', record);
+    
+    // Use non-null assertion with type casting to avoid deep type inference
     return mapDbRecordToSimpleInvitation(record as InvitationDbRecord);
   } catch (error) {
     console.error('[getSharedInvitation] Error getting shared invitation:', error);
@@ -209,7 +217,7 @@ export async function fetchSimpleInvitations(userId: string, isEvent?: boolean):
     
     console.log('[fetchSimpleInvitations] Fetched invitations:', records?.length || 0);
     
-    // Map records to SimpleInvitation objects, using explicit typing and filtering
+    // Create a properly typed array and explicitly add items to it
     const invitations: SimpleInvitation[] = [];
     
     if (records && records.length > 0) {
