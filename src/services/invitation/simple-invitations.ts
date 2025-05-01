@@ -1,13 +1,17 @@
 
-// Re-export all invitation functions from the refactored files
+// Re-export all invitation functions from invitation-crud and invitation-fetch
 export {
   createSimpleInvitation,
   updateSimpleInvitation,
   getSimpleInvitationById,
   getSharedInvitation,
+  mapDbRecordToSimpleInvitation
+} from './invitation-crud';
+
+export {
   fetchSimpleInvitations,
   listSimpleInvitations
-} from './invitation-api';
+} from './invitation-fetch';
 
 // Import the supabase client
 import { supabase } from '@/integrations/supabase/client';

@@ -2,7 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { InvitationDbRecord } from './invitation-types';
 import { SimpleInvitation } from '@/types/invitation.types';
-import { mapDbRecordToSimpleInvitation } from './invitation-mapper';
+import { mapDbRecordToSimpleInvitation } from './invitation-crud';
 
 /**
  * Fetch a list of simple invitations for a user

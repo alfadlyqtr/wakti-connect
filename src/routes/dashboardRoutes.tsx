@@ -1,10 +1,11 @@
 
 import React from 'react';
 import SimpleInvitationsList from '@/components/invitations/SimpleInvitationsList';
-import SimpleInvitationCreator from '@/components/invitations/SimpleInvitationCreator';
+import SimpleInvitationCreator from '@/pages/invitations/SimpleInvitationCreator';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { getSimpleInvitationById } from '@/services/invitation/simple-invitations';
+import { getSimpleInvitationById } from '@/services/invitation/invitation-crud';
+import DashboardEvents from '@/pages/dashboard/DashboardEvents';
 
 const InvitationEdit = () => {
   const { id } = useParams<{ id: string }>();
@@ -35,12 +36,16 @@ export const dashboardRoutes = [
     element: <SimpleInvitationCreator />,
   },
   {
+    path: "invitations/create",
+    element: <SimpleInvitationCreator />,
+  },
+  {
     path: "invitations/edit/:id",
     element: <InvitationEdit />,
   },
   {
     path: "events",
-    element: <SimpleInvitationsList isEventsList={true} />,
+    element: <DashboardEvents />,
   },
   {
     path: "events/new",

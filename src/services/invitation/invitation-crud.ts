@@ -2,7 +2,80 @@
 import { supabase } from '@/integrations/supabase/client';
 import { InvitationDbRecord, InvitationData } from './invitation-types';
 import { SimpleInvitation } from '@/types/invitation.types';
-import { mapDbRecordToSimpleInvitation } from './invitation-mapper';
+
+/**
+ * Maps a database record to a SimpleInvitation object with simplified type handling
+ */
+export function mapDbRecordToSimpleInvitation(record: InvitationDbRecord): SimpleInvitation {
+  // Convert datetime string to date and time
+  let date: string | undefined;
+  let time: string | undefined;
+  
+  if (record.datetime) {
+    const dateObj = new Date(record.datetime);
+    date = dateObj.toISOString().split('T')[0]; // YYYY-MM-DD format
+    time = dateObj.toISOString().split('T')[1].substring(0, 5); // HH:MM format
+  }
+  
+  // Create the SimpleInvitation without complex type checking
+  return {
+    id: record.id,
+    title: record.title,
+    description: record.description || '',
+    location: record.location || '',
+    locationTitle: record.location_title || '',
+    date,
+    time,
+    createdAt: record.created_at,
+    updatedAt: record.updated_at,
+    userId: record.user_id,
+    shareId: record.share_id,
+    isPublic: record.is_public,
+    isEvent: record.is_event,
+    customization: {
+      background: {
+        type: (record.background_type || 'solid') as 'solid' | 'gradient' | 'image' | 'ai',
+        value: record.background_value || '#ffffff'
+      },
+      font: {
+        family: record.font_family || 'system-ui, sans-serif',
+        size: record.font_size || 'medium',
+        color: record.text_color || '#000000',
+        alignment: record.text_align || 'center'
+      },
+      buttons: {
+        accept: {
+          background: '#3B82F6',
+          color: '#ffffff',
+          shape: 'rounded'
+        },
+        decline: {
+          background: '#EF4444',
+          color: '#ffffff',
+          shape: 'rounded'
+        },
+        directions: {
+          show: true,
+          background: '#3B82F6',
+          color: '#ffffff',
+          shape: 'rounded',
+          position: 'bottom-right'
+        },
+        calendar: {
+          show: true,
+          background: '#3B82F6',
+          color: '#ffffff',
+          shape: 'rounded',
+          position: 'bottom-left'
+        }
+      },
+      textLayout: {
+        contentPosition: 'middle',
+        spacing: 'normal'
+      }
+    }
+  };
+}
 
 /**
  * Create a new simple invitation
