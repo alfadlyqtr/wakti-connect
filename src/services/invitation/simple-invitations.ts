@@ -6,5 +6,8 @@ export {
   deleteSimpleInvitation,
   getSimpleInvitationById,
   getSharedInvitation,
-  listSimpleInvitations
+  fetchSimpleInvitations
 } from './invitation-api';
+
+// Export the previous function as an alias for backward compatibility
+export { fetchSimpleInvitations as listSimpleInvitations } from './invitation-api';

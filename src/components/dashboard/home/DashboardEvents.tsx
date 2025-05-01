@@ -1,17 +1,16 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { CalendarDays } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useQuery } from '@tanstack/react-query';
-import { listSimpleInvitations } from '@/services/invitation/simple-invitations';
+import { fetchSimpleInvitations } from '@/services/invitation/simple-invitations';
 
 const DashboardEvents = () => {
   const navigate = useNavigate();
   const { data: invitations, isLoading } = useQuery({
     queryKey: ['simple-invitations'],
-    queryFn: () => listSimpleInvitations(),
+    queryFn: () => fetchSimpleInvitations(),
   });
 
   const upcomingEvents = invitations?.filter(inv => {

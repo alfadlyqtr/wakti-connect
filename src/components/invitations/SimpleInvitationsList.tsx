@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,7 @@ import { PlusCircle, Calendar, Loader2, Search } from 'lucide-react';
 import { SimpleInvitation } from '@/types/invitation.types';
 import { format } from 'date-fns';
 import { Input } from '@/components/ui/input';
-import { listSimpleInvitations } from '@/services/invitation/simple-invitations';
+import { fetchSimpleInvitations } from '@/services/invitation/simple-invitations';
 import { useQuery } from '@tanstack/react-query';
 
 interface SimpleInvitationsListProps {
@@ -23,7 +22,7 @@ export default function SimpleInvitationsList({ isEventsList = false }: SimpleIn
   
   const { data: invitations, isLoading, error } = useQuery({
     queryKey: ['simple-invitations', isEventsList],
-    queryFn: () => listSimpleInvitations(isEventsList),
+    queryFn: () => fetchSimpleInvitations(isEventsList),
   });
   
   // Filter invitations based on search term
