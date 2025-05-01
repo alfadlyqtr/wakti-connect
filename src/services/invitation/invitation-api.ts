@@ -1,19 +1,35 @@
 
+import { SimpleInvitation, SimpleInvitationCustomization, BackgroundType } from '@/types/invitation.types';
+import { SimpleInvitationResult, InvitationDbRecord, InvitationData } from './invitation-types';
 import { supabase } from '@/integrations/supabase/client';
-import { InvitationDbRecord, InvitationData, SimpleInvitationResult } from './invitation-types';
-import { SimpleInvitation } from '@/types/invitation.types';
+import { toast } from '@/components/ui/use-toast';
 
 /**
- * Create a new simple invitation
- * @param data The invitation data to create
- * @returns The created invitation or null if creation failed
+ * Creates a new invitation
  */
-export async function createSimpleInvitation(data: Partial<InvitationData>): Promise<SimpleInvitation | null> {
+export async function createSimpleInvitation(invitationData: Partial<SimpleInvitation>): Promise<SimpleInvitation | null> {
   try {
-    // Insert the new invitation
-    const { data: newInvitation, error } = await supabase
+    // Convert from frontend model to database model
+    const dbData = {
+      title: invitationData.title || '',
+      description: invitationData.description || '',
+      location: invitationData.location || null,
+      location_url: null,
+      location_title: invitationData.locationTitle || null,
+      datetime: invitationData.date ? new Date(invitationData.date).toISOString() : null,
+      background_type: invitationData.customization?.background.type || 'solid',
+      background_value: invitationData.customization?.background.value || '#ffffff',
+      font_family: invitationData.customization?.font.family || 'system-ui, sans-serif',
+      font_size: invitationData.customization?.font.size || 'medium',
+      text_color: invitationData.customization?.font.color || '#000000',
+      text_align: invitationData.customization?.font.alignment || 'left',
+      is_event: invitationData.isEvent || false,
+      user_id: (await supabase.auth.getSession()).data.session?.user?.id
+    };
+
+    const { data, error } = await supabase
       .from('invitations')
-      .insert([data as InvitationData])
+      .insert([dbData])
       .select()
       .single();
 
@@ -22,71 +38,56 @@ export async function createSimpleInvitation(data: Partial<InvitationData>): Pro
       throw error;
     }
 
-    if (!newInvitation) {
+    if (!data) {
+      console.error('No data returned after creating invitation');
       return null;
     }
 
-    // Map the database record to our frontend model
-    const record = newInvitation as InvitationDbRecord;
-    
-    // Extract date and time from datetime if available
-    let date: string | undefined;
-    let time: string | undefined;
-    if (record.datetime) {
-      const dateObj = new Date(record.datetime);
-      date = dateObj.toISOString().split('T')[0];
-      time = dateObj.toTimeString().slice(0, 5); // Format as HH:MM
-    }
-
-    // Map to SimpleInvitation with explicit property assignments
-    const invitation: SimpleInvitation = {
-      id: record.id,
-      title: record.title,
-      description: record.description,
-      location: record.location || '',
-      locationTitle: record.location_title || '',
-      date,
-      time,
-      createdAt: record.created_at,
-      updatedAt: record.updated_at,
-      userId: record.user_id,
-      shareId: record.share_id,
-      isPublic: record.is_public || false,
-      isEvent: record.is_event || false,
-      customization: {
-        background: {
-          type: record.background_type as any,
-          value: record.background_value,
-        },
-        font: {
-          family: record.font_family,
-          size: record.font_size,
-          color: record.text_color,
-          alignment: record.text_align,
-          weight: 'normal', // Default value as it's not stored in DB
-        }
-      }
-    };
-
-    return invitation;
+    return mapDatabaseRecordToSimpleInvitation(data);
   } catch (error) {
-    console.error('Error in createSimpleInvitation:', error);
-    throw error;
+    console.error('Failed to create invitation:', error);
+    toast({
+      title: 'Error',
+      description: 'Failed to create invitation',
+      variant: 'destructive',
+    });
+    return null;
   }
 }
 
 /**
- * Update an existing simple invitation
- * @param id The ID of the invitation to update
- * @param data The data to update
- * @returns The updated invitation or null if update failed
+ * Updates an existing invitation
  */
-export async function updateSimpleInvitation(id: string, data: Partial<InvitationData>): Promise<SimpleInvitation | null> {
+export async function updateSimpleInvitation(id: string, invitationData: Partial<SimpleInvitation>): Promise<SimpleInvitation | null> {
   try {
-    // Update the invitation
-    const { data: updatedInvitation, error } = await supabase
+    // Convert from frontend model to database model
+    const dbData: Partial<InvitationDbRecord> = {
+      title: invitationData.title,
+      description: invitationData.description,
+      location: invitationData.location,
+      location_title: invitationData.locationTitle,
+      datetime: invitationData.date ? new Date(invitationData.date).toISOString() : null,
+      updated_at: new Date().toISOString()
+    };
+
+    // Only update customization fields if they are provided
+    if (invitationData.customization) {
+      if (invitationData.customization.background) {
+        dbData.background_type = invitationData.customization.background.type;
+        dbData.background_value = invitationData.customization.background.value;
+      }
+      
+      if (invitationData.customization.font) {
+        dbData.font_family = invitationData.customization.font.family;
+        dbData.font_size = invitationData.customization.font.size;
+        dbData.text_color = invitationData.customization.font.color;
+        dbData.text_align = invitationData.customization.font.alignment;
+      }
+    }
+
+    const { data, error } = await supabase
       .from('invitations')
-      .update(data)
+      .update(dbData)
       .eq('id', id)
       .select()
       .single();
@@ -96,63 +97,20 @@ export async function updateSimpleInvitation(id: string, data: Partial<Invitatio
       throw error;
     }
 
-    if (!updatedInvitation) {
-      return null;
-    }
-
-    // Map the database record to our frontend model
-    const record = updatedInvitation as InvitationDbRecord;
-    
-    // Extract date and time from datetime if available
-    let date: string | undefined;
-    let time: string | undefined;
-    if (record.datetime) {
-      const dateObj = new Date(record.datetime);
-      date = dateObj.toISOString().split('T')[0];
-      time = dateObj.toTimeString().slice(0, 5); // Format as HH:MM
-    }
-
-    // Map to SimpleInvitation with explicit property assignments
-    const invitation: SimpleInvitation = {
-      id: record.id,
-      title: record.title,
-      description: record.description,
-      location: record.location || '',
-      locationTitle: record.location_title || '',
-      date,
-      time,
-      createdAt: record.created_at,
-      updatedAt: record.updated_at,
-      userId: record.user_id,
-      shareId: record.share_id,
-      isPublic: record.is_public || false,
-      isEvent: record.is_event || false,
-      customization: {
-        background: {
-          type: record.background_type as any,
-          value: record.background_value,
-        },
-        font: {
-          family: record.font_family,
-          size: record.font_size,
-          color: record.text_color,
-          alignment: record.text_align,
-          weight: 'normal', // Default value as it's not stored in DB
-        }
-      }
-    };
-
-    return invitation;
+    return mapDatabaseRecordToSimpleInvitation(data);
   } catch (error) {
-    console.error('Error in updateSimpleInvitation:', error);
-    throw error;
+    console.error('Failed to update invitation:', error);
+    toast({
+      title: 'Error',
+      description: 'Failed to update invitation',
+      variant: 'destructive',
+    });
+    return null;
   }
 }
 
 /**
- * Delete a simple invitation
- * @param id The ID of the invitation to delete
- * @returns true if deletion was successful, false otherwise
+ * Deletes an invitation by ID
  */
 export async function deleteSimpleInvitation(id: string): Promise<boolean> {
   try {
@@ -168,223 +126,171 @@ export async function deleteSimpleInvitation(id: string): Promise<boolean> {
 
     return true;
   } catch (error) {
-    console.error('Error in deleteSimpleInvitation:', error);
-    throw error;
+    console.error('Failed to delete invitation:', error);
+    toast({
+      title: 'Error',
+      description: 'Failed to delete invitation',
+      variant: 'destructive',
+    });
+    return false;
   }
 }
 
 /**
- * Get a simple invitation by ID
- * @param id The ID of the invitation to retrieve
- * @returns The invitation or null if not found
+ * Fetches an invitation by ID
  */
 export async function getSimpleInvitationById(id: string): Promise<SimpleInvitation | null> {
   try {
-    const { data: invitation, error } = await supabase
+    const { data, error } = await supabase
       .from('invitations')
-      .select()
+      .select('*')
       .eq('id', id)
-      .maybeSingle();
+      .single();
 
     if (error) {
-      console.error('Error fetching invitation:', error);
       throw error;
     }
 
-    if (!invitation) {
+    if (!data) {
       return null;
     }
 
-    // Map the database record to our frontend model
-    const record = invitation as InvitationDbRecord;
-    
-    // Extract date and time from datetime if available
-    let date: string | undefined;
-    let time: string | undefined;
-    if (record.datetime) {
-      const dateObj = new Date(record.datetime);
-      date = dateObj.toISOString().split('T')[0];
-      time = dateObj.toTimeString().slice(0, 5); // Format as HH:MM
-    }
-
-    // Map to SimpleInvitation with explicit property assignments
-    const result: SimpleInvitation = {
-      id: record.id,
-      title: record.title,
-      description: record.description,
-      location: record.location || '',
-      locationTitle: record.location_title || '',
-      date,
-      time,
-      createdAt: record.created_at,
-      updatedAt: record.updated_at,
-      userId: record.user_id,
-      shareId: record.share_id,
-      isPublic: record.is_public || false,
-      isEvent: record.is_event || false,
-      customization: {
-        background: {
-          type: record.background_type as any,
-          value: record.background_value,
-        },
-        font: {
-          family: record.font_family,
-          size: record.font_size,
-          color: record.text_color,
-          alignment: record.text_align,
-          weight: 'normal', // Default value as it's not stored in DB
-        }
-      }
-    };
-
-    return result;
+    return mapDatabaseRecordToSimpleInvitation(data);
   } catch (error) {
-    console.error('Error in getSimpleInvitationById:', error);
-    throw error;
+    console.error('Failed to fetch invitation by id:', error);
+    return null;
   }
 }
 
 /**
- * Get a shared invitation by share ID
- * @param shareId The sharing ID of the invitation
- * @returns The invitation or null if not found
+ * Fetches a list of invitations for the current user
+ * @param isEvent Optional filter to get only events or non-events
  */
-export async function getSharedInvitation(shareId: string): Promise<SimpleInvitation | null> {
+export async function fetchSimpleInvitations(isEvent?: boolean): Promise<SimpleInvitation[]> {
   try {
-    const { data: invitation, error } = await supabase
-      .from('invitations')
-      .select()
-      .eq('share_id', shareId)
-      .maybeSingle();
-
-    if (error) {
-      console.error('Error fetching shared invitation:', error);
-      throw error;
-    }
-
-    if (!invitation) {
-      return null;
-    }
-
-    // Map the database record to our frontend model
-    const record = invitation as InvitationDbRecord;
+    const { data: { session } } = await supabase.auth.getSession();
     
-    // Extract date and time from datetime if available
-    let date: string | undefined;
-    let time: string | undefined;
-    if (record.datetime) {
-      const dateObj = new Date(record.datetime);
-      date = dateObj.toISOString().split('T')[0];
-      time = dateObj.toTimeString().slice(0, 5); // Format as HH:MM
+    if (!session) {
+      console.log('No active session');
+      return [];
     }
 
-    // Map to SimpleInvitation with explicit property assignments
-    const result: SimpleInvitation = {
-      id: record.id,
-      title: record.title,
-      description: record.description,
-      location: record.location || '',
-      locationTitle: record.location_title || '',
-      date,
-      time,
-      createdAt: record.created_at,
-      updatedAt: record.updated_at,
-      userId: record.user_id,
-      shareId: record.share_id,
-      isPublic: record.is_public || false,
-      isEvent: record.is_event || false,
-      customization: {
-        background: {
-          type: record.background_type as any,
-          value: record.background_value,
-        },
-        font: {
-          family: record.font_family,
-          size: record.font_size,
-          color: record.text_color,
-          alignment: record.text_align,
-          weight: 'normal', // Default value as it's not stored in DB
-        }
-      }
-    };
-
-    return result;
-  } catch (error) {
-    console.error('Error in getSharedInvitation:', error);
-    throw error;
-  }
-}
-
-/**
- * Fetch all simple invitations for the current user
- * @param isEvents If true, only events are returned, if false, only non-events are returned
- * @returns Array of simple invitations
- */
-export async function fetchSimpleInvitations(isEvents?: boolean): Promise<SimpleInvitation[]> {
-  try {
     let query = supabase
       .from('invitations')
-      .select();
-      
-    // Filter by event type if specified
-    if (typeof isEvents === 'boolean') {
-      query = query.eq('is_event', isEvents);
-    }
+      .select('*')
+      .eq('user_id', session.user.id)
+      .order('created_at', { ascending: false });
     
-    const { data: invitations, error } = await query.order('created_at', { ascending: false });
+    // If isEvent is explicitly defined (true or false), filter by that
+    if (typeof isEvent !== 'undefined') {
+      query = query.eq('is_event', isEvent);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       console.error('Error fetching invitations:', error);
       throw error;
     }
 
-    if (!invitations || invitations.length === 0) {
+    if (!data || data.length === 0) {
       return [];
     }
 
-    // Map the database records to our frontend model
-    return invitations.map((record: InvitationDbRecord) => {
-      // Extract date and time from datetime if available
-      let date: string | undefined;
-      let time: string | undefined;
-      if (record.datetime) {
-        const dateObj = new Date(record.datetime);
-        date = dateObj.toISOString().split('T')[0];
-        time = dateObj.toTimeString().slice(0, 5); // Format as HH:MM
-      }
-
-      // Map to SimpleInvitation with explicit property assignments
-      return {
-        id: record.id,
-        title: record.title,
-        description: record.description,
-        location: record.location || '',
-        locationTitle: record.location_title || '',
-        date,
-        time,
-        createdAt: record.created_at,
-        updatedAt: record.updated_at,
-        userId: record.user_id,
-        shareId: record.share_id,
-        isPublic: record.is_public || false,
-        isEvent: record.is_event || false,
-        customization: {
-          background: {
-            type: record.background_type as any,
-            value: record.background_value,
-          },
-          font: {
-            family: record.font_family,
-            size: record.font_size,
-            color: record.text_color,
-            alignment: record.text_align,
-            weight: 'normal', // Default value as it's not stored in DB
-          }
-        }
-      };
-    });
+    // Map each database record to the frontend model
+    return data.map((record) => mapDatabaseRecordToSimpleInvitation(record));
   } catch (error) {
-    console.error('Error in fetchSimpleInvitations:', error);
-    throw error;
+    console.error('Failed to fetch invitations:', error);
+    return [];
   }
+}
+
+/**
+ * Fetches a shared invitation by share ID
+ */
+export async function getSharedInvitation(shareId: string): Promise<SimpleInvitation | null> {
+  try {
+    const { data, error } = await supabase
+      .from('invitations')
+      .select('*')
+      .eq('share_link', shareId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching shared invitation:', error);
+      return null;
+    }
+
+    if (!data) {
+      return null;
+    }
+
+    // Use manual mapping with explicit type assertion to avoid deep type inference
+    const result = {
+      id: data.id,
+      title: data.title,
+      description: data.description,
+      location: data.location || '',
+      locationTitle: data.location_title || '',
+      date: data.datetime ? new Date(data.datetime).toISOString().split('T')[0] : undefined,
+      time: data.datetime ? new Date(data.datetime).toLocaleTimeString() : undefined,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+      userId: data.user_id,
+      shareId: data.share_link,
+      isPublic: !!data.share_link,
+      isEvent: !!data.is_event,
+      customization: {
+        background: {
+          type: (data.background_type || 'solid') as BackgroundType,
+          value: data.background_value || '#ffffff',
+        },
+        font: {
+          family: data.font_family || 'system-ui, sans-serif',
+          size: data.font_size || 'medium',
+          color: data.text_color || '#000000',
+          alignment: data.text_align || 'left',
+        },
+      },
+    } as SimpleInvitation;
+
+    return result;
+  } catch (error) {
+    console.error('Failed to fetch shared invitation:', error);
+    return null;
+  }
+}
+
+// Helper function to map database record to frontend model
+function mapDatabaseRecordToSimpleInvitation(data: InvitationDbRecord): SimpleInvitation {
+  const result: SimpleInvitationResult = {
+    id: data.id,
+    title: data.title,
+    description: data.description,
+    location: data.location || '',
+    locationTitle: data.location_title || '',
+    date: data.datetime ? new Date(data.datetime).toISOString().split('T')[0] : undefined,
+    time: data.datetime ? new Date(data.datetime).toLocaleTimeString() : undefined,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+    userId: data.user_id,
+    shareId: data.share_id,
+    isPublic: !!data.is_public,
+    isEvent: !!data.is_event,
+    customization: {
+      background: {
+        type: (data.background_type || 'solid') as BackgroundType,
+        value: data.background_value || '#ffffff',
+      },
+      font: {
+        family: data.font_family || 'system-ui, sans-serif',
+        size: data.font_size || 'medium',
+        color: data.text_color || '#000000',
+        alignment: data.text_align || 'left',
+      },
+    },
+  };
+  
+  // Use type assertion to convert to SimpleInvitation
+  return result as unknown as SimpleInvitation;
 }
