@@ -268,7 +268,7 @@ export function mapDbRecordToSimpleInvitation(data: InvitationDbRecord): SimpleI
     createdAt: data.created_at,
     updatedAt: data.updated_at,
     userId: data.user_id,
-    shareId: data.share_link, // We use share_link here
+    shareId: data.share_link, // We use share_link here as shareId
     isPublic: data.is_public || false,
     isEvent: !!data.is_event,
     date: data.datetime ? new Date(data.datetime).toISOString().split('T')[0] : undefined,
@@ -283,10 +283,15 @@ export function mapDbRecordToSimpleInvitation(data: InvitationDbRecord): SimpleI
         family: data.font_family || 'system-ui, sans-serif',
         size: data.font_size || 'medium',
         color: data.text_color || '#000000',
-        alignment: data.text_align || 'left'
+        alignment: data.text_align || 'left' // Ensure this is never undefined
       }
     }
   };
+  
+  // Add textShadow if applicable (for image backgrounds)
+  if (data.background_type === 'image') {
+    result.customization.textShadow = true;
+  }
   
   return result;
 }

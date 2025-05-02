@@ -1,28 +1,29 @@
 
-import React from "react";
-import { useCustomization } from "../context";
-import TextTab from "../tabs/TextTab";
+import React from 'react';
+import { useCustomization } from '../context';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import FontSelector from '../FontSelector';
+import TextShadowToggle from './TextShadowToggle';
 
 const TextTabContent = () => {
-  const {
-    customization,
-    handleFontChange,
-    handleHeaderFontChange,
-    handleDescriptionFontChange,
-    handleDateTimeFontChange
-  } = useCustomization();
-
+  const { customization, handlers } = useCustomization();
+  const { handleFontChange } = handlers;
+  
   return (
-    <TextTab
-      font={customization.font}
-      headerFont={customization.headerFont}
-      descriptionFont={customization.descriptionFont}
-      dateTimeFont={customization.dateTimeFont}
-      onFontChange={handleFontChange}
-      onHeaderFontChange={handleHeaderFontChange}
-      onDescriptionFontChange={handleDescriptionFontChange}
-      onDateTimeFontChange={handleDateTimeFontChange}
-    />
+    <div className="space-y-6">
+      <div className="pb-4 border-b">
+        <FontSelector 
+          font={customization.font} 
+          onFontChange={handleFontChange}
+          showAlignment={true}
+          showWeight={true}
+          previewText="Preview text styling"
+        />
+      </div>
+      
+      <TextShadowToggle />
+    </div>
   );
 };
 

@@ -125,7 +125,7 @@ export interface SimpleInvitationCustomization {
     size: string;
     color: string;
     weight?: string;
-    alignment: string; // Changed from optional to required
+    alignment: string; // Required field
   };
   buttons?: {
     accept: {
@@ -142,4 +142,5 @@ export interface SimpleInvitationCustomization {
   headerStyle?: string;
   animation?: string;
   cardEffect?: string;
+  textShadow?: boolean; // Added textShadow option
 }

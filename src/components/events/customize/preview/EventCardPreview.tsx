@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, Map, Clock } from 'lucide-react';
+import { Calendar, Map, Clock, MapPin } from 'lucide-react';
 import { generateMapsUrl } from '@/utils/locationUtils';
 import { useCustomization } from '../context';
 import { format } from 'date-fns';
@@ -51,11 +50,36 @@ const EventCardPreview: React.FC<EventCardPreviewProps> = ({
   const formattedDate = date ? format(date, 'MMM dd, yyyy') : '';
   const formattedTime = date ? format(date, 'h:mm a') : '';
   
+  // Determine if we need text shadow
+  const needsTextShadow = () => {
+    // If textShadow is explicitly set, use that
+    if (customization.textShadow !== undefined) {
+      return customization.textShadow;
+    }
+    
+    // Otherwise determine based on background type
+    if (customization.background?.type === 'image') {
+      return true;
+    }
+    return false;
+  };
+
+  const textShadowStyle = needsTextShadow() ? 
+    { textShadow: '0 1px 2px rgba(0,0,0,0.7)' } : {};
+  
+  // Handle directions button click
+  const handleGetDirections = () => {
+    if (location) {
+      const directionsUrl = generateMapsUrl(location);
+      window.open(directionsUrl, '_blank');
+    }
+  };
+  
   return (
     <Card className="overflow-hidden shadow-lg" style={cardStyle}>
       <CardHeader className="pb-2">
-        <h3 className="text-lg font-semibold">{title}</h3>
-        <div className="flex items-center text-sm space-x-1">
+        <h3 className="text-lg font-semibold" style={textShadowStyle}>{title}</h3>
+        <div className="flex items-center text-sm space-x-1" style={textShadowStyle}>
           <Calendar className="h-4 w-4 mr-1" />
           <span>{formattedDate}</span>
           {formattedTime && (
@@ -68,10 +92,10 @@ const EventCardPreview: React.FC<EventCardPreviewProps> = ({
       </CardHeader>
       
       <CardContent className="flex-grow">
-        <p className="text-sm mb-3">{description}</p>
+        <p className="text-sm mb-3" style={textShadowStyle}>{description}</p>
         
         {hasLocation && (
-          <div className="flex items-center text-sm mt-2">
+          <div className="flex items-center text-sm mt-2" style={textShadowStyle}>
             <Map className="h-4 w-4 mr-1 flex-shrink-0" />
             <span className="truncate">{locationTitle || location}</span>
           </div>
@@ -84,8 +108,10 @@ const EventCardPreview: React.FC<EventCardPreviewProps> = ({
             <Button 
               size="sm" 
               variant="outline"
-              className="text-xs h-8"
+              className="text-xs h-8 flex items-center gap-1"
+              onClick={handleGetDirections}
             >
+              <MapPin className="h-3 w-3" />
               Get Directions
             </Button>
           )}
