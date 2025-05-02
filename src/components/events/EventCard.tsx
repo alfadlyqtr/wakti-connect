@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,11 +26,17 @@ const EventCard: React.FC<EventCardProps> = ({ event, onEdit, onShare, onDelete 
   const startDate = event.start_time ? new Date(event.start_time) : null;
   const endDate = event.end_time ? new Date(event.end_time) : null;
   
-  // Get custom styling from event with default values if customization is missing
-  const customization = event.customization || {
-    background: { type: 'solid', value: '#ffffff' },
-    font: { color: '#000000' }
+  // Create a default customization object for fallback
+  const defaultCustomization = {
+    background: { type: 'solid' as const, value: '#ffffff' },
+    font: { color: '#000000' },
+    textShadow: false,
+    showAddToCalendarButton: true,
+    enableAddToCalendar: true
   };
+  
+  // Get custom styling from event with default values if customization is missing
+  const customization = event.customization || defaultCustomization;
   
   const background = customization.background || { type: 'solid', value: '#ffffff' };
   const textColor = customization.font?.color || '#000000';
@@ -154,6 +161,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, onEdit, onShare, onDelete 
         </div>
         
         <div className="flex space-x-2">
+          {/* Handle both properties for backward compatibility */}
           {(customization.showAddToCalendarButton !== false && customization.enableAddToCalendar !== false) && (
             <Button 
               size="sm"
