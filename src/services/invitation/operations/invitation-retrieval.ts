@@ -46,10 +46,7 @@ export const getSharedInvitation = async (shareId: string): Promise<SimpleInvita
     const { data, error } = await supabase
       .from('invitations')
       .select('*')
-      .or([
-        { share_link: shareId },
-        { id: shareId }
-      ])
+      .or(`share_link.eq.${shareId},id.eq.${shareId}`)
       .maybeSingle();
 
     if (error) {
