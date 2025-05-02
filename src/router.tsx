@@ -18,6 +18,7 @@ import ScrollToTop from "./components/ui/scroll-to-top";
 import { TaskProvider } from "@/contexts/TaskContext";
 import NotificationListener from "./components/notifications/NotificationListener";
 import ErrorBoundary from "./components/ui/ErrorBoundary";
+import SharedEventPage from '@/pages/SharedEventPage';
 
 // Lazy load dashboard pages
 import { lazy, Suspense } from "react";
@@ -233,6 +234,23 @@ export const router = createBrowserRouter([
       </SuperAdminGuard>
     ),
     children: superadminRoutes as RouteObject[],
+  },
+  
+  // Event shared page route
+  {
+    path: "/e/:id",
+    element: (
+      <ErrorBoundary>
+        <TooltipProvider>
+          <TaskProvider>
+            <ScrollToTop />
+            <Toaster />
+            <Sonner />
+            <SharedEventPage />
+          </TaskProvider>
+        </TooltipProvider>
+      </ErrorBoundary>
+    ),
   },
   
   // 404 page

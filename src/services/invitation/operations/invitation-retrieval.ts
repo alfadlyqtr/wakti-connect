@@ -36,11 +36,13 @@ export const getSimpleInvitationById = async (id: string): Promise<SimpleInvitat
 };
 
 /**
- * Get a shared invitation by share ID
+ * Get a shared invitation by share ID (share_link or id)
  */
 export const getSharedInvitation = async (shareId: string): Promise<SimpleInvitation | null> => {
   try {
-    // Try to find by share_link first, then by id if not found
+    console.log("Fetching shared invitation with ID:", shareId);
+    
+    // Use proper OR filter syntax for Supabase
     const { data, error } = await supabase
       .from('invitations')
       .select('*')
@@ -48,13 +50,16 @@ export const getSharedInvitation = async (shareId: string): Promise<SimpleInvita
       .maybeSingle();
 
     if (error) {
+      console.error("Supabase query error:", error);
       throw error;
     }
 
     if (!data) {
+      console.log("No invitation found with share ID:", shareId);
       return null;
     }
     
+    console.log("Found invitation:", data);
     return mapDbRecordToSimpleInvitation(data);
   } catch (error) {
     console.error("Error fetching shared invitation:", error);
