@@ -125,7 +125,25 @@ const SimpleInvitationsList: React.FC<SimpleInvitationsListProps> = ({ isEventsL
               user_id: invitation.userId,
               created_at: invitation.createdAt,
               updated_at: invitation.updatedAt || '',
-              customization: invitation.customization,
+              customization: {
+                background: {
+                  type: invitation.customization.background.type === 'gradient' ? 'solid' : invitation.customization.background.type,
+                  value: invitation.customization.background.value
+                },
+                font: invitation.customization.font,
+                buttons: {
+                  accept: {
+                    background: '#4CAF50',
+                    color: '#ffffff',
+                    shape: 'rounded'
+                  },
+                  decline: {
+                    background: '#F44336',
+                    color: '#ffffff',
+                    shape: 'rounded'
+                  }
+                }
+              },
               shareId: invitation.shareId
             }}
             onEdit={() => handleEdit(invitation.id)}

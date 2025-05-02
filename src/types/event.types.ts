@@ -217,6 +217,7 @@ export interface Event {
   location_type?: 'manual' | 'google_maps';
   maps_url?: string;
   sender_name?: string;
+  shareId?: string; // Added shareId property
 }
 
 // New type for guest responses (non-WAKTI users)
