@@ -1,5 +1,5 @@
 
-import { BackgroundType, ButtonShape, EventCustomization, ElementAnimations, CardEffectType, MapDisplayType } from "@/types/event.types";
+import { BackgroundType, ButtonShape, EventCustomization, ElementAnimations, CardEffectType, MapDisplayType, CardEffect, TextAlign } from "@/types/event.types";
 
 export interface CustomizationContextType {
   customization: EventCustomization;
@@ -42,14 +42,4 @@ export interface CustomizationContextType {
   
   // Optional additional handlers for components
   handleButtonStyleChange?: (buttonType: string, property: string, value: string) => void;
-  handleToggleButtons?: (enabled: boolean) => void;
-  handleToggleCalendar?: (enabled: boolean) => void;
-  handleFontChange?: (fontProperty: string, value: string) => void;
-}
-
-// Interface for CardEffect to match the type in event.types.ts
-export interface CardEffect {
-  type: CardEffectType;
-  borderRadius?: 'none' | 'small' | 'medium' | 'large';
-  border?: boolean;
 }

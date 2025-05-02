@@ -50,8 +50,34 @@ export const createButtonHandlers = (
     onCustomizationChange(updatedCustomization);
   };
 
+  // Add missing button handlers
+  const handleAcceptButtonChange = (property: string, value: string) => {
+    handleButtonStyleChange('accept', property as 'background' | 'color' | 'shape', value);
+  };
+
+  const handleDeclineButtonChange = (property: string, value: string) => {
+    handleButtonStyleChange('decline', property as 'background' | 'color' | 'shape', value);
+  };
+
+  const handleButtonShapeChange = (shape: string) => {
+    // Apply the shape to both accept and decline buttons
+    handleButtonStyleChange('accept', 'shape', shape);
+    handleButtonStyleChange('decline', 'shape', shape);
+  };
+
+  const handleShowButtonsChange = (show: boolean) => {
+    onCustomizationChange({
+      ...customization,
+      showAcceptDeclineButtons: show
+    });
+  };
+
   return {
     handleButtonStyleChange,
-    handleUtilityButtonStyleChange
+    handleUtilityButtonStyleChange,
+    handleAcceptButtonChange,
+    handleDeclineButtonChange,
+    handleButtonShapeChange,
+    handleShowButtonsChange
   };
 };

@@ -20,10 +20,6 @@ const CardEffectTabContent: React.FC = () => {
   };
   
   const handleRadiusChange = (radius: "none" | "small" | "medium" | "large") => {
-    const updatedEffect: CardEffect = {
-      ...effect,
-      borderRadius: radius
-    };
     handleBorderRadiusChange(radius);
   };
   

@@ -132,8 +132,8 @@ interface BusinessBranding {
   slogan?: string;
 }
 
-// Card Effect
-interface CardEffect {
+// Card Effect - Make sure this is exported
+export interface CardEffect {
   type: CardEffectType;
   borderRadius?: 'none' | 'small' | 'medium' | 'large';
   border?: boolean;

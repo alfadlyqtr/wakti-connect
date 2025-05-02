@@ -1,6 +1,5 @@
 
-import { EventCustomization, AnimationType, ElementAnimations } from "@/types/event.types";
-import { CardEffect } from "../types";
+import { EventCustomization, AnimationType, ElementAnimations, CardEffect } from "@/types/event.types";
 
 export const createEffectHandlers = (
   customization: EventCustomization,
