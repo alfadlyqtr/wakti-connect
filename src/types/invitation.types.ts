@@ -125,7 +125,7 @@ export interface SimpleInvitationCustomization {
     size: string;
     color: string;
     weight?: string;
-    alignment?: string;
+    alignment: string; // Changed from optional to required
   };
   buttons?: {
     accept: {
