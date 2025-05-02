@@ -10,6 +10,9 @@ import FeaturesPage from '@/pages/public/FeaturesPage';
 import PricingPage from '@/pages/public/PricingPage';
 import AboutPage from '@/pages/public/AboutPage';
 import LandingPage from '@/pages/public/LandingPage';
+import FaqPage from '@/pages/public/FaqPage';
+import PrivacyPage from '@/pages/public/PrivacyPage';
+import TermsPage from '@/pages/public/TermsPage';
 
 // Temporary placeholder component for missing pages
 const PlaceholderPage = ({ title }: { title: string }) => (
@@ -18,11 +21,6 @@ const PlaceholderPage = ({ title }: { title: string }) => (
     <p className="text-muted-foreground">This page is currently under construction.</p>
   </div>
 );
-
-// Placeholder only for pages that don't have implementations yet
-const PrivacyPage = () => <PlaceholderPage title="Privacy" />;
-const TermsPage = () => <PlaceholderPage title="Terms" />;
-const FaqPage = () => <PlaceholderPage title="FAQ" />;
 
 export const publicRoutes = [
   {
