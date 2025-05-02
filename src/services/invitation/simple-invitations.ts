@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import { SimpleInvitation } from '@/types/invitation.types';
@@ -9,6 +8,11 @@ import { InvitationDbRecord } from './invitation-types';
  */
 export const createSimpleInvitation = async (invitationData: any): Promise<SimpleInvitation | null> => {
   try {
+    // Generate a unique share_link if not provided
+    if (!invitationData.share_link) {
+      invitationData.share_link = generateUniqueShareId();
+    }
+
     const { data, error } = await supabase
       .from('invitations')
       .insert(invitationData)
@@ -42,6 +46,11 @@ export const createSimpleInvitation = async (invitationData: any): Promise<Simpl
  */
 export const updateSimpleInvitation = async (id: string, invitationData: any): Promise<SimpleInvitation | null> => {
   try {
+    // Ensure share_link exists
+    if (!invitationData.share_link && 'is_public' in invitationData && invitationData.is_public) {
+      invitationData.share_link = generateUniqueShareId();
+    }
+
     const { data, error } = await supabase
       .from('invitations')
       .update(invitationData)
@@ -197,14 +206,14 @@ export const deleteSimpleInvitation = async (id: string): Promise<boolean> => {
 };
 
 /**
- * Get a shared invitation by share ID
+ * Get a shared invitation by share link
  */
-export const getSharedInvitation = async (shareId: string): Promise<SimpleInvitation | null> => {
+export const getSharedInvitation = async (shareLink: string): Promise<SimpleInvitation | null> => {
   try {
     const { data, error } = await supabase
       .from('invitations')
       .select('*')
-      .eq('share_id', shareId)
+      .eq('share_link', shareLink)
       .maybeSingle();
 
     if (error) {
@@ -234,14 +243,21 @@ export const getSharedInvitation = async (shareId: string): Promise<SimpleInvita
 };
 
 /**
+ * Generate a unique share ID for invitations
+ */
+export const generateUniqueShareId = (): string => {
+  return Math.random().toString(36).substring(2, 10);
+};
+
+/**
  * Map a database record to a SimpleInvitation object
- * Simplified to avoid TypeScript "excessively deep instantiation" errors
+ * Completely refactored to fix "excessively deep instantiation" TypeScript error
  */
 export function mapDbRecordToSimpleInvitation(data: InvitationDbRecord): SimpleInvitation | null {
   if (!data) return null;
   
-  // Create a plain object without complex type instantiation
-  const result = {
+  // Use a simpler approach without nested type instantiation
+  const invitation: SimpleInvitation = {
     id: data.id,
     title: data.title,
     description: data.description || '',
@@ -250,15 +266,16 @@ export function mapDbRecordToSimpleInvitation(data: InvitationDbRecord): SimpleI
     createdAt: data.created_at,
     updatedAt: data.updated_at,
     userId: data.user_id,
-    shareId: data.share_id,
+    fromName: data.from_name || '', // Add from name
+    shareId: data.share_link, // Fix: Use share_link from database
     isPublic: data.is_public || false,
     isEvent: !!data.is_event,
-    // Handle date and time separately
     date: data.datetime ? new Date(data.datetime).toISOString().split('T')[0] : undefined,
     time: data.datetime ? new Date(data.datetime).toISOString().split('T')[1].substring(0, 5) : undefined,
+    endTime: data.end_time ? new Date(data.end_time).toISOString().split('T')[1].substring(0, 5) : undefined, // Add end time
     customization: {
       background: {
-        type: data.background_type || 'solid',
+        type: (data.background_type || 'solid') as any,
         value: data.background_value || '#ffffff'
       },
       font: {
@@ -270,8 +287,7 @@ export function mapDbRecordToSimpleInvitation(data: InvitationDbRecord): SimpleI
     }
   };
   
-  // Single type assertion at the return point
-  return result as SimpleInvitation;
+  return invitation;
 }
 
 // Re-export listSimpleInvitations as an alias for fetchSimpleInvitations for backward compatibility

@@ -11,8 +11,10 @@ import LocationPicker from '@/components/events/location/LocationPicker';
 interface FormData {
   title: string;
   description: string;
+  fromName: string;
   date: string;
   time: string;
+  endTime: string;
   location: string;
   locationTitle: string;
 }
@@ -46,6 +48,7 @@ export default function InvitationForm({ formData, onChange, isEvent = false }: 
     // If all day is toggled on, clear the time field
     if (checked) {
       onChange('time', '');
+      onChange('endTime', '');
     }
   };
 
@@ -59,6 +62,17 @@ export default function InvitationForm({ formData, onChange, isEvent = false }: 
           value={formData.title}
           onChange={handleInputChange}
           placeholder={`Enter ${isEvent ? 'event' : 'invitation'} title`}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="fromName">From</Label>
+        <Input
+          id="fromName"
+          name="fromName"
+          value={formData.fromName}
+          onChange={handleInputChange}
+          placeholder="Your name or organization"
         />
       </div>
 
@@ -95,14 +109,25 @@ export default function InvitationForm({ formData, onChange, isEvent = false }: 
         {!isAllDay && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="time">Time</Label>
+              <Label htmlFor="time">Start Time</Label>
               <Input
                 id="time"
                 name="time"
                 type="time"
                 value={formData.time}
                 onChange={handleInputChange}
-                placeholder="Select a time"
+                placeholder="Start time"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="endTime">End Time</Label>
+              <Input
+                id="endTime"
+                name="endTime"
+                type="time"
+                value={formData.endTime || ''}
+                onChange={handleInputChange}
+                placeholder="End time"
               />
             </div>
           </div>

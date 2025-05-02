@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import InvitationForm from './InvitationForm';
 import InvitationStyler from './InvitationStyler';
 import InvitationPreview from './InvitationPreview';
+import SimpleShareLink from '@/components/events/sharing/SimpleShareLink';
 import { toast } from '@/components/ui/use-toast';
 import { useAuth } from '@/features/auth/context/AuthContext';
 
@@ -27,6 +28,7 @@ export default function SimpleInvitationCreator({
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<string>('details');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [savedInvitation, setSavedInvitation] = useState<SimpleInvitation | null>(null);
 
   // Determine paths based on whether this is for events or invitations
   const basePath = isEvent ? '/dashboard/events' : '/dashboard/invitations';
@@ -34,11 +36,13 @@ export default function SimpleInvitationCreator({
 
   const [formData, setFormData] = useState({
     title: existingInvitation?.title || '',
+    fromName: existingInvitation?.fromName || '',
     description: existingInvitation?.description || '',
     location: existingInvitation?.location || '',
     locationTitle: existingInvitation?.locationTitle || '',
     date: existingInvitation?.date || '',
     time: existingInvitation?.time || '',
+    endTime: existingInvitation?.endTime || '',
   });
 
   const [customization, setCustomization] = useState<SimpleInvitationCustomization>(
@@ -83,11 +87,13 @@ export default function SimpleInvitationCreator({
       // Map our form data to the database structure
       const invitationData = {
         title: formData.title,
+        from_name: formData.fromName,
         description: formData.description || '',
         location: formData.location || '',
-        location_url: formData.location || '', // Using location as location_url
+        location_url: formData.location || '',
         location_title: formData.locationTitle || '',
         datetime: formData.date && formData.time ? new Date(`${formData.date}T${formData.time}`).toISOString() : undefined,
+        end_time: formData.date && formData.endTime ? new Date(`${formData.date}T${formData.endTime}`).toISOString() : undefined,
         
         // Map from our customization model to the database fields
         background_type: customization.background.type,
@@ -95,8 +101,10 @@ export default function SimpleInvitationCreator({
         font_family: customization.font.family,
         font_size: customization.font.size,
         text_color: customization.font.color,
-        is_event: isEvent, // Add flag to identify if this is an event
-        user_id: user.id, // Add the user's ID to comply with RLS
+        text_align: customization.font.alignment,
+        is_event: isEvent,
+        is_public: true, // Make shareable by default
+        user_id: user.id,
       };
 
       let result;
@@ -109,14 +117,19 @@ export default function SimpleInvitationCreator({
       }
 
       if (result) {
+        setSavedInvitation(result);
+        
         toast({
           title: 'Success',
           description: `${entityType} successfully ${existingInvitation ? 'updated' : 'created'}!`,
         });
-        if (onSuccess) {
+        
+        if (activeTab === 'details') {
+          setActiveTab('customize');
+        } else if (activeTab === 'customize') {
+          setActiveTab('share');
+        } else if (onSuccess) {
           onSuccess();
-        } else {
-          navigate(basePath);
         }
       }
     } catch (error) {
@@ -133,15 +146,28 @@ export default function SimpleInvitationCreator({
 
   const handleNextTab = () => {
     if (activeTab === 'details') {
-      setActiveTab('customize');
+      if (savedInvitation || existingInvitation) {
+        setActiveTab('customize');
+      } else {
+        handleSubmit();
+      }
     } else if (activeTab === 'customize') {
-      handleSubmit();
+      if (savedInvitation || existingInvitation) {
+        setActiveTab('share');
+      } else {
+        handleSubmit();
+      }
+    } else if (activeTab === 'share') {
+      // Already at the last tab, navigate back to list
+      navigate(basePath);
     }
   };
 
   const handlePrevTab = () => {
     if (activeTab === 'customize') {
       setActiveTab('details');
+    } else if (activeTab === 'share') {
+      setActiveTab('customize');
     }
   };
 
@@ -151,6 +177,15 @@ export default function SimpleInvitationCreator({
       console.warn('User is not authenticated');
     }
   }, [user]);
+  
+  // Get the share URL for the invitation
+  const getShareableUrl = () => {
+    const invitation = savedInvitation || existingInvitation;
+    if (invitation?.shareId) {
+      return `${window.location.origin}/invite/${invitation.shareId}`;
+    }
+    return '';
+  };
 
   return (
     <div className="container mx-auto p-4 max-w-5xl">
@@ -168,9 +203,10 @@ export default function SimpleInvitationCreator({
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="details">{entityType} Details</TabsTrigger>
           <TabsTrigger value="customize">Customize Style</TabsTrigger>
+          <TabsTrigger value="share">Share</TabsTrigger>
         </TabsList>
 
         <Card className="mt-6 p-6">
@@ -192,6 +228,23 @@ export default function SimpleInvitationCreator({
                   description={formData.description}
                 />
               </TabsContent>
+              
+              <TabsContent value="share" className="mt-0">
+                {(savedInvitation || existingInvitation) ? (
+                  <SimpleShareLink 
+                    title={formData.title} 
+                    shareUrl={getShareableUrl()}
+                    previewImage="/invitation-preview.jpg" // Optional preview image
+                  />
+                ) : (
+                  <div className="text-center p-6">
+                    <p>Save your {entityType.toLowerCase()} first to get a shareable link.</p>
+                    <Button onClick={handleSubmit} className="mt-4">
+                      Save {entityType}
+                    </Button>
+                  </div>
+                )}
+              </TabsContent>
             </div>
 
             <div className="order-first md:order-last mb-6 md:mb-0">
@@ -199,11 +252,13 @@ export default function SimpleInvitationCreator({
                 <h3 className="text-sm font-medium mb-2 text-muted-foreground">Preview</h3>
                 <InvitationPreview
                   title={formData.title}
+                  fromName={formData.fromName}
                   description={formData.description}
                   location={formData.location}
                   locationTitle={formData.locationTitle}
                   date={formData.date}
                   time={formData.time}
+                  endTime={formData.endTime}
                   customization={customization}
                   isEvent={isEvent}
                 />
@@ -221,15 +276,17 @@ export default function SimpleInvitationCreator({
             </Button>
 
             <div className="flex gap-2">
-              {activeTab === 'customize' && (
+              {activeTab !== 'details' && (
                 <Button variant="outline" onClick={handlePrevTab} disabled={isSubmitting}>
                   Previous
                 </Button>
               )}
               <Button onClick={handleNextTab} disabled={isSubmitting}>
-                {activeTab === 'details' 
-                  ? 'Next: Customize' 
-                  : `Save ${entityType}`}
+                {activeTab === 'share' 
+                  ? 'Finish' 
+                  : activeTab === 'details' 
+                    ? 'Next: Customize'
+                    : 'Next: Share'}
               </Button>
             </div>
           </div>
