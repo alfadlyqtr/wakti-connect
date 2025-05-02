@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import { SimpleInvitation } from '@/types/invitation.types';
@@ -256,23 +257,23 @@ export const generateUniqueShareId = (): string => {
 export function mapDbRecordToSimpleInvitation(data: InvitationDbRecord): SimpleInvitation | null {
   if (!data) return null;
   
-  // Use a simpler approach without nested type instantiation
-  const invitation: SimpleInvitation = {
+  // Use a simpler approach to avoid excessive type instantiation
+  const result: SimpleInvitation = {
     id: data.id,
     title: data.title,
     description: data.description || '',
+    fromName: data.from_name || '',
     location: data.location || '',
     locationTitle: data.location_title || '',
     createdAt: data.created_at,
     updatedAt: data.updated_at,
     userId: data.user_id,
-    fromName: data.from_name || '', // Add from name
-    shareId: data.share_link, // Fix: Use share_link from database
+    shareId: data.share_link, // We use share_link here
     isPublic: data.is_public || false,
     isEvent: !!data.is_event,
     date: data.datetime ? new Date(data.datetime).toISOString().split('T')[0] : undefined,
     time: data.datetime ? new Date(data.datetime).toISOString().split('T')[1].substring(0, 5) : undefined,
-    endTime: data.end_time ? new Date(data.end_time).toISOString().split('T')[1].substring(0, 5) : undefined, // Add end time
+    endTime: data.end_time ? new Date(data.end_time).toISOString().split('T')[1].substring(0, 5) : undefined,
     customization: {
       background: {
         type: (data.background_type || 'solid') as any,
@@ -287,7 +288,7 @@ export function mapDbRecordToSimpleInvitation(data: InvitationDbRecord): SimpleI
     }
   };
   
-  return invitation;
+  return result;
 }
 
 // Re-export listSimpleInvitations as an alias for fetchSimpleInvitations for backward compatibility

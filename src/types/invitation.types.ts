@@ -100,15 +100,15 @@ export interface SimpleInvitation {
   id: string;
   title: string;
   description: string;
-  fromName?: string; // Added from name field
+  fromName?: string;
   location?: string;
   locationTitle?: string;
   date?: string;
   time?: string;
-  endTime?: string; // Added end time field
+  endTime?: string;
   createdAt: string;
   updatedAt?: string;
-  userId: string; // Match the database column name
+  userId: string;
   shareId?: string;
   isPublic?: boolean;
   customization: SimpleInvitationCustomization;
