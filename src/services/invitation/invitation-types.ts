@@ -71,4 +71,5 @@ export interface InvitationData {
   text_align?: string;
   is_event?: boolean;
   user_id: string;
+  share_id?: string; // Added share_id to the creation data
 }
