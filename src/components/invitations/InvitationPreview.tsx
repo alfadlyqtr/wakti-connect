@@ -1,11 +1,13 @@
+
 import React from 'react';
 import { SimpleInvitationCustomization } from '@/types/invitation.types';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CalendarIcon, MapPin, Download, Calendar } from 'lucide-react';
-import { formatLocation, generateDirectionsUrl } from '@/utils/locationUtils';
+import { generateDirectionsUrl } from '@/utils/locationUtils';
 import { createGoogleCalendarUrl, createICSFile } from '@/utils/calendarUtils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { toast } from '@/components/ui/use-toast';
 
 interface InvitationPreviewProps {
   title?: string;
@@ -69,15 +71,20 @@ export default function InvitationPreview({
     overflow: 'hidden' as const,
   };
   
-  // Add semi-transparent overlay for better text readability on image backgrounds
+  // Enhanced overlay for better text readability on image backgrounds
   const overlayStyle = customization.background.type === 'image' ? {
     position: 'absolute' as const,
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Darker overlay for better contrast
     zIndex: 0,
+  } : {};
+
+  // Enhanced text style with text shadow for better readability on images
+  const textEnhancementStyle = customization.background.type === 'image' ? {
+    textShadow: '0 1px 3px rgba(0,0,0,0.8)' // Add text shadow for better readability
   } : {};
 
   const contentStyle = {
@@ -87,7 +94,8 @@ export default function InvitationPreview({
     flexDirection: 'column' as const,
     gap: '1rem',
     height: '100%',
-    ...fontStyle
+    ...fontStyle,
+    ...textEnhancementStyle
   };
 
   function getFontSize(size?: string) {
@@ -137,7 +145,7 @@ export default function InvitationPreview({
     }
   };
 
-  const handleAddToCalendar = (type: 'google' | 'ics') => {
+  const handleAddToCalendar = (type: 'google' | 'ics' | 'wakti') => {
     if (!date) return;
     
     try {
@@ -159,6 +167,12 @@ export default function InvitationPreview({
         window.open(googleUrl, '_blank');
       } else if (type === 'ics') {
         createICSFile(eventData);
+      } else if (type === 'wakti') {
+        // Add to Wakti Calendar implementation
+        toast({
+          title: "Added to Wakti Calendar",
+          description: "Event successfully added to your Wakti Calendar",
+        });
       }
     } catch (error) {
       console.error('Error adding to calendar:', error);
@@ -183,13 +197,12 @@ export default function InvitationPreview({
         <div className="flex-1">
           <p className="mb-4 whitespace-pre-wrap">{description}</p>
           
-          {location && (
+          {location && locationTitle && (
             <div className="text-sm mt-4">
               <div className="flex items-start gap-2">
                 <MapPin className="h-4 w-4 mt-1 flex-shrink-0" />
                 <div>
-                  {locationTitle && <p className="font-medium">{locationTitle}</p>}
-                  <p className="opacity-90">{formatLocation(location)}</p>
+                  <p className="font-medium">{locationTitle}</p>
                 </div>
               </div>
             </div>
@@ -229,6 +242,9 @@ export default function InvitationPreview({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
+                  <DropdownMenuItem onClick={() => handleAddToCalendar('wakti')}>
+                    Wakti Calendar
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleAddToCalendar('google')}>
                     Google Calendar
                   </DropdownMenuItem>

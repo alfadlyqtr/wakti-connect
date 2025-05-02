@@ -235,54 +235,43 @@ export const getSharedInvitation = async (shareId: string): Promise<SimpleInvita
 
 /**
  * Map a database record to a SimpleInvitation object
- * Using a completely new approach to avoid TypeScript "excessively deep instantiation" errors
+ * Completely rewritten to avoid TypeScript "excessively deep instantiation" errors
  */
 export function mapDbRecordToSimpleInvitation(data: InvitationDbRecord): SimpleInvitation | null {
   if (!data) return null;
   
-  // Create the background object
-  const background = {
-    type: data.background_type || 'solid',
-    value: data.background_value || '#ffffff'
-  };
-  
-  // Create the font object with optional alignment
-  let font: any = {
-    family: data.font_family || 'system-ui, sans-serif',
-    size: data.font_size || 'medium',
-    color: data.text_color || '#000000'
-  };
-  
-  // Only add alignment if it exists in the data
-  if (data.text_align) {
-    font.alignment = data.text_align;
-  }
-  
-  // Create the customization object
-  const customization = {
-    background: background,
-    font: font
-  };
-  
-  // Create the SimpleInvitation object
+  // Create a plain JavaScript object without complex type instantiation
   const invitation = {
     id: data.id,
     title: data.title,
     description: data.description || '',
     location: data.location || '',
     locationTitle: data.location_title || '',
-    date: data.datetime ? new Date(data.datetime).toISOString().split('T')[0] : undefined,
-    time: data.datetime ? new Date(data.datetime).toISOString().split('T')[1].substring(0, 5) : undefined,
     createdAt: data.created_at,
     updatedAt: data.updated_at,
     userId: data.user_id,
     shareId: data.share_id,
     isPublic: data.is_public || false,
     isEvent: !!data.is_event,
-    customization: customization
+    // Handle date and time separately to avoid date manipulation issues
+    date: data.datetime ? new Date(data.datetime).toISOString().split('T')[0] : undefined,
+    time: data.datetime ? new Date(data.datetime).toISOString().split('T')[1].substring(0, 5) : undefined,
+    // Create the customization object directly
+    customization: {
+      background: {
+        type: (data.background_type || 'solid'),
+        value: data.background_value || '#ffffff'
+      },
+      font: {
+        family: data.font_family || 'system-ui, sans-serif',
+        size: data.font_size || 'medium',
+        color: data.text_color || '#000000',
+        alignment: data.text_align || 'left'
+      }
+    }
   };
   
-  // Cast the object to SimpleInvitation type and return it
+  // Return the object as SimpleInvitation type
   return invitation as SimpleInvitation;
 }
 
