@@ -6,8 +6,23 @@ import AccountDetailsCard from "@/components/dashboard/profile/AccountDetailsCar
 import LoadingState from "@/components/dashboard/profile/LoadingState";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useProfileForm, ProfileData } from "@/hooks/dashboard/useProfileForm";
+import { useProfileForm } from "@/hooks/dashboard/useProfileForm";
 import { toast } from "@/hooks/use-toast";
+
+// Create a compatible ProfileData type that includes 'free' as a valid account_type
+interface ProfileData {
+  id: string;
+  full_name: string | null;
+  display_name: string | null;
+  business_name: string | null;
+  occupation: string | null;
+  account_type: "free" | "individual" | "business";
+  avatar_url: string | null;
+  created_at: string;
+  updated_at: string;
+  is_searchable: boolean | null;
+  theme_preference: string | null;
+}
 
 const DashboardProfile = () => {
   const [isEditing, setIsEditing] = useState(false);

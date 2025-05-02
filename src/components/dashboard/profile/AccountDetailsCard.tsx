@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 
 interface ProfileData {
-  account_type:  "individual" | "business";
+  account_type: "individual" | "business" | "free";
   id?: string;
   created_at?: string;
 }

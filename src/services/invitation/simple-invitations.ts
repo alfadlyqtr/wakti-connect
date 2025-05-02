@@ -235,13 +235,13 @@ export const getSharedInvitation = async (shareId: string): Promise<SimpleInvita
 
 /**
  * Map a database record to a SimpleInvitation object
- * Completely rewritten to avoid TypeScript "excessively deep instantiation" errors
+ * Simplified to avoid TypeScript "excessively deep instantiation" errors
  */
 export function mapDbRecordToSimpleInvitation(data: InvitationDbRecord): SimpleInvitation | null {
   if (!data) return null;
   
-  // Create a plain JavaScript object without complex type instantiation
-  const invitation = {
+  // Create a plain object without complex type instantiation
+  const result = {
     id: data.id,
     title: data.title,
     description: data.description || '',
@@ -253,13 +253,12 @@ export function mapDbRecordToSimpleInvitation(data: InvitationDbRecord): SimpleI
     shareId: data.share_id,
     isPublic: data.is_public || false,
     isEvent: !!data.is_event,
-    // Handle date and time separately to avoid date manipulation issues
+    // Handle date and time separately
     date: data.datetime ? new Date(data.datetime).toISOString().split('T')[0] : undefined,
     time: data.datetime ? new Date(data.datetime).toISOString().split('T')[1].substring(0, 5) : undefined,
-    // Create the customization object directly
     customization: {
       background: {
-        type: (data.background_type || 'solid'),
+        type: data.background_type || 'solid',
         value: data.background_value || '#ffffff'
       },
       font: {
@@ -271,8 +270,8 @@ export function mapDbRecordToSimpleInvitation(data: InvitationDbRecord): SimpleI
     }
   };
   
-  // Return the object as SimpleInvitation type
-  return invitation as SimpleInvitation;
+  // Single type assertion at the return point
+  return result as SimpleInvitation;
 }
 
 // Re-export listSimpleInvitations as an alias for fetchSimpleInvitations for backward compatibility
