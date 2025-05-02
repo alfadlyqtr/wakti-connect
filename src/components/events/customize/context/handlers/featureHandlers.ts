@@ -5,52 +5,30 @@ export const createFeatureHandlers = (
   customization: EventCustomization,
   onCustomizationChange: (customization: EventCustomization) => void
 ) => {
-  const handleToggleCalendar = (checked: boolean) => {
+  const handleAddToCalendarChange = (enabled: boolean) => {
     onCustomizationChange({
       ...customization,
-      enableAddToCalendar: checked,
-      showAddToCalendarButton: checked
+      enableAddToCalendar: enabled
     });
   };
 
-  const handleToggleButtons = (checked: boolean) => {
+  const handleChatbotChange = (enabled: boolean) => {
     onCustomizationChange({
       ...customization,
-      showAcceptDeclineButtons: checked
+      enableChatbot: enabled
     });
   };
 
-  const handleBrandingChange = (property: 'logo' | 'slogan', value: string) => {
-    const updatedBranding = {
-      ...(customization.branding || {}),
-      [property]: value
-    };
-    
+  const handleMapDisplayChange = (display: MapDisplayType) => {
     onCustomizationChange({
       ...customization,
-      branding: updatedBranding
-    });
-  };
-
-  const handleMapDisplayChange = (value: MapDisplayType) => {
-    onCustomizationChange({
-      ...customization,
-      mapDisplay: value
-    });
-  };
-  
-  const handlePoweredByColorChange = (color: string) => {
-    onCustomizationChange({
-      ...customization,
-      poweredByColor: color
+      mapDisplay: display
     });
   };
 
   return {
-    handleToggleCalendar,
-    handleToggleButtons,
-    handleBrandingChange,
-    handleMapDisplayChange,
-    handlePoweredByColorChange
+    handleAddToCalendarChange,
+    handleChatbotChange,
+    handleMapDisplayChange
   };
 };

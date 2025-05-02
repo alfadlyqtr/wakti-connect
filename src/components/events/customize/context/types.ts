@@ -1,28 +1,41 @@
 
-import { EventCustomization, MapDisplayType, ElementAnimations } from "@/types/event.types";
+import { BackgroundType, ButtonShape, EventCustomization, ElementAnimations } from "@/types/event.types";
 
 export interface CustomizationContextType {
   customization: EventCustomization;
   onCustomizationChange: (customization: EventCustomization) => void;
-  // Updated type to accept 'color' instead of 'solid' and remove 'gradient'
-  handleBackgroundChange: (type: 'color' | 'image', value: string) => void;
-  handleButtonStyleChange: (type: 'accept' | 'decline', property: 'background' | 'color' | 'shape', value: string) => void;
-  handleFontChange: (property: 'family' | 'size' | 'color' | 'weight' | 'alignment', value: string) => void;
-  handleHeaderFontChange: (property: 'family' | 'size' | 'color' | 'weight', value: string) => void;
-  handleDescriptionFontChange: (property: 'family' | 'size' | 'color' | 'weight', value: string) => void;
-  handleDateTimeFontChange: (property: 'family' | 'size' | 'color' | 'weight', value: string) => void;
-  handleHeaderStyleChange: (style: 'banner' | 'simple' | 'minimal') => void;
-  handleHeaderImageChange: (imageUrl: string) => void;
-  handleToggleCalendar: (checked: boolean) => void;
-  handleToggleButtons: (checked: boolean) => void;
-  handleBrandingChange: (property: 'logo' | 'slogan', value: string) => void;
-  handleAnimationChange: (value: 'fade' | 'slide' | 'pop') => void;
-  handleMapDisplayChange: (value: MapDisplayType) => void;
-  handleCardEffectChange: (cardEffect: any) => void;
-  handleElementAnimationsChange: (elementAnimations: ElementAnimations) => void;
-  handleUtilityButtonStyleChange: (buttonType: 'calendar' | 'map' | 'qr', property: 'background' | 'color' | 'shape', value: string) => void;
-  handlePoweredByColorChange: (color: string) => void;
-  handlers?: {
-    handleFontChange: (property: 'family' | 'size' | 'color' | 'weight' | 'alignment', value: string) => void;
-  };
+  
+  // Background handling
+  handleBackgroundTypeChange: (type: BackgroundType) => void;
+  handleBackgroundValueChange: (value: string) => void;
+  
+  // Font handling
+  handleFontFamilyChange: (fontFamily: string) => void;
+  handleFontColorChange: (color: string) => void;
+  handleFontSizeChange: (size: string) => void;
+  handleTextAlignmentChange: (alignment: string) => void;
+  handleHeaderStyleChange: (style: string) => void;
+  handleTextShadowChange: (enabled: boolean) => void;
+  
+  // Button handling
+  handleAcceptButtonChange: (property: string, value: string) => void;
+  handleDeclineButtonChange: (property: string, value: string) => void;
+  handleButtonShapeChange: (shape: ButtonShape) => void;
+  handleShowButtonsChange: (show: boolean) => void;
+  
+  // Feature toggles
+  handleAddToCalendarChange: (enabled: boolean) => void;
+  handleChatbotChange: (enabled: boolean) => void;
+  
+  // Effects
+  handleCardEffectChange: (effect: string) => void;
+  handleBorderRadiusChange: (radius: string) => void;
+  handleAnimationChange: (animation: string) => void;
+  handleElementAnimationsChange: (animations: ElementAnimations) => void;
+  
+  // Map display
+  handleMapDisplayChange: (display: 'button' | 'both' | 'qrcode') => void;
+
+  // Header image
+  handleHeaderImageChange: (url: string) => void;
 }

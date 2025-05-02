@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { EventCustomization } from '@/types/event.types';
 import { Card } from '@/components/ui/card';
@@ -118,6 +119,54 @@ const LivePreview: React.FC<LivePreviewProps> = ({
     }
   };
 
+  // Get map display style
+  const renderMapSection = () => {
+    if (!location) return null;
+
+    const mapDisplay = customization.mapDisplay || 'both';
+
+    switch (mapDisplay) {
+      case 'qrcode':
+        return (
+          <div className="mt-4">
+            <p className="text-sm mb-2 opacity-70" style={textShadowStyle}>Scan for directions:</p>
+            <div className="w-24 h-24 bg-white border rounded flex items-center justify-center">
+              QR Placeholder
+            </div>
+          </div>
+        );
+      case 'both': 
+        return (
+          <div className="mt-4">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleGetDirections}
+              className="flex items-center gap-1"
+            >
+              <MapPin className="h-3 w-3" />
+              <span>Get Directions</span>
+            </Button>
+          </div>
+        );
+      case 'button':
+      default:
+        return (
+          <div className="mt-4">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleGetDirections}
+              className="flex items-center gap-1"
+            >
+              <MapPin className="h-3 w-3" />
+              <span>Get Directions</span>
+            </Button>
+          </div>
+        );
+    }
+  };
+
   return (
     <Card style={cardStyle} className="w-full shadow-lg">
       {renderHeader()}
@@ -135,17 +184,7 @@ const LivePreview: React.FC<LivePreviewProps> = ({
       </div>
 
       <div className="flex flex-wrap gap-2 mt-4 justify-between">
-        {location && (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleGetDirections}
-            className="flex items-center gap-1"
-          >
-            <MapPin className="h-3 w-3" />
-            <span>Get Directions</span>
-          </Button>
-        )}
+        {renderMapSection()}
         
         {customization.showAcceptDeclineButtons !== false && (
           <div className="flex gap-2">
