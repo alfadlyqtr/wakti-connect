@@ -42,11 +42,14 @@ export const getSharedInvitation = async (shareId: string): Promise<SimpleInvita
   try {
     console.log("Fetching shared invitation with ID:", shareId);
     
-    // Use proper OR filter syntax for Supabase
+    // Fix the OR query syntax for Supabase
     const { data, error } = await supabase
       .from('invitations')
       .select('*')
-      .or(`share_link.eq.${shareId},id.eq.${shareId}`)
+      .or([
+        { share_link: shareId },
+        { id: shareId }
+      ])
       .maybeSingle();
 
     if (error) {

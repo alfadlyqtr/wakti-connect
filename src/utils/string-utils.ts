@@ -14,6 +14,31 @@ export const generateSlug = (text: string): string => {
 };
 
 /**
+ * Generates an enhanced slug that includes user information for uniqueness
+ * @param userId User ID for uniqueness
+ * @param displayName User display name (optional)
+ * @param title The title to include in the slug
+ * @returns A unique, URL-friendly slug
+ */
+export const generateEnhancedSlug = (userId: string, displayName: string | undefined | null, title: string): string => {
+  // Create a username part from display name or user ID
+  const usernamePart = displayName 
+    ? displayName.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-')
+    : userId.substring(0, 8);
+  
+  // Create the title part
+  const titlePart = title
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .trim();
+  
+  // Combine them with a separator
+  return `${usernamePart}-${titlePart}`;
+};
+
+/**
  * Truncates a string to a specified length and adds an ellipsis if needed
  * @param text The text to truncate
  * @param length The maximum length
