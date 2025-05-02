@@ -4,43 +4,39 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { ElementAnimationValue, ElementAnimationDelay, ElementAnimations } from "@/types/event.types";
 
 interface ElementAnimationsSelectorProps {
-  value: {
-    text?: 'fade' | 'slide' | 'pop' | 'none';
-    buttons?: 'fade' | 'slide' | 'pop' | 'none';
-    icons?: 'fade' | 'slide' | 'pop' | 'none';
-    delay?: 'none' | 'staggered' | 'sequence';
-  };
-  onChange: (value: any) => void;
+  value: ElementAnimations;
+  onChange: (value: ElementAnimations) => void;
 }
 
 const ElementAnimationsSelector: React.FC<ElementAnimationsSelectorProps> = ({
   value,
   onChange
 }) => {
-  const handleTextAnimationChange = (animation: 'fade' | 'slide' | 'pop' | 'none') => {
+  const handleTextAnimationChange = (animation: ElementAnimationValue) => {
     onChange({
       ...value,
       text: animation
     });
   };
 
-  const handleButtonsAnimationChange = (animation: 'fade' | 'slide' | 'pop' | 'none') => {
+  const handleButtonsAnimationChange = (animation: ElementAnimationValue) => {
     onChange({
       ...value,
       buttons: animation
     });
   };
 
-  const handleIconsAnimationChange = (animation: 'fade' | 'slide' | 'pop' | 'none') => {
+  const handleIconsAnimationChange = (animation: ElementAnimationValue) => {
     onChange({
       ...value,
       icons: animation
     });
   };
 
-  const handleDelayTypeChange = (delayType: 'none' | 'staggered' | 'sequence') => {
+  const handleDelayTypeChange = (delayType: ElementAnimationDelay) => {
     onChange({
       ...value,
       delay: delayType

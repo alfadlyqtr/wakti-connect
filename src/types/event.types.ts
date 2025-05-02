@@ -1,12 +1,17 @@
 
 // Event Status Types
-export type EventStatus = 'draft' | 'published' | 'canceled' | 'completed';
+export type EventStatus = 'draft' | 'published' | 'canceled' | 'completed' | 'sent';
 
 // Background Types
 export type BackgroundType = 'solid' | 'gradient' | 'image' | 'ai';
 export type AnimationType = 'none' | 'fade' | 'slide' | 'pop';
 export type CardEffectType = 'shadow' | 'matte' | 'gloss';
 export type ButtonShape = 'rounded' | 'pill' | 'square';
+export type TextAlign = 'left' | 'center' | 'right' | 'justify';
+export type MapDisplayType = 'button' | 'both' | 'qrcode';
+
+// Event Tab Type
+export type EventTab = 'my-events' | 'invited-events' | 'draft-events';
 
 // Form Values Interface
 export interface EventFormValues {
@@ -57,7 +62,7 @@ export interface Event {
   is_all_day: boolean;
   location?: string;
   location_title?: string;
-  location_type?: string;
+  location_type?: 'manual' | 'google_maps';
   maps_url?: string;
   user_id: string;
   created_at: string;
@@ -65,6 +70,11 @@ export interface Event {
   customization?: EventCustomization;
   status: EventStatus;
   invitations?: EventInvitation[];
+}
+
+// Event with Invitations
+export interface EventWithInvitations extends Event {
+  invitations: EventInvitation[];
 }
 
 // Event Invitation
@@ -90,6 +100,17 @@ export interface EventGuestResponse {
   comment?: string;
   created_at: string;
 }
+
+// Events Result Interface
+export interface EventsResult {
+  events: Event[];
+  userRole: 'free' | 'individual' | 'business';
+  canCreateEvents: boolean;
+}
+
+// Element Animation Types
+export type ElementAnimationValue = 'none' | 'fade' | 'slide' | 'pop';
+export type ElementAnimationDelay = 'none' | 'staggered' | 'sequence';
 
 // Utility Button Style
 interface UtilityButtonStyle {
@@ -120,10 +141,10 @@ interface CardEffect {
 
 // Element Animations
 interface ElementAnimations {
-  text?: string;
-  buttons?: string;
-  icons?: string;
-  delay?: string;
+  text?: ElementAnimationValue;
+  buttons?: ElementAnimationValue;
+  icons?: ElementAnimationValue;
+  delay?: ElementAnimationDelay;
 }
 
 export interface EventCustomization {
@@ -136,7 +157,7 @@ export interface EventCustomization {
     size: string;
     color: string;
     weight?: string;
-    alignment?: string;
+    alignment?: TextAlign;
   };
   buttons?: {
     accept?: {
@@ -177,10 +198,11 @@ export interface EventCustomization {
   cardEffect?: CardEffect;
   elementAnimations?: ElementAnimations;
   branding?: BusinessBranding;
-  mapDisplay?: 'button' | 'both' | 'qrcode';
+  mapDisplay?: MapDisplayType;
   poweredByColor?: string;
   utilityButtons?: UtilityButtons;
   enableAddToCalendar?: boolean;
+  enableChatbot?: boolean;
 }
 
 export type EventFormTab = 'details' | 'customize' | 'share';

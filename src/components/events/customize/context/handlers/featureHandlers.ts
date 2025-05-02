@@ -1,5 +1,5 @@
 
-import { EventCustomization } from "@/types/event.types";
+import { EventCustomization, MapDisplayType } from "@/types/event.types";
 
 export const createFeatureHandlers = (
   customization: EventCustomization,
@@ -22,7 +22,7 @@ export const createFeatureHandlers = (
 
   const handleBrandingChange = (property: 'logo' | 'slogan', value: string) => {
     const updatedBranding = {
-      ...customization.branding,
+      ...(customization.branding || {}),
       [property]: value
     };
     
@@ -32,7 +32,7 @@ export const createFeatureHandlers = (
     });
   };
 
-  const handleMapDisplayChange = (value: 'button' | 'both') => {
+  const handleMapDisplayChange = (value: MapDisplayType) => {
     onCustomizationChange({
       ...customization,
       mapDisplay: value

@@ -106,7 +106,10 @@ const useEditEventEffect = ({
       
       // Handle location type and maps URL if present
       if (location_type) {
-        setLocationType(location_type);
+        // Ensure location_type is of the correct type
+        setLocationType(location_type === 'manual' || location_type === 'google_maps' 
+          ? location_type 
+          : 'manual');
         
         if (location_type === 'google_maps' && maps_url) {
           setMapsUrl(maps_url);

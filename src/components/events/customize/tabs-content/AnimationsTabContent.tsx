@@ -2,6 +2,7 @@
 import React from "react";
 import { useCustomization } from "../context";
 import ElementAnimationsSelector from "../ElementAnimationsSelector";
+import { ElementAnimations } from "@/types/event.types";
 
 const AnimationsTabContent: React.FC = () => {
   const {
@@ -9,14 +10,17 @@ const AnimationsTabContent: React.FC = () => {
     handleElementAnimationsChange
   } = useCustomization();
 
+  // Ensure we're using the correct types
+  const defaultAnimations: ElementAnimations = {
+    text: 'none',
+    buttons: 'none',
+    icons: 'none',
+    delay: 'none'
+  };
+
   return (
     <ElementAnimationsSelector 
-      value={customization.elementAnimations || {
-        text: 'none',
-        buttons: 'none',
-        icons: 'none',
-        delay: 'none'
-      }}
+      value={customization.elementAnimations || defaultAnimations}
       onChange={handleElementAnimationsChange}
     />
   );

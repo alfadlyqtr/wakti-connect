@@ -1,5 +1,5 @@
 
-import { EventCustomization } from "@/types/event.types";
+import { EventCustomization, MapDisplayType, ElementAnimations } from "@/types/event.types";
 
 export interface CustomizationContextType {
   customization: EventCustomization;
@@ -17,9 +17,9 @@ export interface CustomizationContextType {
   handleToggleButtons: (checked: boolean) => void;
   handleBrandingChange: (property: 'logo' | 'slogan', value: string) => void;
   handleAnimationChange: (value: 'fade' | 'slide' | 'pop') => void;
-  handleMapDisplayChange: (value: 'button' | 'both') => void;
+  handleMapDisplayChange: (value: MapDisplayType) => void;
   handleCardEffectChange: (cardEffect: any) => void;
-  handleElementAnimationsChange: (elementAnimations: any) => void;
+  handleElementAnimationsChange: (elementAnimations: ElementAnimations) => void;
   handleUtilityButtonStyleChange: (buttonType: 'calendar' | 'map' | 'qr', property: 'background' | 'color' | 'shape', value: string) => void;
   handlePoweredByColorChange: (color: string) => void;
   handlers?: {
