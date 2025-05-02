@@ -13,6 +13,10 @@ export type MapDisplayType = 'button' | 'both' | 'qrcode';
 // Event Tab Type
 export type EventTab = 'my-events' | 'invited-events' | 'draft-events';
 
+// Element Animation Types
+export type ElementAnimationValue = 'none' | 'fade' | 'slide' | 'pop';
+export type ElementAnimationDelay = 'none' | 'staggered' | 'sequence';
+
 // Form Values Interface
 export interface EventFormValues {
   title: string;
@@ -108,10 +112,6 @@ export interface EventsResult {
   canCreateEvents: boolean;
 }
 
-// Element Animation Types
-export type ElementAnimationValue = 'none' | 'fade' | 'slide' | 'pop';
-export type ElementAnimationDelay = 'none' | 'staggered' | 'sequence';
-
 // Utility Button Style
 interface UtilityButtonStyle {
   background: string;
@@ -140,7 +140,7 @@ interface CardEffect {
 }
 
 // Element Animations
-interface ElementAnimations {
+export interface ElementAnimations {
   text?: ElementAnimationValue;
   buttons?: ElementAnimationValue;
   icons?: ElementAnimationValue;
