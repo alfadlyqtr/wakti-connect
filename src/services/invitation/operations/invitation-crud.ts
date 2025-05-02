@@ -4,15 +4,25 @@ import { toast } from '@/components/ui/use-toast';
 import { SimpleInvitation } from '@/types/invitation.types';
 import { InvitationData, InvitationDbRecord } from '../invitation-types';
 import { mapDbRecordToSimpleInvitation } from '../utils/invitation-mappers';
+import { generateSlug } from '@/utils/string-utils';
 
 /**
  * Create a simple invitation record
  */
 export const createSimpleInvitation = async (invitationData: InvitationData): Promise<SimpleInvitation | null> => {
   try {
+    // Generate a slug from the title
+    const slug = generateSlug(invitationData.title);
+    
+    // Add the slug to the invitation data
+    const dataWithSlug = {
+      ...invitationData,
+      share_link: slug
+    };
+
     const { data, error } = await supabase
       .from('invitations')
-      .insert(invitationData)
+      .insert(dataWithSlug)
       .select()
       .single();
 
@@ -37,9 +47,15 @@ export const createSimpleInvitation = async (invitationData: InvitationData): Pr
  */
 export const updateSimpleInvitation = async (id: string, invitationData: Partial<InvitationData>): Promise<SimpleInvitation | null> => {
   try {
+    // If title is being updated, regenerate the slug
+    let dataToUpdate = { ...invitationData };
+    if (invitationData.title) {
+      dataToUpdate.share_link = generateSlug(invitationData.title);
+    }
+
     const { data, error } = await supabase
       .from('invitations')
-      .update(invitationData)
+      .update(dataToUpdate)
       .eq('id', id)
       .select()
       .single();

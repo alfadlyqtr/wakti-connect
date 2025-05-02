@@ -7,6 +7,10 @@ import { Card } from '@/components/ui/card';
 import { toast } from '@/components/ui/use-toast';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import InvitationPreview from './InvitationPreview';
+import { Helmet } from 'react-helmet-async';
+
+// Default image for OpenGraph previews
+const DEFAULT_OG_IMAGE = 'https://wakti.qa/og-image.png';
 
 export default function SharedInvitationView() {
   const { shareId } = useParams<{ shareId: string }>();
@@ -16,6 +20,36 @@ export default function SharedInvitationView() {
     queryFn: () => shareId ? getSharedInvitation(shareId) : Promise.resolve(null),
     enabled: !!shareId
   });
+
+  // Generate preview metadata
+  const getMetaTags = () => {
+    if (!invitation) return null;
+    
+    const title = invitation.title || 'Invitation';
+    const description = invitation.description || 'You have been invited';
+    const imageUrl = DEFAULT_OG_IMAGE;
+    const url = `https://wakti.qa/i/${shareId}`;
+    
+    return (
+      <Helmet>
+        <title>{title}</title>
+        <meta name="description" content={description} />
+        
+        {/* OpenGraph Meta Tags */}
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={description} />
+        <meta property="og:image" content={imageUrl} />
+        <meta property="og:url" content={url} />
+        <meta property="og:type" content="website" />
+        
+        {/* Twitter Card Meta Tags */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={title} />
+        <meta name="twitter:description" content={description} />
+        <meta name="twitter:image" content={imageUrl} />
+      </Helmet>
+    );
+  };
 
   if (isLoading) {
     return (
@@ -45,6 +79,7 @@ export default function SharedInvitationView() {
 
   return (
     <div className="container mx-auto px-4 py-16">
+      {getMetaTags()}
       <div className="max-w-2xl mx-auto">
         <InvitationPreview
           title={invitation.title}
