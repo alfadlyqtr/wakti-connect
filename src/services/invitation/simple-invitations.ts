@@ -3,13 +3,16 @@
 export {
   createSimpleInvitation,
   updateSimpleInvitation,
+} from './operations/invitation-crud';
+
+export {
   getSimpleInvitationById,
   getSharedInvitation,
   fetchSimpleInvitations
-} from './invitation-api';
+} from './operations/invitation-retrieval';
 
 // Export the previous function as an alias for backward compatibility
-export { fetchSimpleInvitations as listSimpleInvitations } from './invitation-api';
+export { fetchSimpleInvitations as listSimpleInvitations } from './operations/invitation-retrieval';
 
 // Import the supabase client
 import { supabase } from '@/integrations/supabase/client';
