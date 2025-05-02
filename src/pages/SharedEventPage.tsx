@@ -56,7 +56,8 @@ const SharedEventPage: React.FC = () => {
           user_id: invitation.userId,
           created_at: invitation.createdAt,
           updated_at: invitation.updatedAt || '',
-          customization: invitation.customization
+          customization: invitation.customization,
+          shareId: invitation.shareId || invitation.id // Use shareId if available, otherwise fall back to ID
         }}
       />
     </div>

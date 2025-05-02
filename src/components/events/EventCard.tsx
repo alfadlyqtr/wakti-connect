@@ -63,7 +63,8 @@ const EventCard: React.FC<EventCardProps> = ({ event, onEdit, onShare, onDelete,
   // Generate a shareable link for the event
   const generateShareableLink = () => {
     const shareId = event.shareId || event.id;
-    const shareLink = `${window.location.origin}/shared-event/${shareId}`;
+    // Use the /i/:id format to match the route in publicRoutes.tsx
+    const shareLink = `${window.location.origin}/i/${shareId}`;
     
     try {
       navigator.clipboard.writeText(shareLink);

@@ -134,10 +134,11 @@ export const fetchSimpleInvitations = async (isEvent = false): Promise<SimpleInv
  */
 export const getSharedInvitation = async (shareId: string): Promise<SimpleInvitation | null> => {
   try {
+    // Try to find by share_link first, then by id if not found
     const { data, error } = await supabase
       .from('invitations')
       .select('*')
-      .eq('share_link', shareId)
+      .or(`share_link.eq.${shareId},id.eq.${shareId}`)
       .maybeSingle();
 
     if (error) {
@@ -162,6 +163,7 @@ export const getSharedInvitation = async (shareId: string): Promise<SimpleInvita
       createdAt: data.created_at,
       updatedAt: data.updated_at,
       userId: data.user_id,
+      shareId: data.share_link || data.id, // Use share_link if available, otherwise fall back to ID
       isPublic: true, // If it's shared, we consider it public
       isEvent: !!data.is_event,
       customization: {
@@ -213,7 +215,7 @@ export function mapDbRecordToSimpleInvitation(data: InvitationDbRecord): SimpleI
     createdAt: data.created_at,
     updatedAt: data.updated_at,
     userId: data.user_id,
-    shareId: data.share_id,
+    shareId: data.share_link || data.id, // Use share_link if available or fall back to ID
     isPublic: data.is_public || false,
     isEvent: !!data.is_event,
     customization: {

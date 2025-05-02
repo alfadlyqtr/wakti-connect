@@ -82,6 +82,10 @@ const routes: RouteObject[] = [
     path: "/shared-event/:id",
     element: <SharedEventPage />,
   },
+  {
+    path: "/i/:id",
+    element: <SharedEventPage />,
+  },
 ];
 
 export default routes;
