@@ -20,7 +20,7 @@ export interface InvitationDbRecord {
   user_id: string;
   created_at: string;
   updated_at?: string;
-  share_id?: string;
+  share_link?: string;
   is_public?: boolean;
 }
 
@@ -71,5 +71,5 @@ export interface InvitationData {
   text_align?: string;
   is_event?: boolean;
   user_id: string;
-  share_id?: string; // Added share_id to the creation data
+  share_link?: string; // Using share_link instead of share_id to match database
 }
