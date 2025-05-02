@@ -5,10 +5,10 @@ import { Switch } from '@/components/ui/switch';
 import { useCustomization } from '../context';
 
 const TextShadowToggle: React.FC = () => {
-  const { customization, setCustomization } = useCustomization();
+  const { customization, onCustomizationChange } = useCustomization();
   
   const handleToggleTextShadow = (checked: boolean) => {
-    setCustomization({
+    onCustomizationChange({
       ...customization,
       textShadow: checked
     });

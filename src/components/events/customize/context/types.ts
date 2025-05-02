@@ -22,4 +22,7 @@ export interface CustomizationContextType {
   handleElementAnimationsChange: (elementAnimations: any) => void;
   handleUtilityButtonStyleChange: (buttonType: 'calendar' | 'map' | 'qr', property: 'background' | 'color' | 'shape', value: string) => void;
   handlePoweredByColorChange: (color: string) => void;
+  handlers?: {
+    handleFontChange: (property: 'family' | 'size' | 'color' | 'weight' | 'alignment', value: string) => void;
+  };
 }

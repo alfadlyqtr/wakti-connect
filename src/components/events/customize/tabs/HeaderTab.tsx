@@ -16,7 +16,9 @@ const HeaderTab: React.FC<HeaderTabProps> = ({
   onHeaderStyleChange,
   onHeaderImageChange
 }) => {
-  const [headerImagePreview, setHeaderImagePreview] = useState<string | null>(customization.headerImage || null);
+  const [headerImagePreview, setHeaderImagePreview] = useState<string | null>(
+    customization.headerImage || null
+  );
   
   const handleHeaderImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -40,8 +42,8 @@ const HeaderTab: React.FC<HeaderTabProps> = ({
   return (
     <div className="space-y-6">
       <HeaderStyleSelector
-        value={customization.headerStyle}
-        onChange={onHeaderStyleChange}
+        value={customization.headerStyle || 'simple'}
+        onChange={(style) => onHeaderStyleChange(style as 'banner' | 'simple' | 'minimal')}
       />
       
       <div>
