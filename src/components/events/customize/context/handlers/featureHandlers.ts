@@ -1,35 +1,56 @@
 
-import { EventCustomization, MapDisplayType } from "@/types/event.types";
+import { EventCustomization } from "@/types/event.types";
 
 export const createFeatureHandlers = (
   customization: EventCustomization,
   onCustomizationChange: (customization: EventCustomization) => void
 ) => {
-  const handleAddToCalendarChange = (enabled: boolean) => {
+  const handleToggleCalendar = (checked: boolean) => {
     onCustomizationChange({
       ...customization,
-      enableAddToCalendar: enabled,
-      showAddToCalendarButton: enabled // Keep both properties in sync
+      enableAddToCalendar: checked,
+      showAddToCalendarButton: checked
     });
   };
 
-  const handleChatbotChange = (enabled: boolean) => {
+  const handleToggleButtons = (checked: boolean) => {
     onCustomizationChange({
       ...customization,
-      enableChatbot: enabled
+      showAcceptDeclineButtons: checked
     });
   };
 
-  const handleMapDisplayChange = (display: MapDisplayType) => {
+  const handleBrandingChange = (property: 'logo' | 'slogan', value: string) => {
+    const updatedBranding = {
+      ...customization.branding,
+      [property]: value
+    };
+    
     onCustomizationChange({
       ...customization,
-      mapDisplay: display
+      branding: updatedBranding
+    });
+  };
+
+  const handleMapDisplayChange = (value: 'button' | 'both') => {
+    onCustomizationChange({
+      ...customization,
+      mapDisplay: value
+    });
+  };
+  
+  const handlePoweredByColorChange = (color: string) => {
+    onCustomizationChange({
+      ...customization,
+      poweredByColor: color
     });
   };
 
   return {
-    handleAddToCalendarChange,
-    handleChatbotChange,
-    handleMapDisplayChange
+    handleToggleCalendar,
+    handleToggleButtons,
+    handleBrandingChange,
+    handleMapDisplayChange,
+    handlePoweredByColorChange
   };
 };

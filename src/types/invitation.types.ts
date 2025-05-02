@@ -100,15 +100,13 @@ export interface SimpleInvitation {
   id: string;
   title: string;
   description: string;
-  fromName?: string;
   location?: string;
   locationTitle?: string;
   date?: string;
   time?: string;
-  endTime?: string;
   createdAt: string;
   updatedAt?: string;
-  userId: string;
+  userId: string; // Match the database column name
   shareId?: string;
   isPublic?: boolean;
   customization: SimpleInvitationCustomization;
@@ -125,7 +123,7 @@ export interface SimpleInvitationCustomization {
     size: string;
     color: string;
     weight?: string;
-    alignment: string; // Required field
+    alignment?: string;
   };
   buttons?: {
     accept: {
@@ -142,5 +140,4 @@ export interface SimpleInvitationCustomization {
   headerStyle?: string;
   animation?: string;
   cardEffect?: string;
-  textShadow?: boolean; // Added textShadow option
 }

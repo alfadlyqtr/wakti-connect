@@ -1,7 +1,7 @@
 
 import React from "react";
 import ButtonStyleSelector from "../ButtonStyleSelector";
-import { EventCustomization, ButtonShape } from "@/types/event.types";
+import { EventCustomization } from "@/types/event.types";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
@@ -19,20 +19,6 @@ const ButtonsTab: React.FC<ButtonsTabProps> = ({
   onToggleButtons,
   onToggleCalendarButton
 }) => {
-  // Ensure buttons object exists with proper typing
-  const buttons = customization.buttons || {
-    accept: {
-      background: '#4CAF50',
-      color: '#ffffff',
-      shape: 'rounded' as ButtonShape
-    },
-    decline: {
-      background: '#f44336',
-      color: '#ffffff',
-      shape: 'rounded' as ButtonShape
-    }
-  };
-
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -58,8 +44,8 @@ const ButtonsTab: React.FC<ButtonsTabProps> = ({
       <div className={customization.showAcceptDeclineButtons === false ? 'opacity-50 pointer-events-none' : ''}>
         <h3 className="font-medium text-base mb-4">Button Styles</h3>
         <ButtonStyleSelector 
-          acceptButton={buttons.accept}
-          declineButton={buttons.decline}
+          acceptButton={customization.buttons.accept}
+          declineButton={customization.buttons.decline}
           onButtonStyleChange={onButtonStyleChange}
         />
       </div>
@@ -70,10 +56,10 @@ const ButtonsTab: React.FC<ButtonsTabProps> = ({
           <button 
             className="py-2 px-4 flex items-center gap-1"
             style={{
-              backgroundColor: buttons.accept.background,
-              color: buttons.accept.color,
-              borderRadius: buttons.accept.shape === 'rounded' ? '0.375rem' : 
-                          buttons.accept.shape === 'pill' ? '9999px' : '0'
+              backgroundColor: customization.buttons.accept.background,
+              color: customization.buttons.accept.color,
+              borderRadius: customization.buttons.accept.shape === 'rounded' ? '0.375rem' : 
+                             customization.buttons.accept.shape === 'pill' ? '9999px' : '0'
             }}
           >
             Accept
@@ -82,10 +68,10 @@ const ButtonsTab: React.FC<ButtonsTabProps> = ({
           <button
             className="py-2 px-4 flex items-center gap-1"
             style={{
-              backgroundColor: buttons.decline.background,
-              color: buttons.decline.color,
-              borderRadius: buttons.decline.shape === 'rounded' ? '0.375rem' : 
-                          buttons.decline.shape === 'pill' ? '9999px' : '0'
+              backgroundColor: customization.buttons.decline.background,
+              color: customization.buttons.decline.color,
+              borderRadius: customization.buttons.decline.shape === 'rounded' ? '0.375rem' : 
+                             customization.buttons.decline.shape === 'pill' ? '9999px' : '0'
             }}
           >
             Decline

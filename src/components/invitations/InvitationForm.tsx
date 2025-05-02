@@ -1,20 +1,17 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { DatePicker } from '@/components/ui/date-picker';
-import { Switch } from '@/components/ui/switch';
 import { format } from 'date-fns';
 import LocationPicker from '@/components/events/location/LocationPicker';
 
 interface FormData {
   title: string;
   description: string;
-  fromName: string;
   date: string;
   time: string;
-  endTime: string;
   location: string;
   locationTitle: string;
 }
@@ -26,8 +23,6 @@ interface InvitationFormProps {
 }
 
 export default function InvitationForm({ formData, onChange, isEvent = false }: InvitationFormProps) {
-  const [isAllDay, setIsAllDay] = useState(false);
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     onChange(e.target.name, e.target.value);
   };
@@ -41,15 +36,6 @@ export default function InvitationForm({ formData, onChange, isEvent = false }: 
   const handleLocationChange = (location: string, locationTitle: string) => {
     onChange('location', location);
     onChange('locationTitle', locationTitle);
-  };
-
-  const handleAllDayToggle = (checked: boolean) => {
-    setIsAllDay(checked);
-    // If all day is toggled on, clear the time field
-    if (checked) {
-      onChange('time', '');
-      onChange('endTime', '');
-    }
   };
 
   return (
@@ -66,21 +52,7 @@ export default function InvitationForm({ formData, onChange, isEvent = false }: 
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="fromName">From</Label>
-        <Input
-          id="fromName"
-          name="fromName"
-          value={formData.fromName}
-          onChange={handleInputChange}
-          placeholder="Your name or organization"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="description">Description</Label>
-          <span className="text-xs text-muted-foreground">Optional</span>
-        </div>
+        <Label htmlFor="description">Description</Label>
         <Textarea
           id="description"
           name="description"
@@ -91,7 +63,7 @@ export default function InvitationForm({ formData, onChange, isEvent = false }: 
         />
       </div>
 
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="date">Date</Label>
           <DatePicker 
@@ -101,37 +73,17 @@ export default function InvitationForm({ formData, onChange, isEvent = false }: 
           />
         </div>
 
-        <div className="flex items-center space-x-2">
-          <Switch id="all-day" checked={isAllDay} onCheckedChange={handleAllDayToggle} />
-          <Label htmlFor="all-day">All day event</Label>
+        <div className="space-y-2">
+          <Label htmlFor="time">Time</Label>
+          <Input
+            id="time"
+            name="time"
+            type="time"
+            value={formData.time}
+            onChange={handleInputChange}
+            placeholder="Select a time"
+          />
         </div>
-
-        {!isAllDay && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="time">Start Time</Label>
-              <Input
-                id="time"
-                name="time"
-                type="time"
-                value={formData.time}
-                onChange={handleInputChange}
-                placeholder="Start time"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="endTime">End Time</Label>
-              <Input
-                id="endTime"
-                name="endTime"
-                type="time"
-                value={formData.endTime || ''}
-                onChange={handleInputChange}
-                placeholder="End time"
-              />
-            </div>
-          </div>
-        )}
       </div>
 
       <LocationPicker

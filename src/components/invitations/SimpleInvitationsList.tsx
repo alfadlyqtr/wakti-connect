@@ -1,247 +1,217 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar, Clock, MapPin, Trash, Edit, ExternalLink, Plus } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PlusCircle, Calendar, Loader2, Search, Trash2 } from 'lucide-react';
 import { SimpleInvitation } from '@/types/invitation.types';
-import { deleteSimpleInvitation, fetchSimpleInvitations } from '@/services/invitation/simple-invitations';
-import { toast } from '@/components/ui/use-toast';
 import { format } from 'date-fns';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { Input } from '@/components/ui/input';
+import { fetchSimpleInvitations, deleteSimpleInvitation } from '@/services/invitation/simple-invitations';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
+import { toast } from '@/components/ui/use-toast';
 
 interface SimpleInvitationsListProps {
   isEventsList?: boolean;
 }
 
-const SimpleInvitationsList: React.FC<SimpleInvitationsListProps> = ({ isEventsList = false }) => {
+export default function SimpleInvitationsList({ isEventsList = false }: SimpleInvitationsListProps) {
   const navigate = useNavigate();
-  const [invitations, setInvitations] = useState<SimpleInvitation[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [selectedInvitationId, setSelectedInvitationId] = useState<string | null>(null);
-
-  useEffect(() => {
-    loadInvitations();
-  }, [isEventsList]);
-
-  const loadInvitations = async () => {
-    setIsLoading(true);
-    try {
-      const items = await fetchSimpleInvitations(isEventsList);
-      setInvitations(items || []);
-    } catch (error) {
-      console.error('Error fetching invitations:', error);
+  const queryClient = useQueryClient();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [deletingInvitation, setDeletingInvitation] = useState<SimpleInvitation | null>(null);
+  
+  const entityType = isEventsList ? 'event' : 'invitation';
+  const entityTypeCaps = isEventsList ? 'Event' : 'Invitation';
+  
+  const { data: invitations, isLoading, error } = useQuery({
+    queryKey: ['simple-invitations', isEventsList],
+    queryFn: () => fetchSimpleInvitations(isEventsList),
+  });
+  
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: deleteSimpleInvitation,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['simple-invitations', isEventsList] });
       toast({
-        title: 'Error',
-        description: 'Failed to load invitations',
-        variant: 'destructive',
+        title: `${entityTypeCaps} deleted`,
+        description: `The ${entityType} has been successfully deleted.`,
       });
-    } finally {
-      setIsLoading(false);
+    },
+    onError: (error) => {
+      toast({
+        title: `Failed to delete ${entityType}`,
+        description: error instanceof Error ? error.message : `An error occurred while deleting the ${entityType}`,
+        variant: "destructive"
+      });
+    }
+  });
+  
+  // Filter invitations based on search term
+  const filteredInvitations = invitations?.filter(invitation =>
+    invitation.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (invitation.description?.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+  
+  const handleCreateNew = () => {
+    if (isEventsList) {
+      navigate('/dashboard/events/new');
+    } else {
+      navigate('/dashboard/invitations/new');
+    }
+  };
+  
+  const handleEditItem = (id: string) => {
+    if (isEventsList) {
+      navigate(`/dashboard/events/edit/${id}`);
+    } else {
+      navigate(`/dashboard/invitations/edit/${id}`);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    setSelectedInvitationId(id);
-    setDeleteConfirmOpen(true);
+  const handleDeleteItem = (invitation: SimpleInvitation, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click (navigation to edit)
+    setDeletingInvitation(invitation);
   };
 
-  const confirmDelete = async () => {
-    if (!selectedInvitationId) return;
-
-    try {
-      const success = await deleteSimpleInvitation(selectedInvitationId);
-      if (success) {
-        setInvitations(invitations.filter(inv => inv.id !== selectedInvitationId));
-        toast({
-          title: 'Success',
-          description: `${isEventsList ? 'Event' : 'Invitation'} deleted successfully`,
-        });
-      }
-    } catch (error) {
-      console.error('Error deleting invitation:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to delete invitation',
-        variant: 'destructive',
-      });
-    } finally {
-      setDeleteConfirmOpen(false);
-      setSelectedInvitationId(null);
+  const confirmDelete = () => {
+    if (deletingInvitation) {
+      deleteMutation.mutate(deletingInvitation.id);
+      setDeletingInvitation(null);
     }
   };
-
-  const handleEdit = (id: string) => {
-    navigate(`/dashboard/${isEventsList ? 'events' : 'invitations'}/edit/${id}`);
-  };
-
+  
   return (
-    <div className="container py-6">
+    <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            {isEventsList ? 'My Events' : 'My Invitations'}
+          <h1 className="text-3xl font-bold">
+            {isEventsList ? 'Events' : 'Invitations'}
           </h1>
-          <p className="text-muted-foreground">
-            {isEventsList
-              ? 'Manage and share your events'
-              : 'Create and manage your digital invitations'}
+          <p className="text-muted-foreground mt-1">
+            {isEventsList 
+              ? 'Create and manage your events'
+              : 'Create and manage your invitations'
+            }
           </p>
         </div>
-        <Button onClick={() => navigate(`/dashboard/${isEventsList ? 'events' : 'invitations'}/new`)}>
-          <Plus className="mr-2 h-4 w-4" />
-          New {isEventsList ? 'Event' : 'Invitation'}
+        
+        <Button onClick={handleCreateNew}>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Create New {entityTypeCaps}
         </Button>
       </div>
-
-      {isLoading ? (
-        <div className="flex justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      
+      <div className="mb-6">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input
+            className="pl-10"
+            placeholder={`Search ${entityType}s...`}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
-      ) : (
-        <>
-          {invitations.length === 0 ? (
-            <Card className="border-dashed">
-              <CardContent className="py-8 text-center">
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 mb-4">
-                  <Calendar className="h-6 w-6 text-primary" />
+      </div>
+      
+      {isLoading ? (
+        <div className="flex justify-center items-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : error ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <p className="text-muted-foreground mb-4">
+              There was an error loading your {entityType}s.
+            </p>
+            <Button variant="outline" onClick={() => window.location.reload()}>
+              Try Again
+            </Button>
+          </CardContent>
+        </Card>
+      ) : filteredInvitations && filteredInvitations.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredInvitations.map((invitation) => (
+            <Card 
+              key={invitation.id}
+              className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer relative"
+              onClick={() => handleEditItem(invitation.id)}
+            >
+              <div 
+                className="h-24 bg-gradient-to-r from-primary/20 to-primary/10 flex items-center justify-center"
+                style={{
+                  background: invitation.customization?.background.type === 'image' 
+                    ? `url(${invitation.customization.background.value}) center/cover` 
+                    : invitation.customization?.background.type === 'gradient' 
+                      ? invitation.customization.background.value 
+                      : invitation.customization?.background.value || '#f3f4f6'
+                }}
+              >
+                <Calendar className="h-12 w-12 text-white drop-shadow-md opacity-75" />
+              </div>
+              
+              <CardContent className="p-4">
+                <div className="flex justify-between items-start">
+                  <div className="pr-8">
+                    <h3 className="font-medium text-lg mb-1 line-clamp-1">{invitation.title}</h3>
+                    {invitation.date && (
+                      <p className="text-sm text-muted-foreground mb-1">
+                        {format(new Date(invitation.date), 'MMMM d, yyyy')}
+                        {invitation.time && ` at ${invitation.time}`}
+                      </p>
+                    )}
+                    {invitation.locationTitle && (
+                      <p className="text-sm text-muted-foreground">
+                        Location: {invitation.locationTitle}
+                      </p>
+                    )}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-2 right-2 bg-background/80 hover:bg-background"
+                    onClick={(e) => handleDeleteItem(invitation, e)}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                    <span className="sr-only">Delete</span>
+                  </Button>
                 </div>
-                <h3 className="text-lg font-semibold mb-1">
-                  No {isEventsList ? 'events' : 'invitations'} found
-                </h3>
-                <p className="text-muted-foreground mb-4">
-                  You haven't created any {isEventsList ? 'events' : 'invitations'} yet.
-                </p>
-                <Button onClick={() => navigate(`/dashboard/${isEventsList ? 'events' : 'invitations'}/new`)}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create {isEventsList ? 'Event' : 'Invitation'}
-                </Button>
               </CardContent>
             </Card>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {invitations.map((invitation) => (
-                <Card key={invitation.id} className="overflow-hidden flex flex-col">
-                  <div
-                    className="h-24 w-full"
-                    style={{
-                      backgroundColor: invitation.customization.background.type === 'solid' 
-                        ? invitation.customization.background.value 
-                        : '#f3f4f6',
-                      backgroundImage: invitation.customization.background.type === 'image'
-                        ? `url(${invitation.customization.background.value})`
-                        : undefined,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                    }}
-                  />
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">{invitation.title}</CardTitle>
-                    {invitation.fromName && (
-                      <CardDescription>From: {invitation.fromName}</CardDescription>
-                    )}
-                  </CardHeader>
-                  <CardContent className="flex-1">
-                    {invitation.date && (
-                      <div className="flex items-start gap-2 mb-2">
-                        <Calendar className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                        <span>
-                          {format(new Date(invitation.date), 'MMMM d, yyyy')}
-                        </span>
-                      </div>
-                    )}
-                    {invitation.time && (
-                      <div className="flex items-start gap-2 mb-2">
-                        <Clock className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                        <span>
-                          {invitation.time}
-                          {invitation.endTime ? ` - ${invitation.endTime}` : ''}
-                        </span>
-                      </div>
-                    )}
-                    {invitation.location && (
-                      <div className="flex items-start gap-2 mb-2">
-                        <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                        <span>{invitation.locationTitle || invitation.location}</span>
-                      </div>
-                    )}
-                  </CardContent>
-                  <CardFooter className="pt-0 flex justify-between">
-                    <Button variant="outline" size="sm" onClick={() => handleEdit(invitation.id)}>
-                      <Edit className="h-4 w-4 mr-1" />
-                      Edit
-                    </Button>
-                    <div className="flex gap-2">
-                      {invitation.shareId && (
-                        <Button 
-                          variant="secondary" 
-                          size="sm"
-                          onClick={() => {
-                            // Open sharing dialog or copy link
-                            if (navigator.share) {
-                              navigator.share({
-                                title: invitation.title,
-                                url: `${window.location.origin}/invitation/${invitation.shareId}`
-                              }).catch(err => console.error('Error sharing:', err));
-                            } else {
-                              navigator.clipboard.writeText(
-                                `${window.location.origin}/invitation/${invitation.shareId}`
-                              );
-                              toast({
-                                title: "Link copied",
-                                description: "The invitation link has been copied to your clipboard"
-                              });
-                            }
-                          }}
-                        >
-                          <ExternalLink className="h-4 w-4 mr-1" />
-                          Share
-                        </Button>
-                      )}
-                      <Button 
-                        variant="destructive" 
-                        size="sm"
-                        onClick={() => handleDelete(invitation.id)}
-                      >
-                        <Trash className="h-4 w-4 mr-1" />
-                        Delete
-                      </Button>
-                    </div>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          )}
-        </>
+          ))}
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium mb-1">No {entityType}s found</h3>
+            <p className="text-muted-foreground mb-4">
+              {searchTerm 
+                ? `No ${entityType}s match your search criteria.` 
+                : `You haven't created any ${entityType}s yet.`
+              }
+            </p>
+            <Button onClick={handleCreateNew}>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Create Your First {entityTypeCaps}
+            </Button>
+          </CardContent>
+        </Card>
       )}
 
-      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete this {isEventsList ? 'event' : 'invitation'}.
-              This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete}>Delete</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Confirmation Dialog for Delete */}
+      <ConfirmationDialog
+        open={!!deletingInvitation}
+        onOpenChange={(open) => !open && setDeletingInvitation(null)}
+        title={`Delete ${entityTypeCaps}`}
+        description={`Are you sure you want to delete "${deletingInvitation?.title}"? This action cannot be undone.`}
+        onConfirm={confirmDelete}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        isLoading={deleteMutation.isPending}
+      />
     </div>
   );
-};
-
-export default SimpleInvitationsList;
+}

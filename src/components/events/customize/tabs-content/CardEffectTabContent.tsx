@@ -1,96 +1,100 @@
 
 import React from "react";
-import { useCustomization } from "../context";
 import { Label } from "@/components/ui/label";
-import { CardEffectType, CardEffect } from "@/types/event.types";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { useCustomization } from "../context";
+import { CardEffectType } from "@/types/event.types";
 
-const CardEffectTabContent: React.FC = () => {
-  const { customization, handleCardEffectChange, handleBorderRadiusChange } = useCustomization();
+const CardEffectTabContent = () => {
+  const { customization, handleCardEffectChange } = useCustomization();
   
-  const effect = customization.cardEffect || { type: 'shadow' };
-  
-  const handleEffectChange = (type: CardEffectType) => {
-    const updatedEffect: CardEffect = {
-      ...effect,
+  // Ensure cardEffect exists with a default type
+  const cardEffect = customization.cardEffect || {
+    type: "shadow" as CardEffectType,
+    borderRadius: "medium",
+    border: false
+  };
+
+  const handleEffectTypeChange = (type: CardEffectType) => {
+    handleCardEffectChange({
+      ...cardEffect,
       type
-    };
-    handleCardEffectChange(updatedEffect);
+    });
   };
-  
-  const handleRadiusChange = (radius: "none" | "small" | "medium" | "large") => {
-    handleBorderRadiusChange(radius);
+
+  const handleBorderRadiusChange = (borderRadius: "none" | "small" | "medium" | "large") => {
+    handleCardEffectChange({
+      ...cardEffect,
+      borderRadius
+    });
   };
-  
-  const handleBorderToggle = (hasBorder: boolean) => {
-    const updatedEffect: CardEffect = {
-      ...effect,
-      border: hasBorder
-    };
-    handleCardEffectChange(updatedEffect);
+
+  const handleBorderToggle = (border: boolean) => {
+    handleCardEffectChange({
+      ...cardEffect,
+      border
+    });
   };
-  
+
   return (
     <div className="space-y-6">
-      {/* Card Effect Type */}
-      <div className="space-y-2">
-        <Label>Card Effect</Label>
-        <RadioGroup 
-          defaultValue={effect.type || 'shadow'} 
-          value={effect.type || 'shadow'} 
-          onValueChange={(value) => handleEffectChange(value as CardEffectType)}
-        >
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="shadow" id="shadow" />
-            <Label htmlFor="shadow">Shadow</Label>
+      <div>
+        <h3 className="text-lg font-medium">Card Effect</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Customize the appearance of your event card
+        </p>
+        
+        <div className="space-y-4">
+          <div>
+            <Label>Effect Type</Label>
+            <RadioGroup
+              value={cardEffect.type}
+              onValueChange={(value) => handleEffectTypeChange(value as CardEffectType)}
+              className="grid grid-cols-3 gap-4 mt-2"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="shadow" id="effect-shadow" />
+                <Label htmlFor="effect-shadow">Shadow</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="matte" id="effect-matte" />
+                <Label htmlFor="effect-matte">Matte</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="gloss" id="effect-gloss" />
+                <Label htmlFor="effect-gloss">Gloss</Label>
+              </div>
+            </RadioGroup>
           </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="matte" id="matte" />
-            <Label htmlFor="matte">Matte</Label>
+          
+          <div>
+            <Label>Border Radius</Label>
+            <Select 
+              value={cardEffect.borderRadius || "medium"}
+              onValueChange={(value) => handleBorderRadiusChange(value as "none" | "small" | "medium" | "large")}
+            >
+              <SelectTrigger className="mt-2">
+                <SelectValue placeholder="Select border radius" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                <SelectItem value="small">Small</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="large">Large</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="gloss" id="gloss" />
-            <Label htmlFor="gloss">Gloss</Label>
+          
+          <div className="flex items-center justify-between">
+            <Label>Show Border</Label>
+            <Switch
+              checked={cardEffect.border || false}
+              onCheckedChange={handleBorderToggle}
+            />
           </div>
-        </RadioGroup>
-      </div>
-      
-      {/* Border Radius */}
-      <div className="space-y-2">
-        <Label>Border Radius</Label>
-        <RadioGroup 
-          defaultValue={effect.borderRadius || 'medium'} 
-          value={effect.borderRadius || 'medium'}
-          onValueChange={(value) => handleRadiusChange(value as "none" | "small" | "medium" | "large")}
-        >
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="none" id="radius-none" />
-            <Label htmlFor="radius-none">None</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="small" id="radius-small" />
-            <Label htmlFor="radius-small">Small</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="medium" id="radius-medium" />
-            <Label htmlFor="radius-medium">Medium</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="large" id="radius-large" />
-            <Label htmlFor="radius-large">Large</Label>
-          </div>
-        </RadioGroup>
-      </div>
-      
-      {/* Border Toggle */}
-      <div className="flex items-center justify-between">
-        <Label htmlFor="border-toggle">Show Border</Label>
-        <Switch 
-          id="border-toggle"
-          checked={effect.border === true}
-          onCheckedChange={handleBorderToggle}
-        />
+        </div>
       </div>
     </div>
   );

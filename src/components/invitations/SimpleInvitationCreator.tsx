@@ -1,313 +1,240 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { SimpleInvitation, SimpleInvitationCustomization, BackgroundType } from '@/types/invitation.types';
+import { createSimpleInvitation, updateSimpleInvitation } from '@/services/invitation/simple-invitations';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import InvitationForm from './InvitationForm';
 import InvitationStyler from './InvitationStyler';
-import { SimpleInvitation, BackgroundType } from '@/types/invitation.types';
-import { createSimpleInvitation, updateSimpleInvitation } from '@/services/invitation/simple-invitations';
-import { supabase } from '@/integrations/supabase/client';
+import InvitationPreview from './InvitationPreview';
 import { toast } from '@/components/ui/use-toast';
-import SimpleShareLink from './SimpleShareLink';
+import { useAuth } from '@/features/auth/context/AuthContext';
 
 interface SimpleInvitationCreatorProps {
   existingInvitation?: SimpleInvitation;
+  onSuccess?: () => void;
   isEvent?: boolean;
 }
 
-export default function SimpleInvitationCreator({ existingInvitation, isEvent = false }: SimpleInvitationCreatorProps) {
+export default function SimpleInvitationCreator({ 
+  existingInvitation, 
+  onSuccess,
+  isEvent = false 
+}: SimpleInvitationCreatorProps) {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('details');
-  const [isPublic, setIsPublic] = useState<boolean>(existingInvitation?.isPublic || false);
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<string>('details');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Determine paths based on whether this is for events or invitations
+  const basePath = isEvent ? '/dashboard/events' : '/dashboard/invitations';
+  const entityType = isEvent ? 'Event' : 'Invitation';
+
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    fromName: '',
-    date: '',
-    time: '',
-    endTime: '',
-    location: '',
-    locationTitle: '',
-  });
-  const [customization, setCustomization] = useState({
-    background: {
-      type: 'solid' as BackgroundType,
-      value: '#ffffff',
-    },
-    font: {
-      family: 'system-ui, sans-serif',
-      size: 'medium',
-      color: '#000000',
-      alignment: 'left',
-    },
+    title: existingInvitation?.title || '',
+    description: existingInvitation?.description || '',
+    location: existingInvitation?.location || '',
+    locationTitle: existingInvitation?.locationTitle || '',
+    date: existingInvitation?.date || '',
+    time: existingInvitation?.time || '',
   });
 
-  useEffect(() => {
-    if (existingInvitation) {
-      setFormData({
-        title: existingInvitation.title || '',
-        description: existingInvitation.description || '',
-        fromName: existingInvitation.fromName || '',
-        date: existingInvitation.date || '',
-        time: existingInvitation.time || '',
-        endTime: existingInvitation.endTime || '',
-        location: existingInvitation.location || '',
-        locationTitle: existingInvitation.locationTitle || '',
-      });
-      setCustomization(existingInvitation.customization);
-      setIsPublic(existingInvitation.isPublic || false);
+  const [customization, setCustomization] = useState<SimpleInvitationCustomization>(
+    existingInvitation?.customization || {
+      background: {
+        type: 'solid' as BackgroundType,
+        value: '#ffffff',
+      },
+      font: {
+        family: 'system-ui, sans-serif',
+        size: 'medium',
+        color: '#000000',
+        alignment: 'left',
+      },
     }
-  }, [existingInvitation]);
+  );
 
   const handleFormChange = (field: string, value: string) => {
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
       [field]: value,
     }));
   };
 
-  const handleCustomizationChange = (newCustomization: any) => {
+  const handleCustomizationChange = (newCustomization: SimpleInvitationCustomization) => {
     setCustomization(newCustomization);
   };
 
   const handleSubmit = async () => {
+    if (!user) {
+      toast({
+        title: 'Authentication required',
+        description: 'Please log in to save your ' + entityType.toLowerCase(),
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       
-      // Get current user ID
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        toast({
-          title: "Authentication Error",
-          description: "You must be logged in to create invitations",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      // Validate required fields
-      if (!formData.title) {
-        toast({
-          title: "Missing Information",
-          description: "Please provide a title",
-          variant: "destructive",
-        });
-        setActiveTab('details');
-        return;
-      }
-      
-      if (!formData.date) {
-        toast({
-          title: "Missing Information",
-          description: "Please select a date",
-          variant: "destructive",
-        });
-        setActiveTab('details');
-        return;
-      }
-      
-      // Convert date and time to ISO format
-      const datetime = formData.date + (formData.time ? `T${formData.time}:00` : 'T00:00:00');
-      const endTime = formData.date + (formData.endTime ? `T${formData.endTime}:00` : '');
-      
-      // Generate a unique share link for public invitations
-      const shareLink = isPublic ? (existingInvitation?.shareId || Math.random().toString(36).substring(2, 10)) : null;
-      
-      // Prepare invitation data
+      // Map our form data to the database structure
       const invitationData = {
         title: formData.title,
-        description: formData.description,
-        from_name: formData.fromName,
-        datetime,
-        end_time: formData.endTime ? endTime : null,
-        location: formData.location,
-        location_title: formData.locationTitle,
-        user_id: session.user.id,
-        is_public: isPublic,
-        share_link: shareLink,
-        is_event: isEvent,
+        description: formData.description || '',
+        location: formData.location || '',
+        location_url: formData.location || '', // Using location as location_url
+        location_title: formData.locationTitle || '',
+        datetime: formData.date && formData.time ? new Date(`${formData.date}T${formData.time}`).toISOString() : undefined,
+        
+        // Map from our customization model to the database fields
         background_type: customization.background.type,
         background_value: customization.background.value,
         font_family: customization.font.family,
         font_size: customization.font.size,
         text_color: customization.font.color,
-        text_align: customization.font.alignment,
+        is_event: isEvent, // Add flag to identify if this is an event
+        user_id: user.id, // Add the user's ID to comply with RLS
       };
-      
+
       let result;
-      
-      // Update or create invitation
       if (existingInvitation) {
+        // Update existing invitation
         result = await updateSimpleInvitation(existingInvitation.id, invitationData);
       } else {
+        // Create new invitation
         result = await createSimpleInvitation(invitationData);
       }
-      
+
       if (result) {
         toast({
-          title: `${isEvent ? 'Event' : 'Invitation'} ${existingInvitation ? 'Updated' : 'Created'}`,
-          description: `Successfully ${existingInvitation ? 'updated' : 'created'} ${formData.title}`,
+          title: 'Success',
+          description: `${entityType} successfully ${existingInvitation ? 'updated' : 'created'}!`,
         });
-        
-        // Navigate back to the appropriate list
-        navigate(isEvent ? '/dashboard/events' : '/dashboard/invitations');
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          navigate(basePath);
+        }
       }
     } catch (error) {
-      console.error("Error creating invitation:", error);
+      console.error(`Error saving ${entityType.toLowerCase()}:`, error);
       toast({
-        title: "Error",
-        description: `Failed to ${existingInvitation ? 'update' : 'create'} ${isEvent ? 'event' : 'invitation'}`,
-        variant: "destructive",
+        title: `Failed to save ${entityType.toLowerCase()}`,
+        description: `There was an error while saving your ${entityType.toLowerCase()}.`,
+        variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const handleNextTab = () => {
+    if (activeTab === 'details') {
+      setActiveTab('customize');
+    } else if (activeTab === 'customize') {
+      handleSubmit();
+    }
+  };
+
+  const handlePrevTab = () => {
+    if (activeTab === 'customize') {
+      setActiveTab('details');
+    }
+  };
+
+  // Check if user is authenticated
+  React.useEffect(() => {
+    if (!user) {
+      console.warn('User is not authenticated');
+    }
+  }, [user]);
+
   return (
-    <div className="container py-6 max-w-5xl">
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            {existingInvitation 
-              ? `Edit ${isEvent ? 'Event' : 'Invitation'}`
-              : `Create New ${isEvent ? 'Event' : 'Invitation'}`
-            }
-          </h1>
-          <p className="text-muted-foreground">
-            {isEvent 
-              ? 'Create an event and invite others' 
-              : 'Design a beautiful invitation for your guests'
-            }
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => navigate(isEvent ? '/dashboard/events' : '/dashboard/invitations')}
-          >
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? 'Saving...' : (existingInvitation ? 'Update' : 'Create')}
-          </Button>
-        </div>
+    <div className="container mx-auto p-4 max-w-5xl">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold mb-2">
+          {existingInvitation 
+            ? `Edit ${entityType}` 
+            : `Create New ${entityType}`}
+        </h1>
+        <p className="text-muted-foreground">
+          {existingInvitation 
+            ? `Update your ${entityType.toLowerCase()} details and styling` 
+            : `Fill in the details and customize your ${entityType.toLowerCase()}`}
+        </p>
       </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-        <div className="lg:col-span-3">
-          <Card>
-            <CardHeader>
-              <CardTitle>{isEvent ? 'Event Details' : 'Invitation Details'}</CardTitle>
-              <CardDescription>
-                Fill in the information about your {isEvent ? 'event' : 'invitation'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="mb-4 grid w-full grid-cols-2">
-                  <TabsTrigger value="details">Details</TabsTrigger>
-                  <TabsTrigger value="design">Design</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="details">
-                  <InvitationForm
-                    formData={formData}
-                    onChange={handleFormChange}
-                    isEvent={isEvent}
-                  />
-                  <div className="mt-6">
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="isPublic"
-                        checked={isPublic}
-                        onChange={(e) => setIsPublic(e.target.checked)}
-                      />
-                      <label htmlFor="isPublic">Make this {isEvent ? 'event' : 'invitation'} public</label>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Public {isEvent ? 'events' : 'invitations'} can be shared with anyone via a link
-                    </p>
-                  </div>
-                  
-                  {isPublic && existingInvitation && existingInvitation.shareId && (
-                    <div className="mt-6">
-                      <h3 className="text-sm font-medium mb-2">Share Link</h3>
-                      <SimpleShareLink shareId={existingInvitation.shareId} />
-                    </div>
-                  )}
-                </TabsContent>
-                
-                <TabsContent value="design">
-                  <InvitationStyler
-                    customization={customization}
-                    onChange={handleCustomizationChange}
-                    title={formData.title}
-                    description={formData.description}
-                  />
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
-        </div>
-        
-        <div className="lg:col-span-2">
-          <Card className="sticky top-8">
-            <CardHeader>
-              <CardTitle>Preview</CardTitle>
-              <CardDescription>
-                See how your {isEvent ? 'event' : 'invitation'} will look
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div
-                className="p-6 rounded-lg"
-                style={{
-                  backgroundColor: 
-                    customization.background.type === 'solid' 
-                      ? customization.background.value 
-                      : '#ffffff',
-                  backgroundImage: 
-                    customization.background.type === 'image' 
-                      ? `url(${customization.background.value})` 
-                      : undefined,
-                  backgroundSize: 'cover',
-                  color: customization.font.color,
-                  fontFamily: customization.font.family,
-                  textAlign: customization.font.alignment as any || 'left',
-                }}
-              >
-                <h2 className="text-xl font-bold mb-2">{formData.title || "Your Invitation Title"}</h2>
-                {formData.fromName && <p className="text-sm mb-4">From: {formData.fromName}</p>}
-                {formData.description && <p className="mb-4">{formData.description}</p>}
-                
-                {formData.date && (
-                  <div className="mb-2">
-                    <strong>Date:</strong> {new Date(formData.date).toLocaleDateString()}
-                  </div>
-                )}
-                
-                {formData.time && (
-                  <div className="mb-2">
-                    <strong>Time:</strong> {formData.time}{formData.endTime ? ` - ${formData.endTime}` : ''}
-                  </div>
-                )}
-                
-                {formData.location && (
-                  <div className="mb-2">
-                    <strong>Location:</strong> {formData.locationTitle || formData.location}
-                  </div>
-                )}
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="details">{entityType} Details</TabsTrigger>
+          <TabsTrigger value="customize">Customize Style</TabsTrigger>
+        </TabsList>
+
+        <Card className="mt-6 p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <TabsContent value="details" className="mt-0">
+                <InvitationForm 
+                  formData={formData}
+                  onChange={handleFormChange}
+                  isEvent={isEvent}
+                />
+              </TabsContent>
+
+              <TabsContent value="customize" className="mt-0">
+                <InvitationStyler
+                  customization={customization}
+                  onChange={handleCustomizationChange}
+                  title={formData.title}
+                  description={formData.description}
+                />
+              </TabsContent>
+            </div>
+
+            <div className="order-first md:order-last mb-6 md:mb-0">
+              <div className="sticky top-4">
+                <h3 className="text-sm font-medium mb-2 text-muted-foreground">Preview</h3>
+                <InvitationPreview
+                  title={formData.title}
+                  description={formData.description}
+                  location={formData.location}
+                  locationTitle={formData.locationTitle}
+                  date={formData.date}
+                  time={formData.time}
+                  customization={customization}
+                  isEvent={isEvent}
+                />
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+            </div>
+          </div>
+
+          <div className="flex justify-between mt-6">
+            <Button
+              variant="outline"
+              onClick={() => navigate(basePath)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+
+            <div className="flex gap-2">
+              {activeTab === 'customize' && (
+                <Button variant="outline" onClick={handlePrevTab} disabled={isSubmitting}>
+                  Previous
+                </Button>
+              )}
+              <Button onClick={handleNextTab} disabled={isSubmitting}>
+                {activeTab === 'details' 
+                  ? 'Next: Customize' 
+                  : `Save ${entityType}`}
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </Tabs>
     </div>
   );
 }

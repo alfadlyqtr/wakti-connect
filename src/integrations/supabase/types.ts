@@ -1236,9 +1236,6 @@ export type Database = {
           is_all_day: boolean | null
           is_recalled: boolean | null
           location: string | null
-          location_title: string | null
-          location_type: string | null
-          maps_url: string | null
           start_time: string
           status: Database["public"]["Enums"]["event_status"] | null
           title: string
@@ -1254,9 +1251,6 @@ export type Database = {
           is_all_day?: boolean | null
           is_recalled?: boolean | null
           location?: string | null
-          location_title?: string | null
-          location_type?: string | null
-          maps_url?: string | null
           start_time: string
           status?: Database["public"]["Enums"]["event_status"] | null
           title: string
@@ -1272,9 +1266,6 @@ export type Database = {
           is_all_day?: boolean | null
           is_recalled?: boolean | null
           location?: string | null
-          location_title?: string | null
-          location_type?: string | null
-          maps_url?: string | null
           start_time?: string
           status?: Database["public"]["Enums"]["event_status"] | null
           title?: string
@@ -1358,7 +1349,6 @@ export type Database = {
           location_title: string | null
           location_url: string | null
           share_link: string | null
-          text_align: string
           text_color: string
           title: string
           updated_at: string
@@ -1378,7 +1368,6 @@ export type Database = {
           location_title?: string | null
           location_url?: string | null
           share_link?: string | null
-          text_align?: string
           text_color?: string
           title: string
           updated_at?: string
@@ -1398,7 +1387,6 @@ export type Database = {
           location_title?: string | null
           location_url?: string | null
           share_link?: string | null
-          text_align?: string
           text_color?: string
           title?: string
           updated_at?: string

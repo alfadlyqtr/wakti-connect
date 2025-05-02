@@ -1,52 +1,35 @@
 
-import { BackgroundType, EventCustomization } from "@/types/event.types";
+import { EventCustomization, BackgroundType } from "@/types/event.types";
 
 export const createBackgroundHandlers = (
   customization: EventCustomization,
   onCustomizationChange: (customization: EventCustomization) => void
 ) => {
-  // Set up defaults for background if not present
-  const getBackground = () => {
-    return customization.background || { type: 'solid' as BackgroundType, value: '#ffffff' };
-  };
-
-  const handleBackgroundTypeChange = (type: BackgroundType) => {
-    const background = getBackground();
-    onCustomizationChange({
-      ...customization,
-      background: {
-        ...background,
-        type,
-      }
-    });
-  };
-
-  const handleBackgroundValueChange = (value: string) => {
-    const background = getBackground();
-    onCustomizationChange({
-      ...customization,
-      background: {
-        ...background,
-        value,
-      }
-    });
-  };
-
-  // Combined handler for use with BackgroundSelector component
   const handleBackgroundChange = (type: 'color' | 'image', value: string) => {
-    const mappedType = type === 'color' ? 'solid' as BackgroundType : 'image' as BackgroundType;
+    // Convert 'color' to 'solid' for internal representation
+    const backgroundType: BackgroundType = type === 'color' ? 'solid' : (type as BackgroundType);
+    
+    let finalValue = value;
+    
     onCustomizationChange({
       ...customization,
       background: {
-        type: mappedType,
-        value,
+        ...customization.background,
+        type: backgroundType,
+        value: finalValue
       }
+    });
+  };
+
+  const handleAnimationChange = (value: 'fade' | 'slide' | 'pop') => {
+    onCustomizationChange({
+      ...customization,
+      animation: value
     });
   };
 
   return {
-    handleBackgroundTypeChange,
-    handleBackgroundValueChange,
-    handleBackgroundChange
+    handleBackgroundChange,
+    handleAnimationChange
   };
 };

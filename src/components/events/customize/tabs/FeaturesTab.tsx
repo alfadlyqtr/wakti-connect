@@ -1,6 +1,6 @@
 
 import React from "react";
-import { EventCustomization, MapDisplayType } from "@/types/event.types";
+import { EventCustomization } from "@/types/event.types";
 import { Separator } from "@/components/ui/separator";
 import { 
   InteractiveFeatures,
@@ -14,7 +14,7 @@ interface FeaturesTabProps {
   onToggleCalendar: (checked: boolean) => void;
   onToggleButtons: (checked: boolean) => void;
   onBrandingChange: (property: 'logo' | 'slogan', value: string) => void;
-  onMapDisplayChange: (value: MapDisplayType) => void;
+  onMapDisplayChange: (value: 'button' | 'both' | 'qrcode') => void;
   onUtilityButtonStyleChange?: (buttonType: 'calendar' | 'map' | 'qr', property: 'background' | 'color' | 'shape', value: string) => void;
   onPoweredByColorChange?: (color: string) => void;
 }

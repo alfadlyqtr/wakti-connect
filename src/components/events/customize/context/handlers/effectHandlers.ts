@@ -1,46 +1,26 @@
 
-import { EventCustomization, AnimationType, ElementAnimations, CardEffect } from "@/types/event.types";
+import { EventCustomization } from "@/types/event.types";
 
 export const createEffectHandlers = (
   customization: EventCustomization,
   onCustomizationChange: (customization: EventCustomization) => void
 ) => {
-  const handleCardEffectChange = (cardEffect: CardEffect) => {
+  const handleCardEffectChange = (cardEffect: any) => {
     onCustomizationChange({
       ...customization,
       cardEffect
     });
   };
 
-  const handleBorderRadiusChange = (radius: string) => {
-    const cardEffect = customization.cardEffect || { type: 'shadow' };
+  const handleElementAnimationsChange = (elementAnimations: any) => {
     onCustomizationChange({
       ...customization,
-      cardEffect: {
-        ...cardEffect,
-        borderRadius: radius as 'none' | 'small' | 'medium' | 'large'
-      }
-    });
-  };
-
-  const handleAnimationChange = (animation: string) => {
-    onCustomizationChange({
-      ...customization,
-      animation: animation as AnimationType
-    });
-  };
-
-  const handleElementAnimationsChange = (animations: ElementAnimations) => {
-    onCustomizationChange({
-      ...customization,
-      elementAnimations: animations
+      elementAnimations
     });
   };
 
   return {
     handleCardEffectChange,
-    handleBorderRadiusChange,
-    handleAnimationChange,
     handleElementAnimationsChange
   };
 };

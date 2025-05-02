@@ -1,76 +1,74 @@
 
+import { SimpleInvitation, SimpleInvitationCustomization, BackgroundType } from '@/types/invitation.types';
+
+// Database model structure for invitations
 export interface InvitationDbRecord {
   id: string;
   title: string;
-  description?: string;
-  from_name?: string;
+  description: string;
   location?: string;
-  location_title?: string;
   location_url?: string;
+  location_title?: string;
   datetime?: string;
-  end_time?: string;
+  background_type: string;
+  background_value: string;
+  font_family: string;
+  font_size: string;
+  text_color: string;
+  text_align?: string;
+  is_event?: boolean;
+  user_id: string;
   created_at: string;
-  updated_at: string;
-  user_id: string;
+  updated_at?: string;
   share_id?: string;
-  share_link?: string; // The actual field used for sharing in the database
   is_public?: boolean;
-  is_event?: boolean;
-  background_type?: string;
-  background_value?: string;
-  font_family?: string;
-  font_size?: string;
-  text_color?: string;
-  text_align?: string;
 }
 
-export interface InvitationData {
-  title: string;
-  from_name?: string;
-  description?: string;
-  location?: string;
-  location_title?: string;
-  location_url?: string;
-  datetime?: string;
-  end_time?: string;
-  is_event?: boolean;
-  is_public?: boolean;
-  share_link?: string;
-  user_id: string;
-  background_type?: string;
-  background_value?: string;
-  font_family?: string;
-  font_size?: string;
-  text_color?: string;
-  text_align?: string;
-}
-
-export interface SimpleInvitationResult {
+// Intermediate type for breaking the deep type inference chain
+// Making alignment optional to match SimpleInvitationCustomization's structure
+export type SimpleInvitationResult = {
   id: string;
   title: string;
   description: string;
-  fromName?: string;
-  location?: string;
-  locationTitle?: string;
+  location: string;
+  locationTitle: string;
   date?: string;
   time?: string;
-  endTime?: string;
   createdAt: string;
   updatedAt?: string;
   userId: string;
   shareId?: string;
-  isPublic?: boolean;
-  isEvent?: boolean;
+  isPublic: boolean;
+  isEvent: boolean;
   customization: {
     background: {
-      type: string;
+      type: BackgroundType;
       value: string;
     };
     font: {
       family: string;
       size: string;
       color: string;
-      alignment?: string;
+      alignment?: string;  // Optional to match the source type
+      weight?: string;     // Optional to match the source type
     };
   };
+}
+
+// Type for creating a new invitation
+export interface InvitationData {
+  title: string;
+  description: string;
+  location?: string;
+  location_url?: string;
+  location_title?: string;
+  datetime?: string;
+  background_type: string;
+  background_value: string;
+  font_family: string;
+  font_size: string;
+  text_color: string;
+  text_align?: string;
+  is_event?: boolean;
+  user_id: string;
 }

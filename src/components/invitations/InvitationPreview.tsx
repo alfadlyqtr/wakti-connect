@@ -2,21 +2,18 @@ import React from 'react';
 import { SimpleInvitationCustomization } from '@/types/invitation.types';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CalendarIcon, MapPin, Download, Calendar, Clock } from 'lucide-react';
-import { generateDirectionsUrl } from '@/utils/locationUtils';
+import { CalendarIcon, MapPin, Download, Calendar } from 'lucide-react';
+import { formatLocation, generateDirectionsUrl } from '@/utils/locationUtils';
 import { createGoogleCalendarUrl, createICSFile } from '@/utils/calendarUtils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { toast } from '@/components/ui/use-toast';
 
 interface InvitationPreviewProps {
   title?: string;
-  fromName?: string;
   description?: string;
   location?: string;
   locationTitle?: string;
   date?: string;
   time?: string;
-  endTime?: string;
   customization: SimpleInvitationCustomization;
   showActions?: boolean;
   isEvent?: boolean;
@@ -24,13 +21,11 @@ interface InvitationPreviewProps {
 
 export default function InvitationPreview({
   title = "Invitation Title",
-  fromName = "Your Name",
   description = "Enter a description for your invitation.",
   location,
   locationTitle,
   date,
   time,
-  endTime,
   customization,
   showActions = true,
   isEvent = false
@@ -74,20 +69,15 @@ export default function InvitationPreview({
     overflow: 'hidden' as const,
   };
   
-  // Enhanced overlay for better text readability on image backgrounds
+  // Add semi-transparent overlay for better text readability on image backgrounds
   const overlayStyle = customization.background.type === 'image' ? {
     position: 'absolute' as const,
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Darker overlay for better contrast
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
     zIndex: 0,
-  } : {};
-
-  // Enhanced text style with text shadow for better readability on images
-  const textEnhancementStyle = customization.background.type === 'image' ? {
-    textShadow: '0 1px 3px rgba(0,0,0,0.8)' // Add text shadow for better readability
   } : {};
 
   const contentStyle = {
@@ -97,8 +87,7 @@ export default function InvitationPreview({
     flexDirection: 'column' as const,
     gap: '1rem',
     height: '100%',
-    ...fontStyle,
-    ...textEnhancementStyle
+    ...fontStyle
   };
 
   function getFontSize(size?: string) {
@@ -110,7 +99,7 @@ export default function InvitationPreview({
     }
   }
 
-  const formatDate = (dateStr?: string) => {
+  const formatDate = (dateStr?: string, timeStr?: string) => {
     if (!dateStr) return '';
     
     try {
@@ -122,6 +111,9 @@ export default function InvitationPreview({
         year: 'numeric'
       });
       
+      if (timeStr) {
+        return `${formattedDate} at ${formatTime(timeStr)}`;
+      }
       return formattedDate;
     } catch (e) {
       return dateStr;
@@ -145,17 +137,7 @@ export default function InvitationPreview({
     }
   };
 
-  const formatTimeRange = (startTime?: string, endTime?: string) => {
-    if (!startTime) return '';
-    
-    const formattedStart = formatTime(startTime);
-    if (!endTime) return formattedStart;
-    
-    const formattedEnd = formatTime(endTime);
-    return `${formattedStart} - ${formattedEnd}`;
-  };
-
-  const handleAddToCalendar = (type: 'google' | 'ics' | 'wakti') => {
+  const handleAddToCalendar = (type: 'google' | 'ics') => {
     if (!date) return;
     
     try {
@@ -177,12 +159,6 @@ export default function InvitationPreview({
         window.open(googleUrl, '_blank');
       } else if (type === 'ics') {
         createICSFile(eventData);
-      } else if (type === 'wakti') {
-        // Add to Wakti Calendar implementation
-        toast({
-          title: "Added to Wakti Calendar",
-          description: "Event successfully added to your Wakti Calendar",
-        });
       }
     } catch (error) {
       console.error('Error adding to calendar:', error);
@@ -196,23 +172,10 @@ export default function InvitationPreview({
       <div style={contentStyle}>
         <div className="mb-2">
           <h2 className="text-2xl font-semibold mb-1">{title}</h2>
-          {fromName && (
-            <div className="text-sm opacity-75 mb-2">
-              From: {fromName}
-            </div>
-          )}
           {date && (
             <div className="flex items-center gap-1 opacity-90">
               <CalendarIcon className="h-4 w-4" />
-              <span className="text-sm">{formatDate(date)}</span>
-            </div>
-          )}
-          {time && (
-            <div className="flex items-center gap-1 opacity-90">
-              <Clock className="h-4 w-4" />
-              <span className="text-sm">
-                {formatTimeRange(time, endTime)}
-              </span>
+              <span className="text-sm">{formatDate(date, time)}</span>
             </div>
           )}
         </div>
@@ -220,12 +183,13 @@ export default function InvitationPreview({
         <div className="flex-1">
           <p className="mb-4 whitespace-pre-wrap">{description}</p>
           
-          {location && locationTitle && (
+          {location && (
             <div className="text-sm mt-4">
               <div className="flex items-start gap-2">
                 <MapPin className="h-4 w-4 mt-1 flex-shrink-0" />
                 <div>
-                  <p className="font-medium">{locationTitle}</p>
+                  {locationTitle && <p className="font-medium">{locationTitle}</p>}
+                  <p className="opacity-90">{formatLocation(location)}</p>
                 </div>
               </div>
             </div>
@@ -265,9 +229,6 @@ export default function InvitationPreview({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  <DropdownMenuItem onClick={() => handleAddToCalendar('wakti')}>
-                    Wakti Calendar
-                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleAddToCalendar('google')}>
                     Google Calendar
                   </DropdownMenuItem>
