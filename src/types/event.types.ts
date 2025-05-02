@@ -59,7 +59,7 @@ export interface EventFormData {
   }>;
 }
 
-// Background type definition - only solid and image
+// Background type definition - updated to match invitation types
 export type BackgroundType = "solid" | "image";
 
 // Font weight type

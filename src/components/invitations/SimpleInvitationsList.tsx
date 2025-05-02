@@ -127,10 +127,20 @@ const SimpleInvitationsList: React.FC<SimpleInvitationsListProps> = ({ isEventsL
               updated_at: invitation.updatedAt || '',
               customization: {
                 background: {
-                  type: invitation.customization.background.type === 'gradient' ? 'solid' : invitation.customization.background.type,
+                  // Filter out 'ai' type which isn't supported in EventCustomization
+                  type: invitation.customization.background.type === 'gradient' || 
+                        invitation.customization.background.type === 'ai' ? 
+                        'solid' : invitation.customization.background.type,
                   value: invitation.customization.background.value
                 },
-                font: invitation.customization.font,
+                font: {
+                  family: invitation.customization.font.family,
+                  size: invitation.customization.font.size,
+                  color: invitation.customization.font.color,
+                  weight: invitation.customization.font.weight,
+                  // Cast alignment to TextAlign or undefined
+                  alignment: invitation.customization.font.alignment as "left" | "center" | "right" | "justify" | undefined
+                },
                 buttons: {
                   accept: {
                     background: '#4CAF50',
