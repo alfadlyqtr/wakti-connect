@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { useCustomization } from "../context";
 import { CardEffectType } from "@/types/event.types";
+import { CardEffect } from "../context/types";
 
 const CardEffectTabContent = () => {
   const { customization, handleCardEffectChange } = useCustomization();
@@ -18,24 +19,27 @@ const CardEffectTabContent = () => {
   };
 
   const handleEffectTypeChange = (type: CardEffectType) => {
-    handleCardEffectChange({
+    const updatedEffect: CardEffect = {
       ...cardEffect,
       type
-    });
+    };
+    handleCardEffectChange(updatedEffect);
   };
 
   const handleBorderRadiusChange = (borderRadius: "none" | "small" | "medium" | "large") => {
-    handleCardEffectChange({
+    const updatedEffect: CardEffect = {
       ...cardEffect,
       borderRadius
-    });
+    };
+    handleCardEffectChange(updatedEffect);
   };
 
   const handleBorderToggle = (border: boolean) => {
-    handleCardEffectChange({
+    const updatedEffect: CardEffect = {
       ...cardEffect,
       border
-    });
+    };
+    handleCardEffectChange(updatedEffect);
   };
 
   return (

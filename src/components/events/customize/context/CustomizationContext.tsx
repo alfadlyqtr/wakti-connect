@@ -14,9 +14,39 @@ export const CustomizationProvider: React.FC<{
   // Get all handlers from our utility function
   const handlers = createCustomizationHandlers(customization, onCustomizationChange);
 
-  const value = {
+  // Create a complete context value with all required properties
+  const value: CustomizationContextType = {
     customization,
     onCustomizationChange,
+    // Background handling
+    handleBackgroundTypeChange: handlers.handleBackgroundTypeChange,
+    handleBackgroundValueChange: handlers.handleBackgroundValueChange,
+    handleBackgroundChange: handlers.handleBackgroundChange,
+    // Font handling
+    handleFontFamilyChange: handlers.handleFontFamilyChange,
+    handleFontColorChange: handlers.handleFontColorChange,
+    handleFontSizeChange: handlers.handleFontSizeChange,
+    handleTextAlignmentChange: handlers.handleTextAlignmentChange,
+    handleHeaderStyleChange: handlers.handleHeaderStyleChange,
+    handleTextShadowChange: handlers.handleTextShadowChange,
+    // Button handling
+    handleAcceptButtonChange: handlers.handleAcceptButtonChange,
+    handleDeclineButtonChange: handlers.handleDeclineButtonChange,
+    handleButtonShapeChange: handlers.handleButtonShapeChange,
+    handleShowButtonsChange: handlers.handleShowButtonsChange,
+    // Feature toggles
+    handleAddToCalendarChange: handlers.handleAddToCalendarChange,
+    handleChatbotChange: handlers.handleChatbotChange,
+    // Effects
+    handleCardEffectChange: handlers.handleCardEffectChange,
+    handleBorderRadiusChange: handlers.handleBorderRadiusChange,
+    handleAnimationChange: handlers.handleAnimationChange,
+    handleElementAnimationsChange: handlers.handleElementAnimationsChange,
+    // Map display
+    handleMapDisplayChange: handlers.handleMapDisplayChange,
+    // Header image
+    handleHeaderImageChange: handlers.handleHeaderImageChange,
+    // Additional handlers needed for components
     ...handlers
   };
 

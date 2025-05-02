@@ -7,8 +7,30 @@ import FontSelector from '../FontSelector';
 import TextShadowToggle from './TextShadowToggle';
 
 const TextTabContent = () => {
-  const { customization, handlers } = useCustomization();
-  const { handleFontChange } = handlers;
+  const { 
+    customization, 
+    handleFontFamilyChange,
+    handleFontColorChange,
+    handleFontSizeChange,
+    handleTextAlignmentChange
+  } = useCustomization();
+  
+  const handleFontChange = (property: string, value: string) => {
+    switch(property) {
+      case 'family':
+        handleFontFamilyChange(value);
+        break;
+      case 'color':
+        handleFontColorChange(value);
+        break;
+      case 'size':
+        handleFontSizeChange(value);
+        break;
+      case 'alignment':
+        handleTextAlignmentChange(value);
+        break;
+    }
+  };
   
   return (
     <div className="space-y-6">

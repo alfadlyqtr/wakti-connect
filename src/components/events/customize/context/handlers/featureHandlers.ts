@@ -8,7 +8,8 @@ export const createFeatureHandlers = (
   const handleAddToCalendarChange = (enabled: boolean) => {
     onCustomizationChange({
       ...customization,
-      enableAddToCalendar: enabled
+      enableAddToCalendar: enabled,
+      showAddToCalendarButton: enabled // Keep both properties in sync
     });
   };
 

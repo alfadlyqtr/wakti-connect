@@ -154,7 +154,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, onEdit, onShare, onDelete 
         </div>
         
         <div className="flex space-x-2">
-          {customization.showAddToCalendarButton !== false && (
+          {(customization.showAddToCalendarButton !== false && customization.enableAddToCalendar !== false) && (
             <Button 
               size="sm"
               variant="outline"
