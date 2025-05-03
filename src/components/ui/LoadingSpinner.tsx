@@ -6,11 +6,13 @@ type SpinnerSize = 'sm' | 'md' | 'lg' | 'xl';
 interface LoadingSpinnerProps {
   size?: SpinnerSize;
   className?: string;
+  color?: string; // Added color prop
 }
 
 const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ 
   size = 'md', 
-  className = '' 
+  className = '',
+  color = 'primary' // Default to primary color
 }) => {
   const getSizeClass = () => {
     switch (size) {
@@ -22,8 +24,17 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
     }
   };
   
+  // Use the color prop to determine the border color
+  const getColorClass = () => {
+    if (!color || color === 'primary') {
+      return 'border-primary'; // Default primary color
+    } else {
+      return `border-${color}-500`; // For other Tailwind colors like blue, red, etc.
+    }
+  };
+  
   return (
-    <div className={`${getSizeClass()} ${className} rounded-full border-t-transparent border-primary animate-spin`}></div>
+    <div className={`${getSizeClass()} ${className} rounded-full border-t-transparent ${getColorClass()} animate-spin`}></div>
   );
 };
 
