@@ -10,7 +10,6 @@ export interface GenerateImageParams {
   CFGScale?: number;
   scheduler?: string;
   strength?: number;
-  promptWeighting?: "compel" | "sdEmbeds";
   seed?: number | null;
   lora?: string[];
   width?: number;      // Add width parameter
@@ -30,6 +29,7 @@ export class RunwareService {
   async generateImage(params: GenerateImageParams): Promise<GeneratedImage> {
     try {
       console.log("Requesting image generation through ai-image-generation edge function");
+      console.log("Prompt being used:", params.positivePrompt);
       
       // Ensure width and height are multiples of 64 for Runware API
       const width = params.width || 1216;  // Default to 1216px (multiple of 64)
@@ -50,6 +50,7 @@ export class RunwareService {
           cfgScale: params.CFGScale,
           scheduler: params.scheduler,
           outputFormat: params.outputFormat
+          // Removed promptWeighting to prevent Runware API errors
         }
       });
       

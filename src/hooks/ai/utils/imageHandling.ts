@@ -1,4 +1,3 @@
-
 import { runwareService } from '@/services/ai/runwareService';
 import { toast } from '@/components/ui/use-toast';
 
@@ -23,7 +22,8 @@ export async function handleImageGeneration(prompt: string): Promise<GeneratedIm
     }
     
     // Add parameters to ensure the generated image works well as a background
-    const enhancedPrompt = `${prompt.trim()} Make it suitable for an invitation card background with space for text overlay. Use a balanced composition, soft edges, and ensure good text contrast. Create with a portrait orientation (3:4 aspect ratio).`;
+    // Keep the user's original prompt intact without adding too many modifiers
+    const enhancedPrompt = prompt.trim();
     
     console.log('[imageHandling] Enhanced prompt:', enhancedPrompt);
     
@@ -32,8 +32,8 @@ export async function handleImageGeneration(prompt: string): Promise<GeneratedIm
       positivePrompt: enhancedPrompt,
       // Configure for optimal background image with correct dimensions for invitation cards
       // Ensure width is a multiple of 64 as required by Runware API
-      width: 1216,         // Adjusted from 1200 to 1216 (multiple of 64)
-      height: 1536,        // Adjusted from 1600 to 1536 (also multiple of 64, maintains ~3:4 ratio)
+      width: 1216,         // Updated to ensure it's a multiple of 64
+      height: 1536,        // Updated to ensure it's a multiple of 64, maintains ~3:4 ratio
       CFGScale: 9,         // Increased from default for better prompt adherence
       scheduler: "FlowMatchEulerDiscreteScheduler", // Best for scenic backgrounds
       outputFormat: "WEBP", // Better compression for web
@@ -41,7 +41,7 @@ export async function handleImageGeneration(prompt: string): Promise<GeneratedIm
       strength: 0.85      // Slightly higher than default
     });
     
-    console.log('[imageHandling] Image generation successful');
+    console.log('[imageHandling] Image generation successful, provider:', result.provider);
     
     if (!result.imageURL) {
       throw new Error('No image URL returned from service');

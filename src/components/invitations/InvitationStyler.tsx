@@ -63,7 +63,7 @@ export default function InvitationStyler({
       }
       
       // Log the prompt being used
-      console.log("Using prompt for image generation:", prompt);
+      console.log("InvitationStyler: Using prompt for image generation:", prompt);
       
       // Add enhancement instructions if not in custom prompt
       if (!customPrompt) {

@@ -64,7 +64,7 @@ export const ImageGenerationToolCard: React.FC<ImageGenerationToolCardProps> = (
       setIsGenerating(true);
       setError(null);
       
-      console.log('Submitting image generation request with prompt:', prompt.trim());
+      console.log('ImageGenerationToolCard: Submitting image generation request with prompt:', prompt.trim());
       
       // Generate image directly
       const result = await handleImageGeneration(prompt.trim());

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useCustomization } from "../context";
 import BackgroundSelector from "../BackgroundSelector";
@@ -145,14 +144,14 @@ const BackgroundTabContent: React.FC<BackgroundTabContentProps> = ({ title, desc
       if (customPrompt) {
         // Use custom prompt directly
         enhancedPrompt = customPrompt;
-        console.log("Using custom prompt for AI generation:", customPrompt);
+        console.log("BackgroundTabContent: Using custom prompt for AI generation:", customPrompt);
       } else {
         // Detect the event type from title and description
         const eventType = detectEventType(title, description);
         
         // Build an optimized prompt for image generation
         enhancedPrompt = createOptimizedPrompt(eventType, title, description);
-        console.log("Using auto-generated prompt for AI:", enhancedPrompt);
+        console.log("BackgroundTabContent: Using auto-generated prompt for AI:", enhancedPrompt);
       }
       
       toast({
@@ -184,9 +183,6 @@ const BackgroundTabContent: React.FC<BackgroundTabContentProps> = ({ title, desc
         description: error.message || "Could not generate image background. Please try again.",
         variant: "destructive"
       });
-      
-      // Fallback to a placeholder image when AI generation fails
-      handleBackgroundChange('image', 'https://source.unsplash.com/random/800x600/?event');
     } finally {
       setIsGeneratingImage(false);
     }

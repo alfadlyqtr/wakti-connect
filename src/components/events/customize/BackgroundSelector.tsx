@@ -56,9 +56,10 @@ const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
     onBackgroundChange('image', value);
   };
 
-  // Handler for AI background generation
+  // Handler for AI background generation - now properly passes the customPrompt
   const handleGenerateAIBackground = (customPrompt?: string) => {
     if (onGenerateAIBackground) {
+      console.log("BackgroundSelector: Sending prompt to parent component:", customPrompt || "Using event details");
       // Pass the custom prompt to the parent component
       onGenerateAIBackground(customPrompt);
     } else {
