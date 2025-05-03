@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { SimpleInvitationCustomization } from '@/types/invitation.types';
 import { Card } from '@/components/ui/card';
@@ -70,7 +71,7 @@ export default function InvitationPreview({
   };
   
   // Add semi-transparent overlay for better text readability on image backgrounds
-  const overlayStyle = customization.background.type === 'image' ? {
+  const overlayStyle = customization.background?.type === 'image' ? {
     position: 'absolute' as const,
     top: 0,
     left: 0,
@@ -165,9 +166,12 @@ export default function InvitationPreview({
     }
   };
 
+  // Ensure action buttons are visible regardless of background
+  const buttonBaseStyle = "bg-white/80 backdrop-blur-md text-foreground font-medium shadow-md hover:bg-white/95 border border-white/20";
+
   return (
-    <Card style={cardStyle} className="w-full shadow-lg">
-      {customization.background.type === 'image' && <div style={overlayStyle}></div>}
+    <Card style={cardStyle} className="w-full shadow-lg rounded-lg overflow-hidden transition-all duration-300 hover:shadow-xl">
+      {customization.background?.type === 'image' && <div style={overlayStyle}></div>}
       
       <div style={contentStyle}>
         <div className="mb-2">
@@ -201,8 +205,7 @@ export default function InvitationPreview({
             {location && (
               <Button 
                 size="sm"
-                variant="outline"
-                className="bg-white/70 backdrop-blur-sm hover:bg-white/90 text-foreground"
+                className={`${buttonBaseStyle} transition-all duration-300 transform hover:scale-105`}
                 asChild
               >
                 <a 
@@ -221,18 +224,17 @@ export default function InvitationPreview({
                 <DropdownMenuTrigger asChild>
                   <Button 
                     size="sm" 
-                    variant="outline"
-                    className="bg-white/70 backdrop-blur-sm hover:bg-white/90 text-foreground"
+                    className={`${buttonBaseStyle} transition-all duration-300 transform hover:scale-105`}
                   >
                     <Calendar className="h-4 w-4 mr-1" />
                     Add to Calendar
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  <DropdownMenuItem onClick={() => handleAddToCalendar('google')}>
+                  <DropdownMenuItem onClick={() => handleAddToCalendar('google')} className="cursor-pointer">
                     Google Calendar
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleAddToCalendar('ics')}>
+                  <DropdownMenuItem onClick={() => handleAddToCalendar('ics')} className="cursor-pointer">
                     <Download className="h-4 w-4 mr-1" />
                     Download .ics (Apple/Outlook)
                   </DropdownMenuItem>

@@ -53,21 +53,23 @@ export default function SharedInvitationView() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-16 flex justify-center">
-        <Card className="p-8 w-full max-w-lg text-center">
-          <div className="flex flex-col items-center justify-center space-y-4">
-            <LoadingSpinner size="lg" />
-            <p className="text-muted-foreground">Loading invitation...</p>
-          </div>
-        </Card>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 py-8 px-4 flex items-center justify-center">
+        <div className="w-full max-w-lg">
+          <Card className="p-8 text-center shadow-lg">
+            <div className="flex flex-col items-center justify-center space-y-4">
+              <LoadingSpinner size="lg" />
+              <p className="text-muted-foreground">Loading invitation...</p>
+            </div>
+          </Card>
+        </div>
       </div>
     );
   }
 
   if (error || !invitation) {
     return (
-      <div className="container mx-auto px-4 py-16">
-        <Card className="p-8 w-full max-w-lg mx-auto text-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 py-8 px-4">
+        <Card className="p-8 w-full max-w-lg mx-auto text-center shadow-lg">
           <h2 className="text-2xl font-semibold mb-4">Invitation Not Found</h2>
           <p className="text-muted-foreground">
             The invitation you're looking for may have been removed or is no longer available.
@@ -78,7 +80,7 @@ export default function SharedInvitationView() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-16">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 py-8 px-4">
       {getMetaTags()}
       <div className="max-w-2xl mx-auto">
         <InvitationPreview

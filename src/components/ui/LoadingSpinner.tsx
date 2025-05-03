@@ -1,43 +1,29 @@
 
 import React from 'react';
-import { Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+
+type SpinnerSize = 'sm' | 'md' | 'lg' | 'xl';
 
 interface LoadingSpinnerProps {
-  size?: 'sm' | 'md' | 'lg';
-  color?: 'primary' | 'secondary' | 'muted' | 'white';
+  size?: SpinnerSize;
   className?: string;
 }
 
 const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ 
   size = 'md', 
-  color = 'primary',
-  className 
+  className = '' 
 }) => {
-  // Determine the size of the spinner
-  const sizeClasses = {
-    sm: 'h-4 w-4',
-    md: 'h-6 w-6',
-    lg: 'h-10 w-10',
-  };
-  
-  // Determine the color of the spinner
-  const colorClasses = {
-    primary: 'text-primary',
-    secondary: 'text-secondary',
-    muted: 'text-muted-foreground',
-    white: 'text-white',
+  const getSizeClass = () => {
+    switch (size) {
+      case 'sm': return 'w-4 h-4 border-2';
+      case 'md': return 'w-6 h-6 border-2';
+      case 'lg': return 'w-10 h-10 border-3';
+      case 'xl': return 'w-16 h-16 border-4';
+      default: return 'w-6 h-6 border-2';
+    }
   };
   
   return (
-    <Loader2 
-      className={cn(
-        'animate-spin',
-        sizeClasses[size],
-        colorClasses[color],
-        className
-      )} 
-    />
+    <div className={`${getSizeClass()} ${className} rounded-full border-t-transparent border-primary animate-spin`}></div>
   );
 };
 

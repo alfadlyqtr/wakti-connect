@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Copy, Check, QrCode, Download } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { Switch } from '@/components/ui/switch';
+import { generateQRCode } from '@/utils/qrCodeUtils';
 
 interface ShareLinkTabProps {
   eventId: string;
@@ -14,6 +15,7 @@ interface ShareLinkTabProps {
 
 const ShareLinkTab: React.FC<ShareLinkTabProps> = ({ eventId, slug }) => {
   const [copied, setCopied] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   
   // Always use /e/ prefix for the shareable URL
   const shareUrl = slug 
@@ -43,10 +45,31 @@ const ShareLinkTab: React.FC<ShareLinkTabProps> = ({ eventId, slug }) => {
     }
   };
   
+  const downloadQRCode = async () => {
+    try {
+      setIsDownloading(true);
+      const eventTitle = slug || eventId;
+      await generateQRCode(shareUrl, eventTitle);
+      toast({
+        title: "QR Code downloaded",
+        description: "Your QR code has been downloaded",
+      });
+    } catch (err) {
+      console.error('Failed to generate QR code:', err);
+      toast({
+        title: "Download failed",
+        description: "Unable to generate the QR code",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+  
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <Label htmlFor="share-link">Shareable Link</Label>
+        <Label htmlFor="share-link" className="text-base font-medium">Shareable Link</Label>
         <div className="flex space-x-2">
           <Input 
             id="share-link"
@@ -57,10 +80,10 @@ const ShareLinkTab: React.FC<ShareLinkTabProps> = ({ eventId, slug }) => {
           <Button 
             onClick={copyToClipboard} 
             variant="outline"
-            className="flex-shrink-0"
+            className="flex-shrink-0 hover:bg-primary/10 transition-colors"
           >
             {copied ? (
-              <Check className="h-4 w-4 mr-2" />
+              <Check className="h-4 w-4 mr-2 text-green-500" />
             ) : (
               <Copy className="h-4 w-4 mr-2" />
             )}
@@ -72,11 +95,17 @@ const ShareLinkTab: React.FC<ShareLinkTabProps> = ({ eventId, slug }) => {
         </p>
       </div>
       
-      <div className="border rounded-lg p-6 flex flex-col items-center justify-center">
+      <div className="border rounded-lg p-6 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900">
         <QrCode size={160} className="mb-4" />
-        <Button variant="outline" size="sm">
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={downloadQRCode}
+          disabled={isDownloading}
+          className="hover:bg-primary/10 transition-colors"
+        >
           <Download className="h-4 w-4 mr-2" />
-          Download QR Code
+          {isDownloading ? 'Downloading...' : 'Download QR Code'}
         </Button>
       </div>
       
