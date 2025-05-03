@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { SimpleInvitationCustomization } from '@/types/invitation.types';
 import { Card } from '@/components/ui/card';

@@ -1,4 +1,3 @@
-
 // Adapted from: https://ui.shadcn.com/docs/components/toast
 import { useState, useEffect } from "react";
 import { Reminder, ReminderNotification } from "@/types/reminder.types";
@@ -15,7 +14,7 @@ export interface Toast {
   title?: string;
   description?: string | ReminderToastData;
   action?: React.ReactNode;
-  variant?: "default" | "destructive" | "success";
+  variant?: "default" | "destructive" | "success" | "warning";
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
@@ -32,7 +31,7 @@ export interface ToastOptions {
   title?: string;
   description?: string | ReminderToastData;
   action?: React.ReactNode;
-  variant?: "default" | "destructive" | "success";
+  variant?: "default" | "destructive" | "success" | "warning";
   duration?: number;
 }
 

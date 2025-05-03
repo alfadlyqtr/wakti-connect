@@ -24,7 +24,8 @@ export function Toast({ toast }: ToastProps) {
         "group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-md border p-4 shadow-lg transition-all",
         variant === "default" && "bg-background",
         variant === "destructive" && "border-destructive bg-destructive text-destructive-foreground",
-        variant === "success" && "border-green-500 bg-green-500 text-white"
+        variant === "success" && "border-green-500 bg-green-500 text-white",
+        variant === "warning" && "border-yellow-500 bg-yellow-500 text-white"
       )}
     >
       <div className="grid gap-1 w-full">
@@ -59,7 +60,8 @@ export function Toast({ toast }: ToastProps) {
             "inline-flex h-8 w-8 items-center justify-center rounded-md border text-sm font-medium",
             variant === "default" && "border-muted-foreground/50 hover:bg-secondary text-foreground",
             variant === "destructive" && "border-muted hover:bg-destructive/90 text-destructive-foreground",
-            variant === "success" && "border-muted hover:bg-green-600 text-white"
+            variant === "success" && "border-muted hover:bg-green-600 text-white",
+            variant === "warning" && "border-muted hover:bg-yellow-600 text-white"
           )}
         >
           <X className="h-4 w-4" />
