@@ -15,10 +15,12 @@ interface ShareLinkTabProps {
 const ShareLinkTab: React.FC<ShareLinkTabProps> = ({ eventId, slug }) => {
   const [copied, setCopied] = useState(false);
   
-  // Generate the full shareable URL with correct /e/ prefix for events
+  // Always use /e/ prefix for the shareable URL
   const shareUrl = slug 
     ? `${window.location.origin}/e/${slug}` 
     : `${window.location.origin}/e/${eventId}`;
+  
+  console.log("Generated share URL:", shareUrl, "with slug:", slug, "and eventId:", eventId);
   
   const copyToClipboard = async () => {
     try {

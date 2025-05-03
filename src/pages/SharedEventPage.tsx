@@ -13,6 +13,8 @@ const DEFAULT_OG_IMAGE = 'https://wakti.qa/og-image.png';
 const SharedEventPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   
+  console.log("SharedEventPage: Attempting to fetch event with id:", id);
+  
   const { data: invitation, isLoading, error } = useQuery({
     queryKey: ['shared-invitation', id],
     queryFn: () => id ? getSharedInvitation(id) : Promise.resolve(null),
@@ -59,13 +61,29 @@ const SharedEventPage: React.FC = () => {
     );
   }
 
-  if (error || !invitation) {
+  if (error) {
+    console.error("Error loading shared event:", error);
     return (
       <div className="container mx-auto max-w-3xl py-8 px-4">
         <Card className="border-destructive">
           <CardContent className="pt-6 text-center">
             <p className="text-destructive">
-              This event could not be found or has been removed.
+              This event could not be found or has been removed. (Error: {error.message || "Unknown error"})
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+  
+  if (!invitation) {
+    console.log("No invitation found for id:", id);
+    return (
+      <div className="container mx-auto max-w-3xl py-8 px-4">
+        <Card className="border-destructive">
+          <CardContent className="pt-6 text-center">
+            <p className="text-destructive">
+              This event could not be found or has been removed. Please check the URL and try again.
             </p>
           </CardContent>
         </Card>
@@ -73,6 +91,7 @@ const SharedEventPage: React.FC = () => {
     );
   }
 
+  console.log("Rendering invitation:", invitation);
   return (
     <div className="container mx-auto max-w-3xl py-8 px-4">
       {getMetaTags()}

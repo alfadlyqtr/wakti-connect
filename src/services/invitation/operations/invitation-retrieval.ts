@@ -42,12 +42,25 @@ export const getSharedInvitation = async (shareId: string): Promise<SimpleInvita
   try {
     console.log("Fetching shared invitation with ID:", shareId);
     
-    // Fix the OR query syntax for Supabase
-    const { data, error } = await supabase
+    // Try to find the invitation by share_link first
+    let { data, error } = await supabase
       .from('invitations')
       .select('*')
-      .or(`share_link.eq.${shareId},id.eq.${shareId}`)
+      .eq('share_link', shareId)
       .maybeSingle();
+      
+    // If not found by share_link, try by id
+    if (!data && !error) {
+      console.log("No invitation found with share_link, trying id");
+      const result = await supabase
+        .from('invitations')
+        .select('*')
+        .eq('id', shareId)
+        .maybeSingle();
+        
+      data = result.data;
+      error = result.error;
+    }
 
     if (error) {
       console.error("Supabase query error:", error);
@@ -55,7 +68,7 @@ export const getSharedInvitation = async (shareId: string): Promise<SimpleInvita
     }
 
     if (!data) {
-      console.log("No invitation found with share ID:", shareId);
+      console.log("No invitation found with either share_link or id:", shareId);
       return null;
     }
     

@@ -1,3 +1,4 @@
+
 import { lazy } from "react";
 import { RouteObject } from "react-router-dom";
 
@@ -79,7 +80,7 @@ const routes: RouteObject[] = [
     ],
   },
   {
-    path: "/shared-event/:id",
+    path: "/e/:id",
     element: <SharedEventPage />,
   },
   {
