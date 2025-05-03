@@ -4,8 +4,8 @@
  * @returns Formatted location text
  */
 export function formatLocation(locationUrl: string): string {
-  // Check if it's a Google Maps URL
-  if (locationUrl.includes('maps.google.com') || locationUrl.includes('goo.gl/maps')) {
+  // Check if it's any Google Maps URL format
+  if (isValidMapsUrl(locationUrl)) {
     return 'Google Maps Location';
   }
   
@@ -23,14 +23,30 @@ export function formatLocation(locationUrl: string): string {
  * @returns A Google Maps directions URL
  */
 export function generateDirectionsUrl(location: string): string {
-  // If it's already a Google Maps URL, use it
-  if (location.includes('maps.google.com') || location.includes('goo.gl/maps')) {
-    return location;
+  // If it's already a Google Maps URL, use it directly
+  if (isValidMapsUrl(location)) {
+    // For shortened URLs like maps.app.goo.gl, don't modify them
+    if (location.includes('maps.app.goo.gl') || location.includes('goo.gl/maps')) {
+      return location;
+    }
+    
+    // For normal Google Maps URLs, ensure they have the proper format
+    try {
+      const url = new URL(location);
+      // Make sure it opens in directions mode if possible
+      if (!url.searchParams.has('dirflg')) {
+        url.searchParams.append('dirflg', 'd');
+      }
+      return url.toString();
+    } catch (e) {
+      console.error("Error parsing maps URL:", e);
+      return location; // Return original if URL parsing fails
+    }
   }
   
-  // Otherwise create a search URL
+  // Otherwise create a search URL with the location as the destination
   const encodedLocation = encodeURIComponent(location);
-  return `https://www.google.com/maps/search/?api=1&query=${encodedLocation}`;
+  return `https://www.google.com/maps/dir/?api=1&destination=${encodedLocation}`;
 }
 
 /**
@@ -40,7 +56,7 @@ export function generateDirectionsUrl(location: string): string {
  */
 export function generateMapsUrl(location: string): string {
   // If it's already a Google Maps URL, use it
-  if (location.includes('maps.google.com') || location.includes('goo.gl/maps')) {
+  if (isValidMapsUrl(location)) {
     return location;
   }
   
@@ -57,11 +73,12 @@ export function generateMapsUrl(location: string): string {
 export function isValidMapsUrl(url: string): boolean {
   if (!url) return false;
   
-  // Simple validation to check if it's a Google Maps URL
+  // Comprehensive check for all Google Maps URL formats
   return (
     url.includes('maps.google.com') || 
     url.includes('goo.gl/maps') || 
     url.includes('maps.app.goo.gl') || 
-    url.includes('google.com/maps')
+    url.includes('google.com/maps') ||
+    url.includes('maps.google.')
   );
 }

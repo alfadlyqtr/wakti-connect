@@ -79,6 +79,10 @@ export default function SharedInvitationView() {
     );
   }
 
+  // Determine if this is an event by checking if it has a date
+  const isEvent = invitation.isEvent || !!invitation.date;
+  console.log("SharedInvitationView: Is this an event?", isEvent);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 py-8 px-4">
       {getMetaTags()}
@@ -91,7 +95,7 @@ export default function SharedInvitationView() {
           date={invitation.date}
           time={invitation.time}
           customization={invitation.customization}
-          isEvent={invitation.isEvent}
+          isEvent={isEvent}
           showActions={true}
         />
       </div>

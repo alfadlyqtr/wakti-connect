@@ -15,13 +15,15 @@ interface InvitationStylerProps {
   onChange: (customization: SimpleInvitationCustomization) => void;
   title?: string;
   description?: string;
+  isEvent?: boolean; // Add this flag to indicate if it's an event
 }
 
 export default function InvitationStyler({
   customization,
   onChange,
   title,
-  description
+  description,
+  isEvent = false // Default to false
 }: InvitationStylerProps) {
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
 
@@ -43,6 +45,9 @@ export default function InvitationStyler({
   };
 
   const handleGenerateAIBackground = async (customPrompt?: string) => {
+    // Log received custom prompt for debugging
+    console.log("InvitationStyler received custom prompt:", customPrompt);
+
     // If no custom prompt and no title/description, show error
     if (!customPrompt && !title && !description) {
       toast({
@@ -80,6 +85,7 @@ export default function InvitationStyler({
             "Your custom AI background has been created and applied." : 
             "Your AI background has been created and applied.",
         });
+        console.log("Image provider used:", result.provider);
       } 
     } catch (error) {
       console.error('Error generating AI background:', error);

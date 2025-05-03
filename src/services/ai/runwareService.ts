@@ -32,12 +32,12 @@ export class RunwareService {
       console.log("Prompt being used:", params.positivePrompt);
       
       // Ensure width and height are multiples of 64 for Runware API
-      const width = params.width || 1216;  // Default to 1216px (multiple of 64)
-      const height = params.height || 1536; // Default to 1536px (multiple of 64)
+      const width = params.width ? Math.floor(params.width / 64) * 64 : 1216;  // Default to 1216px
+      const height = params.height ? Math.floor(params.height / 64) * 64 : 1536; // Default to 1536px
       
       // Verify dimensions are valid for Runware (multiples of 64)
       if (width % 64 !== 0 || height % 64 !== 0) {
-        console.warn(`Invalid dimensions detected. Width and height must be multiples of 64. Adjusting to nearest valid values.`);
+        console.warn(`Invalid dimensions detected. Adjusting to nearest multiples of 64: ${width}x${height}`);
       }
       
       // Call the consolidated ai-image-generation edge function
@@ -49,8 +49,9 @@ export class RunwareService {
           height: height,
           cfgScale: params.CFGScale,
           scheduler: params.scheduler,
-          outputFormat: params.outputFormat
-          // Removed promptWeighting to prevent Runware API errors
+          outputFormat: params.outputFormat,
+          // Don't pass promptWeighting at all to avoid Runware API errors
+          preferProvider: 'runware' // Try to use Runware first
         }
       });
       
@@ -62,6 +63,8 @@ export class RunwareService {
       if (!data || !data.imageUrl) {
         throw new Error('No image was generated');
       }
+
+      console.log('Image generated successfully by provider:', data.provider);
 
       return {
         imageURL: data.imageUrl,

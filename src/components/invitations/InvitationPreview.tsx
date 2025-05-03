@@ -7,6 +7,7 @@ import { CalendarIcon, MapPin, Download, Calendar } from 'lucide-react';
 import { formatLocation, generateDirectionsUrl } from '@/utils/locationUtils';
 import { createGoogleCalendarUrl, createICSFile } from '@/utils/calendarUtils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { toast } from '@/components/ui/use-toast';
 
 interface InvitationPreviewProps {
   title?: string;
@@ -32,6 +33,9 @@ export default function InvitationPreview({
   isEvent = false
 }: InvitationPreviewProps) {
   
+  // Default to treating it as an event if a date is provided
+  const shouldShowCalendarOption = isEvent || !!date;
+
   const getBackgroundStyle = () => {
     if (!customization?.background) {
       return '#ffffff';
@@ -139,7 +143,14 @@ export default function InvitationPreview({
   };
 
   const handleAddToCalendar = (type: 'google' | 'ics') => {
-    if (!date) return;
+    if (!date) {
+      toast({
+        title: "Missing Date",
+        description: "This event doesn't have a date specified, so it can't be added to your calendar.",
+        variant: "warning"
+      });
+      return;
+    }
     
     try {
       const startDate = new Date(`${date}T${time || '00:00:00'}`);
@@ -163,7 +174,27 @@ export default function InvitationPreview({
       }
     } catch (error) {
       console.error('Error adding to calendar:', error);
+      toast({
+        title: "Error",
+        description: "There was a problem adding this event to your calendar.",
+        variant: "destructive"
+      });
     }
+  };
+
+  const handleGetDirections = () => {
+    if (!location) {
+      toast({
+        title: "No Location",
+        description: "This event doesn't have a location specified.",
+        variant: "warning"
+      });
+      return;
+    }
+
+    const directionsUrl = generateDirectionsUrl(location);
+    console.log("Opening directions URL:", directionsUrl);
+    window.open(directionsUrl, '_blank');
   };
 
   // Ensure action buttons are visible regardless of background
@@ -206,20 +237,14 @@ export default function InvitationPreview({
               <Button 
                 size="sm"
                 className={`${buttonBaseStyle} transition-all duration-300 transform hover:scale-105`}
-                asChild
+                onClick={handleGetDirections}
               >
-                <a 
-                  href={generateDirectionsUrl(location)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <MapPin className="h-4 w-4 mr-1" />
-                  Get Directions
-                </a>
+                <MapPin className="h-4 w-4 mr-1" />
+                Get Directions
               </Button>
             )}
             
-            {isEvent && date && (
+            {shouldShowCalendarOption && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button 

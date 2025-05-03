@@ -2,11 +2,8 @@
 import React, { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
 import ColorTab from "./background-tabs/ColorTab";
 import ImageTab from "./background-tabs/ImageTab";
-import { Sparkles } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
 
 interface BackgroundSelectorProps {
   backgroundType: string;
@@ -56,18 +53,12 @@ const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
     onBackgroundChange('image', value);
   };
 
-  // Handler for AI background generation - now properly passes the customPrompt
+  // Handler for AI background generation - explicitly passing the customPrompt
   const handleGenerateAIBackground = (customPrompt?: string) => {
     if (onGenerateAIBackground) {
       console.log("BackgroundSelector: Sending prompt to parent component:", customPrompt || "Using event details");
-      // Pass the custom prompt to the parent component
+      // Ensure customPrompt is passed to the parent component
       onGenerateAIBackground(customPrompt);
-    } else {
-      // Fallback implementation if no handler is provided
-      toast({
-        title: "AI Background Generation",
-        description: "This feature is not available yet."
-      });
     }
   };
 

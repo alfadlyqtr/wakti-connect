@@ -1,3 +1,4 @@
+
 import { runwareService } from '@/services/ai/runwareService';
 import { toast } from '@/components/ui/use-toast';
 
@@ -6,6 +7,7 @@ export interface GeneratedImageResult {
   prompt: string;
   success: boolean;
   error?: string;
+  provider?: string;
 }
 
 /**
@@ -25,9 +27,9 @@ export async function handleImageGeneration(prompt: string): Promise<GeneratedIm
     // Keep the user's original prompt intact without adding too many modifiers
     const enhancedPrompt = prompt.trim();
     
-    console.log('[imageHandling] Enhanced prompt:', enhancedPrompt);
+    console.log('[imageHandling] Using prompt:', enhancedPrompt);
     
-    // Generate image using the consolidated ai-image-generation edge function
+    // Generate image using the edge function
     const result = await runwareService.generateImage({
       positivePrompt: enhancedPrompt,
       // Configure for optimal background image with correct dimensions for invitation cards
@@ -50,6 +52,7 @@ export async function handleImageGeneration(prompt: string): Promise<GeneratedIm
     return {
       imageUrl: result.imageURL,
       prompt: enhancedPrompt,
+      provider: result.provider,
       success: true
     };
   } catch (error) {
