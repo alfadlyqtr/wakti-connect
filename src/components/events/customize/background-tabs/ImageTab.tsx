@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -7,25 +6,30 @@ import { toast } from "@/components/ui/use-toast";
 import { useAIImageGeneration } from "@/hooks/ai/useAIImageGeneration";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 interface ImageTabProps {
   value: string;
   onChange: (value: string) => void;
   title?: string;
   description?: string;
+  onGenerateAI?: (customPrompt?: string) => void;
+  isGenerating?: boolean;
 }
 
 const ImageTab: React.FC<ImageTabProps> = ({
   value,
   onChange,
   title,
-  description
+  description,
+  onGenerateAI,
+  isGenerating = false
 }) => {
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
-  const [aiPrompt, setAiPrompt] = useState<string>("");
+  const [customPrompt, setCustomPrompt] = useState<string>("");
   const { 
     generateImage,
-    isGenerating, 
+    isGenerating: isLocalGenerating, 
     generatedImage,
     clearGeneratedImage
   } = useAIImageGeneration();
@@ -82,15 +86,7 @@ const ImageTab: React.FC<ImageTabProps> = ({
   // Generate an AI image based on prompt
   const handleGenerateAIImage = async () => {
     try {
-      let prompt = aiPrompt;
-      
-      // If no prompt is provided, generate one based on title and description
-      if (!prompt && (title || description)) {
-        prompt = `Beautiful event background for "${title || 'event'}"${description ? ` with theme: ${description.substring(0, 50)}` : ''}`;
-        setAiPrompt(prompt);
-      }
-      
-      if (!prompt) {
+      if (!customPrompt) {
         toast({
           title: "No prompt provided",
           description: "Please enter a description for the image you want to generate",
@@ -98,12 +94,12 @@ const ImageTab: React.FC<ImageTabProps> = ({
         });
         return;
       }
-
-      const result = await generateImage.mutateAsync({ prompt });
       
-      if (result && result.imageUrl) {
-        onChange(result.imageUrl);
-        setSelectedPreset(null);
+      console.log("Using custom prompt for AI generation:", customPrompt);
+      
+      // Call the parent component's handler with the custom prompt
+      if (onGenerateAI) {
+        onGenerateAI(customPrompt);
       }
     } catch (error: any) {
       toast({
@@ -157,16 +153,20 @@ const ImageTab: React.FC<ImageTabProps> = ({
                 <h4 className="text-sm font-medium">Generate AI Background</h4>
                 <Textarea
                   placeholder={`Describe the background you want to generate${title ? ` for "${title}"` : ''}`}
-                  value={aiPrompt}
-                  onChange={(e) => setAiPrompt(e.target.value)}
+                  value={customPrompt}
+                  onChange={(e) => setCustomPrompt(e.target.value)}
                   rows={3}
                 />
                 <Button 
                   className="w-full" 
                   onClick={handleGenerateAIImage} 
-                  disabled={isGenerating}
+                  disabled={isGenerating || isLocalGenerating}
                 >
-                  {isGenerating ? "Generating..." : "Generate Background"}
+                  {isGenerating || isLocalGenerating ? (
+                    <span className="flex items-center">
+                      <LoadingSpinner size="sm" className="mr-2" /> Generating...
+                    </span>
+                  ) : "Generate Background"}
                 </Button>
               </div>
             </PopoverContent>

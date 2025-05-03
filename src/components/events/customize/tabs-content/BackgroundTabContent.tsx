@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { useState } from "react";
 import { useCustomization } from "../context";
 import BackgroundSelector from "../BackgroundSelector";
 import { BackgroundType } from "@/types/event.types";
@@ -124,6 +125,8 @@ const BackgroundTabContent: React.FC<BackgroundTabContentProps> = ({ title, desc
     handleBackgroundChange,
     handleAnimationChange
   } = useCustomization();
+  
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
 
   // Convert between type values used in UI and the internal values
   const convertBackgroundTypeToUI = (type: BackgroundType): "color" | "image" => {
@@ -132,20 +135,30 @@ const BackgroundTabContent: React.FC<BackgroundTabContentProps> = ({ title, desc
   };
 
   // Enhanced AI background generation using optimized prompt construction
-  const handleAIBackgroundGeneration = async () => {
+  const handleAIBackgroundGeneration = async (customPrompt?: string) => {
     try {
-      // Detect the event type from title and description
-      const eventType = detectEventType(title, description);
+      setIsGeneratingImage(true);
       
-      // Build an optimized prompt for image generation
-      const enhancedPrompt = createOptimizedPrompt(eventType, title, description);
+      // Use the provided custom prompt if available
+      let enhancedPrompt;
+      
+      if (customPrompt) {
+        // Use custom prompt directly
+        enhancedPrompt = customPrompt;
+        console.log("Using custom prompt for AI generation:", customPrompt);
+      } else {
+        // Detect the event type from title and description
+        const eventType = detectEventType(title, description);
+        
+        // Build an optimized prompt for image generation
+        enhancedPrompt = createOptimizedPrompt(eventType, title, description);
+        console.log("Using auto-generated prompt for AI:", enhancedPrompt);
+      }
       
       toast({
         title: "Generating background",
         description: "Please wait while we create a custom background for your event..."
       });
-      
-      console.log("Enhanced AI prompt:", enhancedPrompt);
       
       // Use the handleImageGeneration function with our enhanced prompt
       const result = await handleImageGeneration(enhancedPrompt);
@@ -156,7 +169,9 @@ const BackgroundTabContent: React.FC<BackgroundTabContentProps> = ({ title, desc
         
         toast({
           title: "Background generated",
-          description: "Your AI generated background has been applied"
+          description: customPrompt ? 
+            "Your custom AI background has been applied" : 
+            "Your AI generated background has been applied"
         });
       } else {
         throw new Error(result.error || "Failed to generate image");
@@ -172,6 +187,8 @@ const BackgroundTabContent: React.FC<BackgroundTabContentProps> = ({ title, desc
       
       // Fallback to a placeholder image when AI generation fails
       handleBackgroundChange('image', 'https://source.unsplash.com/random/800x600/?event');
+    } finally {
+      setIsGeneratingImage(false);
     }
   };
 
@@ -184,6 +201,7 @@ const BackgroundTabContent: React.FC<BackgroundTabContentProps> = ({ title, desc
         title={title}
         description={description}
         onGenerateAIBackground={handleAIBackgroundGeneration}
+        isGeneratingImage={isGeneratingImage}
       />
     </>
   );

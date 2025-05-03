@@ -24,7 +24,6 @@ export default function InvitationStyler({
   description
 }: InvitationStylerProps) {
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
-  const [aiPrompt, setAiPrompt] = useState("");
 
   const handleBackgroundChange = (type: BackgroundType, value: string) => {
     onChange({
@@ -43,8 +42,9 @@ export default function InvitationStyler({
     });
   };
 
-  const handleGenerateAIBackground = async () => {
-    if (!title && !description && !aiPrompt) {
+  const handleGenerateAIBackground = async (customPrompt?: string) => {
+    // If no custom prompt and no title/description, show error
+    if (!customPrompt && !title && !description) {
       toast({
         title: "Missing Information",
         description: "Please add a title, description, or custom prompt to generate an AI background.",
@@ -57,11 +57,18 @@ export default function InvitationStyler({
       setIsGeneratingImage(true);
       
       // Use custom prompt if provided, otherwise generate one based on invitation details
-      let prompt = aiPrompt || `Create a beautiful invitation background image for "${title || 'an event'}"`;
-      if (description && !aiPrompt) {
+      let prompt = customPrompt || `Create a beautiful invitation background image for "${title || 'an event'}"`;
+      if (description && !customPrompt) {
         prompt += ` with description "${description}".`;
       }
-      prompt += " Make it high quality, visually appealing, and suitable for a digital invitation card with aspect ratio 4:3.";
+      
+      // Log the prompt being used
+      console.log("Using prompt for image generation:", prompt);
+      
+      // Add enhancement instructions if not in custom prompt
+      if (!customPrompt) {
+        prompt += " Make it high quality, visually appealing, and suitable for a digital invitation card with aspect ratio 4:3.";
+      }
       
       const result = await handleImageGeneration(prompt);
       
@@ -69,7 +76,9 @@ export default function InvitationStyler({
         handleBackgroundChange('image', result.imageUrl);
         toast({
           title: "Background Generated",
-          description: "Your AI background has been created and applied.",
+          description: customPrompt ? 
+            "Your custom AI background has been created and applied." : 
+            "Your AI background has been created and applied.",
         });
       } 
     } catch (error) {

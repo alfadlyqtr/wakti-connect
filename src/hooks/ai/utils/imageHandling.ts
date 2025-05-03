@@ -31,8 +31,9 @@ export async function handleImageGeneration(prompt: string): Promise<GeneratedIm
     const result = await runwareService.generateImage({
       positivePrompt: enhancedPrompt,
       // Configure for optimal background image with correct dimensions for invitation cards
-      width: 1200,         // Set width to 1200px
-      height: 1600,        // Set height to 1600px (3:4 aspect ratio)
+      // Ensure width is a multiple of 64 as required by Runware API
+      width: 1216,         // Adjusted from 1200 to 1216 (multiple of 64)
+      height: 1536,        // Adjusted from 1600 to 1536 (also multiple of 64, maintains ~3:4 ratio)
       CFGScale: 9,         // Increased from default for better prompt adherence
       scheduler: "FlowMatchEulerDiscreteScheduler", // Best for scenic backgrounds
       outputFormat: "WEBP", // Better compression for web

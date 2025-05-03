@@ -43,7 +43,25 @@ serve(async (req) => {
     }
 
     console.log("Processing image generation request");
-    console.log(`Dimensions: ${width}x${height}`);
+    
+    // Ensure width and height are valid for Runware (multiples of 64)
+    let validWidth = width || 1216;  // Default to 1216 if not provided
+    let validHeight = height || 1536; // Default to 1536 if not provided
+    
+    // Ensure values are multiples of 64
+    if (validWidth % 64 !== 0) {
+      validWidth = Math.floor(validWidth / 64) * 64;
+      if (validWidth < 128) validWidth = 128;
+      if (validWidth > 2048) validWidth = 2048;
+    }
+    
+    if (validHeight % 64 !== 0) {
+      validHeight = Math.floor(validHeight / 64) * 64;
+      if (validHeight < 128) validHeight = 128;
+      if (validHeight > 2048) validHeight = 2048;
+    }
+    
+    console.log(`Using dimensions: ${validWidth}x${validHeight}`);
     
     // Try Runware first if API key is available (REVERSED ORDER - NOW RUNWARE FIRST)
     if (RUNWARE_API_KEY) {
@@ -64,6 +82,8 @@ serve(async (req) => {
           .replace(/Make it /g, '')
           .split('.').slice(0, 2).join('.');
         
+        console.log("Using simplified prompt:", simplifiedPrompt);
+        
         // Prepare the payload for Runware API with optimized parameters for invitation card backgrounds
         const runwarePayload = [
           {
@@ -75,11 +95,11 @@ serve(async (req) => {
             "taskUUID": crypto.randomUUID(),
             "positivePrompt": simplifiedPrompt,
             "model": "runware:100@1",
-            "width": width || 1200,        // Use provided width or default to 1200
-            "height": height || 1600,      // Use provided height or default to 1600
+            "width": validWidth,
+            "height": validHeight,
             "numberResults": 1,
             "outputFormat": outputFormat || "WEBP",
-            "CFGScale": cfgScale || 12.0,  // Use provided CFGScale or default to 12.0
+            "CFGScale": cfgScale || 12.0,
             "scheduler": scheduler || "FlowMatchEulerDiscreteScheduler", // Best for scenic imagery
             "strength": 0.9,    // Increased from 0.75 for stronger effect
             "promptWeighting": "none"
@@ -92,8 +112,7 @@ serve(async (req) => {
         }
         
         // Call Runware API
-        console.log(`Making Runware API request with dimensions: ${width || 1200}x${height || 1600}`);
-        console.log("Using simplified prompt:", simplifiedPrompt);
+        console.log(`Making Runware API request with dimensions: ${validWidth}x${validHeight}`);
         const runwareResponse = await fetch('https://api.runware.ai/v1', {
           method: 'POST',
           headers: {

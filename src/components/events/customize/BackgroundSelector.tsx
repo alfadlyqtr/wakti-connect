@@ -12,9 +12,10 @@ interface BackgroundSelectorProps {
   backgroundType: string;
   backgroundValue: string;
   onBackgroundChange: (type: 'color' | 'image', value: string) => void;
-  onGenerateAIBackground?: () => void;
+  onGenerateAIBackground?: (customPrompt?: string) => void;
   title?: string;
   description?: string;
+  isGeneratingImage?: boolean;
 }
 
 const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
@@ -23,7 +24,8 @@ const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
   onBackgroundChange,
   onGenerateAIBackground,
   title,
-  description
+  description,
+  isGeneratingImage = false
 }) => {
   const [activeTab, setActiveTab] = useState<string>(backgroundType || 'color');
 
@@ -55,9 +57,10 @@ const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
   };
 
   // Handler for AI background generation
-  const handleGenerateAIBackground = () => {
+  const handleGenerateAIBackground = (customPrompt?: string) => {
     if (onGenerateAIBackground) {
-      onGenerateAIBackground();
+      // Pass the custom prompt to the parent component
+      onGenerateAIBackground(customPrompt);
     } else {
       // Fallback implementation if no handler is provided
       toast({
@@ -90,21 +93,9 @@ const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
             onChange={handleImageChange}
             title={title}
             description={description}
+            onGenerateAI={handleGenerateAIBackground}
+            isGenerating={isGeneratingImage}
           />
-          
-          <div className="mt-4 border-t pt-4">
-            <Button 
-              variant="outline" 
-              className="w-full flex items-center justify-center gap-2" 
-              onClick={handleGenerateAIBackground}
-            >
-              <Sparkles className="h-4 w-4" />
-              Generate AI Background
-            </Button>
-            <p className="text-xs text-muted-foreground mt-2 text-center">
-              Create a unique background based on your event details
-            </p>
-          </div>
         </TabsContent>
       </Tabs>
     </div>
