@@ -116,19 +116,22 @@ export default function SharedInvitationView() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 py-8 px-4">
       {getMetaTags()}
       <div className="max-w-2xl mx-auto">
-        <div className="transform hover:scale-[1.01] transition-all duration-300">
-          <InvitationPreview
-            title={invitation.title}
-            description={invitation.description}
-            location={invitation.location}
-            locationTitle={invitation.locationTitle}
-            date={invitation.date}
-            time={invitation.time}
-            customization={invitation.customization}
-            isEvent={isEvent}
-            showActions={true}
-            eventId={invitation.id} // Pass the event ID for response buttons
-          />
+        <div className="transform hover:scale-[1.01] transition-all duration-500 animate-fade-in shadow-lg hover:shadow-xl rounded-xl relative glassmorphism">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 rounded-xl z-0 opacity-70"></div>
+          <div className="relative z-10">
+            <InvitationPreview
+              title={invitation.title}
+              description={invitation.description}
+              location={invitation.location}
+              locationTitle={invitation.locationTitle}
+              date={invitation.date}
+              time={invitation.time}
+              customization={invitation.customization}
+              isEvent={isEvent}
+              showActions={true}
+              eventId={invitation.id} // Pass the event ID for response buttons
+            />
+          </div>
         </div>
       </div>
     </div>

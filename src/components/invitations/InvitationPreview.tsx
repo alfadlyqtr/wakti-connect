@@ -54,11 +54,11 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({
 
   return (
     <Card 
-      className="overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 animate-fade-in border border-white/10 backdrop-blur-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:hover:shadow-[0_8px_30px_rgba(120,120,255,0.15)]"
+      className="overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 animate-fade-in border border-white/10 backdrop-blur-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:hover:shadow-[0_8px_30px_rgba(120,120,255,0.15)] transform hover:-translate-y-1"
       style={cardStyle}
     >
       <CardHeader className="pb-3">
-        <h3 className="text-xl font-semibold">{title}</h3>
+        <h3 className="text-xl font-semibold text-shadow-sm">{title}</h3>
         {date && (
           <div className="flex items-center text-sm space-x-2">
             <Calendar className="h-4 w-4 mr-1" />
@@ -75,7 +75,7 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({
       
       <CardContent className="pb-4">
         {description && (
-          <p className="text-sm mb-4">{description}</p>
+          <p className="text-sm mb-4 text-shadow-xs">{description}</p>
         )}
         
         {hasLocation && (

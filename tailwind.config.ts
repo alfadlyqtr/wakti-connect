@@ -1,3 +1,4 @@
+
 import { fontFamily } from "tailwindcss/defaultTheme";
 import { type Config } from "tailwindcss";
 import tailwindcssAnimate from "tailwindcss-animate";
@@ -32,6 +33,12 @@ const config = {
       fontFamily: {
         redrose: ['Red Rose', 'sans-serif'],
         cairo: ['Cairo', 'sans-serif'],
+      },
+      textShadow: {
+        'xs': '0 1px 1px rgba(0, 0, 0, 0.15)',
+        'sm': '0 1px 2px rgba(0, 0, 0, 0.2)',
+        'md': '0 2px 4px rgba(0, 0, 0, 0.25)',
+        'lg': '0 4px 8px rgba(0, 0, 0, 0.3)',
       },
       colors: {
         border: "hsl(var(--border))",
@@ -94,16 +101,44 @@ const config = {
           "0%": { transform: "translateY(20px)", opacity: "0" },
           "100%": { transform: "translateY(0)", opacity: "1" },
         },
+        cardPulse: {
+          "0%, 100%": { boxShadow: "0 0 0 rgba(66, 153, 225, 0.5)" },
+          "50%": { boxShadow: "0 0 20px rgba(66, 153, 225, 0.7)" }
+        }
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fadeIn 0.5s ease-in-out forwards",
         "slide-in": "slideIn 0.5s ease-in-out forwards",
+        "card-pulse": "cardPulse 3s infinite ease-in-out",
       },
     },
   },
-  plugins: [tailwindcssAnimate, headlessui],
+  plugins: [
+    tailwindcssAnimate,
+    headlessui,
+    function ({ addUtilities }) {
+      const newUtilities = {
+        '.text-shadow-xs': {
+          textShadow: '0 1px 1px rgba(0, 0, 0, 0.15)',
+        },
+        '.text-shadow-sm': {
+          textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)',
+        },
+        '.text-shadow-md': {
+          textShadow: '0 2px 4px rgba(0, 0, 0, 0.25)',
+        },
+        '.text-shadow-lg': {
+          textShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
+        },
+        '.text-shadow-none': {
+          textShadow: 'none',
+        },
+      }
+      addUtilities(newUtilities)
+    }
+  ],
 } satisfies Config;
 
 export default config;
