@@ -74,9 +74,9 @@ export const getSharedInvitation = async (shareId: string): Promise<SimpleInvita
     
     console.log("Found invitation:", data);
     
-    // Set isEvent flag if the invitation has a date
-    if (data.date && !data.is_event) {
-      console.log("This invitation has a date but is not marked as an event, fixing this...");
+    // Set isEvent flag if the invitation has a datetime
+    if (data.datetime && !data.is_event) {
+      console.log("This invitation has a datetime but is not marked as an event, fixing this...");
       
       // Update the record to mark it as an event
       const { error: updateError } = await supabase
@@ -124,7 +124,7 @@ export const fetchSimpleInvitations = async (isEvent = false): Promise<SimpleInv
     
     // For events query, also include items with dates regardless of is_event flag
     if (isEvent) {
-      query = query.or(`is_event.eq.true,date.not.is.null`);
+      query = query.or(`is_event.eq.true,datetime.not.is.null`);
     }
     // When not filtering for events, don't need special handling
     else if (isEvent === false) {
@@ -139,10 +139,10 @@ export const fetchSimpleInvitations = async (isEvent = false): Promise<SimpleInv
     
     console.log(`Found ${data.length} invitations`);
 
-    // Auto-fix: Mark any invitation with a date as an event
+    // Auto-fix: Mark any invitation with a datetime as an event
     for (const invitation of data) {
-      if (invitation.date && !invitation.is_event) {
-        console.log(`Fixing invitation ${invitation.id}: has date but no is_event flag`);
+      if (invitation.datetime && !invitation.is_event) {
+        console.log(`Fixing invitation ${invitation.id}: has datetime but no is_event flag`);
         
         // Update the record to mark it as an event
         const { error: updateError } = await supabase
