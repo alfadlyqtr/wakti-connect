@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Check, X } from "lucide-react";
-import { useToast } from '@/components/ui/use-toast';
 
 interface NonWaktiUserPopupProps {
   isOpen: boolean;
@@ -20,6 +19,7 @@ interface NonWaktiUserPopupProps {
   onSubmit: (name: string) => void;
   type: 'accepted' | 'declined';
   eventTitle: string;
+  isSubmitting?: boolean;
 }
 
 const NonWaktiUserPopup: React.FC<NonWaktiUserPopupProps> = ({
@@ -27,46 +27,22 @@ const NonWaktiUserPopup: React.FC<NonWaktiUserPopupProps> = ({
   onClose,
   onSubmit,
   type,
-  eventTitle
+  eventTitle,
+  isSubmitting = false
 }) => {
   const [name, setName] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) {
-      toast({
-        title: "Name Required",
-        description: "Please enter your name to continue.",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (!name.trim()) return;
     
-    setIsSubmitting(true);
-    try {
-      await onSubmit(name.trim());
-      toast({
-        title: "Response Recorded",
-        description: type === 'accepted' ? "You're attending this event!" : "You've declined this event.",
-        variant: type === 'accepted' ? "success" : "default",
-      });
-      onClose();
-    } catch (error) {
-      console.error('Error submitting response:', error);
-      toast({
-        title: "Error",
-        description: "There was a problem recording your response. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    onSubmit(name.trim());
   };
   
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open && !isSubmitting) onClose();
+    }}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -103,17 +79,23 @@ const NonWaktiUserPopup: React.FC<NonWaktiUserPopupProps> = ({
                 autoFocus
                 required
                 placeholder="Enter your name"
+                disabled={isSubmitting}
               />
             </div>
           </div>
           
           <DialogFooter>
-            <Button variant="outline" onClick={onClose} type="button">
+            <Button 
+              variant="outline" 
+              onClick={onClose} 
+              type="button"
+              disabled={isSubmitting}
+            >
               Cancel
             </Button>
             <Button 
               type="submit" 
-              disabled={isSubmitting}
+              disabled={isSubmitting || !name.trim()}
               variant={type === 'accepted' ? "success" : "destructive"}
             >
               {isSubmitting ? 'Submitting...' : 'Submit Response'}

@@ -35,16 +35,33 @@ const EventInvitationResponse: React.FC<EventInvitationResponseProps> = ({
   };
   
   const handleNonWaktiSubmit = async (name: string) => {
+    if (!name.trim()) {
+      toast({
+        title: "Name Required",
+        description: "Please enter your name to continue.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     try {
       setIsLoading(true);
       const success = await respondToInvitation(eventId, responseType, { name });
       
       if (success) {
+        // Only show success toast if operation was successful
         toast({
           title: "Response Recorded",
-          description: `Thank you for your response, ${name}!`,
-          variant: "default"
+          description: responseType === 'accepted' 
+            ? `Thank you for accepting, ${name}!` 
+            : `We're sorry you can't make it, ${name}.`,
+          variant: responseType === 'accepted' ? "success" : "default"
         });
+        
+        // Close popup
+        setShowNonWaktiPopup(false);
+        
+        // Call the callback
         if (onResponseComplete) onResponseComplete();
       } else {
         throw new Error("Failed to record response");
@@ -91,6 +108,7 @@ const EventInvitationResponse: React.FC<EventInvitationResponseProps> = ({
         onSubmit={handleNonWaktiSubmit}
         type={responseType}
         eventTitle={eventTitle}
+        isSubmitting={isLoading}
       />
     </>
   );

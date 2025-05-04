@@ -17,6 +17,8 @@ export const respondToInvitation = async (
   try {
     const { name } = options;
     
+    console.log(`Recording response: ${response} for event ${eventId} by ${name}`);
+    
     // Simple insert to event_guest_responses
     const { error } = await supabase
       .from('event_guest_responses')
@@ -26,7 +28,10 @@ export const respondToInvitation = async (
         response
       });
       
-    if (error) throw error;
+    if (error) {
+      console.error("Error responding to invitation:", error);
+      return false;
+    }
     
     return true;
   } catch (error: any) {
@@ -40,16 +45,23 @@ export const respondToInvitation = async (
  */
 export const fetchEventResponses = async (eventId: string): Promise<EventGuestResponse[]> => {
   try {
+    console.log(`Fetching responses for event: ${eventId}`);
+    
     // Get responses for the event
     const { data, error } = await supabase
       .from('event_guest_responses')
       .select('*')
       .eq('event_id', eventId);
     
-    if (error) throw error;
+    if (error) {
+      console.error("Error fetching responses:", error);
+      throw error;
+    }
     
     // Make sure the response property is cast to the correct type
     if (!data) return [];
+    
+    console.log(`Found ${data.length} responses for event ${eventId}`);
     
     return data.map(item => ({
       id: item.id,
