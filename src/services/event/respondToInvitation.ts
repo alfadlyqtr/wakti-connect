@@ -118,15 +118,21 @@ export const getEventWithResponses = async (eventId: string): Promise<EventWithR
     if (!event) return null;
     
     // Get responses for the event
-    const { data: responses } = await supabase
+    const { data: responsesRaw } = await supabase
       .from('event_guest_responses')
       .select('*')
       .eq('event_id', eventId);
     
+    // Convert response strings to the expected union type
+    const responses: EventGuestResponse[] = (responsesRaw || []).map(resp => ({
+      ...resp,
+      response: resp.response === 'accepted' ? 'accepted' : 'declined'
+    }));
+    
     return {
       ...event,
       sender_name: 'Event Organizer',
-      guest_responses: responses || []
+      guest_responses: responses
     };
   } catch (error) {
     console.error("Error fetching event with responses:", error);
@@ -156,7 +162,13 @@ export const fetchEventResponses = async (eventId: string): Promise<EventGuestRe
     
     if (error) throw error;
     
-    return data || [];
+    // Convert response strings to the expected union type
+    const responses: EventGuestResponse[] = (data || []).map(resp => ({
+      ...resp,
+      response: resp.response === 'accepted' ? 'accepted' : 'declined'
+    }));
+    
+    return responses;
   } catch (error) {
     console.error("Error fetching responses:", error);
     return [];
