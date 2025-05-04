@@ -6,6 +6,9 @@ import { Calendar, Map, Clock, CalendarDays } from 'lucide-react';
 import { generateMapsUrl } from '@/utils/locationUtils';
 import EventInvitationResponse from '@/components/events/EventInvitationResponse';
 import { createGoogleCalendarUrl, createICSFile } from '@/utils/calendarUtils';
+import EventResponseSummary from '@/components/events/EventResponseSummary';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 interface InvitationPreviewProps {
   title: string;
@@ -35,6 +38,26 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({
   // Generate background style from customization
   const cardStyle: React.CSSProperties = {};
   const hasLocation = !!location;
+  
+  // Check if current user is the creator of the event
+  const { data: isCreator } = useQuery({
+    queryKey: ['isEventCreator', eventId],
+    enabled: !!eventId,
+    queryFn: async () => {
+      if (!eventId) return false;
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id) return false;
+      
+      const { data: event } = await supabase
+        .from('events')
+        .select('user_id')
+        .eq('id', eventId)
+        .single();
+        
+      return event?.user_id === session.user.id;
+    }
+  });
   
   if (customization?.background) {
     const background = customization.background;
@@ -96,6 +119,13 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({
                 <span className="text-shadow-xs">{time}</span>
               </div>
             )}
+          </div>
+        )}
+        
+        {/* Display the response summary for event creators */}
+        {isCreator && eventId && (
+          <div className="mt-2">
+            <EventResponseSummary eventId={eventId} isCreator={true} />
           </div>
         )}
       </CardHeader>

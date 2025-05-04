@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,9 @@ import { useState } from 'react';
 import { deleteSimpleInvitation } from '@/services/invitation/simple-invitations';
 import { toast } from '@/components/ui/use-toast';
 import EventInvitationResponse from '@/components/events/EventInvitationResponse';
+import EventResponseSummary from './EventResponseSummary';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 interface EventCardProps {
   event: Event;
@@ -31,6 +35,15 @@ const EventCard: React.FC<EventCardProps> = ({ event, onEdit, onShare, onDelete,
   const hasLocation = !!event.location;
   const startDate = event.start_time ? new Date(event.start_time) : null;
   const endDate = event.end_time ? new Date(event.end_time) : null;
+  
+  // Check if current user is the creator of the event
+  const { data: isCreator } = useQuery({
+    queryKey: ['isEventCreator', event.id],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      return session?.user?.id === event.user_id;
+    }
+  });
   
   // Get custom styling from event with default values if customization is missing
   const customization = event.customization || {
@@ -170,28 +183,35 @@ const EventCard: React.FC<EventCardProps> = ({ event, onEdit, onShare, onDelete,
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <h3 className="text-lg font-semibold">{event.title}</h3>
+        <h3 className="text-lg font-semibold text-shadow-sm">{event.title}</h3>
         <div className="flex items-center text-sm space-x-1">
           <Calendar className="h-4 w-4 mr-1" />
-          <span>{formattedStartDate}</span>
+          <span className="text-shadow-xs">{formattedStartDate}</span>
           {formattedStartTime && (
             <div className="flex items-center">
               <Clock className="h-3 w-3 mx-1" />
-              <span>{formattedStartTime}</span>
+              <span className="text-shadow-xs">{formattedStartTime}</span>
             </div>
           )}
         </div>
+        
+        {/* Display the response summary for event creators */}
+        {isCreator && (
+          <div className="mt-2">
+            <EventResponseSummary eventId={event.id} isCreator={true} />
+          </div>
+        )}
       </CardHeader>
       
       <CardContent>
         {event.description && (
-          <p className="text-sm mb-3">{event.description}</p>
+          <p className="text-sm mb-3 text-shadow-xs">{event.description}</p>
         )}
         
         {hasLocation && (
           <div className="flex items-center text-sm mt-2">
             <Map className="h-4 w-4 mr-1 flex-shrink-0" />
-            <span className="truncate">
+            <span className="truncate text-shadow-xs">
               {event.location_title || event.location}
             </span>
           </div>

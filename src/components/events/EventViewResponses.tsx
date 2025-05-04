@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { EventGuestResponse } from '@/types/event.types';
+import { EventGuestResponse } from '@/types/event-guest-response.types';
 
 interface EventViewResponsesProps {
   responses?: EventGuestResponse[];
@@ -35,8 +35,8 @@ const EventViewResponses: React.FC<EventViewResponsesProps> = ({ responses = [] 
             <div className="space-y-2">
               <h3 className="font-medium">Guest List</h3>
               <ul className="divide-y">
-                {responses.map((response) => (
-                  <li key={response.id} className="py-2 flex justify-between items-center">
+                {responses.map((response, index) => (
+                  <li key={response.id || index} className="py-2 flex justify-between items-center">
                     <span>{response.name}</span>
                     <span className={`text-sm font-medium ${
                       response.response === 'accepted' ? 'text-green-600' : 'text-red-600'
