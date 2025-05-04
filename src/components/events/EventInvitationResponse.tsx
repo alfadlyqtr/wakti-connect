@@ -46,10 +46,9 @@ const EventInvitationResponse: React.FC<EventInvitationResponseProps> = ({
     
     try {
       setIsLoading(true);
-      const success = await respondToInvitation(eventId, responseType, { name });
+      const result = await respondToInvitation(eventId, responseType, { name });
       
-      if (success) {
-        // Only show success toast if operation was successful
+      if (result.success) {
         toast({
           title: "Response Recorded",
           description: responseType === 'accepted' 
@@ -64,13 +63,13 @@ const EventInvitationResponse: React.FC<EventInvitationResponseProps> = ({
         // Call the callback
         if (onResponseComplete) onResponseComplete();
       } else {
-        throw new Error("Failed to record response");
+        throw new Error(result.error || "Failed to record response");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error ${responseType} invitation:`, error);
       toast({
         title: "Response Failed",
-        description: "There was a problem saving your response. Please try again.",
+        description: `There was a problem saving your response: ${error.message || "Please try again."}`,
         variant: "destructive"
       });
     } finally {

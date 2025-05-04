@@ -13,30 +13,38 @@ export const respondToInvitation = async (
   eventId: string,
   response: 'accepted' | 'declined',
   options: RespondOptions
-): Promise<boolean> => {
+): Promise<{ success: boolean; error?: string }> => {
   try {
     const { name } = options;
     
     console.log(`Recording response: ${response} for event ${eventId} by ${name}`);
     
     // Simple insert to event_guest_responses
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('event_guest_responses')
       .insert({
         event_id: eventId,
         name: name,
         response
-      });
+      })
+      .select();
       
     if (error) {
       console.error("Error responding to invitation:", error);
-      return false;
+      return { 
+        success: false, 
+        error: error.message 
+      };
     }
     
-    return true;
+    console.log("Response recorded successfully:", data);
+    return { success: true };
   } catch (error: any) {
-    console.error("Error responding to invitation:", error);
-    return false;
+    console.error("Exception responding to invitation:", error);
+    return { 
+      success: false, 
+      error: error.message || "Unknown error occurred" 
+    };
   }
 };
 
