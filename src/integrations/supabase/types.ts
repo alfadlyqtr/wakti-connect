@@ -1158,6 +1158,7 @@ export type Database = {
           created_at: string
           event_id: string
           id: string
+          invitation_id: string | null
           name: string
           response: string
         }
@@ -1165,6 +1166,7 @@ export type Database = {
           created_at?: string
           event_id: string
           id?: string
+          invitation_id?: string | null
           name: string
           response: string
         }
@@ -1172,6 +1174,7 @@ export type Database = {
           created_at?: string
           event_id?: string
           id?: string
+          invitation_id?: string | null
           name?: string
           response?: string
         }
