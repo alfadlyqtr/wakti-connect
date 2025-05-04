@@ -1,4 +1,3 @@
-
 import { runwareService } from '@/services/ai/runwareService';
 import { toast } from '@/components/ui/use-toast';
 
@@ -34,16 +33,18 @@ export async function handleImageGeneration(prompt: string): Promise<GeneratedIm
       positivePrompt: enhancedPrompt,
       // Configure for optimal background image with correct dimensions for invitation cards
       // Ensure width is a multiple of 64 as required by Runware API
-      width: 1216,         // Updated to ensure it's a multiple of 64
-      height: 1536,        // Updated to ensure it's a multiple of 64, maintains ~3:4 ratio
+      width: 1216,         // Exact multiple of 64
+      height: 1536,        // Exact multiple of 64, maintains ~3:4 ratio
       CFGScale: 9,         // Increased from default for better prompt adherence
       scheduler: "FlowMatchEulerDiscreteScheduler", // Best for scenic backgrounds
       outputFormat: "WEBP", // Better compression for web
       numberResults: 1,
       strength: 0.85      // Slightly higher than default
+      // Removed promptWeighting to prevent errors with Runware API
     });
     
     console.log('[imageHandling] Image generation successful, provider:', result.provider);
+    console.log('[imageHandling] Image URL:', result.imageURL);
     
     if (!result.imageURL) {
       throw new Error('No image URL returned from service');

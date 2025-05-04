@@ -40,6 +40,8 @@ export class RunwareService {
         console.warn(`Invalid dimensions detected. Adjusting to nearest multiples of 64: ${width}x${height}`);
       }
       
+      console.log(`Using dimensions: ${width}x${height}`);
+      
       // Call the consolidated ai-image-generation edge function
       const { data, error } = await supabase.functions.invoke('ai-image-generation', {
         body: { 
@@ -57,14 +59,26 @@ export class RunwareService {
       
       if (error) {
         console.error('Edge function error:', error);
+        toast({
+          title: "Image Generation Failed",
+          description: "Error from image generation service. Trying backup method...",
+          variant: "warning"
+        });
         throw error;
       }
       
       if (!data || !data.imageUrl) {
+        console.error('No image was generated');
+        toast({
+          title: "Image Generation Issue",
+          description: "No image was returned. Trying backup method...",
+          variant: "warning"
+        });
         throw new Error('No image was generated');
       }
 
       console.log('Image generated successfully by provider:', data.provider);
+      console.log('Image URL:', data.imageUrl);
 
       return {
         imageURL: data.imageUrl,

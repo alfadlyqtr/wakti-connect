@@ -73,6 +73,25 @@ export const getSharedInvitation = async (shareId: string): Promise<SimpleInvita
     }
     
     console.log("Found invitation:", data);
+    
+    // Set isEvent flag if the invitation has a date
+    if (data.date && !data.is_event) {
+      console.log("This invitation has a date but is not marked as an event, fixing this...");
+      
+      // Update the record to mark it as an event
+      const { error: updateError } = await supabase
+        .from('invitations')
+        .update({ is_event: true })
+        .eq('id', data.id);
+        
+      if (updateError) {
+        console.error("Error updating invitation is_event flag:", updateError);
+      } else {
+        // Update local data as well
+        data.is_event = true;
+      }
+    }
+    
     return mapDbRecordToSimpleInvitation(data);
   } catch (error) {
     console.error("Error fetching shared invitation:", error);
@@ -91,6 +110,7 @@ export const getSharedInvitation = async (shareId: string): Promise<SimpleInvita
  */
 export const fetchSimpleInvitations = async (isEvent = false): Promise<SimpleInvitation[]> => {
   try {
+    console.log("Fetching invitations with isEvent filter:", isEvent);
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session) {
@@ -102,9 +122,13 @@ export const fetchSimpleInvitations = async (isEvent = false): Promise<SimpleInv
       .select('*')
       .eq('user_id', session.user.id);
     
-    // Add filter for events if specified
+    // For events query, also include items with dates regardless of is_event flag
     if (isEvent) {
-      query = query.eq('is_event', true);
+      query = query.or(`is_event.eq.true,date.not.is.null`);
+    }
+    // When not filtering for events, don't need special handling
+    else if (isEvent === false) {
+      // Do nothing - we'll get all invitations without filtering
     }
     
     const { data, error } = await query.order('created_at', { ascending: false });
@@ -112,8 +136,32 @@ export const fetchSimpleInvitations = async (isEvent = false): Promise<SimpleInv
     if (error) {
       throw error;
     }
+    
+    console.log(`Found ${data.length} invitations`);
 
-    return data.map(mapDbRecordToSimpleInvitation).filter(Boolean) as SimpleInvitation[];
+    // Auto-fix: Mark any invitation with a date as an event
+    for (const invitation of data) {
+      if (invitation.date && !invitation.is_event) {
+        console.log(`Fixing invitation ${invitation.id}: has date but no is_event flag`);
+        
+        // Update the record to mark it as an event
+        const { error: updateError } = await supabase
+          .from('invitations')
+          .update({ is_event: true })
+          .eq('id', invitation.id);
+          
+        if (updateError) {
+          console.error("Error updating invitation is_event flag:", updateError);
+        } else {
+          // Update local data as well
+          invitation.is_event = true;
+        }
+      }
+    }
+
+    const mappedData = data.map(mapDbRecordToSimpleInvitation).filter(Boolean) as SimpleInvitation[];
+    console.log(`Returning ${mappedData.length} mapped invitations`);
+    return mappedData;
   } catch (error) {
     console.error("Error fetching invitations:", error);
     toast({

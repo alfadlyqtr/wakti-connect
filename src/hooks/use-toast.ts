@@ -1,3 +1,4 @@
+
 // Adapted from: https://ui.shadcn.com/docs/components/toast
 import { useState, useEffect } from "react";
 import { Reminder, ReminderNotification } from "@/types/reminder.types";
@@ -54,6 +55,9 @@ export function toast(opts: ToastOptions) {
     action: opts.action,
     variant: opts.variant || "default",
   };
+  
+  // Log toast for debugging
+  console.log(`[Toast] ${opts.variant || 'default'}: ${opts.title}`, opts.description);
   
   toasts = [...toasts, toast];
   notify();

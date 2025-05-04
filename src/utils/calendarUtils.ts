@@ -12,6 +12,8 @@ interface CalendarEvent {
  * Creates a Google Calendar URL for an event
  */
 export const createGoogleCalendarUrl = (event: CalendarEvent): string => {
+  console.log("Creating Google Calendar URL for event:", event);
+  
   const startDate = formatDateForGoogleCalendar(event.start, event.isAllDay);
   const endDate = formatDateForGoogleCalendar(event.end, event.isAllDay);
   
@@ -23,13 +25,18 @@ export const createGoogleCalendarUrl = (event: CalendarEvent): string => {
     dates: `${startDate}/${endDate}`
   });
   
-  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+  const url = `https://calendar.google.com/calendar/render?${params.toString()}`;
+  console.log("Generated Google Calendar URL:", url);
+  
+  return url;
 };
 
 /**
  * Creates and downloads an ICS file for calendar imports
  */
 export const createICSFile = (event: CalendarEvent): void => {
+  console.log("Creating ICS file for event:", event);
+  
   const icsContent = generateICSContent(event);
   const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
   
@@ -40,12 +47,16 @@ export const createICSFile = (event: CalendarEvent): void => {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+  
+  console.log("ICS file download triggered");
 };
 
 /**
  * Formats a date for Google Calendar URL
  */
 const formatDateForGoogleCalendar = (date: Date, isAllDay?: boolean): string => {
+  console.log("Formatting date for Google Calendar:", date, "isAllDay:", isAllDay);
+  
   if (isAllDay) {
     return date.toISOString().replace(/[-:]/g, '').split('T')[0];
   }
@@ -56,6 +67,8 @@ const formatDateForGoogleCalendar = (date: Date, isAllDay?: boolean): string => 
  * Generates ICS file content
  */
 const generateICSContent = (event: CalendarEvent): string => {
+  console.log("Generating ICS content for event:", event);
+  
   const formatICSDate = (date: Date, isAllDay?: boolean) => {
     if (isAllDay) {
       return date.toISOString().replace(/[-:]/g, '').split('T')[0];

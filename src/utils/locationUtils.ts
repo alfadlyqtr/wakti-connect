@@ -27,6 +27,7 @@ export function generateDirectionsUrl(location: string): string {
   if (isValidMapsUrl(location)) {
     // For shortened URLs like maps.app.goo.gl, don't modify them
     if (location.includes('maps.app.goo.gl') || location.includes('goo.gl/maps')) {
+      console.log("Using shortened maps URL directly:", location);
       return location;
     }
     
@@ -37,6 +38,7 @@ export function generateDirectionsUrl(location: string): string {
       if (!url.searchParams.has('dirflg')) {
         url.searchParams.append('dirflg', 'd');
       }
+      console.log("Modified Google Maps URL for directions:", url.toString());
       return url.toString();
     } catch (e) {
       console.error("Error parsing maps URL:", e);
@@ -46,7 +48,9 @@ export function generateDirectionsUrl(location: string): string {
   
   // Otherwise create a search URL with the location as the destination
   const encodedLocation = encodeURIComponent(location);
-  return `https://www.google.com/maps/dir/?api=1&destination=${encodedLocation}`;
+  const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodedLocation}`;
+  console.log("Created new directions URL:", directionsUrl);
+  return directionsUrl;
 }
 
 /**

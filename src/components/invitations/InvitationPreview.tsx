@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { SimpleInvitationCustomization } from '@/types/invitation.types';
 import { Card } from '@/components/ui/card';
@@ -120,6 +121,7 @@ export default function InvitationPreview({
       }
       return formattedDate;
     } catch (e) {
+      console.error("Error formatting date:", e, dateStr);
       return dateStr;
     }
   };
@@ -137,6 +139,7 @@ export default function InvitationPreview({
         minute: '2-digit' 
       });
     } catch (e) {
+      console.error("Error formatting time:", e, timeStr);
       return timeStr;
     }
   };
@@ -165,12 +168,22 @@ export default function InvitationPreview({
         isAllDay: !time
       };
       
+      console.log("Calendar event data:", eventData);
+      
       if (type === 'google') {
         const googleUrl = createGoogleCalendarUrl(eventData);
+        console.log("Opening Google Calendar URL:", googleUrl);
         window.open(googleUrl, '_blank');
       } else if (type === 'ics') {
+        console.log("Creating ICS file for calendar event");
         createICSFile(eventData);
       }
+      
+      toast({
+        title: type === 'google' ? "Added to Google Calendar" : "Calendar File Downloaded",
+        description: type === 'google' ? "Event was added to your Google Calendar" : "Calendar file has been downloaded",
+        variant: "success"
+      });
     } catch (error) {
       console.error('Error adding to calendar:', error);
       toast({
@@ -194,6 +207,12 @@ export default function InvitationPreview({
     const directionsUrl = generateDirectionsUrl(location);
     console.log("Opening directions URL:", directionsUrl);
     window.open(directionsUrl, '_blank');
+    
+    toast({
+      title: "Opening Directions",
+      description: "Google Maps directions are opening in a new tab",
+      variant: "success"
+    });
   };
 
   // Ensure action buttons are visible regardless of background
