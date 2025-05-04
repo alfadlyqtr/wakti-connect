@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Check, X } from "lucide-react";
+import { useToast } from '@/components/ui/use-toast';
 
 interface NonWaktiUserPopupProps {
   isOpen: boolean;
@@ -30,16 +31,35 @@ const NonWaktiUserPopup: React.FC<NonWaktiUserPopupProps> = ({
 }) => {
   const [name, setName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim()) {
+      toast({
+        title: "Name Required",
+        description: "Please enter your name to continue.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setIsSubmitting(true);
     try {
       await onSubmit(name.trim());
+      toast({
+        title: "Response Recorded",
+        description: type === 'accepted' ? "You're attending this event!" : "You've declined this event.",
+        variant: type === 'accepted' ? "success" : "default",
+      });
+      onClose();
     } catch (error) {
       console.error('Error submitting response:', error);
+      toast({
+        title: "Error",
+        description: "There was a problem recording your response. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -64,8 +84,8 @@ const NonWaktiUserPopup: React.FC<NonWaktiUserPopupProps> = ({
           </DialogTitle>
           <DialogDescription>
             {type === 'accepted' 
-              ? `Thank you for accepting "${eventTitle}". Please provide your name to be added to the guest list.` 
-              : `Please provide your name so the organizer knows you've declined "${eventTitle}".`}
+              ? `Thank you for accepting "${eventTitle}". Please provide your name.` 
+              : `Please provide your name to decline "${eventTitle}".`}
           </DialogDescription>
         </DialogHeader>
         
@@ -87,28 +107,13 @@ const NonWaktiUserPopup: React.FC<NonWaktiUserPopupProps> = ({
             </div>
           </div>
           
-          <div className="mt-4 mb-2 p-4 bg-blue-50 rounded-md text-sm">
-            <p className="font-medium text-blue-700 mb-1">Get more from WAKTI!</p>
-            <p className="text-blue-600">
-              Create a free WAKTI account to manage your events, get reminders, and connect with others.
-            </p>
-            <a 
-              href="https://wakti.qa" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-blue-700 hover:text-blue-800 mt-2 inline-block font-medium"
-            >
-              Visit wakti.qa →
-            </a>
-          </div>
-          
           <DialogFooter>
             <Button variant="outline" onClick={onClose} type="button">
               Cancel
             </Button>
             <Button 
               type="submit" 
-              disabled={!name.trim() || isSubmitting}
+              disabled={isSubmitting}
               variant={type === 'accepted' ? "success" : "destructive"}
             >
               {isSubmitting ? 'Submitting...' : 'Submit Response'}

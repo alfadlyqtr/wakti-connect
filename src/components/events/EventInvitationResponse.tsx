@@ -24,91 +24,31 @@ const EventInvitationResponse: React.FC<EventInvitationResponseProps> = ({
   const [showNonWaktiPopup, setShowNonWaktiPopup] = useState(false);
   const [responseType, setResponseType] = useState<'accepted' | 'declined'>('accepted');
   
-  // Check if the user is logged in
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  
-  React.useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const { data: { session } } = await import('@/integrations/supabase/client').then(module => module.supabase.auth.getSession());
-        setIsAuthenticated(!!session);
-      } catch (error) {
-        console.error("Error checking authentication:", error);
-        setIsAuthenticated(false);
-      }
-    };
-    
-    checkAuth();
-  }, []);
-  
-  const handleAccept = async () => {
+  const handleAccept = () => {
     setResponseType('accepted');
-    
-    if (isAuthenticated === false) {
-      setShowNonWaktiPopup(true);
-      return;
-    }
-    
-    try {
-      setIsLoading(true);
-      await respondToInvitation(eventId, 'accepted', { addToCalendar: true });
-      toast({
-        title: "Response Saved",
-        description: "You have accepted this invitation.",
-        variant: "default"
-      });
-      if (onResponseComplete) onResponseComplete();
-    } catch (error) {
-      console.error("Error accepting invitation:", error);
-      toast({
-        title: "Error",
-        description: "Failed to accept invitation. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    setShowNonWaktiPopup(true);
   };
   
-  const handleDecline = async () => {
+  const handleDecline = () => {
     setResponseType('declined');
-    
-    if (isAuthenticated === false) {
-      setShowNonWaktiPopup(true);
-      return;
-    }
-    
-    try {
-      setIsLoading(true);
-      await respondToInvitation(eventId, 'declined');
-      toast({
-        title: "Response Saved",
-        description: "You have declined this invitation.",
-        variant: "default"
-      });
-      if (onResponseComplete) onResponseComplete();
-    } catch (error) {
-      console.error("Error declining invitation:", error);
-      toast({
-        title: "Error",
-        description: "Failed to decline invitation. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    setShowNonWaktiPopup(true);
   };
   
   const handleNonWaktiSubmit = async (name: string) => {
     try {
-      await respondToInvitation(eventId, responseType, { name });
-      setShowNonWaktiPopup(false);
-      toast({
-        title: "Response Saved",
-        description: `You have ${responseType === 'accepted' ? 'accepted' : 'declined'} this invitation.`,
-        variant: "default"
-      });
-      if (onResponseComplete) onResponseComplete();
+      setIsLoading(true);
+      const success = await respondToInvitation(eventId, responseType, { name });
+      
+      if (success) {
+        toast({
+          title: "Response Recorded",
+          description: `Thank you for your response, ${name}!`,
+          variant: "default"
+        });
+        if (onResponseComplete) onResponseComplete();
+      } else {
+        throw new Error("Failed to record response");
+      }
     } catch (error) {
       console.error(`Error ${responseType} invitation:`, error);
       toast({
@@ -116,6 +56,8 @@ const EventInvitationResponse: React.FC<EventInvitationResponseProps> = ({
         description: "There was a problem saving your response. Please try again.",
         variant: "destructive"
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
