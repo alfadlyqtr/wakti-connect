@@ -33,12 +33,13 @@ const EventViewResponses: React.FC<EventViewResponsesProps> = ({ responses = [] 
               </div>
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-1 mt-4">
               <h3 className="font-medium">Guest List</h3>
               <ul className="divide-y">
-                {responses.map((response, index) => (
-                  <li key={response.id || index} className="py-2 flex justify-between items-center">
-                    <span>{response.name}</span>
+                {responses.map((response) => (
+                  <li key={response.id || `${response.name}-${response.response}`} 
+                      className="py-2 flex justify-between items-center">
+                    <span className="font-medium">{response.name}</span>
                     {response.response === 'accepted' ? (
                       <span className="flex items-center text-green-600">
                         <Check className="h-4 w-4 mr-1" />

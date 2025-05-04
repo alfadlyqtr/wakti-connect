@@ -26,7 +26,9 @@ const EventResponseSummary: React.FC<EventResponseSummaryProps> = ({
     
     try {
       setIsLoading(true);
+      console.log("EventResponseSummary: Loading responses for event", eventId);
       const eventResponses = await fetchEventResponses(eventId);
+      console.log("EventResponseSummary: Received responses:", eventResponses);
       setResponses(eventResponses);
     } catch (err: any) {
       console.error("Error loading responses:", err);
@@ -47,6 +49,7 @@ const EventResponseSummary: React.FC<EventResponseSummaryProps> = ({
 
   const acceptedCount = responses.filter(r => r.response === 'accepted').length;
   const declinedCount = responses.filter(r => r.response === 'declined').length;
+  const totalCount = responses.length;
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -55,6 +58,7 @@ const EventResponseSummary: React.FC<EventResponseSummaryProps> = ({
           variant="ghost" 
           size="sm"
           className="flex items-center bg-white/10 backdrop-blur-sm hover:bg-white/20 gap-2 mt-2 rounded-full text-xs h-8 px-3"
+          onClick={() => loadResponses()} // Refresh responses when opening the dialog
         >
           <Users className="h-3 w-3" /> 
           <span className="flex items-center gap-1">
@@ -66,7 +70,13 @@ const EventResponseSummary: React.FC<EventResponseSummaryProps> = ({
       
       <DialogContent className="sm:max-w-md">
         <div className="p-2">
-          <EventViewResponses responses={responses} />
+          {isLoading ? (
+            <p className="text-center py-8">Loading responses...</p>
+          ) : error ? (
+            <p className="text-center text-red-500 py-8">{error}</p>
+          ) : (
+            <EventViewResponses responses={responses} />
+          )}
         </div>
       </DialogContent>
     </Dialog>
