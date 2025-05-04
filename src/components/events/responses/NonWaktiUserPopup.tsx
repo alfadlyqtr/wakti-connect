@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Check, X } from "lucide-react";
 
 interface NonWaktiUserPopupProps {
   isOpen: boolean;
@@ -48,12 +49,22 @@ const NonWaktiUserPopup: React.FC<NonWaktiUserPopupProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>
-            {type === 'accepted' ? "You're attending!" : "Response recorded"}
+          <DialogTitle className="flex items-center gap-2">
+            {type === 'accepted' ? (
+              <>
+                <Check className="h-5 w-5 text-green-600" />
+                You're attending!
+              </>
+            ) : (
+              <>
+                <X className="h-5 w-5 text-red-600" />
+                Not attending
+              </>
+            )}
           </DialogTitle>
           <DialogDescription>
             {type === 'accepted' 
-              ? `Thank you for accepting "${eventTitle}". Please provide your name so the organizer knows you're attending.` 
+              ? `Thank you for accepting "${eventTitle}". Please provide your name to be added to the guest list.` 
               : `Please provide your name so the organizer knows you've declined "${eventTitle}".`}
           </DialogDescription>
         </DialogHeader>
@@ -95,7 +106,11 @@ const NonWaktiUserPopup: React.FC<NonWaktiUserPopupProps> = ({
             <Button variant="outline" onClick={onClose} type="button">
               Cancel
             </Button>
-            <Button type="submit" disabled={!name.trim() || isSubmitting}>
+            <Button 
+              type="submit" 
+              disabled={!name.trim() || isSubmitting}
+              variant={type === 'accepted' ? "success" : "destructive"}
+            >
               {isSubmitting ? 'Submitting...' : 'Submit Response'}
             </Button>
           </DialogFooter>

@@ -13,27 +13,13 @@ interface RespondOptions {
  * Respond to an event invitation (accept or decline)
  */
 export const respondToInvitation = async (
-  id: string,
+  eventId: string,
   response: 'accepted' | 'declined',
   options: RespondOptions = {}
 ): Promise<boolean> => {
   const { name, addToCalendar } = options;
   
   try {
-    // Determine if this is an event ID or invitation ID
-    let eventId = id;
-    
-    // First check if the ID is for an invitation
-    const { data: invitation } = await supabase
-      .from('event_invitations')
-      .select('event_id')
-      .eq('id', id)
-      .maybeSingle();
-      
-    if (invitation) {
-      eventId = invitation.event_id;
-    }
-    
     // For anonymous users, name is required
     if (!name) {
       const { data: { session } } = await supabase.auth.getSession();
@@ -145,20 +131,11 @@ export const getEventWithResponses = async (eventId: string): Promise<EventWithR
  */
 export const fetchEventResponses = async (eventId: string): Promise<EventGuestResponse[]> => {
   try {
-    // Check if the ID is for an invitation first
-    const { data: invitation } = await supabase
-      .from('event_invitations')
-      .select('event_id')
-      .eq('id', eventId)
-      .maybeSingle();
-    
-    const actualEventId = invitation?.event_id || eventId;
-    
     // Get responses for the event
     const { data, error } = await supabase
       .from('event_guest_responses')
       .select('*')
-      .eq('event_id', actualEventId);
+      .eq('event_id', eventId);
     
     if (error) throw error;
     

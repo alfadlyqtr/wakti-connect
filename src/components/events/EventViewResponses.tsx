@@ -2,6 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EventGuestResponse } from '@/types/event-guest-response.types';
+import { Check, X } from 'lucide-react';
 
 interface EventViewResponsesProps {
   responses?: EventGuestResponse[];
@@ -38,11 +39,17 @@ const EventViewResponses: React.FC<EventViewResponsesProps> = ({ responses = [] 
                 {responses.map((response, index) => (
                   <li key={response.id || index} className="py-2 flex justify-between items-center">
                     <span>{response.name}</span>
-                    <span className={`text-sm font-medium ${
-                      response.response === 'accepted' ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {response.response === 'accepted' ? 'Going' : 'Not Going'}
-                    </span>
+                    {response.response === 'accepted' ? (
+                      <span className="flex items-center text-green-600">
+                        <Check className="h-4 w-4 mr-1" />
+                        Going
+                      </span>
+                    ) : (
+                      <span className="flex items-center text-red-600">
+                        <X className="h-4 w-4 mr-1" />
+                        Not Going
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>
