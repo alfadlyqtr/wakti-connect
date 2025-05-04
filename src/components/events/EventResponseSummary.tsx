@@ -8,15 +8,13 @@ import { Button } from '@/components/ui/button';
 import { Check, X, Users } from 'lucide-react';
 
 interface EventResponseSummaryProps {
-  eventId: string; // This can be either an event ID or an invitation ID
+  eventId: string;
   isCreator?: boolean;
-  isInvitation?: boolean; // Flag to indicate if the ID is for an invitation
 }
 
 const EventResponseSummary: React.FC<EventResponseSummaryProps> = ({ 
   eventId, 
-  isCreator = false,
-  isInvitation = false
+  isCreator = false
 }) => {
   const [responses, setResponses] = useState<EventGuestResponse[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -28,7 +26,6 @@ const EventResponseSummary: React.FC<EventResponseSummaryProps> = ({
     
     try {
       setIsLoading(true);
-      // fetchEventResponses now checks if the ID is for an event or invitation internally
       const eventResponses = await fetchEventResponses(eventId);
       setResponses(eventResponses);
     } catch (err: any) {
@@ -50,7 +47,6 @@ const EventResponseSummary: React.FC<EventResponseSummaryProps> = ({
 
   const acceptedCount = responses.filter(r => r.response === 'accepted').length;
   const declinedCount = responses.filter(r => r.response === 'declined').length;
-  const totalCount = responses.length;
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
