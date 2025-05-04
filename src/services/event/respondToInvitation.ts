@@ -48,7 +48,16 @@ export const fetchEventResponses = async (eventId: string): Promise<EventGuestRe
     
     if (error) throw error;
     
-    return data || [];
+    // Make sure the response property is cast to the correct type
+    if (!data) return [];
+    
+    return data.map(item => ({
+      id: item.id,
+      event_id: item.event_id,
+      name: item.name,
+      response: item.response as 'accepted' | 'declined',
+      created_at: item.created_at
+    }));
   } catch (error) {
     console.error("Error fetching responses:", error);
     return [];
