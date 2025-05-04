@@ -1,3 +1,4 @@
+
 import { runwareService } from '@/services/ai/runwareService';
 import { toast } from '@/components/ui/use-toast';
 
@@ -40,7 +41,7 @@ export async function handleImageGeneration(prompt: string): Promise<GeneratedIm
       outputFormat: "WEBP", // Better compression for web
       numberResults: 1,
       strength: 0.85      // Slightly higher than default
-      // Removed promptWeighting to prevent errors with Runware API
+      // Deliberately NOT including promptWeighting parameter to prevent Runware API errors
     });
     
     console.log('[imageHandling] Image generation successful, provider:', result.provider);

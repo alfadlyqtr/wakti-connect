@@ -52,8 +52,9 @@ export class RunwareService {
           cfgScale: params.CFGScale,
           scheduler: params.scheduler,
           outputFormat: params.outputFormat,
-          // Don't pass promptWeighting at all to avoid Runware API errors
-          preferProvider: 'runware' // Try to use Runware first
+          // Explicitly forcing Runware as provider and removing promptWeighting parameter
+          preferProvider: 'runware',
+          forceRunware: true // Add a flag to emphasize Runware preference
         }
       });
       
