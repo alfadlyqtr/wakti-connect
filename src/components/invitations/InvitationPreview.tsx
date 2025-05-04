@@ -2,9 +2,10 @@
 import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, Map, Clock } from 'lucide-react';
+import { Calendar, Map, Clock, CalendarDays } from 'lucide-react';
 import { generateMapsUrl } from '@/utils/locationUtils';
 import EventInvitationResponse from '@/components/events/EventInvitationResponse';
+import { createGoogleCalendarUrl, createICSFile } from '@/utils/calendarUtils';
 
 interface InvitationPreviewProps {
   title: string;
@@ -52,21 +53,47 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({
     cardStyle.color = customization.font.color;
   }
 
+  const handleAddToCalendar = () => {
+    if (!date) return;
+    
+    // Create a calendar event for the invitation
+    const eventDate = date ? new Date(date) : new Date();
+    if (time) {
+      const [hours, minutes] = time.split(':').map(Number);
+      eventDate.setHours(hours || 0, minutes || 0);
+    }
+    
+    // End time is 1 hour after start time by default
+    const endDate = new Date(eventDate);
+    endDate.setHours(endDate.getHours() + 1);
+    
+    const eventDetails = {
+      title: title,
+      description: description || '',
+      location: location || '',
+      start: eventDate,
+      end: endDate,
+    };
+    
+    // Open Google Calendar in a new tab
+    window.open(createGoogleCalendarUrl(eventDetails), '_blank');
+  };
+
   return (
     <Card 
-      className="overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 animate-fade-in border border-white/10 backdrop-blur-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:hover:shadow-[0_8px_30px_rgba(120,120,255,0.15)] transform hover:-translate-y-1"
+      className="overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 animate-fade-in border border-white/10 backdrop-blur-sm hover:shadow-[0_12px_40px_rgb(0,0,0,0.18)] dark:hover:shadow-[0_12px_40px_rgba(120,120,255,0.25)] transform hover:-translate-y-2 w-full max-w-2xl mx-auto"
       style={cardStyle}
     >
       <CardHeader className="pb-3">
-        <h3 className="text-xl font-semibold text-shadow-sm">{title}</h3>
+        <h3 className="text-2xl font-semibold text-shadow-md">{title}</h3>
         {date && (
           <div className="flex items-center text-sm space-x-2">
             <Calendar className="h-4 w-4 mr-1" />
-            <span>{date}</span>
+            <span className="text-shadow-xs">{date}</span>
             {time && (
               <div className="flex items-center ml-2">
                 <Clock className="h-3 w-3 mr-1" />
-                <span>{time}</span>
+                <span className="text-shadow-xs">{time}</span>
               </div>
             )}
           </div>
@@ -75,27 +102,20 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({
       
       <CardContent className="pb-4">
         {description && (
-          <p className="text-sm mb-4 text-shadow-xs">{description}</p>
+          <p className="text-md mb-5 text-shadow-sm leading-relaxed">{description}</p>
         )}
         
         {hasLocation && (
           <div className="flex items-center text-sm mt-3">
             <Map className="h-4 w-4 mr-2 flex-shrink-0" />
-            <span className="truncate">
+            <span className="truncate text-shadow-xs">
               {locationTitle || location}
             </span>
           </div>
         )}
       </CardContent>
       
-      <CardFooter className="pt-2 flex flex-col gap-4">
-        {/* Debug info - commented out - no debug text should appear */}
-        {/* <div className="text-xs opacity-50 mb-2">
-          isEvent: {isEvent ? 'true' : 'false'}, 
-          eventId: {eventId || 'none'}, 
-          showActions: {showActions ? 'true' : 'false'}
-        </div> */}
-        
+      <CardFooter className="pt-2 flex flex-col gap-4 p-6">
         {/* Only show the response buttons if this is an event and we have an eventId */}
         {isEvent && eventId && showActions && (
           <EventInvitationResponse 
@@ -104,18 +124,32 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({
             className="w-full"
           />
         )}
+
+        <div className="flex flex-col sm:flex-row w-full gap-3">
+          {date && showActions && (
+            <Button 
+              size="sm" 
+              variant="outline"
+              onClick={handleAddToCalendar}
+              className="flex-1 bg-blue-500/40 hover:bg-blue-600/60 text-white font-medium py-3 h-12 rounded-md shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] flex items-center justify-center gap-2 backdrop-blur-sm"
+            >
+              <CalendarDays className="h-4 w-4" />
+              <span>Add to Calendar</span>
+            </Button>
+          )}
         
-        {hasLocation && location && showActions && (
-          <Button 
-            size="sm" 
-            variant="outline"
-            onClick={() => window.open(generateMapsUrl(location), '_blank')}
-            className="w-full text-sm h-12 bg-blue-500/70 hover:bg-blue-600/80 text-white font-medium py-3 rounded-md shadow-md hover:shadow-lg transition-all hover:scale-[1.02] flex items-center justify-center gap-2 backdrop-blur-sm"
-          >
-            <Map className="h-4 w-4" />
-            <span>Get Directions</span>
-          </Button>
-        )}
+          {hasLocation && location && showActions && (
+            <Button 
+              size="sm" 
+              variant="outline"
+              onClick={() => window.open(generateMapsUrl(location), '_blank')}
+              className="flex-1 bg-blue-500/40 hover:bg-blue-600/60 text-white font-medium py-3 h-12 rounded-md shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] flex items-center justify-center gap-2 backdrop-blur-sm"
+            >
+              <Map className="h-4 w-4" />
+              <span>Get Directions</span>
+            </Button>
+          )}
+        </div>
       </CardFooter>
     </Card>
   );

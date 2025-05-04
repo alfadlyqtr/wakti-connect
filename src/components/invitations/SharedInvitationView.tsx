@@ -78,7 +78,7 @@ export default function SharedInvitationView() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 py-8 px-4 flex items-center justify-center">
-        <div className="w-full max-w-lg">
+        <div className="w-full max-w-2xl">
           <Card className="p-8 text-center shadow-lg">
             <div className="flex flex-col items-center justify-center space-y-4">
               <LoadingSpinner size="lg" />
@@ -94,8 +94,8 @@ export default function SharedInvitationView() {
     console.log("SharedInvitationView: No invitation found for shareId:", shareId);
     
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 py-8 px-4">
-        <Card className="p-8 w-full max-w-lg mx-auto text-center shadow-lg">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 py-12 px-4">
+        <Card className="p-8 w-full max-w-2xl mx-auto text-center shadow-lg">
           <h2 className="text-2xl font-semibold mb-4">Invitation Not Found</h2>
           <p className="text-muted-foreground">
             The invitation you're looking for may have been removed or is no longer available.
@@ -113,12 +113,12 @@ export default function SharedInvitationView() {
   console.log("SharedInvitationView: Is this an event?", isEvent, "Event ID:", invitation.id);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 py-12 px-4">
       {getMetaTags()}
-      <div className="max-w-2xl mx-auto">
-        <div className="transform hover:scale-[1.01] transition-all duration-500 animate-fade-in shadow-lg hover:shadow-xl rounded-xl relative glassmorphism">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 rounded-xl z-0 opacity-70"></div>
-          <div className="relative z-10">
+      <div className="max-w-3xl mx-auto">
+        <div className="transform hover:scale-[1.02] transition-all duration-500 animate-fade-in shadow-2xl hover:shadow-[0_20px_60px_rgba(0,0,0,0.3),0_8px_20px_rgba(80,80,255,0.2)] rounded-xl relative glassmorphism">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl z-0 opacity-80"></div>
+          <div className="relative z-10 p-2">
             <InvitationPreview
               title={invitation.title}
               description={invitation.description}
