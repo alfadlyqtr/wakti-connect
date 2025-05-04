@@ -14,6 +14,7 @@ import {
 import { useState } from 'react';
 import { deleteSimpleInvitation } from '@/services/invitation/simple-invitations';
 import { toast } from '@/components/ui/use-toast';
+import EventInvitationResponse from '@/components/events/EventInvitationResponse';
 
 interface EventCardProps {
   event: Event;
@@ -122,6 +123,13 @@ const EventCard: React.FC<EventCardProps> = ({ event, onEdit, onShare, onDelete,
     }
   };
   
+  // Handle response complete (optional callback for when a user responds to the invitation)
+  const handleResponseComplete = () => {
+    if (refreshEvents) {
+      refreshEvents();
+    }
+  };
+  
   return (
     <Card className="overflow-hidden" style={cardStyle}>
       <CardHeader className="pb-2 relative">
@@ -190,44 +198,54 @@ const EventCard: React.FC<EventCardProps> = ({ event, onEdit, onShare, onDelete,
         )}
       </CardContent>
       
-      <CardFooter className="pt-2 flex justify-between">
-        <div className="flex space-x-2">
-          {hasLocation && event.location && (
-            <Button 
-              size="sm" 
-              variant="outline"
-              onClick={() => window.open(generateMapsUrl(event.location), '_blank')}
-              className="text-xs h-8"
-            >
-              Get Directions
-            </Button>
-          )}
-        </div>
+      <CardFooter className="pt-2 flex flex-col gap-4">
+        {/* Accept/Decline Invitation buttons */}
+        <EventInvitationResponse 
+          eventId={event.id} 
+          eventTitle={event.title} 
+          onResponseComplete={handleResponseComplete}
+          className="w-full"
+        />
         
-        <div className="flex space-x-2">
-          {onEdit && (
-            <Button 
-              size="sm"
-              variant="ghost"
-              onClick={onEdit}
-              className="h-8 w-8 p-0"
-            >
-              <Edit className="h-4 w-4" />
-              <span className="sr-only">Edit</span>
-            </Button>
-          )}
+        <div className="flex justify-between w-full">
+          <div className="flex space-x-2">
+            {hasLocation && event.location && (
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={() => window.open(generateMapsUrl(event.location), '_blank')}
+                className="text-xs h-8"
+              >
+                Get Directions
+              </Button>
+            )}
+          </div>
           
-          {onShare && (
-            <Button 
-              size="sm"
-              variant="ghost"
-              onClick={onShare}
-              className="h-8 w-8 p-0"
-            >
-              <Share2 className="h-4 w-4" />
-              <span className="sr-only">Share</span>
-            </Button>
-          )}
+          <div className="flex space-x-2">
+            {onEdit && (
+              <Button 
+                size="sm"
+                variant="ghost"
+                onClick={onEdit}
+                className="h-8 w-8 p-0"
+              >
+                <Edit className="h-4 w-4" />
+                <span className="sr-only">Edit</span>
+              </Button>
+            )}
+            
+            {onShare && (
+              <Button 
+                size="sm"
+                variant="ghost"
+                onClick={onShare}
+                className="h-8 w-8 p-0"
+              >
+                <Share2 className="h-4 w-4" />
+                <span className="sr-only">Share</span>
+              </Button>
+            )}
+          </div>
         </div>
       </CardFooter>
     </Card>
