@@ -14,6 +14,7 @@ export interface InvitationDbRecord {
   background_value: string;
   font_family: string;
   font_size: string;
+  font_color?: string;
   text_color: string;
   text_align?: string;
   is_event?: boolean;
@@ -67,6 +68,7 @@ export interface InvitationData {
   background_value: string;
   font_family: string;
   font_size: string;
+  font_color?: string;
   text_color: string;
   text_align?: string;
   is_event?: boolean;
