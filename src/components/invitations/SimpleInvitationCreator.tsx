@@ -94,7 +94,8 @@ export default function SimpleInvitationCreator({
         background_value: customization.background.value,
         font_family: customization.font.family,
         font_size: customization.font.size,
-        text_color: customization.font.color,
+        font_color: customization.font.color,
+        text_align: customization.font.alignment || 'left', // Add text_align property
         is_event: isEvent, // Add flag to identify if this is an event
         user_id: user.id, // Add the user's ID to comply with RLS
       };
