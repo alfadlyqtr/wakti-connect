@@ -153,7 +153,9 @@ export const getEventWithResponses = async (eventId: string): Promise<EventWithR
     // Get responses for the event
     const responses = await fetchEventResponses(eventId);
     
-    const sender_name = event.profiles?.display_name || event.profiles?.full_name || 'Event Organizer';
+    // Handle profiles data safely with null checks and optional chaining
+    const profileData = event.profiles as { full_name?: string, display_name?: string } | null;
+    const sender_name = profileData?.display_name || profileData?.full_name || 'Event Organizer';
     
     return {
       ...event,
@@ -218,8 +220,10 @@ export const fetchEventResponses = async (id: string): Promise<EventGuestRespons
       
       if (invitationResponses && invitationResponses.length > 0) {
         return invitationResponses.map(inv => {
-          const name = inv.profiles ? 
-            (inv.profiles.display_name || inv.profiles.full_name || inv.profiles.email) : 
+          // Safely handle profiles data with type assertions and null checks
+          const profileData = inv.profiles as { display_name?: string, full_name?: string, email?: string } | null;
+          const name = profileData ? 
+            (profileData.display_name || profileData.full_name || profileData.email || `Guest-${inv.id.substring(0, 6)}`) : 
             (inv.email || `Guest-${inv.id.substring(0, 6)}`);
             
           return {
@@ -235,7 +239,7 @@ export const fetchEventResponses = async (id: string): Promise<EventGuestRespons
       return [];
     }
     
-    // Convert to expected format
+    // Convert to expected format and ensure response is correctly typed
     return data.map(response => ({
       id: response.id,
       event_id: response.event_id,
