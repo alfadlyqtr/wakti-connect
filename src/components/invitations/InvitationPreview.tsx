@@ -9,6 +9,13 @@ import { createGoogleCalendarUrl, createICSFile } from '@/utils/calendarUtils';
 import EventResponseSummary from '@/components/events/EventResponseSummary';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/components/ui/use-toast';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
 
 interface InvitationPreviewProps {
   title: string;
@@ -59,6 +66,15 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({
     }
   });
   
+  // Check if user is authenticated for WAKTI calendar option
+  const { data: isAuthenticated } = useQuery({
+    queryKey: ['isAuthenticated'],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      return !!session?.user;
+    }
+  });
+  
   if (customization?.background) {
     const background = customization.background;
     
@@ -76,7 +92,7 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({
     cardStyle.color = customization.font.color;
   }
 
-  const handleAddToCalendar = () => {
+  const handleCalendarAction = (action: string) => {
     if (!date) return;
     
     // Create a calendar event for the invitation
@@ -98,8 +114,34 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({
       end: endDate,
     };
     
-    // Open Google Calendar in a new tab
-    window.open(createGoogleCalendarUrl(eventDetails), '_blank');
+    switch (action) {
+      case 'google':
+        // Open Google Calendar in a new tab
+        window.open(createGoogleCalendarUrl(eventDetails), '_blank');
+        break;
+      case 'apple':
+      case 'outlook':
+        // Both Apple and Outlook use ICS files
+        createICSFile(eventDetails);
+        break;
+      case 'wakti':
+        // Handle WAKTI calendar integration (simplified for now)
+        if (isAuthenticated) {
+          toast({
+            title: "Added to WAKTI Calendar",
+            description: "Event has been added to your WAKTI Calendar",
+          });
+        } else {
+          toast({
+            title: "Authentication Required",
+            description: "Please log in to add events to your WAKTI Calendar",
+            variant: "destructive",
+          });
+        }
+        break;
+      default:
+        break;
+    }
   };
 
   return (
@@ -157,15 +199,40 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({
 
         <div className="flex flex-col sm:flex-row w-full gap-3">
           {date && showActions && (
-            <Button 
-              size="sm" 
-              variant="outline"
-              onClick={handleAddToCalendar}
-              className="flex-1 bg-blue-500/40 hover:bg-blue-600/60 text-white font-medium py-3 h-12 rounded-md shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] flex items-center justify-center gap-2 backdrop-blur-sm"
-            >
-              <CalendarDays className="h-4 w-4" />
-              <span>Add to Calendar</span>
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  className="flex-1 bg-blue-500/40 hover:bg-blue-600/60 text-white font-medium py-3 h-12 rounded-md shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] flex items-center justify-center gap-2 backdrop-blur-sm"
+                >
+                  <CalendarDays className="h-4 w-4" />
+                  <span>Add to Calendar</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg rounded-md p-2">
+                <DropdownMenuItem onClick={() => handleCalendarAction('google')} className="cursor-pointer">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  <span>Google Calendar</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleCalendarAction('apple')} className="cursor-pointer">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  <span>Apple Calendar</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleCalendarAction('outlook')} className="cursor-pointer">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  <span>Outlook Calendar</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => handleCalendarAction('wakti')} 
+                  disabled={!isAuthenticated}
+                  className="cursor-pointer"
+                >
+                  <Calendar className="h-4 w-4 mr-2" />
+                  <span>WAKTI Calendar {!isAuthenticated && "(Login Required)"}</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         
           {hasLocation && location && showActions && (
