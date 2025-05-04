@@ -14,8 +14,8 @@ export interface InvitationDbRecord {
   background_value: string;
   font_family: string;
   font_size: string;
-  font_color?: string;
-  text_color: string;
+  font_color?: string; // Optional, for backward compatibility
+  text_color: string;  // Required, matches database schema
   text_align?: string;
   is_event?: boolean;
   user_id: string;
@@ -68,8 +68,8 @@ export interface InvitationData {
   background_value: string;
   font_family: string;
   font_size: string;
-  font_color?: string;
-  text_color: string;
+  font_color?: string;  // Made optional to match current usage
+  text_color: string;   // Required, matches database schema
   text_align?: string;
   is_event?: boolean;
   user_id: string;

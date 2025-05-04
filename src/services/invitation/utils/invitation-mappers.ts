@@ -19,6 +19,7 @@ interface InvitationDbRecord {
   font_family?: string;
   font_size?: string;
   font_color?: string;
+  text_color?: string;
   text_align?: string;
   font_alignment?: string;  // Support both column names for backward compatibility
   [key: string]: any;
@@ -49,8 +50,11 @@ export function mapDbRecordToSimpleInvitation(record: InvitationDbRecord): Simpl
     }
   }
 
-  // Map customization - use text_align if available, otherwise fall back to font_alignment
+  // Map text alignment - use text_align if available, otherwise fall back to font_alignment
   const textAlignment = record.text_align || record.font_alignment || 'left';
+  
+  // Use text_color from DB for font color in the UI model
+  const fontColor = record.text_color || record.font_color || '#000000';
   
   // Map customization
   const customization: SimpleInvitationCustomization = {
@@ -61,7 +65,7 @@ export function mapDbRecordToSimpleInvitation(record: InvitationDbRecord): Simpl
     font: {
       family: record.font_family || 'sans-serif',
       size: record.font_size || 'medium',
-      color: record.font_color || '#000000',
+      color: fontColor,
       alignment: textAlignment,
     }
   };

@@ -17,7 +17,7 @@ export function createCustomizationObject(data: InvitationDbRecord): SimpleInvit
     font: {
       family: data.font_family || 'system-ui, sans-serif',
       size: data.font_size || 'medium',
-      color: data.text_color || '#000000',
+      color: data.text_color || '#000000',  // Use text_color for font color
       alignment: data.text_align || 'left', 
       weight: 'normal',
     },
