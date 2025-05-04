@@ -46,6 +46,9 @@ const EventInvitationResponse: React.FC<EventInvitationResponseProps> = ({
     
     try {
       setIsLoading(true);
+      // Add console log to debug the eventId
+      console.log("Submitting response with eventId:", eventId, "type:", typeof eventId);
+      
       const result = await respondToInvitation(eventId, responseType, { name });
       
       if (result.success) {

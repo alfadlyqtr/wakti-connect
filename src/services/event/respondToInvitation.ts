@@ -27,7 +27,7 @@ export const respondToInvitation = async (
     
     console.log(`Recording response: ${response} for event ${eventId} by ${name}`);
     
-    // Simple insert to simple_guest_responses without foreign key validation
+    // Using simple_guest_responses table which doesn't have foreign key constraints
     const { data, error } = await supabase
       .from('simple_guest_responses')
       .insert({
@@ -63,7 +63,7 @@ export const fetchEventResponses = async (eventId: string): Promise<SimpleGuestR
   try {
     console.log(`Fetching responses for event: ${eventId}`);
     
-    // Get responses for the event
+    // Get responses from simple_guest_responses table
     const { data, error } = await supabase
       .from('simple_guest_responses')
       .select('*')
