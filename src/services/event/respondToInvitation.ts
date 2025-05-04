@@ -165,8 +165,7 @@ export const fetchEventResponses = async (eventId: string): Promise<EventGuestRe
         id,
         status,
         invited_user_id,
-        email,
-        profiles:invited_user_id (full_name)
+        email
       `)
       .eq("event_id", eventId)
       .in("status", ["accepted", "declined"]);
@@ -176,18 +175,37 @@ export const fetchEventResponses = async (eventId: string): Promise<EventGuestRe
       throw invitationError;
     }
     
-    // Format invitation responses to match guest responses format
-    const formattedInvitationResponses = invitationResponses.map(inv => ({
-      id: inv.id,
-      event_id: eventId,
-      name: inv.profiles?.full_name || inv.email || "Unknown User",
-      response: inv.status,
-      created_at: new Date().toISOString()
-    })) as EventGuestResponse[];
+    // Get profile information for invited users
+    const formattedInvitationResponses: EventGuestResponse[] = [];
+    
+    for (const inv of invitationResponses) {
+      let userName = inv.email || "Unknown User";
+      
+      if (inv.invited_user_id) {
+        // Try to get the user's profile
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", inv.invited_user_id)
+          .single();
+          
+        if (profile?.full_name) {
+          userName = profile.full_name;
+        }
+      }
+      
+      formattedInvitationResponses.push({
+        id: inv.id,
+        event_id: eventId,
+        name: userName,
+        response: inv.status as 'accepted' | 'declined',
+        created_at: new Date().toISOString()
+      });
+    }
     
     // Combine both response types
     const allResponses = [
-      ...(guestResponses || []),
+      ...(guestResponses as EventGuestResponse[] || []),
       ...formattedInvitationResponses
     ];
     
