@@ -89,12 +89,12 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({
       </CardContent>
       
       <CardFooter className="pt-2 flex flex-col gap-4">
-        {/* Debug info - uncommented for debugging */}
-        <div className="text-xs opacity-50 mb-2">
+        {/* Debug info - commented out - no debug text should appear */}
+        {/* <div className="text-xs opacity-50 mb-2">
           isEvent: {isEvent ? 'true' : 'false'}, 
           eventId: {eventId || 'none'}, 
           showActions: {showActions ? 'true' : 'false'}
-        </div>
+        </div> */}
         
         {/* Only show the response buttons if this is an event and we have an eventId */}
         {isEvent && eventId && showActions && (
@@ -110,7 +110,7 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({
             size="sm" 
             variant="outline"
             onClick={() => window.open(generateMapsUrl(location), '_blank')}
-            className="w-full text-sm h-12 bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 rounded-md shadow-md hover:shadow-lg transition-all hover:scale-[1.02] flex items-center justify-center gap-2"
+            className="w-full text-sm h-12 bg-blue-500/70 hover:bg-blue-600/80 text-white font-medium py-3 rounded-md shadow-md hover:shadow-lg transition-all hover:scale-[1.02] flex items-center justify-center gap-2 backdrop-blur-sm"
           >
             <Map className="h-4 w-4" />
             <span>Get Directions</span>

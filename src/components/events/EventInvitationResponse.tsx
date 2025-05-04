@@ -124,7 +124,7 @@ const EventInvitationResponse: React.FC<EventInvitationResponseProps> = ({
       <div className={`flex gap-3 ${className}`}>
         <Button
           variant="default"
-          className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-6 h-12 rounded-md shadow-md hover:shadow-lg transition-all hover:scale-[1.02] flex items-center justify-center"
+          className="flex-1 bg-green-600/70 hover:bg-green-700/80 text-white font-medium py-6 h-12 rounded-md shadow-md hover:shadow-lg transition-all hover:scale-[1.02] flex items-center justify-center backdrop-blur-sm"
           disabled={isLoading}
           onClick={handleAccept}
         >
@@ -134,7 +134,7 @@ const EventInvitationResponse: React.FC<EventInvitationResponseProps> = ({
         
         <Button
           variant="default"
-          className="flex-1 bg-red-500 hover:bg-red-600 text-white font-medium py-6 h-12 rounded-md shadow-md hover:shadow-lg transition-all hover:scale-[1.02] flex items-center justify-center"
+          className="flex-1 bg-red-500/70 hover:bg-red-600/80 text-white font-medium py-6 h-12 rounded-md shadow-md hover:shadow-lg transition-all hover:scale-[1.02] flex items-center justify-center backdrop-blur-sm"
           disabled={isLoading}
           onClick={handleDecline}
         >
