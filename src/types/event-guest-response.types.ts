@@ -1,7 +1,8 @@
 
 export interface EventGuestResponse {
   id?: string;
-  event_id: string;
+  event_id?: string;
+  invitation_id?: string; // Added to support responses for invitations
   name: string;
   response: 'accepted' | 'declined';
   created_at?: string;

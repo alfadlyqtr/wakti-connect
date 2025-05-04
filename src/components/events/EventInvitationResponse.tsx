@@ -7,17 +7,19 @@ import { useToast } from '@/components/ui/use-toast';
 import NonWaktiUserPopup from './responses/NonWaktiUserPopup';
 
 interface EventInvitationResponseProps {
-  eventId: string;
+  eventId: string; // This can be either an event ID or an invitation ID
   eventTitle: string;
   onResponseComplete?: () => void;
   className?: string;
+  isInvitation?: boolean; // Flag to indicate if the ID is for an invitation
 }
 
 const EventInvitationResponse: React.FC<EventInvitationResponseProps> = ({
   eventId,
   eventTitle,
   onResponseComplete,
-  className = ''
+  className = '',
+  isInvitation = false
 }) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);

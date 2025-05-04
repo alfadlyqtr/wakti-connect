@@ -12,7 +12,7 @@ interface ResponseOptions {
  * Responds to an event invitation with accept or decline
  */
 export const respondToInvitation = async (
-  eventId: string,
+  invitationId: string,
   response: 'accepted' | 'declined',
   options?: ResponseOptions
 ): Promise<void> => {
@@ -27,24 +27,64 @@ export const respondToInvitation = async (
         throw new Error("Please provide your name to respond to this invitation");
       }
       
-      // For non-WAKTI users, store the guest response in event_guest_responses table
-      const { error } = await supabase.from("event_guest_responses").insert({
-        event_id: eventId,
-        name: options.name,
-        response: response
-      });
+      // First check if the ID is for an event or invitation
+      const { data: invitationData, error: invitationError } = await supabase
+        .from("invitations")
+        .select("*")
+        .eq("id", invitationId)
+        .single();
       
-      if (error) {
-        console.error("Error saving guest response:", error);
-        throw new Error("Failed to save your response. Please try again.");
+      if (!invitationError && invitationData) {
+        // For non-WAKTI users, store the guest response directly linked to the invitation
+        const { error } = await supabase.from("event_guest_responses").insert({
+          invitation_id: invitationId,
+          name: options.name,
+          response: response
+        });
+        
+        if (error) {
+          console.error("Error saving guest response:", error);
+          throw new Error("Failed to save your response. Please try again.");
+        }
+        
+        toast({
+          title: response === 'accepted' ? "Event Accepted" : "Event Declined",
+          description: `Thank you, ${options.name}! Your response has been recorded.`,
+        });
+        
+        return;
+      } else {
+        // Check if it's an event ID instead
+        const { data: eventData, error: eventError } = await supabase
+          .from("events")
+          .select("*")
+          .eq("id", invitationId)
+          .single();
+          
+        if (!eventError && eventData) {
+          // Store response with event_id for backward compatibility
+          const { error } = await supabase.from("event_guest_responses").insert({
+            event_id: invitationId,
+            name: options.name,
+            response: response
+          });
+          
+          if (error) {
+            console.error("Error saving guest response:", error);
+            throw new Error("Failed to save your response. Please try again.");
+          }
+          
+          toast({
+            title: response === 'accepted' ? "Event Accepted" : "Event Declined",
+            description: `Thank you, ${options.name}! Your response has been recorded.`,
+          });
+          
+          return;
+        } else {
+          console.error("Invalid invitation or event ID:", invitationId);
+          throw new Error("Invalid invitation. Please try again with a valid invitation link.");
+        }
       }
-      
-      toast({
-        title: response === 'accepted' ? "Event Accepted" : "Event Declined",
-        description: `Thank you, ${options.name}! Your response has been recorded.`,
-      });
-      
-      return;
     }
     
     // For authenticated WAKTI users
@@ -52,7 +92,7 @@ export const respondToInvitation = async (
     const { data: invitation, error: findError } = await supabase
       .from("event_invitations")
       .select("*")
-      .eq("event_id", eventId)
+      .eq("event_id", invitationId)
       .eq("invited_user_id", session.user.id)
       .single();
 
@@ -68,15 +108,37 @@ export const respondToInvitation = async (
         
       const userName = profile?.full_name || "User";
       
-      const { error } = await supabase.from("event_guest_responses").insert({
-        event_id: eventId,
-        name: userName,
-        response: response
-      });
-      
-      if (error) {
-        console.error("Error saving authenticated guest response:", error);
-        throw new Error("Failed to save your response. Please try again.");
+      // Check if it's an invitation ID or event ID
+      const { data: invitationData, error: invitationError } = await supabase
+        .from("invitations")
+        .select("*")
+        .eq("id", invitationId)
+        .single();
+        
+      if (!invitationError && invitationData) {
+        // It's an invitation ID
+        const { error } = await supabase.from("event_guest_responses").insert({
+          invitation_id: invitationId,
+          name: userName,
+          response: response
+        });
+        
+        if (error) {
+          console.error("Error saving authenticated guest response:", error);
+          throw new Error("Failed to save your response. Please try again.");
+        }
+      } else {
+        // Try with event ID
+        const { error } = await supabase.from("event_guest_responses").insert({
+          event_id: invitationId,
+          name: userName,
+          response: response
+        });
+        
+        if (error) {
+          console.error("Error saving authenticated guest response:", error);
+          throw new Error("Failed to save your response. Please try again.");
+        }
       }
       
       toast({
@@ -108,14 +170,14 @@ export const respondToInvitation = async (
       const { data: eventData, error: eventError } = await supabase
         .from("events")
         .select("*")
-        .eq("id", eventId)
+        .eq("id", invitationId)
         .single();
         
       if (!eventError && eventData) {
         // Log the action but don't try to insert to an unknown table
         console.log("Event would be added to user calendar:", {
           user_id: session.user.id,
-          event_id: eventId,
+          event_id: invitationId,
           title: eventData.title,
           start_time: eventData.start_time,
           end_time: eventData.end_time,
@@ -147,32 +209,60 @@ export const respondToInvitation = async (
  */
 export const fetchEventResponses = async (eventId: string): Promise<EventGuestResponse[]> => {
   try {
-    // First, get responses from guest_responses table (non-authenticated users)
-    const { data: guestResponses, error: guestError } = await supabase
-      .from("event_guest_responses")
+    // First check if the ID is for an event or invitation
+    let isInvitation = false;
+    const { data: invitationData, error: invitationError } = await supabase
+      .from("invitations")
       .select("*")
-      .eq("event_id", eventId);
+      .eq("id", eventId)
+      .single();
+      
+    if (!invitationError && invitationData) {
+      isInvitation = true;
+    }
+    
+    // First, get responses from guest_responses table for either events or invitations
+    let guestResponsesQuery;
+    if (isInvitation) {
+      guestResponsesQuery = supabase
+        .from("event_guest_responses")
+        .select("*")
+        .eq("invitation_id", eventId);
+    } else {
+      guestResponsesQuery = supabase
+        .from("event_guest_responses")
+        .select("*")
+        .eq("event_id", eventId);
+    }
+    
+    const { data: guestResponses, error: guestError } = await guestResponsesQuery;
       
     if (guestError) {
       console.error("Error fetching guest responses:", guestError);
       throw guestError;
     }
     
-    // Then get responses from event_invitations (authenticated users)
-    const { data: invitationResponses, error: invitationError } = await supabase
-      .from("event_invitations")
-      .select(`
-        id,
-        status,
-        invited_user_id,
-        email
-      `)
-      .eq("event_id", eventId)
-      .in("status", ["accepted", "declined"]);
+    // Only get event invitation responses if it's an event ID
+    let invitationResponses: any[] = [];
+    if (!isInvitation) {
+      // Then get responses from event_invitations (authenticated users)
+      const { data: eventInvitationResponses, error: invitationError } = await supabase
+        .from("event_invitations")
+        .select(`
+          id,
+          status,
+          invited_user_id,
+          email
+        `)
+        .eq("event_id", eventId)
+        .in("status", ["accepted", "declined"]);
+        
+      if (invitationError) {
+        console.error("Error fetching invitation responses:", invitationError);
+        throw invitationError;
+      }
       
-    if (invitationError) {
-      console.error("Error fetching invitation responses:", invitationError);
-      throw invitationError;
+      invitationResponses = eventInvitationResponses || [];
     }
     
     // Get profile information for invited users

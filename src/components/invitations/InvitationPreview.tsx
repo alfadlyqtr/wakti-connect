@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar, Map, Clock, CalendarDays } from 'lucide-react';
 import { generateMapsUrl } from '@/utils/locationUtils';
 import EventInvitationResponse from '@/components/events/EventInvitationResponse';
-import { createGoogleCalendarUrl, createICSFile } from '@/utils/calendarUtils';
+import { createGoogleCalendarUrl, createICSFile } from '@/services/event/createICSFile';
 import EventResponseSummary from '@/components/events/EventResponseSummary';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -96,21 +95,28 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({
     if (!date) return;
     
     // Create a calendar event for the invitation
-    const eventDate = date ? new Date(date) : new Date();
+    const startDate = new Date(date);
+    let endDate = new Date(startDate);
+    endDate.setHours(startDate.getHours() + 1); // Default to 1 hour if no time specified
+    
     if (time) {
-      const [hours, minutes] = time.split(':').map(Number);
-      eventDate.setHours(hours || 0, minutes || 0);
+      // Parse the time string (assuming format like "19:00" or "7:00 PM")
+      const timeParts = time.split(':');
+      if (timeParts.length >= 2) {
+        const hours = parseInt(timeParts[0], 10);
+        const minutes = parseInt(timeParts[1].split(' ')[0], 10);
+        
+        startDate.setHours(hours, minutes);
+        endDate = new Date(startDate);
+        endDate.setHours(startDate.getHours() + 1); // Default event duration is 1 hour
+      }
     }
     
-    // End time is 1 hour after start time by default
-    const endDate = new Date(eventDate);
-    endDate.setHours(endDate.getHours() + 1);
-    
     const eventDetails = {
-      title: title,
+      title,
       description: description || '',
       location: location || '',
-      start: eventDate,
+      start: startDate,
       end: endDate,
     };
     
