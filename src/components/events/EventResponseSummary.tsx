@@ -49,7 +49,6 @@ const EventResponseSummary: React.FC<EventResponseSummaryProps> = ({
 
   const acceptedCount = responses.filter(r => r.response === 'accepted').length;
   const declinedCount = responses.filter(r => r.response === 'declined').length;
-  const totalCount = responses.length;
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
