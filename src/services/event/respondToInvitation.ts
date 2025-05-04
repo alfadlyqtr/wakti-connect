@@ -5,6 +5,15 @@ interface RespondOptions {
   name: string;
 }
 
+// Define a type for our simple guest responses
+interface SimpleGuestResponse {
+  id?: string;
+  event_id: string;
+  name: string;
+  response: 'accepted' | 'declined';
+  created_at?: string;
+}
+
 /**
  * Simple function to record an event response with guest name
  */
@@ -50,7 +59,7 @@ export const respondToInvitation = async (
 /**
  * Fetch responses for an event
  */
-export const fetchEventResponses = async (eventId: string): Promise<EventGuestResponse[]> => {
+export const fetchEventResponses = async (eventId: string): Promise<SimpleGuestResponse[]> => {
   try {
     console.log(`Fetching responses for event: ${eventId}`);
     

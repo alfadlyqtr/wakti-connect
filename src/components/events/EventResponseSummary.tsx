@@ -1,11 +1,19 @@
 
 import React, { useEffect, useState } from 'react';
-import { EventGuestResponse } from '@/types/event-guest-response.types';
 import { fetchEventResponses } from '@/services/event/respondToInvitation';
 import EventViewResponses from './EventViewResponses';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Check, X, Users } from 'lucide-react';
+
+// Define our SimpleGuestResponse type locally to avoid circular dependencies
+interface SimpleGuestResponse {
+  id?: string;
+  event_id: string;
+  name: string;
+  response: 'accepted' | 'declined';
+  created_at?: string;
+}
 
 interface EventResponseSummaryProps {
   eventId: string;
@@ -16,7 +24,7 @@ const EventResponseSummary: React.FC<EventResponseSummaryProps> = ({
   eventId, 
   isCreator = false
 }) => {
-  const [responses, setResponses] = useState<EventGuestResponse[]>([]);
+  const [responses, setResponses] = useState<SimpleGuestResponse[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);

@@ -1,11 +1,19 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { EventGuestResponse } from '@/types/event-guest-response.types';
 import { Check, X } from 'lucide-react';
 
+// Define our SimpleGuestResponse type for this component
+interface SimpleGuestResponse {
+  id?: string;
+  event_id: string;
+  name: string;
+  response: 'accepted' | 'declined';
+  created_at?: string;
+}
+
 interface EventViewResponsesProps {
-  responses?: EventGuestResponse[];
+  responses?: SimpleGuestResponse[];
 }
 
 const EventViewResponses: React.FC<EventViewResponsesProps> = ({ responses = [] }) => {
