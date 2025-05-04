@@ -126,6 +126,7 @@ export default function SharedInvitationView() {
           customization={invitation.customization}
           isEvent={isEvent}
           showActions={true}
+          eventId={invitation.id} // Pass the event ID for response buttons
         />
       </div>
     </div>
