@@ -1867,6 +1867,30 @@ export type Database = {
         }
         Relationships: []
       }
+      simple_guest_responses: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          name: string
+          response: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          name: string
+          response: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          name?: string
+          response?: string
+        }
+        Relationships: []
+      }
       staff_service_assignments: {
         Row: {
           created_at: string

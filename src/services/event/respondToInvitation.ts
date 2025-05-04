@@ -1,6 +1,5 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { EventGuestResponse } from "@/types/event-guest-response.types";
 
 interface RespondOptions {
   name: string;
@@ -19,9 +18,9 @@ export const respondToInvitation = async (
     
     console.log(`Recording response: ${response} for event ${eventId} by ${name}`);
     
-    // Simple insert to event_guest_responses
+    // Simple insert to simple_guest_responses without foreign key validation
     const { data, error } = await supabase
-      .from('event_guest_responses')
+      .from('simple_guest_responses')
       .insert({
         event_id: eventId,
         name: name,
@@ -57,7 +56,7 @@ export const fetchEventResponses = async (eventId: string): Promise<EventGuestRe
     
     // Get responses for the event
     const { data, error } = await supabase
-      .from('event_guest_responses')
+      .from('simple_guest_responses')
       .select('*')
       .eq('event_id', eventId);
     
