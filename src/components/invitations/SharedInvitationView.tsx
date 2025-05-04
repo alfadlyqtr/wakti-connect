@@ -110,25 +110,27 @@ export default function SharedInvitationView() {
 
   // Determine if this is an event by checking if it has a date
   const isEvent = invitation.isEvent || !!invitation.date;
-  console.log("SharedInvitationView: Is this an event?", isEvent);
+  console.log("SharedInvitationView: Is this an event?", isEvent, "Event ID:", invitation.id);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 py-8 px-4">
       {getMetaTags()}
       <div className="max-w-2xl mx-auto">
-        <InvitationPreview
-          title={invitation.title}
-          description={invitation.description}
-          location={invitation.location}
-          locationTitle={invitation.locationTitle}
-          date={invitation.date}
-          time={invitation.time}
-          customization={invitation.customization}
-          isEvent={isEvent}
-          showActions={true}
-          eventId={invitation.id} // Pass the event ID for response buttons
-        />
+        <div className="transform hover:scale-[1.01] transition-all duration-300">
+          <InvitationPreview
+            title={invitation.title}
+            description={invitation.description}
+            location={invitation.location}
+            locationTitle={invitation.locationTitle}
+            date={invitation.date}
+            time={invitation.time}
+            customization={invitation.customization}
+            isEvent={isEvent}
+            showActions={true}
+            eventId={invitation.id} // Pass the event ID for response buttons
+          />
+        </div>
       </div>
     </div>
   );
-}
+};

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ThumbsUp, ThumbsDown } from 'lucide-react';
@@ -51,9 +52,19 @@ const EventInvitationResponse: React.FC<EventInvitationResponseProps> = ({
     try {
       setIsLoading(true);
       await respondToInvitation(eventId, 'accepted', { addToCalendar: true });
+      toast({
+        title: "Response Saved",
+        description: "You have accepted this invitation.",
+        variant: "default"
+      });
       if (onResponseComplete) onResponseComplete();
     } catch (error) {
       console.error("Error accepting invitation:", error);
+      toast({
+        title: "Error",
+        description: "Failed to accept invitation. Please try again.",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -70,9 +81,19 @@ const EventInvitationResponse: React.FC<EventInvitationResponseProps> = ({
     try {
       setIsLoading(true);
       await respondToInvitation(eventId, 'declined');
+      toast({
+        title: "Response Saved",
+        description: "You have declined this invitation.",
+        variant: "default"
+      });
       if (onResponseComplete) onResponseComplete();
     } catch (error) {
       console.error("Error declining invitation:", error);
+      toast({
+        title: "Error",
+        description: "Failed to decline invitation. Please try again.",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -82,6 +103,11 @@ const EventInvitationResponse: React.FC<EventInvitationResponseProps> = ({
     try {
       await respondToInvitation(eventId, responseType, { name });
       setShowNonWaktiPopup(false);
+      toast({
+        title: "Response Saved",
+        description: `You have ${responseType === 'accepted' ? 'accepted' : 'declined'} this invitation.`,
+        variant: "default"
+      });
       if (onResponseComplete) onResponseComplete();
     } catch (error) {
       console.error(`Error ${responseType} invitation:`, error);
@@ -97,23 +123,23 @@ const EventInvitationResponse: React.FC<EventInvitationResponseProps> = ({
     <>
       <div className={`flex gap-3 ${className}`}>
         <Button
-          variant="outline"
-          className="flex-1 bg-green-50 hover:bg-green-100 border-green-200"
+          variant="default"
+          className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-6 h-12 rounded-md shadow-md hover:shadow-lg transition-all hover:scale-[1.02]"
           disabled={isLoading}
           onClick={handleAccept}
         >
-          <ThumbsUp className="mr-2 h-4 w-4" />
-          Accept
+          <ThumbsUp className="mr-2 h-5 w-5" />
+          <span className="text-sm font-medium">Accept</span>
         </Button>
         
         <Button
-          variant="outline"
-          className="flex-1 bg-red-50 hover:bg-red-100 border-red-200"
+          variant="default"
+          className="flex-1 bg-red-500 hover:bg-red-600 text-white font-medium py-6 h-12 rounded-md shadow-md hover:shadow-lg transition-all hover:scale-[1.02]"
           disabled={isLoading}
           onClick={handleDecline}
         >
-          <ThumbsDown className="mr-2 h-4 w-4" />
-          Decline
+          <ThumbsDown className="mr-2 h-5 w-5" />
+          <span className="text-sm font-medium">Decline</span>
         </Button>
       </div>
       

@@ -16,7 +16,7 @@ interface InvitationPreviewProps {
   customization?: any;
   isEvent?: boolean;
   showActions?: boolean;
-  eventId?: string; // Add eventId for the response buttons
+  eventId?: string;
 }
 
 const InvitationPreview: React.FC<InvitationPreviewProps> = ({
@@ -53,16 +53,19 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({
   }
 
   return (
-    <Card className="overflow-hidden shadow-lg" style={cardStyle}>
-      <CardHeader className="pb-2">
+    <Card 
+      className="overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 animate-fade-in border border-white/10 backdrop-blur-sm"
+      style={cardStyle}
+    >
+      <CardHeader className="pb-3">
         <h3 className="text-xl font-semibold">{title}</h3>
         {date && (
-          <div className="flex items-center text-sm space-x-1">
+          <div className="flex items-center text-sm space-x-2">
             <Calendar className="h-4 w-4 mr-1" />
             <span>{date}</span>
             {time && (
-              <div className="flex items-center">
-                <Clock className="h-3 w-3 mx-1" />
+              <div className="flex items-center ml-2">
+                <Clock className="h-3 w-3 mr-1" />
                 <span>{time}</span>
               </div>
             )}
@@ -70,14 +73,14 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({
         )}
       </CardHeader>
       
-      <CardContent>
+      <CardContent className="pb-4">
         {description && (
-          <p className="text-sm mb-3">{description}</p>
+          <p className="text-sm mb-4">{description}</p>
         )}
         
         {hasLocation && (
-          <div className="flex items-center text-sm mt-2">
-            <Map className="h-4 w-4 mr-1 flex-shrink-0" />
+          <div className="flex items-center text-sm mt-3">
+            <Map className="h-4 w-4 mr-2 flex-shrink-0" />
             <span className="truncate">
               {locationTitle || location}
             </span>
@@ -86,6 +89,13 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({
       </CardContent>
       
       <CardFooter className="pt-2 flex flex-col gap-4">
+        {/* Debug info */}
+        {/* <div className="text-xs opacity-50 mb-2">
+          isEvent: {isEvent ? 'true' : 'false'}, 
+          eventId: {eventId || 'none'}, 
+          showActions: {showActions ? 'true' : 'false'}
+        </div> */}
+        
         {/* Only show the response buttons if this is an event and we have an eventId */}
         {isEvent && eventId && showActions && (
           <EventInvitationResponse 
@@ -100,7 +110,7 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({
             size="sm" 
             variant="outline"
             onClick={() => window.open(generateMapsUrl(location), '_blank')}
-            className="w-full text-xs h-8"
+            className="w-full text-xs h-9 hover:bg-white/10 hover:scale-[1.02] transition-all"
           >
             Get Directions
           </Button>
