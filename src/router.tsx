@@ -253,6 +253,23 @@ export const router = createBrowserRouter([
     ),
   },
   
+  // Invitation shared page route - make sure both formats are supported
+  {
+    path: "/i/:shareId",
+    element: (
+      <ErrorBoundary>
+        <TooltipProvider>
+          <TaskProvider>
+            <ScrollToTop />
+            <Toaster />
+            <Sonner />
+            <SharedEventPage />
+          </TaskProvider>
+        </TooltipProvider>
+      </ErrorBoundary>
+    ),
+  },
+  
   // 404 page
   {
     path: "*",

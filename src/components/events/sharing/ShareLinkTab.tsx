@@ -17,10 +17,11 @@ const ShareLinkTab: React.FC<ShareLinkTabProps> = ({ eventId, slug }) => {
   const [copied, setCopied] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   
-  // Always use /e/ prefix for the shareable URL
+  // Generate the URL in the correct format with the /i/ prefix for invitations
+  // This ensures compatibility with the router
   const shareUrl = slug 
-    ? `${window.location.origin}/e/${slug}` 
-    : `${window.location.origin}/e/${eventId}`;
+    ? `${window.location.origin}/i/${slug}` 
+    : `${window.location.origin}/i/${eventId}`;
   
   console.log("Generated share URL:", shareUrl, "with slug:", slug, "and eventId:", eventId);
   

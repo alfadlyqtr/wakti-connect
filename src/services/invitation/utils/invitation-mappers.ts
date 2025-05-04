@@ -1,47 +1,81 @@
 
-import { SimpleInvitation } from '@/types/invitation.types';
-import { InvitationDbRecord } from '../invitation-types';
+import { SimpleInvitation, SimpleInvitationCustomization } from "@/types/invitation.types";
 
-/**
- * Map a database record to a SimpleInvitation object
- * Using explicit mapping to avoid TypeScript "excessively deep instantiation" errors
- */
-export function mapDbRecordToSimpleInvitation(data: InvitationDbRecord): SimpleInvitation | null {
-  if (!data) return null;
+interface InvitationDbRecord {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string;
+  location?: string;
+  location_title?: string;
+  datetime?: string;
+  created_at: string;
+  updated_at?: string;
+  share_link?: string;
+  is_public?: boolean;
+  is_event?: boolean;
+  background_type?: string;
+  background_value?: string;
+  font_family?: string;
+  font_size?: string;
+  font_color?: string;
+  font_alignment?: string;
+  [key: string]: any;
+}
 
-  // Create the result with explicit mappings to avoid deep type inference chains
-  const result = {
-    id: data.id,
-    title: data.title,
-    description: data.description || '',
-    location: data.location || '',
-    locationTitle: data.location_title || '',
-    date: data.datetime ? new Date(data.datetime).toISOString().split('T')[0] : undefined,
-    time: data.datetime ? new Date(data.datetime).toISOString().split('T')[1].substring(0, 5) : undefined,
-    createdAt: data.created_at,
-    updatedAt: data.updated_at,
-    userId: data.user_id,
-    shareId: data.share_link || data.id, // Use share_link if available or fall back to ID
-    isPublic: data.is_public || false,
-    isEvent: !!data.is_event,
-    customization: {
-      background: {
-        type: (data.background_type || 'solid') as any,
-        value: data.background_value || '#ffffff'
-      },
-      font: {
-        family: data.font_family || 'system-ui, sans-serif',
-        size: data.font_size || 'medium',
-        color: data.text_color || '#000000',
-      }
+export function mapDbRecordToSimpleInvitation(record: InvitationDbRecord): SimpleInvitation {
+  console.log("Mapping DB record to SimpleInvitation:", record);
+
+  // Extract date and time from datetime if present
+  let date: string | undefined;
+  let time: string | undefined;
+  
+  if (record.datetime) {
+    try {
+      const dateObj = new Date(record.datetime);
+      
+      // Format date as YYYY-MM-DD
+      date = dateObj.toISOString().split('T')[0];
+      
+      // Format time as HH:MM (24-hour)
+      const hours = dateObj.getHours().toString().padStart(2, '0');
+      const minutes = dateObj.getMinutes().toString().padStart(2, '0');
+      time = `${hours}:${minutes}`;
+      
+      console.log("Extracted date and time from datetime:", { date, time, originalDatetime: record.datetime });
+    } catch (error) {
+      console.error("Error parsing datetime:", error);
+    }
+  }
+
+  // Map customization
+  const customization: SimpleInvitationCustomization = {
+    background: {
+      type: (record.background_type as any) || 'solid',
+      value: record.background_value || '#ffffff',
+    },
+    font: {
+      family: record.font_family || 'sans-serif',
+      size: record.font_size || 'medium',
+      color: record.font_color || '#000000',
+      alignment: record.font_alignment || 'left',
     }
   };
 
-  // Add alignment property only if text_align exists
-  if ('text_align' in data && data.text_align) {
-    (result.customization.font as any).alignment = data.text_align;
-  }
-
-  // Cast to SimpleInvitation to maintain type compatibility
-  return result as unknown as SimpleInvitation;
+  return {
+    id: record.id,
+    userId: record.user_id,
+    title: record.title || 'Untitled',
+    description: record.description || '',
+    location: record.location,
+    locationTitle: record.location_title,
+    date,
+    time,
+    createdAt: record.created_at,
+    updatedAt: record.updated_at,
+    shareId: record.share_link || record.id,
+    isPublic: record.is_public || false,
+    isEvent: record.is_event || false,
+    customization
+  };
 }

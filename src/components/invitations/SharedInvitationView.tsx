@@ -1,8 +1,8 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { getSharedInvitation } from '@/services/invitation/simple-invitations';
+import { getSharedInvitation } from '@/services/invitation/operations/invitation-retrieval';
 import { Card } from '@/components/ui/card';
 import { toast } from '@/components/ui/use-toast';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
@@ -15,11 +15,35 @@ const DEFAULT_OG_IMAGE = 'https://wakti.qa/og-image.png';
 export default function SharedInvitationView() {
   const { shareId } = useParams<{ shareId: string }>();
   
+  console.log("SharedInvitationView: Attempting to fetch invitation with shareId:", shareId);
+  
   const { data: invitation, isLoading, error } = useQuery({
     queryKey: ['shared-invitation', shareId],
-    queryFn: () => shareId ? getSharedInvitation(shareId) : Promise.resolve(null),
-    enabled: !!shareId
+    queryFn: () => {
+      if (!shareId) {
+        console.error("No shareId provided in URL parameters");
+        return Promise.resolve(null);
+      }
+      
+      console.log("Fetching shared invitation with shareId:", shareId);
+      return getSharedInvitation(shareId);
+    },
+    enabled: !!shareId,
+    retry: 2
   });
+
+  useEffect(() => {
+    if (error) {
+      console.error("Error fetching shared invitation:", error);
+      toast({
+        title: "Error",
+        description: "Could not load the invitation",
+        variant: "destructive"
+      });
+    } else if (invitation) {
+      console.log("Successfully loaded invitation:", invitation.id, invitation.title);
+    }
+  }, [invitation, error]);
 
   // Generate preview metadata
   const getMetaTags = () => {
@@ -67,12 +91,17 @@ export default function SharedInvitationView() {
   }
 
   if (error || !invitation) {
+    console.log("SharedInvitationView: No invitation found for shareId:", shareId);
+    
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 py-8 px-4">
         <Card className="p-8 w-full max-w-lg mx-auto text-center shadow-lg">
           <h2 className="text-2xl font-semibold mb-4">Invitation Not Found</h2>
           <p className="text-muted-foreground">
             The invitation you're looking for may have been removed or is no longer available.
+          </p>
+          <p className="text-sm text-muted-foreground mt-2">
+            Share ID: {shareId || 'Not provided'}
           </p>
         </Card>
       </div>

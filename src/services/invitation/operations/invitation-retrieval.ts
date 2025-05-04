@@ -9,6 +9,8 @@ import { mapDbRecordToSimpleInvitation } from '../utils/invitation-mappers';
  */
 export const getSimpleInvitationById = async (id: string): Promise<SimpleInvitation | null> => {
   try {
+    console.log("Fetching invitation by ID:", id);
+    
     const { data, error } = await supabase
       .from('invitations')
       .select('*')
@@ -16,13 +18,16 @@ export const getSimpleInvitationById = async (id: string): Promise<SimpleInvitat
       .maybeSingle();
 
     if (error) {
+      console.error("Error fetching invitation by ID:", error);
       throw error;
     }
 
     if (!data) {
+      console.log("No invitation found with ID:", id);
       return null;
     }
 
+    console.log("Found invitation by ID:", data.id);
     return mapDbRecordToSimpleInvitation(data);
   } catch (error) {
     console.error("Error fetching invitation:", error);
@@ -42,7 +47,7 @@ export const getSharedInvitation = async (shareId: string): Promise<SimpleInvita
   try {
     console.log("Fetching shared invitation with ID:", shareId);
     
-    // Try to find the invitation by share_link first
+    // First, try finding by share_link exactly as provided
     let { data, error } = await supabase
       .from('invitations')
       .select('*')
@@ -62,13 +67,26 @@ export const getSharedInvitation = async (shareId: string): Promise<SimpleInvita
       error = result.error;
     }
 
+    // If still not found, try a case-insensitive search on share_link
+    if (!data && !error) {
+      console.log("No invitation found with exact share_link or id, trying case-insensitive match");
+      const result = await supabase
+        .from('invitations')
+        .select('*')
+        .ilike('share_link', shareId)
+        .maybeSingle();
+        
+      data = result.data;
+      error = result.error;
+    }
+
     if (error) {
       console.error("Supabase query error:", error);
       throw error;
     }
 
     if (!data) {
-      console.log("No invitation found with either share_link or id:", shareId);
+      console.log("No invitation found for shareId:", shareId);
       return null;
     }
     
@@ -172,3 +190,6 @@ export const fetchSimpleInvitations = async (isEvent = false): Promise<SimpleInv
     return [];
   }
 };
+
+// Alias for backward compatibility
+export const listSimpleInvitations = fetchSimpleInvitations;
