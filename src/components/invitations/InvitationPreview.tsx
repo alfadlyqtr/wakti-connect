@@ -54,7 +54,7 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({
 
   return (
     <Card 
-      className="overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 animate-fade-in border border-white/10 backdrop-blur-sm"
+      className="overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 animate-fade-in border border-white/10 backdrop-blur-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:hover:shadow-[0_8px_30px_rgba(120,120,255,0.15)]"
       style={cardStyle}
     >
       <CardHeader className="pb-3">
@@ -89,12 +89,12 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({
       </CardContent>
       
       <CardFooter className="pt-2 flex flex-col gap-4">
-        {/* Debug info */}
-        {/* <div className="text-xs opacity-50 mb-2">
+        {/* Debug info - uncommented for debugging */}
+        <div className="text-xs opacity-50 mb-2">
           isEvent: {isEvent ? 'true' : 'false'}, 
           eventId: {eventId || 'none'}, 
           showActions: {showActions ? 'true' : 'false'}
-        </div> */}
+        </div>
         
         {/* Only show the response buttons if this is an event and we have an eventId */}
         {isEvent && eventId && showActions && (
@@ -110,9 +110,10 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({
             size="sm" 
             variant="outline"
             onClick={() => window.open(generateMapsUrl(location), '_blank')}
-            className="w-full text-xs h-9 hover:bg-white/10 hover:scale-[1.02] transition-all"
+            className="w-full text-sm h-12 bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 rounded-md shadow-md hover:shadow-lg transition-all hover:scale-[1.02] flex items-center justify-center gap-2"
           >
-            Get Directions
+            <Map className="h-4 w-4" />
+            <span>Get Directions</span>
           </Button>
         )}
       </CardFooter>
