@@ -1,8 +1,7 @@
-
 import {
   Home,
   CalendarDays,
-  CalendarPlus, // Added CalendarPlus import
+  CalendarPlus,
   Briefcase,
   Users,
   BarChart2,
@@ -17,6 +16,7 @@ import {
   Headphones,
   Bell,
   MessageSquare,
+  Calendar,
 } from "lucide-react";
 import { UserRole } from "@/types/roles";
 
@@ -28,6 +28,12 @@ export const navItems = [
     showFor: ["individual", "business", "staff", "super-admin"],
   },
   {
+    path: "calendar",
+    label: "Calendar",
+    icon: Calendar,
+    showFor: ["individual", "business", "staff"],
+  },
+  {
     path: "tasks",
     label: "Tasks",
     icon: CheckSquare,
@@ -36,7 +42,7 @@ export const navItems = [
   {
     path: "events",
     label: "Events",
-    icon: CalendarPlus, // Changed from CalendarDays to CalendarPlus
+    icon: CalendarPlus,
     showFor: ["individual", "business"],
   },
   {
