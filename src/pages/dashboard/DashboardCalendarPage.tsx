@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { format } from 'date-fns';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { CalendarViewSelector } from '@/components/calendar/CalendarViewSelector';
@@ -14,7 +14,7 @@ const DashboardCalendarPage = () => {
   const [view, setView] = useState<'month' | 'day' | 'week'>('month');
   
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 max-w-full">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-2">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Calendar</h1>
@@ -34,19 +34,19 @@ const DashboardCalendarPage = () => {
         </div>
       </div>
 
-      <Card>
-        <CardHeader className="pt-4 px-4 pb-0">
+      <Card className="w-full overflow-hidden border shadow-sm">
+        <div className="p-4 border-b bg-white dark:bg-gray-900">
           <div className="flex items-center justify-between">
-            <CardTitle>{format(selectedDate, 'MMMM yyyy')}</CardTitle>
+            <h2 className="text-lg font-semibold">{format(selectedDate, 'MMMM yyyy')}</h2>
           </div>
-        </CardHeader>
-        <CardContent className="p-3">
+        </div>
+        <div className="p-0">
           <UnifiedCalendar 
             selectedDate={selectedDate}
             onDateSelect={setSelectedDate}
             view={view}
           />
-        </CardContent>
+        </div>
       </Card>
 
       <CalendarEntryDialog 

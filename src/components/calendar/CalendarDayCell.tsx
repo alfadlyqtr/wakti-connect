@@ -41,20 +41,30 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
   // Check if we need to show a "+X more" indicator
   const totalEvents = taskCount + eventCount + bookingCount + manualCount;
   const hasMoreEvents = totalEvents > 3;
+
+  // Check if this is the current day
+  const isCurrentDay = isToday(date);
   
   return (
     <div 
       {...props}
       onClick={handleClick}
       className={cn(
-        props.className,
-        "relative group hover:bg-muted cursor-pointer transition-colors p-1",
-        selected && "bg-primary text-primary-foreground",
+        "aspect-square relative hover:bg-muted cursor-pointer transition-colors p-1",
+        selected ? "bg-primary/10 font-bold" : "bg-white dark:bg-gray-900",
         !isSameMonth(date, new Date()) && "text-muted-foreground opacity-50",
-        isToday(date) && !selected && "border border-primary",
+        isCurrentDay && !selected && "border-primary border-2 font-bold",
+        props.className
       )}
     >
-      <time dateTime={format(date, 'yyyy-MM-dd')} className="font-medium text-xs">
+      <time 
+        dateTime={format(date, 'yyyy-MM-dd')} 
+        className={cn(
+          "flex items-center justify-center font-medium text-xs rounded-full w-6 h-6 mb-1",
+          isCurrentDay ? "bg-primary text-primary-foreground" : "",
+          selected ? "text-primary" : ""
+        )}
+      >
         {format(date, 'd')}
       </time>
       

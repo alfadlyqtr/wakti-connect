@@ -64,43 +64,47 @@ export const UnifiedCalendar: React.FC<CalendarViewProps> = ({
   }
 
   return (
-    <div className="space-y-4">
-      <Calendar
-        mode="single"
-        selected={selectedDate}
-        onSelect={(date) => date && onDateSelect(date)}
-        className="rounded-md border bg-gradient-to-br from-white via-white to-[#E5DEFF]/20 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800"
-        components={{
-          Day: ({ date, ...props }) => (
-            <CalendarDayCell
-              date={date}
-              selected={isSameDay(date, selectedDate)}
-              eventTypes={getEventTypesForDate(date)}
-              onSelect={() => onDateSelect(date)}
-              events={events.filter(event => isSameDay(new Date(event.date), date))}
-              {...props}
-            />
-          ),
-        }}
-      />
-
-      <CalendarLegend 
-        showBookings={true} 
-        showEvents={true} 
-        showManualEntries={true} 
-      />
-      
-      {selectedDateEvents.length > 0 ? (
-        <CalendarDayView 
-          selectedDate={selectedDate} 
-          events={selectedDateEvents} 
-          isSummary={true}
+    <div className="w-full">
+      <div className="w-full bg-white dark:bg-gray-900">
+        <Calendar
+          mode="single"
+          selected={selectedDate}
+          onSelect={(date) => date && onDateSelect(date)}
+          className="w-full border-none"
+          components={{
+            Day: ({ date, ...props }) => (
+              <CalendarDayCell
+                date={date}
+                selected={isSameDay(date, selectedDate)}
+                eventTypes={getEventTypesForDate(date)}
+                onSelect={() => onDateSelect(date)}
+                events={events.filter(event => isSameDay(new Date(event.date), date))}
+                {...props}
+              />
+            ),
+          }}
         />
-      ) : (
-        <div className="text-center py-4 text-muted-foreground text-sm bg-white/50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700">
-          No events for {format(selectedDate, "MMMM d, yyyy")}
-        </div>
-      )}
+      </div>
+
+      <div className="p-4 bg-white dark:bg-gray-900 border-t">
+        <CalendarLegend 
+          showBookings={true} 
+          showEvents={true} 
+          showManualEntries={true} 
+        />
+        
+        {selectedDateEvents.length > 0 ? (
+          <CalendarDayView 
+            selectedDate={selectedDate} 
+            events={selectedDateEvents} 
+            isSummary={true}
+          />
+        ) : (
+          <div className="text-center py-4 text-muted-foreground text-sm bg-white/50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700 mt-3">
+            No events for {format(selectedDate, "MMMM d, yyyy")}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
