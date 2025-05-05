@@ -1,204 +1,151 @@
 
-import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { CalendarIcon, MapPinIcon } from 'lucide-react';
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
 import { format } from 'date-fns';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { cn } from '@/lib/utils';
-import { ManualCalendarEntry } from '@/types/calendar.types';
-import { toast } from '@/components/ui/use-toast';
-import { createManualEntry } from '@/services/calendar/manualEntryService';
+import { toast } from "@/components/ui/use-toast";
+import { supabase } from '@/integrations/supabase/client';
+import { useTheme } from '@/hooks/use-theme';
 
 interface CalendarEntryDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: (entry: ManualCalendarEntry) => void;
-  selectedDate?: Date;
+  onSuccess: (entry: any) => void;
+  selectedDate: Date;
   userId: string;
 }
 
-export const CalendarEntryDialog: React.FC<CalendarEntryDialogProps> = ({
-  isOpen,
-  onClose,
+const CalendarEntryDialog: React.FC<CalendarEntryDialogProps> = ({ 
+  isOpen, 
+  onClose, 
   onSuccess,
-  selectedDate = new Date(),
+  selectedDate,
   userId
 }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [location, setLocation] = useState('');
-  const [date, setDate] = useState<Date>(new Date(selectedDate));
+  const [date, setDate] = useState<Date>(selectedDate);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [calendarOpen, setCalendarOpen] = useState(false);
-  
-  // Update the date when selectedDate prop changes or dialog opens
-  useEffect(() => {
-    if (isOpen && selectedDate) {
-      setDate(new Date(selectedDate));
-    }
-  }, [isOpen, selectedDate]);
-  
-  // Reset form when dialog opens
-  useEffect(() => {
-    if (isOpen) {
-      setTitle('');
-      setDescription('');
-      setLocation('');
-      setDate(new Date(selectedDate));
-    }
-  }, [isOpen, selectedDate]);
-  
-  const resetForm = () => {
-    setTitle('');
-    setDescription('');
-    setLocation('');
-    setDate(new Date(selectedDate));
-  };
-  
-  const handleClose = () => {
-    resetForm();
-    onClose();
-  };
-  
+  const { theme } = useTheme();
+  const isDarkMode = theme === 'dark';
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!title.trim()) {
       toast({
-        title: "Title is required",
-        description: "Please enter a title for your calendar entry",
-        variant: "destructive",
+        title: "Error",
+        description: "Please enter a title for your entry",
+        variant: "destructive"
       });
       return;
     }
+
+    setIsSubmitting(true);
     
     try {
-      setIsSubmitting(true);
+      // Create a new entry in the database
+      const { data, error } = await supabase
+        .from('calendar_entries')
+        .insert({
+          user_id: userId,
+          title,
+          description,
+          date: format(date, 'yyyy-MM-dd'),
+          type: "manual"
+        })
+        .select()
+        .single();
       
-      console.log("Creating entry with date:", date);
+      if (error) throw error;
       
-      const newEntry = await createManualEntry({
-        title,
-        date, // Use the date state which properly tracks the selected date
-        description: description || undefined,
-        location: location || undefined,
-        user_id: userId
+      toast({
+        title: "Success",
+        description: "Calendar entry created successfully"
       });
       
-      if (newEntry) {
-        toast({
-          title: "Entry created",
-          description: "Your calendar entry has been created successfully",
-        });
-        onSuccess(newEntry);
-        handleClose();
-      } else {
-        throw new Error("Failed to create entry");
-      }
+      // Call the success callback with the new entry
+      onSuccess(data);
+      
+      // Reset form and close dialog
+      setTitle('');
+      setDescription('');
+      onClose();
     } catch (error) {
-      console.error("Error creating entry:", error);
+      console.error('Error creating calendar entry:', error);
       toast({
         title: "Error",
-        description: "Failed to create calendar entry. Please try again.",
-        variant: "destructive",
+        description: "Failed to create calendar entry",
+        variant: "destructive"
       });
     } finally {
       setIsSubmitting(false);
     }
   };
-  
+
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="sm:max-w-[425px]">
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className={isDarkMode ? "bg-gray-800 border-gray-700 text-gray-100" : ""}>
         <DialogHeader>
-          <DialogTitle>Add Calendar Entry</DialogTitle>
-          <DialogDescription>
-            Create a new entry in your calendar for {format(date, "MMMM d, yyyy")}.
-          </DialogDescription>
+          <DialogTitle className={isDarkMode ? "text-gray-100" : ""}>Add Calendar Entry</DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
+            <Label htmlFor="title" className={isDarkMode ? "text-gray-200" : ""}>Title</Label>
             <Input
               id="title"
-              placeholder="Enter title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              required
+              placeholder="Add title"
+              className={isDarkMode ? "bg-gray-700 border-gray-600 text-gray-100 placeholder:text-gray-400" : ""}
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="date">Date</Label>
-            <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "PPP") : <span>Pick a date</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={(newDate) => {
-                    if (newDate) {
-                      setDate(new Date(newDate));
-                    }
-                    setCalendarOpen(false);
-                  }}
-                  initialFocus
-                  className={cn("p-3 pointer-events-auto")}
-                />
-              </PopoverContent>
-            </Popover>
+            <Label htmlFor="description" className={isDarkMode ? "text-gray-200" : ""}>Description</Label>
+            <Input
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Add description (optional)"
+              className={isDarkMode ? "bg-gray-700 border-gray-600 text-gray-100 placeholder:text-gray-400" : ""}
+            />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="location">Location (optional)</Label>
-            <div className="relative">
-              <MapPinIcon className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="location"
-                placeholder="Add location"
-                className="pl-8"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
+            <Label className={isDarkMode ? "text-gray-200" : ""}>Date</Label>
+            <div className="border rounded-md p-2 flex justify-center">
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={(newDate) => newDate && setDate(newDate)}
+                disabled={(date) => date < new Date('1900-01-01')}
+                initialFocus
               />
             </div>
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="description">Description (optional)</Label>
-            <Textarea
-              id="description"
-              placeholder="Enter description"
-              rows={3}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          </div>
-          
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={handleClose}>
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onClose}
+              className={isDarkMode ? "border-gray-600 hover:bg-gray-700 text-gray-200" : ""}
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting || !title.trim()}>
-              {isSubmitting ? "Saving..." : "Save Entry"}
+            <Button 
+              type="submit" 
+              disabled={isSubmitting}
+              className={isDarkMode ? "bg-blue-700 hover:bg-blue-800" : ""}
+            >
+              {isSubmitting ? "Adding..." : "Add Entry"}
             </Button>
-          </DialogFooter>
+          </div>
         </form>
       </DialogContent>
     </Dialog>

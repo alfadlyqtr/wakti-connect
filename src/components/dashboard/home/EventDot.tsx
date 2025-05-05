@@ -1,26 +1,32 @@
 
 import React from "react";
-import { EventType } from "@/types/calendar.types";
+import { cn } from "@/lib/utils";
+import { useTheme } from "@/hooks/use-theme";
 
 interface EventDotProps {
-  type: EventType;
+  type: "task" | "booking" | "event" | "manual";
+  className?: string;
 }
 
-export const EventDot: React.FC<EventDotProps> = ({ type }) => {
-  const getColorClass = () => {
-    switch (type) {
-      case "task":
-        return "bg-amber-500";
-      case "booking":
-        return "bg-green-500";
-      case "event":
-        return "bg-blue-500";
-      case "manual":
-        return "bg-purple-500";
-      default:
-        return "bg-gray-500";
-    }
+export const EventDot: React.FC<EventDotProps> = ({ type, className }) => {
+  const { theme } = useTheme();
+  const isDarkMode = theme === 'dark';
+  
+  const dotColor = {
+    task: isDarkMode ? "bg-blue-400" : "bg-blue-500",
+    booking: isDarkMode ? "bg-green-400" : "bg-green-500",
+    event: isDarkMode ? "bg-amber-400" : "bg-amber-500",
+    manual: isDarkMode ? "bg-purple-400" : "bg-purple-500"
   };
 
-  return <div className={`h-1.5 w-1.5 rounded-full ${getColorClass()}`} />;
+  return (
+    <div
+      className={cn(
+        "h-2 w-2 rounded-full shadow-sm",
+        dotColor[type],
+        isDarkMode && "shadow-glow",
+        className
+      )}
+    />
+  );
 };

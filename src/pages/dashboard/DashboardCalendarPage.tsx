@@ -4,7 +4,7 @@ import EnhancedCalendar from '@/components/calendar/EnhancedCalendar';
 
 const DashboardCalendarPage: React.FC = () => {
   return (
-    <div className="w-full mx-auto px-4 py-6">
+    <div className="w-full h-full mx-auto px-2 py-4 md:px-4 md:py-6">
       <EnhancedCalendar />
     </div>
   );

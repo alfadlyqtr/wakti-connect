@@ -6,6 +6,7 @@ import { DayPicker } from "react-day-picker"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useTheme } from "@/hooks/use-theme";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>
 
@@ -16,6 +17,8 @@ function Calendar({
   ...props
 }: CalendarProps) {
   const isMobile = useIsMobile();
+  const { theme } = useTheme();
+  const isDarkMode = theme === 'dark';
   
   return (
     <DayPicker
@@ -25,12 +28,17 @@ function Calendar({
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4 w-full",
         caption: "flex justify-center pt-1 relative items-center",
-        caption_label: cn("text-sm font-medium", isMobile && "text-xs"),
+        caption_label: cn(
+          "text-sm font-medium", 
+          isMobile && "text-xs",
+          isDarkMode && "text-gray-200"
+        ),
         nav: "space-x-1 flex items-center",
         nav_button: cn(
           buttonVariants({ variant: "outline" }),
           "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100",
-          isMobile && "h-6 w-6"
+          isMobile && "h-6 w-6",
+          isDarkMode && "border-gray-700 hover:bg-gray-800 text-gray-300"
         ),
         nav_button_previous: "absolute left-1",
         nav_button_next: "absolute right-1",
@@ -38,7 +46,8 @@ function Calendar({
         head_row: "flex w-full",
         head_cell: cn(
           "text-muted-foreground w-full rounded-md font-normal text-[0.8rem] text-center",
-          isMobile && "w-7 text-[0.7rem]"
+          isMobile && "w-7 text-[0.7rem]",
+          isDarkMode && "text-gray-400"
         ),
         row: "flex w-full mt-2",
         cell: cn(
@@ -48,17 +57,24 @@ function Calendar({
         day: cn(
           buttonVariants({ variant: "ghost" }),
           "h-9 w-9 p-0 font-normal aria-selected:opacity-100 hover:bg-muted",
-          isMobile && "h-7 w-7"
+          isMobile && "h-7 w-7",
+          isDarkMode && "text-gray-200 hover:bg-gray-800 hover:text-gray-100"
         ),
         day_range_end: "day-range-end",
-        day_selected:
+        day_selected: cn(
           "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-        day_today: "bg-accent text-accent-foreground",
-        day_outside:
+          isDarkMode && "bg-blue-900 text-blue-100 hover:bg-blue-800"
+        ),
+        day_today: cn(
+          "bg-accent text-accent-foreground", 
+          isDarkMode && "bg-gray-700 text-purple-200 border border-purple-400"
+        ),
+        day_outside: cn(
           "day-outside text-muted-foreground opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
+          isDarkMode && "text-gray-500"
+        ),
         day_disabled: "text-muted-foreground opacity-50",
-        day_range_middle:
-          "aria-selected:bg-accent aria-selected:text-accent-foreground",
+        day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
         day_hidden: "invisible",
         ...classNames,
       }}

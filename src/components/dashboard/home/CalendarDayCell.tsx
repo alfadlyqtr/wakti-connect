@@ -4,6 +4,7 @@ import { format, isSameMonth, isToday } from "date-fns";
 import { cn } from "@/lib/utils";
 import { EventDot } from "./EventDot";
 import { DayEventTypes } from "@/types/calendar.types";
+import { useTheme } from "@/hooks/use-theme";
 
 interface CalendarDayCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onSelect'> {
   date: Date;
@@ -19,6 +20,11 @@ const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
   onSelect,
   ...props 
 }) => {
+  const { theme } = useTheme();
+  const isDarkMode = theme === 'dark';
+  const isCurrentMonth = isSameMonth(date, new Date());
+  const isTodayDate = isToday(date);
+  
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     props.onClick?.(e);
     onSelect(date);
@@ -30,15 +36,23 @@ const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
       onClick={handleClick}
       className={cn(
         props.className,
-        "relative h-full w-full cursor-pointer transition-colors p-1",
-        selected && "bg-primary text-primary-foreground",
-        !isSameMonth(date, new Date()) && "text-muted-foreground opacity-50",
-        isToday(date) && !selected && "border border-primary",
+        "h-full w-full cursor-pointer transition-colors p-2",
       )}
     >
-      <time dateTime={format(date, 'yyyy-MM-dd')} className="font-medium">
-        {format(date, 'd')}
-      </time>
+      <div className={cn(
+        "flex justify-between items-start",
+        selected && isDarkMode && "text-blue-200",
+      )}>
+        <time 
+          dateTime={format(date, 'yyyy-MM-dd')} 
+          className={cn(
+            "font-medium text-sm sm:text-base",
+            !isCurrentMonth && "text-muted-foreground",
+            isTodayDate && !selected && isDarkMode && "text-purple-300",
+          )}>
+          {format(date, 'd')}
+        </time>
+      </div>
       
       {/* Event indicators */}
       {(eventTypes.hasTasks || eventTypes.hasBookings || eventTypes.hasEvents || eventTypes.hasManualEntries) && (
