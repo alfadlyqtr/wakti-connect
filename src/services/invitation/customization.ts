@@ -83,9 +83,6 @@ const convertToEventCustomization = (invitationCustomization: InvitationCustomiz
 
 /**
  * Get invitation customization by invitation ID
- * 
- * Note: This is a placeholder function. The "invitation_customizations" table 
- * may need to be created in the database for this to work.
  */
 export const getInvitationCustomization = async (invitationId: string): Promise<InvitationCustomization | null> => {
   try {
@@ -112,7 +109,10 @@ export const getInvitationCustomization = async (invitationId: string): Promise<
       buttonStyles: {
         style: 'rounded',
         color: '#3B82F6'
-      }
+      },
+      // Add the missing required properties
+      layoutSize: 'medium',
+      customEffects: {}
     };
   } catch (error) {
     console.error('Error in getInvitationCustomization:', error);
@@ -122,9 +122,6 @@ export const getInvitationCustomization = async (invitationId: string): Promise<
 
 /**
  * Save invitation customization
- * 
- * Note: This function needs a proper table to save customizations.
- * Since we don't have "invitation_customizations" table, we'll save to the invitations table directly.
  */
 export const saveInvitationCustomization = async (invitationId: string, customization: InvitationCustomization): Promise<InvitationCustomization | null> => {
   try {
@@ -162,7 +159,10 @@ export const saveInvitationCustomization = async (invitationId: string, customiz
       buttonStyles: customization.buttonStyles || {
         style: 'rounded',
         color: '#3B82F6'
-      }
+      },
+      // Add the missing required properties
+      layoutSize: customization.layoutSize || 'medium',
+      customEffects: customization.customEffects || {}
     };
   } catch (error) {
     console.error('Error in saveInvitationCustomization:', error);

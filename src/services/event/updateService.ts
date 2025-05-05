@@ -109,7 +109,7 @@ export const updateEvent = async (eventId: string, formData: EventFormData): Pro
         event_id: eventId,
         email: inv.email,
         invited_user_id: inv.invited_user_id,
-        status: 'pending',
+        status: 'pending' as 'pending' | 'accepted' | 'declined', // Explicitly type as one of the valid status values
         shared_as_link: inv.shared_as_link || false
       }));
       
