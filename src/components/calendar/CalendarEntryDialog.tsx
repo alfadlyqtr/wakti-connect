@@ -47,15 +47,14 @@ const CalendarEntryDialog: React.FC<CalendarEntryDialogProps> = ({
     setIsSubmitting(true);
     
     try {
-      // Create a new entry in the database
+      // Create a new entry in the database - fixed table name to match the schema
       const { data, error } = await supabase
-        .from('calendar_entries')
+        .from('calendar_manual_entries')
         .insert({
           user_id: userId,
           title,
           description,
           date: format(date, 'yyyy-MM-dd'),
-          type: "manual"
         })
         .select()
         .single();

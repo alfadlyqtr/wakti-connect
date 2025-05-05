@@ -1,263 +1,208 @@
 
 import React, { useState, useEffect } from 'react';
-import { format, isSameDay, isSameMonth, isToday } from "date-fns";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
-import { CalendarEvent, DayEventTypes } from "@/types/calendar.types";
-import CalendarEventList from "@/components/calendar/CalendarEventList";
-import CalendarDayCell from "@/components/dashboard/home/CalendarDayCell";
-import CalendarLegend from "@/components/dashboard/home/CalendarLegend";
-import CalendarEntryDialog from './CalendarEntryDialog';
-import { useQuery } from '@tanstack/react-query';
-import { fetchManualEntries } from '@/services/calendar/manualEntryService';
-import { supabase } from '@/integrations/supabase/client';
 import { useTheme } from '@/hooks/use-theme';
+import { supabase } from '@/integrations/supabase/client';
+import { Calendar } from '@/components/ui/calendar';
+import { Card, CardContent } from '@/components/ui/card';
+import { format, isSameMonth, isSameDay } from 'date-fns';
+import { Button } from '@/components/ui/button';
+import { Calendar as CalendarIcon, Plus } from 'lucide-react';
+import CalendarEntryDialog from './CalendarEntryDialog';
+import CalendarEventList from './CalendarEventList';
+import { CalendarEvent } from '@/types/calendar.types';
 
 const EnhancedCalendar: React.FC = () => {
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [date, setDate] = useState<Date>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const { theme } = useTheme();
+  const isDarkMode = theme === 'dark';
 
-  // Get current userId
   useEffect(() => {
+    // Get current user ID
     supabase.auth.getSession().then(result => {
       const id = result.data?.session?.user?.id;
       setUserId(id || null);
+      
+      if (id) {
+        fetchEvents(id);
+      }
     });
   }, []);
 
-  // Fetch manual calendar entries
-  const { data: manualEntries = [], isLoading: isLoadingManual } = useQuery({
-    queryKey: ['manualEntries', userId],
-    queryFn: () => userId ? fetchManualEntries(userId) : Promise.resolve([]),
-    enabled: !!userId,
-  });
+  const fetchEvents = async (uid: string) => {
+    try {
+      // Fetch tasks with due dates
+      const { data: tasksData, error: tasksError } = await supabase
+        .from('tasks')
+        .select('id, title, due_date, status')
+        .eq('user_id', uid)
+        .not('due_date', 'is', null);
+      
+      // Fetch manual calendar entries
+      const { data: manualEntries, error: manualError } = await supabase
+        .from('calendar_manual_entries')
+        .select('*')
+        .eq('user_id', uid);
+      
+      if (tasksError) console.error('Error fetching tasks:', tasksError);
+      if (manualError) console.error('Error fetching manual entries:', manualError);
 
-  // Update events when manual entries are loaded
-  useEffect(() => {
-    if (manualEntries && manualEntries.length > 0) {
-      setEvents(manualEntries);
+      const allEvents: CalendarEvent[] = [];
+
+      // Process tasks
+      if (tasksData) {
+        tasksData.forEach(task => {
+          allEvents.push({
+            id: task.id,
+            title: task.title,
+            date: new Date(task.due_date),
+            type: 'task',
+            status: task.status
+          });
+        });
+      }
+      
+      // Process manual entries
+      if (manualEntries) {
+        manualEntries.forEach(entry => {
+          allEvents.push({
+            id: entry.id,
+            title: entry.title,
+            date: new Date(entry.date),
+            type: 'manual',
+            description: entry.description,
+            location: entry.location
+          });
+        });
+      }
+      
+      setEvents(allEvents);
+    } catch (error) {
+      console.error('Error fetching events:', error);
     }
-  }, [manualEntries]);
-
-  // Helper: filter events for specific date
-  const getEventsForDate = (date: Date) => {
-    return events.filter(event => isSameDay(new Date(event.date), date));
   };
 
-  const getEventTypesForDate = (date: Date): DayEventTypes => {
-    const dateEvents = getEventsForDate(date);
+  const handleAddEntry = (newEntry: any) => {
+    // Convert the entry from the backend into our CalendarEvent format
+    const calendarEvent: CalendarEvent = {
+      id: newEntry.id,
+      title: newEntry.title,
+      date: new Date(newEntry.date),
+      type: 'manual',
+      description: newEntry.description,
+      location: newEntry.location
+    };
+    
+    // Add the new event to our state
+    setEvents(prev => [...prev, calendarEvent]);
+  };
+
+  // Filter events for the selected day
+  const selectedDateEvents = events.filter(event => 
+    isSameDay(new Date(event.date), selectedDate)
+  );
+
+  // Filter events to get dots for each day with events
+  const getEventDots = (day: Date) => {
+    const dayEvents = events.filter(event => isSameDay(new Date(event.date), day));
     return {
-      hasTasks: dateEvents.some(event => event.type === "task"),
-      hasBookings: dateEvents.some(event => event.type === "booking"),
-      hasEvents: dateEvents.some(event => event.type === "event"),
-      hasManualEntries: dateEvents.some(event => event.type === "manual")
+      hasTasks: dayEvents.some(event => event.type === 'task'),
+      hasBookings: dayEvents.some(event => event.type === 'booking'),
+      hasEvents: dayEvents.some(event => event.type === 'event'),
+      hasManualEntries: dayEvents.some(event => event.type === 'manual')
     };
   };
 
-  // Handle new entry creation
-  const handleAddEntry = (entry: any) => {
-    setEvents((prev) => [...prev, entry]);
-  };
-
-  // Navigation functions
-  const nextMonth = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
-  };
-
-  const prevMonth = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
-  };
-  
-  // Generate calendar grid
-  const getDaysInMonth = (date: Date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    
-    // Get start of the week (Sunday)
-    const startDate = new Date(firstDay);
-    startDate.setDate(firstDay.getDate() - firstDay.getDay());
-    
-    // Get end of the calendar view
-    const endDate = new Date(lastDay);
-    const daysToAdd = 6 - endDate.getDay();
-    endDate.setDate(lastDay.getDate() + daysToAdd);
-    
-    const days = [];
-    const currentDate = new Date(startDate);
-    
-    while (currentDate <= endDate) {
-      days.push(new Date(currentDate));
-      currentDate.setDate(currentDate.getDate() + 1);
-    }
-    
-    return days;
-  };
-
-  const days = getDaysInMonth(currentMonth);
-  
-  // Group days into weeks
-  const weeks: Date[][] = [];
-  let currentWeek: Date[] = [];
-  
-  days.forEach((day) => {
-    if (currentWeek.length === 7) {
-      weeks.push(currentWeek);
-      currentWeek = [];
-    }
-    currentWeek.push(day);
-  });
-  
-  if (currentWeek.length > 0) {
-    weeks.push(currentWeek);
-  }
-
-  const weekdays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
-
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Calendar</h1>
-        <Button 
-          onClick={() => setIsDialogOpen(true)} 
-          className="flex items-center gap-1 bg-primary hover:bg-primary/90"
-        >
-          <Plus size={16} />
-          Add Entry
-        </Button>
-      </div>
-
-      <Card className={`border shadow-sm ${theme === 'dark' ? 'bg-gray-800/50 border-gray-700' : 'bg-white'}`}>
-        <CardContent className="p-4">
-          <div className="flex justify-between items-center mb-6">
-            <Button 
-              variant="outline" 
-              size="icon" 
-              onClick={prevMonth}
-              className={`rounded-full ${theme === 'dark' ? 'bg-gray-700/50 border-gray-600 hover:bg-gray-700' : ''}`}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <h2 className="text-lg font-semibold">
-              {format(currentMonth, 'MMMM yyyy')}
-            </h2>
-            <Button 
-              variant="outline" 
-              size="icon" 
-              onClick={nextMonth}
-              className={`rounded-full ${theme === 'dark' ? 'bg-gray-700/50 border-gray-600 hover:bg-gray-700' : ''}`}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+      <Card className={`border ${isDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
+        <CardContent className="p-0">
+          <div className="p-4 border-b flex justify-between items-center">
+            <div className="flex items-center">
+              <CalendarIcon className={`mr-2 h-5 w-5 ${isDarkMode ? 'text-gray-300' : ''}`} />
+              <h3 className={`text-lg font-medium ${isDarkMode ? 'text-gray-100' : ''}`}>Calendar</h3>
+            </div>
+            {userId && (
+              <Button 
+                size="sm" 
+                onClick={() => setIsAddDialogOpen(true)}
+                className={`${isDarkMode ? 'bg-blue-700 hover:bg-blue-600 text-white' : ''}`}
+              >
+                <Plus className="h-4 w-4 mr-1" /> Add Entry
+              </Button>
+            )}
           </div>
           
-          <div className={`w-full rounded-lg overflow-hidden ${theme === 'dark' ? 'bg-gray-800/30 border border-gray-700' : 'bg-gray-50 border border-gray-200'}`}>
-            {/* Weekday headers */}
-            <div className="grid grid-cols-7 gap-0">
-              {weekdays.map((day, i) => (
-                <div 
-                  key={i} 
-                  className={`text-center p-2 font-medium text-sm border-b ${
-                    theme === 'dark' 
-                      ? 'bg-gray-800 text-gray-300 border-gray-700' 
-                      : 'bg-gray-100 text-gray-700 border-gray-200'
-                  }`}
-                >
-                  {day}
-                </div>
-              ))}
-            </div>
-            
-            {/* Calendar grid */}
-            {weeks.map((week, weekIndex) => (
-              <div key={weekIndex} className="grid grid-cols-7 gap-0">
-                {week.map((date, i) => {
-                  const isSelected = isSameDay(date, selectedDate);
-                  const today = isToday(date);
-                  const sameMonth = isSameMonth(date, currentMonth);
+          <div className={`p-3 ${isDarkMode ? 'bg-gray-800' : ''}`}>
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={(date) => date && setSelectedDate(date)}
+              className={`rounded-md ${isDarkMode ? 'bg-gray-800 text-gray-100' : ''} w-full`}
+              classNames={{
+                months: "w-full",
+                month: "w-full",
+                table: "w-full border-collapse",
+                head_row: "w-full flex",
+                row: "flex w-full mt-2",
+                cell: "relative p-0 text-center h-10 w-full focus-within:relative focus-within:z-20",
+                day: "h-10 w-full p-0 aria-selected:opacity-100"
+              }}
+              components={{
+                Day: ({ date: day, ...props }) => {
+                  const isSelected = isSameDay(day, selectedDate);
+                  const isCurrentMonth = isSameMonth(day, date);
+                  const eventDots = getEventDots(day);
                   
                   return (
                     <div
-                      key={i}
-                      onClick={() => setSelectedDate(date)}
                       className={`
-                        min-h-[80px] sm:min-h-[100px] border ${i < 6 ? 'border-r' : ''} ${weekIndex < weeks.length - 1 ? 'border-b' : ''} 
-                        ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}
-                        ${isSelected 
-                          ? theme === 'dark' 
-                            ? 'bg-blue-900/30 hover:bg-blue-900/40' 
-                            : 'bg-blue-50 hover:bg-blue-100' 
-                          : today 
-                            ? theme === 'dark'
-                              ? 'bg-gray-700/50 hover:bg-gray-700/70'
-                              : 'bg-purple-50/50 hover:bg-purple-50'
-                            : theme === 'dark'
-                              ? 'hover:bg-gray-700/30'
-                              : 'hover:bg-gray-50'
-                        }
-                        ${!sameMonth && (theme === 'dark' ? 'opacity-40' : 'opacity-50')}
-                        relative cursor-pointer transition-colors
+                        relative flex items-center justify-center h-10 w-full cursor-pointer
+                        ${!isCurrentMonth ? 'text-gray-400' : ''}
+                        ${isSelected && isDarkMode ? 'bg-blue-900/30 text-blue-100' : ''}
+                        ${isSelected && !isDarkMode ? 'bg-blue-100 text-blue-900' : ''}
+                        ${isDarkMode && !isSelected ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}
                       `}
+                      onClick={() => setSelectedDate(day)}
+                      {...props}
                     >
-                      <CalendarDayCell
-                        date={date}
-                        selected={isSelected}
-                        eventTypes={getEventTypesForDate(date)}
-                        onSelect={(date) => setSelectedDate(date)}
-                        className={`h-full w-full ${
-                          theme === 'dark' && isSelected ? 'text-blue-200' : ''
-                        }`}
-                      />
+                      <time dateTime={format(day, 'yyyy-MM-dd')}>{format(day, 'd')}</time>
+                      
+                      {/* Event indicators */}
+                      <div className="absolute bottom-1 left-0 right-0 flex justify-center space-x-1">
+                        {eventDots.hasTasks && <div className="h-1.5 w-1.5 rounded-full bg-amber-500" />}
+                        {eventDots.hasBookings && <div className="h-1.5 w-1.5 rounded-full bg-green-500" />}
+                        {eventDots.hasEvents && <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />}
+                        {eventDots.hasManualEntries && <div className="h-1.5 w-1.5 rounded-full bg-purple-500" />}
+                      </div>
                     </div>
                   );
-                })}
-              </div>
-            ))}
+                }
+              }}
+            />
           </div>
         </CardContent>
       </Card>
+      
+      {/* Events for selected date */}
+      <Card className={`${isDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
+        <CardContent className="p-4">
+          <h3 className={`text-lg font-medium mb-4 ${isDarkMode ? 'text-gray-100' : ''}`}>
+            {format(selectedDate, 'MMMM d, yyyy')}
+          </h3>
+          
+          <CalendarEventList events={selectedDateEvents} />
+        </CardContent>
+      </Card>
 
-      <CalendarLegend showManualEntries={true} />
-
-      {getEventsForDate(selectedDate).length > 0 ? (
-        <Card className={theme === 'dark' ? 'bg-gray-800/50 border-gray-700' : ''}>
-          <CardContent className="p-4 sm:p-6">
-            <div className="mb-4">
-              <h2 className="text-xl font-semibold">
-                {format(selectedDate, "MMMM d, yyyy")}
-              </h2>
-            </div>
-            <CalendarEventList events={getEventsForDate(selectedDate)} />
-          </CardContent>
-        </Card>
-      ) : (
-        <Card className={theme === 'dark' ? 'bg-gray-800/50 border-gray-700' : ''}>
-          <CardContent className="p-6 text-center">
-            <p className="text-muted-foreground">
-              No events for {format(selectedDate, "MMMM d, yyyy")}
-            </p>
-            <Button 
-              variant="outline" 
-              className={`mt-4 ${theme === 'dark' ? 'hover:bg-gray-700' : ''}`}
-              onClick={() => setIsDialogOpen(true)}
-            >
-              <Plus size={16} className="mr-2" />
-              Add an entry
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
+      {/* Dialog for adding new entries */}
       {userId && (
         <CalendarEntryDialog
-          isOpen={isDialogOpen}
-          onClose={() => setIsDialogOpen(false)}
+          isOpen={isAddDialogOpen}
+          onClose={() => setIsAddDialogOpen(false)}
           onSuccess={handleAddEntry}
           selectedDate={selectedDate}
           userId={userId}
