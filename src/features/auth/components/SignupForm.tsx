@@ -4,13 +4,12 @@ import { Mail, Lock, Eye, EyeOff, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import { useAuth } from "../context/AuthContext";
-
-import FormInputField from "./signup/FormInputField";
-import AccountTypeSelector from "./signup/AccountTypeSelector";
-import BusinessNameField from "./signup/BusinessNameField";
-import TermsCheckbox from "./signup/TermsCheckbox";
-import SubmitButton from "./signup/SubmitButton";
-import TroubleshootingTips from "./signup/TroubleshootingTips";
+import FormInputField from "@/components/auth/signup/FormInputField";
+import AccountTypeSelector from "@/components/auth/signup/AccountTypeSelector";
+import BusinessNameField from "@/components/auth/signup/BusinessNameField";
+import TermsCheckbox from "@/components/auth/signup/TermsCheckbox";
+import SubmitButton from "@/components/auth/signup/SubmitButton";
+import TroubleshootingTips from "@/components/auth/signup/TroubleshootingTips";
 
 interface SignupFormProps {
   setError: (error: string) => void;
@@ -34,6 +33,7 @@ const SignupForm = ({ setError }: SignupFormProps) => {
     setError("");
     setIsLoading(true);
 
+    // Validate business name if account type is business
     if (needsBusinessName && !businessName.trim()) {
       setError("Business name is required for business accounts");
       toast({
@@ -48,6 +48,7 @@ const SignupForm = ({ setError }: SignupFormProps) => {
     try {
       console.log("Registering with account type:", accountType);
       
+      // Call the register function with all parameters
       const result = await register(email, password, fullName, accountType, businessName);
       
       if (result.error) {
@@ -59,12 +60,14 @@ const SignupForm = ({ setError }: SignupFormProps) => {
         description: "Please check your email to verify your account.",
       });
 
-      setRegisterAttempts(prev => prev + 1);
+      // Note: we don't redirect here as the user needs to verify their email first
     } catch (error: any) {
       console.error("Signup error:", error);
       
+      // Track registration attempts
       setRegisterAttempts(prev => prev + 1);
       
+      // Provide contextual error messages
       let errorMessage = error.message || "Failed to create account. Please try again.";
       
       if (registerAttempts >= 2 && (error.message?.includes("database") || error.message?.includes("profiles"))) {

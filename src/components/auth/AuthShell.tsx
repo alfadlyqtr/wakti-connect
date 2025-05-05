@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useAuth } from "@/features/auth/context/AuthContext"; // Updated import path
+import { useAuth } from "@/features/auth/context/AuthContext"; // Direct import from features
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import AuthLoadingState from "./AuthLoadingState";
@@ -14,7 +14,7 @@ const AuthShell: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   const searchParams = new URLSearchParams(location.search);
   const returnUrl = searchParams.get('returnUrl') || '/dashboard';
 
-  console.log("AuthShell render:", { isAuthenticated, isLoading, returnUrl });
+  console.log("AuthShell render:", { isAuthenticated, isLoading, returnUrl, path: location.pathname });
 
   // Show loading indicator while checking authentication
   if (isLoading) {
