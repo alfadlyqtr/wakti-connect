@@ -30,6 +30,7 @@ const UserMenu = ({ unreadMessages = [], unreadNotifications = [] }: UserMenuPro
   const getDisplayName = () => {
     if (!user) return 'Account';
     
+    // Fix the property access to match the AppUser type definition
     if (user.account_type === 'business' && user.business_name) {
       return user.business_name;
     } else if (user.displayName) {

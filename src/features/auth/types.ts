@@ -9,6 +9,7 @@ export interface AppUser extends SupabaseUser {
   effectiveRole?: UserRole;
   account_type?: string;
   full_name?: string;
+  business_name?: string; // Add business_name property
   avatar_url?: string;
   plan?: UserRole;
 }
