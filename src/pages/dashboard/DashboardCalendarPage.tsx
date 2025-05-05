@@ -13,8 +13,8 @@ const DashboardCalendarPage = () => {
   const [view, setView] = useState<'month' | 'day' | 'week'>('month');
   
   return (
-    <div className="space-y-4 max-w-full">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+    <div className="space-y-4 w-full">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Calendar</h1>
           <p className="text-muted-foreground">
@@ -33,19 +33,17 @@ const DashboardCalendarPage = () => {
         </div>
       </div>
 
-      <div className="w-full overflow-hidden border shadow-sm rounded-lg bg-white dark:bg-gray-900">
-        <div className="p-4 border-b">
+      <div className="w-full overflow-hidden border shadow-sm rounded-md bg-white dark:bg-gray-900">
+        <div className="p-3 border-b">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">{format(selectedDate, 'MMMM yyyy')}</h2>
           </div>
         </div>
-        <div className="p-0">
-          <UnifiedCalendar 
-            selectedDate={selectedDate}
-            onDateSelect={setSelectedDate}
-            view={view}
-          />
-        </div>
+        <UnifiedCalendar 
+          selectedDate={selectedDate}
+          onDateSelect={setSelectedDate}
+          view={view}
+        />
       </div>
 
       <CalendarEntryDialog 

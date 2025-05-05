@@ -25,11 +25,11 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
     onSelect(date);
   };
 
-  // Count events by type (max 3 per type to avoid overcrowding)
-  const taskCount = Math.min(events.filter(e => e.type === 'task').length, 3);
-  const eventCount = Math.min(events.filter(e => e.type === 'event').length, 3);
-  const bookingCount = Math.min(events.filter(e => e.type === 'booking').length, 3);
-  const manualCount = Math.min(events.filter(e => e.type === 'manual').length, 3);
+  // Count events by type
+  const taskCount = events.filter(e => e.type === 'task').length;
+  const eventCount = events.filter(e => e.type === 'event').length;
+  const bookingCount = events.filter(e => e.type === 'booking').length;
+  const manualCount = events.filter(e => e.type === 'manual').length;
   
   // Sort events by type to display in order: bookings, events, tasks, manual
   const prioritizedEvents = [...events].sort((a, b) => {
@@ -49,19 +49,20 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
       {...props}
       onClick={handleClick}
       className={cn(
-        "aspect-square relative hover:bg-muted cursor-pointer transition-colors p-1",
-        selected ? "bg-primary/5 font-medium" : "bg-white dark:bg-gray-900",
+        "h-full w-full relative hover:bg-muted/50 cursor-pointer transition-colors p-1",
+        selected ? "bg-primary/5" : "",
         !isSameMonth(date, new Date()) && "text-muted-foreground opacity-50",
-        isCurrentDay && !selected && "border-primary border",
+        isCurrentDay && !selected && "border-b-2 border-primary",
+        "border-r border-b border-muted/40 last:border-r-0",
         props.className
       )}
     >
       <time 
         dateTime={format(date, 'yyyy-MM-dd')} 
         className={cn(
-          "flex items-center justify-center text-xs font-medium w-6 h-6 mb-1",
-          isCurrentDay ? "text-primary" : "",
-          selected ? "text-primary" : ""
+          "flex justify-end items-start text-xs font-medium p-1",
+          isCurrentDay ? "text-primary font-medium" : "",
+          selected ? "text-primary font-medium" : ""
         )}
       >
         {format(date, 'd')}
@@ -69,12 +70,12 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
       
       {/* Event indicators - displayed as colored bars */}
       {totalEvents > 0 && (
-        <div className="mt-1 space-y-1 max-h-[80%] overflow-hidden">
+        <div className="absolute bottom-1 left-1 right-1 space-y-1">
           {prioritizedEvents.map((event, idx) => (
             <div 
               key={`${event.id}-${idx}`} 
               className={cn(
-                "h-1.5 rounded-full w-full",
+                "h-1 rounded-sm w-full",
                 event.type === 'task' ? "bg-amber-500" : "",
                 event.type === 'event' ? "bg-purple-500" : "",
                 event.type === 'booking' ? "bg-blue-500" : "",
@@ -85,7 +86,7 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
           
           {/* Show "more" indicator if needed */}
           {hasMoreEvents && (
-            <div className="text-xs text-center text-muted-foreground mt-0.5">
+            <div className="text-[10px] text-right text-muted-foreground mt-0.5 pr-0.5">
               +{totalEvents - 3}
             </div>
           )}

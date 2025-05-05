@@ -63,9 +63,14 @@ export const UnifiedCalendar: React.FC<CalendarViewProps> = ({
     );
   }
 
+  if (view === 'week') {
+    // Week view implementation would go here
+    return <div>Week view (not implemented)</div>;
+  }
+
   return (
     <div className="w-full">
-      <div className="w-full bg-white dark:bg-gray-900">
+      <div className="w-full bg-white dark:bg-gray-900 border-b">
         <Calendar
           mode="single"
           selected={selectedDate}

@@ -20,10 +20,10 @@ function Calendar({
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
-      className={cn("p-0 pointer-events-auto w-full", className)}
+      className={cn("p-0 pointer-events-auto", className)}
       classNames={{
-        months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0 w-full",
-        month: "space-y-0 w-full",
+        months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
+        month: "space-y-0",
         caption: "flex justify-center pt-2 pb-2 relative items-center bg-transparent",
         caption_label: cn("text-sm font-medium", isMobile && "text-xs"),
         nav: "space-x-1 flex items-center",
@@ -34,7 +34,7 @@ function Calendar({
         ),
         nav_button_previous: "absolute left-1",
         nav_button_next: "absolute right-1",
-        table: "w-full border-collapse space-y-0",
+        table: "w-full border-collapse",
         head_row: "flex w-full",
         head_cell: cn(
           "text-muted-foreground rounded-none w-full font-normal text-[0.8rem] py-2",
@@ -42,17 +42,18 @@ function Calendar({
         ),
         row: "flex w-full mt-0",
         cell: cn(
-          "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 h-10 w-10 sm:h-12 sm:w-12 md:h-14 md:w-14 lg:h-16 lg:w-16",
-          isMobile && "text-xs h-9 w-9"
+          "relative p-0 text-center text-sm focus-within:relative focus-within:z-20",
+          "h-9 w-9 sm:h-10 sm:w-10 md:h-12 md:w-12 lg:h-12 lg:w-12",
+          isMobile && "h-8 w-8 text-xs"
         ),
         day: cn(
           "h-full w-full p-0 font-normal aria-selected:opacity-100",
-          "hover:bg-muted rounded-md transition-colors"
+          "hover:bg-muted/50 rounded-none transition-colors"
         ),
         day_range_end: "day-range-end",
         day_selected:
-          "bg-primary/5 text-primary hover:bg-primary/10 hover:text-primary focus:bg-primary/20 focus:text-primary rounded-md",
-        day_today: "bg-none text-foreground font-medium border border-primary border-dashed",
+          "bg-primary/5 text-primary hover:bg-primary/10 hover:text-primary focus:bg-primary/20 focus:text-primary",
+        day_today: "bg-none text-foreground font-medium border-b-2 border-primary",
         day_outside:
           "day-outside text-muted-foreground opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
         day_disabled: "text-muted-foreground opacity-50",

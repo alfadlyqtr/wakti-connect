@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from "react";
 import Navbar from "@/components/layout/Navbar";
-import Sidebar from "@/components/layout/Sidebar";
+import Sidebar from "@/components/layout/sidebar/Sidebar";
 import "@/components/layout/sidebar/sidebar.css";
 import { useDashboardUserProfile } from "@/hooks/useDashboardUserProfile";
 import { useSidebarToggle } from "@/hooks/useSidebarToggle";
@@ -63,56 +63,6 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
   const openCommandSearch = () => {
     setCommandSearchOpen(true);
   };
-
-  // Redirect to appropriate dashboard based on role if on main dashboard
-  useEffect(() => {
-    // Fix: Check for both "/dashboard" and "/dashboard/" paths
-    const isMainDashboardPath = location.pathname === "/dashboard" || location.pathname === "/dashboard/";
-    const isAnalyticsPath = location.pathname === "/dashboard/analytics";
-    
-    console.log("DashboardLayout user role check:", {
-      userRoleValue,
-      accountType: profileData?.account_type,
-      isStaff,
-      isMainDashboardPath,
-      isSuperAdmin
-    });
-    
-    if (!profileLoading && isMainDashboardPath) {
-      // Prevent redirect floods by limiting frequency and number of attempts
-      const now = Date.now();
-      if (redirectAttempts > 5 || (now - lastRedirectTime < 2000 && redirectAttempts > 0)) {
-        console.warn("Too many redirect attempts, stopping to prevent a loop");
-        return;
-      }
-      
-      // Only super admins should be redirected to their special dashboard
-      if (userRoleValue === 'super-admin' && isSuperAdmin) {
-        console.log("Super admin detected, redirecting to super admin dashboard");
-        setRedirectAttempts(prev => prev + 1);
-        setLastRedirectTime(now);
-        navigate('/gohabsgo', { replace: true });
-        return;
-      }
-      
-      // Only staff users (who are not also business owners) go to staff dashboard
-      if (userRoleValue === 'staff') {
-        console.log("Staff user detected, redirecting to staff dashboard");
-        setRedirectAttempts(prev => prev + 1);
-        setLastRedirectTime(now);
-        navigate('/dashboard/staff-dashboard', { replace: true });
-      } else {
-        // All users (including business) go to the main dashboard
-        // We're already on the main dashboard path, so no redirect needed
-        console.log(`${userRoleValue} account detected, already on main dashboard`);
-      }
-    }
-    
-    // If business user is on analytics page but should be redirected to main dashboard
-    if (!profileLoading && isAnalyticsPath && userRoleValue === 'business' && location.state?.fromInitialRedirect) {
-      navigate('/dashboard');
-    }
-  }, [profileLoading, location.pathname, userRoleValue, isStaff, navigate, location.state, profileData?.account_type, accountType, isSuperAdmin, redirectAttempts, lastRedirectTime]);
 
   // For components that don't recognize super-admin yet, map it to business role
   const mapRoleForCompatibility = (role: UserRole): "individual" | "business" | "staff" => {

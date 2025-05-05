@@ -19,7 +19,7 @@ export const CalendarViewSelector: React.FC<CalendarViewSelectorProps> = ({
       onValueChange={(val) => {
         if (val) onValueChange(val as 'month' | 'week' | 'day');
       }}
-      className="border rounded-md bg-white dark:bg-gray-800"
+      className="border rounded-md bg-white dark:bg-gray-800 shadow-sm"
     >
       <ToggleGroupItem value="month" aria-label="Month view" className="px-3 py-1.5 text-xs sm:text-sm">
         <CalendarDays className="h-4 w-4 mr-1" />
