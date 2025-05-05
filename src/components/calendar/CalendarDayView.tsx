@@ -1,4 +1,3 @@
-
 import React from "react";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -69,6 +68,11 @@ const CalendarDayView: React.FC<CalendarDayViewProps> = ({
       }
     };
 
+    // Function to check if deletion is allowed - only for manual entries
+    const canDelete = (eventType: string) => {
+      return eventType === "manual";
+    };
+
     return (
       <div className="space-y-3">
         <h3 className="font-medium text-sm flex items-center gap-2">
@@ -135,20 +139,20 @@ const CalendarDayView: React.FC<CalendarDayViewProps> = ({
                   </div>
                 </div>
                 
-                {/* Allow deleting manual entries and tasks */}
-                {(type === "manual" || type === "task") && onDelete && (
+                {/* Only allow deleting manual entries */}
+                {canDelete(event.type) && onDelete && (
                   <Button 
                     variant="ghost" 
                     size="icon" 
                     className="h-7 w-7 text-muted-foreground hover:text-destructive" 
-                    onClick={() => onDelete(event.id, type)}
+                    onClick={() => onDelete(event.id, event.type)}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 )}
                 
                 {/* Show appropriate status badge for each event type */}
-                {event.status && !onDelete && (
+                {event.status && !canDelete(event.type) && (
                   <Badge 
                     variant={
                       event.status === "completed" || event.status === "confirmed" ? "outline" : 

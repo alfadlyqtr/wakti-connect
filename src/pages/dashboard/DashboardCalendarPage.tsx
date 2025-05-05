@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { format, isSameDay, startOfToday } from "date-fns";
 import { Card } from "@/components/ui/card";
@@ -19,8 +18,7 @@ const DashboardCalendarPage: React.FC = () => {
   const [deleteConfirmation, setDeleteConfirmation] = useState<{
     isOpen: boolean;
     entryId: string;
-    entryType: string;
-  }>({ isOpen: false, entryId: "", entryType: "" });
+  }>({ isOpen: false, entryId: "" });
   
   // Convert CalendarEvent array to format expected by FullScreenCalendar
   const calendarData = React.useMemo(() => {
@@ -79,33 +77,24 @@ const DashboardCalendarPage: React.FC = () => {
     }
   };
 
-  // Handle confirming entry deletion
+  // Handle confirming manual entry deletion
   const confirmDeleteEntry = (entryId: string, entryType: string) => {
-    setDeleteConfirmation({
-      isOpen: true,
-      entryId,
-      entryType,
-    });
+    // Only proceed if it's a manual entry
+    if (entryType === "manual") {
+      setDeleteConfirmation({
+        isOpen: true,
+        entryId
+      });
+    }
   };
 
   // Handle deleting entries
-  const handleDeleteEntry = async (entryId: string, entryType: string) => {
+  const handleDeleteEntry = async (entryId: string) => {
     try {
-      let error;
-      
-      if (entryType === "manual") {
-        const result = await supabase
-          .from('calendar_manual_entries')
-          .delete()
-          .eq('id', entryId);
-        error = result.error;
-      } else if (entryType === "task") {
-        const result = await supabase
-          .from('tasks')
-          .delete()
-          .eq('id', entryId);
-        error = result.error;
-      }
+      const { error } = await supabase
+        .from('calendar_manual_entries')
+        .delete()
+        .eq('id', entryId);
       
       if (error) {
         throw error;
@@ -113,7 +102,7 @@ const DashboardCalendarPage: React.FC = () => {
       
       toast({
         title: "Entry deleted",
-        description: "The calendar entry has been removed",
+        description: "The manual entry has been removed",
       });
       
       refetch();
@@ -126,7 +115,7 @@ const DashboardCalendarPage: React.FC = () => {
       });
     } finally {
       // Close the confirmation dialog
-      setDeleteConfirmation({ isOpen: false, entryId: "", entryType: "" });
+      setDeleteConfirmation({ isOpen: false, entryId: "" });
     }
   };
   
@@ -174,11 +163,11 @@ const DashboardCalendarPage: React.FC = () => {
       />
 
       <ConfirmationDialog
-        title={`Delete ${deleteConfirmation.entryType === "manual" ? "Manual Entry" : "Task"}`}
-        description={`Are you sure you want to delete this ${deleteConfirmation.entryType === "manual" ? "manual entry" : "task"}? This action cannot be undone.`}
+        title="Delete Manual Entry"
+        description="Are you sure you want to delete this manual entry? This action cannot be undone."
         open={deleteConfirmation.isOpen}
         onOpenChange={(open) => setDeleteConfirmation({ ...deleteConfirmation, isOpen: open })}
-        onConfirm={() => handleDeleteEntry(deleteConfirmation.entryId, deleteConfirmation.entryType)}
+        onConfirm={() => handleDeleteEntry(deleteConfirmation.entryId)}
         confirmLabel="Delete"
         cancelLabel="Cancel"
       />

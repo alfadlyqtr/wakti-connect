@@ -62,9 +62,9 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks, onDelete }) => {
     }
   };
 
+  // Only allow deletion for manual entries
   const canDelete = (type: string) => {
-    // Allow deletion for manual entries and tasks
-    return type === 'manual' || type === 'task';
+    return type === 'manual';
   };
 
   return (
@@ -102,7 +102,7 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks, onDelete }) => {
                 size="icon" 
                 className="h-6 w-6 text-muted-foreground hover:text-destructive" 
                 onClick={() => onDelete(task.id, task.type)}
-                title={`Delete ${getEventTypeLabel(task.type)}`}
+                title="Delete Manual Entry"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
