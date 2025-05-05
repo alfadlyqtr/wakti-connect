@@ -10,11 +10,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { Separator } from "@/components/ui/separator";
 import CalendarLegend from "@/components/calendar/CalendarLegend";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 
 const DashboardCalendarPage: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(startOfToday());
   const [isEntryDialogOpen, setIsEntryDialogOpen] = useState(false);
   const { events, isLoading, refetch } = useCalendarEvents();
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    isOpen: boolean;
+    entryId: string;
+    entryType: string;
+  }>({ isOpen: false, entryId: "", entryType: "" });
   
   // Convert CalendarEvent array to format expected by FullScreenCalendar
   const calendarData = React.useMemo(() => {
@@ -73,6 +79,15 @@ const DashboardCalendarPage: React.FC = () => {
     }
   };
 
+  // Handle confirming entry deletion
+  const confirmDeleteEntry = (entryId: string, entryType: string) => {
+    setDeleteConfirmation({
+      isOpen: true,
+      entryId,
+      entryType,
+    });
+  };
+
   // Handle deleting entries
   const handleDeleteEntry = async (entryId: string, entryType: string) => {
     try {
@@ -109,6 +124,9 @@ const DashboardCalendarPage: React.FC = () => {
         description: "There was an error deleting the entry",
         variant: "destructive",
       });
+    } finally {
+      // Close the confirmation dialog
+      setDeleteConfirmation({ isOpen: false, entryId: "", entryType: "" });
     }
   };
   
@@ -140,7 +158,7 @@ const DashboardCalendarPage: React.FC = () => {
             date={selectedDate}
             events={selectedDayEvents}
             onCompleteTask={handleCompleteTask}
-            onDelete={handleDeleteEntry}
+            onDelete={confirmDeleteEntry}
           />
         </div>
       </div>
@@ -153,6 +171,16 @@ const DashboardCalendarPage: React.FC = () => {
           refetch();
           setIsEntryDialogOpen(false);
         }}
+      />
+
+      <ConfirmationDialog
+        title={`Delete ${deleteConfirmation.entryType === "manual" ? "Manual Entry" : "Task"}`}
+        description={`Are you sure you want to delete this ${deleteConfirmation.entryType === "manual" ? "manual entry" : "task"}? This action cannot be undone.`}
+        open={deleteConfirmation.isOpen}
+        onOpenChange={(open) => setDeleteConfirmation({ ...deleteConfirmation, isOpen: open })}
+        onConfirm={() => handleDeleteEntry(deleteConfirmation.entryId, deleteConfirmation.entryType)}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
       />
     </div>
   );
