@@ -8,6 +8,8 @@ const TABLE_NAME = 'calendar_manual_entries';
 // Create a new manual calendar entry
 export const createManualEntry = async (entry: Omit<ManualCalendarEntry, 'id' | 'created_at'>): Promise<ManualCalendarEntry | null> => {
   try {
+    console.log("Creating entry with date:", entry.date);
+    
     const { data, error } = await supabase
       .from(TABLE_NAME)
       .insert({
@@ -25,6 +27,7 @@ export const createManualEntry = async (entry: Omit<ManualCalendarEntry, 'id' | 
       return null;
     }
     
+    // Convert date string back to Date object
     return {
       ...data,
       date: new Date(data.date) // Convert date string back to Date object

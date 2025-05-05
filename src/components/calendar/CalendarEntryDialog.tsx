@@ -36,12 +36,13 @@ export const CalendarEntryDialog: React.FC<CalendarEntryDialogProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   
-  // Update the date when selectedDate prop changes
+  // Update the date when selectedDate prop changes or dialog opens
   useEffect(() => {
-    if (selectedDate) {
-      setDate(selectedDate);
+    if (isOpen && selectedDate) {
+      // Create new Date object to break reference
+      setDate(new Date(selectedDate));
     }
-  }, [selectedDate]);
+  }, [isOpen, selectedDate]);
   
   // Reset form when dialog opens
   useEffect(() => {
@@ -49,7 +50,7 @@ export const CalendarEntryDialog: React.FC<CalendarEntryDialogProps> = ({
       setTitle('');
       setDescription('');
       setLocation('');
-      setDate(selectedDate);
+      setDate(new Date(selectedDate));
     }
   }, [isOpen, selectedDate]);
   
@@ -57,7 +58,7 @@ export const CalendarEntryDialog: React.FC<CalendarEntryDialogProps> = ({
     setTitle('');
     setDescription('');
     setLocation('');
-    setDate(selectedDate);
+    setDate(selectedDate ? new Date(selectedDate) : new Date());
   };
   
   const handleClose = () => {
@@ -80,9 +81,11 @@ export const CalendarEntryDialog: React.FC<CalendarEntryDialogProps> = ({
     try {
       setIsSubmitting(true);
       
+      console.log("Creating entry with date:", date);
+      
       const newEntry = await createManualEntry({
         title,
-        date,
+        date: date, // Use the local state date which properly tracks the selected date
         description: description || undefined,
         location: location || undefined,
         user_id: userId
@@ -153,7 +156,9 @@ export const CalendarEntryDialog: React.FC<CalendarEntryDialogProps> = ({
                   selected={date}
                   onSelect={(selectedDate) => {
                     if (selectedDate) {
-                      setDate(selectedDate);
+                      // Create a new date to ensure we have a new reference
+                      setDate(new Date(selectedDate));
+                      console.log("Selected date in calendar:", selectedDate);
                     }
                     setCalendarOpen(false);
                   }}

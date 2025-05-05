@@ -7,7 +7,7 @@ interface EventDotProps {
 }
 
 export const EventDot: React.FC<EventDotProps> = ({ type }) => {
-  const getDotColor = () => {
+  const getColorClass = () => {
     switch (type) {
       case "task":
         return "bg-amber-500";
@@ -18,11 +18,9 @@ export const EventDot: React.FC<EventDotProps> = ({ type }) => {
       case "manual":
         return "bg-purple-500";
       default:
-        return "bg-slate-400";
+        return "bg-gray-500";
     }
   };
 
-  return (
-    <div className={`h-1.5 w-1.5 rounded-full ${getDotColor()}`} />
-  );
+  return <div className={`h-1.5 w-1.5 rounded-full ${getColorClass()}`} />;
 };

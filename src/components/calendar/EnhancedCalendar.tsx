@@ -1,84 +1,26 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { format, isSameDay, isSameMonth, isToday } from "date-fns";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarEvent, DayEventTypes, ManualCalendarEntry } from "@/types/calendar.types";
-import { format, isSameDay, addMonths, subMonths } from "date-fns";
+import { Plus } from "lucide-react";
+import { CalendarEvent, DayEventTypes } from "@/types/calendar.types";
+import CalendarEventList from "@/components/calendar/CalendarEventList";
 import CalendarDayCell from "@/components/dashboard/home/CalendarDayCell";
 import CalendarLegend from "@/components/dashboard/home/CalendarLegend";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/integrations/supabase/client";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import CalendarEntryDialog from "./CalendarEntryDialog";
-import CalendarEventList from "./CalendarEventList";
-import { fetchTasks } from "@/services/calendar/fetchTasksService";
-import { fetchEvents } from "@/services/calendar/fetchEventsService";
-import { fetchManualEntries } from "@/services/calendar/manualEntryService";
-import { cn } from "@/lib/utils";
+import CalendarEntryDialog from './CalendarEntryDialog';
+import { useQuery } from '@tanstack/react-query';
+import { fetchManualEntries } from '@/services/calendar/manualEntryService';
+import { supabase } from '@/integrations/supabase/client';
 
-interface EnhancedCalendarProps {
-  isCompact?: boolean;
-}
-
-// Use this hook to get all calendar events
-const useAllCalendarEvents = (userId: string | null) => {
-  return useQuery({
-    queryKey: ['allCalendarEvents', userId],
-    queryFn: async () => {
-      if (!userId) return [];
-      let results: CalendarEvent[] = [];
-
-      try {
-        // Fetch tasks
-        const tasks = await fetchTasks(userId);
-        results = [...results, ...tasks];
-        
-        // Fetch events
-        const events = await fetchEvents(userId);
-        results = [...results, ...events];
-        
-        // Fetch manual entries
-        const manualEntries = await fetchManualEntries(userId);
-        results = [...results, ...manualEntries];
-        
-        // Fetch bookings (where user is customer or business)
-        const { data: bookingsData } = await supabase
-          .from('bookings')
-          .select('id, title, start_time, status')
-          .or(`customer_id.eq.${userId},business_id.eq.${userId}`);
-        
-        if (bookingsData) {
-          results.push(...bookingsData.map(booking => ({
-            id: booking.id,
-            title: booking.title,
-            date: new Date(booking.start_time as string),
-            type: "booking" as const,
-            status: booking.status
-          })));
-        }
-        
-        return results;
-      } catch (error) {
-        console.error("Error fetching calendar events:", error);
-        return [];
-      }
-    },
-    enabled: !!userId,
-  });
-};
-
-export const EnhancedCalendar: React.FC<EnhancedCalendarProps> = ({
-  isCompact = false,
-}) => {
+const EnhancedCalendar: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
-  const [showAddEntryDialog, setShowAddEntryDialog] = useState(false);
-  const queryClient = useQueryClient();
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
 
-  // Get current userId for filtering
+  // Get current userId
   useEffect(() => {
     supabase.auth.getSession().then(result => {
       const id = result.data?.session?.user?.id;
@@ -86,8 +28,19 @@ export const EnhancedCalendar: React.FC<EnhancedCalendarProps> = ({
     });
   }, []);
 
-  // Get all calendar events
-  const { data: events = [], isLoading } = useAllCalendarEvents(userId);
+  // Fetch manual calendar entries
+  const { data: manualEntries = [], isLoading: isLoadingManual } = useQuery({
+    queryKey: ['manualEntries', userId],
+    queryFn: () => userId ? fetchManualEntries(userId) : Promise.resolve([]),
+    enabled: !!userId,
+  });
+
+  // Update events when manual entries are loaded
+  useEffect(() => {
+    if (manualEntries && manualEntries.length > 0) {
+      setEvents(manualEntries);
+    }
+  }, [manualEntries]);
 
   // Helper: filter events for specific date
   const getEventsForDate = (date: Date) => {
@@ -104,135 +57,100 @@ export const EnhancedCalendar: React.FC<EnhancedCalendarProps> = ({
     };
   };
 
-  const selectedDateEvents = getEventsForDate(selectedDate);
-
-  const handlePreviousMonth = () => {
-    setCurrentMonth(prev => subMonths(prev, 1));
+  // Handle new entry creation
+  const handleAddEntry = (entry: any) => {
+    setEvents((prev) => [...prev, entry]);
   };
-
-  const handleNextMonth = () => {
-    setCurrentMonth(prev => addMonths(prev, 1));
-  };
-
-  const handleAddEntry = (newEntry: ManualCalendarEntry) => {
-    // Invalidate the query to refetch calendar events
-    queryClient.invalidateQueries({ queryKey: ['allCalendarEvents'] });
-  };
-
-  const calendarHeader = (
-    <div className="flex items-center justify-between mb-4">
-      <h2 className="text-xl font-bold">{format(currentMonth, "MMMM yyyy")}</h2>
-      <div className="flex items-center space-x-2">
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-8 w-8"
-          onClick={handlePreviousMonth}
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-8 w-8"
-          onClick={handleNextMonth}
-        >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
-    </div>
-  );
 
   return (
     <div className="space-y-4">
-      {isLoading ? (
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Calendar</h1>
+        <Button 
+          onClick={() => setIsDialogOpen(true)} 
+          className="flex items-center gap-1"
+        >
+          <Plus size={16} />
+          Add Entry
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-7 gap-4">
+        <div className="lg:col-span-7">
+          <Card className="border bg-white shadow-sm">
+            <CardContent className="p-2 sm:p-6">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={(date) => date && setSelectedDate(date)}
+                className="w-full rounded-md border-0 bg-white"
+                classNames={{
+                  month: "space-y-4",
+                  caption_label: "text-base font-semibold",
+                  table: "w-full border-collapse",
+                  head_row: "flex w-full",
+                  head_cell: "w-full text-muted-foreground rounded-md font-normal text-sm px-0",
+                  row: "flex w-full mt-2",
+                  cell: "h-20 w-full text-center text-sm relative p-0 border-0 focus-within:relative focus-within:z-20",
+                  day: "h-full w-full p-1 flex flex-col hover:bg-accent rounded-md",
+                  day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+                  day_today: "bg-accent text-accent-foreground",
+                  day_outside: "text-muted-foreground opacity-50",
+                  day_disabled: "text-muted-foreground opacity-50",
+                  day_hidden: "invisible",
+                }}
+                components={{
+                  Day: ({ date, ...props }) => (
+                    <CalendarDayCell
+                      date={date}
+                      selected={isSameDay(date, selectedDate)}
+                      eventTypes={getEventTypesForDate(date)}
+                      onSelect={(date) => setSelectedDate(date)}
+                      {...props}
+                    />
+                  ),
+                }}
+              />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      <CalendarLegend showManualEntries={true} />
+
+      {getEventsForDate(selectedDate).length > 0 ? (
         <Card>
-          <CardContent>
-            <div className="h-52 flex items-center justify-center text-muted-foreground">Loading calendar…</div>
+          <CardContent className="p-4 sm:p-6">
+            <div className="mb-4">
+              <h2 className="text-xl font-semibold">
+                {format(selectedDate, "MMMM d, yyyy")}
+              </h2>
+            </div>
+            <CalendarEventList events={getEventsForDate(selectedDate)} />
           </CardContent>
         </Card>
       ) : (
-        <>
-          <div className="flex items-center justify-between">
-            {!isCompact && (
-              <h1 className="text-2xl font-bold">Calendar</h1>
-            )}
+        <Card>
+          <CardContent className="p-6 text-center">
+            <p className="text-muted-foreground">
+              No events for {format(selectedDate, "MMMM d, yyyy")}
+            </p>
             <Button 
-              onClick={() => setShowAddEntryDialog(true)}
-              className="flex items-center gap-1"
+              variant="outline" 
+              className="mt-4"
+              onClick={() => setIsDialogOpen(true)}
             >
-              <Plus className="h-4 w-4 mr-1" /> Add Entry
+              <Plus size={16} className="mr-2" />
+              Add an entry
             </Button>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-7 md:gap-6">
-            <div className="md:col-span-7">
-              <Card className={cn(
-                "border bg-white dark:bg-gray-950 shadow-sm",
-                isCompact ? "" : "p-4"
-              )}>
-                <CardHeader className="p-0 pb-4">
-                  {calendarHeader}
-                </CardHeader>
-                <CardContent className="p-0">
-                  <Calendar
-                    mode="single"
-                    month={currentMonth}
-                    selected={selectedDate}
-                    onSelect={(date) => date && setSelectedDate(date)}
-                    className="w-full rounded-md border bg-gradient-to-br from-white via-white to-[#E5DEFF]/20 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800"
-                    components={{
-                      Day: ({ date, ...props }) => (
-                        <CalendarDayCell
-                          date={date}
-                          selected={isSameDay(date, selectedDate)}
-                          eventTypes={getEventTypesForDate(date)}
-                          onSelect={(date) => setSelectedDate(date)}
-                          {...props}
-                        />
-                      ),
-                    }}
-                  />
-                </CardContent>
-              </Card>
-
-              <CalendarLegend 
-                showBookings={true}
-                showEvents={true}
-                showManualEntries={true}
-              />
-
-              {selectedDateEvents.length > 0 ? (
-                <div className="mt-4">
-                  <div className="flex items-center gap-2 mb-4">
-                    <h3 className="text-lg font-medium">
-                      {format(selectedDate, "EEEE, MMMM d, yyyy")}
-                    </h3>
-                    <Badge variant="outline" className="ml-2 bg-white/50 text-xs">
-                      {selectedDateEvents.length} {selectedDateEvents.length === 1 ? 'event' : 'events'}
-                    </Badge>
-                  </div>
-
-                  <CalendarEventList 
-                    events={selectedDateEvents}
-                    userId={userId}
-                    onEventUpdate={() => queryClient.invalidateQueries({ queryKey: ['allCalendarEvents'] })}
-                  />
-                </div>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground text-sm bg-white/50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700 mt-4">
-                  No events for {format(selectedDate, "MMMM d, yyyy")}
-                </div>
-              )}
-            </div>
-          </div>
-        </>
+          </CardContent>
+        </Card>
       )}
 
       {userId && (
         <CalendarEntryDialog
-          isOpen={showAddEntryDialog}
-          onClose={() => setShowAddEntryDialog(false)}
+          isOpen={isDialogOpen}
+          onClose={() => setIsDialogOpen(false)}
           onSuccess={handleAddEntry}
           selectedDate={selectedDate}
           userId={userId}
