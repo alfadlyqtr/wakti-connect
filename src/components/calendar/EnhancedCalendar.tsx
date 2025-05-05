@@ -1,227 +1,184 @@
 
 import React, { useState, useEffect } from 'react';
-import { useTheme } from '@/hooks/use-theme';
-import { supabase } from '@/integrations/supabase/client';
-import { Calendar } from '@/components/ui/calendar';
-import { Card, CardContent } from '@/components/ui/card';
-import { format, isSameMonth, isSameDay } from 'date-fns';
-import { Button } from '@/components/ui/button';
-import { Calendar as CalendarIcon, Plus } from 'lucide-react';
-import CalendarEntryDialog from './CalendarEntryDialog';
+import { format, isSameDay, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, getDay } from 'date-fns';
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import CalendarEventList from './CalendarEventList';
-import { CalendarEvent } from '@/types/calendar.types';
-import { EventDot } from '@/components/dashboard/home/EventDot';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { fetchEvents } from '@/services/calendar/fetchEventsService';
-import { fetchTasks } from '@/services/calendar/fetchTasksService';
-import { fetchBookings } from '@/services/calendar/fetchBookingsService';
-import { fetchManualEntries } from '@/services/calendar/manualEntryService';
-import { useUserRole } from '@/features/auth/hooks/useUserRole';
+import { CalendarEvent } from "@/types/calendar.types";
+import CalendarEntryDialog from './CalendarEntryDialog';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/components/ui/use-toast';
+import { fetchAllCalendarItems } from '@/services/calendar/fetchEventsService';
+import CreateEventButton from '@/components/events/CreateEventButton';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const EnhancedCalendar: React.FC = () => {
-  const [userId, setUserId] = useState<string | null>(null);
-  const [date, setDate] = useState<Date>(new Date());
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const { theme } = useTheme();
-  const isDarkMode = theme === 'dark';
-  const { userRole, isIndividual, isBusiness, isStaff } = useUserRole();
-
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [filteredEvents, setFilteredEvents] = useState<CalendarEvent[]>([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+  const isMobile = useIsMobile();
+  
+  // Get current user ID
   useEffect(() => {
-    // Get current user ID
-    supabase.auth.getSession().then(result => {
-      const id = result.data?.session?.user?.id;
-      setUserId(id || null);
-    });
+    const getUserId = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.id) {
+        setUserId(session.user.id);
+      }
+    };
+    
+    getUserId();
   }, []);
-
-  // Query for tasks - only for business and individual users
-  const { data: taskEvents = [] } = useQuery({
-    queryKey: ['calendarTasks', userId],
-    queryFn: async () => {
-      if (!userId || isStaff) return []; 
-      return await fetchTasks(userId);
-    },
-    enabled: !!userId && (isBusiness || isIndividual)
-  });
-
-  // Query for events - only for business and individual users
-  const { data: eventEvents = [] } = useQuery({
-    queryKey: ['calendarEvents', userId],
-    queryFn: async () => {
-      if (!userId || isStaff) return []; 
-      return await fetchEvents(userId);
-    },
-    enabled: !!userId && (isBusiness || isIndividual)
-  });
-
-  // Query for bookings - for business and staff users
-  const { data: bookingEvents = [] } = useQuery({
-    queryKey: ['calendarBookings', userId],
-    queryFn: async () => {
-      if (!userId || isIndividual) return []; 
-      return await fetchBookings(userId);
-    },
-    enabled: !!userId && (isBusiness || isStaff)
-  });
-
-  // Query for manual entries - for all users
-  const { data: manualEvents = [] } = useQuery({
-    queryKey: ['calendarManualEntries', userId],
-    queryFn: async () => {
-      if (!userId) return [];
-      return await fetchManualEntries(userId);
-    },
-    enabled: !!userId
-  });
-
-  // Combine all events based on user role
-  const events = React.useMemo(() => {
-    let combinedEvents: CalendarEvent[] = [];
+  
+  // Fetch calendar events when user ID is available
+  useEffect(() => {
+    const fetchCalendarData = async () => {
+      if (userId) {
+        setIsLoading(true);
+        try {
+          const calendarEvents = await fetchAllCalendarItems(userId);
+          console.log("Calendar events loaded:", calendarEvents.length);
+          setEvents(calendarEvents);
+        } catch (error) {
+          console.error('Error fetching calendar data:', error);
+          toast({
+            title: "Error",
+            description: "Failed to load calendar events",
+            variant: "destructive"
+          });
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
     
-    // Add manual entries for everyone
-    combinedEvents = [...manualEvents];
-    
-    // Add tasks for business and individual users
-    if (isBusiness || isIndividual) {
-      combinedEvents = [...combinedEvents, ...taskEvents];
+    fetchCalendarData();
+  }, [userId, toast]);
+  
+  // Filter events for selected date
+  useEffect(() => {
+    if (selectedDate && events.length > 0) {
+      const eventsForDate = events.filter(event => 
+        isSameDay(new Date(event.date), selectedDate)
+      );
+      setFilteredEvents(eventsForDate);
+    } else {
+      setFilteredEvents([]);
     }
-    
-    // Add events for business and individual users
-    if (isBusiness || isIndividual) {
-      combinedEvents = [...combinedEvents, ...eventEvents];
-    }
-    
-    // Add bookings for business and staff users
-    if (isBusiness || isStaff) {
-      combinedEvents = [...combinedEvents, ...bookingEvents];
-    }
-    
-    return combinedEvents;
-  }, [taskEvents, eventEvents, bookingEvents, manualEvents, isBusiness, isIndividual, isStaff]);
-
-  const handleAddEntry = (newEntry: any) => {
-    // Convert the entry from the backend into our CalendarEvent format
-    const calendarEvent: CalendarEvent = {
-      id: newEntry.id,
-      title: newEntry.title,
-      date: new Date(newEntry.date),
+  }, [selectedDate, events]);
+  
+  // Handle navigation
+  const handlePreviousMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
+  const handleNextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
+  
+  // Handle new calendar entry
+  const handleNewEntry = (entry: any) => {
+    // Create a new CalendarEvent from the entry
+    const newEvent: CalendarEvent = {
+      id: entry.id,
+      title: entry.title,
+      date: new Date(entry.date),
       type: 'manual',
-      description: newEntry.description,
-      location: newEntry.location
+      description: entry.description,
+      location: entry.location
     };
     
-    // The event will be automatically added via React Query refetch
-  };
-
-  // Filter events for the selected day
-  const selectedDateEvents = events.filter(event => 
-    isSameDay(new Date(event.date), selectedDate)
-  );
-
-  // Filter events to get dots for each day with events
-  const getEventDots = (day: Date) => {
-    const dayEvents = events.filter(event => isSameDay(new Date(event.date), day));
-    return {
-      hasTasks: dayEvents.some(event => event.type === 'task'),
-      hasBookings: dayEvents.some(event => event.type === 'booking'),
-      hasEvents: dayEvents.some(event => event.type === 'event'),
-      hasManualEntries: dayEvents.some(event => event.type === 'manual')
-    };
-  };
-
-  const refreshQueries = () => {
-    // This will be used to refresh data after a new manual entry is added
-    if (userId) {
-      const queryClient = useQueryClient();
-      queryClient.invalidateQueries({ queryKey: ['calendarManualEntries'] });
+    // Add the new event to the events list
+    setEvents(prev => [...prev, newEvent]);
+    
+    // If the new event is for the selected date, add it to filtered events
+    if (isSameDay(new Date(entry.date), selectedDate)) {
+      setFilteredEvents(prev => [...prev, newEvent]);
     }
   };
 
   return (
-    <div className="space-y-4">
-      <Card className={`border ${isDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
-        <CardContent className="p-0">
-          <div className="p-4 border-b flex justify-between items-center">
-            <div className="flex items-center">
-              <CalendarIcon className={`mr-2 h-5 w-5 ${isDarkMode ? 'text-gray-300' : ''}`} />
-              <h3 className={`text-lg font-medium ${isDarkMode ? 'text-gray-100' : ''}`}>Calendar</h3>
-            </div>
-            {userId && (
-              <Button 
-                size="sm" 
-                onClick={() => setIsAddDialogOpen(true)}
-                className={`${isDarkMode ? 'bg-blue-700 hover:bg-blue-600 text-white' : ''}`}
-              >
-                <Plus className="h-4 w-4 mr-1" /> Add Entry
-              </Button>
-            )}
-          </div>
-          
-          <div className={`p-3 ${isDarkMode ? 'bg-gray-800' : ''}`}>
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={(date) => date && setSelectedDate(date)}
-              className={`rounded-md ${isDarkMode ? 'bg-gray-800 text-gray-100' : ''} w-full`}
-              components={{
-                Day: ({ date: day, ...props }) => {
-                  const isSelected = isSameDay(day, selectedDate);
-                  const isCurrentMonth = isSameMonth(day, date);
-                  const eventDots = getEventDots(day);
-                  
-                  return (
-                    <div
-                      className={`
-                        relative flex items-center justify-center h-10 w-full cursor-pointer
-                        ${!isCurrentMonth ? 'text-gray-400' : ''}
-                        ${isSelected && isDarkMode ? 'bg-blue-900/30 text-blue-100' : ''}
-                        ${isSelected && !isDarkMode ? 'bg-blue-100 text-blue-900' : ''}
-                        ${isDarkMode && !isSelected ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}
-                      `}
-                      onClick={() => setSelectedDate(day)}
-                      {...props}
-                    >
-                      <time dateTime={format(day, 'yyyy-MM-dd')}>{format(day, 'd')}</time>
-                      
-                      {/* Event indicators */}
-                      <div className="absolute bottom-1 left-0 right-0 flex justify-center space-x-1">
-                        {eventDots.hasTasks && <div className="h-1.5 w-1.5 rounded-full bg-amber-500" />}
-                        {eventDots.hasBookings && <div className="h-1.5 w-1.5 rounded-full bg-green-500" />}
-                        {eventDots.hasEvents && <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />}
-                        {eventDots.hasManualEntries && <div className="h-1.5 w-1.5 rounded-full bg-purple-500" />}
-                      </div>
-                    </div>
-                  );
-                }
-              }}
-            />
-          </div>
-        </CardContent>
-      </Card>
+    <div className="max-w-6xl mx-auto">
+      <div className="flex flex-col md:flex-row gap-6">
+        <div className="w-full md:w-2/3">
+          <Card className="bg-white dark:bg-gray-800 shadow-md">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold">{format(currentMonth, 'MMMM yyyy')}</h2>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handlePreviousMonth}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    {!isMobile && <span className="ml-1">Previous</span>}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleNextMonth}
+                  >
+                    {!isMobile && <span className="mr-1">Next</span>}
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              
+              {isLoading ? (
+                <div className="h-80 flex items-center justify-center">
+                  <p className="text-muted-foreground">Loading calendar...</p>
+                </div>
+              ) : (
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(date) => date && setSelectedDate(date)}
+                  month={currentMonth}
+                  className="rounded-md"
+                />
+              )}
+            </CardContent>
+          </Card>
+        </div>
+        
+        <div className="w-full md:w-1/3">
+          <Card className="bg-white dark:bg-gray-800 shadow-md h-full">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold">{format(selectedDate, 'MMMM d, yyyy')}</h3>
+                <div className="flex gap-2">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => setIsDialogOpen(true)}
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add
+                  </Button>
+                  <CreateEventButton startDate={selectedDate} />
+                </div>
+              </div>
+              
+              {filteredEvents.length > 0 ? (
+                <CalendarEventList events={filteredEvents} />
+              ) : (
+                <div className="text-center py-10 text-muted-foreground">
+                  <p>No events for this date</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
       
-      {/* Events for selected date */}
-      <Card className={`${isDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
-        <CardContent className="p-4">
-          <h3 className={`text-lg font-medium mb-4 ${isDarkMode ? 'text-gray-100' : ''}`}>
-            {format(selectedDate, 'MMMM d, yyyy')}
-          </h3>
-          
-          <CalendarEventList events={selectedDateEvents} />
-        </CardContent>
-      </Card>
-
-      {/* Dialog for adding new entries */}
-      {userId && (
+      {isDialogOpen && userId && (
         <CalendarEntryDialog
-          isOpen={isAddDialogOpen}
-          onClose={() => setIsAddDialogOpen(false)}
-          onSuccess={(entry) => {
-            handleAddEntry(entry);
-            // Refresh data after adding a new entry
-            const queryClient = useQueryClient();
-            queryClient.invalidateQueries({ queryKey: ['calendarManualEntries', userId] });
-          }}
+          isOpen={isDialogOpen}
+          onClose={() => setIsDialogOpen(false)}
+          onSuccess={handleNewEntry}
           selectedDate={selectedDate}
           userId={userId}
         />
