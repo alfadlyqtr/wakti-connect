@@ -16,13 +16,13 @@ export function useCalendarEvents() {
     });
   }, []);
 
-  const { data: taskEvents = [], isLoading: isLoadingTasks } = useQuery({
+  const { data: taskEvents = [], isLoading: isLoadingTasks, refetch: refetchTasks } = useQuery({
     queryKey: ['calendarTaskEvents', userId],
     queryFn: async () => userId ? fetchTasks(userId) : [],
     enabled: !!userId,
   });
 
-  const { data: bookingEvents = [], isLoading: isLoadingBookings } = useQuery({
+  const { data: bookingEvents = [], isLoading: isLoadingBookings, refetch: refetchBookings } = useQuery({
     queryKey: ['calendarBookingEvents', userId],
     queryFn: async () => {
       if (!userId) return [];
@@ -51,7 +51,7 @@ export function useCalendarEvents() {
     enabled: !!userId,
   });
 
-  const { data: calendarEvents = [], isLoading: isLoadingEvents } = useQuery({
+  const { data: calendarEvents = [], isLoading: isLoadingEvents, refetch: refetchEvents } = useQuery({
     queryKey: ['calendarEvents', userId],
     queryFn: async () => userId ? fetchEvents(userId) : [],
     enabled: !!userId,
@@ -65,9 +65,19 @@ export function useCalendarEvents() {
 
   const isLoading = isLoadingTasks || isLoadingBookings || isLoadingEvents;
 
+  // Create a combined refetch function that calls all refetch functions
+  const refetch = async () => {
+    await Promise.all([
+      refetchTasks(),
+      refetchBookings(),
+      refetchEvents()
+    ]);
+  };
+
   return {
     events: allEvents,
     isLoading,
-    userId
+    userId,
+    refetch // Return the refetch function
   };
 }
