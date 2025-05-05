@@ -11,80 +11,94 @@ import CalendarEntryDialog from './CalendarEntryDialog';
 import CalendarEventList from './CalendarEventList';
 import { CalendarEvent } from '@/types/calendar.types';
 import { EventDot } from '@/components/dashboard/home/EventDot';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { fetchEvents } from '@/services/calendar/fetchEventsService';
+import { fetchTasks } from '@/services/calendar/fetchTasksService';
+import { fetchBookings } from '@/services/calendar/fetchBookingsService';
+import { fetchManualEntries } from '@/services/calendar/manualEntryService';
+import { useUserRole } from '@/features/auth/hooks/useUserRole';
 
 const EnhancedCalendar: React.FC = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [date, setDate] = useState<Date>(new Date());
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const { theme } = useTheme();
   const isDarkMode = theme === 'dark';
+  const { userRole, isIndividual, isBusiness, isStaff } = useUserRole();
 
   useEffect(() => {
     // Get current user ID
     supabase.auth.getSession().then(result => {
       const id = result.data?.session?.user?.id;
       setUserId(id || null);
-      
-      if (id) {
-        fetchEvents(id);
-      }
     });
   }, []);
 
-  const fetchEvents = async (uid: string) => {
-    try {
-      // Fetch tasks with due dates
-      const { data: tasksData, error: tasksError } = await supabase
-        .from('tasks')
-        .select('id, title, due_date, status')
-        .eq('user_id', uid)
-        .not('due_date', 'is', null);
-      
-      // Fetch manual calendar entries
-      const { data: manualEntries, error: manualError } = await supabase
-        .from('calendar_manual_entries')
-        .select('*')
-        .eq('user_id', uid);
-      
-      if (tasksError) console.error('Error fetching tasks:', tasksError);
-      if (manualError) console.error('Error fetching manual entries:', manualError);
+  // Query for tasks - only for business and individual users
+  const { data: taskEvents = [] } = useQuery({
+    queryKey: ['calendarTasks', userId],
+    queryFn: async () => {
+      if (!userId || isStaff) return []; 
+      return await fetchTasks(userId);
+    },
+    enabled: !!userId && (isBusiness || isIndividual)
+  });
 
-      const allEvents: CalendarEvent[] = [];
+  // Query for events - only for business and individual users
+  const { data: eventEvents = [] } = useQuery({
+    queryKey: ['calendarEvents', userId],
+    queryFn: async () => {
+      if (!userId || isStaff) return []; 
+      return await fetchEvents(userId);
+    },
+    enabled: !!userId && (isBusiness || isIndividual)
+  });
 
-      // Process tasks
-      if (tasksData) {
-        tasksData.forEach(task => {
-          allEvents.push({
-            id: task.id,
-            title: task.title,
-            date: new Date(task.due_date),
-            type: 'task',
-            status: task.status
-          });
-        });
-      }
-      
-      // Process manual entries
-      if (manualEntries) {
-        manualEntries.forEach(entry => {
-          allEvents.push({
-            id: entry.id,
-            title: entry.title,
-            date: new Date(entry.date),
-            type: 'manual',
-            description: entry.description,
-            location: entry.location
-          });
-        });
-      }
-      
-      setEvents(allEvents);
-    } catch (error) {
-      console.error('Error fetching events:', error);
+  // Query for bookings - for business and staff users
+  const { data: bookingEvents = [] } = useQuery({
+    queryKey: ['calendarBookings', userId],
+    queryFn: async () => {
+      if (!userId || isIndividual) return []; 
+      return await fetchBookings(userId);
+    },
+    enabled: !!userId && (isBusiness || isStaff)
+  });
+
+  // Query for manual entries - for all users
+  const { data: manualEvents = [] } = useQuery({
+    queryKey: ['calendarManualEntries', userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      return await fetchManualEntries(userId);
+    },
+    enabled: !!userId
+  });
+
+  // Combine all events based on user role
+  const events = React.useMemo(() => {
+    let combinedEvents: CalendarEvent[] = [];
+    
+    // Add manual entries for everyone
+    combinedEvents = [...manualEvents];
+    
+    // Add tasks for business and individual users
+    if (isBusiness || isIndividual) {
+      combinedEvents = [...combinedEvents, ...taskEvents];
     }
-  };
+    
+    // Add events for business and individual users
+    if (isBusiness || isIndividual) {
+      combinedEvents = [...combinedEvents, ...eventEvents];
+    }
+    
+    // Add bookings for business and staff users
+    if (isBusiness || isStaff) {
+      combinedEvents = [...combinedEvents, ...bookingEvents];
+    }
+    
+    return combinedEvents;
+  }, [taskEvents, eventEvents, bookingEvents, manualEvents, isBusiness, isIndividual, isStaff]);
 
   const handleAddEntry = (newEntry: any) => {
     // Convert the entry from the backend into our CalendarEvent format
@@ -97,8 +111,7 @@ const EnhancedCalendar: React.FC = () => {
       location: newEntry.location
     };
     
-    // Add the new event to our state
-    setEvents(prev => [...prev, calendarEvent]);
+    // The event will be automatically added via React Query refetch
   };
 
   // Filter events for the selected day
@@ -115,6 +128,14 @@ const EnhancedCalendar: React.FC = () => {
       hasEvents: dayEvents.some(event => event.type === 'event'),
       hasManualEntries: dayEvents.some(event => event.type === 'manual')
     };
+  };
+
+  const refreshQueries = () => {
+    // This will be used to refresh data after a new manual entry is added
+    if (userId) {
+      const queryClient = useQueryClient();
+      queryClient.invalidateQueries({ queryKey: ['calendarManualEntries'] });
+    }
   };
 
   return (
@@ -195,7 +216,12 @@ const EnhancedCalendar: React.FC = () => {
         <CalendarEntryDialog
           isOpen={isAddDialogOpen}
           onClose={() => setIsAddDialogOpen(false)}
-          onSuccess={handleAddEntry}
+          onSuccess={(entry) => {
+            handleAddEntry(entry);
+            // Refresh data after adding a new entry
+            const queryClient = useQueryClient();
+            queryClient.invalidateQueries({ queryKey: ['calendarManualEntries', userId] });
+          }}
           selectedDate={selectedDate}
           userId={userId}
         />
