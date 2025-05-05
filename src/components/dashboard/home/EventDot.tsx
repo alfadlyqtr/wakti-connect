@@ -1,27 +1,24 @@
 
 import React from "react";
-import { cn } from "@/lib/utils";
+import { EventType } from "@/types/calendar.types";
 
 interface EventDotProps {
-  type: "task" | "booking" | "event" | "manual";
-  className?: string;
+  type: EventType;
 }
 
-export const EventDot: React.FC<EventDotProps> = ({ type, className }) => {
-  const dotColor = {
-    task: "bg-amber-500",
-    booking: "bg-blue-500",
-    event: "bg-purple-500",
-    manual: "bg-orange-500",
+export const EventDot: React.FC<EventDotProps> = ({ type }) => {
+  const getDotColor = () => {
+    switch (type) {
+      case "task":
+        return "bg-amber-500";
+      case "booking":
+        return "bg-green-500";
+      default:
+        return "bg-slate-400";
+    }
   };
 
   return (
-    <div
-      className={cn(
-        "h-1.5 w-1.5 rounded-full",
-        dotColor[type],
-        className
-      )}
-    />
+    <div className={`h-1.5 w-1.5 rounded-full ${getDotColor()}`} />
   );
 };

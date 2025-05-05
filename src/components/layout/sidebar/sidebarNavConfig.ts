@@ -1,160 +1,146 @@
 
-import { 
-  CalendarDays, 
-  CheckSquare, 
-  Home, 
-  LayoutDashboard, 
-  Mail, 
-  MessageSquare, 
-  Settings, 
-  User, 
+import {
+  Home,
+  CalendarDays,
+  CalendarPlus, // Added CalendarPlus import
+  Briefcase,
   Users,
+  BarChart2,
+  FileText,
+  Settings,
+  HelpCircle,
+  Brain,
+  Mic,
+  CheckSquare,
+  Building2,
+  ScrollText,
+  Headphones,
   Bell,
-  HeartHandshake
-} from 'lucide-react';
+  MessageSquare,
+} from "lucide-react";
+import { UserRole } from "@/types/roles";
 
-// Define user type for sidebar
-export type UserType = 'all' | 'individual' | 'business' | 'staff';
+export const navItems = [
+  {
+    path: "",
+    label: "Dashboard",
+    icon: Home,
+    showFor: ["individual", "business", "staff", "super-admin"],
+  },
+  {
+    path: "tasks",
+    label: "Tasks",
+    icon: CheckSquare,
+    showFor: ["individual", "business"],
+  },
+  {
+    path: "events",
+    label: "Events",
+    icon: CalendarPlus, // Changed from CalendarDays to CalendarPlus
+    showFor: ["individual", "business"],
+  },
+  {
+    path: "bookings",
+    label: "Bookings",
+    icon: CalendarDays,
+    showFor: ["business", "staff"],
+  },
+  {
+    path: "jobs",
+    label: "Jobs",
+    icon: Briefcase, 
+    showFor: ["business", "staff"],
+  },
+  {
+    path: "services",
+    label: "Services",
+    icon: Headphones,
+    showFor: ["business"],
+  },
+  {
+    path: "staff",
+    label: "Staff",
+    icon: Users,
+    showFor: ["business"],
+  },
+  {
+    path: "business-page",
+    label: "Business Page",
+    icon: Building2,
+    showFor: ["business"],
+  },
+  {
+    path: "analytics",
+    label: "Analytics",
+    icon: BarChart2,
+    showFor: ["business"],
+  },
+  {
+    path: "reports",
+    label: "Reports",
+    icon: ScrollText,
+    showFor: ["business"],
+  },
+  {
+    path: "ai-assistant",
+    label: "WAKTI AI",
+    icon: Brain,
+    showFor: ["individual", "business"],
+  },
+  {
+    path: "meeting-summary",
+    label: "Voice Recorder & Transcription",
+    icon: Mic,
+    showFor: ["individual", "business"],
+  },
+  {
+    path: "settings",
+    label: "Settings",
+    icon: Settings,
+    showFor: ["individual", "business", "staff"],
+  },
+  {
+    path: "help",
+    label: "Help",
+    icon: HelpCircle,
+    showFor: ["individual", "business", "staff"],
+  },
+];
 
-export interface NavItem {
-  title: string;
-  href: string;
-  icon: any;
-  forUsers?: UserType[];
-  badge?: string;
-}
+export const dropdownNavItems = [
+  {
+    path: "notifications",
+    label: "Notifications",
+    icon: Bell,
+    showFor: ["individual", "business", "staff"],
+    badge: 0,
+  },
+  {
+    path: "messages",
+    label: "Messages",
+    icon: MessageSquare,
+    showFor: ["individual", "business", "staff"],
+    badge: 0,
+  },
+  {
+    path: "contacts",
+    label: "Contacts",
+    icon: Users,
+    showFor: ["individual", "business", "staff"],
+    badge: 0,
+  },
+  {
+    path: "settings",
+    label: "Settings",
+    icon: Settings,
+    showFor: ["individual", "business", "staff"],
+  },
+];
 
-export interface NavSection {
-  title?: string;
-  items: NavItem[];
-}
-
-// Item type used by SidebarNavItems component
-export interface NavItemType {
-  label: string;
+export type NavItem = {
   path: string;
-  icon: any;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
   showFor: string[];
   badge?: number;
-}
-
-// Nav items for the sidebar
-export const navItems: NavItemType[] = [
-  {
-    label: 'Dashboard',
-    path: '',
-    icon: LayoutDashboard,
-    showFor: ['individual', 'business', 'staff', 'super-admin']
-  },
-  {
-    label: 'Calendar',
-    path: 'calendar',
-    icon: CalendarDays,
-    showFor: ['individual', 'business', 'staff', 'super-admin']
-  },
-  {
-    label: 'Tasks',
-    path: 'tasks',
-    icon: CheckSquare,
-    showFor: ['individual', 'business', 'staff', 'super-admin']
-  }
-];
-
-// Nav items for the user dropdown menu
-export const dropdownNavItems: NavItemType[] = [
-  {
-    label: 'Messages',
-    path: 'messages',
-    icon: MessageSquare,
-    showFor: ['individual', 'business', 'staff', 'super-admin']
-  },
-  {
-    label: 'Notifications',
-    path: 'notifications',
-    icon: Bell,
-    showFor: ['individual', 'business', 'staff', 'super-admin']
-  },
-  {
-    label: 'Profile',
-    path: 'profile',
-    icon: User,
-    showFor: ['individual', 'business', 'staff', 'super-admin']
-  },
-  {
-    label: 'Staff',
-    path: 'staff-management',
-    icon: Users,
-    showFor: ['business', 'super-admin']
-  },
-  {
-    label: 'Settings',
-    path: 'settings',
-    icon: Settings,
-    showFor: ['individual', 'business', 'staff', 'super-admin']
-  }
-];
-
-export const sidebarNavConfig: NavSection[] = [
-  {
-    items: [
-      {
-        title: 'Dashboard',
-        href: '/dashboard',
-        icon: LayoutDashboard,
-        forUsers: ['all'],
-      },
-      {
-        title: 'Calendar',
-        href: '/dashboard/calendar',
-        icon: CalendarDays,
-        forUsers: ['all'],
-      },
-      {
-        title: 'Tasks',
-        href: '/dashboard/tasks',
-        icon: CheckSquare,
-        forUsers: ['all'],
-      },
-      {
-        title: 'Invitations',
-        href: '/dashboard/invitations',
-        icon: Mail,
-        forUsers: ['all'],
-      },
-      {
-        title: 'Messages',
-        href: '/dashboard/messages',
-        icon: MessageSquare,
-        forUsers: ['all'],
-      },
-    ],
-  },
-  {
-    title: 'Account',
-    items: [
-      {
-        title: 'Profile',
-        href: '/dashboard/profile',
-        icon: User,
-        forUsers: ['all'],
-      },
-      {
-        title: 'Settings',
-        href: '/dashboard/settings',
-        icon: Settings,
-        forUsers: ['all'],
-      },
-    ],
-  },
-  {
-    title: 'Business',
-    items: [
-      {
-        title: 'Staff',
-        href: '/dashboard/staff',
-        icon: Users,
-        forUsers: ['business'],
-      },
-    ],
-  },
-];
+};
