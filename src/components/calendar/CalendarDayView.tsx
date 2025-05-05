@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { CalendarEvent } from "@/types/calendar.types";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Clock, MapPin, Calendar, CheckSquare } from "lucide-react";
+import { Clock, MapPin, Calendar, CheckSquare, Edit3 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface CalendarDayViewProps {
@@ -23,7 +23,9 @@ const CalendarDayView: React.FC<CalendarDayViewProps> = ({
   // Group events by type
   const tasks = events.filter(event => event.type === "task");
   const bookings = events.filter(event => event.type === "booking");
+  const manualEntries = events.filter(event => !event.type || event.type === "manual"); // Consider undefined type as manual entries
   const otherEvents = events.filter(event => event.type === "event");
+  const reminders = events.filter(event => event.type === "reminder");
 
   if (events.length === 0) {
     return (
@@ -40,7 +42,7 @@ const CalendarDayView: React.FC<CalendarDayViewProps> = ({
     );
   }
 
-  const renderEvents = (title: string, eventsList: CalendarEvent[], type: "task" | "booking" | "event") => {
+  const renderEvents = (title: string, eventsList: CalendarEvent[], type: "task" | "booking" | "event" | "manual" | "reminder") => {
     if (eventsList.length === 0) return null;
 
     return (
@@ -48,7 +50,9 @@ const CalendarDayView: React.FC<CalendarDayViewProps> = ({
         <h3 className="font-medium text-sm flex items-center gap-2">
           {type === "task" && <CheckSquare className="h-4 w-4 text-amber-500" />}
           {type === "booking" && <Calendar className="h-4 w-4 text-green-500" />}
-          {type === "event" && <Calendar className="h-4 w-4 text-blue-500" />}
+          {type === "event" && <Calendar className="h-4 w-4 text-violet-500" />}
+          {type === "manual" && <Edit3 className="h-4 w-4 text-purple-500" />}
+          {type === "reminder" && <Clock className="h-4 w-4 text-yellow-400" />}
           {title}
           <Badge variant="outline" className="ml-2 font-normal">
             {eventsList.length}
@@ -62,7 +66,9 @@ const CalendarDayView: React.FC<CalendarDayViewProps> = ({
               className={`p-3 border rounded-lg ${
                 type === "task" ? "bg-amber-50/50 border-amber-200" :
                 type === "booking" ? "bg-green-50/50 border-green-200" :
-                "bg-blue-50/50 border-blue-200"
+                type === "event" ? "bg-violet-50/50 border-violet-200" :
+                type === "reminder" ? "bg-yellow-50/50 border-yellow-200" :
+                "bg-purple-50/50 border-purple-200"
               }`}
             >
               <div className="flex items-start justify-between">
@@ -83,7 +89,7 @@ const CalendarDayView: React.FC<CalendarDayViewProps> = ({
                     </div>
                   )}
                   
-                  {(type === "booking" || type === "event") && (
+                  {(type !== "task") && (
                     <h4 className="font-medium">{event.title}</h4>
                   )}
                   
@@ -144,17 +150,29 @@ const CalendarDayView: React.FC<CalendarDayViewProps> = ({
       <CardContent className="space-y-4">
         {renderEvents("Tasks", tasks, "task")}
         
-        {tasks.length > 0 && (bookings.length > 0 || otherEvents.length > 0) && (
+        {tasks.length > 0 && (manualEntries.length > 0 || bookings.length > 0 || otherEvents.length > 0 || reminders.length > 0) && (
+          <Separator className="my-4" />
+        )}
+        
+        {renderEvents("Manual Entries", manualEntries, "manual")}
+        
+        {(tasks.length > 0 || manualEntries.length > 0) && (bookings.length > 0 || otherEvents.length > 0 || reminders.length > 0) && (
           <Separator className="my-4" />
         )}
         
         {renderEvents("Bookings", bookings, "booking")}
         
-        {(tasks.length > 0 || bookings.length > 0) && otherEvents.length > 0 && (
+        {(tasks.length > 0 || manualEntries.length > 0 || bookings.length > 0) && (otherEvents.length > 0 || reminders.length > 0) && (
           <Separator className="my-4" />
         )}
         
         {renderEvents("Events", otherEvents, "event")}
+        
+        {(tasks.length > 0 || manualEntries.length > 0 || bookings.length > 0 || otherEvents.length > 0) && reminders.length > 0 && (
+          <Separator className="my-4" />
+        )}
+        
+        {renderEvents("Reminders", reminders, "reminder")}
       </CardContent>
     </Card>
   );

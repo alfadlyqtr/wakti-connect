@@ -56,6 +56,20 @@ const useRealCalendarEvents = (userId: string | null) => {
         })));
       }
 
+      // Fetch manual entries and events
+      const { data: eventsData } = await supabase
+        .from('events')
+        .select('id, title, start_time, type')
+        .eq('user_id', userId);
+      if (eventsData) {
+        results.push(...eventsData.map(event => ({
+          id: event.id,
+          title: event.title,
+          date: new Date(event.start_time as string),
+          type: (event.type || "manual") as EventType
+        })));
+      }
+
       return results;
     },
     enabled: !!userId,
@@ -88,7 +102,10 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
     const dateEvents = getEventsForDate(date);
     return {
       hasTasks: dateEvents.some(event => event.type === "task"),
-      hasBookings: dateEvents.some(event => event.type === "booking")
+      hasBookings: dateEvents.some(event => event.type === "booking"),
+      hasEvents: dateEvents.some(event => event.type === "event"),
+      hasManualEntries: dateEvents.some(event => !event.type || event.type === "manual"),
+      hasReminders: dateEvents.some(event => event.type === "reminder")
     };
   };
 
@@ -122,7 +139,7 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
             }}
           />
 
-          <CalendarLegend showBookings={true} />
+          <CalendarLegend showBookings={true} showManualEntries={true} showEvents={true} showReminders={true} />
 
           {selectedDateEvents.length > 0 ? (
             <div className="mt-4">

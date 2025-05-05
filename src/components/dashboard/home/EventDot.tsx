@@ -3,7 +3,7 @@ import React from "react";
 import { EventType } from "@/types/calendar.types";
 
 interface EventDotProps {
-  type: EventType;
+  type: EventType | "manual" | "reminder";
 }
 
 export const EventDot: React.FC<EventDotProps> = ({ type }) => {
@@ -15,6 +15,9 @@ export const EventDot: React.FC<EventDotProps> = ({ type }) => {
         return "bg-green-500"; // Matching our legend
       case "event":
         return "bg-violet-500"; // Added for events
+      case "reminder":
+        return "bg-yellow-400"; // Added for reminders  
+      case "manual":
       default:
         return "bg-purple-500"; // Default for manual entries
     }
@@ -24,4 +27,3 @@ export const EventDot: React.FC<EventDotProps> = ({ type }) => {
     <div className={`h-1.5 w-1.5 rounded-full ${getDotColor()}`} />
   );
 };
-

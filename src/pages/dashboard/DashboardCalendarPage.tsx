@@ -26,10 +26,10 @@ const DashboardCalendarPage: React.FC = () => {
         acc[dateStr] = [];
       }
       
+      // Only add a reference to the event type, not the full content
+      // This prevents cluttering the calendar cells
       acc[dateStr].push({
         id: event.id,
-        name: event.title,
-        time: event.startTime,
         type: event.type,
       });
       

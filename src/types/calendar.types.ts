@@ -15,10 +15,12 @@ export interface CalendarEvent {
   endTime?: string; // Optional end time for time-specific events
 }
 
-export type EventType = "task" | "booking" | "event"; // Added "event" type
+export type EventType = "task" | "booking" | "event" | "manual" | "reminder";
 
 export interface DayEventTypes {
   hasTasks: boolean;
   hasBookings?: boolean;
-  hasEvents?: boolean; // Added hasEvents property
+  hasEvents?: boolean;
+  hasManualEntries?: boolean;
+  hasReminders?: boolean;
 }
