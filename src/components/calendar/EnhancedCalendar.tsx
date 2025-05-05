@@ -10,6 +10,7 @@ import { Calendar as CalendarIcon, Plus } from 'lucide-react';
 import CalendarEntryDialog from './CalendarEntryDialog';
 import CalendarEventList from './CalendarEventList';
 import { CalendarEvent } from '@/types/calendar.types';
+import { EventDot } from '@/components/dashboard/home/EventDot';
 
 const EnhancedCalendar: React.FC = () => {
   const [userId, setUserId] = useState<string | null>(null);
@@ -142,15 +143,6 @@ const EnhancedCalendar: React.FC = () => {
               selected={selectedDate}
               onSelect={(date) => date && setSelectedDate(date)}
               className={`rounded-md ${isDarkMode ? 'bg-gray-800 text-gray-100' : ''} w-full`}
-              classNames={{
-                months: "w-full",
-                month: "w-full",
-                table: "w-full border-collapse",
-                head_row: "w-full flex",
-                row: "flex w-full mt-2",
-                cell: "relative p-0 text-center h-10 w-full focus-within:relative focus-within:z-20",
-                day: "h-10 w-full p-0 aria-selected:opacity-100"
-              }}
               components={{
                 Day: ({ date: day, ...props }) => {
                   const isSelected = isSameDay(day, selectedDate);

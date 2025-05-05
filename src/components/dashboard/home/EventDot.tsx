@@ -13,10 +13,10 @@ export const EventDot: React.FC<EventDotProps> = ({ type, className }) => {
   const isDarkMode = theme === 'dark';
   
   const dotColor = {
-    task: isDarkMode ? "bg-blue-400" : "bg-blue-500",
-    booking: isDarkMode ? "bg-green-400" : "bg-green-500",
-    event: isDarkMode ? "bg-amber-400" : "bg-amber-500",
-    manual: isDarkMode ? "bg-purple-400" : "bg-purple-500"
+    task: "bg-amber-500",
+    booking: "bg-green-500",
+    event: "bg-blue-500",
+    manual: "bg-purple-500"
   };
 
   return (

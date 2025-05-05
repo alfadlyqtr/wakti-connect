@@ -34,7 +34,7 @@ const CalendarEventList: React.FC<CalendarEventListProps> = ({ events }) => {
       {events.map(event => (
         <div 
           key={event.id} 
-          className="p-3 rounded-lg border bg-white hover:bg-gray-50 transition-colors"
+          className="p-3 rounded-lg border bg-white hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-750 transition-colors"
         >
           <div className="flex items-start gap-3">
             <div className={`h-3 w-3 rounded-full mt-1.5 ${getEventTypeColor(event.type)}`} />
@@ -56,7 +56,7 @@ const CalendarEventList: React.FC<CalendarEventListProps> = ({ events }) => {
               </div>
               
               {event.description && (
-                <p className="mt-2 text-sm text-gray-600">{event.description}</p>
+                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{event.description}</p>
               )}
             </div>
           </div>
