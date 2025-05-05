@@ -1,6 +1,5 @@
-
 import { toast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase";
 import { Event, EventFormData, EventStatus } from "@/types/event.types";
 import { transformDatabaseEvent, prepareEventForStorage } from './eventHelpers';
 
@@ -109,7 +108,7 @@ export const updateEvent = async (eventId: string, formData: EventFormData): Pro
         event_id: eventId,
         email: inv.email,
         invited_user_id: inv.invited_user_id,
-        status: 'pending' as 'pending' | 'accepted' | 'declined', // Explicitly type as one of the valid status values
+        status: 'pending',
         shared_as_link: inv.shared_as_link || false
       }));
       

@@ -4,7 +4,6 @@ import { format, isSameMonth, isToday } from "date-fns";
 import { cn } from "@/lib/utils";
 import { EventDot } from "./EventDot";
 import { DayEventTypes } from "@/types/calendar.types";
-import { useTheme } from "@/hooks/use-theme";
 
 interface CalendarDayCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onSelect'> {
   date: Date;
@@ -20,11 +19,6 @@ const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
   onSelect,
   ...props 
 }) => {
-  const { theme } = useTheme();
-  const isDarkMode = theme === 'dark';
-  const isCurrentMonth = isSameMonth(date, new Date());
-  const isTodayDate = isToday(date);
-  
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     props.onClick?.(e);
     onSelect(date);
@@ -36,31 +30,18 @@ const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
       onClick={handleClick}
       className={cn(
         props.className,
-        "h-full w-full cursor-pointer transition-colors p-2",
+        "relative group hover:bg-muted cursor-pointer transition-colors",
+        selected && "bg-primary text-primary-foreground",
+        !isSameMonth(date, new Date()) && "text-muted-foreground opacity-50",
+        isToday(date) && !selected && "border border-primary",
       )}
     >
-      <div className={cn(
-        "flex justify-between items-start",
-        selected && isDarkMode && "text-blue-200",
-      )}>
-        <time 
-          dateTime={format(date, 'yyyy-MM-dd')} 
-          className={cn(
-            "font-medium text-sm sm:text-base",
-            !isCurrentMonth && "text-muted-foreground",
-            isTodayDate && !selected && isDarkMode && "text-purple-300",
-          )}>
-          {format(date, 'd')}
-        </time>
-      </div>
+      <time dateTime={format(date, 'yyyy-MM-dd')}>{format(date, 'd')}</time>
       
       {/* Event indicators */}
-      {(eventTypes.hasTasks || eventTypes.hasBookings || eventTypes.hasEvents || eventTypes.hasManualEntries) && (
+      {(eventTypes.hasTasks) && (
         <div className="absolute bottom-1 left-0 right-0 flex justify-center space-x-1">
           {eventTypes.hasTasks && <EventDot type="task" />}
-          {eventTypes.hasBookings && <EventDot type="booking" />}
-          {eventTypes.hasEvents && <EventDot type="event" />}
-          {eventTypes.hasManualEntries && <EventDot type="manual" />}
         </div>
       )}
     </div>

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
@@ -15,7 +16,7 @@ import LoginForm from "./LoginForm";
 import SignupForm from "./SignupForm";
 import SocialAuth from "./SocialAuth";
 import LanguageSwitcher from "@/components/ui/language-switcher";
-import { useAuth } from "@/features/auth/context/AuthContext"; // Use direct import
+import { useAuth } from "@/hooks/useAuth";
 
 interface AuthFormProps {
   defaultTab?: 'login' | 'register';

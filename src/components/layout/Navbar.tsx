@@ -1,13 +1,11 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Menu, X, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 import LanguageSwitcher from "@/components/ui/language-switcher";
 import { Separator } from "@/components/ui/separator";
 import NotificationsDropdown from "@/components/notifications/NotificationsDropdown";
-import { useAuth } from "@/features/auth/context/AuthContext";
 
 // Import the components
 import BrandLogo from "./navbar/BrandLogo";
@@ -27,8 +25,9 @@ interface NavbarProps {
 
 const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
   const [searchOpen, setSearchOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [commandSearchOpen, setCommandSearchOpen] = useState(false);
-  const { isAuthenticated, effectiveRole } = useAuth();
 
   // Get unread notifications count
   const { data: unreadNotifications = [] } = useQuery({
@@ -45,7 +44,6 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
         
       return data || [];
     },
-    enabled: isAuthenticated,
   });
 
   // Get unread messages count
@@ -63,11 +61,33 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
         
       return data || [];
     },
-    enabled: isAuthenticated,
   });
 
-  // Convert effectiveRole to userRole for compatibility
-  const userRole = effectiveRole as UserRole;
+  useEffect(() => {
+    // Check if user is authenticated
+    const checkAuth = async () => {
+      const { data } = await supabase.auth.getSession();
+      setIsAuthenticated(!!data.session);
+      
+      // Get user role from localStorage
+      const role = localStorage.getItem('userRole') as UserRole;
+      setUserRole(role);
+    };
+
+    checkAuth();
+
+    // Listen for auth changes
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
+      // Update user role when auth state changes
+      const role = localStorage.getItem('userRole') as UserRole;
+      setUserRole(role);
+    });
+
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
+  }, []);
 
   // Function to open command search dialog
   const openCommandSearch = () => {
@@ -101,6 +121,8 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
         {/* Only show search for business, individual, and free users - not for staff */}
         {!isStaff && (
           <>
+            {/* Removing the desktop search button with command+K shortcut */}
+            
             {/* Mobile search field */}
             <MobileSearch 
               searchOpen={searchOpen} 
@@ -144,6 +166,7 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
 
           {/* User menu dropdown - contains all the navigation items now */}
           <UserMenu 
+            isAuthenticated={isAuthenticated} 
             unreadMessages={unreadMessages} 
             unreadNotifications={unreadNotifications}
           />

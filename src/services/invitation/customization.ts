@@ -1,5 +1,5 @@
 
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 import { InvitationCustomization } from '@/types/invitation.types';
 import { EventCustomization, BackgroundType, TextAlign, ButtonShape } from '@/types/event.types';
 
@@ -86,34 +86,18 @@ const convertToEventCustomization = (invitationCustomization: InvitationCustomiz
  */
 export const getInvitationCustomization = async (invitationId: string): Promise<InvitationCustomization | null> => {
   try {
-    // Check if the invitation exists in the invitations table
-    const { data: invitationData, error: invitationError } = await supabase
-      .from('invitations')
+    const { data, error } = await supabase
+      .from('invitation_customizations')
       .select('*')
-      .eq('id', invitationId)
+      .eq('invitation_id', invitationId)
       .single();
     
-    if (invitationError) {
-      console.error('Error fetching invitation:', invitationError);
+    if (error) {
+      console.error('Error fetching invitation customization:', error);
       return null;
     }
     
-    // Create an InvitationCustomization from the invitation data
-    return {
-      backgroundType: invitationData.background_type || 'solid',
-      backgroundValue: invitationData.background_value || '#ffffff',
-      fontFamily: invitationData.font_family || 'system-ui, sans-serif',
-      fontSize: invitationData.font_size || 'medium',
-      textColor: invitationData.text_color || '#000000',
-      textAlign: invitationData.text_align || 'left',
-      buttonStyles: {
-        style: 'rounded',
-        color: '#3B82F6'
-      },
-      // Add the missing required properties
-      layoutSize: 'medium',
-      customEffects: {}
-    };
+    return data as InvitationCustomization;
   } catch (error) {
     console.error('Error in getInvitationCustomization:', error);
     return null;
@@ -125,22 +109,19 @@ export const getInvitationCustomization = async (invitationId: string): Promise<
  */
 export const saveInvitationCustomization = async (invitationId: string, customization: InvitationCustomization): Promise<InvitationCustomization | null> => {
   try {
-    // Convert to database format
-    const updateData = {
-      background_type: customization.backgroundType || 'solid',
-      background_value: customization.backgroundValue || '#ffffff',
-      font_family: customization.fontFamily || 'system-ui, sans-serif',
-      font_size: customization.fontSize || 'medium',
-      text_color: customization.textColor || '#000000',
-      text_align: customization.textAlign || 'left'
-    };
+    // Convert InvitationCustomization to EventCustomization for proper processing
+    const eventCustomization = convertToEventCustomization(customization);
     
-    // Update the invitations table
+    // Then convert EventCustomization to a safe JSON format
+    const safeCustomization = convertEventCustomization(eventCustomization);
+    
     const { data, error } = await supabase
-      .from('invitations')
-      .update(updateData)
-      .eq('id', invitationId)
-      .select()
+      .from('invitation_customizations')
+      .upsert(
+        { invitation_id: invitationId, customization: safeCustomization },
+        { onConflict: 'invitation_id' }
+      )
+      .select('*')
       .single();
     
     if (error) {
@@ -148,22 +129,7 @@ export const saveInvitationCustomization = async (invitationId: string, customiz
       return null;
     }
     
-    // Return the updated customization
-    return {
-      backgroundType: data.background_type,
-      backgroundValue: data.background_value,
-      fontFamily: data.font_family,
-      fontSize: data.font_size,
-      textColor: data.text_color,
-      textAlign: data.text_align,
-      buttonStyles: customization.buttonStyles || {
-        style: 'rounded',
-        color: '#3B82F6'
-      },
-      // Add the missing required properties
-      layoutSize: customization.layoutSize || 'medium',
-      customEffects: customization.customEffects || {}
-    };
+    return data as InvitationCustomization;
   } catch (error) {
     console.error('Error in saveInvitationCustomization:', error);
     return null;

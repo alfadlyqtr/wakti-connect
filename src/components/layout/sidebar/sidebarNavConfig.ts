@@ -1,7 +1,7 @@
+
 import {
   Home,
   CalendarDays,
-  Calendar, // Added Calendar icon for the main Calendar page
   CalendarPlus, // Added CalendarPlus import
   Briefcase,
   Users,
@@ -26,12 +26,6 @@ export const navItems = [
     label: "Dashboard",
     icon: Home,
     showFor: ["individual", "business", "staff", "super-admin"],
-  },
-  {
-    path: "calendar",
-    label: "Calendar",
-    icon: Calendar,
-    showFor: ["individual", "business", "staff"],
   },
   {
     path: "tasks",

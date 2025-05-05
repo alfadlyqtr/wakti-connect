@@ -10,39 +10,62 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import AccountMenuItems from "./AccountMenuItems";
-import { Link } from "react-router-dom";
-import { useAuth } from "@/features/auth/context/AuthContext";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { fetchUnreadNotificationsCount } from "@/services/notifications/notificationService";
+import { useStaffWorkingStatus } from "@/hooks/staff/useStaffWorkingStatus";
 import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
+import { useEffectiveRole } from "@/features/auth/hooks/useEffectiveRole";
 import { dropdownNavItems } from "../sidebar/sidebarNavConfig";
 
 interface UserMenuProps {
+  isAuthenticated: boolean;
   unreadMessages: any[];
   unreadNotifications: any[];
 }
 
-const UserMenu = ({ unreadMessages = [], unreadNotifications = [] }: UserMenuProps) => {
-  const { isAuthenticated, effectiveRole, user } = useAuth();
+const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications }: UserMenuProps) => {
+  const { role: effectiveRole } = useEffectiveRole();
+  const { data: staffStatus } = useStaffWorkingStatus();
+  const isWorking = staffStatus?.isWorking || false;
+  
+  const { data: profileData } = useQuery({
+    queryKey: ['userMenuProfile'],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return null;
+      
+      const { data } = await supabase
+        .from('profiles')
+        .select('display_name, business_name, full_name, account_type')
+        .eq('id', session.user.id)
+        .single();
+        
+      return data;
+    },
+    enabled: isAuthenticated,
+  });
   
   const shouldPulse = 
     unreadMessages.length > 0 || 
     unreadNotifications.length > 0;
   
   const getDisplayName = () => {
-    if (!user) return 'Account';
+    if (!profileData) return 'Account';
     
-    // Fix the property access to match the AppUser type definition
-    if (user.account_type === 'business' && user.business_name) {
-      return user.business_name;
-    } else if (user.displayName) {
-      return user.displayName;
-    } else if (user.name) {
-      return user.name;
+    if (profileData.account_type === 'business' && profileData.business_name) {
+      return profileData.business_name;
+    } else if (profileData.display_name) {
+      return profileData.display_name;
+    } else if (profileData.full_name) {
+      return profileData.full_name;
     } else {
       return 'Account';
     }
   };
 
-  // Filter dropdown items based on user role
+  // Update dropdown items with unread counts
   const navItemsWithCounts = dropdownNavItems.map(item => {
     if (item.path === 'messages' && unreadMessages.length > 0) {
       return { ...item, badge: unreadMessages.length };
@@ -66,16 +89,25 @@ const UserMenu = ({ unreadMessages = [], unreadNotifications = [] }: UserMenuPro
           size="icon" 
           className={cn(
             "rounded-full h-8 w-8 bg-muted relative", 
+            isWorking && "ring-2 ring-green-500",
             shouldPulse && "animate-pulse"
           )} 
           aria-label="User menu"
         >
           <User className="h-4 w-4" />
+          {isWorking && (
+            <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-500 border-2 border-background" />
+          )}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel className="flex items-center gap-2">
           {getDisplayName()}
+          {isWorking && (
+            <span className="text-xs font-normal text-green-600">
+              (Working)
+            </span>
+          )}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         

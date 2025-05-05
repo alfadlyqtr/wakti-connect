@@ -5,7 +5,7 @@ import { Mail, Lock, Eye, EyeOff, Fingerprint } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuth } from "@/features/auth/context/AuthContext"; // Direct import from the source
+import { useAuth } from "@/hooks/useAuth";
 import { verifyBiometricLogin } from "@/lib/webauthn";
 import { toast } from "@/components/ui/use-toast";
 
@@ -33,7 +33,6 @@ const LoginForm = ({ setError }: LoginFormProps) => {
     setError("");
     
     try {
-      console.log("Attempting login with:", email); // Add debug log
       const result = await login(email, password);
       
       if (result.error) {

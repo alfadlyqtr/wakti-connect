@@ -1,6 +1,6 @@
 
 import React, { useEffect } from "react";
-import AuthForm from "@/features/auth/components/AuthForm"; // Updated import from features
+import AuthForm from "@/components/auth/AuthForm";
 
 const RegisterPage = () => {
   useEffect(() => {

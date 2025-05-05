@@ -1,8 +1,7 @@
 
 import { toast } from "@/components/ui/use-toast";
 import { Event, EventFormData, EventStatus } from "@/types/event.types";
-import { supabase } from "@/integrations/supabase/client";
-import { prepareEventForStorage, transformDatabaseEvent } from "./eventHelpers";
+import { supabase } from "@/lib/supabase";
 
 // Helper functions
 const getUserProfile = async () => {
@@ -36,8 +35,8 @@ export const createEvent = async (formData: EventFormData): Promise<Event | null
       endTimestamp = new Date(formData.endDate).toISOString();
     }
     
-    // Prepare the event object for insertion with proper JSON serialization
-    const eventData = prepareEventForStorage({
+    // Prepare the event object for insertion
+    const eventData = {
       title: formData.title,
       description: formData.description,
       start_time: startTimestamp,
@@ -49,7 +48,7 @@ export const createEvent = async (formData: EventFormData): Promise<Event | null
       status: formData.status as EventStatus,
       user_id: userId,
       customization: formData.customization
-    });
+    };
     
     // Insert the event into the database
     const { data: event, error } = await supabase
@@ -86,7 +85,7 @@ export const createEvent = async (formData: EventFormData): Promise<Event | null
       }
     }
     
-    return transformDatabaseEvent(event);
+    return event;
   } catch (error: any) {
     console.error("Error in createEvent:", error);
     return null;

@@ -1,21 +1,12 @@
 
-import React, { useEffect } from "react";
+import React from "react";
 import { Navigate } from "react-router-dom";
-import { useAuth } from "@/features/auth/context/AuthContext";
+import AuthForm from "@/components/auth/AuthForm";
 
 const Auth = () => {
-  const { isAuthenticated } = useAuth();
+  console.log("Auth page rendering with redirect to /auth/login");
   
-  useEffect(() => {
-    console.log("Auth page rendering with redirect to /auth/login", { isAuthenticated });
-  }, [isAuthenticated]);
-  
-  // If already authenticated, redirect to dashboard
-  if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
-  }
-  
-  // Redirect directly to the login page
+  // We'll just render a redirect to the login page
   return <Navigate to="/auth/login" replace />;
 };
 

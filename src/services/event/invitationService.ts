@@ -32,7 +32,7 @@ export const respondToInvitation = async (
       throw new Error("You don't have an invitation for this event");
     }
     
-    // Update the invitation status with correct typing
+    // Update the invitation status
     const { error: updateError } = await supabase
       .from('event_invitations')
       .update({ status: response })

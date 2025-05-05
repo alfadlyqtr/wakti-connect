@@ -1,10 +1,9 @@
 
-import React, { useEffect } from "react";
+import React from "react";
 import { Navigate } from "react-router-dom";
 import { usePermissions } from "../hooks/usePermissions";
 import { toast } from "@/components/ui/use-toast";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import { useAuth } from "../context/AuthContext";
 
 interface PermissionGuardProps {
   feature: string;
@@ -22,19 +21,6 @@ const PermissionGuard: React.FC<PermissionGuardProps> = ({
   fallback,
 }) => {
   const { hasPermission, isLoading } = usePermissions(feature);
-  const { isAuthenticated, effectiveRole } = useAuth();
-
-  // Add debug logging
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.debug(`[PermissionGuard] ${feature}:`, { 
-        hasPermission, 
-        isLoading, 
-        isAuthenticated,
-        effectiveRole
-      });
-    }
-  }, [feature, hasPermission, isLoading, isAuthenticated, effectiveRole]);
 
   if (isLoading) {
     return (

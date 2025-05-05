@@ -1,8 +1,9 @@
+
 import React, { useState } from "react";
 import { Mail, Lock, Eye, EyeOff, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
-import { useAuth } from "@/features/auth";
+import { useAuth } from "@/hooks/useAuth";
 
 // Import refactored components
 import FormInputField from "./signup/FormInputField";

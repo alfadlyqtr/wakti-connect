@@ -10,7 +10,7 @@ import VerifySuccess from "@/pages/auth/VerifySuccessPage";
 import PlanSelection from "@/pages/auth/PlanSelectionPage";
 import WelcomeSetup from "@/pages/auth/WelcomeSetupPage";
 import PaymentSuccess from "@/pages/auth/PaymentSuccessPage";
-import AuthShell from "@/features/auth/components/AuthShell"; // Update to use from features
+import AuthShell from "@/components/auth/AuthShell";
 
 export const authRoutes: RouteObject[] = [
   {

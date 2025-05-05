@@ -1,5 +1,5 @@
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase";
 import { TaskFormData, Task } from "@/types/task.types";
 import { mapNestedStructureToFlatSubtasks } from "./subtaskStructureUtils";
 
@@ -75,24 +75,11 @@ export const createAITask = async (taskData: TaskFormData): Promise<Task | null>
         // Don't throw here - we'll still return the created task
       }
       
-      // Create a proper Task object with subtasks included
-      const taskResult: Task = {
-        ...createdTask,
-        status: createdTask.status as Task['status'],
-        priority: createdTask.priority as Task['priority'],
-        subtasks: subtasksToInsert
-      };
-      
-      return taskResult;
+      // Add the subtasks to the returned task object
+      createdTask.subtasks = subtasksToInsert;
     }
     
-    // Return the created task with proper type casting
-    return {
-      ...createdTask,
-      status: createdTask.status as Task['status'],
-      priority: createdTask.priority as Task['priority'],
-      subtasks: []
-    };
+    return createdTask;
   } catch (error) {
     console.error("Error in createAITask:", error);
     throw error;

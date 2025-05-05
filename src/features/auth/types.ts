@@ -1,4 +1,3 @@
-
 import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 import { UserRole } from "@/types/roles";
 
@@ -9,7 +8,6 @@ export interface AppUser extends SupabaseUser {
   effectiveRole?: UserRole;
   account_type?: string;
   full_name?: string;
-  business_name?: string; // Add business_name property
   avatar_url?: string;
   plan?: UserRole;
 }
@@ -23,7 +21,7 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   hasRole: (role: UserRole) => boolean;
-  hasAccess: (allowedRoles: UserRole[]) => boolean;
+  hasAccess: (requiredRoles: UserRole[]) => boolean;
   login: (email: string, password: string) => Promise<{ error: any; data?: any }>;
   logout: () => Promise<void>;
   register: (
