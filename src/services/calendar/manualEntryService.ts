@@ -12,7 +12,7 @@ export const createManualEntry = async (entry: Omit<ManualCalendarEntry, 'id' | 
       .from(TABLE_NAME)
       .insert({
         title: entry.title,
-        date: entry.date.toISOString(),
+        date: entry.date.toISOString(), // Convert Date to ISO string for Supabase
         description: entry.description,
         location: entry.location,
         user_id: entry.user_id
@@ -27,8 +27,8 @@ export const createManualEntry = async (entry: Omit<ManualCalendarEntry, 'id' | 
     
     return {
       ...data,
-      date: new Date(data.date)
-    };
+      date: new Date(data.date) // Convert date string back to Date object
+    } as ManualCalendarEntry;
   } catch (error) {
     console.error("Error in createManualEntry:", error);
     return null;
@@ -55,7 +55,7 @@ export const fetchManualEntries = async (userId: string): Promise<CalendarEvent[
     return data.map(entry => ({
       id: entry.id,
       title: entry.title,
-      date: new Date(entry.date),
+      date: new Date(entry.date), // Convert date string back to Date object
       type: 'manual' as const,
       description: entry.description,
       location: entry.location
@@ -69,8 +69,17 @@ export const fetchManualEntries = async (userId: string): Promise<CalendarEvent[
 // Update a manual calendar entry
 export const updateManualEntry = async (id: string, updates: Partial<ManualCalendarEntry>): Promise<boolean> => {
   try {
-    // Convert date to ISO string if it exists
-    const updateData = { ...updates };
+    // Create a new object for updates
+    const updateData: Record<string, any> = {};
+    
+    // Copy all updates except date
+    Object.keys(updates).forEach(key => {
+      if (key !== 'date') {
+        updateData[key] = (updates as any)[key];
+      }
+    });
+    
+    // Handle date conversion separately
     if (updates.date) {
       updateData.date = updates.date.toISOString();
     }
