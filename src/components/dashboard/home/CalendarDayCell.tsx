@@ -30,7 +30,7 @@ const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
       onClick={handleClick}
       className={cn(
         props.className,
-        "relative h-full group hover:bg-muted cursor-pointer transition-colors p-1",
+        "relative h-full w-full cursor-pointer transition-colors p-1",
         selected && "bg-primary text-primary-foreground",
         !isSameMonth(date, new Date()) && "text-muted-foreground opacity-50",
         isToday(date) && !selected && "border border-primary",

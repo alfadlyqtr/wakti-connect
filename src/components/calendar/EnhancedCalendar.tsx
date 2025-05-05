@@ -75,46 +75,42 @@ const EnhancedCalendar: React.FC = () => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-7 gap-4">
-        <div className="lg:col-span-7">
-          <Card className="border bg-white shadow-sm">
-            <CardContent className="p-2 sm:p-6">
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={(date) => date && setSelectedDate(date)}
-                className="w-full rounded-md border-0 bg-white"
-                classNames={{
-                  month: "space-y-4",
-                  caption_label: "text-base font-semibold",
-                  table: "w-full border-collapse",
-                  head_row: "flex w-full",
-                  head_cell: "w-full text-muted-foreground rounded-md font-normal text-sm px-0",
-                  row: "flex w-full mt-2",
-                  cell: "h-20 w-full text-center text-sm relative p-0 border-0 focus-within:relative focus-within:z-20",
-                  day: "h-full w-full p-1 flex flex-col hover:bg-accent rounded-md",
-                  day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-                  day_today: "bg-accent text-accent-foreground",
-                  day_outside: "text-muted-foreground opacity-50",
-                  day_disabled: "text-muted-foreground opacity-50",
-                  day_hidden: "invisible",
-                }}
-                components={{
-                  Day: ({ date, ...props }) => (
-                    <CalendarDayCell
-                      date={date}
-                      selected={isSameDay(date, selectedDate)}
-                      eventTypes={getEventTypesForDate(date)}
-                      onSelect={(date) => setSelectedDate(date)}
-                      {...props}
-                    />
-                  ),
-                }}
-              />
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+      <Card className="border bg-white shadow-sm">
+        <CardContent className="p-1 sm:p-3">
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={(date) => date && setSelectedDate(date)}
+            className="w-full border-collapse bg-white"
+            classNames={{
+              month: "w-full",
+              caption_label: "text-base font-semibold",
+              table: "w-full border-collapse",
+              head_row: "flex w-full border-b",
+              head_cell: "text-muted-foreground w-full font-normal text-sm py-2 text-center",
+              row: "flex w-full",
+              cell: "h-24 w-full text-center text-sm relative p-0 border-r border-b last:border-r-0",
+              day: "h-full w-full p-1 flex flex-col hover:bg-accent rounded-none",
+              day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+              day_today: "border border-primary",
+              day_outside: "text-muted-foreground opacity-50",
+              day_disabled: "text-muted-foreground opacity-50",
+              day_hidden: "invisible",
+            }}
+            components={{
+              Day: ({ date, ...props }) => (
+                <CalendarDayCell
+                  date={date}
+                  selected={isSameDay(date, selectedDate)}
+                  eventTypes={getEventTypesForDate(date)}
+                  onSelect={(date) => setSelectedDate(date)}
+                  {...props}
+                />
+              ),
+            }}
+          />
+        </CardContent>
+      </Card>
 
       <CalendarLegend showManualEntries={true} />
 

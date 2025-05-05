@@ -32,14 +32,13 @@ export const CalendarEntryDialog: React.FC<CalendarEntryDialogProps> = ({
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
-  const [date, setDate] = useState<Date>(selectedDate);
+  const [date, setDate] = useState<Date>(new Date(selectedDate));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   
   // Update the date when selectedDate prop changes or dialog opens
   useEffect(() => {
     if (isOpen && selectedDate) {
-      // Create new Date object to break reference
       setDate(new Date(selectedDate));
     }
   }, [isOpen, selectedDate]);
@@ -58,7 +57,7 @@ export const CalendarEntryDialog: React.FC<CalendarEntryDialogProps> = ({
     setTitle('');
     setDescription('');
     setLocation('');
-    setDate(selectedDate ? new Date(selectedDate) : new Date());
+    setDate(new Date(selectedDate));
   };
   
   const handleClose = () => {
@@ -85,7 +84,7 @@ export const CalendarEntryDialog: React.FC<CalendarEntryDialogProps> = ({
       
       const newEntry = await createManualEntry({
         title,
-        date: date, // Use the local state date which properly tracks the selected date
+        date, // Use the date state which properly tracks the selected date
         description: description || undefined,
         location: location || undefined,
         user_id: userId
@@ -154,11 +153,9 @@ export const CalendarEntryDialog: React.FC<CalendarEntryDialogProps> = ({
                 <Calendar
                   mode="single"
                   selected={date}
-                  onSelect={(selectedDate) => {
-                    if (selectedDate) {
-                      // Create a new date to ensure we have a new reference
-                      setDate(new Date(selectedDate));
-                      console.log("Selected date in calendar:", selectedDate);
+                  onSelect={(newDate) => {
+                    if (newDate) {
+                      setDate(new Date(newDate));
                     }
                     setCalendarOpen(false);
                   }}
