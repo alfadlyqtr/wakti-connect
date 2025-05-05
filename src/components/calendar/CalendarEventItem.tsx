@@ -16,19 +16,19 @@ export const CalendarEventItem: React.FC<CalendarEventItemProps> = ({
   event 
 }) => {
   const { getEventColors } = useCalendarEventUtils();
-  const { bgClass, textClass, borderClass } = getEventColors(event);
+  const { borderClass } = getEventColors(event);
   
   // Icons based on event type
   const getEventIcon = () => {
     switch(event.type) {
       case 'booking':
-        return <Calendar className="h-4 w-4 mr-1" />;
+        return <Calendar className="h-4 w-4 mr-1 flex-shrink-0" />;
       case 'event':
-        return <AlertCircle className="h-4 w-4 mr-1" />;
+        return <AlertCircle className="h-4 w-4 mr-1 flex-shrink-0" />;
       case 'task':
-        return <Clock className="h-4 w-4 mr-1" />;
+        return <Clock className="h-4 w-4 mr-1 flex-shrink-0" />;
       case 'manual':
-        return <MapPin className="h-4 w-4 mr-1" />;
+        return <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />;
       default:
         return null;
     }
@@ -36,24 +36,40 @@ export const CalendarEventItem: React.FC<CalendarEventItemProps> = ({
 
   // Format time if available
   const timeDisplay = event.start && event.end ? (
-    <span className="text-xs text-muted-foreground whitespace-nowrap">
-      {format(event.start, 'h:mm a')} - {format(event.end, 'h:mm a')}
+    <span className="text-xs text-muted-foreground whitespace-nowrap ml-auto pl-2">
+      {format(new Date(event.start), 'h:mm a')}
     </span>
   ) : null;
+  
+  // Define border color based on event type
+  const getEventBorder = () => {
+    switch(event.type) {
+      case 'booking':
+        return "border-l-blue-500";
+      case 'event':
+        return "border-l-purple-500";
+      case 'task':
+        return "border-l-amber-500";
+      case 'manual':
+        return "border-l-orange-500";
+      default:
+        return "";
+    }
+  };
 
   return (
     <Card className={cn(
-      "p-2 flex items-center justify-between border group hover:shadow-sm transition-all",
-      event.color ? `border-l-4 border-l-[${event.color}]` : borderClass
+      "p-2 flex items-center border-l-4 hover:shadow-sm transition-all",
+      getEventBorder()
     )}>
-      <div className="flex items-center space-x-2 truncate">
-        <div className={cn("flex items-center", textClass)}>
+      <div className="flex items-center space-x-2 flex-grow min-w-0">
+        <div className="flex items-center">
           {getEventIcon()}
           
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="font-medium truncate max-w-[200px]">
+                <span className="font-medium truncate max-w-[200px] text-sm">
                   {event.title}
                 </span>
               </TooltipTrigger>
@@ -67,12 +83,6 @@ export const CalendarEventItem: React.FC<CalendarEventItemProps> = ({
                       <span>{event.location}</span>
                     </div>
                   )}
-                  {timeDisplay && (
-                    <div className="flex items-center text-xs">
-                      <Clock className="h-3 w-3 mr-1" />
-                      {timeDisplay}
-                    </div>
-                  )}
                 </div>
               </TooltipContent>
             </Tooltip>
@@ -80,9 +90,7 @@ export const CalendarEventItem: React.FC<CalendarEventItemProps> = ({
         </div>
       </div>
       
-      <div className="flex items-center">
-        {timeDisplay}
-      </div>
+      {timeDisplay}
     </Card>
   );
 };

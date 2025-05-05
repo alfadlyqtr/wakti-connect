@@ -12,57 +12,39 @@ export const useCalendarEventUtils = () => {
    * Gets appropriate styling classes based on event type and status
    */
   const getEventColors = (event: CalendarEvent): EventColorOptions => {
-    // For task events
-    if (event.type === "task") {
-      if (event.isCompleted) {
+    // Based on event type
+    switch(event.type) {
+      case "task":
         return {
-          bgClass: "bg-green-100",
-          textClass: "text-green-800",
-          borderClass: "border-green-300"
+          bgClass: "bg-amber-100",
+          textClass: "text-amber-800",
+          borderClass: "border-l-amber-500"
         };
-      }
-
-      // By priority
-      switch (event.priority) {
-        case "urgent":
-          return {
-            bgClass: "bg-red-100",
-            textClass: "text-red-800",
-            borderClass: "border-red-300"
-          };
-        case "high":
-          return {
-            bgClass: "bg-red-100",
-            textClass: "text-red-800",
-            borderClass: "border-red-300"
-          };
-        case "medium":
-          return {
-            bgClass: "bg-amber-100",
-            textClass: "text-amber-800", 
-            borderClass: "border-amber-300"
-          };
-        case "normal":
-          return {
-            bgClass: "bg-green-100",
-            textClass: "text-green-800",
-            borderClass: "border-green-300"
-          };
-        default:
-          return {
-            bgClass: "bg-blue-100",
-            textClass: "text-blue-800",
-            borderClass: "border-blue-300"
-          };
-      }
+      case "event":
+        return {
+          bgClass: "bg-purple-100",
+          textClass: "text-purple-800",
+          borderClass: "border-l-purple-500"
+        };
+      case "booking":
+        return {
+          bgClass: "bg-blue-100",
+          textClass: "text-blue-800",
+          borderClass: "border-l-blue-500"
+        };
+      case "manual":
+        return {
+          bgClass: "bg-orange-100",
+          textClass: "text-orange-800",
+          borderClass: "border-l-orange-500"
+        };
+      default:
+        return {
+          bgClass: "bg-slate-100",
+          textClass: "text-slate-800",
+          borderClass: "border-l-slate-500"
+        };
     }
-    
-    // Default styling
-    return {
-      bgClass: "bg-slate-100",
-      textClass: "text-slate-800",
-      borderClass: "border-slate-300"
-    };
   };
 
   /**

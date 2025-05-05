@@ -2,7 +2,6 @@
 import React from "react";
 import { format, isSameMonth, isToday } from "date-fns";
 import { cn } from "@/lib/utils";
-import { EventDot } from "@/components/dashboard/home/EventDot";
 import { DayEventTypes, CalendarEvent } from "@/types/calendar.types";
 
 interface CalendarDayCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onSelect'> {
@@ -39,7 +38,7 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
   }).slice(0, 3); // Only show max 3 events visually
 
   // Check if we need to show a "+X more" indicator
-  const totalEvents = taskCount + eventCount + bookingCount + manualCount;
+  const totalEvents = events.length;
   const hasMoreEvents = totalEvents > 3;
 
   // Check if this is the current day
@@ -51,45 +50,43 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
       onClick={handleClick}
       className={cn(
         "aspect-square relative hover:bg-muted cursor-pointer transition-colors p-1",
-        selected ? "bg-primary/10 font-bold" : "bg-white dark:bg-gray-900",
+        selected ? "bg-primary/5 font-medium" : "bg-white dark:bg-gray-900",
         !isSameMonth(date, new Date()) && "text-muted-foreground opacity-50",
-        isCurrentDay && !selected && "border-primary border-2 font-bold",
+        isCurrentDay && !selected && "border-primary border",
         props.className
       )}
     >
       <time 
         dateTime={format(date, 'yyyy-MM-dd')} 
         className={cn(
-          "flex items-center justify-center font-medium text-xs rounded-full w-6 h-6 mb-1",
-          isCurrentDay ? "bg-primary text-primary-foreground" : "",
+          "flex items-center justify-center text-xs font-medium w-6 h-6 mb-1",
+          isCurrentDay ? "text-primary" : "",
           selected ? "text-primary" : ""
         )}
       >
         {format(date, 'd')}
       </time>
       
-      {/* Event indicators - displayed as colored dots */}
+      {/* Event indicators - displayed as colored bars */}
       {totalEvents > 0 && (
         <div className="mt-1 space-y-1 max-h-[80%] overflow-hidden">
           {prioritizedEvents.map((event, idx) => (
             <div 
               key={`${event.id}-${idx}`} 
               className={cn(
-                "text-xs px-1 py-0.5 rounded truncate w-full",
-                event.type === 'task' ? "bg-amber-100 text-amber-800" : "",
-                event.type === 'event' ? "bg-purple-100 text-purple-800" : "",
-                event.type === 'booking' ? "bg-blue-100 text-blue-800" : "",
-                event.type === 'manual' ? "bg-orange-100 text-orange-800" : ""
+                "h-1.5 rounded-full w-full",
+                event.type === 'task' ? "bg-amber-500" : "",
+                event.type === 'event' ? "bg-purple-500" : "",
+                event.type === 'booking' ? "bg-blue-500" : "",
+                event.type === 'manual' ? "bg-orange-500" : ""
               )}
-            >
-              {event.title}
-            </div>
+            />
           ))}
           
           {/* Show "more" indicator if needed */}
           {hasMoreEvents && (
-            <div className="text-xs text-center text-muted-foreground">
-              +{totalEvents - 3} more
+            <div className="text-xs text-center text-muted-foreground mt-0.5">
+              +{totalEvents - 3}
             </div>
           )}
         </div>

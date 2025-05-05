@@ -29,7 +29,7 @@ function Calendar({
         nav: "space-x-1 flex items-center",
         nav_button: cn(
           buttonVariants({ variant: "outline" }),
-          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100",
+          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 border-0",
           isMobile && "h-6 w-6"
         ),
         nav_button_previous: "absolute left-1",
@@ -37,21 +37,22 @@ function Calendar({
         table: "w-full border-collapse space-y-0",
         head_row: "flex w-full",
         head_cell: cn(
-          "text-muted-foreground rounded-none w-full font-medium text-[0.8rem] py-2",
+          "text-muted-foreground rounded-none w-full font-normal text-[0.8rem] py-2",
           isMobile && "text-[0.7rem]"
         ),
-        row: "flex w-full",
+        row: "flex w-full mt-0",
         cell: cn(
-          "relative p-0 aspect-square text-center text-sm focus-within:relative focus-within:z-20",
-          isMobile && "text-xs"
+          "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 h-10 w-10 sm:h-12 sm:w-12 md:h-14 md:w-14 lg:h-16 lg:w-16",
+          isMobile && "text-xs h-9 w-9"
         ),
         day: cn(
-          "h-full w-full p-0 font-normal aria-selected:opacity-100 hover:bg-muted",
+          "h-full w-full p-0 font-normal aria-selected:opacity-100",
+          "hover:bg-muted rounded-md transition-colors"
         ),
         day_range_end: "day-range-end",
         day_selected:
-          "bg-primary/10 text-primary font-bold hover:bg-primary/20 hover:text-primary focus:bg-primary/20 focus:text-primary",
-        day_today: "bg-none text-foreground font-bold",
+          "bg-primary/5 text-primary hover:bg-primary/10 hover:text-primary focus:bg-primary/20 focus:text-primary rounded-md",
+        day_today: "bg-none text-foreground font-medium border border-primary border-dashed",
         day_outside:
           "day-outside text-muted-foreground opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
         day_disabled: "text-muted-foreground opacity-50",

@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
 import { format } from 'date-fns';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { CalendarViewSelector } from '@/components/calendar/CalendarViewSelector';
@@ -15,7 +14,7 @@ const DashboardCalendarPage = () => {
   
   return (
     <div className="space-y-4 max-w-full">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-2">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Calendar</h1>
           <p className="text-muted-foreground">
@@ -34,8 +33,8 @@ const DashboardCalendarPage = () => {
         </div>
       </div>
 
-      <Card className="w-full overflow-hidden border shadow-sm">
-        <div className="p-4 border-b bg-white dark:bg-gray-900">
+      <div className="w-full overflow-hidden border shadow-sm rounded-lg bg-white dark:bg-gray-900">
+        <div className="p-4 border-b">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">{format(selectedDate, 'MMMM yyyy')}</h2>
           </div>
@@ -47,7 +46,7 @@ const DashboardCalendarPage = () => {
             view={view}
           />
         </div>
-      </Card>
+      </div>
 
       <CalendarEntryDialog 
         open={entryDialogOpen} 

@@ -21,17 +21,17 @@ export const CalendarViewSelector: React.FC<CalendarViewSelectorProps> = ({
       }}
       className="border rounded-md bg-white dark:bg-gray-800"
     >
-      <ToggleGroupItem value="month" aria-label="Month view">
+      <ToggleGroupItem value="month" aria-label="Month view" className="px-3 py-1.5 text-xs sm:text-sm">
         <CalendarDays className="h-4 w-4 mr-1" />
         <span className="hidden sm:inline">Month</span>
       </ToggleGroupItem>
       
-      <ToggleGroupItem value="week" aria-label="Week view">
+      <ToggleGroupItem value="week" aria-label="Week view" className="px-3 py-1.5 text-xs sm:text-sm">
         <CalendarRange className="h-4 w-4 mr-1" />
         <span className="hidden sm:inline">Week</span>
       </ToggleGroupItem>
       
-      <ToggleGroupItem value="day" aria-label="Day view">
+      <ToggleGroupItem value="day" aria-label="Day view" className="px-3 py-1.5 text-xs sm:text-sm">
         <Calendar className="h-4 w-4 mr-1" />
         <span className="hidden sm:inline">Day</span>
       </ToggleGroupItem>

@@ -1,6 +1,6 @@
 
 import React from "react";
-import { format, isSameDay } from "date-fns";
+import { format } from "date-fns";
 import { CalendarEvent } from "@/types/calendar.types";
 import { CalendarEventItem } from "./CalendarEventItem";
 import { Badge } from "@/components/ui/badge";
@@ -52,18 +52,18 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
       </div>
 
       <ScrollArea className={isSummary ? 'h-[200px]' : 'h-full'}>
-        <div className="space-y-4">
+        <div className="space-y-4 pr-4">
           {eventTypeOrder.map(type => {
             const typeEvents = eventsByType[type] || [];
             if (typeEvents.length === 0) return null;
             
             return (
               <div key={type} className="space-y-2">
-                <h4 className="text-sm font-medium text-muted-foreground">
+                <h4 className="text-xs font-medium text-muted-foreground">
                   {eventTypeNames[type]} ({typeEvents.length})
                 </h4>
                 
-                <div className="space-y-1">
+                <div className="space-y-2">
                   {typeEvents.map(event => (
                     <CalendarEventItem 
                       key={event.id} 
