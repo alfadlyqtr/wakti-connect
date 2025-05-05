@@ -26,6 +26,7 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 // Dashboard pages with lazy loading
 const DashboardHome = lazy(() => import("@/pages/dashboard/DashboardHome"));
+const DashboardCalendarPage = lazy(() => import("@/pages/dashboard/DashboardCalendarPage"));
 const DashboardTasks = lazy(() => import("@/pages/dashboard/DashboardTasks"));
 const DashboardServiceManagement = lazy(() => import("@/pages/dashboard/DashboardServiceManagement"));
 const DashboardStaffManagement = lazy(() => import("@/pages/dashboard/DashboardStaffManagement"));
@@ -54,6 +55,10 @@ const localDashboardRoutes: RouteObject[] = [
   {
     index: true,
     element: withSuspense(DashboardHome),
+  },
+  {
+    path: "calendar",
+    element: withSuspense(DashboardCalendarPage),
   },
   {
     path: "tasks/*",
