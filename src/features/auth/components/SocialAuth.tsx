@@ -1,3 +1,3 @@
 
-// Re-export from existing component for now
+// Re-export from existing component
 export { default } from '@/components/auth/SocialAuth';
