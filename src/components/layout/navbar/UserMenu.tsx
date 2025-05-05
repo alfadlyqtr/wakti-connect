@@ -30,8 +30,8 @@ const UserMenu = ({ unreadMessages = [], unreadNotifications = [] }: UserMenuPro
   const getDisplayName = () => {
     if (!user) return 'Account';
     
-    if (user.account_type === 'business' && user.businessName) {
-      return user.businessName;
+    if (user.account_type === 'business' && user.business_name) {
+      return user.business_name;
     } else if (user.displayName) {
       return user.displayName;
     } else if (user.name) {
