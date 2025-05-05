@@ -2,6 +2,7 @@
 import {
   Home,
   CalendarDays,
+  CalendarPlus, // Added CalendarPlus import
   Briefcase,
   Users,
   BarChart2,
@@ -35,7 +36,7 @@ export const navItems = [
   {
     path: "events",
     label: "Events",
-    icon: CalendarDays,
+    icon: CalendarPlus, // Changed from CalendarDays to CalendarPlus
     showFor: ["individual", "business"],
   },
   {
