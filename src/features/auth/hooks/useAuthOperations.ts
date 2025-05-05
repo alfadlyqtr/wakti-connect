@@ -1,3 +1,4 @@
+
 import { User } from "../types";
 import { loginOperation, logoutOperation, registerOperation } from "../operations";
 
@@ -33,7 +34,7 @@ export function useAuthOperations(
     email: string, 
     password: string, 
     name?: string, 
-    accountType: string = 'free', 
+    accountType: "free" | "individual" | "business" | "staff" | "super-admin" = 'free', 
     businessName?: string
   ) => {
     try {
