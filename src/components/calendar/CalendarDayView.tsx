@@ -1,3 +1,4 @@
+
 import React from "react";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -139,13 +140,14 @@ const CalendarDayView: React.FC<CalendarDayViewProps> = ({
                   </div>
                 </div>
                 
-                {/* Only allow deleting manual entries */}
+                {/* Only show delete button for manual entries */}
                 {canDelete(event.type) && onDelete && (
                   <Button 
                     variant="ghost" 
                     size="icon" 
                     className="h-7 w-7 text-muted-foreground hover:text-destructive" 
                     onClick={() => onDelete(event.id, event.type)}
+                    title="Delete Manual Entry"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
