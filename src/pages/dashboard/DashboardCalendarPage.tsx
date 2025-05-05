@@ -81,7 +81,7 @@ const DashboardCalendarPage: React.FC = () => {
       <Separator className="my-2" />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <Card className="col-span-1 lg:col-span-2 overflow-hidden">
+        <Card className="col-span-1 lg:col-span-2 overflow-hidden relative">
           <FullScreenCalendar 
             data={calendarData}
             isLoading={isLoading}

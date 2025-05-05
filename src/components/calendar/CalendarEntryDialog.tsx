@@ -105,7 +105,7 @@ export default function CalendarEntryDialog({
       const formattedStartTime = startTime ? formatTimeToISO(startTime, date!) : date!.toISOString();
       const formattedEndTime = endTime ? formatTimeToISO(endTime, date!) : date!.toISOString();
 
-      // Insert the event into the events table
+      // Insert the event into the events table with properly typed status
       const { data, error } = await supabase.from('events').insert({
         title: title,
         description: description,
@@ -113,7 +113,7 @@ export default function CalendarEntryDialog({
         end_time: formattedEndTime,
         location: location,
         user_id: userId,
-        status: "draft" as "draft" | "sent" | "accepted" | "declined" | "recalled", // Fix for the TypeScript error
+        status: "draft" as "draft" | "sent" | "accepted" | "declined" | "recalled", // Fixed type
         is_all_day: !startTime && !endTime
       });
 

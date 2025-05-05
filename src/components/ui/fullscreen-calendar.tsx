@@ -1,6 +1,4 @@
 
-"use client"
-
 import * as React from "react"
 import {
   add,
@@ -18,34 +16,31 @@ import {
   startOfWeek,
 } from "date-fns"
 import {
-  ChevronLeft,
-  ChevronRight,
-  PlusCircle,
-  Search,
+  ChevronDown,
+  PlusCircleIcon,
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { useMediaQuery } from "@/hooks/use-media-query"
-import { CalendarEvent } from "@/types/calendar.types"
-import { EventDot } from "../dashboard/home/EventDot"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 interface Event {
-  id: string;
+  id: string | number;
   name: string;
-  time?: string;
-  description?: string;
-  type: "task" | "booking" | "event";
+  time: string;
+  type?: string;
 }
 
-interface CalendarDayData {
-  day: Date;
-  events: Event[];
+interface CalendarData {
+  day: Date
+  events: Event[]
 }
 
 interface FullScreenCalendarProps {
-  data: CalendarDayData[];
+  data: CalendarData[];
   isLoading?: boolean;
   onAddEntry?: () => void;
   onSelectDay?: (day: Date) => void;
@@ -61,7 +56,17 @@ const colStartClasses = [
   "col-start-7",
 ]
 
-export function FullScreenCalendar({ data, isLoading, onAddEntry, onSelectDay }: FullScreenCalendarProps) {
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June", 
+  "July", "August", "September", "October", "November", "December"
+];
+
+export function FullScreenCalendar({ 
+  data = [], 
+  isLoading = false,
+  onAddEntry,
+  onSelectDay
+}: FullScreenCalendarProps) {
   const today = startOfToday()
   const [selectedDay, setSelectedDay] = React.useState(today)
   const [currentMonth, setCurrentMonth] = React.useState(
@@ -75,19 +80,10 @@ export function FullScreenCalendar({ data, isLoading, onAddEntry, onSelectDay }:
     end: endOfWeek(endOfMonth(firstDayCurrentMonth)),
   })
 
-  function previousMonth() {
-    const firstDayNextMonth = add(firstDayCurrentMonth, { months: -1 })
-    setCurrentMonth(format(firstDayNextMonth, "MMM-yyyy"))
-  }
-
-  function nextMonth() {
-    const firstDayNextMonth = add(firstDayCurrentMonth, { months: 1 })
-    setCurrentMonth(format(firstDayNextMonth, "MMM-yyyy"))
-  }
-
-  function goToToday() {
-    setCurrentMonth(format(today, "MMM-yyyy"))
-    setSelectedDay(today)
+  function setMonth(month: number) {
+    const year = firstDayCurrentMonth.getFullYear();
+    const newDate = new Date(year, month, 1);
+    setCurrentMonth(format(newDate, "MMM-yyyy"));
   }
 
   const handleSelectDay = (day: Date) => {
@@ -97,86 +93,54 @@ export function FullScreenCalendar({ data, isLoading, onAddEntry, onSelectDay }:
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-1 items-center justify-center">
-        <div className="text-center">
-          <p className="text-muted-foreground">Loading calendar...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-1 flex-col">
       {/* Calendar Header */}
       <div className="flex flex-col space-y-4 p-4 md:flex-row md:items-center md:justify-between md:space-y-0 lg:flex-none">
         <div className="flex flex-auto">
-          <div className="flex items-center gap-4">
-            <div className="hidden w-20 flex-col items-center justify-center rounded-lg border bg-muted p-0.5 md:flex">
-              <h1 className="p-1 text-xs uppercase text-muted-foreground">
-                {format(today, "MMM")}
-              </h1>
-              <div className="flex w-full items-center justify-center rounded-lg border bg-background p-0.5 text-lg font-bold">
-                <span>{format(today, "d")}</span>
-              </div>
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="flex gap-1">
+                    {format(firstDayCurrentMonth, "MMMM yyyy")}
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="p-0" align="start">
+                  <ScrollArea className="h-72">
+                    <div className="grid grid-cols-1 gap-1 p-2">
+                      {MONTHS.map((month, index) => (
+                        <Button 
+                          key={month} 
+                          variant="ghost" 
+                          className={cn(
+                            "justify-start",
+                            index === firstDayCurrentMonth.getMonth() && "bg-accent"
+                          )}
+                          onClick={() => setMonth(index)}
+                        >
+                          {month}
+                        </Button>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </PopoverContent>
+              </Popover>
             </div>
-            <div className="flex flex-col">
-              <h2 className="text-lg font-semibold text-foreground">
-                {format(firstDayCurrentMonth, "MMMM, yyyy")}
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                {format(firstDayCurrentMonth, "MMM d, yyyy")} -{" "}
-                {format(endOfMonth(firstDayCurrentMonth), "MMM d, yyyy")}
-              </p>
-            </div>
+            <p className="text-sm text-muted-foreground mt-1">
+              {format(today, "EEEE, MMMM d, yyyy")}
+            </p>
           </div>
         </div>
 
-        <div className="flex flex-col items-center gap-4 md:flex-row md:gap-6">
-          <Button variant="outline" size="icon" className="hidden lg:flex">
-            <Search className="h-4 w-4" aria-hidden="true" />
-          </Button>
-
-          <Separator orientation="vertical" className="hidden h-6 lg:block" />
-
-          <div className="inline-flex w-full -space-x-px rounded-lg shadow-sm shadow-black/5 md:w-auto rtl:space-x-reverse">
-            <Button
-              onClick={previousMonth}
-              className="rounded-none shadow-none first:rounded-s-lg last:rounded-e-lg focus-visible:z-10"
-              variant="outline"
-              size="icon"
-              aria-label="Navigate to previous month"
-            >
-              <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-            </Button>
-            <Button
-              onClick={goToToday}
-              className="w-full rounded-none shadow-none first:rounded-s-lg last:rounded-e-lg focus-visible:z-10 md:w-auto"
-              variant="outline"
-            >
-              Today
-            </Button>
-            <Button
-              onClick={nextMonth}
-              className="rounded-none shadow-none first:rounded-s-lg last:rounded-e-lg focus-visible:z-10"
-              variant="outline"
-              size="icon"
-              aria-label="Navigate to next month"
-            >
-              <ChevronRight className="h-4 w-4" aria-hidden="true" />
-            </Button>
-          </div>
-
-          <Separator orientation="vertical" className="hidden h-6 md:block" />
-          <Separator
-            orientation="horizontal"
-            className="block w-full md:hidden"
-          />
-
-          <Button className="w-full gap-2 md:w-auto" onClick={onAddEntry}>
-            <PlusCircle className="h-4 w-4" aria-hidden="true" />
-            <span>New Entry</span>
+        <div className="flex items-center gap-4">
+          <Button 
+            className="gap-2" 
+            onClick={onAddEntry}
+          >
+            <PlusCircleIcon size={16} strokeWidth={2} aria-hidden="true" />
+            <span>Add Entry</span>
           </Button>
         </div>
       </div>
@@ -245,7 +209,7 @@ export function FullScreenCalendar({ data, isLoading, onAddEntry, onSelectDay }:
                             {date.events.map((event) => (
                               <span
                                 key={event.id}
-                                className="mx-0.5 mt-1 h-1.5 w-1.5 rounded-full bg-muted-foreground"
+                                className={`mx-0.5 mt-1 h-1.5 w-1.5 rounded-full ${event.type === 'task' ? 'bg-blue-500' : event.type === 'booking' ? 'bg-green-500' : 'bg-muted-foreground'}`}
                               />
                             ))}
                           </div>
@@ -263,10 +227,8 @@ export function FullScreenCalendar({ data, isLoading, onAddEntry, onSelectDay }:
                       !isToday(day) &&
                       !isSameMonth(day, firstDayCurrentMonth) &&
                       "bg-accent/50 text-muted-foreground",
-                    "relative flex flex-col border-b border-r hover:bg-muted focus:z-10",
-                    !isEqual(day, selectedDay) && "hover:bg-accent/75",
-                    isEqual(day, selectedDay) && "bg-accent/10",
-                    "cursor-pointer"
+                    "relative flex flex-col border-b border-r cursor-pointer",
+                    !isEqual(day, selectedDay) && "hover:bg-accent/50",
                   )}
                 >
                   <header className="flex items-center justify-between p-2.5">
@@ -287,11 +249,10 @@ export function FullScreenCalendar({ data, isLoading, onAddEntry, onSelectDay }:
                           "border-none bg-primary",
                         isEqual(day, selectedDay) &&
                           !isToday(day) &&
-                          "bg-primary",
+                          "bg-foreground",
                         (isEqual(day, selectedDay) || isToday(day)) &&
                           "font-semibold",
-                        isEqual(day, selectedDay) && "text-white",
-                        "flex h-7 w-7 items-center justify-center rounded-full text-xs",
+                        "flex h-7 w-7 items-center justify-center rounded-full text-xs hover:border",
                       )}
                     >
                       <time dateTime={format(day, "yyyy-MM-dd")}>
@@ -302,32 +263,28 @@ export function FullScreenCalendar({ data, isLoading, onAddEntry, onSelectDay }:
                   <div className="flex-1 p-2.5">
                     {data
                       .filter((event) => isSameDay(event.day, day))
-                      .map((dayData) => (
-                        <div key={dayData.day.toString()} className="space-y-1.5">
-                          {dayData.events.slice(0, 2).map((event) => (
+                      .map((day) => (
+                        <div key={day.day.toString()} className="space-y-1.5">
+                          {day.events.slice(0, 1).map((event) => (
                             <div
                               key={event.id}
-                              className={cn(
-                                "flex flex-col items-start gap-1 rounded-lg border p-2 text-xs leading-tight",
-                                event.type === "task" && "bg-amber-100 border-amber-200",
-                                event.type === "booking" && "bg-green-100 border-green-200",
-                                event.type === "event" && "bg-blue-100 border-blue-200"
-                              )}
+                              className={`flex flex-col items-start gap-1 rounded-lg border p-2 text-xs leading-tight ${
+                                event.type === 'task' ? 'bg-blue-100 border-blue-300 dark:bg-blue-950 dark:border-blue-800' :
+                                event.type === 'booking' ? 'bg-green-100 border-green-300 dark:bg-green-950 dark:border-green-800' :
+                                'bg-muted/50'
+                              }`}
                             >
-                              <div className="flex w-full justify-between">
-                                <p className="font-medium leading-none line-clamp-1">{event.name}</p>
-                                <EventDot type={event.type} />
-                              </div>
-                              {event.time && (
-                                <p className="leading-none text-muted-foreground">
-                                  {event.time}
-                                </p>
-                              )}
+                              <p className="font-medium leading-none">
+                                {event.name}
+                              </p>
+                              <p className="leading-none text-muted-foreground">
+                                {event.time}
+                              </p>
                             </div>
                           ))}
-                          {dayData.events.length > 2 && (
+                          {day.events.length > 1 && (
                             <div className="text-xs text-muted-foreground">
-                              + {dayData.events.length - 2} more
+                              + {day.events.length - 1} more
                             </div>
                           )}
                         </div>
@@ -385,12 +342,11 @@ export function FullScreenCalendar({ data, isLoading, onAddEntry, onSelectDay }:
                           {date.events.map((event) => (
                             <span
                               key={event.id}
-                              className={cn(
-                                "mx-0.5 mt-1 h-1.5 w-1.5 rounded-full",
-                                event.type === "task" && "bg-amber-500",
-                                event.type === "booking" && "bg-green-500",
-                                event.type === "event" && "bg-blue-500"
-                              )}
+                              className={`mx-0.5 mt-1 h-1.5 w-1.5 rounded-full ${
+                                event.type === 'task' ? 'bg-blue-500' : 
+                                event.type === 'booking' ? 'bg-green-500' : 
+                                'bg-muted-foreground'
+                              }`}
                             />
                           ))}
                         </div>
@@ -402,6 +358,15 @@ export function FullScreenCalendar({ data, isLoading, onAddEntry, onSelectDay }:
           </div>
         </div>
       </div>
+      
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm">
+          <div className="text-center space-y-2">
+            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-primary border-r-2 mx-auto"></div>
+            <p className="text-sm text-muted-foreground">Loading calendar...</p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
