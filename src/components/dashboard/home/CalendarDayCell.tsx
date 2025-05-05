@@ -35,7 +35,7 @@ const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
         "relative group hover:bg-muted cursor-pointer transition-colors",
         selected && "bg-primary text-primary-foreground",
         !isSameMonth(date, new Date()) && "text-muted-foreground opacity-50",
-        isCurrentDay && !selected && "border-2 border-primary rounded-md",
+        isCurrentDay ? "border-2 border-primary rounded-md" : "border border-transparent",
       )}
     >
       <time dateTime={format(date, 'yyyy-MM-dd')}>{format(date, 'd')}</time>
