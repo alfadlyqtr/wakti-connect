@@ -1,78 +1,32 @@
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { User } from '@/features/auth/types';
+import { AppUser, User as AppUserType } from '@/features/auth/types';
 import { UserRole } from '@/types/roles';
 import { getEffectiveRole } from '@/types/roles';
-
-export interface AuthContextType {
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  user: User | null;
-  effectiveRole: UserRole | null;
-  hasRole: (role: UserRole) => boolean;
-  hasAccess: (allowedRoles: UserRole[]) => boolean;
-}
+import { useAuthState } from '../hooks/useAuthState';
+import { useAuthOperations } from '../hooks/useAuthOperations';
+import { AuthContextType } from '../types';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [user, setUser] = useState<User | null>(null);
+  const { user, setUser, isLoading, setIsLoading } = useAuthState();
   const [effectiveRole, setEffectiveRole] = useState<UserRole | null>(null);
   const [isInitializingRole, setIsInitializingRole] = useState<boolean>(true);
+  const [session, setSession] = useState<any>(null);
+  
+  const { login, logout, register } = useAuthOperations(setUser as React.Dispatch<React.SetStateAction<AppUserType | null>>, setIsLoading);
 
-  // Initialize auth state and set up listener
+  // Fetch and initialize user role
   useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        // First, set up auth state change listener
-        const { data: authListener } = supabase.auth.onAuthStateChange(
-          async (event, session) => {
-            const isAuthed = !!session?.user;
-            setIsAuthenticated(isAuthed);
-            setUser(session?.user || null);
-            
-            // If user logged out, reset role
-            if (!isAuthed) {
-              setEffectiveRole(null);
-              setIsInitializingRole(false);
-              return;
-            }
-            
-            // Only fetch role data if auth status changed to authenticated
-            if (isAuthed) {
-              await fetchUserRoleData(session.user.id);
-            }
-          }
-        );
-
-        // Check current session status
-        const { data: { session } } = await supabase.auth.getSession();
-        setIsAuthenticated(!!session);
-        setUser(session?.user || null);
-        
-        if (session?.user) {
-          await fetchUserRoleData(session.user.id);
-        } else {
-          setIsInitializingRole(false);
-        }
-        
-        setIsLoading(false);
-        
-        return () => {
-          authListener?.subscription?.unsubscribe();
-        };
-      } catch (error) {
-        console.error('Error initializing auth:', error);
-        setIsLoading(false);
-        setIsInitializingRole(false);
-      }
-    };
-
-    initializeAuth();
-  }, []);
+    if (!isLoading && user) {
+      fetchUserRoleData(user.id);
+    } else if (!isLoading && !user) {
+      setEffectiveRole(null);
+      setIsInitializingRole(false);
+    }
+  }, [user, isLoading]);
 
   // Function to fetch user role data with retry logic
   const fetchUserRoleData = async (userId: string) => {
@@ -139,6 +93,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Helper function to refresh the user's role
+  const refreshUserRole = async () => {
+    if (user) {
+      await fetchUserRoleData(user.id);
+    }
+  };
+
   // Helper function to check if user has a specific role
   const hasRole = (role: UserRole): boolean => {
     if (!effectiveRole) return false;
@@ -157,12 +118,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return (
     <AuthContext.Provider
       value={{
-        isAuthenticated,
+        isAuthenticated: !!user,
         isLoading: finalLoadingState,
         user,
+        session,
         effectiveRole,
         hasRole,
-        hasAccess
+        hasAccess,
+        login,
+        logout,
+        register,
+        refreshUserRole
       }}
     >
       {children}
