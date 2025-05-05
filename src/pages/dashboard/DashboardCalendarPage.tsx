@@ -14,7 +14,7 @@ import CalendarLegend from "@/components/calendar/CalendarLegend";
 const DashboardCalendarPage: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(startOfToday());
   const [isEntryDialogOpen, setIsEntryDialogOpen] = useState(false);
-  const { events, isLoading } = useCalendarEvents();
+  const { events, isLoading, refetch } = useCalendarEvents();
   
   // Convert CalendarEvent array to format expected by FullScreenCalendar
   const calendarData = React.useMemo(() => {
@@ -61,11 +61,52 @@ const DashboardCalendarPage: React.FC = () => {
         description: "Your task has been marked as complete",
       });
       
+      refetch();
+      
     } catch (error) {
       console.error("Error completing task:", error);
       toast({
         title: "Error",
         description: "Failed to complete task",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handle deleting entries
+  const handleDeleteEntry = async (entryId: string, entryType: string) => {
+    try {
+      let error;
+      
+      if (entryType === "manual") {
+        const result = await supabase
+          .from('calendar_manual_entries')
+          .delete()
+          .eq('id', entryId);
+        error = result.error;
+      } else if (entryType === "task") {
+        const result = await supabase
+          .from('tasks')
+          .delete()
+          .eq('id', entryId);
+        error = result.error;
+      }
+      
+      if (error) {
+        throw error;
+      }
+      
+      toast({
+        title: "Entry deleted",
+        description: "The calendar entry has been removed",
+      });
+      
+      refetch();
+    } catch (err) {
+      console.error("Error deleting entry:", err);
+      toast({
+        title: "Delete failed",
+        description: "There was an error deleting the entry",
         variant: "destructive",
       });
     }
@@ -99,6 +140,7 @@ const DashboardCalendarPage: React.FC = () => {
             date={selectedDate}
             events={selectedDayEvents}
             onCompleteTask={handleCompleteTask}
+            onDelete={handleDeleteEntry}
           />
         </div>
       </div>
@@ -108,8 +150,8 @@ const DashboardCalendarPage: React.FC = () => {
         onOpenChange={setIsEntryDialogOpen}
         defaultDate={selectedDate}
         onEntryCreated={() => {
-          // Force refetch of calendar data
-          window.location.reload();
+          refetch();
+          setIsEntryDialogOpen(false);
         }}
       />
     </div>

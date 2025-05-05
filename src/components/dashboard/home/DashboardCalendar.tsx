@@ -10,6 +10,9 @@ import { TaskList } from "./TaskList";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 interface DashboardCalendarProps {
   events?: CalendarEvent[];
@@ -97,6 +100,25 @@ const useRealCalendarEvents = (userId: string | null) => {
         console.log("Error fetching events:", err);
       }
 
+      // Fetch reminders
+      try {
+        const { data: remindersData } = await supabase
+          .from('reminders')
+          .select('id, message, reminder_time')
+          .eq('user_id', userId);
+
+        if (remindersData) {
+          results.push(...remindersData.map(reminder => ({
+            id: reminder.id,
+            title: reminder.message,
+            date: new Date(reminder.reminder_time as string),
+            type: "reminder" as const
+          })));
+        }
+      } catch (err) {
+        console.log("Error fetching reminders:", err);
+      }
+
       return results;
     },
     enabled: !!userId,
@@ -108,6 +130,7 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
 }) => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [userId, setUserId] = useState<string | null>(null);
+  const { toast } = useToast();
 
   // Get current userId for filtering
   useEffect(() => {
@@ -118,7 +141,7 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
   }, []);
 
   // Get task and booking events for this user
-  const { data: events = [], isLoading } = useRealCalendarEvents(userId);
+  const { data: events = [], isLoading, refetch } = useRealCalendarEvents(userId);
 
   // Helper: filter events for specific date
   const getEventsForDate = (date: Date) => {
@@ -137,6 +160,49 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
   };
 
   const selectedDateEvents = getEventsForDate(selectedDate);
+  
+  // Delete a manual entry
+  const handleDeleteEntry = async (entryId: string, entryType: string) => {
+    if (!userId) return;
+    
+    try {
+      let error;
+      
+      if (entryType === "manual") {
+        const result = await supabase
+          .from('calendar_manual_entries')
+          .delete()
+          .eq('id', entryId)
+          .eq('user_id', userId);
+        error = result.error;
+      } else if (entryType === "task") {
+        const result = await supabase
+          .from('tasks')
+          .delete()
+          .eq('id', entryId)
+          .eq('user_id', userId);
+        error = result.error;
+      }
+      
+      if (error) {
+        throw error;
+      }
+      
+      toast({
+        title: "Entry deleted",
+        description: "The calendar entry has been removed",
+      });
+      
+      refetch();
+    } catch (err) {
+      console.error("Error deleting entry:", err);
+      toast({
+        title: "Delete failed",
+        description: "There was an error deleting the entry",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -180,7 +246,10 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
               </div>
 
               <div className="bg-white/50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700 p-2">
-                <TaskList tasks={selectedDateEvents} />
+                <TaskList 
+                  tasks={selectedDateEvents} 
+                  onDelete={(id, type) => handleDeleteEntry(id, type)} 
+                />
               </div>
             </div>
           ) : (

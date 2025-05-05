@@ -6,24 +6,26 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { CalendarEvent } from "@/types/calendar.types";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Clock, MapPin, Calendar, CheckSquare, Edit3 } from "lucide-react";
+import { Clock, MapPin, Calendar, CheckSquare, Edit3, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface CalendarDayViewProps {
   date: Date;
   events: CalendarEvent[];
   onCompleteTask?: (taskId: string) => void;
+  onDelete?: (id: string, type: string) => void;
 }
 
 const CalendarDayView: React.FC<CalendarDayViewProps> = ({
   date,
   events,
-  onCompleteTask
+  onCompleteTask,
+  onDelete
 }) => {
   // Group events by type
   const tasks = events.filter(event => event.type === "task");
   const bookings = events.filter(event => event.type === "booking");
-  const manualEntries = events.filter(event => !event.type || event.type === "manual"); // Consider undefined type as manual entries
+  const manualEntries = events.filter(event => event.type === "manual");
   const otherEvents = events.filter(event => event.type === "event");
   const reminders = events.filter(event => event.type === "reminder");
 
@@ -45,14 +47,32 @@ const CalendarDayView: React.FC<CalendarDayViewProps> = ({
   const renderEvents = (title: string, eventsList: CalendarEvent[], type: "task" | "booking" | "event" | "manual" | "reminder") => {
     if (eventsList.length === 0) return null;
 
+    const getIconByType = (type: string) => {
+      switch (type) {
+        case "task": return <CheckSquare className="h-4 w-4 text-amber-500" />;
+        case "booking": return <Calendar className="h-4 w-4 text-green-500" />;
+        case "event": return <Calendar className="h-4 w-4 text-blue-500" />;
+        case "manual": return <Edit3 className="h-4 w-4 text-purple-500" />;
+        case "reminder": return <Clock className="h-4 w-4 text-yellow-400" />;
+        default: return <Calendar className="h-4 w-4" />;
+      }
+    };
+
+    const getBgByType = (type: string) => {
+      switch (type) {
+        case "task": return "bg-amber-50/50 border-amber-200";
+        case "booking": return "bg-green-50/50 border-green-200"; 
+        case "event": return "bg-blue-50/50 border-blue-200";
+        case "manual": return "bg-purple-50/50 border-purple-200";
+        case "reminder": return "bg-yellow-50/50 border-yellow-200";
+        default: return "bg-gray-50/50 border-gray-200";
+      }
+    };
+
     return (
       <div className="space-y-3">
         <h3 className="font-medium text-sm flex items-center gap-2">
-          {type === "task" && <CheckSquare className="h-4 w-4 text-amber-500" />}
-          {type === "booking" && <Calendar className="h-4 w-4 text-green-500" />}
-          {type === "event" && <Calendar className="h-4 w-4 text-violet-500" />}
-          {type === "manual" && <Edit3 className="h-4 w-4 text-purple-500" />}
-          {type === "reminder" && <Clock className="h-4 w-4 text-yellow-400" />}
+          {getIconByType(type)}
           {title}
           <Badge variant="outline" className="ml-2 font-normal">
             {eventsList.length}
@@ -63,13 +83,7 @@ const CalendarDayView: React.FC<CalendarDayViewProps> = ({
           {eventsList.map(event => (
             <div 
               key={event.id} 
-              className={`p-3 border rounded-lg ${
-                type === "task" ? "bg-amber-50/50 border-amber-200" :
-                type === "booking" ? "bg-green-50/50 border-green-200" :
-                type === "event" ? "bg-violet-50/50 border-violet-200" :
-                type === "reminder" ? "bg-yellow-50/50 border-yellow-200" :
-                "bg-purple-50/50 border-purple-200"
-              }`}
+              className={`p-3 border rounded-lg ${getBgByType(type)}`}
             >
               <div className="flex items-start justify-between">
                 <div className="space-y-1">
@@ -121,8 +135,20 @@ const CalendarDayView: React.FC<CalendarDayViewProps> = ({
                   </div>
                 </div>
                 
+                {/* Allow deleting manual entries and tasks */}
+                {(type === "manual" || type === "task") && onDelete && (
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-7 w-7 text-muted-foreground hover:text-destructive" 
+                    onClick={() => onDelete(event.id, type)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+                
                 {/* Show appropriate status badge for each event type */}
-                {event.status && (
+                {event.status && !onDelete && (
                   <Badge 
                     variant={
                       event.status === "completed" || event.status === "confirmed" ? "outline" : 
