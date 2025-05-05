@@ -34,10 +34,11 @@ const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
       className={cn(
         props.className,
         "relative group hover:bg-muted cursor-pointer transition-colors",
+        // Base styles
         selected && "bg-primary text-primary-foreground",
         !isSameMonth(date, new Date()) && "text-muted-foreground opacity-50",
-        // Always apply a border for today's date, regardless of selection
-        isCurrentDay && "ring-2 ring-primary ring-offset-1",
+        // Always apply a prominent highlight for today's date, regardless of selection
+        isCurrentDay && "ring-2 ring-primary ring-inset ring-offset-2" 
       )}
     >
       <time dateTime={format(date, 'yyyy-MM-dd')}>{format(date, 'd')}</time>
