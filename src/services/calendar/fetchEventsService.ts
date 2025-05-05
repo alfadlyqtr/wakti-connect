@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { CalendarEvent } from "@/types/calendar.types";
+import { TaskPriority } from "@/types/task.types";
 import { format } from "date-fns";
 
 // Fetch events for calendar
@@ -38,6 +39,17 @@ export const fetchEvents = async (userId: string): Promise<CalendarEvent[]> => {
     console.error("Error in fetchEvents:", error);
     return [];
   }
+};
+
+// Helper function to validate and convert priority string to TaskPriority type
+const validateTaskPriority = (priority: string | null | undefined): TaskPriority => {
+  if (!priority) return "normal";
+  
+  const validPriorities: TaskPriority[] = ["urgent", "high", "medium", "normal"];
+  
+  return validPriorities.includes(priority as TaskPriority) 
+    ? (priority as TaskPriority) 
+    : "normal";
 };
 
 // Helper function to fetch all calendar items (events, tasks, bookings)
@@ -100,7 +112,7 @@ export const fetchAllCalendarItems = async (userId: string): Promise<CalendarEve
         date: new Date(task.due_date as string),
         type: 'task' as const,
         status: task.status,
-        priority: task.priority
+        priority: validateTaskPriority(task.priority)
       }));
       
       allItems.push(...taskEvents);
