@@ -56,18 +56,45 @@ const useRealCalendarEvents = (userId: string | null) => {
         })));
       }
 
-      // Fetch manual entries and events
-      const { data: eventsData } = await supabase
-        .from('events')
-        .select('id, title, start_time, type')
-        .eq('user_id', userId);
-      if (eventsData) {
-        results.push(...eventsData.map(event => ({
-          id: event.id,
-          title: event.title,
-          date: new Date(event.start_time as string),
-          type: (event.type || "manual") as EventType
-        })));
+      // Fetch manual entries and custom events
+      try {
+        // Try to fetch from calendar_manual_entries
+        const { data: manualEntriesData } = await supabase
+          .from('calendar_manual_entries')
+          .select('id, title, date, description, location')
+          .eq('user_id', userId);
+
+        if (manualEntriesData) {
+          results.push(...manualEntriesData.map(entry => ({
+            id: entry.id,
+            title: entry.title,
+            date: new Date(entry.date as string),
+            type: "manual" as const,
+            description: entry.description,
+            location: entry.location
+          })));
+        }
+      } catch (err) {
+        console.log("Manual entries table might not exist yet:", err);
+      }
+
+      // Fetch events from events table
+      try {
+        const { data: eventsData } = await supabase
+          .from('events')
+          .select('id, title, start_time')
+          .eq('user_id', userId);
+
+        if (eventsData) {
+          results.push(...eventsData.map(event => ({
+            id: event.id,
+            title: event.title,
+            date: new Date(event.start_time as string),
+            type: "event" as const
+          })));
+        }
+      } catch (err) {
+        console.log("Error fetching events:", err);
       }
 
       return results;
@@ -104,7 +131,7 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
       hasTasks: dateEvents.some(event => event.type === "task"),
       hasBookings: dateEvents.some(event => event.type === "booking"),
       hasEvents: dateEvents.some(event => event.type === "event"),
-      hasManualEntries: dateEvents.some(event => !event.type || event.type === "manual"),
+      hasManualEntries: dateEvents.some(event => event.type === "manual"),
       hasReminders: dateEvents.some(event => event.type === "reminder")
     };
   };
