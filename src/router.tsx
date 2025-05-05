@@ -1,3 +1,4 @@
+
 import React from "react";
 import { createBrowserRouter, RouteObject, Outlet } from "react-router-dom";
 import { publicRoutes } from "./routes/publicRoutes";
@@ -27,6 +28,7 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 // Dashboard pages with lazy loading
 const DashboardHome = lazy(() => import("@/pages/dashboard/DashboardHome"));
 const DashboardTasks = lazy(() => import("@/pages/dashboard/DashboardTasks"));
+const DashboardCalendarPage = lazy(() => import("@/pages/dashboard/DashboardCalendarPage")); // Added Calendar page
 const DashboardServiceManagement = lazy(() => import("@/pages/dashboard/DashboardServiceManagement"));
 const DashboardStaffManagement = lazy(() => import("@/pages/dashboard/DashboardStaffManagement"));
 const DashboardBookings = lazy(() => import("@/pages/dashboard/DashboardBookings"));
@@ -54,6 +56,10 @@ const localDashboardRoutes: RouteObject[] = [
   {
     index: true,
     element: withSuspense(DashboardHome),
+  },
+  {
+    path: "calendar", // Add the calendar route
+    element: withSuspense(DashboardCalendarPage),
   },
   {
     path: "tasks/*",

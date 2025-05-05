@@ -13,6 +13,10 @@ export const EventDot: React.FC<EventDotProps> = ({ type }) => {
         return "bg-amber-500";
       case "booking":
         return "bg-green-500";
+      case "event":
+        return "bg-blue-500";
+      case "manual":
+        return "bg-purple-500";
       default:
         return "bg-slate-400";
     }
