@@ -6,13 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import CalendarEventList from './CalendarEventList';
-import { CalendarEvent } from "@/types/calendar.types";
+import { CalendarEvent, DayEventTypes } from "@/types/calendar.types";
 import CalendarEntryDialog from './CalendarEntryDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { fetchAllCalendarItems } from '@/services/calendar/fetchEventsService';
 import CreateEventButton from '@/components/events/CreateEventButton';
 import { useIsMobile } from '@/hooks/use-mobile';
+import CalendarDayCell from '@/components/dashboard/home/CalendarDayCell';
 
 const EnhancedCalendar: React.FC = () => {
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
@@ -73,6 +74,17 @@ const EnhancedCalendar: React.FC = () => {
       setFilteredEvents([]);
     }
   }, [selectedDate, events]);
+  
+  // Helper: get event types for a specific date
+  const getEventTypesForDate = (date: Date): DayEventTypes => {
+    const dateEvents = events.filter(event => isSameDay(new Date(event.date), date));
+    return {
+      hasTasks: dateEvents.some(event => event.type === "task"),
+      hasBookings: dateEvents.some(event => event.type === "booking"),
+      hasEvents: dateEvents.some(event => event.type === "event"),
+      hasManualEntries: dateEvents.some(event => event.type === "manual")
+    };
+  };
   
   // Handle navigation
   const handlePreviousMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
@@ -138,6 +150,17 @@ const EnhancedCalendar: React.FC = () => {
                   onSelect={(date) => date && setSelectedDate(date)}
                   month={currentMonth}
                   className="rounded-md"
+                  components={{
+                    Day: ({ date, ...props }) => (
+                      <CalendarDayCell
+                        date={date}
+                        selected={isSameDay(date, selectedDate)}
+                        eventTypes={getEventTypesForDate(date)}
+                        onSelect={(date) => setSelectedDate(date)}
+                        {...props}
+                      />
+                    ),
+                  }}
                 />
               )}
             </CardContent>
