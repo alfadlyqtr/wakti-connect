@@ -71,24 +71,20 @@ export const useStaffListOperations = () => {
         throw new Error('Not authenticated');
       }
 
-      const response = await fetch('/api/sync-staff-records', {
-        method: 'POST',
+      // Call the Supabase Edge Function directly instead of a non-existent API route
+      const { data, error } = await supabase.functions.invoke('sync-staff-records', {
         headers: {
-          'Authorization': `Bearer ${sessionData.session.access_token}`,
-          'Content-Type': 'application/json'
+          Authorization: `Bearer ${sessionData.session.access_token}`
         }
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to sync staff records');
+      if (error) {
+        throw error;
       }
-
-      const result = await response.json();
       
       toast({
         title: "Staff Synchronized",
-        description: `Successfully synchronized ${result.data?.synced?.length || 0} staff records.`
+        description: `Successfully synchronized ${data?.synced?.length || 0} staff records.`
       });
       
       // Refresh staff list
