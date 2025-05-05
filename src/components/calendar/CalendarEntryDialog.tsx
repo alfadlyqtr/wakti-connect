@@ -1,52 +1,16 @@
 
-import React from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { format } from "date-fns";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import React, { useState } from "react";
+import { format, parseISO } from "date-fns";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { DatePicker } from "@/components/ui/date-picker";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { DatePicker } from "@/components/ui/date-picker";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-
-const formSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  date: z.date({
-    required_error: "Date is required",
-  }),
-  type: z.enum(["event", "task"]),
-  description: z.string().optional(),
-  location: z.string().optional(),
-  startTime: z.string().optional(),
-  endTime: z.string().optional(),
-  priority: z.enum(["normal", "medium", "high", "urgent"]).optional(),
-});
+import { EventType } from "@/types/calendar.types";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface CalendarEntryDialogProps {
   open: boolean;
@@ -55,308 +19,212 @@ interface CalendarEntryDialogProps {
   onEntryCreated?: () => void;
 }
 
-const CalendarEntryDialog: React.FC<CalendarEntryDialogProps> = ({
+export default function CalendarEntryDialog({
   open,
   onOpenChange,
   defaultDate = new Date(),
-  onEntryCreated,
-}) => {
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      title: "",
-      date: defaultDate,
-      type: "event",
-      description: "",
-      location: "",
-      startTime: "",
-      endTime: "",
-      priority: "normal",
-    },
-  });
+  onEntryCreated
+}: CalendarEntryDialogProps) {
+  const isMobile = useIsMobile();
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [date, setDate] = useState<Date | undefined>(defaultDate);
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
+  const [location, setLocation] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const resetForm = () => {
+    setTitle("");
+    setDescription("");
+    setDate(defaultDate);
+    setStartTime("");
+    setEndTime("");
+    setLocation("");
+  };
+
+  const handleClose = () => {
+    resetForm();
+    onOpenChange(false);
+  };
+
+  const validate = () => {
+    if (!title.trim()) {
+      toast({
+        title: "Missing information",
+        description: "Please enter a title for your entry",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (!date) {
+      toast({
+        title: "Missing information",
+        description: "Please select a date",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  const formatTimeToISO = (timeString: string, dateObj: Date) => {
+    if (!timeString) return null;
+
+    const [hours, minutes] = timeString.split(":");
+    const newDate = new Date(dateObj);
+    newDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+    return newDate.toISOString();
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validate()) return;
+
+    setIsSubmitting(true);
+
     try {
+      // Get current user
       const { data: { session } } = await supabase.auth.getSession();
+      
       if (!session?.user) {
         toast({
-          title: "Authentication required",
-          description: "Please sign in to create calendar entries",
+          title: "Authentication error",
+          description: "You must be logged in to create calendar entries",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      const userId = session.user.id;
+      
+      // Format start and end times
+      const formattedStartTime = startTime ? formatTimeToISO(startTime, date!) : date!.toISOString();
+      const formattedEndTime = endTime ? formatTimeToISO(endTime, date!) : date!.toISOString();
+
+      // Insert the event into the events table
+      const { data, error } = await supabase.from('events').insert({
+        title: title,
+        description: description,
+        start_time: formattedStartTime,
+        end_time: formattedEndTime,
+        location: location,
+        user_id: userId,
+        status: "draft" as "draft" | "sent" | "accepted" | "declined" | "recalled", // Fix for the TypeScript error
+        is_all_day: !startTime && !endTime
+      });
+
+      if (error) {
+        console.error("Error creating event:", error);
+        toast({
+          title: "Error",
+          description: "Failed to create calendar entry.",
           variant: "destructive",
         });
         return;
       }
 
-      const userId = session.user.id;
-      
-      // Format the date
-      const formattedDate = format(values.date, "yyyy-MM-dd");
-      
-      // Handle based on entry type
-      if (values.type === "task") {
-        const taskData = {
-          title: values.title,
-          description: values.description || null,
-          due_date: formattedDate,
-          due_time: values.startTime || null,
-          user_id: userId,
-          status: "pending",
-          priority: values.priority || "normal",
-        };
-        
-        const { error } = await supabase.from("tasks").insert(taskData);
-        
-        if (error) throw error;
-        
-      } else if (values.type === "event") {
-        // Calculate start and end times if provided
-        let startTime = null;
-        let endTime = null;
-        
-        if (values.startTime) {
-          startTime = `${formattedDate}T${values.startTime}:00`;
-        }
-        
-        if (values.endTime) {
-          endTime = `${formattedDate}T${values.endTime}:00`;
-        } else if (startTime) {
-          // Default to 1 hour later if only start time is provided
-          const startDate = new Date(startTime);
-          startDate.setHours(startDate.getHours() + 1);
-          endTime = startDate.toISOString();
-        }
-        
-        const eventData = {
-          title: values.title,
-          description: values.description || null,
-          start_time: startTime || `${formattedDate}T00:00:00`,
-          end_time: endTime,
-          location: values.location || null,
-          user_id: userId,
-          status: "scheduled",
-        };
-        
-        const { error } = await supabase.from("events").insert(eventData);
-        
-        if (error) throw error;
-      }
-      
       toast({
-        title: "Entry created",
-        description: `Your ${values.type} has been added to the calendar`,
+        title: "Success",
+        description: "Calendar entry created successfully!",
       });
+
+      // Close the dialog and reset form
+      handleClose();
       
-      // Reset form and close dialog
-      form.reset();
-      onOpenChange(false);
-      
-      // Notify parent component that an entry was created
+      // Notify parent component
       if (onEntryCreated) {
         onEntryCreated();
       }
-      
     } catch (error) {
-      console.error("Error creating calendar entry:", error);
+      console.error("Error in handleSubmit:", error);
       toast({
         title: "Error",
-        description: "Failed to create calendar entry",
+        description: "An unexpected error occurred.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const entryType = form.watch("type");
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className={isMobile ? "w-[90vw] p-4" : "max-w-md"}>
         <DialogHeader>
           <DialogTitle>Add Calendar Entry</DialogTitle>
-          <DialogDescription>
-            Create a new event or task in your calendar.
-          </DialogDescription>
         </DialogHeader>
         
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Entry Type</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select entry type" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="event">Event</SelectItem>
-                      <SelectItem value="task">Task</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormDescription>
-                    Choose what type of entry to create
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="title">Title</Label>
+            <Input
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Meeting, Appointment, etc."
             />
-            
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Title</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter a title" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <div className="flex flex-col sm:flex-row gap-4">
-              <FormField
-                control={form.control}
-                name="date"
-                render={({ field }) => (
-                  <FormItem className="flex-1">
-                    <FormLabel>Date</FormLabel>
-                    <FormControl>
-                      <DatePicker 
-                        date={field.value} 
-                        setDate={field.onChange}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="date">Date</Label>
+            <DatePicker date={date} setDate={setDate} />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="startTime">Start Time (optional)</Label>
+              <Input
+                id="startTime"
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
               />
-              
-              {entryType === "task" && (
-                <FormField
-                  control={form.control}
-                  name="priority"
-                  render={({ field }) => (
-                    <FormItem className="flex-1">
-                      <FormLabel>Priority</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select priority" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="normal">Normal</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="high">High</SelectItem>
-                          <SelectItem value="urgent">Urgent</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
             </div>
             
-            <div className="flex flex-col sm:flex-row gap-4">
-              <FormField
-                control={form.control}
-                name="startTime"
-                render={({ field }) => (
-                  <FormItem className="flex-1">
-                    <FormLabel>
-                      {entryType === "task" ? "Due Time" : "Start Time"}
-                    </FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="time" 
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+            <div className="space-y-2">
+              <Label htmlFor="endTime">End Time (optional)</Label>
+              <Input
+                id="endTime"
+                type="time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
               />
-              
-              {entryType === "event" && (
-                <FormField
-                  control={form.control}
-                  name="endTime"
-                  render={({ field }) => (
-                    <FormItem className="flex-1">
-                      <FormLabel>End Time</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="time" 
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
             </div>
-            
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Add a description" 
-                      {...field} 
-                      className="resize-none"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="location">Location (optional)</Label>
+            <Input
+              id="location"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="Office, Home, etc."
             />
-            
-            {entryType === "event" && (
-              <FormField
-                control={form.control}
-                name="location"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Location</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="Add a location" 
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-            
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
-              </Button>
-              <Button type="submit">Create Entry</Button>
-            </DialogFooter>
-          </form>
-        </Form>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="description">Description (optional)</Label>
+            <Textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Add details about this entry..."
+              rows={3}
+            />
+          </div>
+          
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={handleClose}>Cancel</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Creating..." : "Create Entry"}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
-};
-
-export default CalendarEntryDialog;
+}
