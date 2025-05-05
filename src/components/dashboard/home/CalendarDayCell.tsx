@@ -38,7 +38,7 @@ const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
         selected && "bg-primary text-primary-foreground",
         !isSameMonth(date, new Date()) && "text-muted-foreground opacity-50",
         // Always apply a prominent highlight for today's date, regardless of selection
-        isCurrentDay && "ring-2 ring-primary ring-inset ring-offset-2" 
+        isCurrentDay && "ring-2 ring-primary ring-inset" 
       )}
     >
       <time dateTime={format(date, 'yyyy-MM-dd')}>{format(date, 'd')}</time>
