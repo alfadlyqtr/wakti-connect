@@ -63,7 +63,7 @@ export const stringifyEventCustomization = (customization: EventCustomization): 
 };
 
 /**
- * Prepares an event for database storage by converting customization to JSON
+ * Prepares an event for database storage by converting customization to JSON string
  */
 export const prepareEventForStorage = (event: any) => {
   // Skip if already a string or no customization

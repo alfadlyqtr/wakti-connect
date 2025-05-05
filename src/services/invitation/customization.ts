@@ -1,5 +1,5 @@
 
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { InvitationCustomization } from '@/types/invitation.types';
 import { EventCustomization, BackgroundType, TextAlign, ButtonShape } from '@/types/event.types';
 
@@ -83,21 +83,37 @@ const convertToEventCustomization = (invitationCustomization: InvitationCustomiz
 
 /**
  * Get invitation customization by invitation ID
+ * 
+ * Note: This is a placeholder function. The "invitation_customizations" table 
+ * may need to be created in the database for this to work.
  */
 export const getInvitationCustomization = async (invitationId: string): Promise<InvitationCustomization | null> => {
   try {
-    const { data, error } = await supabase
-      .from('invitation_customizations')
+    // Check if the invitation exists in the invitations table
+    const { data: invitationData, error: invitationError } = await supabase
+      .from('invitations')
       .select('*')
-      .eq('invitation_id', invitationId)
+      .eq('id', invitationId)
       .single();
     
-    if (error) {
-      console.error('Error fetching invitation customization:', error);
+    if (invitationError) {
+      console.error('Error fetching invitation:', invitationError);
       return null;
     }
     
-    return data as InvitationCustomization;
+    // Create an InvitationCustomization from the invitation data
+    return {
+      backgroundType: invitationData.background_type || 'solid',
+      backgroundValue: invitationData.background_value || '#ffffff',
+      fontFamily: invitationData.font_family || 'system-ui, sans-serif',
+      fontSize: invitationData.font_size || 'medium',
+      textColor: invitationData.text_color || '#000000',
+      textAlign: invitationData.text_align || 'left',
+      buttonStyles: {
+        style: 'rounded',
+        color: '#3B82F6'
+      }
+    };
   } catch (error) {
     console.error('Error in getInvitationCustomization:', error);
     return null;
@@ -106,22 +122,28 @@ export const getInvitationCustomization = async (invitationId: string): Promise<
 
 /**
  * Save invitation customization
+ * 
+ * Note: This function needs a proper table to save customizations.
+ * Since we don't have "invitation_customizations" table, we'll save to the invitations table directly.
  */
 export const saveInvitationCustomization = async (invitationId: string, customization: InvitationCustomization): Promise<InvitationCustomization | null> => {
   try {
-    // Convert InvitationCustomization to EventCustomization for proper processing
-    const eventCustomization = convertToEventCustomization(customization);
+    // Convert to database format
+    const updateData = {
+      background_type: customization.backgroundType || 'solid',
+      background_value: customization.backgroundValue || '#ffffff',
+      font_family: customization.fontFamily || 'system-ui, sans-serif',
+      font_size: customization.fontSize || 'medium',
+      text_color: customization.textColor || '#000000',
+      text_align: customization.textAlign || 'left'
+    };
     
-    // Then convert EventCustomization to a safe JSON format
-    const safeCustomization = convertEventCustomization(eventCustomization);
-    
+    // Update the invitations table
     const { data, error } = await supabase
-      .from('invitation_customizations')
-      .upsert(
-        { invitation_id: invitationId, customization: safeCustomization },
-        { onConflict: 'invitation_id' }
-      )
-      .select('*')
+      .from('invitations')
+      .update(updateData)
+      .eq('id', invitationId)
+      .select()
       .single();
     
     if (error) {
@@ -129,7 +151,19 @@ export const saveInvitationCustomization = async (invitationId: string, customiz
       return null;
     }
     
-    return data as InvitationCustomization;
+    // Return the updated customization
+    return {
+      backgroundType: data.background_type,
+      backgroundValue: data.background_value,
+      fontFamily: data.font_family,
+      fontSize: data.font_size,
+      textColor: data.text_color,
+      textAlign: data.text_align,
+      buttonStyles: customization.buttonStyles || {
+        style: 'rounded',
+        color: '#3B82F6'
+      }
+    };
   } catch (error) {
     console.error('Error in saveInvitationCustomization:', error);
     return null;

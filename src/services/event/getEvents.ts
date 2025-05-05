@@ -1,6 +1,7 @@
 
 import { Event, EventTab, EventsResult } from '@/types/event.types';
 import { supabase } from '@/integrations/supabase/client';
+import { transformDatabaseEvent } from './eventHelpers';
 
 /**
  * Get events based on tab (my-events, invited-events, draft-events)
@@ -23,7 +24,12 @@ export const getEvents = async (tab: EventTab): Promise<EventsResult> => {
       .eq('id', userId)
       .single();
       
-    const userRole = userProfile?.account_type || 'free';
+    const userProfileType = userProfile?.account_type || 'free';
+    // Ensure userRole is compatible with EventsResult.userRole type
+    const userRole = ['free', 'individual', 'business'].includes(userProfileType) 
+      ? userProfileType as 'free' | 'individual' | 'business'
+      : 'free';
+    
     const canCreateEvents = userRole !== 'free';
       
     // Different queries based on tab
@@ -96,37 +102,12 @@ export const getEvents = async (tab: EventTab): Promise<EventsResult> => {
       throw new Error('Failed to fetch events');
     }
     
-    // Parse customization from JSON if needed and transform data
-    const events: Event[] = (data || []).map((event: any) => {
-      // Parse customization if it's a string
-      let customization = event.customization;
-      
-      if (typeof customization === 'string') {
-        try {
-          customization = JSON.parse(customization);
-        } catch (e) {
-          console.warn('Failed to parse customization:', e);
-          // Set default customization if parsing fails
-          customization = {
-            background: { type: 'solid', value: '#ffffff' },
-            font: { family: 'system-ui, sans-serif', size: 'medium', color: '#333333' },
-            buttons: {
-              accept: { background: '#4CAF50', color: '#ffffff', shape: 'rounded' },
-              decline: { background: '#f44336', color: '#ffffff', shape: 'rounded' }
-            }
-          };
-        }
-      }
-      
-      return {
-        ...event,
-        customization
-      };
-    });
+    // Transform data to ensure proper customization parsing
+    const events: Event[] = (data || []).map((event: any) => transformDatabaseEvent(event));
     
     return {
       events,
-      userRole: userRole as 'free' | 'individual' | 'business',
+      userRole,
       canCreateEvents
     };
     

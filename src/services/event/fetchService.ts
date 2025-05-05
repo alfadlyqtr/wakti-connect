@@ -1,6 +1,8 @@
+
 import { toast } from "@/components/ui/use-toast";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import { Event, EventsResult, EventWithInvitations } from "@/types/event.types";
+import { transformDatabaseEvent } from "./eventHelpers";
 
 // Simple helper function to check user role instead of importing from userService
 const getUserRole = async () => {
@@ -30,7 +32,12 @@ export const getAllEvents = async (): Promise<EventsResult> => {
     }
     
     const userRole = await getUserRole();
-    const canCreateEvents = userRole !== 'free';
+    // Ensure userRole is compatible with EventsResult.userRole type
+    const typedUserRole = ['free', 'individual', 'business'].includes(userRole) 
+      ? userRole as 'free' | 'individual' | 'business'
+      : 'free';
+    
+    const canCreateEvents = typedUserRole !== 'free';
     
     const { data, error } = await supabase
       .from('events')
@@ -43,10 +50,13 @@ export const getAllEvents = async (): Promise<EventsResult> => {
       throw new Error(error.message);
     }
     
+    // Transform database events to proper Event objects
+    const events: Event[] = (data || []).map(transformDatabaseEvent);
+    
     return {
-      events: data || [],
-      userRole: userRole,
-      canCreateEvents: canCreateEvents
+      events,
+      userRole: typedUserRole,
+      canCreateEvents
     };
   } catch (error: any) {
     console.error("Error in getAllEvents:", error);
@@ -82,7 +92,8 @@ export const getEventWithInvitations = async (eventId: string): Promise<EventWit
       throw new Error(error.message);
     }
     
-    return data as EventWithInvitations;
+    // Transform to proper EventWithInvitations object with parsed customization
+    return transformDatabaseEvent(data) as EventWithInvitations;
   } catch (error: any) {
     console.error("Error in getEventWithInvitations:", error);
     toast({
