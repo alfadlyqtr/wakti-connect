@@ -1,13 +1,13 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
-import { NavItem } from "./sidebarNavConfig";
+import { NavItemType } from "./sidebarNavConfig";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface SidebarNavItemProps {
-  item: NavItem;
+  item: NavItemType;
   isActive: boolean;
   isMobile: boolean;
   isCollapsed?: boolean;
