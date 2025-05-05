@@ -24,6 +24,9 @@ const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
     onSelect(date);
   };
 
+  // Determine if today for highlighting
+  const isCurrentDay = isToday(date);
+
   return (
     <div 
       {...props}
@@ -33,7 +36,8 @@ const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
         "relative group hover:bg-muted cursor-pointer transition-colors",
         selected && "bg-primary text-primary-foreground",
         !isSameMonth(date, new Date()) && "text-muted-foreground opacity-50",
-        isToday(date) && !selected && "border-2 border-primary rounded-md",
+        // Always apply a border for today's date, regardless of selection
+        isCurrentDay && "ring-2 ring-primary ring-offset-1",
       )}
     >
       <time dateTime={format(date, 'yyyy-MM-dd')}>{format(date, 'd')}</time>
