@@ -10,11 +10,13 @@ export const EventDot: React.FC<EventDotProps> = ({ type }) => {
   const getDotColor = () => {
     switch (type) {
       case "task":
-        return "bg-amber-500";
+        return "bg-amber-500"; // Matching our legend
       case "booking":
-        return "bg-green-500";
+        return "bg-green-500"; // Matching our legend
+      case "event":
+        return "bg-violet-500"; // Added for events
       default:
-        return "bg-slate-400";
+        return "bg-purple-500"; // Default for manual entries
     }
   };
 
@@ -22,3 +24,4 @@ export const EventDot: React.FC<EventDotProps> = ({ type }) => {
     <div className={`h-1.5 w-1.5 rounded-full ${getDotColor()}`} />
   );
 };
+

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { format, isSameDay, startOfToday } from "date-fns";
 import { Card } from "@/components/ui/card";
 import { useCalendarEvents } from "@/hooks/useCalendarEvents";
@@ -9,6 +9,7 @@ import CalendarEntryDialog from "@/components/calendar/CalendarEntryDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { Separator } from "@/components/ui/separator";
+import CalendarLegend from "@/components/calendar/CalendarLegend";
 
 const DashboardCalendarPage: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(startOfToday());
@@ -77,7 +78,10 @@ const DashboardCalendarPage: React.FC = () => {
 
   return (
     <div className="container mx-auto space-y-4 py-2">
-      <h1 className="text-2xl font-bold">Calendar</h1>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+        <h1 className="text-2xl font-bold">Calendar</h1>
+        <CalendarLegend className="ml-auto" />
+      </div>
       <Separator className="my-2" />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
