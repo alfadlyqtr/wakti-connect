@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/features/auth/context/AuthContext"; // Updated import path
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import AuthLoadingState from "./AuthLoadingState";
