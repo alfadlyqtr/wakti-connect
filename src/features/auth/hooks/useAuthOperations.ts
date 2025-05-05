@@ -34,7 +34,7 @@ export function useAuthOperations(
     email: string, 
     password: string, 
     name?: string, 
-    accountType: "free" | "individual" | "business" | "staff" | "super-admin" = 'free', 
+    accountType: "individual" | "business" | "staff" | "super-admin" = 'individual', 
     businessName?: string
   ) => {
     try {

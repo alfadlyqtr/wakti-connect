@@ -3,7 +3,7 @@ import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { LogOut, Settings, User } from "lucide-react";
 import { DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/features/auth/context/AuthContext";
 
 interface AccountMenuItemsProps {
   isAuthenticated: boolean;
@@ -11,10 +11,15 @@ interface AccountMenuItemsProps {
 
 const AccountMenuItems = ({ isAuthenticated }: AccountMenuItemsProps) => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    navigate('/auth');
+    try {
+      await logout();
+      navigate('/auth');
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
   };
 
   return (
