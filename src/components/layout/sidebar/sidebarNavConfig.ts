@@ -8,7 +8,9 @@ import {
   MessageSquare, 
   Settings, 
   User, 
-  Users
+  Users,
+  Bell,
+  HeartHandshake
 } from 'lucide-react';
 
 // Define user type for sidebar
@@ -26,6 +28,71 @@ export interface NavSection {
   title?: string;
   items: NavItem[];
 }
+
+// Item type used by SidebarNavItems component
+export interface NavItemType {
+  label: string;
+  path: string;
+  icon: any;
+  showFor: string[];
+  badge?: number;
+}
+
+// Nav items for the sidebar
+export const navItems: NavItemType[] = [
+  {
+    label: 'Dashboard',
+    path: '',
+    icon: LayoutDashboard,
+    showFor: ['individual', 'business', 'staff', 'super-admin']
+  },
+  {
+    label: 'Calendar',
+    path: 'calendar',
+    icon: CalendarDays,
+    showFor: ['individual', 'business', 'staff', 'super-admin']
+  },
+  {
+    label: 'Tasks',
+    path: 'tasks',
+    icon: CheckSquare,
+    showFor: ['individual', 'business', 'staff', 'super-admin']
+  }
+];
+
+// Nav items for the user dropdown menu
+export const dropdownNavItems: NavItemType[] = [
+  {
+    label: 'Messages',
+    path: 'messages',
+    icon: MessageSquare,
+    showFor: ['individual', 'business', 'staff', 'super-admin']
+  },
+  {
+    label: 'Notifications',
+    path: 'notifications',
+    icon: Bell,
+    showFor: ['individual', 'business', 'staff', 'super-admin']
+  },
+  {
+    label: 'Profile',
+    path: 'profile',
+    icon: User,
+    showFor: ['individual', 'business', 'staff', 'super-admin']
+  },
+  {
+    label: 'Staff',
+    path: 'staff-management',
+    icon: Users,
+    showFor: ['business', 'super-admin']
+  },
+  {
+    label: 'Settings',
+    path: 'settings',
+    icon: Settings,
+    showFor: ['individual', 'business', 'staff', 'super-admin']
+  }
+];
 
 export const sidebarNavConfig: NavSection[] = [
   {
