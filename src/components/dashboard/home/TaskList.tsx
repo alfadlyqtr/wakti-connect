@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { CalendarEvent } from '@/types/calendar.types';
-import { CheckCircle, Clock, MapPin, Trash2, Calendar, Edit3 } from 'lucide-react';
+import { CheckCircle, Clock, MapPin, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 
@@ -16,11 +16,11 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks, onDelete }) => {
       case 'task':
         return <CheckCircle className="h-4 w-4 text-amber-500" />;
       case 'booking':
-        return <Calendar className="h-4 w-4 text-green-500" />;
+        return <Clock className="h-4 w-4 text-green-500" />;
       case 'event':
-        return <Calendar className="h-4 w-4 text-blue-500" />;
+        return <Clock className="h-4 w-4 text-blue-500" />;
       case 'manual':
-        return <Edit3 className="h-4 w-4 text-purple-500" />;
+        return <MapPin className="h-4 w-4 text-purple-500" />;
       case 'reminder':
         return <Clock className="h-4 w-4 text-yellow-400" />;
       default:

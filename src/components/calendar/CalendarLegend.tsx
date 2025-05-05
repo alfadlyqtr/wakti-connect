@@ -18,7 +18,7 @@ const CalendarLegend: React.FC<CalendarLegendProps> = ({ className }) => {
         <span>Tasks</span>
       </div>
       <div className="flex items-center gap-1.5">
-        <span className="h-3 w-3 rounded-full bg-blue-500" />
+        <span className="h-3 w-3 rounded-full bg-violet-500" />
         <span>Events</span>
       </div>
       <div className="flex items-center gap-1.5">
