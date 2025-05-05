@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,6 +35,23 @@ export const CalendarEntryDialog: React.FC<CalendarEntryDialogProps> = ({
   const [date, setDate] = useState<Date>(selectedDate);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  
+  // Update the date when selectedDate prop changes
+  useEffect(() => {
+    if (selectedDate) {
+      setDate(selectedDate);
+    }
+  }, [selectedDate]);
+  
+  // Reset form when dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      setTitle('');
+      setDescription('');
+      setLocation('');
+      setDate(selectedDate);
+    }
+  }, [isOpen, selectedDate]);
   
   const resetForm = () => {
     setTitle('');
@@ -99,7 +116,7 @@ export const CalendarEntryDialog: React.FC<CalendarEntryDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Add Calendar Entry</DialogTitle>
           <DialogDescription>
-            Create a new entry in your calendar. Fill out the details below.
+            Create a new entry in your calendar for {format(date, "MMMM d, yyyy")}.
           </DialogDescription>
         </DialogHeader>
         
@@ -135,10 +152,13 @@ export const CalendarEntryDialog: React.FC<CalendarEntryDialogProps> = ({
                   mode="single"
                   selected={date}
                   onSelect={(selectedDate) => {
-                    setDate(selectedDate || new Date());
+                    if (selectedDate) {
+                      setDate(selectedDate);
+                    }
                     setCalendarOpen(false);
                   }}
                   initialFocus
+                  className={cn("p-3 pointer-events-auto")}
                 />
               </PopoverContent>
             </Popover>

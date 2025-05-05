@@ -165,63 +165,67 @@ export const EnhancedCalendar: React.FC<EnhancedCalendarProps> = ({
             </Button>
           </div>
 
-          <Card className={cn(
-            "border bg-white dark:bg-gray-950 shadow-sm",
-            isCompact ? "" : "p-4"
-          )}>
-            <CardHeader className="p-0 pb-4">
-              {calendarHeader}
-            </CardHeader>
-            <CardContent className="p-0">
-              <Calendar
-                mode="single"
-                month={currentMonth}
-                selected={selectedDate}
-                onSelect={(date) => date && setSelectedDate(date)}
-                className="rounded-md border bg-gradient-to-br from-white via-white to-[#E5DEFF]/20 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800"
-                components={{
-                  Day: ({ date, ...props }) => (
-                    <CalendarDayCell
-                      date={date}
-                      selected={isSameDay(date, selectedDate)}
-                      eventTypes={getEventTypesForDate(date)}
-                      onSelect={(date) => setSelectedDate(date)}
-                      {...props}
-                    />
-                  ),
-                }}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-7 md:gap-6">
+            <div className="md:col-span-7">
+              <Card className={cn(
+                "border bg-white dark:bg-gray-950 shadow-sm",
+                isCompact ? "" : "p-4"
+              )}>
+                <CardHeader className="p-0 pb-4">
+                  {calendarHeader}
+                </CardHeader>
+                <CardContent className="p-0">
+                  <Calendar
+                    mode="single"
+                    month={currentMonth}
+                    selected={selectedDate}
+                    onSelect={(date) => date && setSelectedDate(date)}
+                    className="w-full rounded-md border bg-gradient-to-br from-white via-white to-[#E5DEFF]/20 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800"
+                    components={{
+                      Day: ({ date, ...props }) => (
+                        <CalendarDayCell
+                          date={date}
+                          selected={isSameDay(date, selectedDate)}
+                          eventTypes={getEventTypesForDate(date)}
+                          onSelect={(date) => setSelectedDate(date)}
+                          {...props}
+                        />
+                      ),
+                    }}
+                  />
+                </CardContent>
+              </Card>
+
+              <CalendarLegend 
+                showBookings={true}
+                showEvents={true}
+                showManualEntries={true}
               />
-            </CardContent>
-          </Card>
 
-          <CalendarLegend 
-            showBookings={true}
-            showEvents={true}
-            showManualEntries={true}
-          />
+              {selectedDateEvents.length > 0 ? (
+                <div className="mt-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <h3 className="text-lg font-medium">
+                      {format(selectedDate, "EEEE, MMMM d, yyyy")}
+                    </h3>
+                    <Badge variant="outline" className="ml-2 bg-white/50 text-xs">
+                      {selectedDateEvents.length} {selectedDateEvents.length === 1 ? 'event' : 'events'}
+                    </Badge>
+                  </div>
 
-          {selectedDateEvents.length > 0 ? (
-            <div className="mt-4">
-              <div className="flex items-center gap-2 mb-4">
-                <h3 className="text-lg font-medium">
-                  {format(selectedDate, "EEEE, MMMM d, yyyy")}
-                </h3>
-                <Badge variant="outline" className="ml-2 bg-white/50 text-xs">
-                  {selectedDateEvents.length} {selectedDateEvents.length === 1 ? 'event' : 'events'}
-                </Badge>
-              </div>
-
-              <CalendarEventList 
-                events={selectedDateEvents}
-                userId={userId}
-                onEventUpdate={() => queryClient.invalidateQueries({ queryKey: ['allCalendarEvents'] })}
-              />
+                  <CalendarEventList 
+                    events={selectedDateEvents}
+                    userId={userId}
+                    onEventUpdate={() => queryClient.invalidateQueries({ queryKey: ['allCalendarEvents'] })}
+                  />
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground text-sm bg-white/50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700 mt-4">
+                  No events for {format(selectedDate, "MMMM d, yyyy")}
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="text-center py-8 text-muted-foreground text-sm bg-white/50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700 mt-4">
-              No events for {format(selectedDate, "MMMM d, yyyy")}
-            </div>
-          )}
+          </div>
         </>
       )}
 
