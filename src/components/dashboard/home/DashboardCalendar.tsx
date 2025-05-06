@@ -80,7 +80,7 @@ const DashboardCalendar: React.FC<DashboardCalendarProps> = ({ isCompact = false
   // Render day names row
   const renderDayNames = () => {
     // Use abbreviated day names on mobile
-    const dayNames = isMobile ? ['Su', 'M', 'T', 'W', 'Th', 'F', 'Sa'] : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const dayNames = isMobile ? ['S', 'M', 'T', 'W', 'T', 'F', 'S'] : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     return dayNames.map(day => (
       <div key={day} className="py-1 md:py-2 text-xs md:text-sm font-medium">
         {day}
@@ -110,7 +110,7 @@ const DashboardCalendar: React.FC<DashboardCalendarProps> = ({ isCompact = false
       <div
         key={index}
         className={`
-          relative h-8 md:h-12 p-0.5 md:p-1 border-t
+          relative h-9 md:h-12 p-0.5 md:p-1 border-t
           ${isCurrentMonth ? 'bg-background' : 'bg-muted/30 text-muted-foreground'}
           ${isSelected ? 'bg-accent' : ''}
           ${isToday ? 'font-bold' : ''}
@@ -118,7 +118,7 @@ const DashboardCalendar: React.FC<DashboardCalendarProps> = ({ isCompact = false
         onClick={() => setSelectedDay(day)}
       >
         <div className="flex justify-between items-start h-full">
-          <span className={`text-[10px] md:text-xs ${isSelected ? 'text-accent-foreground' : ''}`}>
+          <span className={`text-xs md:text-sm ${isSelected ? 'text-accent-foreground' : ''}`}>
             {day.getDate()}
           </span>
           
@@ -155,7 +155,7 @@ const DashboardCalendar: React.FC<DashboardCalendarProps> = ({ isCompact = false
   };
 
   return (
-    <Card className="h-full">
+    <Card className="h-full w-full">
       {/* Calendar header */}
       <div className="p-2 md:p-4 border-b">
         <div className="flex items-center justify-between">
@@ -189,8 +189,8 @@ const DashboardCalendar: React.FC<DashboardCalendarProps> = ({ isCompact = false
         </div>
       </div>
       
-      {/* Calendar grid */}
-      <div className="grid grid-cols-7 gap-px text-xs text-center">
+      {/* Calendar grid - Add max-width none to ensure full width on mobile */}
+      <div className="grid grid-cols-7 gap-px text-xs text-center max-w-none w-full">
         {/* Day names row */}
         {renderDayNames()}
         

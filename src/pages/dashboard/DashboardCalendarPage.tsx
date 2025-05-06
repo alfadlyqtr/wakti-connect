@@ -11,6 +11,7 @@ import { toast } from "@/components/ui/use-toast";
 import { Separator } from "@/components/ui/separator";
 import CalendarLegend from "@/components/calendar/CalendarLegend";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 const DashboardCalendarPage: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(startOfToday());
@@ -21,6 +22,9 @@ const DashboardCalendarPage: React.FC = () => {
     entryId: string;
     entryType: string;
   }>({ isOpen: false, entryId: "", entryType: "" });
+  
+  // Check if on mobile
+  const isMobile = useMediaQuery('(max-width: 768px)');
   
   // Convert CalendarEvent array to format expected by FullScreenCalendar
   const calendarData = React.useMemo(() => {
@@ -149,8 +153,9 @@ const DashboardCalendarPage: React.FC = () => {
       </div>
       <Separator className="my-2" />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <Card className="col-span-1 lg:col-span-2 overflow-hidden relative">
+      {/* Make the calendar section take full width on mobile */}
+      <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-3'} gap-4`}>
+        <Card className={`${isMobile ? 'w-full px-0' : 'col-span-1 lg:col-span-2'} overflow-hidden relative`}>
           <FullScreenCalendar 
             data={calendarData}
             isLoading={isLoading}
@@ -159,7 +164,7 @@ const DashboardCalendarPage: React.FC = () => {
           />
         </Card>
 
-        <div className="col-span-1">
+        <div className={`${isMobile ? 'w-full mt-4' : 'col-span-1'}`}>
           <CalendarDayView 
             date={selectedDate}
             events={selectedDayEvents}
