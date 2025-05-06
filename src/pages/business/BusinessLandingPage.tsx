@@ -7,13 +7,17 @@ import { toast } from "@/components/ui/use-toast";
 
 interface BusinessLandingPageProps {
   isPreview?: boolean;
+  slug?: string; // Added direct slug prop
 }
 
-const BusinessLandingPage: React.FC<BusinessLandingPageProps> = ({ isPreview: isPreviewProp }) => {
-  const { slug } = useParams<{ slug: string }>();
+const BusinessLandingPage: React.FC<BusinessLandingPageProps> = ({ isPreview: isPreviewProp, slug: slugProp }) => {
+  const params = useParams<{ slug: string }>();
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  
+  // Use the slug prop if provided, otherwise use the param from the URL
+  const slug = slugProp || params.slug;
   
   // Check if we're in preview mode from props, URL path, or search param
   const isPreviewMode = isPreviewProp || 

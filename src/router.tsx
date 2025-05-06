@@ -20,6 +20,7 @@ import { TaskProvider } from "@/contexts/TaskContext";
 import NotificationListener from "./components/notifications/NotificationListener";
 import ErrorBoundary from "./components/ui/ErrorBoundary";
 import SharedEventPage from '@/pages/SharedEventPage';
+import SlugResolver from "@/components/business/SlugResolver";
 
 // Lazy load dashboard pages
 import { lazy, Suspense } from "react";
@@ -132,6 +133,24 @@ const localDashboardRoutes: RouteObject[] = [
 const combinedDashboardRoutes = [...localDashboardRoutes, ...importedDashboardRoutes];
 
 export const router = createBrowserRouter([
+  // Direct business page URLs using the simple format /:slug
+  {
+    path: "/:slug",
+    element: (
+      <ErrorBoundary>
+        <TooltipProvider>
+          <TaskProvider>
+            <ScrollToTop />
+            <NotificationListener />
+            <Toaster />
+            <Sonner />
+            <SlugResolver />
+          </TaskProvider>
+        </TooltipProvider>
+      </ErrorBoundary>
+    ),
+  },
+  
   // Auth routes
   {
     path: "/auth",

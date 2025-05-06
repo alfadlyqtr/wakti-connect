@@ -97,8 +97,8 @@ export const usePublicPageUrl = (pageSlug?: string) => {
     // Get the origin (protocol + hostname + port)
     const baseUrl = window.location.origin;
     
-    // Construct the full URL to the business page with proper path
-    return `${baseUrl}/business/${pageSlug}`;
+    // Construct the full URL to the business page with the new simpler format
+    return `${baseUrl}/${pageSlug}`;
   }, [pageSlug]);
   
   return getPublicPageUrl;
