@@ -10,6 +10,7 @@ import { useCalendarEvents } from '@/hooks/useCalendarEvents';
 import CalendarLegend from './CalendarLegend';
 import { EventDot } from './EventDot';
 import EventCountBadge from './EventCountBadge';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 
 // Helper function to get days for the calendar view
 const getDaysForCalendarView = (date: Date) => {
@@ -34,6 +35,10 @@ const DashboardCalendar: React.FC<DashboardCalendarProps> = ({ isCompact = false
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState(new Date());
   const [calendarDays, setCalendarDays] = useState<Date[]>([]);
+  
+  // Responsive breakpoints
+  const isMobile = useMediaQuery('(max-width: 640px)');
+  const isTablet = useMediaQuery('(max-width: 768px)');
 
   // Use the unified calendar hook
   const { events, isLoading } = useCalendarEvents();
@@ -74,9 +79,10 @@ const DashboardCalendar: React.FC<DashboardCalendarProps> = ({ isCompact = false
 
   // Render day names row
   const renderDayNames = () => {
-    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    // Use abbreviated day names on mobile
+    const dayNames = isMobile ? ['Su', 'M', 'T', 'W', 'Th', 'F', 'Sa'] : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     return dayNames.map(day => (
-      <div key={day} className="py-2 font-medium">
+      <div key={day} className="py-1 md:py-2 text-xs md:text-sm font-medium">
         {day}
       </div>
     ));
@@ -104,7 +110,7 @@ const DashboardCalendar: React.FC<DashboardCalendarProps> = ({ isCompact = false
       <div
         key={index}
         className={`
-          relative h-12 p-1 border-t
+          relative h-8 md:h-12 p-0.5 md:p-1 border-t
           ${isCurrentMonth ? 'bg-background' : 'bg-muted/30 text-muted-foreground'}
           ${isSelected ? 'bg-accent' : ''}
           ${isToday ? 'font-bold' : ''}
@@ -112,11 +118,12 @@ const DashboardCalendar: React.FC<DashboardCalendarProps> = ({ isCompact = false
         onClick={() => setSelectedDay(day)}
       >
         <div className="flex justify-between items-start h-full">
-          <span className={`text-xs ${isSelected ? 'text-accent-foreground' : ''}`}>
+          <span className={`text-[10px] md:text-xs ${isSelected ? 'text-accent-foreground' : ''}`}>
             {day.getDate()}
           </span>
           
-          {hasEvents && (
+          {/* Show event dots only if space allows (md and up) */}
+          {hasEvents && !isMobile && (
             <div className="flex flex-wrap gap-0.5 justify-end">
               {eventCounts.tasks > 0 && <EventDot type="task" />}
               {eventCounts.events > 0 && <EventDot type="event" />}
@@ -126,9 +133,15 @@ const DashboardCalendar: React.FC<DashboardCalendarProps> = ({ isCompact = false
             </div>
           )}
           
-          {hasEvents && dayEvents.length > 1 && (
-            <div className="absolute bottom-1 right-1">
-              <EventCountBadge count={dayEvents.length} label="events" />
+          {/* On mobile, just show a dot indicator if events exist */}
+          {hasEvents && isMobile && (
+            <div className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-primary"></div>
+          )}
+          
+          {/* Show count badge only on non-mobile */}
+          {hasEvents && dayEvents.length > 1 && !isMobile && (
+            <div className="absolute bottom-0.5 right-0.5 hidden md:block">
+              <EventCountBadge count={dayEvents.length} />
             </div>
           )}
         </div>
@@ -144,32 +157,35 @@ const DashboardCalendar: React.FC<DashboardCalendarProps> = ({ isCompact = false
   return (
     <Card className="h-full">
       {/* Calendar header */}
-      <div className="p-4 border-b">
+      <div className="p-2 md:p-4 border-b">
         <div className="flex items-center justify-between">
           <div className="flex gap-1">
             <Button
               variant="ghost"
               size="icon"
               onClick={prevMonth}
-              className="h-7 w-7"
+              className="h-6 w-6 md:h-7 md:w-7"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-3 w-3 md:h-4 md:w-4" />
               <span className="sr-only">Previous month</span>
             </Button>
             <Button
               variant="ghost"
               size="icon"
               onClick={nextMonth}
-              className="h-7 w-7"
+              className="h-6 w-6 md:h-7 md:w-7"
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-3 w-3 md:h-4 md:w-4" />
               <span className="sr-only">Next month</span>
             </Button>
           </div>
-          <h2 className="text-lg font-semibold">
-            {format(currentMonth, 'MMMM yyyy')}
+          <h2 className="text-sm md:text-lg font-semibold">
+            {format(currentMonth, isMobile ? 'MMM yyyy' : 'MMMM yyyy')}
           </h2>
-          <CalendarLegend />
+          {/* Hide legend on mobile for space */}
+          <div className="hidden md:block">
+            <CalendarLegend />
+          </div>
         </div>
       </div>
       
@@ -183,16 +199,16 @@ const DashboardCalendar: React.FC<DashboardCalendarProps> = ({ isCompact = false
       </div>
       
       {/* Selected day's events */}
-      <div className="p-4 border-t">
-        <h3 className="font-medium mb-3">
-          {format(selectedDay, 'MMMM d, yyyy')} 
+      <div className="p-2 md:p-4 border-t">
+        <h3 className="text-xs md:text-sm font-medium mb-2 md:mb-3">
+          {format(selectedDay, isMobile ? 'MMM d, yy' : 'MMMM d, yyyy')} 
           {isLoading && <span className="ml-2 text-xs text-muted-foreground">(Loading...)</span>}
         </h3>
         {selectedDayEvents.length ? (
           // Pass only tasks prop, not onDelete since this is display-only
           <TaskList tasks={selectedDayEvents} />
         ) : (
-          <div className="text-center py-2 text-sm text-muted-foreground">
+          <div className="text-center py-2 text-xs md:text-sm text-muted-foreground">
             No events for this day
           </div>
         )}
