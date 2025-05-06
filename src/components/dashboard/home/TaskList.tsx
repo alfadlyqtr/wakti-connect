@@ -1,16 +1,14 @@
 
 import React from 'react';
 import { CalendarEvent } from '@/types/calendar.types';
-import { CheckCircle, Clock, MapPin, Trash2 } from 'lucide-react';
+import { CheckCircle, Clock, MapPin } from 'lucide-react';
 import { format } from 'date-fns';
-import { Button } from '@/components/ui/button';
 
 interface TaskListProps {
   tasks: CalendarEvent[];
-  onDelete?: (id: string, type: string) => void;
 }
 
-export const TaskList: React.FC<TaskListProps> = ({ tasks, onDelete }) => {
+export const TaskList: React.FC<TaskListProps> = ({ tasks }) => {
   const getEventTypeIcon = (type: string) => {
     switch (type) {
       case 'task':
@@ -62,11 +60,6 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks, onDelete }) => {
     }
   };
 
-  // Only allow deletion for manual entries
-  const canDelete = (type: string) => {
-    return type === 'manual';
-  };
-
   return (
     <div className="space-y-2">
       {tasks.map((task) => (
@@ -95,18 +88,6 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks, onDelete }) => {
                 </div>
               )}
             </div>
-            
-            {canDelete(task.type) && onDelete && (
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-6 w-6 text-muted-foreground hover:text-destructive" 
-                onClick={() => onDelete(task.id, task.type)}
-                title="Delete Manual Entry"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            )}
           </div>
         </div>
       ))}

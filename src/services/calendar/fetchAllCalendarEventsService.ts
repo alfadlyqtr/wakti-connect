@@ -10,8 +10,30 @@ export const fetchAllCalendarEvents = async (userId: string): Promise<CalendarEv
     // Get tasks
     const tasks = await fetchTasks(userId);
     
-    // Get custom events
+    // Get events (including manual entries)
     const events = await fetchEvents(userId);
+    
+    // Get manual entries
+    const { data: manualData, error: manualError } = await supabase
+      .from('calendar_manual_entries')
+      .select('id, title, description, date, location, start_time, end_time')
+      .eq('user_id', userId);
+      
+    if (manualError) {
+      console.error("Error fetching manual entries:", manualError);
+      return [...tasks, ...events];
+    }
+    
+    const manualEntries: CalendarEvent[] = manualData?.map(entry => ({
+      id: entry.id,
+      title: entry.title,
+      description: entry.description,
+      date: new Date(entry.date),
+      type: 'manual' as const,
+      location: entry.location,
+      startTime: entry.start_time,
+      endTime: entry.end_time
+    })) || [];
     
     // Get bookings
     const { data: bookingsData, error: bookingsError } = await supabase
@@ -22,11 +44,11 @@ export const fetchAllCalendarEvents = async (userId: string): Promise<CalendarEv
     
     if (bookingsError) {
       console.error("Error fetching bookings:", bookingsError);
-      return [...tasks, ...events];
+      return [...tasks, ...events, ...manualEntries];
     }
     
     if (!bookingsData) {
-      return [...tasks, ...events];
+      return [...tasks, ...events, ...manualEntries];
     }
     
     const bookings: CalendarEvent[] = bookingsData.map(booking => ({
@@ -37,8 +59,27 @@ export const fetchAllCalendarEvents = async (userId: string): Promise<CalendarEv
       status: booking.status
     }));
     
+    // Get reminders
+    const { data: remindersData, error: remindersError } = await supabase
+      .from('reminders')
+      .select('id, message, reminder_time')
+      .eq('user_id', userId)
+      .eq('is_active', true);
+      
+    if (remindersError) {
+      console.error("Error fetching reminders:", remindersError);
+      return [...tasks, ...events, ...manualEntries, ...bookings];
+    }
+    
+    const reminders: CalendarEvent[] = remindersData?.map(reminder => ({
+      id: reminder.id,
+      title: reminder.message,
+      date: new Date(reminder.reminder_time),
+      type: 'reminder' as const
+    })) || [];
+    
     // Combine all events
-    return [...tasks, ...events, ...bookings];
+    return [...tasks, ...events, ...manualEntries, ...bookings, ...reminders];
   } catch (error) {
     console.error("Error in fetchAllCalendarEvents:", error);
     return [];

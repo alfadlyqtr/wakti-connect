@@ -57,20 +57,86 @@ export function useCalendarEvents() {
     enabled: !!userId,
   });
 
+  const { data: manualEvents = [], isLoading: isLoadingManual, refetch: refetchManual } = useQuery({
+    queryKey: ['calendarManualEvents', userId],
+    queryFn: async () => {
+      if (!userId) return [];
+
+      try {
+        // Fetch manual entries
+        const { data: manualData } = await supabase
+          .from('calendar_manual_entries')
+          .select('id, title, description, date, location, start_time, end_time')
+          .eq('user_id', userId);
+
+        if (!manualData) return [];
+
+        return manualData.map(entry => ({
+          id: entry.id,
+          title: entry.title,
+          description: entry.description,
+          date: new Date(entry.date),
+          type: "manual" as const,
+          location: entry.location,
+          startTime: entry.start_time,
+          endTime: entry.end_time
+        }));
+      } catch (error) {
+        console.error("Error fetching manual events:", error);
+        return [];
+      }
+    },
+    enabled: !!userId,
+  });
+
+  const { data: reminderEvents = [], isLoading: isLoadingReminders, refetch: refetchReminders } = useQuery({
+    queryKey: ['calendarReminderEvents', userId],
+    queryFn: async () => {
+      if (!userId) return [];
+
+      try {
+        // Fetch reminders
+        const { data: remindersData } = await supabase
+          .from('reminders')
+          .select('id, message, reminder_time')
+          .eq('user_id', userId)
+          .eq('is_active', true);
+
+        if (!remindersData) return [];
+
+        return remindersData.map(reminder => ({
+          id: reminder.id,
+          title: reminder.message,
+          date: new Date(reminder.reminder_time),
+          type: "reminder" as const
+        }));
+      } catch (error) {
+        console.error("Error fetching reminder events:", error);
+        return [];
+      }
+    },
+    enabled: !!userId,
+  });
+
   const allEvents = [
     ...(taskEvents || []),
     ...(bookingEvents || []),
-    ...(calendarEvents || [])
+    ...(calendarEvents || []),
+    ...(manualEvents || []),
+    ...(reminderEvents || [])
   ];
 
-  const isLoading = isLoadingTasks || isLoadingBookings || isLoadingEvents;
+  const isLoading = isLoadingTasks || isLoadingBookings || isLoadingEvents || 
+                   isLoadingManual || isLoadingReminders;
 
   // Create a combined refetch function that calls all refetch functions
   const refetch = async () => {
     await Promise.all([
       refetchTasks(),
       refetchBookings(),
-      refetchEvents()
+      refetchEvents(),
+      refetchManual(),
+      refetchReminders()
     ]);
   };
 
@@ -78,6 +144,6 @@ export function useCalendarEvents() {
     events: allEvents,
     isLoading,
     userId,
-    refetch // Return the refetch function
+    refetch
   };
 }
