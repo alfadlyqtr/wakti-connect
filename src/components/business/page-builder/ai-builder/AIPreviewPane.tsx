@@ -47,7 +47,7 @@ const AIPreviewPane: React.FC<AIPreviewPaneProps> = ({ sections, businessPage })
         </TabsContent>
       </Tabs>
       
-      <Alert variant="info" className="bg-blue-50 text-blue-800 border-blue-200">
+      <Alert variant="default" className="bg-blue-50 text-blue-800 border-blue-200">
         <AlertCircle className="h-4 w-4 text-blue-600" />
         <AlertTitle>Preview Mode</AlertTitle>
         <AlertDescription>

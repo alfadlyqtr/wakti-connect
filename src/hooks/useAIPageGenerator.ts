@@ -63,7 +63,7 @@ export const useAIPageGenerator = () => {
           
           if (existingSection) {
             // Update existing section
-            await updateSection({
+            await updateSection.mutateAsync({
               sectionId: existingSection.id,
               data: {
                 section_content: section.section_content,

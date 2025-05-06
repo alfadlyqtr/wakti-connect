@@ -1,93 +1,82 @@
 
-import React, { useState, useRef, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
+import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Wand2, Eye, Settings2, Save, RotateCcw, ArrowRight } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { MessageSquare, Wand2, Loader2, Settings2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
-import { useBusinessPage } from "@/hooks/useBusinessPage";
-import { useAIPageGenerator } from "@/hooks/useAIPageGenerator";
-import AIPreviewPane from "./ai-builder/AIPreviewPane";
+import { useAuth } from "@/hooks/useAuth";
+import { useBusinessPage } from "@/hooks/business-page";
 import AIPromptSuggestions from "./ai-builder/AIPromptSuggestions";
+import AIPreviewPane from "./ai-builder/AIPreviewPane";
 import AIBuilderSettings from "./ai-builder/AIBuilderSettings";
-import PageSettingsTab from "./PageSettingsTab";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useAIPageGenerator } from "@/hooks/useAIPageGenerator";
 import PageBuilderEmptyState from "./PageBuilderEmptyState";
 
-const AIPageBuilder = () => {
+const AIPageBuilder: React.FC = () => {
   const [prompt, setPrompt] = useState("");
-  const [activeTab, setActiveTab] = useState("ai-builder");
-  const promptInputRef = useRef<HTMLTextAreaElement>(null);
-  const isMobile = useIsMobile();
-  
+  const [isPrompting, setIsPrompting] = useState(false);
+  const { user } = useAuth();
   const { 
-    ownerBusinessPage,
+    ownerBusinessPage, 
     ownerPageLoading, 
-    updatePage,
-    createPage,
-    updateSection,
-    pageSections,
-    autoSavePage,
-    autoSaveField,
-    getPublicPageUrl
+    createPage 
   } = useBusinessPage();
   
   const { 
     generatePageContent, 
+    applyGeneratedContent, 
     isGenerating, 
-    generatedSections,
+    generatedSections, 
     lastGeneratedPrompt,
-    resetGeneration,
-    applyGeneratedContent
+    resetGeneration
   } = useAIPageGenerator();
-
-  // Focus on prompt input when component mounts
-  useEffect(() => {
-    if (promptInputRef.current && activeTab === "ai-builder") {
-      promptInputRef.current.focus();
-    }
-  }, [activeTab]);
-
-  // Handle input change
-  const handlePromptChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setPrompt(e.target.value);
-  };
-
-  // Handle prompt submission
-  const handleGenerateContent = async () => {
+  
+  const handleGenerate = async () => {
     if (!prompt.trim()) {
       toast({
-        title: "Please enter a prompt",
-        description: "Describe what you'd like your page to include",
+        title: "Empty prompt",
+        description: "Please enter a prompt to generate content",
         variant: "destructive",
       });
       return;
     }
     
-    try {
-      await generatePageContent(prompt, ownerBusinessPage?.id);
-      
+    if (!ownerBusinessPage?.id) {
       toast({
-        title: "Page content generated",
-        description: "Review and apply the generated content",
+        title: "No business page found",
+        description: "Please create a business page first",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsPrompting(true);
+    
+    try {
+      await generatePageContent(prompt, ownerBusinessPage.id);
+      toast({
+        title: "Content generated",
+        description: "Review the preview and apply changes when ready",
       });
     } catch (error: any) {
       console.error("Error generating content:", error);
       toast({
-        title: "Error generating content",
-        description: error.message || "Please try again",
+        title: "Generation failed",
+        description: error.message || "Failed to generate content. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsPrompting(false);
     }
   };
   
-  // Handle applying generated content
-  const handleApplyContent = async () => {
-    if (!ownerBusinessPage || !generatedSections || generatedSections.length === 0) {
+  const handleApply = async () => {
+    if (!generatedSections || !ownerBusinessPage?.id) {
       toast({
         title: "No content to apply",
-        description: "Please generate content first",
+        description: "Generate content first before applying",
         variant: "destructive",
       });
       return;
@@ -95,180 +84,144 @@ const AIPageBuilder = () => {
     
     try {
       await applyGeneratedContent(ownerBusinessPage.id, generatedSections);
-      
       toast({
-        title: "Content applied successfully",
+        title: "Changes applied",
         description: "Your business page has been updated",
+        variant: "success",
       });
-      
-      // Switch to preview tab
-      setActiveTab("preview");
-      
+      resetGeneration();
     } catch (error: any) {
-      console.error("Error applying content:", error);
+      console.error("Error applying changes:", error);
       toast({
-        title: "Error applying content",
-        description: error.message || "Please try again",
+        title: "Failed to apply changes",
+        description: error.message || "An error occurred while applying changes",
         variant: "destructive",
       });
     }
   };
-
-  // Handle input for settings fields with auto-save
-  const handleInputChangeWithAutoSave = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    autoSaveField(name, value);
+  
+  const handleSelectSuggestion = (suggestion: string) => {
+    setPrompt(current => current ? `${current}\n${suggestion}` : suggestion);
   };
-
-  // Handle toggle for settings with auto-save
-  const handleToggleWithAutoSave = (name: string, checked: boolean) => {
-    autoSaveField(name, checked);
-  };
-
+  
   if (ownerPageLoading) {
     return (
-      <div className="flex justify-center items-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-[400px]">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
-
+  
   if (!ownerBusinessPage) {
-    return <PageBuilderEmptyState createPage={createPage} />;
+    // If no business page exists yet, show the empty state with page creation form
+    return (
+      <PageBuilderEmptyState 
+        createPage={(data) => createPage.mutateAsync(data)}
+      />
+    );
   }
-
+  
   return (
-    <div className="container mx-auto p-4">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-3 mb-6">
-          <TabsTrigger value="ai-builder" className="flex items-center gap-2">
-            <Wand2 className="h-4 w-4" />
-            <span className={isMobile ? "hidden" : "inline"}>AI Builder</span>
+    <div className="container mx-auto py-6 space-y-6">
+      <h1 className="text-3xl font-bold">Business Page Builder</h1>
+      <p className="text-muted-foreground">
+        Describe what you want on your business page and let AI create it for you.
+      </p>
+      
+      <Tabs defaultValue="prompt">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="prompt" className="flex items-center gap-2">
+            <MessageSquare className="h-4 w-4" />
+            AI Prompt
           </TabsTrigger>
           <TabsTrigger value="preview" className="flex items-center gap-2">
-            <Eye className="h-4 w-4" />
-            <span className={isMobile ? "hidden" : "inline"}>Preview</span>
+            <Wand2 className="h-4 w-4" />
+            Preview
           </TabsTrigger>
           <TabsTrigger value="settings" className="flex items-center gap-2">
             <Settings2 className="h-4 w-4" />
-            <span className={isMobile ? "hidden" : "inline"}>Settings</span>
+            Settings
           </TabsTrigger>
         </TabsList>
-
-        {/* AI Builder Tab */}
-        <TabsContent value="ai-builder" className="space-y-4">
+        
+        <TabsContent value="prompt" className="space-y-4 mt-4">
           <Card>
-            <CardHeader>
-              <CardTitle>AI Page Builder</CardTitle>
-              <CardDescription>
-                Describe what you want on your business page and our AI will create it for you
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Textarea
-                  ref={promptInputRef}
-                  placeholder="Describe your business and what you want on your page... (e.g., 'Create a landing page for my hair salon with a booking system, contact form, and Instagram feed')"
-                  value={prompt}
-                  onChange={handlePromptChange}
-                  className="min-h-[120px] resize-y"
-                />
-                
-                <AIPromptSuggestions onSelectSuggestion={(suggestion) => setPrompt(prev => `${prev} ${suggestion}`.trim())} />
-                
-                <div className="flex justify-end gap-2 mt-4">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setPrompt("")}
-                    disabled={!prompt || isGenerating}
-                  >
-                    Clear
-                  </Button>
-                  <Button 
-                    onClick={handleGenerateContent}
-                    disabled={!prompt || isGenerating}
-                  >
-                    {isGenerating ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        <Wand2 className="mr-2 h-4 w-4" />
-                        Generate Content
-                      </>
-                    )}
-                  </Button>
-                </div>
+            <CardContent className="pt-6 space-y-4">
+              <Textarea
+                placeholder="Describe your business page. For example: 'Create a page for my hair salon with an about section, gallery, contact form, and booking feature.'"
+                className="min-h-[200px] resize-none"
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+              />
+              
+              <AIPromptSuggestions onSelectSuggestion={handleSelectSuggestion} />
+              
+              <div className="flex justify-end gap-2">
+                <Button 
+                  variant="outline" 
+                  disabled={isPrompting}
+                  onClick={() => setPrompt("")}
+                >
+                  Clear
+                </Button>
+                <Button 
+                  onClick={handleGenerate}
+                  disabled={isPrompting || !prompt.trim()}
+                >
+                  {isPrompting || isGenerating ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="mr-2 h-4 w-4" />
+                      Generate
+                    </>
+                  )}
+                </Button>
               </div>
-              
-              {/* AI Preview */}
-              {generatedSections && generatedSections.length > 0 && (
-                <div className="space-y-4 border-t pt-4">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-medium">Generated Content Preview</h3>
-                    <div className="flex gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={resetGeneration}
-                      >
-                        <RotateCcw className="h-4 w-4 mr-1" />
-                        Reset
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        onClick={handleApplyContent}
-                      >
-                        <Save className="h-4 w-4 mr-1" />
-                        Apply Changes
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <AIPreviewPane 
-                    sections={generatedSections} 
-                    businessPage={ownerBusinessPage}
-                  />
-                  
-                  <div className="flex justify-center mt-6">
-                    <Button 
-                      className="w-full max-w-sm" 
-                      onClick={handleApplyContent}
-                    >
-                      Apply Changes to Your Business Page
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              )}
-              
-              {/* AI Builder Settings */}
-              <AIBuilderSettings />
             </CardContent>
           </Card>
+          
+          {lastGeneratedPrompt && (
+            <div className="bg-muted p-4 rounded-md">
+              <p className="font-medium text-sm">Last prompt:</p>
+              <p className="text-sm text-muted-foreground">{lastGeneratedPrompt}</p>
+            </div>
+          )}
         </TabsContent>
-
-        {/* Preview Tab */}
-        <TabsContent value="preview">
-          <iframe 
-            src={`${window.location.origin}/${ownerBusinessPage.page_slug}/preview`} 
-            className="w-full h-[600px] border rounded-lg"
-            title="Business page preview"
-          />
+        
+        <TabsContent value="preview" className="space-y-4 mt-4">
+          {generatedSections ? (
+            <>
+              <AIPreviewPane 
+                sections={generatedSections}
+                businessPage={ownerBusinessPage}
+              />
+              <div className="flex justify-end">
+                <Button onClick={handleApply}>
+                  Apply Changes
+                </Button>
+              </div>
+            </>
+          ) : (
+            <Card>
+              <CardContent className="py-8">
+                <div className="text-center space-y-2">
+                  <Wand2 className="mx-auto h-12 w-12 text-muted-foreground/60" />
+                  <h3 className="text-lg font-medium">No Preview Available</h3>
+                  <p className="text-muted-foreground text-sm">
+                    Generate content first to see a preview
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
-
-        {/* Settings Tab */}
-        <TabsContent value="settings">
-          <PageSettingsTab 
-            pageData={ownerBusinessPage}
-            businessId={ownerBusinessPage.business_id}
-            handleInputChangeWithAutoSave={handleInputChangeWithAutoSave}
-            handleToggleWithAutoSave={handleToggleWithAutoSave}
-            getPublicPageUrl={getPublicPageUrl}
-            updatePage={updatePage}
-          />
+        
+        <TabsContent value="settings" className="mt-4">
+          <AIBuilderSettings businessPage={ownerBusinessPage} />
         </TabsContent>
       </Tabs>
     </div>
