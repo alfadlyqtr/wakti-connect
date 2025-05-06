@@ -1,6 +1,6 @@
 
 import React from "react";
-import BusinessPageBuilder from "@/components/business/page-builder/BusinessPageBuilder";
+import AIPageBuilder from "@/components/business/page-builder/AIPageBuilder";
 import { Helmet } from "react-helmet-async";
 
 const DashboardBusinessPage = () => {
@@ -9,7 +9,7 @@ const DashboardBusinessPage = () => {
       <Helmet>
         <title>Business Page Builder | WAKTI</title>
       </Helmet>
-      <BusinessPageBuilder />
+      <AIPageBuilder />
     </>
   );
 };
