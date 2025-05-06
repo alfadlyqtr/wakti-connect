@@ -9,6 +9,7 @@ import BusinessTestimonialsSection from "./sections/BusinessTestimonialsSection"
 import BusinessBookingSection from "./sections/BusinessBookingSection";
 import InstagramSection from "./sections/InstagramSection";
 import ChatbotSection from "./sections/ChatbotSection";
+import ContactSection from "./ContactSection";
 import { useSubmitContactFormMutation } from "@/hooks/business-page/useContactSubmissionMutation";
 
 interface BusinessPageSectionsProps {
@@ -111,6 +112,18 @@ const BusinessPageSections: React.FC<BusinessPageSectionsProps> = ({
                 key={section.id}
                 section={section}
                 businessId={businessPage.business_id}
+              />
+            );
+          
+          case 'contact':
+            return (
+              <ContactSection
+                key={section.id}
+                section={section}
+                businessId={businessPage.business_id}
+                pageId={businessPage.id}
+                submitContactForm={handleContactFormSubmit}
+                primaryColor={businessPage.primary_color}
               />
             );
           
