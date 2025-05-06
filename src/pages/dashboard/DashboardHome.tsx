@@ -11,7 +11,7 @@ import DashboardEvents from "@/components/dashboard/home/DashboardEvents";
 import { DashboardWidgetLayout, WidgetType } from "@/types/dashboard";
 import { useDashboardLayout } from "@/hooks/useDashboardLayout";
 import { Loader2 } from "lucide-react";
-import { DashboardCalendar } from "@/components/dashboard/home/DashboardCalendar";
+import DashboardCalendar from "@/components/dashboard/home/DashboardCalendar";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 
 const DashboardHome = () => {

@@ -16,8 +16,7 @@ export const fetchAllCalendarEvents = async (userId: string): Promise<CalendarEv
     // Get manual entries
     const { data: manualData, error: manualError } = await supabase
       .from('calendar_manual_entries')
-      .select('id, title, description, date, location, start_time, end_time')
-      .eq('user_id', userId);
+      .select('id, title, description, date, location');
       
     if (manualError) {
       console.error("Error fetching manual entries:", manualError);
@@ -30,9 +29,8 @@ export const fetchAllCalendarEvents = async (userId: string): Promise<CalendarEv
       description: entry.description,
       date: new Date(entry.date),
       type: 'manual' as const,
-      location: entry.location,
-      startTime: entry.start_time,
-      endTime: entry.end_time
+      location: entry.location
+      // We don't have start_time and end_time columns in this table
     })) || [];
     
     // Get bookings

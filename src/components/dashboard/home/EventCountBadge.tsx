@@ -4,13 +4,13 @@ import { cn } from "@/lib/utils";
 
 interface EventCountBadgeProps {
   count: number;
-  label: string;
+  label?: string;
   className?: string;
 }
 
 const EventCountBadge: React.FC<EventCountBadgeProps> = ({ 
   count, 
-  label,
+  label = "events",
   className
 }) => {
   return (

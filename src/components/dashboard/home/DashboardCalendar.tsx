@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { format, startOfMonth, startOfWeek, endOfMonth, endOfWeek, eachDayOfInterval, addDays, isSameMonth, isSameDay } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -7,7 +8,7 @@ import { TaskList } from './TaskList';
 import { CalendarEvent } from '@/types/calendar.types';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
 import CalendarLegend from './CalendarLegend';
-import EventDot from './EventDot';
+import { EventDot } from './EventDot';
 import EventCountBadge from './EventCountBadge';
 
 // Helper function to get days for the calendar view
@@ -123,7 +124,7 @@ const DashboardCalendar: React.FC = () => {
           
           {hasEvents && dayEvents.length > 1 && (
             <div className="absolute bottom-1 right-1">
-              <EventCountBadge count={dayEvents.length} />
+              <EventCountBadge count={dayEvents.length} label="events" />
             </div>
           )}
         </div>

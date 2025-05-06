@@ -71,8 +71,7 @@ export function useCalendarEvents() {
         // Fetch manual entries
         const { data, error } = await supabase
           .from('calendar_manual_entries')
-          .select('id, title, description, date, location, start_time, end_time')
-          .eq('user_id', userId);
+          .select('id, title, description, date, location');
 
         if (error) {
           console.error("Error fetching manual events:", error);
@@ -88,8 +87,9 @@ export function useCalendarEvents() {
           date: new Date(entry.date),
           type: "manual" as const,
           location: entry.location,
-          startTime: entry.start_time,
-          endTime: entry.end_time
+          // Since we don't have start_time and end_time, these will be undefined
+          startTime: undefined,
+          endTime: undefined
         }));
       } catch (error) {
         console.error("Error fetching manual events:", error);
