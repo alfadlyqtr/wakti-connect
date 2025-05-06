@@ -135,7 +135,7 @@ const CalendarDayView: React.FC<CalendarDayViewProps> = ({
                   </div>
                 </div>
                 
-                {/* Show delete button for manual entries */}
+                {/* Show delete button for any manual entry, regardless of section */}
                 {type === "manual" && onDelete && (
                   <Button 
                     variant="ghost" 

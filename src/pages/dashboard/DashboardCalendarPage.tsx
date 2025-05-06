@@ -19,7 +19,8 @@ const DashboardCalendarPage: React.FC = () => {
   const [deleteConfirmation, setDeleteConfirmation] = useState<{
     isOpen: boolean;
     entryId: string;
-  }>({ isOpen: false, entryId: "" });
+    entryType: string;
+  }>({ isOpen: false, entryId: "", entryType: "" });
   
   // Convert CalendarEvent array to format expected by FullScreenCalendar
   const calendarData = React.useMemo(() => {
@@ -80,18 +81,21 @@ const DashboardCalendarPage: React.FC = () => {
 
   // Handle confirming manual entry deletion
   const confirmDeleteEntry = (entryId: string, entryType: string) => {
-    // Only proceed if it's a manual entry
-    if (entryType === "manual") {
-      setDeleteConfirmation({
-        isOpen: true,
-        entryId
-      });
-    }
+    setDeleteConfirmation({
+      isOpen: true,
+      entryId,
+      entryType
+    });
   };
 
   // Handle deleting entries
-  const handleDeleteEntry = async (entryId: string) => {
+  const handleDeleteEntry = async (entryId: string, entryType: string) => {
     try {
+      // Only proceed if it's a manual entry
+      if (entryType !== 'manual') {
+        throw new Error("Only manual entries can be deleted");
+      }
+      
       const { error } = await supabase
         .from('calendar_manual_entries')
         .delete()
@@ -116,7 +120,7 @@ const DashboardCalendarPage: React.FC = () => {
       });
     } finally {
       // Close the confirmation dialog
-      setDeleteConfirmation({ isOpen: false, entryId: "" });
+      setDeleteConfirmation({ isOpen: false, entryId: "", entryType: "" });
     }
   };
   
@@ -168,7 +172,7 @@ const DashboardCalendarPage: React.FC = () => {
         description="Are you sure you want to delete this manual entry? This action cannot be undone."
         open={deleteConfirmation.isOpen}
         onOpenChange={(open) => setDeleteConfirmation({ ...deleteConfirmation, isOpen: open })}
-        onConfirm={() => handleDeleteEntry(deleteConfirmation.entryId)}
+        onConfirm={() => handleDeleteEntry(deleteConfirmation.entryId, deleteConfirmation.entryType)}
         confirmLabel="Delete"
         cancelLabel="Cancel"
       />
