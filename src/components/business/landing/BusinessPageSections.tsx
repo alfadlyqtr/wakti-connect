@@ -128,8 +128,7 @@ const BusinessPageSections: React.FC<BusinessPageSectionsProps> = ({
             return (
               <div key={section.id}>
                 <BusinessChatbotSection
-                  section={section}
-                  businessPage={businessPage}
+                  content={section.section_content || {}}
                 />
               </div>
             );
