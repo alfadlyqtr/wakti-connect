@@ -18,6 +18,7 @@ interface DialogContentProps {
   handleSubmit: (values: StaffFormValues) => Promise<void>;
   onCancel: () => void;
   error?: string | null;
+  isLoading?: boolean;
 }
 
 const DialogContent: React.FC<DialogContentProps> = ({
@@ -28,7 +29,8 @@ const DialogContent: React.FC<DialogContentProps> = ({
   setActiveTab,
   handleSubmit,
   onCancel,
-  error
+  error,
+  isLoading
 }) => {
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
@@ -38,18 +40,23 @@ const DialogContent: React.FC<DialogContentProps> = ({
         </TabsList>
         
         <TabsContent value="create" className="flex-1 overflow-auto px-6 py-4">
-          {error && (
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <span className="ml-2">Loading staff details...</span>
+            </div>
+          ) : error ? (
             <Alert variant="destructive" className="mb-4">
               <AlertTriangle className="h-4 w-4 mr-2" />
               <AlertDescription>{error}</AlertDescription>
             </Alert>
+          ) : (
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+                <StaffFormFields form={form} isEditing={isEditing} />
+              </form>
+            </Form>
           )}
-          
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-              <StaffFormFields form={form} isEditing={isEditing} />
-            </form>
-          </Form>
         </TabsContent>
       </Tabs>
       
@@ -58,14 +65,14 @@ const DialogContent: React.FC<DialogContentProps> = ({
           type="button"
           variant="outline"
           onClick={onCancel}
-          disabled={isSubmitting}
+          disabled={isSubmitting || isLoading}
         >
           Cancel
         </Button>
         <Button 
           type="button" 
           onClick={form.handleSubmit(handleSubmit)}
-          disabled={isSubmitting}
+          disabled={isSubmitting || isLoading}
         >
           {isSubmitting ? (
             <>

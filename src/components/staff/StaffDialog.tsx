@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +11,7 @@ interface StaffDialogProps {
   staffId: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
+  onSuccess?: () => void;
 }
 
 export const StaffDialog = ({
@@ -21,20 +20,23 @@ export const StaffDialog = ({
   onOpenChange,
   onSuccess
 }: StaffDialogProps) => {
-  const [activeTab, setActiveTab] = useState("create");
   const {
     form,
     isSubmitting,
-    onSubmit
-  } = useStaffDialog(onSuccess);
+    onSubmit,
+    isLoading,
+    isEditing
+  } = useStaffDialog(onSuccess, staffId);
   
-  // Determine if we are editing based on staffId
-  const isEditing = !!staffId;
-  
-  // Handle the form submission
-  const handleSubmit = async (values: any) => {
-    await onSubmit(values);
-  };
+  // Handle dialog open/close
+  useEffect(() => {
+    if (open && !form.formState.isSubmitSuccessful) {
+      // Dialog was opened, keep the current state
+    } else if (!open) {
+      // Dialog was closed, reset the form
+      form.reset();
+    }
+  }, [open, form]);
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -44,11 +46,12 @@ export const StaffDialog = ({
           form={form}
           isSubmitting={isSubmitting}
           isEditing={isEditing}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          handleSubmit={handleSubmit}
+          activeTab="create"
+          setActiveTab={() => {}}
+          handleSubmit={onSubmit}
           onCancel={() => onOpenChange(false)}
           error={null}
+          isLoading={isLoading}
         />
       </DialogContent>
     </Dialog>

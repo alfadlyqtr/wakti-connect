@@ -2,13 +2,14 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
-import CreateStaffDialog from "./CreateStaffDialog";
 import { StaffList } from "./list";
 import { StaffMember } from "@/types/staff";
-import { useStaffQuery, StaffQueryResult } from "./list/useStaffQuery";
+import { useStaffQuery } from "./list/useStaffQuery";
+import { StaffDialog } from "@/components/staff/StaffDialog";
 
 const StaffManagementTab: React.FC = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
   const { data: staffData, isLoading, error, refetch } = useStaffQuery();
 
   // Transform the API data to our application StaffMember type
@@ -32,16 +33,26 @@ const StaffManagementTab: React.FC = () => {
     }));
   }, [staffData]);
 
-  const handleViewDetails = (staffId: string) => {
-    console.log("View details for staff member:", staffId);
-    // Implement view details functionality here
+  const handleOpenDialog = (staffId: string | null = null) => {
+    setSelectedStaffId(staffId);
+    setCreateDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setSelectedStaffId(null);
+    setCreateDialogOpen(false);
+  };
+
+  const handleSuccess = () => {
+    refetch();
+    handleCloseDialog();
   };
 
   return (
     <>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold">Staff Members</h2>
-        <Button onClick={() => setCreateDialogOpen(true)}>
+        <Button onClick={() => handleOpenDialog()}>
           <UserPlus className="mr-2 h-4 w-4" />
           Add Staff Member
         </Button>
@@ -51,13 +62,15 @@ const StaffManagementTab: React.FC = () => {
         staffMembers={staffMembers}
         isLoading={isLoading}
         error={error}
-        onEdit={handleViewDetails}
+        onEdit={(staffId) => handleOpenDialog(staffId)}
         onRefresh={() => refetch()}
       />
       
-      <CreateStaffDialog
+      <StaffDialog
+        staffId={selectedStaffId}
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
+        onSuccess={handleSuccess}
       />
     </>
   );
