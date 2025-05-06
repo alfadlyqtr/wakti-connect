@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,6 +16,11 @@ const AboutEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }) 
   const handleToggleChange = (name: string, checked: boolean) => {
     handleInputChange(name, checked);
   };
+
+  // Log content data for debugging on every render
+  useEffect(() => {
+    console.log("AboutEditor - Current content data:", contentData);
+  }, [contentData]);
 
   return (
     <>

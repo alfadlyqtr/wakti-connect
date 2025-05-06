@@ -70,9 +70,11 @@ export const usePageSectionsQuery = (pageId?: string) => {
     queryFn: async () => {
       if (!pageId) return [];
       
+      console.log("Fetching page sections for pageId:", pageId);
+      
       const { data, error } = await supabase
         .from('business_page_sections')
-        .select()
+        .select('*')
         .eq('page_id', pageId)
         .order('section_order', { ascending: true });
       
@@ -81,6 +83,7 @@ export const usePageSectionsQuery = (pageId?: string) => {
         throw error;
       }
       
+      console.log(`Retrieved ${data?.length || 0} page sections:`, data);
       return data as BusinessPageSection[] || [];
     },
     enabled: !!pageId

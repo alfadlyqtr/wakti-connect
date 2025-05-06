@@ -31,10 +31,27 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
   const isAuthenticated = useAuthentication();
   const { redirectToLogin } = useAuthRedirect();
   
-  console.log("BusinessLandingPage - authentication status:", isAuthenticated);
-  console.log("BusinessLandingPage - businessPage:", businessPage);
-  console.log("BusinessLandingPage - socialLinks:", socialLinks?.length || 0);
-  console.log("BusinessLandingPage - social icons position:", businessPage?.social_icons_position);
+  // Add detailed logging
+  useEffect(() => {
+    console.log("BusinessLandingPage - authentication status:", isAuthenticated);
+    console.log("BusinessLandingPage - businessPage:", businessPage);
+    console.log("BusinessLandingPage - pageSections:", pageSections);
+    console.log("BusinessLandingPage - socialLinks count:", socialLinks?.length || 0);
+    console.log("BusinessLandingPage - isPreviewMode:", isPreviewMode);
+    
+    if (businessPage) {
+      console.log("BusinessLandingPage - styling values:", {
+        primaryColor: businessPage.primary_color,
+        secondaryColor: businessPage.secondary_color,
+        textColor: businessPage.text_color,
+        backgroundColor: businessPage.background_color,
+        fontFamily: businessPage.font_family,
+        borderRadius: businessPage.border_radius,
+        socialIconsPosition: businessPage.social_icons_position,
+        contentMaxWidth: businessPage.content_max_width
+      });
+    }
+  }, [businessPage, pageSections, socialLinks, isAuthenticated, isPreviewMode]);
 
   // Handle scroll effects for powered by
   useEffect(() => {
@@ -67,6 +84,7 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
   }
 
   if (!businessPage) {
+    console.error("BusinessLandingPage - Business page not found for slug:", slug);
     return <BusinessPageNotFound />;
   }
 

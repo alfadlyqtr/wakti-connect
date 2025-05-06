@@ -31,6 +31,13 @@ const BusinessLandingPage: React.FC<BusinessLandingPageProps> = ({ isPreview: is
     .join(' ');
   
   useEffect(() => {
+    console.log("BusinessLandingPage - Rendering with:", {
+      slug,
+      isPreviewMode,
+      locationPath: location.pathname,
+      searchParams: Object.fromEntries(searchParams.entries())
+    });
+    
     if (!slug) {
       toast({
         title: "Business Page Not Found",
@@ -39,7 +46,7 @@ const BusinessLandingPage: React.FC<BusinessLandingPageProps> = ({ isPreview: is
       });
       navigate("/");
     }
-  }, [slug, navigate]);
+  }, [slug, isPreviewMode, navigate, location.pathname, searchParams]);
   
   if (!slug) {
     return (

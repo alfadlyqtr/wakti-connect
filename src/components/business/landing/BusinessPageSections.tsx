@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { BusinessPage, BusinessPageSection } from "@/types/business.types";
 import BusinessPageHeader from "./sections/BusinessPageHeader";
 import BusinessAbout from "./BusinessAbout";
@@ -32,10 +32,21 @@ const BusinessPageSections: React.FC<BusinessPageSectionsProps> = ({
     return contactFormMutation.mutateAsync(data);
   };
 
+  // Add debugging to log the sections and page data
+  useEffect(() => {
+    console.log("BusinessPageSections - Page Data:", businessPage);
+    console.log("BusinessPageSections - Sorted Sections:", sortedSections);
+  }, [businessPage, sortedSections]);
+
   return (
     <div className="space-y-8 sm:space-y-12 md:space-y-16 lg:space-y-20 mt-6">
       {sortedSections.map((section) => {
-        if (!section.is_visible) return null;
+        if (!section.is_visible) {
+          console.log(`Section ${section.section_type} (ID: ${section.id}) is not visible, skipping`);
+          return null;
+        }
+        
+        console.log(`Rendering section: ${section.section_type}`, section);
         
         switch (section.section_type) {
           case 'header':
@@ -107,6 +118,13 @@ const BusinessPageSections: React.FC<BusinessPageSectionsProps> = ({
             );
           
           case 'contact':
+            console.log("Rendering contact section with data:", {
+              sectionId: section.id,
+              content: section.section_content,
+              businessId: businessPage.business_id,
+              pageId: businessPage.id
+            });
+            
             return (
               <ContactSection
                 key={section.id}
@@ -128,6 +146,7 @@ const BusinessPageSections: React.FC<BusinessPageSectionsProps> = ({
             );
           
           default:
+            console.warn(`Unknown section type: ${section.section_type}`);
             return (
               <div key={section.id} className="p-4 border rounded-md">
                 <p className="text-center text-muted-foreground">
