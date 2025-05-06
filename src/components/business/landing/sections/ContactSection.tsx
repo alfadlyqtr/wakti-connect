@@ -52,7 +52,7 @@ const ContactSection: React.FC<ContactSectionProps> = ({
   };
 
   return (
-    <section style={styles} className={`my-8 ${!section.is_visible ? 'hidden' : ''}`} id="contact">
+    <section style={styles} className={`my-8 ${!section.is_visible ? 'hidden' : ''}`}>
       <div className="container mx-auto">
         <div className="text-center mb-8">
           <h2 className="text-2xl md:text-3xl font-bold">{contactInfo.title}</h2>
