@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { 
   format, 
@@ -9,15 +8,24 @@ import {
   isSameDay,
   addMonths,
   subMonths,
-  isToday
+  isToday,
+  getYear,
+  setMonth
 } from "date-fns";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Plus } from "lucide-react";
+import { Calendar as CalendarIcon, Plus } from "lucide-react";
 import { DayEventTypes } from "@/types/calendar.types";
 import CalendarDayCell from "@/components/dashboard/home/CalendarDayCell";
 import { Skeleton } from "./skeleton";
 import { cn } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Default number of weeks to show (6 gives us a standard calendar grid)
 const DEFAULT_WEEKS_TO_SHOW = 6;
@@ -45,8 +53,6 @@ export function FullScreenCalendar({
   const [currentMonth, setCurrentMonth] = useState(startOfMonth(new Date()));
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   
-  const handlePreviousMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
-  const handleNextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
   const handleTodayClick = () => {
     const today = new Date();
     setCurrentMonth(startOfMonth(today));
@@ -54,6 +60,13 @@ export function FullScreenCalendar({
     if (onSelectDay) {
       onSelectDay(today);
     }
+  };
+
+  const handleMonthChange = (monthValue: string) => {
+    // Parse the month value (0-11) and set the month while keeping the year
+    const newMonth = parseInt(monthValue, 10);
+    const newDate = setMonth(currentMonth, newMonth);
+    setCurrentMonth(startOfMonth(newDate));
   };
 
   // Create a grid of days for the current month view
@@ -116,11 +129,36 @@ export function FullScreenCalendar({
       hasReminders: dayEvents.some(event => event.type === 'reminder'),
     };
   };
+
+  // Generate months for dropdown
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+  
+  const currentYear = getYear(currentMonth);
+  const currentMonthIndex = currentMonth.getMonth();
   
   // Calendar header for desktop
   const calendarHeader = (
     <div className="flex items-center justify-between mb-4">
-      <h2 className="text-xl font-semibold">{format(currentMonth, 'MMMM yyyy')}</h2>
+      <div className="flex items-center gap-2">
+        <Select 
+          value={currentMonthIndex.toString()} 
+          onValueChange={handleMonthChange}
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue>{format(currentMonth, 'MMMM yyyy')}</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {monthNames.map((month, index) => (
+              <SelectItem key={month} value={index.toString()}>
+                {`${month} ${currentYear}`}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
       
       <div className="flex gap-2">
         <Button 
@@ -130,15 +168,6 @@ export function FullScreenCalendar({
         >
           <CalendarIcon className="h-4 w-4 mr-1" /> Today
         </Button>
-        
-        <div className="flex">
-          <Button variant="outline" size="icon" onClick={handlePreviousMonth} aria-label="Previous month">
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="icon" onClick={handleNextMonth} aria-label="Next month">
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
         
         {onAddEntry && (
           <Button onClick={onAddEntry} size="sm">
@@ -154,16 +183,21 @@ export function FullScreenCalendar({
   const mobileHeader = (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">{format(currentMonth, 'MMMM yyyy')}</h2>
-        
-        <div className="flex">
-          <Button variant="outline" size="icon" onClick={handlePreviousMonth} className="h-8 w-8">
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="icon" onClick={handleNextMonth} className="h-8 w-8">
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
+        <Select 
+          value={currentMonthIndex.toString()} 
+          onValueChange={handleMonthChange}
+        >
+          <SelectTrigger className="w-[140px]">
+            <SelectValue>{format(currentMonth, 'MMM yyyy')}</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {monthNames.map((month, index) => (
+              <SelectItem key={month} value={index.toString()}>
+                {`${month} ${currentYear}`}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       
       <div className="flex justify-between">

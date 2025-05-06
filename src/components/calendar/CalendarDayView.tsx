@@ -69,11 +69,6 @@ const CalendarDayView: React.FC<CalendarDayViewProps> = ({
       }
     };
 
-    // Function to check if deletion is allowed - only for manual entries
-    const canDelete = (eventType: string) => {
-      return eventType === "manual";
-    };
-
     return (
       <div className="space-y-3">
         <h3 className="font-medium text-sm flex items-center gap-2">
@@ -140,22 +135,22 @@ const CalendarDayView: React.FC<CalendarDayViewProps> = ({
                   </div>
                 </div>
                 
-                {/* Only show delete button for manual entries */}
-                {canDelete(event.type) && onDelete && (
+                {/* Show delete button for manual entries */}
+                {type === "manual" && onDelete && (
                   <Button 
                     variant="ghost" 
                     size="icon" 
                     className="h-7 w-7 text-muted-foreground hover:text-destructive" 
                     onClick={() => onDelete(event.id, event.type)}
-                    title="Delete Manual Entry"
-                    aria-label="Delete Manual Entry"
+                    title="Delete Entry"
+                    aria-label="Delete Entry"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 )}
                 
                 {/* Show appropriate status badge for each event type */}
-                {event.status && !canDelete(event.type) && (
+                {event.status && type !== "manual" && (
                   <Badge 
                     variant={
                       event.status === "completed" || event.status === "confirmed" ? "outline" : 
