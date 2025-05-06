@@ -18,7 +18,10 @@ const BusinessPageHeader: React.FC<BusinessPageHeaderProps> = ({
   isPreviewMode = false,
   isAuthenticated
 }) => {
-  const isOwner = business.id === isAuthenticated;
+  // Fixed comparison - checking if the business.id equals the isAuthenticated value
+  // Only consider the user as owner if isAuthenticated is a string (not null/boolean)
+  // and matches the business.id
+  const isOwner = typeof isAuthenticated === 'string' && business.id === isAuthenticated;
 
   const { business_name, display_name, avatar_url } = business;
   const name = display_name || business_name || "Business";
