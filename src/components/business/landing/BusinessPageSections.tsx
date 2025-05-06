@@ -1,216 +1,144 @@
 
 import React from "react";
-import { BusinessPageSection, BusinessPage } from "@/types/business.types";
+import { BusinessPage, BusinessPageSection } from "@/types/business.types";
+import { BusinessPageHeader } from "./sections/BusinessPageHeader";
+import AboutSection from "./sections/AboutSection";
+import ContactSection from "./sections/ContactSection";
+import HoursSection from "./sections/HoursSection";
+import GallerySection from "./sections/GallerySection";
+import TestimonialsSection from "./sections/TestimonialsSection";
+import BookingSection from "./sections/BookingSection";
+import InstagramSection from "./sections/InstagramSection";
+import ChatbotSection from "./sections/ChatbotSection";
+import { submitContactForm } from "@/services/contact";
+import { useSubmitContactFormMutation } from "@/hooks/business-page/useContactSubmissionMutation";
 
-// Import section renderers
-import BusinessPageHeader from "./sections/BusinessPageHeader";
-import BusinessAboutSection from "./sections/BusinessAboutSection";
-import BusinessContactSection from "./sections/BusinessContactSection";
-import BusinessHoursSection from "./sections/BusinessHoursSection";
-import BusinessGallerySection from "./sections/BusinessGallerySection";
-import BusinessTestimonialsSection from "./sections/BusinessTestimonialsSection";
-import BusinessBookingTemplatesSection from "./sections/BusinessBookingTemplatesSection";
-import BusinessInstagramSection from "./sections/BusinessInstagramSection";
-import BusinessChatbotSection from "./sections/BusinessChatbotSection";
-import { cn } from "@/lib/utils";
-import { getBackgroundPattern } from "./PageBackground";
-
-export interface BusinessPageSectionsProps {
+interface BusinessPageSectionsProps {
   pageSections: BusinessPageSection[];
   businessPage: BusinessPage;
 }
 
-const BusinessPageSections = ({ pageSections, businessPage }: BusinessPageSectionsProps) => {
-  // Log the primary and secondary colors to verify they're properly passed
-  console.log("BusinessPageSections received colors:", {
-    primary: businessPage.primary_color,
-    secondary: businessPage.secondary_color,
-    sections: pageSections.length
-  });
-
-  if (!pageSections || pageSections.length === 0) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-muted-foreground">No content sections available.</p>
-      </div>
-    );
-  }
+const BusinessPageSections: React.FC<BusinessPageSectionsProps> = ({ 
+  pageSections, 
+  businessPage 
+}) => {
+  // Get the submitContactForm mutation from our hook
+  const contactFormMutation = useSubmitContactFormMutation();
   
-  const getSectionStyles = (section: BusinessPageSection) => {
-    const defaultBorderRadius = businessPage.border_radius || 'medium';
-    
-    const borderRadiusValue = 
-      (section.border_radius || defaultBorderRadius) === 'none' ? '0px' :
-      (section.border_radius || defaultBorderRadius) === 'small' ? '4px' :
-      (section.border_radius || defaultBorderRadius) === 'medium' ? '8px' :
-      (section.border_radius || defaultBorderRadius) === 'large' ? '12px' :
-      (section.border_radius || defaultBorderRadius) === 'full' ? '9999px' : '8px';
-    
-    // Calculate padding based on section settings
-    const paddingValue = 
-      section.padding === 'none' ? '0' :
-      section.padding === 'sm' ? '1rem' :
-      section.padding === 'md' ? '2rem' :
-      section.padding === 'lg' ? '3rem' :
-      section.padding === 'xl' ? '4rem' : '1rem';
-    
-    // Calculate shadow based on section settings
-    const shadowValue = 
-      section.section_content?.shadow_effect === 'none' ? 'none' :
-      section.section_content?.shadow_effect === 'sm' ? '0 1px 2px rgba(0,0,0,0.1)' :
-      section.section_content?.shadow_effect === 'md' ? '0 4px 6px rgba(0,0,0,0.1)' :
-      section.section_content?.shadow_effect === 'lg' ? '0 10px 15px rgba(0,0,0,0.1)' :
-      section.section_content?.shadow_effect === 'xl' ? '0 20px 25px rgba(0,0,0,0.1)' : 'none';
-    
-    // Calculate border style, width and color
-    const borderStyle = section.section_content?.border_style || 'none';
-    const borderWidth = section.section_content?.border_width || '1px';
-    const borderColor = section.section_content?.border_color || '#000000';
-    
-    // Calculate section style (outlined, solid, default)
-    const sectionStyle = section.section_content?.section_style || 'default';
-    
-    // Get background pattern from section content
-    const backgroundPattern = section.section_content?.background_pattern;
-    
-    // Log section data for debugging
-    console.log(`Section ${section.section_type} content:`, section.section_content);
-    
-    // Generate the background pattern CSS
-    const backgroundPatternValue = backgroundPattern ? getBackgroundPattern(backgroundPattern) : 'none';
-    
-    // Build the style object
-    const styles: React.CSSProperties = {
-      backgroundColor: section.background_color || 'transparent',
-      color: section.text_color || businessPage.text_color || 'inherit',
-      padding: paddingValue,
-      borderRadius: borderRadiusValue,
-      boxShadow: section.section_content?.shadow_effect !== 'none' ? shadowValue : 'none',
-    };
-    
-    // Apply background image if provided
-    if (section.background_image_url) {
-      styles.backgroundImage = `url(${section.background_image_url})`;
-      styles.backgroundSize = 'cover';
-      styles.backgroundPosition = 'center';
-    }
-    // Apply background pattern if provided and no background image
-    else if (backgroundPattern && backgroundPattern !== 'none' && backgroundPatternValue !== 'none') {
-      styles.backgroundImage = backgroundPatternValue;
-      styles.backgroundSize = 'auto';
-      styles.backgroundRepeat = 'repeat';
-    }
-    
-    // Add border if it's not "none"
-    if (borderStyle !== 'none') {
-      styles.borderStyle = borderStyle;
-      styles.borderWidth = borderWidth;
-      styles.borderColor = borderColor;
-    }
-    
-    // Handle section style
-    if (sectionStyle === 'outlined') {
-      styles.backgroundColor = 'transparent';
-      styles.borderStyle = 'solid';
-      styles.borderWidth = '1px';
-      styles.borderColor = section.background_color || '#000000';
-    } else if (sectionStyle === 'solid') {
-      styles.backgroundColor = section.background_color || '#ffffff';
-    }
-    
-    console.log(`Applying styles for section ${section.section_type} with background pattern: ${backgroundPattern}`, styles);
-    
-    return styles;
-  };
-
-  const renderSection = (section: BusinessPageSection) => {
-    if (!section.is_visible) return null;
-    
-    const content = section.section_content || {};
-    const sectionStyles = getSectionStyles(section);
-    
-    const sectionClasses = cn(
-      "section-wrapper mb-8",
-      section.background_color || section.background_image_url ? "rounded overflow-hidden" : ""
-    );
-    
-    console.log(`Rendering section ${section.section_type} with content:`, content);
-    
-    const SectionComponent = () => {
-      switch (section.section_type) {
-        case 'header':
-          return <BusinessPageHeader 
-            content={{ 
-              ...content, 
-              primary_color: businessPage.primary_color, 
-              secondary_color: businessPage.secondary_color,
-              logo_url: businessPage.logo_url
-            }} 
-          />;
-          
-        case 'about':
-          return <BusinessAboutSection content={content} />;
-          
-        case 'contact':
-          return <BusinessContactSection 
-            businessName={content.business_name || businessPage.page_title || ''}
-            businessAddress={content.address || ''}
-            businessPhoneNumber={content.phone || ''}
-            businessEmail={content.email || ''}
-          />;
-          
-        case 'hours':
-          return <BusinessHoursSection content={content} />;
-          
-        case 'gallery':
-          return <BusinessGallerySection content={content} />;
-          
-        case 'testimonials':
-          return <BusinessTestimonialsSection content={content} />;
+  // Sort sections by order
+  const sortedSections = [...pageSections].sort((a, b) => a.section_order - b.section_order);
   
-        case 'booking':
-          return <BusinessBookingTemplatesSection 
-            content={content} 
-            businessId={businessPage.business_id}
-          />;
-          
-        case 'instagram':
-          return <BusinessInstagramSection content={content} />;
-          
-        case 'chatbot':
-          return <BusinessChatbotSection content={{
-            ...content,
-            // Ensure background_pattern is properly passed down
-            background_pattern: content.background_pattern || 'none'
-          }} />;
-          
-        default:
-          return (
-            <div className="py-8">
-              <h2 className="text-2xl font-bold mb-4 capitalize">{section.section_type}</h2>
-              <p className="text-muted-foreground">
-                This section type is not yet supported for display.
-              </p>
-            </div>
-          );
-      }
-    };
-    
-    console.log(`Rendering section: ${section.section_type} with styles:`, sectionStyles);
-    
-    return (
-      <div key={section.id} className={sectionClasses} style={sectionStyles}>
-        <SectionComponent />
-      </div>
-    );
+  // Handle contact form submission (this wraps the mutation function)
+  const handleContactFormSubmit = async (data: any) => {
+    return contactFormMutation.mutateAsync(data);
   };
 
   return (
-    <>
-      {pageSections
-        .sort((a, b) => a.section_order - b.section_order)
-        .map(renderSection)}
-    </>
+    <div className="space-y-8 sm:space-y-12 md:space-y-16 lg:space-y-20 mt-6">
+      {sortedSections.map((section) => {
+        if (!section.is_visible) return null;
+        
+        switch (section.section_type) {
+          case 'header':
+            return (
+              <BusinessPageHeader
+                key={section.id}
+                content={{
+                  ...section.section_content,
+                  logo_url: businessPage.logo_url,
+                  primary_color: businessPage.primary_color,
+                  secondary_color: businessPage.secondary_color,
+                }}
+              />
+            );
+          
+          case 'about':
+            return (
+              <AboutSection 
+                key={section.id} 
+                section={section} 
+                primaryColor={businessPage.primary_color}
+              />
+            );
+          
+          case 'contact':
+            return (
+              <ContactSection
+                key={section.id}
+                section={section}
+                businessId={businessPage.business_id}
+                pageId={businessPage.id}
+                submitContactForm={handleContactFormSubmit}
+                primaryColor={businessPage.primary_color}
+                textColor={businessPage.text_color || '#FFFFFF'}
+              />
+            );
+          
+          case 'hours':
+            return (
+              <HoursSection
+                key={section.id}
+                section={section}
+                primaryColor={businessPage.primary_color}
+              />
+            );
+          
+          case 'gallery':
+            return (
+              <GallerySection
+                key={section.id}
+                section={section}
+                primaryColor={businessPage.primary_color}
+              />
+            );
+          
+          case 'testimonials':
+            return (
+              <TestimonialsSection
+                key={section.id}
+                section={section}
+                primaryColor={businessPage.primary_color}
+              />
+            );
+          
+          case 'booking':
+            return (
+              <BookingSection
+                key={section.id}
+                section={section}
+                businessId={businessPage.business_id}
+                primaryColor={businessPage.primary_color}
+              />
+            );
+          
+          case 'instagram':
+            return (
+              <InstagramSection
+                key={section.id}
+                section={section}
+              />
+            );
+          
+          case 'chatbot':
+            return (
+              <ChatbotSection
+                key={section.id}
+                section={section}
+                businessId={businessPage.business_id}
+              />
+            );
+          
+          default:
+            return (
+              <div key={section.id} className="p-4 border rounded-md">
+                <p className="text-center text-muted-foreground">
+                  Unknown section type: {section.section_type}
+                </p>
+              </div>
+            );
+        }
+      })}
+    </div>
   );
 };
 

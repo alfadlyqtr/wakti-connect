@@ -38,6 +38,7 @@ export function BusinessContactForm({
 }: BusinessContactFormProps) {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
+  // Initialize form context
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {

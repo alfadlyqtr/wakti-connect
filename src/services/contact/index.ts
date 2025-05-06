@@ -20,6 +20,17 @@ export async function submitContactForm({
   };
 }) {
   try {
+    // For preview mode or development, log the submission but don't send to backend
+    if (window.location.pathname.includes('/preview') || window.location.hostname === 'localhost') {
+      console.log('Contact form submission (preview mode):', {
+        businessId,
+        pageId,
+        formData
+      });
+      return { success: true, id: 'preview-submission' };
+    }
+    
+    // Real submission for production
     const { data, error } = await supabase.functions.invoke('submit-contact-form', {
       body: {
         businessId,

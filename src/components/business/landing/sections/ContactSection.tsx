@@ -4,13 +4,12 @@ import { BusinessPageSection } from "@/types/business.types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import BusinessContactForm from "../BusinessContactForm";
 import { Mail, Phone, MapPin, Clock } from "lucide-react";
-import { submitContactForm } from "@/services/contact";
 
 interface ContactSectionProps {
   section: BusinessPageSection;
   businessId: string;
   pageId: string;
-  submitContactForm: any;
+  submitContactForm: (data: { businessId: string; pageId: string; formData: any }) => Promise<any>;
   primaryColor?: string;
   textColor?: string;
 }
