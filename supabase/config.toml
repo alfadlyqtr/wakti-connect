@@ -24,3 +24,6 @@ verify_jwt = false
 
 [functions.sync-staff-records]
 verify_jwt = true
+
+[functions.generate-page-content]
+verify_jwt = false
