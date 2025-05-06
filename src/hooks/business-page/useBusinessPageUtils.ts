@@ -90,12 +90,14 @@ export const usePublicPageUrl = (pageSlug?: string) => {
       return '#';
     }
     
-    // Check the environment
-    const isLocalhost = window.location.hostname === 'localhost';
-    const baseUrl = isLocalhost 
-      ? `${window.location.origin}` 
-      : window.location.origin;
+    // Check the environment and construct appropriate URL
+    const isLocalhost = window.location.hostname === 'localhost' || 
+                        window.location.hostname === '127.0.0.1';
     
+    // Get the origin (protocol + hostname + port)
+    const baseUrl = window.location.origin;
+    
+    // Construct the full URL to the business page
     return `${baseUrl}/business/${pageSlug}`;
   }, [pageSlug]);
   
