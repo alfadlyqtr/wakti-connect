@@ -135,8 +135,8 @@ const CalendarDayView: React.FC<CalendarDayViewProps> = ({
                   </div>
                 </div>
                 
-                {/* Show delete button for any manual entry, regardless of section */}
-                {type === "manual" && onDelete && (
+                {/* Show delete button for user-created entries (manual or event) */}
+                {(type === "manual" || type === "event") && onDelete && (
                   <Button 
                     variant="ghost" 
                     size="icon" 
@@ -150,7 +150,7 @@ const CalendarDayView: React.FC<CalendarDayViewProps> = ({
                 )}
                 
                 {/* Show appropriate status badge for each event type */}
-                {event.status && type !== "manual" && (
+                {event.status && type !== "manual" && type !== "event" && (
                   <Badge 
                     variant={
                       event.status === "completed" || event.status === "confirmed" ? "outline" : 

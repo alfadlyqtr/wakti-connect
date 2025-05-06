@@ -91,15 +91,27 @@ const DashboardCalendarPage: React.FC = () => {
   // Handle deleting entries
   const handleDeleteEntry = async (entryId: string, entryType: string) => {
     try {
-      // Only proceed if it's a manual entry
-      if (entryType !== 'manual') {
-        throw new Error("Only manual entries can be deleted");
-      }
+      let error;
       
-      const { error } = await supabase
-        .from('calendar_manual_entries')
-        .delete()
-        .eq('id', entryId);
+      if (entryType === 'manual') {
+        // Delete from manual entries table
+        const result = await supabase
+          .from('calendar_manual_entries')
+          .delete()
+          .eq('id', entryId);
+          
+        error = result.error;
+      } else if (entryType === 'event') {
+        // Delete from events table
+        const result = await supabase
+          .from('events')
+          .delete()
+          .eq('id', entryId);
+          
+        error = result.error;
+      } else {
+        throw new Error("Only manual entries and events can be deleted");
+      }
       
       if (error) {
         throw error;
@@ -107,7 +119,7 @@ const DashboardCalendarPage: React.FC = () => {
       
       toast({
         title: "Entry deleted",
-        description: "The manual entry has been removed",
+        description: "The entry has been removed from your calendar",
       });
       
       refetch();
@@ -168,8 +180,8 @@ const DashboardCalendarPage: React.FC = () => {
       />
 
       <ConfirmationDialog
-        title="Delete Manual Entry"
-        description="Are you sure you want to delete this manual entry? This action cannot be undone."
+        title="Delete Calendar Entry"
+        description="Are you sure you want to delete this calendar entry? This action cannot be undone."
         open={deleteConfirmation.isOpen}
         onOpenChange={(open) => setDeleteConfirmation({ ...deleteConfirmation, isOpen: open })}
         onConfirm={() => handleDeleteEntry(deleteConfirmation.entryId, deleteConfirmation.entryType)}
