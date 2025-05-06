@@ -3,11 +3,26 @@ import React from "react";
 
 interface BusinessPageHeaderProps {
   content: Record<string, any>;
+  business?: {
+    id: string;
+    business_name: string;
+    display_name: string;
+    account_type: string;
+    avatar_url?: string;
+  };
+  isPreviewMode?: boolean;
+  isAuthenticated?: boolean | null;
 }
 
-const BusinessPageHeader: React.FC<BusinessPageHeaderProps> = ({ content }) => {
+const BusinessPageHeader: React.FC<BusinessPageHeaderProps> = ({ 
+  content = {},
+  business,
+  isPreviewMode,
+  isAuthenticated 
+}) => {
+  // Extract content values or use defaults
   const {
-    title = "Welcome to Our Business",
+    title = business?.business_name || "Welcome to Our Business",
     subtitle = "We provide quality products and services",
     description = "Learn more about what we can do for you",
     buttonText = "Contact Us",
@@ -18,7 +33,7 @@ const BusinessPageHeader: React.FC<BusinessPageHeaderProps> = ({ content }) => {
     textColor = "dark",
     primary_color,
     secondary_color,
-    logo_url
+    logo_url = business?.avatar_url
   } = content;
 
   console.log("BusinessPageHeader rendering with:", {

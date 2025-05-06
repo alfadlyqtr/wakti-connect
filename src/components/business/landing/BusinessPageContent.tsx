@@ -33,6 +33,16 @@ const BusinessPageContent: React.FC<BusinessPageContentProps> = ({
   const showFooterSocialLinks = socialLinks && socialLinks.length > 0 && 
     ['footer', 'both'].includes(social_icons_position || '');
 
+  // Create header content object for BusinessPageHeader from businessPage
+  const headerContent = {
+    title: businessPage.page_title,
+    subtitle: "Welcome to our business",
+    description: businessPage.description,
+    logo_url: businessPage.logo_url,
+    primary_color: businessPage.primary_color,
+    secondary_color: businessPage.secondary_color
+  };
+
   return (
     <div
       style={{ maxWidth: content_max_width }}
@@ -51,6 +61,7 @@ const BusinessPageContent: React.FC<BusinessPageContentProps> = ({
       )}
       
       <BusinessPageHeader 
+        content={headerContent}
         business={{
           id: businessPage.business_id,
           business_name: businessPage.page_title,

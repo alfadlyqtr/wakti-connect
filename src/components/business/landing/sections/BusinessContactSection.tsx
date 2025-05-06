@@ -3,18 +3,28 @@ import React from "react";
 
 interface BusinessContactSectionProps {
   content: Record<string, any>;
+  businessName?: string;
+  businessAddress?: string;
+  businessPhoneNumber?: string;
+  businessEmail?: string;
 }
 
-const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({ content }) => {
+const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({ 
+  content,
+  businessName,
+  businessAddress,
+  businessPhoneNumber,
+  businessEmail
+}) => {
   const {
     title = "Contact Us",
     subtitle = "We'd love to hear from you",
     description = "Fill out the form below to get in touch with us.",
-    email = "",
-    phone = "",
-    address = "",
+    email = businessEmail || "",
+    phone = businessPhoneNumber || "",
+    address = businessAddress || "",
     hours = ""
-  } = content;
+  } = content || {};
   
   return (
     <section id="contact" className="py-12 md:py-16">
