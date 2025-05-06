@@ -18,7 +18,7 @@ const BusinessHeader = ({ section, businessPage }: BusinessHeaderProps) => {
     subtitle = "Book our services online",
     description = businessPage.description || "",
     buttonText = "Book Now",
-    showButton = false // Changed to false to hide the button
+    showButton = false // Keep as false to hide the button
   } = content;
 
   console.log("BusinessHeader rendering with logo:", businessPage.logo_url);
@@ -64,7 +64,7 @@ const BusinessHeader = ({ section, businessPage }: BusinessHeaderProps) => {
         <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">{description}</p>
       )}
       
-      {/* Button removed by setting showButton to false above */}
+      {/* Button completely removed */}
     </div>
   );
 };
