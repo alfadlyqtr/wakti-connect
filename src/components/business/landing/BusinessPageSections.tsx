@@ -10,6 +10,8 @@ import BusinessChatbotSection from "./BusinessChatbotSection";
 import { submitContactForm } from "@/services/contact";
 import LinksSection from "./sections/LinksSection";
 import TestimonialsSection from "./sections/TestimonialsSection";
+import InstagramSection from "./sections/InstagramSection";
+import BusinessBookingTemplatesSection from "./sections/BusinessBookingTemplatesSection";
 
 interface BusinessPageSectionsProps {
   pageSections: BusinessPageSection[];
@@ -100,6 +102,21 @@ const BusinessPageSections: React.FC<BusinessPageSectionsProps> = ({
               <LinksSection
                 key={section.id}
                 section={section}
+              />
+            );
+          case 'instagram':
+            return (
+              <InstagramSection
+                key={section.id}
+                section={section}
+              />
+            );
+          case 'booking':
+            return (
+              <BusinessBookingTemplatesSection
+                key={section.id}
+                content={section.section_content || {}}
+                businessId={businessId}
               />
             );
           default:
