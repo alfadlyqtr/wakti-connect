@@ -7,10 +7,9 @@ import BusinessContactInfo from "./BusinessContactInfo";
 import BusinessGallery from "./BusinessGallery";
 import BusinessHours from "./BusinessHours";
 import BusinessChatbotSection from "./BusinessChatbotSection";
-import BusinessInstagramSection from "./sections/InstagramSection";
-import TestimonialsSection from "./sections/TestimonialsSection";
-import LinksSection from "./sections/LinksSection";
 import { submitContactForm } from "@/services/contact";
+import LinksSection from "./sections/LinksSection";
+import TestimonialsSection from "./sections/TestimonialsSection";
 
 interface BusinessPageSectionsProps {
   pageSections: BusinessPageSection[];
@@ -87,13 +86,6 @@ const BusinessPageSections: React.FC<BusinessPageSectionsProps> = ({
               <BusinessChatbotSection
                 key={section.id}
                 content={section.section_content || {}}
-              />
-            );
-          case 'instagram':
-            return (
-              <BusinessInstagramSection
-                key={section.id}
-                section={section}
               />
             );
           case 'testimonials':

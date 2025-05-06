@@ -95,7 +95,7 @@ const BusinessGallery = ({ section }: BusinessGalleryProps) => {
         ) : (
           <div className={`grid ${getColumnsClass()} gap-6`}>
             {images.map((image: any, index: number) => (
-              <div key={index} className="relative group overflow-hidden rounded-lg shadow-sm">
+              <div key={index} className="relative group overflow-hidden rounded-full shadow-sm">
                 <div className="aspect-square overflow-hidden">
                   <img 
                     src={image.url} 

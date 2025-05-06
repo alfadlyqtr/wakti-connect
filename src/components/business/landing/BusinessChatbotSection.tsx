@@ -1,17 +1,9 @@
 
-import React, { useEffect } from "react";
-import { useTMWChatbot } from "@/hooks/tmw-chatbot";
+import React from "react";
 import { ExternalLink } from "lucide-react";
 
 interface BusinessChatbotSectionProps {
-  content: {
-    enabled?: boolean;
-    section_title?: string;
-    section_description?: string;
-    chatbot_code?: string;
-    chatbot_size?: 'small' | 'medium' | 'large' | 'full';
-    background_pattern?: string;
-  };
+  content: Record<string, any>;
 }
 
 const BusinessChatbotSection: React.FC<BusinessChatbotSectionProps> = ({ content }) => {
@@ -27,11 +19,8 @@ const BusinessChatbotSection: React.FC<BusinessChatbotSectionProps> = ({ content
   // Create a unique ID for this chatbot container
   const containerId = `tmw-chatbot-section-${Math.floor(Math.random() * 10000)}`;
   
-  // Use the TMW chatbot hook with the new signature (no arguments)
-  const chatbotRef = useTMWChatbot();
-  
   // Log the chatbot setup for debugging
-  useEffect(() => {
+  React.useEffect(() => {
     console.log("BusinessChatbotSection mounting with:", {
       enabled,
       containerId,
@@ -39,6 +28,23 @@ const BusinessChatbotSection: React.FC<BusinessChatbotSectionProps> = ({ content
       size: chatbot_size,
       backgroundPattern: background_pattern
     });
+    
+    // Inject the chatbot script if provided
+    if (chatbot_code && typeof window !== 'undefined') {
+      try {
+        // Create a script element
+        const script = document.createElement('script');
+        script.innerHTML = chatbot_code;
+        
+        // Append it to the container
+        const container = document.getElementById(containerId);
+        if (container) {
+          container.appendChild(script);
+        }
+      } catch (err) {
+        console.error("Error injecting chatbot script:", err);
+      }
+    }
     
     return () => {
       console.log("BusinessChatbotSection unmounting:", containerId);
@@ -64,82 +70,35 @@ const BusinessChatbotSection: React.FC<BusinessChatbotSectionProps> = ({ content
     return null;
   }
   
-  // Get the background pattern style based on the pattern value
-  const getPatternStyle = () => {
-    if (!background_pattern || background_pattern === 'none') {
-      return {};
-    }
-    
-    // Use the same pattern generation logic as in PageBackground.tsx
-    let backgroundPatternValue = 'none';
-    
-    if (background_pattern === 'dots') {
-      backgroundPatternValue = 'radial-gradient(#00000022 1px, transparent 1px)';
-    } else if (background_pattern === 'grid') {
-      backgroundPatternValue = 'linear-gradient(to right, #00000011 1px, transparent 1px), linear-gradient(to bottom, #00000011 1px, transparent 1px)';
-    } else if (background_pattern === 'waves') {
-      backgroundPatternValue = 'url("data:image/svg+xml,%3Csvg width="100" height="20" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M0 10 C 30 0, 70 0, 100 10 L 100 20 L 0 20 Z" fill="%2300000011"/%3E%3C/svg%3E")';
-    } else if (background_pattern === 'diagonal') {
-      backgroundPatternValue = 'repeating-linear-gradient(45deg, #00000011, #00000011 1px, transparent 1px, transparent 10px)';
-    } else if (background_pattern === 'circles') {
-      backgroundPatternValue = 'radial-gradient(circle, #00000011 10px, transparent 11px)';
-    } else if (background_pattern === 'triangles') {
-      backgroundPatternValue = 'url("data:image/svg+xml,%3Csvg width="60" height="60" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M0 0 L 30 52 L 60 0 Z" fill="%2300000011"/%3E%3C/svg%3E")';
-    } else if (background_pattern === 'hexagons') {
-      backgroundPatternValue = 'url("data:image/svg+xml,%3Csvg width="60" height="60" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M0 15 L 15 0 L 45 0 L 60 15 L 60 45 L 45 60 L 15 60 L 0 45 Z" fill="%2300000011"/%3E%3C/svg%3E")';
-    } else if (background_pattern === 'stripes') {
-      backgroundPatternValue = 'repeating-linear-gradient(90deg, #00000011, #00000011 5px, transparent 5px, transparent 15px)';
-    } else if (background_pattern === 'zigzag') {
-      backgroundPatternValue = 'linear-gradient(135deg, #00000011 25%, transparent 25%) 0 0, linear-gradient(225deg, #00000011 25%, transparent 25%) 0 0';
-    } else if (background_pattern === 'confetti') {
-      backgroundPatternValue = 'url("data:image/svg+xml,%3Csvg width="60" height="60" xmlns="http://www.w3.org/2000/svg"%3E%3Crect x="10" y="10" width="4" height="4" transform="rotate(45 12 12)" fill="%2300000022"/%3E%3Crect x="30" y="20" width="4" height="4" transform="rotate(30 32 22)" fill="%2300000022"/%3E%3Crect x="15" y="40" width="4" height="4" transform="rotate(60 17 42)" fill="%2300000022"/%3E%3Crect x="40" y="45" width="4" height="4" transform="rotate(12 42 47)" fill="%2300000022"/%3E%3C/svg%3E")';
-    } else if (background_pattern === 'bubbles') {
-      backgroundPatternValue = 'radial-gradient(circle at 25px 25px, #00000011 15px, transparent 16px), radial-gradient(circle at 75px 75px, #00000011 15px, transparent 16px)';
-    }
-      
-    return {
-      backgroundImage: backgroundPatternValue,
-      backgroundSize: 'auto',
-      backgroundRepeat: 'repeat'
-    };
-  };
-  
-  const patternStyle = getPatternStyle();
-  
   return (
-    <div className="w-full">
-      {(section_title || section_description) && (
-        <div className="text-center mb-6">
-          {section_title && <h2 className="text-2xl font-bold mb-2">{section_title}</h2>}
-          {section_description && <p className="text-muted-foreground">{section_description}</p>}
-        </div>
-      )}
-      
-      <div 
-        id={containerId}
-        className={`relative border border-border rounded-md overflow-hidden ${getSizeClasses()}`}
-        style={patternStyle}
-      >
-        {!chatbot_code && (
-          <div className="flex items-center justify-center h-full">
-            <p className="text-muted-foreground">Add your TMW AI Chatbot code to enable the chatbot</p>
+    <section className="py-12 bg-background">
+      <div className="container mx-auto px-4">
+        {(section_title || section_description) && (
+          <div className="text-center mb-6">
+            {section_title && <h2 className="text-2xl font-bold mb-2">{section_title}</h2>}
+            {section_description && <p className="text-muted-foreground">{section_description}</p>}
           </div>
         )}
-        {/* The chatbot will be injected here by the hook */}
-      </div>
-      
-      {/* Add the "Powered by TMW AI" attribution */}
-      <div className="mt-3 text-center text-sm text-muted-foreground">
-        <a 
-          href="https://tmw.qa/ai-chat-bot/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center hover:underline"
+        
+        <div 
+          id={containerId}
+          className={`relative border border-border rounded-md overflow-hidden ${getSizeClasses()}`}
         >
-          Powered by TMW AI <ExternalLink className="ml-1 h-3 w-3" />
-        </a>
+          {!chatbot_code && (
+            <div className="flex items-center justify-center h-full">
+              <p className="text-muted-foreground">Add your chatbot code to enable the chatbot</p>
+            </div>
+          )}
+        </div>
+        
+        {/* Add the "Powered by" attribution if needed */}
+        <div className="mt-3 text-center text-sm text-muted-foreground">
+          <span className="inline-flex items-center">
+            Powered by AI Chatbot <ExternalLink className="ml-1 h-3 w-3" />
+          </span>
+        </div>
       </div>
-    </div>
+    </section>
   );
 };
 
