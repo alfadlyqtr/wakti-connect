@@ -28,7 +28,7 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 // Dashboard pages with lazy loading
 const DashboardHome = lazy(() => import("@/pages/dashboard/DashboardHome"));
 const DashboardTasks = lazy(() => import("@/pages/dashboard/DashboardTasks"));
-const DashboardCalendar = lazy(() => import("@/pages/dashboard/DashboardCalendarPage")); // Added Calendar page
+const DashboardCalendar = lazy(() => import("@/pages/dashboard/DashboardCalendarPage"));
 const DashboardServiceManagement = lazy(() => import("@/pages/dashboard/DashboardServiceManagement"));
 const DashboardStaffManagement = lazy(() => import("@/pages/dashboard/DashboardStaffManagement"));
 const DashboardBookings = lazy(() => import("@/pages/dashboard/DashboardBookings"));
@@ -43,6 +43,7 @@ const DashboardJobs = lazy(() => import("@/pages/dashboard/DashboardJobs"));
 const DashboardJobCards = lazy(() => import("@/pages/dashboard/DashboardJobCards"));
 const DashboardMeetingSummary = lazy(() => import("@/pages/dashboard/MeetingSummary"));
 const MessagesConversation = lazy(() => import("@/pages/dashboard/MessagesConversation"));
+const DashboardBusinessPage = lazy(() => import("@/pages/dashboard/DashboardBusinessPage")); // Added BusinessPage
 
 // Wrap components with Suspense for lazy loading
 const withSuspense = (Component: React.ComponentType) => (
@@ -58,7 +59,7 @@ const localDashboardRoutes: RouteObject[] = [
     element: withSuspense(DashboardHome),
   },
   {
-    path: "calendar", // New calendar route
+    path: "calendar",
     element: withSuspense(DashboardCalendar),
   },
   {
@@ -120,6 +121,10 @@ const localDashboardRoutes: RouteObject[] = [
   {
     path: "meeting-summary",
     element: withSuspense(DashboardMeetingSummary),
+  },
+  {
+    path: "business-page",
+    element: withSuspense(DashboardBusinessPage),
   },
 ];
 
