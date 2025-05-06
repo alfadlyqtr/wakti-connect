@@ -80,11 +80,6 @@ const PagePreviewTab: React.FC<PagePreviewTabProps> = ({ getPublicPageUrl }) => 
     setLoadError(true);
     setErrorMessage("Could not load the preview. This may be due to browser security restrictions.");
     setIsLoading(false);
-    toast({
-      variant: "destructive",
-      title: "Preview failed to load",
-      description: "Could not load the page preview. Please try opening in a new tab."
-    });
   };
 
   // Set a timeout to avoid infinite loading state
@@ -101,6 +96,14 @@ const PagePreviewTab: React.FC<PagePreviewTabProps> = ({ getPublicPageUrl }) => 
       return () => clearTimeout(timeoutId);
     }
   }, [isLoading, loadAttempts]);
+
+  // Function to open business page in new tab
+  const openInNewTab = () => {
+    const url = getPublicPageUrl();
+    if (url !== '#') {
+      window.open(url, '_blank');
+    }
+  };
 
   return (
     <Card>
@@ -144,7 +147,7 @@ const PagePreviewTab: React.FC<PagePreviewTabProps> = ({ getPublicPageUrl }) => 
       <CardContent className="pb-6">
         <div className="flex justify-center">
           <div 
-            className={`border rounded-lg overflow-hidden transition-all duration-300`}
+            className="border rounded-lg overflow-hidden transition-all duration-300"
             style={{ 
               width: mobileWidth,
               maxWidth: '100%'
@@ -163,16 +166,13 @@ const PagePreviewTab: React.FC<PagePreviewTabProps> = ({ getPublicPageUrl }) => 
                   style={{
                     width: '100%',
                     height: mobileHeight,
-                    display: isLoading ? 'none' : 'block'
+                    display: isLoading ? 'none' : 'block',
+                    border: 'none'
                   }}
                   title="Page Preview"
-                  key={previewUrl} // Force iframe reload when URL changes
+                  key={previewUrl}
                   onLoad={handleIframeLoad}
                   onError={handleIframeError}
-                  sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
-                  loading="lazy"
-                  allow="same-origin"
-                  referrerPolicy="same-origin"
                 />
               </>
             ) : (
@@ -194,12 +194,10 @@ const PagePreviewTab: React.FC<PagePreviewTabProps> = ({ getPublicPageUrl }) => 
                   <Button 
                     variant="secondary"
                     disabled={getPublicPageUrl() === '#'}
-                    asChild
+                    onClick={openInNewTab}
                   >
-                    <a href={getPublicPageUrl()} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      Open in new tab
-                    </a>
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Open in new tab
                   </Button>
                 </div>
               </div>
@@ -213,13 +211,11 @@ const PagePreviewTab: React.FC<PagePreviewTabProps> = ({ getPublicPageUrl }) => 
         </p>
         <Button 
           variant="outline" 
-          asChild
+          onClick={openInNewTab}
           disabled={getPublicPageUrl() === '#'}
         >
-          <a href={getPublicPageUrl()} target="_blank" rel="noopener noreferrer">
-            <Globe className="h-4 w-4 mr-2" />
-            View Full Page
-          </a>
+          <Globe className="h-4 w-4 mr-2" />
+          View Full Page
         </Button>
       </CardFooter>
     </Card>
