@@ -1,148 +1,62 @@
 
-import React, { useState, useEffect } from "react";
-import { BusinessProfile } from "@/types/business.types";
+import React from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { Business } from "@/types/business.types";
 import { Button } from "@/components/ui/button";
-import { useContacts } from "@/hooks/useContacts";
-import { useContactSearch } from "@/hooks/useContactSearch";
-import { Loader2, User, UserPlus } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getInitials } from "@/lib/utils";
 
-export interface BusinessPageHeaderProps {
-  business: BusinessProfile;
+interface BusinessPageHeaderProps {
+  business: Partial<Business>;
   isPreviewMode?: boolean;
-  isAuthenticated?: boolean | null;
+  isAuthenticated: boolean | null;
 }
 
 const BusinessPageHeader: React.FC<BusinessPageHeaderProps> = ({
   business,
-  isPreviewMode,
-  isAuthenticated,
+  isPreviewMode = false,
+  isAuthenticated = null
 }) => {
-  const { sendContactRequest } = useContacts();
-  const { checkContactRequest } = useContactSearch();
-  const [isAddingContact, setIsAddingContact] = useState(false);
-  const [contactStatus, setContactStatus] = useState<'pending' | 'accepted' | 'none'>('none');
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    const checkStatus = async () => {
-      if (isAuthenticated && !isPreviewMode && business.id) {
-        try {
-          const result = await checkContactRequest(business.id);
-          if (result.requestExists) {
-            // Convert the result to our component's expected status type
-            if (result.requestStatus === 'pending') {
-              setContactStatus('pending');
-            } else if (result.requestStatus === 'accepted') {
-              setContactStatus('accepted');
-            } else {
-              setContactStatus('none');
-            }
-          }
-        } catch (error) {
-          console.error('Error checking contact status:', error);
-        }
-      }
-    };
-    
-    checkStatus();
-  }, [isAuthenticated, isPreviewMode, business.id, checkContactRequest]);
-
-  const handleAddContact = async () => {
-    if (!isAuthenticated || !business.id) {
-      toast({
-        title: "Authentication Required",
-        description: "You need to log in to add this business to your contacts",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setIsAddingContact(true);
-    try {
-      await sendContactRequest.mutateAsync(business.id);
-      setContactStatus('pending');
-      toast({
-        title: "Contact Request Sent",
-        description: "Your request to connect has been sent",
-      });
-    } catch (error) {
-      console.error('Error adding contact:', error);
-      toast({
-        title: "Failed to Send Request",
-        description: "There was an error sending your contact request",
-        variant: "destructive",
-      });
-    } finally {
-      setIsAddingContact(false);
+  // Handle scrolling to contact section
+  const scrollToContact = () => {
+    const contactSection = document.getElementById('contact-section');
+    if (contactSection) {
+      contactSection.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
-  // Render different button states based on contact status
-  const renderContactButton = () => {
-    if (contactStatus === 'accepted') {
-      return (
-        <Button variant="outline">
-          <User className="h-4 w-4 mr-2" />
-          In Contacts
-        </Button>
-      );
-    }
-
-    if (contactStatus === 'pending') {
-      return (
-        <Button variant="outline" disabled>
-          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-          Request Pending
-        </Button>
-      );
-    }
-
-    return (
-      <Button 
-        onClick={handleAddContact}
-        disabled={isAddingContact}
-        variant="default"
-        className="bg-primary hover:bg-primary/90"
-      >
-        {isAddingContact ? (
-          <>
-            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-            Adding...
-          </>
-        ) : (
-          <>
-            <UserPlus className="h-4 w-4 mr-2" />
-            Add to Contacts
-          </>
-        )}
-      </Button>
-    );
-  };
-  
   return (
-    <div className="business-page-header py-8">
-      <div className="flex flex-col items-center">
-        {business.avatar_url && (
-          <div className="mb-4">
-            <img 
-              src={business.avatar_url} 
-              alt={business.business_name || "Business"} 
-              className="h-24 w-24 rounded-full object-cover border-2 border-primary/20"
-            />
-          </div>
+    <header className="flex flex-col items-center justify-between py-6 md:flex-row">
+      <div className="flex items-center mb-4 md:mb-0">
+        <Avatar className="h-12 w-12 mr-3">
+          <AvatarImage src={business.avatar_url || ''} alt={business.display_name} />
+          <AvatarFallback>{getInitials(business.display_name || business.business_name || '')}</AvatarFallback>
+        </Avatar>
+        <h1 className="text-2xl font-bold">{business.display_name || business.business_name}</h1>
+      </div>
+      <div className="flex items-center space-x-4">
+        {!isPreviewMode && (
+          <>
+            <Button variant="outline" onClick={scrollToContact}>
+              Contact Us
+            </Button>
+            <Button 
+              onClick={() => navigate(`/booking/${business.id}`)}
+              disabled={!business.id}
+            >
+              Book Now
+            </Button>
+          </>
         )}
-        
-        <h1 className="text-3xl md:text-4xl font-bold text-center mb-4">
-          {business.business_name || "Business Name"}
-        </h1>
-        
-        {!isPreviewMode && isAuthenticated && (
-          <div className="mt-2 mb-4">
-            {renderContactButton()}
+        {isPreviewMode && (
+          <div className="bg-amber-100 border border-amber-300 text-amber-800 px-3 py-1 rounded-full text-sm">
+            Preview Mode
           </div>
         )}
       </div>
-    </div>
+    </header>
   );
 };
 

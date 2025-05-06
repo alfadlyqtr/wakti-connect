@@ -21,16 +21,16 @@ const BusinessGallerySection: React.FC<BusinessGallerySectionProps> = ({ content
   }
   
   return (
-    <section className="py-12 md:py-16">
+    <section className="py-8 md:py-12">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-10">
-          <h2 className="text-3xl font-bold mb-4">{title}</h2>
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold mb-3">{title}</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">{description}</p>
         </div>
         
         {layout === "cards" ? (
           // Card Layout
-          <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-${columns} gap-6`}>
+          <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-${columns} gap-4`}>
             {images.map((image: any, index: number) => (
               <div key={index} className="group rounded-lg overflow-hidden bg-white shadow-md hover:shadow-lg transition-shadow duration-300">
                 {/* Image container with fixed aspect ratio */}
@@ -63,7 +63,7 @@ const BusinessGallerySection: React.FC<BusinessGallerySectionProps> = ({ content
                   className={`w-full rounded-lg shadow-sm object-${imageFit}`}
                 />
                 {(showCaption && image.caption) && (
-                  <div className="mt-2 mb-4">
+                  <div className="mt-2 mb-3">
                     <p className="text-sm text-muted-foreground">{image.caption}</p>
                   </div>
                 )}
@@ -72,13 +72,13 @@ const BusinessGallerySection: React.FC<BusinessGallerySectionProps> = ({ content
           </div>
         ) : (
           // Default Grid Layout
-          <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-${columns} gap-4`}>
+          <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-${columns} gap-3`}>
             {images.map((image: any, index: number) => (
               <div key={index} className="aspect-square overflow-hidden rounded-lg shadow-sm group">
                 <img 
                   src={image.url} 
                   alt={image.alt || `Gallery image ${index + 1}`} 
-                  className={`w-full h-full object-${imageFit} transition-transform group-hover:scale-105 duration-300`}
+                  className={`w-full h-full object-${imageFit} transition-transform group-hover:scale-105 duration-300 max-h-[300px]`}
                 />
                 {(showCaption && image.caption) && (
                   <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 translate-y-full group-hover:translate-y-0 transition-transform">
