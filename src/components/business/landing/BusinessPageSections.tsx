@@ -1,13 +1,13 @@
 
 import React from "react";
 import { BusinessPage, BusinessPageSection } from "@/types/business.types";
-import { BusinessPageHeader } from "./sections/BusinessPageHeader";
-import AboutSection from "./sections/AboutSection";
+import BusinessPageHeader from "./sections/BusinessPageHeader";
+import BusinessAbout from "./BusinessAbout";
 import ContactSection from "./sections/ContactSection";
-import HoursSection from "./sections/HoursSection";
-import GallerySection from "./sections/GallerySection";
-import TestimonialsSection from "./sections/TestimonialsSection";
-import BookingSection from "./sections/BookingSection";
+import BusinessHours from "./BusinessHours";
+import BusinessGallery from "./BusinessGallery";
+import BusinessTestimonialsSection from "./sections/BusinessTestimonialsSection";
+import BusinessBookingSection from "./sections/BusinessBookingSection";
 import InstagramSection from "./sections/InstagramSection";
 import ChatbotSection from "./sections/ChatbotSection";
 import { submitContactForm } from "@/services/contact";
@@ -54,10 +54,9 @@ const BusinessPageSections: React.FC<BusinessPageSectionsProps> = ({
           
           case 'about':
             return (
-              <AboutSection 
+              <BusinessAbout 
                 key={section.id} 
                 section={section} 
-                primaryColor={businessPage.primary_color}
               />
             );
           
@@ -76,25 +75,23 @@ const BusinessPageSections: React.FC<BusinessPageSectionsProps> = ({
           
           case 'hours':
             return (
-              <HoursSection
+              <BusinessHours
                 key={section.id}
                 section={section}
-                primaryColor={businessPage.primary_color}
               />
             );
           
           case 'gallery':
             return (
-              <GallerySection
+              <BusinessGallery
                 key={section.id}
                 section={section}
-                primaryColor={businessPage.primary_color}
               />
             );
           
           case 'testimonials':
             return (
-              <TestimonialsSection
+              <BusinessTestimonialsSection
                 key={section.id}
                 section={section}
                 primaryColor={businessPage.primary_color}
@@ -103,7 +100,7 @@ const BusinessPageSections: React.FC<BusinessPageSectionsProps> = ({
           
           case 'booking':
             return (
-              <BookingSection
+              <BusinessBookingSection
                 key={section.id}
                 section={section}
                 businessId={businessPage.business_id}

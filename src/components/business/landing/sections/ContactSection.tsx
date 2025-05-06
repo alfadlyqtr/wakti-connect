@@ -1,15 +1,13 @@
 
 import React from "react";
-import { BusinessPageSection } from "@/types/business.types";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import BusinessContactForm from "../BusinessContactForm";
-import { Mail, Phone, MapPin, Clock } from "lucide-react";
+import { BusinessPageSection } from "@/types/business.types";
 
 interface ContactSectionProps {
   section: BusinessPageSection;
   businessId: string;
   pageId: string;
-  submitContactForm: (data: { businessId: string; pageId: string; formData: any }) => Promise<any>;
+  submitContactForm: (data: any) => Promise<any>;
   primaryColor?: string;
   textColor?: string;
 }
@@ -23,141 +21,49 @@ const ContactSection: React.FC<ContactSectionProps> = ({
   textColor = "#FFFFFF"
 }) => {
   const content = section.section_content || {};
-  const styles = {
-    backgroundColor: section.background_color || "transparent",
-    color: section.text_color || "inherit",
-    padding: 
-      section.padding === "none" ? "0" :
-      section.padding === "sm" ? "1rem" :
-      section.padding === "md" ? "2rem" :
-      section.padding === "lg" ? "3rem" :
-      section.padding === "xl" ? "4rem" : "2rem",
-    borderRadius: 
-      section.border_radius === "none" ? "0" :
-      section.border_radius === "small" ? "0.25rem" :
-      section.border_radius === "medium" ? "0.5rem" :
-      section.border_radius === "large" ? "1rem" :
-      section.border_radius === "full" ? "999px" : "0.5rem",
-  };
+  const {
+    title = "Get in Touch",
+    description = "We'd love to hear from you. Send us a message and we'll respond as soon as possible.",
+    background_color = "#f8f9fa",
+    text_color = "#333333"
+  } = content;
 
-  const contactInfo = {
-    title: content.title || "Contact Us",
-    subtitle: content.subtitle || "We'd love to hear from you",
-    description: content.description || "Fill out the form below to get in touch with us.",
-    email: content.email || "",
-    phone: content.phone || "",
-    address: content.address || "",
-    hours: content.hours || ""
+  // This wraps the contact form submission with the necessary business and page IDs
+  const handleSubmit = async (formData: any) => {
+    try {
+      return await submitContactForm({
+        businessId,
+        pageId,
+        formData
+      });
+    } catch (error) {
+      console.error("Error in contact form submission:", error);
+      throw error;
+    }
   };
 
   return (
-    <section style={styles} className={`my-8 ${!section.is_visible ? 'hidden' : ''}`}>
-      <div className="container mx-auto">
-        <div className="text-center mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold">{contactInfo.title}</h2>
-          <p className="text-lg text-muted-foreground mt-2">{contactInfo.subtitle}</p>
-          {contactInfo.description && (
-            <p className="mt-4 max-w-2xl mx-auto">{contactInfo.description}</p>
-          )}
+    <section 
+      className="py-12 md:py-16" 
+      style={{ 
+        backgroundColor: section.background_color || background_color,
+        color: section.text_color || text_color
+      }}
+    >
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl font-bold mb-4">{title}</h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">{description}</p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div>
-            <Card>
-              <CardHeader>
-                <CardTitle>Send a Message</CardTitle>
-                <CardDescription>
-                  Fill out this form and we'll get back to you as soon as possible.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <BusinessContactForm 
-                  businessId={businessId}
-                  pageId={pageId}
-                  submitContactForm={submitContactForm}
-                  primaryColor={primaryColor}
-                  textColor={textColor}
-                />
-              </CardContent>
-            </Card>
-          </div>
-          
-          <div className="space-y-6">
-            {(contactInfo.email || contactInfo.phone || contactInfo.address) && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Contact Information</CardTitle>
-                  <CardDescription>
-                    You can also reach us using the following information
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {contactInfo.email && (
-                    <div className="flex items-start">
-                      <Mail className="h-5 w-5 mr-3 mt-0.5" style={{ color: primaryColor }} />
-                      <div>
-                        <div className="font-medium">Email</div>
-                        <a 
-                          href={`mailto:${contactInfo.email}`} 
-                          className="text-muted-foreground hover:underline"
-                          style={{ color: primaryColor }}
-                        >
-                          {contactInfo.email}
-                        </a>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {contactInfo.phone && (
-                    <div className="flex items-start">
-                      <Phone className="h-5 w-5 mr-3 mt-0.5" style={{ color: primaryColor }} />
-                      <div>
-                        <div className="font-medium">Phone</div>
-                        <a 
-                          href={`tel:${contactInfo.phone}`} 
-                          className="text-muted-foreground hover:underline"
-                          style={{ color: primaryColor }}
-                        >
-                          {contactInfo.phone}
-                        </a>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {contactInfo.address && (
-                    <div className="flex items-start">
-                      <MapPin className="h-5 w-5 mr-3 mt-0.5" style={{ color: primaryColor }} />
-                      <div>
-                        <div className="font-medium">Address</div>
-                        <address className="text-muted-foreground not-italic">
-                          {contactInfo.address}
-                        </address>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-            
-            {contactInfo.hours && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Business Hours</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-start">
-                    <Clock className="h-5 w-5 mr-3 mt-0.5" style={{ color: primaryColor }} />
-                    <div>
-                      <div className="font-medium">Hours</div>
-                      <div className="text-muted-foreground whitespace-pre-line">
-                        {contactInfo.hours}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+        <div className="max-w-md mx-auto">
+          <BusinessContactForm
+            businessId={businessId}
+            pageId={pageId}
+            submitContactForm={handleSubmit}
+            primaryColor={primaryColor}
+            textColor={textColor}
+          />
         </div>
       </div>
     </section>
