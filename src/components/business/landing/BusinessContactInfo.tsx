@@ -40,7 +40,7 @@ const BusinessContactInfo = ({ section }: BusinessContactInfoProps) => {
   };
   
   return (
-    <div style={{
+    <div id="contact" style={{
       backgroundColor: section.background_color,
       color: section.text_color,
       padding: section.padding === 'none' ? '0' : 

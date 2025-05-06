@@ -29,11 +29,11 @@ const BusinessGallerySection: React.FC<BusinessGallerySectionProps> = ({ content
         </div>
         
         {layout === "cards" ? (
-          // Card Layout
-          <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-${columns} gap-6`}>
+          // Card Layout - Smaller sizes
+          <div className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-${columns} gap-3`}>
             {images.map((image: any, index: number) => (
               <div key={index} className="group rounded-lg overflow-hidden bg-white shadow-md hover:shadow-lg transition-shadow duration-300">
-                {/* Image container with fixed aspect ratio */}
+                {/* Image container with fixed aspect ratio - reduced size */}
                 <div className="aspect-[4/3] overflow-hidden">
                   <img 
                     src={image.url} 
@@ -44,17 +44,17 @@ const BusinessGallerySection: React.FC<BusinessGallerySectionProps> = ({ content
                 
                 {/* Caption area */}
                 {(showCaption && image.caption) && (
-                  <div className="p-4">
-                    <h3 className="font-medium text-lg">{image.alt || `Image ${index + 1}`}</h3>
-                    <p className="text-muted-foreground mt-1">{image.caption}</p>
+                  <div className="p-2 text-sm">
+                    <h3 className="font-medium text-base">{image.alt || `Image ${index + 1}`}</h3>
+                    <p className="text-muted-foreground text-xs mt-1">{image.caption}</p>
                   </div>
                 )}
               </div>
             ))}
           </div>
         ) : layout === "masonry" ? (
-          // Masonry Layout
-          <div className="columns-1 md:columns-2 lg:columns-3 gap-4 space-y-4">
+          // Masonry Layout - Smaller sizes
+          <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-3 space-y-3">
             {images.map((image: any, index: number) => (
               <div key={index} className="break-inside-avoid">
                 <img 
@@ -63,16 +63,16 @@ const BusinessGallerySection: React.FC<BusinessGallerySectionProps> = ({ content
                   className={`w-full rounded-lg shadow-sm object-${imageFit}`}
                 />
                 {(showCaption && image.caption) && (
-                  <div className="mt-2 mb-4">
-                    <p className="text-sm text-muted-foreground">{image.caption}</p>
+                  <div className="mt-1 mb-2">
+                    <p className="text-xs text-muted-foreground">{image.caption}</p>
                   </div>
                 )}
               </div>
             ))}
           </div>
         ) : (
-          // Default Grid Layout
-          <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-${columns} gap-4`}>
+          // Default Grid Layout - Smaller sizes with more columns
+          <div className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3`}>
             {images.map((image: any, index: number) => (
               <div key={index} className="aspect-square overflow-hidden rounded-lg shadow-sm group">
                 <img 
@@ -81,8 +81,8 @@ const BusinessGallerySection: React.FC<BusinessGallerySectionProps> = ({ content
                   className={`w-full h-full object-${imageFit} transition-transform group-hover:scale-105 duration-300`}
                 />
                 {(showCaption && image.caption) && (
-                  <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 translate-y-full group-hover:translate-y-0 transition-transform">
-                    <p className="text-sm">{image.caption}</p>
+                  <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-1 translate-y-full group-hover:translate-y-0 transition-transform">
+                    <p className="text-xs">{image.caption}</p>
                   </div>
                 )}
               </div>

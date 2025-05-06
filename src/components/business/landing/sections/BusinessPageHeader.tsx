@@ -11,7 +11,7 @@ const BusinessPageHeader: React.FC<BusinessPageHeaderProps> = ({ content }) => {
     subtitle = "We provide quality products and services",
     description = "Learn more about what we can do for you",
     buttonText = "Contact Us",
-    buttonLink = "#contact",
+    buttonLink = "#contact", // Default to linking to the contact section
     backgroundImage,
     alignment = "center",
     overlayOpacity = 80,
@@ -103,7 +103,7 @@ const BusinessPageHeader: React.FC<BusinessPageHeaderProps> = ({ content }) => {
           {buttonText && (
             <div className="pt-4 animate-fade-in animation-delay-400">
               <a
-                href={buttonLink}
+                href={buttonLink || "#contact"}
                 className="inline-flex items-center justify-center px-6 py-3 text-base font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/70 transition-all hover:scale-105"
                 style={buttonStyle}
               >

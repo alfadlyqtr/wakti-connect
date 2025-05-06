@@ -27,10 +27,10 @@ const BusinessChatbotSection: React.FC<BusinessChatbotSectionProps> = ({ content
   // Create a unique ID for this chatbot container
   const containerId = `tmw-chatbot-section-${Math.floor(Math.random() * 10000)}`;
   
-  // Use the TMW chatbot hook with the new signature (no arguments)
-  const chatbotRef = useTMWChatbot();
+  // Use the TMW chatbot hook
+  const { initChatbot } = useTMWChatbot();
   
-  // Log the chatbot setup for debugging
+  // Initialize the chatbot when the component loads
   useEffect(() => {
     console.log("BusinessChatbotSection mounting with:", {
       enabled,
@@ -40,10 +40,14 @@ const BusinessChatbotSection: React.FC<BusinessChatbotSectionProps> = ({ content
       backgroundPattern: background_pattern
     });
     
+    // Initialize the chatbot
+    const cleanup = initChatbot(enabled, chatbot_code || "", containerId);
+    
     return () => {
       console.log("BusinessChatbotSection unmounting:", containerId);
+      if (cleanup) cleanup();
     };
-  }, [enabled, chatbot_code, containerId, chatbot_size, background_pattern]);
+  }, [enabled, chatbot_code, containerId, chatbot_size, background_pattern, initChatbot]);
   
   const getSizeClasses = () => {
     switch (chatbot_size) {
@@ -59,10 +63,6 @@ const BusinessChatbotSection: React.FC<BusinessChatbotSectionProps> = ({ content
         return 'max-w-2xl mx-auto h-[500px]';
     }
   };
-  
-  if (!enabled) {
-    return null;
-  }
   
   // Get the background pattern style based on the pattern value
   const getPatternStyle = () => {
@@ -105,6 +105,10 @@ const BusinessChatbotSection: React.FC<BusinessChatbotSectionProps> = ({ content
   };
   
   const patternStyle = getPatternStyle();
+  
+  if (!enabled) {
+    return null;
+  }
   
   return (
     <div className="w-full">
