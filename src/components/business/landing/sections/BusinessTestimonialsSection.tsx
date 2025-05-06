@@ -3,9 +3,10 @@ import React from "react";
 
 interface BusinessTestimonialsSectionProps {
   content: Record<string, any>;
+  primaryColor?: string;
 }
 
-const BusinessTestimonialsSection: React.FC<BusinessTestimonialsSectionProps> = ({ content }) => {
+const BusinessTestimonialsSection: React.FC<BusinessTestimonialsSectionProps> = ({ content, primaryColor }) => {
   const { 
     title = "What Our Clients Say",
     description = "Read testimonials from our satisfied customers",
@@ -51,7 +52,10 @@ const BusinessTestimonialsSection: React.FC<BusinessTestimonialsSectionProps> = 
                     className="w-12 h-12 rounded-full object-cover mr-4"
                   />
                 ) : (
-                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold mr-4">
+                  <div 
+                    className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold mr-4"
+                    style={primaryColor ? { backgroundColor: `${primaryColor}20`, color: primaryColor } : {}}
+                  >
                     {testimonial.name.charAt(0)}
                   </div>
                 )}
@@ -62,11 +66,21 @@ const BusinessTestimonialsSection: React.FC<BusinessTestimonialsSectionProps> = 
               </div>
               
               <div className="relative">
-                <span className="text-4xl text-primary/20 absolute -top-4 -left-2">"</span>
+                <span 
+                  className="text-4xl text-primary/20 absolute -top-4 -left-2"
+                  style={primaryColor ? { color: `${primaryColor}20` } : {}}
+                >
+                  "
+                </span>
                 <p className="italic relative z-10">
                   {testimonial.comment}
                 </p>
-                <span className="text-4xl text-primary/20 absolute -bottom-8 -right-2">"</span>
+                <span 
+                  className="text-4xl text-primary/20 absolute -bottom-8 -right-2"
+                  style={primaryColor ? { color: `${primaryColor}20` } : {}}
+                >
+                  "
+                </span>
               </div>
             </div>
           ))}

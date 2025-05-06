@@ -4,11 +4,13 @@ import React from "react";
 interface BusinessBookingSectionProps {
   content: Record<string, any>;
   businessId: string;
+  primaryColor?: string;
 }
 
 const BusinessBookingSection: React.FC<BusinessBookingSectionProps> = ({ 
   content, 
-  businessId
+  businessId,
+  primaryColor
 }) => {
   const { 
     title = "Book an Appointment",
@@ -19,6 +21,12 @@ const BusinessBookingSection: React.FC<BusinessBookingSectionProps> = ({
     showStaffSelection = true,
     backgroundColor = "bg-background"
   } = content;
+
+  // Create custom style for the button if primaryColor is provided
+  const buttonStyle = primaryColor ? {
+    backgroundColor: primaryColor,
+    borderColor: primaryColor
+  } : {};
 
   return (
     <section className={`py-12 md:py-16 ${backgroundColor}`}>
@@ -80,6 +88,7 @@ const BusinessBookingSection: React.FC<BusinessBookingSectionProps> = ({
             <a
               href={buttonLink}
               className="block w-full py-2 px-4 bg-primary text-primary-foreground text-center rounded-md hover:bg-primary/90 transition-colors"
+              style={buttonStyle}
             >
               {buttonText}
             </a>
