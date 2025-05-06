@@ -6,13 +6,12 @@ import Pricing from "@/components/landing/Pricing";
 import CTA from "@/components/landing/CTA";
 import { SectionContainer } from "@/components/ui/section-container";
 import DashboardPreview from "@/components/landing/DashboardPreview";
-import ContactSection from "@/components/contact/ContactSection";
-import BusinessHours from "@/components/landing/BusinessHours";
-import Gallery from "@/components/landing/Gallery";
 
 const LandingPage = () => {
   return (
     <div className="min-h-screen">
+      {/* Header is now rendered in PublicLayout.tsx */}
+      
       {/* Hero Section */}
       <Hero />
 
@@ -26,15 +25,11 @@ const LandingPage = () => {
 
       {/* Pricing Section */}
       <Pricing />
-      
-      {/* Contact Us Section */}
-      <ContactSection />
-      
-      {/* Business Hours Section */}
-      <BusinessHours />
 
       {/* Call to Action */}
       <CTA />
+      
+      {/* Footer is now handled by PublicLayout.tsx */}
     </div>
   );
 };
