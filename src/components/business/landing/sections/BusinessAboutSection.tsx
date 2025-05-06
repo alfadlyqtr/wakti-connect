@@ -1,17 +1,103 @@
 
-import React from "react";
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "@/components/ui/use-toast";
+import { Send, Loader2 } from "lucide-react";
 
 interface BusinessAboutSectionProps {
   content: Record<string, any>;
+  businessId?: string;
+  pageId?: string;
+  primaryColor?: string;
+  submitContactForm?: (data: any) => Promise<any>;
 }
 
-const BusinessAboutSection: React.FC<BusinessAboutSectionProps> = ({ content }) => {
+const BusinessAboutSection: React.FC<BusinessAboutSectionProps> = ({ 
+  content,
+  businessId,
+  pageId,
+  primaryColor,
+  submitContactForm
+}) => {
   const { 
     title = "About Us",
     description = "Learn more about our business and what we do.",
     content: aboutContent = "",
-    image
+    image,
+    showMessageForm = false,
+    messageFormTitle = "Send us a message",
+    messageInputPlaceholder = "Type your message here..."
   } = content;
+
+  const [message, setMessage] = useState("");
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!name || !phone || !message) {
+      toast({
+        title: "Missing information",
+        description: "Please provide your name, phone number and a message.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!businessId || !pageId || !submitContactForm) {
+      console.error("Cannot submit form: missing required props");
+      toast({
+        title: "Cannot send message",
+        description: "There was a configuration error. Please try again later.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      
+      await submitContactForm({
+        businessId,
+        pageId,
+        formData: {
+          name,
+          phone,
+          message,
+          email: null
+        }
+      });
+      
+      toast({
+        title: "Message sent",
+        description: "Your message has been sent successfully. We'll get back to you soon."
+      });
+      
+      // Clear form
+      setName("");
+      setPhone("");
+      setMessage("");
+    } catch (error) {
+      console.error("Message submission error:", error);
+      toast({
+        title: "Message failed",
+        description: "There was a problem sending your message. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Create button style if primaryColor is provided
+  const buttonStyle = primaryColor ? {
+    backgroundColor: primaryColor,
+    borderColor: primaryColor
+  } : {};
 
   return (
     <section className="py-12 md:py-16">
@@ -42,6 +128,57 @@ const BusinessAboutSection: React.FC<BusinessAboutSectionProps> = ({ content }) 
                 </p>
               )}
             </div>
+            
+            {showMessageForm && submitContactForm && (
+              <div className="mt-8">
+                <h3 className="text-xl font-semibold mb-4">{messageFormTitle}</h3>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <Input 
+                      placeholder="Your name" 
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Input 
+                      placeholder="Your phone number" 
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Textarea 
+                      placeholder={messageInputPlaceholder} 
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      rows={4}
+                      required
+                    />
+                  </div>
+                  <Button 
+                    type="submit" 
+                    disabled={isSubmitting}
+                    style={buttonStyle}
+                    className="w-full"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="mr-2 h-4 w-4" />
+                        Send Message
+                      </>
+                    )}
+                  </Button>
+                </form>
+              </div>
+            )}
           </div>
         </div>
       </div>

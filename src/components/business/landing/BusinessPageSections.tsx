@@ -3,14 +3,12 @@ import React from "react";
 import { BusinessPage, BusinessPageSection } from "@/types/business.types";
 import BusinessPageHeader from "./sections/BusinessPageHeader";
 import BusinessAbout from "./BusinessAbout";
-import ContactSection from "./sections/ContactSection";
 import BusinessHours from "./BusinessHours";
 import BusinessGallery from "./BusinessGallery";
 import BusinessTestimonialsSection from "./sections/BusinessTestimonialsSection";
 import BusinessBookingSection from "./sections/BusinessBookingSection";
 import InstagramSection from "./sections/InstagramSection";
 import ChatbotSection from "./sections/ChatbotSection";
-import { submitContactForm } from "@/services/contact";
 import { useSubmitContactFormMutation } from "@/hooks/business-page/useContactSubmissionMutation";
 
 interface BusinessPageSectionsProps {
@@ -57,19 +55,10 @@ const BusinessPageSections: React.FC<BusinessPageSectionsProps> = ({
               <BusinessAbout 
                 key={section.id} 
                 section={section} 
-              />
-            );
-          
-          case 'contact':
-            return (
-              <ContactSection
-                key={section.id}
-                section={section}
                 businessId={businessPage.business_id}
                 pageId={businessPage.id}
                 submitContactForm={handleContactFormSubmit}
                 primaryColor={businessPage.primary_color}
-                textColor={businessPage.text_color || '#FFFFFF'}
               />
             );
           
