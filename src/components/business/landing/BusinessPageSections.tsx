@@ -1,12 +1,13 @@
 
 import React from "react";
 import { BusinessPage, BusinessPageSection } from "@/types/business.types";
-import HeaderSection from "./sections/HeaderSection";
-import AboutSection from "./sections/AboutSection";
-import ContactSection from "./sections/ContactSection";
-import BusinessGallerySection from "./sections/BusinessGallerySection";
-import ChatbotSection from "./sections/ChatbotSection";
-import InstagramSection from "./sections/InstagramSection";
+import BusinessHeader from "./BusinessHeader";
+import BusinessAbout from "./BusinessAbout";
+import BusinessContactInfo from "./BusinessContactInfo";
+import BusinessGallery from "./BusinessGallery";
+import BusinessHours from "./BusinessHours";
+import BusinessChatbotSection from "./BusinessChatbotSection";
+import BusinessInstagramSection from "./sections/InstagramSection";
 import TestimonialsSection from "./sections/TestimonialsSection";
 import LinksSection from "./sections/LinksSection";
 import { submitContactForm } from "@/services/contact";
@@ -37,19 +38,19 @@ const BusinessPageSections: React.FC<BusinessPageSectionsProps> = ({
   } = businessPage;
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-8">
       {visibleSections.map((section) => {
         switch (section.section_type) {
           case 'header':
             return (
-              <HeaderSection
+              <BusinessHeader
                 key={section.id}
                 section={section}
               />
             );
           case 'about':
             return (
-              <AboutSection
+              <BusinessAbout
                 key={section.id}
                 section={section}
               />
@@ -57,7 +58,7 @@ const BusinessPageSections: React.FC<BusinessPageSectionsProps> = ({
           case 'contact':
             return (
               <div id="contact-section" key={section.id}>
-                <ContactSection
+                <BusinessContactInfo
                   section={section}
                   businessId={businessId}
                   pageId={pageId}
@@ -69,21 +70,28 @@ const BusinessPageSections: React.FC<BusinessPageSectionsProps> = ({
             );
           case 'gallery':
             return (
-              <BusinessGallerySection
-                key={section.id}
-                content={section.section_content || {}}
-              />
-            );
-          case 'chatbot':
-            return (
-              <ChatbotSection
+              <BusinessGallery
                 key={section.id}
                 section={section}
               />
             );
+          case 'hours':
+            return (
+              <BusinessHours
+                key={section.id}
+                section={section}
+              />
+            );
+          case 'chatbot':
+            return (
+              <BusinessChatbotSection
+                key={section.id}
+                content={section.section_content || {}}
+              />
+            );
           case 'instagram':
             return (
-              <InstagramSection
+              <BusinessInstagramSection
                 key={section.id}
                 section={section}
               />
@@ -95,7 +103,13 @@ const BusinessPageSections: React.FC<BusinessPageSectionsProps> = ({
                 section={section}
               />
             );
-          // Update SectionType to include 'links'
+          case 'links':
+            return (
+              <LinksSection
+                key={section.id}
+                section={section}
+              />
+            );
           default:
             return null;
         }

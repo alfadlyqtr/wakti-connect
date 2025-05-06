@@ -1,79 +1,91 @@
 
 import React from "react";
-import { BusinessPage, BusinessPageSection } from "@/types/business.types";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { BusinessPageSection } from "@/types/business.types";
 
 interface BusinessHeaderProps {
   section: BusinessPageSection;
-  businessPage: BusinessPage;
 }
 
-const BusinessHeader = ({ section, businessPage }: BusinessHeaderProps) => {
-  const navigate = useNavigate();
+const BusinessHeader = ({ section }: BusinessHeaderProps) => {
   const content = section.section_content || {};
   
   const {
-    title = businessPage.page_title,
-    subtitle = "Book our services online",
-    description = businessPage.description || "",
-    buttonText = "Book Now",
-    showButton = true
+    title = "Welcome",
+    subtitle = "",
+    description = "",
+    buttonText = "Learn More",
+    buttonLink = "#",
+    backgroundImage = "",
+    overlayOpacity = 50,
+    textColor = "light",
+    alignment = "center"
   } = content;
-
-  console.log("BusinessHeader rendering with logo:", businessPage.logo_url);
-  console.log("BusinessHeader styles:", {
-    primaryColor: businessPage.primary_color,
-    secondaryColor: businessPage.secondary_color
-  });
   
-  const handleBookNow = () => {
-    if (businessPage.page_slug) {
-      navigate(`/booking/${businessPage.business_id}`);
-    } else {
-      console.error("Unable to navigate: Missing page_slug");
-    }
+  const containerClasses = {
+    left: "text-left items-start",
+    center: "text-center items-center",
+    right: "text-right items-end"
   };
-  
-  // Custom button style based on business page colors
-  const buttonStyle = businessPage.primary_color ? {
-    backgroundColor: businessPage.primary_color,
-    color: "#ffffff"
-  } : {};
+
+  const textClasses = {
+    dark: "text-gray-900",
+    light: "text-white"
+  };
+
+  const alignmentClass = containerClasses[alignment as keyof typeof containerClasses] || containerClasses.center;
+  const textColorClass = textClasses[textColor as keyof typeof textClasses] || textClasses.dark;
+
+  // Calculate overlay opacity (0-100 scale to 0-1)
+  const opacity = Math.max(0, Math.min(100, overlayOpacity)) / 100;
   
   return (
-    <div className="text-center py-8 md:py-16">
-      {businessPage.logo_url && (
-        <div className="flex justify-center mb-4">
-          <img 
-            src={businessPage.logo_url} 
-            alt={businessPage.page_title || "Business"} 
-            className="h-24 w-24 rounded-full object-cover border-2 border-primary/20 mb-4"
-            onError={(e) => {
-              console.error("Error loading logo image:", e);
-              (e.target as HTMLImageElement).style.display = 'none';
-            }}
+    <section className="relative min-h-[60vh] flex items-center">
+      {/* Background overlay & image */}
+      <div 
+        className="absolute inset-0 bg-black z-10"
+        style={{ opacity }}
+      ></div>
+      
+      {backgroundImage ? (
+        <div className="absolute inset-0">
+          <img
+            src={backgroundImage}
+            alt={title}
+            className="w-full h-full object-cover"
           />
         </div>
+      ) : (
+        <div className="absolute inset-0 bg-gradient-to-r from-gray-700 to-gray-900"></div>
       )}
-      
-      <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">{title}</h1>
-      <p className="text-lg md:text-xl text-muted-foreground mb-4">{subtitle}</p>
-      
-      {description && (
-        <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">{description}</p>
-      )}
-      
-      {showButton && (
-        <Button 
-          size="lg" 
-          onClick={handleBookNow}
-          style={buttonStyle}
-        >
-          {buttonText}
-        </Button>
-      )}
-    </div>
+
+      {/* Content */}
+      <div className="relative z-20 container mx-auto px-4 py-20">
+        <div className={`flex flex-col ${alignmentClass} max-w-3xl mx-auto space-y-6 ${textColorClass}`}>
+          {title && (
+            <h1 className="text-4xl md:text-5xl font-bold">{title}</h1>
+          )}
+          
+          {subtitle && (
+            <h2 className="text-2xl md:text-3xl font-medium opacity-90">{subtitle}</h2>
+          )}
+          
+          {description && (
+            <p className="text-lg max-w-2xl opacity-90">{description}</p>
+          )}
+          
+          {buttonText && (
+            <div className="pt-6">
+              <a
+                href={buttonLink}
+                className="inline-flex items-center justify-center px-6 py-3 text-base font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/70 transition-all"
+              >
+                {buttonText}
+              </a>
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
   );
 };
 

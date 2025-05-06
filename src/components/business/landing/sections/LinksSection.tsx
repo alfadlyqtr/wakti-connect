@@ -1,6 +1,7 @@
 
 import React from "react";
 import { BusinessPageSection } from "@/types/business.types";
+import { ExternalLink } from "lucide-react";
 
 interface LinksSectionProps {
   section: BusinessPageSection;
@@ -20,22 +21,27 @@ const LinksSection: React.FC<LinksSectionProps> = ({ section }) => {
   }
   
   return (
-    <section className="py-8">
-      <h2 className="text-2xl font-bold mb-4 text-center">{title}</h2>
-      {description && <p className="text-center mb-6">{description}</p>}
-      
-      <div className="flex flex-col items-center space-y-4 max-w-md mx-auto">
-        {links.map((link: any, index: number) => (
-          <a 
-            key={index}
-            href={link.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full px-6 py-3 bg-card border rounded-md text-center hover:bg-muted transition-colors"
-          >
-            {link.title || link.url}
-          </a>
-        ))}
+    <section className="py-12">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl font-bold mb-4">{title}</h2>
+          {description && <p className="text-lg text-muted-foreground max-w-2xl mx-auto">{description}</p>}
+        </div>
+        
+        <div className="flex flex-col items-center space-y-4 max-w-lg mx-auto">
+          {links.map((link: any, index: number) => (
+            <a 
+              key={index}
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full px-6 py-4 bg-card border rounded-lg text-center hover:bg-muted transition-colors flex items-center justify-between"
+            >
+              <span className="font-medium">{link.title || link.url}</span>
+              <ExternalLink className="h-4 w-4 text-muted-foreground" />
+            </a>
+          ))}
+        </div>
       </div>
     </section>
   );
