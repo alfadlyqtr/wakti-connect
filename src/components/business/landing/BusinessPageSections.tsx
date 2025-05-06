@@ -93,7 +93,7 @@ const BusinessPageSections: React.FC<BusinessPageSectionsProps> = ({
             return (
               <BusinessTestimonialsSection
                 key={section.id}
-                section={section}
+                content={section.section_content || {}}
                 primaryColor={businessPage.primary_color}
               />
             );
@@ -102,7 +102,7 @@ const BusinessPageSections: React.FC<BusinessPageSectionsProps> = ({
             return (
               <BusinessBookingSection
                 key={section.id}
-                section={section}
+                content={section.section_content || {}}
                 businessId={businessPage.business_id}
                 primaryColor={businessPage.primary_color}
               />
