@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import {
   Dialog,
@@ -28,15 +29,19 @@ export const StaffDialog = ({
     isEditing
   } = useStaffDialog(onSuccess, staffId);
   
-  // Handle dialog open/close
+  // Handle dialog open/close with better handling of form reset
   useEffect(() => {
-    if (open && !form.formState.isSubmitSuccessful) {
-      // Dialog was opened, keep the current state
-    } else if (!open) {
-      // Dialog was closed, reset the form
-      form.reset();
+    if (!open) {
+      // Wait for dialog animation to complete before resetting the form
+      const timer = setTimeout(() => {
+        if (!isSubmitting) {
+          form.reset();
+        }
+      }, 300);
+      
+      return () => clearTimeout(timer);
     }
-  }, [open, form]);
+  }, [open, form, isSubmitting]);
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

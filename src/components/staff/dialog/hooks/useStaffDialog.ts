@@ -54,13 +54,16 @@ export const useStaffDialog = (
 
   // Update staffId when initialStaffId changes
   useEffect(() => {
-    setStaffId(initialStaffId || null);
-  }, [initialStaffId]);
+    if (initialStaffId !== staffId) {
+      setStaffId(initialStaffId || null);
+    }
+  }, [initialStaffId, staffId]);
   
   // Load staff details into form when available
   useEffect(() => {
+    // Only load if we have staff details and we are editing
     if (staffDetails && isEditing) {
-      form.reset({
+      const formValues = {
         fullName: staffDetails.name,
         email: staffDetails.email || "",
         position: staffDetails.position || "",
@@ -85,7 +88,9 @@ export const useStaffDialog = (
         password: "",
         confirmPassword: "",
         addToContacts: true
-      });
+      };
+      
+      form.reset(formValues);
     }
   }, [staffDetails, form, isEditing]);
 
@@ -132,7 +137,9 @@ export const useStaffDialog = (
         description: "Staff member has been updated successfully"
       });
       queryClient.invalidateQueries({ queryKey: ['staffMembers'] });
-      queryClient.invalidateQueries({ queryKey: ['staffDetails', staffId] });
+      if (staffId) {
+        queryClient.invalidateQueries({ queryKey: ['staffDetails', staffId] });
+      }
       
       // Call the optional onSuccess callback
       if (onSuccess) {
@@ -150,11 +157,6 @@ export const useStaffDialog = (
 
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
-    if (!open) {
-      form.reset();
-      // Only reset staffId if we're closing the dialog
-      if (!open) setStaffId(null);
-    }
   };
 
   const onSubmit = async (data: StaffFormValues) => {
@@ -208,10 +210,6 @@ export const useStaffDialog = (
         });
       }
 
-      // Close the dialog and reset form on success
-      setIsOpen(false);
-      form.reset();
-      
       // Call the optional onSuccess callback
       if (onSuccess) {
         onSuccess();

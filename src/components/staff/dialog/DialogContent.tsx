@@ -35,7 +35,7 @@ const DialogContent: React.FC<DialogContentProps> = ({
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col flex-1 overflow-hidden">
-        <TabsList className="px-6 pt-4 bg-background sticky top-0 z-10">
+        <TabsList className="px-6 pt-6 bg-background sticky top-0 z-10">
           <TabsTrigger value="create" className="flex-1">Staff Information</TabsTrigger>
         </TabsList>
         
