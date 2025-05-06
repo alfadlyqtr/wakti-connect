@@ -1,9 +1,11 @@
 
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { ExternalLink } from "lucide-react";
 import { BusinessPage } from "@/types/business.types";
 
 interface AIBuilderSettingsProps {
@@ -11,6 +13,19 @@ interface AIBuilderSettingsProps {
 }
 
 const AIBuilderSettings: React.FC<AIBuilderSettingsProps> = ({ businessPage }) => {
+  // Generate a view URL based on the business page slug
+  const getViewUrl = () => {
+    if (!businessPage.page_slug) return '#';
+    return `${window.location.origin}/${businessPage.page_slug}`;
+  };
+
+  const openPageInNewTab = () => {
+    const url = getViewUrl();
+    if (url !== '#') {
+      window.open(url, '_blank');
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -50,7 +65,29 @@ const AIBuilderSettings: React.FC<AIBuilderSettingsProps> = ({ businessPage }) =
             When enabled, AI can replace existing sections with similar types
           </p>
         </div>
+
+        <Separator />
+
+        <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
+          <h3 className="font-medium text-blue-800">Your Business Page</h3>
+          <p className="text-sm text-blue-700 mt-1 mb-3">
+            Share your business page with customers at:
+          </p>
+          <div className="bg-white p-3 rounded border border-blue-200 font-mono text-sm break-all">
+            {getViewUrl() === '#' ? 'No page URL available - set a page slug first' : getViewUrl()}
+          </div>
+        </div>
       </CardContent>
+      <CardFooter className="flex justify-end">
+        <Button 
+          onClick={openPageInNewTab} 
+          disabled={getViewUrl() === '#'}
+          variant="default"
+        >
+          <ExternalLink className="mr-2 h-4 w-4" />
+          View Page
+        </Button>
+      </CardFooter>
     </Card>
   );
 };

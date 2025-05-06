@@ -4,15 +4,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { MessageSquare, Wand2, Loader2, Settings2 } from "lucide-react";
+import { MessageSquare, Wand2, Loader2, Settings2, Eye, ExternalLink } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useBusinessPage } from "@/hooks/business-page";
 import AIPromptSuggestions from "./ai-builder/AIPromptSuggestions";
 import AIPreviewPane from "./ai-builder/AIPreviewPane";
 import AIBuilderSettings from "./ai-builder/AIBuilderSettings";
+import PagePreviewTab from "./PagePreviewTab";
 import { useAIPageGenerator } from "@/hooks/useAIPageGenerator";
 import PageBuilderEmptyState from "./PageBuilderEmptyState";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const AIPageBuilder: React.FC = () => {
   const [prompt, setPrompt] = useState("");
@@ -21,7 +23,8 @@ const AIPageBuilder: React.FC = () => {
   const { 
     ownerBusinessPage, 
     ownerPageLoading, 
-    createPage 
+    createPage,
+    getPublicPageUrl
   } = useBusinessPage();
   
   const { 
@@ -32,6 +35,16 @@ const AIPageBuilder: React.FC = () => {
     lastGeneratedPrompt,
     resetGeneration
   } = useAIPageGenerator();
+
+  // Create URL state to show in the builder
+  const [publicUrl, setPublicUrl] = useState<string>("#");
+  
+  // Update the URL whenever the page slug changes
+  useEffect(() => {
+    if (ownerBusinessPage?.page_slug) {
+      setPublicUrl(getPublicPageUrl());
+    }
+  }, [ownerBusinessPage?.page_slug, getPublicPageUrl]);
   
   const handleGenerate = async () => {
     if (!prompt.trim()) {
@@ -103,6 +116,19 @@ const AIPageBuilder: React.FC = () => {
   const handleSelectSuggestion = (suggestion: string) => {
     setPrompt(current => current ? `${current}\n${suggestion}` : suggestion);
   };
+
+  // View page in new tab
+  const handleViewPage = () => {
+    if (publicUrl !== '#') {
+      window.open(publicUrl, '_blank');
+    } else {
+      toast({
+        title: "Page URL not available",
+        description: "Please make sure your page has a valid slug",
+        variant: "destructive",
+      });
+    }
+  };
   
   if (ownerPageLoading) {
     return (
@@ -123,20 +149,54 @@ const AIPageBuilder: React.FC = () => {
   
   return (
     <div className="container mx-auto py-6 space-y-6">
-      <h1 className="text-3xl font-bold">Business Page Builder</h1>
-      <p className="text-muted-foreground">
-        Describe what you want on your business page and let AI create it for you.
-      </p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">Business Page Builder</h1>
+          <p className="text-muted-foreground">
+            Describe what you want on your business page and let AI create it for you.
+          </p>
+        </div>
+
+        {/* View Page Button */}
+        {publicUrl !== '#' && (
+          <Button 
+            onClick={handleViewPage}
+            className="bg-green-600 hover:bg-green-700 text-white"
+          >
+            <Eye className="mr-2 h-4 w-4" />
+            View Your Live Page
+          </Button>
+        )}
+      </div>
+
+      {/* Page URL Display */}
+      {publicUrl !== '#' && (
+        <Alert className="bg-blue-50 border-blue-200">
+          <AlertDescription className="flex items-center justify-between">
+            <span className="font-medium">Your public page URL: <span className="text-blue-700">{publicUrl}</span></span>
+            <Button variant="outline" size="sm" onClick={() => {
+              navigator.clipboard.writeText(publicUrl);
+              toast({ title: "URL copied to clipboard" });
+            }}>
+              Copy URL
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
       
       <Tabs defaultValue="prompt">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="prompt" className="flex items-center gap-2">
             <MessageSquare className="h-4 w-4" />
             AI Prompt
           </TabsTrigger>
           <TabsTrigger value="preview" className="flex items-center gap-2">
             <Wand2 className="h-4 w-4" />
-            Preview
+            Content Preview
+          </TabsTrigger>
+          <TabsTrigger value="live-preview" className="flex items-center gap-2">
+            <Eye className="h-4 w-4" />
+            Live Preview
           </TabsTrigger>
           <TabsTrigger value="settings" className="flex items-center gap-2">
             <Settings2 className="h-4 w-4" />
@@ -199,7 +259,10 @@ const AIPageBuilder: React.FC = () => {
                 sections={generatedSections}
                 businessPage={ownerBusinessPage}
               />
-              <div className="flex justify-end">
+              <div className="flex justify-end gap-3">
+                <Button variant="outline" onClick={resetGeneration}>
+                  Cancel
+                </Button>
                 <Button onClick={handleApply}>
                   Apply Changes
                 </Button>
@@ -218,6 +281,17 @@ const AIPageBuilder: React.FC = () => {
               </CardContent>
             </Card>
           )}
+        </TabsContent>
+
+        {/* New Live Preview Tab */}
+        <TabsContent value="live-preview" className="mt-4">
+          <PagePreviewTab getPublicPageUrl={getPublicPageUrl} />
+          <div className="flex justify-end mt-4">
+            <Button onClick={handleViewPage} className="mt-4">
+              <ExternalLink className="mr-2 h-4 w-4" />
+              Open in New Tab
+            </Button>
+          </div>
         </TabsContent>
         
         <TabsContent value="settings" className="mt-4">
