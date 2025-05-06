@@ -1,372 +1,249 @@
 
-import * as React from "react"
-import {
-  add,
+import React, { useState } from "react";
+import { 
+  format, 
+  startOfMonth, 
+  endOfMonth, 
   eachDayOfInterval,
-  endOfMonth,
-  endOfWeek,
-  format,
-  getDay,
-  isEqual,
+  isSameMonth, 
   isSameDay,
-  isSameMonth,
-  isToday,
-  parse,
-  startOfToday,
-  startOfWeek,
-} from "date-fns"
-import {
-  ChevronDown,
-  PlusCircleIcon,
-} from "lucide-react"
+  addMonths,
+  subMonths,
+  isToday
+} from "date-fns";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Plus } from "lucide-react";
+import { DayEventTypes } from "@/types/calendar.types";
+import CalendarDayCell from "@/components/dashboard/home/CalendarDayCell";
+import { Skeleton } from "./skeleton";
+import { cn } from "@/lib/utils";
 
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
-import { useMediaQuery } from "@/hooks/use-media-query"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { ScrollArea } from "@/components/ui/scroll-area"
-
-interface Event {
-  id: string | number;
-  name: string;
-  time: string;
-  type?: string;
-}
+// Default number of weeks to show (6 gives us a standard calendar grid)
+const DEFAULT_WEEKS_TO_SHOW = 6;
 
 interface CalendarData {
-  day: Date
-  events: Event[]
+  day: Date;
+  events: any[];
 }
 
 interface FullScreenCalendarProps {
-  data: CalendarData[];
+  className?: string;
+  data?: CalendarData[];
   isLoading?: boolean;
+  onSelectDay?: (date: Date) => void;
   onAddEntry?: () => void;
-  onSelectDay?: (day: Date) => void;
 }
 
-const colStartClasses = [
-  "",
-  "col-start-2",
-  "col-start-3",
-  "col-start-4",
-  "col-start-5",
-  "col-start-6",
-  "col-start-7",
-]
-
-const MONTHS = [
-  "January", "February", "March", "April", "May", "June", 
-  "July", "August", "September", "October", "November", "December"
-];
-
-export function FullScreenCalendar({ 
-  data = [], 
+export function FullScreenCalendar({
+  className,
+  data = [],
   isLoading = false,
-  onAddEntry,
-  onSelectDay
+  onSelectDay,
+  onAddEntry
 }: FullScreenCalendarProps) {
-  const today = startOfToday()
-  const [selectedDay, setSelectedDay] = React.useState(today)
-  const [currentMonth, setCurrentMonth] = React.useState(
-    format(today, "MMM-yyyy"),
-  )
-  const firstDayCurrentMonth = parse(currentMonth, "MMM-yyyy", new Date())
-  const isDesktop = useMediaQuery("(min-width: 768px)")
+  const [currentMonth, setCurrentMonth] = useState(startOfMonth(new Date()));
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  
+  const handlePreviousMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
+  const handleNextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
+  const handleTodayClick = () => {
+    const today = new Date();
+    setCurrentMonth(startOfMonth(today));
+    setSelectedDate(today);
+    if (onSelectDay) {
+      onSelectDay(today);
+    }
+  };
 
+  // Create a grid of days for the current month view
   const days = eachDayOfInterval({
-    start: startOfWeek(firstDayCurrentMonth),
-    end: endOfWeek(endOfMonth(firstDayCurrentMonth)),
-  })
-
-  function setMonth(month: number) {
-    const year = firstDayCurrentMonth.getFullYear();
-    const newDate = new Date(year, month, 1);
-    setCurrentMonth(format(newDate, "MMM-yyyy"));
+    start: currentMonth,
+    end: endOfMonth(currentMonth)
+  });
+  
+  // Fill out the grid with days from previous/next months
+  const firstDayOfMonth = days[0];
+  const dayOfWeek = firstDayOfMonth.getDay();
+  
+  // Add days from previous month to fill the first row
+  const daysFromPreviousMonth = [];
+  for (let i = dayOfWeek; i > 0; i--) {
+    const date = new Date(firstDayOfMonth);
+    date.setDate(date.getDate() - i);
+    daysFromPreviousMonth.push(date);
   }
-
-  const handleSelectDay = (day: Date) => {
-    setSelectedDay(day);
+  
+  // Add days from next month to fill out the grid to a standard 6 weeks
+  const totalDays = daysFromPreviousMonth.length + days.length;
+  const daysNeeded = DEFAULT_WEEKS_TO_SHOW * 7 - totalDays;
+  const daysFromNextMonth = [];
+  
+  if (daysNeeded > 0) {
+    const lastDay = days[days.length - 1];
+    for (let i = 1; i <= daysNeeded; i++) {
+      const date = new Date(lastDay);
+      date.setDate(date.getDate() + i);
+      daysFromNextMonth.push(date);
+    }
+  }
+  
+  const allDays = [...daysFromPreviousMonth, ...days, ...daysFromNextMonth];
+  
+  // Group days into weeks for rendering
+  const weeks = [];
+  for (let i = 0; i < allDays.length; i += 7) {
+    weeks.push(allDays.slice(i, i + 7));
+  }
+  
+  // Handle calendar day click
+  const handleDayClick = (day: Date) => {
+    setSelectedDate(day);
     if (onSelectDay) {
       onSelectDay(day);
     }
   };
-
-  return (
-    <div className="flex flex-1 flex-col">
-      {/* Calendar Header */}
-      <div className="flex flex-col space-y-4 p-4 md:flex-row md:items-center md:justify-between md:space-y-0 lg:flex-none">
-        <div className="flex flex-auto">
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="flex gap-1">
-                    {format(firstDayCurrentMonth, "MMMM yyyy")}
-                    <ChevronDown className="h-4 w-4" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="p-0" align="start">
-                  <ScrollArea className="h-72">
-                    <div className="grid grid-cols-1 gap-1 p-2">
-                      {MONTHS.map((month, index) => (
-                        <Button 
-                          key={month} 
-                          variant="ghost" 
-                          className={cn(
-                            "justify-start",
-                            index === firstDayCurrentMonth.getMonth() && "bg-accent"
-                          )}
-                          onClick={() => setMonth(index)}
-                        >
-                          {month}
-                        </Button>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                </PopoverContent>
-              </Popover>
-            </div>
-            <p className="text-sm text-muted-foreground mt-1">
-              {format(today, "EEEE, MMMM d, yyyy")}
-            </p>
-          </div>
+  
+  // Map dates to event types
+  const getDayEventTypes = (day: Date): DayEventTypes => {
+    const dayEvents = data.find(d => isSameDay(new Date(d.day), day))?.events || [];
+    
+    return {
+      hasTasks: dayEvents.some(event => event.type === 'task'),
+      hasBookings: dayEvents.some(event => event.type === 'booking'),
+      hasEvents: dayEvents.some(event => event.type === 'event'),
+      hasManualEntries: dayEvents.some(event => event.type === 'manual'),
+      hasReminders: dayEvents.some(event => event.type === 'reminder'),
+    };
+  };
+  
+  // Calendar header for desktop
+  const calendarHeader = (
+    <div className="flex items-center justify-between mb-4">
+      <h2 className="text-xl font-semibold">{format(currentMonth, 'MMMM yyyy')}</h2>
+      
+      <div className="flex gap-2">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleTodayClick}
+        >
+          <CalendarIcon className="h-4 w-4 mr-1" /> Today
+        </Button>
+        
+        <div className="flex">
+          <Button variant="outline" size="icon" onClick={handlePreviousMonth} aria-label="Previous month">
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" size="icon" onClick={handleNextMonth} aria-label="Next month">
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
-
-        <div className="flex items-center gap-4">
-          <Button 
-            className="gap-2" 
-            onClick={onAddEntry}
-          >
-            <PlusCircleIcon size={16} strokeWidth={2} aria-hidden="true" />
-            <span>Add Entry</span>
+        
+        {onAddEntry && (
+          <Button onClick={onAddEntry} size="sm">
+            <Plus className="h-4 w-4 mr-1" />
+            Entry
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+  
+  // Calendar header for mobile
+  const mobileHeader = (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold">{format(currentMonth, 'MMMM yyyy')}</h2>
+        
+        <div className="flex">
+          <Button variant="outline" size="icon" onClick={handlePreviousMonth} className="h-8 w-8">
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" size="icon" onClick={handleNextMonth} className="h-8 w-8">
+            <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
       </div>
-
-      {/* Calendar Grid */}
-      <div className="lg:flex lg:flex-auto lg:flex-col">
-        {/* Week Days Header */}
-        <div className="grid grid-cols-7 border text-center text-xs font-semibold leading-6 lg:flex-none">
-          <div className="border-r py-2.5">Sun</div>
-          <div className="border-r py-2.5">Mon</div>
-          <div className="border-r py-2.5">Tue</div>
-          <div className="border-r py-2.5">Wed</div>
-          <div className="border-r py-2.5">Thu</div>
-          <div className="border-r py-2.5">Fri</div>
-          <div className="py-2.5">Sat</div>
-        </div>
-
-        {/* Calendar Days */}
-        <div className="flex text-xs leading-6 lg:flex-auto">
-          <div className="hidden w-full border-x lg:grid lg:grid-cols-7 lg:grid-rows-5">
-            {days.map((day, dayIdx) =>
-              !isDesktop ? (
-                <button
-                  onClick={() => handleSelectDay(day)}
-                  key={dayIdx}
-                  type="button"
-                  className={cn(
-                    isEqual(day, selectedDay) && "text-primary-foreground",
-                    !isEqual(day, selectedDay) &&
-                      !isToday(day) &&
-                      isSameMonth(day, firstDayCurrentMonth) &&
-                      "text-foreground",
-                    !isEqual(day, selectedDay) &&
-                      !isToday(day) &&
-                      !isSameMonth(day, firstDayCurrentMonth) &&
-                      "text-muted-foreground",
-                    (isEqual(day, selectedDay) || isToday(day)) &&
-                      "font-semibold",
-                    "flex h-14 flex-col border-b border-r px-3 py-2 hover:bg-muted focus:z-10",
-                  )}
-                >
-                  <time
-                    dateTime={format(day, "yyyy-MM-dd")}
-                    className={cn(
-                      "ml-auto flex size-6 items-center justify-center rounded-full",
-                      isEqual(day, selectedDay) &&
-                        isToday(day) &&
-                        "bg-primary text-primary-foreground",
-                      isEqual(day, selectedDay) &&
-                        !isToday(day) &&
-                        "bg-primary text-primary-foreground",
-                    )}
-                  >
-                    {format(day, "d")}
-                  </time>
-                  {data.filter((date) => isSameDay(date.day, day)).length >
-                    0 && (
-                    <div>
-                      {data
-                        .filter((date) => isSameDay(date.day, day))
-                        .map((date) => (
-                          <div
-                            key={date.day.toString()}
-                            className="-mx-0.5 mt-auto flex flex-wrap-reverse"
-                          >
-                            {date.events.map((event) => (
-                              <span
-                                key={event.id}
-                                className={`mx-0.5 mt-1 h-1.5 w-1.5 rounded-full ${event.type === 'task' ? 'bg-blue-500' : event.type === 'booking' ? 'bg-green-500' : 'bg-muted-foreground'}`}
-                              />
-                            ))}
-                          </div>
-                        ))}
-                    </div>
-                  )}
-                </button>
-              ) : (
-                <div
-                  key={dayIdx}
-                  onClick={() => handleSelectDay(day)}
-                  className={cn(
-                    dayIdx === 0 && colStartClasses[getDay(day)],
-                    !isEqual(day, selectedDay) &&
-                      !isToday(day) &&
-                      !isSameMonth(day, firstDayCurrentMonth) &&
-                      "bg-accent/50 text-muted-foreground",
-                    "relative flex flex-col border-b border-r cursor-pointer",
-                    !isEqual(day, selectedDay) && "hover:bg-accent/50",
-                  )}
-                >
-                  <header className="flex items-center justify-between p-2.5">
-                    <button
-                      type="button"
-                      className={cn(
-                        isEqual(day, selectedDay) && "text-primary-foreground",
-                        !isEqual(day, selectedDay) &&
-                          !isToday(day) &&
-                          isSameMonth(day, firstDayCurrentMonth) &&
-                          "text-foreground",
-                        !isEqual(day, selectedDay) &&
-                          !isToday(day) &&
-                          !isSameMonth(day, firstDayCurrentMonth) &&
-                          "text-muted-foreground",
-                        isEqual(day, selectedDay) &&
-                          isToday(day) &&
-                          "border-none bg-primary",
-                        isEqual(day, selectedDay) &&
-                          !isToday(day) &&
-                          "bg-foreground",
-                        (isEqual(day, selectedDay) || isToday(day)) &&
-                          "font-semibold",
-                        "flex h-7 w-7 items-center justify-center rounded-full text-xs hover:border",
-                      )}
-                    >
-                      <time dateTime={format(day, "yyyy-MM-dd")}>
-                        {format(day, "d")}
-                      </time>
-                    </button>
-                  </header>
-                  <div className="flex-1 p-2.5">
-                    {data
-                      .filter((event) => isSameDay(event.day, day))
-                      .map((day) => (
-                        <div key={day.day.toString()} className="space-y-1.5">
-                          {day.events.slice(0, 1).map((event) => (
-                            <div
-                              key={event.id}
-                              className={`flex flex-col items-start gap-1 rounded-lg border p-2 text-xs leading-tight ${
-                                event.type === 'task' ? 'bg-blue-100 border-blue-300 dark:bg-blue-950 dark:border-blue-800' :
-                                event.type === 'booking' ? 'bg-green-100 border-green-300 dark:bg-green-950 dark:border-green-800' :
-                                'bg-muted/50'
-                              }`}
-                            >
-                              <p className="font-medium leading-none">
-                                {event.name}
-                              </p>
-                              <p className="leading-none text-muted-foreground">
-                                {event.time}
-                              </p>
-                            </div>
-                          ))}
-                          {day.events.length > 1 && (
-                            <div className="text-xs text-muted-foreground">
-                              + {day.events.length - 1} more
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              ),
-            )}
+      
+      <div className="flex justify-between">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleTodayClick}
+          className="text-xs px-2 h-8"
+        >
+          <CalendarIcon className="h-3 w-3 mr-1" /> Today
+        </Button>
+        
+        {onAddEntry && (
+          <Button onClick={onAddEntry} size="sm" className="text-xs px-2 h-8">
+            <Plus className="h-3 w-3 mr-1" />
+            New Entry
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+  
+  return (
+    <Card className={cn("w-full", className)}>
+      <CardHeader className="px-5">
+        <CardTitle className="tracking-tight">
+          <div className="hidden md:block">
+            {calendarHeader}
           </div>
-
-          <div className="isolate grid w-full grid-cols-7 grid-rows-5 border-x lg:hidden">
-            {days.map((day, dayIdx) => (
-              <button
-                onClick={() => handleSelectDay(day)}
-                key={dayIdx}
-                type="button"
-                className={cn(
-                  isEqual(day, selectedDay) && "text-primary-foreground",
-                  !isEqual(day, selectedDay) &&
-                    !isToday(day) &&
-                    isSameMonth(day, firstDayCurrentMonth) &&
-                    "text-foreground",
-                  !isEqual(day, selectedDay) &&
-                    !isToday(day) &&
-                    !isSameMonth(day, firstDayCurrentMonth) &&
-                    "text-muted-foreground",
-                  (isEqual(day, selectedDay) || isToday(day)) &&
-                    "font-semibold",
-                  "flex h-14 flex-col border-b border-r px-3 py-2 hover:bg-muted focus:z-10",
-                )}
-              >
-                <time
-                  dateTime={format(day, "yyyy-MM-dd")}
-                  className={cn(
-                    "ml-auto flex size-6 items-center justify-center rounded-full",
-                    isEqual(day, selectedDay) &&
-                      isToday(day) &&
-                      "bg-primary text-primary-foreground",
-                    isEqual(day, selectedDay) &&
-                      !isToday(day) &&
-                      "bg-primary text-primary-foreground",
-                  )}
-                >
-                  {format(day, "d")}
-                </time>
-                {data.filter((date) => isSameDay(date.day, day)).length > 0 && (
-                  <div>
-                    {data
-                      .filter((date) => isSameDay(date.day, day))
-                      .map((date) => (
-                        <div
-                          key={date.day.toString()}
-                          className="-mx-0.5 mt-auto flex flex-wrap-reverse"
-                        >
-                          {date.events.map((event) => (
-                            <span
-                              key={event.id}
-                              className={`mx-0.5 mt-1 h-1.5 w-1.5 rounded-full ${
-                                event.type === 'task' ? 'bg-blue-500' : 
-                                event.type === 'booking' ? 'bg-green-500' : 
-                                'bg-muted-foreground'
-                              }`}
-                            />
-                          ))}
-                        </div>
-                      ))}
-                  </div>
-                )}
-              </button>
+          <div className="block md:hidden">
+            {mobileHeader}
+          </div>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="px-2 md:px-5">
+        {isLoading ? (
+          // Skeleton loader for calendar
+          <div className="grid grid-cols-7 gap-1">
+            {Array(42).fill(0).map((_, i) => (
+              <Skeleton key={i} className="h-14 rounded-md" />
             ))}
           </div>
-        </div>
-      </div>
-      
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm">
-          <div className="text-center space-y-2">
-            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-primary border-r-2 mx-auto"></div>
-            <p className="text-sm text-muted-foreground">Loading calendar...</p>
+        ) : (
+          <div className="grid grid-cols-7 text-center text-sm">
+            {/* Day headings */}
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+              <div key={day} className="p-1 mb-1 text-muted-foreground hidden md:block font-medium">
+                {day}
+              </div>
+            ))}
+            {/* Mobile day headings */}
+            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day) => (
+              <div key={day} className="p-1 mb-1 text-muted-foreground block md:hidden font-medium">
+                {day}
+              </div>
+            ))}
+            
+            {/* Calendar days */}
+            {weeks.map((week, weekIndex) => (
+              <React.Fragment key={weekIndex}>
+                {week.map((day) => {
+                  const eventTypes = getDayEventTypes(day);
+                  const isSelected = isSameDay(day, selectedDate);
+                  
+                  return (
+                    <CalendarDayCell
+                      key={day.toISOString()}
+                      date={day}
+                      selected={isSelected}
+                      eventTypes={eventTypes}
+                      onSelect={handleDayClick}
+                      className="aspect-square h-14 p-1 border border-border hover:bg-muted/50"
+                    />
+                  );
+                })}
+              </React.Fragment>
+            ))}
           </div>
-        </div>
-      )}
-    </div>
-  )
+        )}
+      </CardContent>
+    </Card>
+  );
 }

@@ -148,6 +148,7 @@ const CalendarDayView: React.FC<CalendarDayViewProps> = ({
                     className="h-7 w-7 text-muted-foreground hover:text-destructive" 
                     onClick={() => onDelete(event.id, event.type)}
                     title="Delete Manual Entry"
+                    aria-label="Delete Manual Entry"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
