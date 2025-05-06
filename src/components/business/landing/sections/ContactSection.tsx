@@ -29,10 +29,10 @@ const ContactSection: React.FC<ContactSectionProps> = ({
     color: section.text_color || "inherit",
     padding: 
       section.padding === "none" ? "0" :
-      section.padding === "sm" ? "1.5rem" :
-      section.padding === "md" ? "2.5rem" :
-      section.padding === "lg" ? "3.5rem" :
-      section.padding === "xl" ? "4.5rem" : "2.5rem",
+      section.padding === "sm" ? "1rem" :
+      section.padding === "md" ? "2rem" :
+      section.padding === "lg" ? "3rem" :
+      section.padding === "xl" ? "4rem" : "2rem",
     borderRadius: 
       section.border_radius === "none" ? "0" :
       section.border_radius === "small" ? "0.25rem" :
@@ -52,9 +52,9 @@ const ContactSection: React.FC<ContactSectionProps> = ({
   };
 
   return (
-    <section style={styles} className={`my-10 py-10 ${!section.is_visible ? 'hidden' : ''}`}>
+    <section style={styles} className={`my-8 ${!section.is_visible ? 'hidden' : ''}`}>
       <div className="container mx-auto">
-        <div className="text-center mb-10">
+        <div className="text-center mb-8">
           <h2 className="text-2xl md:text-3xl font-bold">{contactInfo.title}</h2>
           <p className="text-lg text-muted-foreground mt-2">{contactInfo.subtitle}</p>
           {contactInfo.description && (

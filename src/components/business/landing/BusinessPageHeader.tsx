@@ -1,98 +1,145 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { BusinessProfile } from "@/types/business.types";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Copy, Edit } from "lucide-react";
+import { useContacts } from "@/hooks/useContacts";
+import { useContactSearch } from "@/hooks/useContactSearch";
+import { Loader2, User, UserPlus } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 
-interface BusinessPageHeaderProps {
+export interface BusinessPageHeaderProps {
   business: BusinessProfile;
   isPreviewMode?: boolean;
-  isAuthenticated: boolean | null;
+  isAuthenticated?: boolean | null;
 }
 
 const BusinessPageHeader: React.FC<BusinessPageHeaderProps> = ({
   business,
-  isPreviewMode = false,
-  isAuthenticated
+  isPreviewMode,
+  isAuthenticated,
 }) => {
-  // Fixed comparison - checking if the business.id equals the isAuthenticated value
-  // Only consider the user as owner if isAuthenticated is a string (not null/boolean)
-  // and matches the business.id
-  const isOwner = typeof isAuthenticated === 'string' && business.id === isAuthenticated;
+  const { sendContactRequest } = useContacts();
+  const { checkContactRequest } = useContactSearch();
+  const [isAddingContact, setIsAddingContact] = useState(false);
+  const [contactStatus, setContactStatus] = useState<'pending' | 'accepted' | 'none'>('none');
 
-  const { business_name, display_name, avatar_url } = business;
-  const name = display_name || business_name || "Business";
-  
-  // Get initials from business name
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(word => word[0])
-      .join('')
-      .toUpperCase()
-      .substring(0, 2);
-  };
-  
-  const copyToClipboard = () => {
-    const url = window.location.href.split('/preview')[0]; // Remove /preview if present
-    navigator.clipboard.writeText(url)
-      .then(() => {
-        toast({
-          description: "Page URL copied to clipboard",
-        });
-      })
-      .catch(err => {
-        console.error('Failed to copy: ', err);
-        toast({
-          variant: "destructive",
-          description: "Failed to copy. Please try again.",
-        });
+  useEffect(() => {
+    const checkStatus = async () => {
+      if (isAuthenticated && !isPreviewMode && business.id) {
+        try {
+          const result = await checkContactRequest(business.id);
+          if (result.requestExists) {
+            // Convert the result to our component's expected status type
+            if (result.requestStatus === 'pending') {
+              setContactStatus('pending');
+            } else if (result.requestStatus === 'accepted') {
+              setContactStatus('accepted');
+            } else {
+              setContactStatus('none');
+            }
+          }
+        } catch (error) {
+          console.error('Error checking contact status:', error);
+        }
+      }
+    };
+    
+    checkStatus();
+  }, [isAuthenticated, isPreviewMode, business.id, checkContactRequest]);
+
+  const handleAddContact = async () => {
+    if (!isAuthenticated || !business.id) {
+      toast({
+        title: "Authentication Required",
+        description: "You need to log in to add this business to your contacts",
+        variant: "destructive",
       });
+      return;
+    }
+    
+    setIsAddingContact(true);
+    try {
+      await sendContactRequest.mutateAsync(business.id);
+      setContactStatus('pending');
+      toast({
+        title: "Contact Request Sent",
+        description: "Your request to connect has been sent",
+      });
+    } catch (error) {
+      console.error('Error adding contact:', error);
+      toast({
+        title: "Failed to Send Request",
+        description: "There was an error sending your contact request",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAddingContact(false);
+    }
   };
 
+  // Render different button states based on contact status
+  const renderContactButton = () => {
+    if (contactStatus === 'accepted') {
+      return (
+        <Button variant="outline">
+          <User className="h-4 w-4 mr-2" />
+          In Contacts
+        </Button>
+      );
+    }
+
+    if (contactStatus === 'pending') {
+      return (
+        <Button variant="outline" disabled>
+          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+          Request Pending
+        </Button>
+      );
+    }
+
+    return (
+      <Button 
+        onClick={handleAddContact}
+        disabled={isAddingContact}
+        variant="default"
+        className="bg-primary hover:bg-primary/90"
+      >
+        {isAddingContact ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            Adding...
+          </>
+        ) : (
+          <>
+            <UserPlus className="h-4 w-4 mr-2" />
+            Add to Contacts
+          </>
+        )}
+      </Button>
+    );
+  };
+  
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between py-4 mb-6">
-      <div className="flex items-center mb-4 sm:mb-0">
-        <Avatar className="h-10 w-10 mr-3">
-          <AvatarImage src={avatar_url || ''} alt={name} />
-          <AvatarFallback>{getInitials(name)}</AvatarFallback>
-        </Avatar>
-        <div>
-          <h1 className="font-semibold text-lg leading-tight">{name}</h1>
-          {isPreviewMode && (
-            <div className="text-xs text-muted-foreground">Preview Mode</div>
-          )}
-        </div>
-      </div>
-      
-      <div className="flex flex-col sm:flex-row gap-2">
-        {isPreviewMode && (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={copyToClipboard}
-            className="flex items-center gap-1"
-          >
-            <Copy className="h-3.5 w-3.5" />
-            <span>Copy URL</span>
-          </Button>
+    <div className="business-page-header py-8">
+      <div className="flex flex-col items-center">
+        {business.avatar_url && (
+          <div className="mb-4">
+            <img 
+              src={business.avatar_url} 
+              alt={business.business_name || "Business"} 
+              className="h-24 w-24 rounded-full object-cover border-2 border-primary/20"
+            />
+          </div>
         )}
         
-        {isOwner && (
-          <Button 
-            variant="default"
-            size="sm"
-            asChild
-            className="flex items-center gap-1"
-          >
-            <Link to="/dashboard/business-page">
-              <Edit className="h-3.5 w-3.5" />
-              <span>Edit Page</span>
-            </Link>
-          </Button>
+        <h1 className="text-3xl md:text-4xl font-bold text-center mb-4">
+          {business.business_name || "Business Name"}
+        </h1>
+        
+        {!isPreviewMode && isAuthenticated && (
+          <div className="mt-2 mb-4">
+            {renderContactButton()}
+          </div>
         )}
       </div>
     </div>

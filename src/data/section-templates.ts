@@ -1,433 +1,341 @@
-
 import { SectionType } from "@/types/business.types";
 
-// Define the structure of a section template
-export interface SectionTemplate {
+interface SectionTemplate {
   id: string;
   name: string;
   description: string;
+  category: string;
+  content: Record<string, any>;
   previewUrl?: string;
-  content: any;
-  category?: string;
 }
 
-// Generate a unique ID for templates
-const generateId = () => `template_${Math.random().toString(36).substr(2, 9)}`;
-
-// Header section templates
+// Default templates by section type
 const headerTemplates: SectionTemplate[] = [
   {
-    id: generateId(),
-    name: "Basic Header",
-    description: "A simple header with title and subtitle",
+    id: 'header-default',
+    name: 'Default Header',
+    description: 'A clean, modern header with title and subtitle',
+    category: 'Simple',
     content: {
-      title: "Welcome to Our Business",
-      subtitle: "We provide quality services",
-      description: "Learn more about what we offer and how we can help you.",
-      buttonText: "Learn More",
-      buttonLink: "#about"
-    },
-    category: "Simple"
+      title: 'Welcome to Our Business',
+      subtitle: 'Quality Services You Can Trust',
+      description: 'Book our professional services today and experience the difference.',
+      background_color: '#ffffff',
+      text_color: '#1f2937',
+      padding: 'lg'
+    }
   },
   {
-    id: generateId(),
-    name: "Call to Action Header",
-    description: "Header with prominent CTA button",
+    id: 'header-centered',
+    name: 'Centered Header',
+    description: 'A centered header with larger text',
+    category: 'Simple',
     content: {
-      title: "Transform Your Experience",
-      subtitle: "Professional services tailored to your needs",
-      description: "We're dedicated to delivering exceptional results for every client.",
-      buttonText: "Get Started Today",
-      buttonLink: "#contact"
-    },
-    category: "Business"
+      title: 'Your Business Name',
+      subtitle: 'Your Tagline Here',
+      description: 'A brief description of your services',
+      text_alignment: 'center',
+      background_color: '#f3f4f6',
+      text_color: '#111827',
+      padding: 'xl'
+    }
   },
   {
-    id: generateId(),
-    name: "Minimal Header",
-    description: "Clean and minimal header design",
+    id: 'header-gradient',
+    name: 'Gradient Background',
+    description: 'Header with a colorful gradient background',
+    category: 'Stylish',
     content: {
-      title: "Simply Better",
-      subtitle: "",
-      description: "Less is more. Quality over quantity.",
-      buttonText: "",
-      buttonLink: ""
-    },
-    category: "Minimal"
+      title: 'Modern Solutions',
+      subtitle: 'For Your Business Needs',
+      description: 'We provide innovative solutions for your business requirements',
+      text_alignment: 'center',
+      background_color: '#4f46e5',
+      gradient: 'linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%)',
+      text_color: '#ffffff',
+      padding: 'xl'
+    }
   }
 ];
 
-// About section templates
 const aboutTemplates: SectionTemplate[] = [
   {
-    id: generateId(),
-    name: "Basic About",
-    description: "Simple about section with text",
+    id: 'about-simple',
+    name: 'Simple About',
+    description: 'A clean, straightforward about section',
+    category: 'Simple',
     content: {
-      title: "About Us",
-      description: "Learn about our story and mission",
-      content: "<p>We are a dedicated team of professionals committed to providing the best service possible. Our journey began with a simple idea: to create solutions that make a difference in people's lives.</p><p>With years of experience in the industry, we've built a reputation for excellence and reliability.</p>"
-    },
-    category: "Simple"
+      title: 'About Us',
+      description: 'We are a dedicated team of professionals committed to providing excellence in our services.',
+      background_color: '#ffffff',
+      text_color: '#1f2937',
+      padding: 'md'
+    }
   },
   {
-    id: generateId(),
-    name: "About with Image",
-    description: "About section with image and text",
+    id: 'about-with-image',
+    name: 'About with Image',
+    description: 'About section with image and text side by side',
+    category: 'With Image',
     content: {
-      title: "Our Story",
-      description: "The journey that made us who we are today",
-      content: "<p>Founded in 2015, our company has grown from a small startup to a leading provider in the industry. We believe in innovation, quality, and customer satisfaction above all else.</p><p>Our team consists of experts who are passionate about their work and committed to excellence.</p>",
-      image: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=800&auto=format&fit=crop&q=60"
-    },
-    category: "Media"
-  },
-  {
-    id: generateId(),
-    name: "Mission & Values",
-    description: "Focus on company mission and core values",
-    content: {
-      title: "Mission & Values",
-      description: "What drives us forward",
-      content: "<h3>Our Mission</h3><p>To provide innovative solutions that empower our clients to achieve their goals.</p><h3>Our Values</h3><ul><li><strong>Integrity</strong> - We conduct business with honesty and transparency</li><li><strong>Excellence</strong> - We strive for the highest quality in everything we do</li><li><strong>Innovation</strong> - We embrace change and continuously seek improvement</li><li><strong>Teamwork</strong> - We believe in the power of collaboration</li></ul>"
-    },
-    category: "Business"
+      title: 'Our Story',
+      description: 'Learn about our journey and what makes us different from others in the industry.',
+      image_url: 'https://placehold.co/600x400',
+      image_position: 'left',
+      background_color: '#f9fafb',
+      text_color: '#111827',
+      padding: 'lg'
+    }
   }
 ];
 
-// Contact section templates
 const contactTemplates: SectionTemplate[] = [
   {
-    id: generateId(),
-    name: "Basic Contact",
-    description: "Simple contact form with info",
+    id: 'contact-basic',
+    name: 'Basic Contact Form',
+    description: 'Simple contact form with essential fields',
+    category: 'Forms',
     content: {
-      title: "Contact Us",
-      subtitle: "We'd love to hear from you",
-      description: "Fill out the form below and we'll get back to you as soon as possible.",
-      email: "contact@example.com",
-      phone: "(123) 456-7890",
-      address: "123 Business Street, City, State, ZIP",
-      hours: "Monday - Friday: 9am - 5pm\nWeekends: Closed"
-    },
-    category: "Simple"
+      title: 'Contact Us',
+      show_name: true,
+      show_email: true,
+      show_phone: true,
+      show_message: true,
+      background_color: '#ffffff',
+      text_color: '#1f2937',
+      padding: 'md'
+    }
   },
   {
-    id: generateId(),
-    name: "Business Contact",
-    description: "Professional contact section with form",
+    id: 'contact-with-info',
+    name: 'Contact with Info',
+    description: 'Contact form with business information',
+    category: 'Forms',
     content: {
-      title: "Get in Touch",
-      subtitle: "Contact our team",
-      description: "Have questions or ready to start working with us? Contact us today!",
-      email: "info@yourbusiness.com",
-      phone: "(555) 123-4567",
-      address: "500 Corporate Avenue, Suite 100, Business City, 12345",
-      hours: "Monday - Thursday: 8am - 6pm\nFriday: 8am - 5pm\nSaturday - Sunday: Closed"
-    },
-    category: "Business"
-  },
-  {
-    id: generateId(),
-    name: "Contact with Social Media",
-    description: "Contact information with social media links",
-    content: {
-      title: "Connect With Us",
-      subtitle: "Multiple ways to reach out",
-      description: "Choose the most convenient way to contact us or follow us on social media.",
-      email: "hello@companyname.com",
-      phone: "(987) 654-3210",
-      address: "789 Main Street, Downtown, City, 54321",
-      hours: "Monday - Friday: 10am - 7pm\nSaturday: 11am - 5pm\nSunday: Closed",
-      socialMedia: [
-        { platform: "Instagram", url: "https://instagram.com/yourbusiness" },
-        { platform: "Facebook", url: "https://facebook.com/yourbusiness" },
-        { platform: "Twitter", url: "https://twitter.com/yourbusiness" }
-      ]
-    },
-    category: "Social"
+      title: 'Get In Touch',
+      subtitle: 'Have questions? Reach out to us directly.',
+      show_name: true,
+      show_email: true,
+      show_phone: true,
+      show_message: true,
+      business_phone: '+1 (555) 123-4567',
+      business_email: 'contact@example.com',
+      business_address: '123 Business St, City',
+      background_color: '#f8fafc',
+      text_color: '#0f172a',
+      padding: 'lg'
+    }
   }
 ];
 
-// Gallery section templates
 const galleryTemplates: SectionTemplate[] = [
   {
-    id: generateId(),
-    name: "Basic Gallery",
-    description: "Simple image gallery",
+    id: 'gallery-grid',
+    name: 'Grid Gallery',
+    description: 'A responsive grid of images',
+    category: 'Galleries',
     content: {
-      title: "Our Gallery",
-      images: [
-        { url: "https://images.unsplash.com/photo-1499951360447-b19be8fe80f5?w=800&auto=format&fit=crop&q=60", alt: "Gallery image 1" },
-        { url: "https://images.unsplash.com/photo-1551782450-a2132b4ba21d?w=800&auto=format&fit=crop&q=60", alt: "Gallery image 2" },
-        { url: "https://images.unsplash.com/photo-1522770179533-24471fcdba45?w=800&auto=format&fit=crop&q=60", alt: "Gallery image 3" },
-        { url: "https://images.unsplash.com/photo-1444418776041-9c7e33cc5a9c?w=800&auto=format&fit=crop&q=60", alt: "Gallery image 4" },
-        { url: "https://images.unsplash.com/photo-1533827432537-70133748f5c8?w=800&auto=format&fit=crop&q=60", alt: "Gallery image 5" },
-        { url: "https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?w=800&auto=format&fit=crop&q=60", alt: "Gallery image 6" }
-      ]
-    },
-    category: "Simple"
+      title: 'Our Gallery',
+      layout: 'grid',
+      images_per_row: 3,
+      gap: 'md',
+      background_color: '#ffffff',
+      text_color: '#1f2937',
+      padding: 'md'
+    }
   },
   {
-    id: generateId(),
-    name: "Portfolio Gallery",
-    description: "Professional portfolio layout",
+    id: 'gallery-masonry',
+    name: 'Masonry Gallery',
+    description: 'An elegant masonry layout for your images',
+    category: 'Galleries',
     content: {
-      title: "Our Portfolio",
-      images: [
-        { url: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=60", alt: "Portfolio project 1" },
-        { url: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&auto=format&fit=crop&q=60", alt: "Portfolio project 2" },
-        { url: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&auto=format&fit=crop&q=60", alt: "Portfolio project 3" },
-        { url: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=60", alt: "Portfolio project 4" },
-        { url: "https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&auto=format&fit=crop&q=60", alt: "Portfolio project 5" },
-        { url: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800&auto=format&fit=crop&q=60", alt: "Portfolio project 6" }
-      ]
-    },
-    category: "Business"
+      title: 'Image Gallery',
+      layout: 'masonry',
+      images_per_row: 4,
+      gap: 'sm',
+      background_color: '#f8fafc',
+      text_color: '#1f2937',
+      padding: 'lg'
+    }
   }
 ];
 
-// Hours section templates
 const hoursTemplates: SectionTemplate[] = [
   {
-    id: generateId(),
-    name: "Basic Hours",
-    description: "Simple business hours display",
+    id: 'hours-simple',
+    name: 'Simple Hours',
+    description: 'Clean display of business hours',
+    category: 'Business Info',
     content: {
-      title: "Business Hours",
-      hours: [
-        { day: "Monday", hours: "9:00 AM - 5:00 PM" },
-        { day: "Tuesday", hours: "9:00 AM - 5:00 PM" },
-        { day: "Wednesday", hours: "9:00 AM - 5:00 PM" },
-        { day: "Thursday", hours: "9:00 AM - 5:00 PM" },
-        { day: "Friday", hours: "9:00 AM - 5:00 PM" },
-        { day: "Saturday", hours: "10:00 AM - 3:00 PM" },
-        { day: "Sunday", hours: "Closed" }
-      ]
-    },
-    category: "Simple"
+      title: 'Business Hours',
+      monday: '9:00 AM - 5:00 PM',
+      tuesday: '9:00 AM - 5:00 PM',
+      wednesday: '9:00 AM - 5:00 PM',
+      thursday: '9:00 AM - 5:00 PM',
+      friday: '9:00 AM - 5:00 PM',
+      saturday: '10:00 AM - 2:00 PM',
+      sunday: 'Closed',
+      background_color: '#ffffff',
+      text_color: '#1f2937',
+      padding: 'md'
+    }
   },
   {
-    id: generateId(),
-    name: "Hours with Note",
-    description: "Business hours with special note",
+    id: 'hours-with-note',
+    name: 'Hours with Note',
+    description: 'Business hours with additional information',
+    category: 'Business Info',
     content: {
-      title: "When We're Open",
-      hours: [
-        { day: "Monday", hours: "8:00 AM - 6:00 PM" },
-        { day: "Tuesday", hours: "8:00 AM - 6:00 PM" },
-        { day: "Wednesday", hours: "8:00 AM - 6:00 PM" },
-        { day: "Thursday", hours: "8:00 AM - 8:00 PM" },
-        { day: "Friday", hours: "8:00 AM - 8:00 PM" },
-        { day: "Saturday", hours: "10:00 AM - 4:00 PM" },
-        { day: "Sunday", hours: "Closed" }
-      ],
-      note: "Extended hours available by appointment. Holiday hours may vary."
-    },
-    category: "Business"
+      title: 'When We\'re Open',
+      monday: '9:00 AM - 5:00 PM',
+      tuesday: '9:00 AM - 5:00 PM',
+      wednesday: '9:00 AM - 5:00 PM',
+      thursday: '9:00 AM - 5:00 PM',
+      friday: '9:00 AM - 5:00 PM',
+      saturday: '10:00 AM - 2:00 PM',
+      sunday: 'Closed',
+      note: 'Hours may vary on holidays. Please call ahead for special hours.',
+      background_color: '#f8fafc',
+      text_color: '#1f2937',
+      padding: 'lg'
+    }
   }
 ];
 
-// Testimonials section templates
 const testimonialsTemplates: SectionTemplate[] = [
   {
-    id: generateId(),
-    name: "Basic Testimonials",
-    description: "Simple testimonials display",
+    id: 'testimonials-simple',
+    name: 'Simple Testimonials',
+    description: 'Clean, card-based testimonials',
+    category: 'Social Proof',
     content: {
-      title: "What Our Clients Say",
-      testimonials: [
-        {
-          text: "Working with this company was an amazing experience. They delivered everything on time and exceeded our expectations.",
-          name: "John Smith",
-          title: "CEO, Example Corp"
-        },
-        {
-          text: "The team was professional and responsive. I would highly recommend their services to anyone.",
-          name: "Sarah Johnson",
-          title: "Marketing Director"
-        },
-        {
-          text: "Outstanding service and attention to detail. Will definitely use their services again.",
-          name: "Michael Brown",
-          title: "Small Business Owner"
-        }
-      ]
-    },
-    category: "Simple"
+      title: 'What Our Clients Say',
+      layout: 'grid',
+      testimonials_per_row: 3,
+      show_avatar: true,
+      background_color: '#ffffff',
+      text_color: '#1f2937',
+      padding: 'md'
+    }
   },
   {
-    id: generateId(),
-    name: "Featured Testimonials",
-    description: "Highlighted client testimonials",
+    id: 'testimonials-carousel',
+    name: 'Testimonials Carousel',
+    description: 'Sliding carousel of testimonials',
+    category: 'Social Proof',
     content: {
-      title: "Client Success Stories",
-      testimonials: [
-        {
-          text: "This team transformed our business processes and helped us increase revenue by 30% within the first year.",
-          name: "Robert Chen",
-          title: "CFO, Enterprise Solutions"
-        },
-        {
-          text: "The attention to detail and personalized approach made all the difference. Truly a game-changer for our company.",
-          name: "Emily Rodriguez",
-          title: "Operations Manager"
-        },
-        {
-          text: "We've worked with many service providers over the years, but none have delivered results like this team. Exceptional work!",
-          name: "David Wilson",
-          title: "Project Director, Global Initiatives"
-        },
-        {
-          text: "From start to finish, the experience was seamless. They understood our needs and delivered beyond our expectations.",
-          name: "Jessica Thompson",
-          title: "Head of Innovation"
-        }
-      ]
-    },
-    category: "Business"
+      title: 'Customer Reviews',
+      layout: 'carousel',
+      show_avatar: true,
+      show_rating: true,
+      background_color: '#f3f4f6',
+      text_color: '#111827',
+      padding: 'lg'
+    }
   }
 ];
 
-// Booking section templates
 const bookingTemplates: SectionTemplate[] = [
   {
-    id: generateId(),
-    name: "Basic Booking",
-    description: "Simple booking section",
+    id: 'booking-simple',
+    name: 'Simple Booking',
+    description: 'Clean, minimalist booking section',
+    category: 'Booking',
     content: {
-      title: "Book an Appointment",
-      description: "Schedule a time that works for you.",
-      buttonText: "Book Now"
-    },
-    category: "Simple"
+      title: 'Book an Appointment',
+      subtitle: 'Schedule your visit today',
+      show_calendar: true,
+      background_color: '#ffffff',
+      text_color: '#1f2937',
+      padding: 'md'
+    }
   },
   {
-    id: generateId(),
-    name: "Consultation Booking",
-    description: "Booking section for consultations",
+    id: 'booking-with-services',
+    name: 'Booking with Services',
+    description: 'Booking section with services selection',
+    category: 'Booking',
     content: {
-      title: "Book a Consultation",
-      description: "Schedule a free 30-minute consultation with one of our experts to discuss your needs.",
-      buttonText: "Schedule Now",
-      showAvailability: true
-    },
-    category: "Business"
+      title: 'Reserve Your Spot',
+      subtitle: 'Choose from our popular services',
+      show_calendar: true,
+      show_services: true,
+      background_color: '#f9fafb',
+      text_color: '#111827',
+      padding: 'lg'
+    }
   }
 ];
 
-// Instagram section templates
 const instagramTemplates: SectionTemplate[] = [
   {
-    id: generateId(),
-    name: "Basic Instagram Feed",
-    description: "Simple Instagram feed display",
+    id: 'instagram-feed',
+    name: 'Instagram Feed',
+    description: 'Display your latest Instagram posts',
+    category: 'Social Media',
     content: {
-      title: "Follow Us on Instagram",
-      username: "yourbusinessname",
-      postCount: 6
-    },
-    category: "Simple"
+      title: 'Follow Us on Instagram',
+      posts_count: 6,
+      show_caption: true,
+      background_color: '#ffffff',
+      text_color: '#1f2937',
+      padding: 'md'
+    }
   },
   {
-    id: generateId(),
-    name: "Featured Instagram",
-    description: "Instagram feed with call to action",
+    id: 'instagram-carousel',
+    name: 'Instagram Carousel',
+    description: 'Sliding carousel of Instagram posts',
+    category: 'Social Media',
     content: {
-      title: "See What We're Sharing",
-      username: "businesshandle",
-      postCount: 9,
-      description: "Follow us for updates, behind-the-scenes content, and special offers!",
-      buttonText: "Follow Us",
-      buttonLink: "https://instagram.com/businesshandle"
-    },
-    category: "Social"
+      title: 'Latest from Our Instagram',
+      layout: 'carousel',
+      posts_count: 8,
+      show_caption: false,
+      background_color: '#f3f4f6',
+      text_color: '#111827',
+      padding: 'lg'
+    }
   }
 ];
 
-// Chatbot section templates
+// Add chatbot templates
 const chatbotTemplates: SectionTemplate[] = [
   {
-    id: generateId(),
-    name: "Basic Chatbot",
-    description: "Simple chatbot integration",
+    id: 'chatbot-simple',
+    name: 'Simple Chatbot',
+    description: 'Clean, minimalist chatbot section',
+    category: 'Simple',
     content: {
-      title: "Ask Us Anything",
-      description: "Our virtual assistant is here to help 24/7.",
-      chatbotType: "iframe"
-    },
-    category: "Simple"
+      section_title: 'Chat with Us',
+      section_description: 'Our AI assistant is ready to help you with any questions',
+      enabled: true,
+      chatbot_size: 'medium',
+      background_color: '#ffffff',
+      text_color: '#1f2937',
+      padding: 'md'
+    }
   },
   {
-    id: generateId(),
-    name: "Support Chatbot",
-    description: "Customer support chatbot",
+    id: 'chatbot-large',
+    name: 'Large Chatbot',
+    description: 'Prominent chatbot section with detailed description',
+    category: 'Featured',
     content: {
-      title: "Need Help?",
-      description: "Get instant answers to your questions with our support assistant.",
-      chatbotType: "script",
-      buttonText: "Start Chat"
-    },
-    category: "Support"
+      section_title: 'Virtual Assistant',
+      section_description: 'Get immediate answers and assistance with our AI-powered chatbot',
+      enabled: true,
+      chatbot_size: 'large',
+      background_color: '#f9fafb',
+      text_color: '#111827',
+      padding: 'lg'
+    }
   }
 ];
 
-// Links section templates
-const linksTemplates: SectionTemplate[] = [
-  {
-    id: generateId(),
-    name: "Basic Links",
-    description: "Simple list of important links",
-    content: {
-      title: "Important Links",
-      description: "Quick access to essential resources",
-      links: [
-        { title: "Our Services", url: "#services" },
-        { title: "About Us", url: "#about" },
-        { title: "Contact", url: "#contact" },
-        { title: "FAQ", url: "#faq" }
-      ]
-    },
-    category: "Simple"
-  },
-  {
-    id: generateId(),
-    name: "Resource Links",
-    description: "Links to resources and documents",
-    content: {
-      title: "Resources & Downloads",
-      description: "Access our helpful resources and documentation",
-      links: [
-        { title: "Service Catalog (PDF)", url: "#catalog" },
-        { title: "Client Onboarding Guide", url: "#guide" },
-        { title: "Terms of Service", url: "#terms" },
-        { title: "Privacy Policy", url: "#privacy" },
-        { title: "Support Center", url: "#support" }
-      ]
-    },
-    category: "Business"
-  },
-  {
-    id: generateId(),
-    name: "Social Media Links",
-    description: "Links to social media profiles",
-    content: {
-      title: "Connect With Us",
-      description: "Follow us on social media",
-      links: [
-        { title: "Facebook", url: "https://facebook.com/example" },
-        { title: "Instagram", url: "https://instagram.com/example" },
-        { title: "Twitter", url: "https://twitter.com/example" },
-        { title: "LinkedIn", url: "https://linkedin.com/company/example" },
-        { title: "YouTube", url: "https://youtube.com/c/example" }
-      ]
-    },
-    category: "Social"
-  }
-];
-
-// Collated templates object
-const templates: Record<SectionType, SectionTemplate[]> = {
+// Map all templates by section type
+const allTemplates: Record<SectionType, SectionTemplate[]> = {
   header: headerTemplates,
   about: aboutTemplates,
   contact: contactTemplates,
@@ -436,17 +344,10 @@ const templates: Record<SectionType, SectionTemplate[]> = {
   testimonials: testimonialsTemplates,
   booking: bookingTemplates,
   instagram: instagramTemplates,
-  chatbot: chatbotTemplates,
-  links: linksTemplates
+  chatbot: chatbotTemplates
 };
 
-// Helper function to get templates for a specific section type or all templates
-export const getTemplates = (sectionType?: SectionType) => {
-  if (sectionType) {
-    return templates[sectionType] || [];
-  }
-  
-  // Return all templates if no section type is specified
-  return Object.values(templates).flat();
+// Get templates by section type
+export const getTemplates = (sectionType: SectionType): SectionTemplate[] => {
+  return allTemplates[sectionType] || [];
 };
-

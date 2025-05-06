@@ -11,44 +11,38 @@ const BusinessAbout = ({ section }: BusinessAboutProps) => {
   
   const {
     title = "About Us",
-    description = "",
     content: aboutContent = "",
     image = null
   } = content;
   
   return (
-    <section className="py-12 bg-background">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-10">
-          <h2 className="text-3xl font-bold mb-4">{title}</h2>
-          {description && <p className="text-lg text-muted-foreground max-w-2xl mx-auto">{description}</p>}
-        </div>
+    <div>
+      <h2 className="text-2xl font-bold mb-4">{title}</h2>
+      
+      <div className="flex flex-col md:flex-row gap-6">
+        {image && (
+          <div className="md:w-1/3">
+            <img 
+              src={image} 
+              alt="About us" 
+              className="rounded-lg w-full h-auto object-cover"
+            />
+          </div>
+        )}
         
-        <div className="flex flex-col md:flex-row gap-8 items-center">
-          {image && (
-            <div className="md:w-1/2">
-              <img 
-                src={image} 
-                alt="About us" 
-                className="rounded-lg w-full h-auto object-cover shadow-md"
-              />
-            </div>
-          )}
-          
-          <div className={image ? "md:w-1/2" : "w-full"}>
-            <div className="prose max-w-none dark:prose-invert">
-              {aboutContent ? (
-                <div dangerouslySetInnerHTML={{ __html: aboutContent }} />
-              ) : (
-                <p className="text-muted-foreground">
-                  Information about the business will be displayed here.
-                </p>
-              )}
-            </div>
+        <div className={image ? "md:w-2/3" : "w-full"}>
+          <div className="prose max-w-none dark:prose-invert">
+            {aboutContent ? (
+              <div dangerouslySetInnerHTML={{ __html: aboutContent }} />
+            ) : (
+              <p className="text-muted-foreground">
+                Information about the business will be displayed here.
+              </p>
+            )}
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 };
 
