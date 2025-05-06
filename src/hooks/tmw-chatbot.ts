@@ -4,7 +4,7 @@ import { useAIAssistant } from './useAIAssistant';
 import { cleanupExistingChatbotElements } from './tmw-chatbot/cleanupUtils';
 import { injectIframeChatbot } from './tmw-chatbot/iframeHandler';
 import { injectScriptChatbot } from './tmw-chatbot/scriptHandler';
-import { useIsMobile } from "../useIsMobile";
+import { useIsMobile } from "./useIsMobile";
 
 // Updated to properly handle the chatbot code and container
 export const useTMWChatbot = () => {
