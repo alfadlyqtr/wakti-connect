@@ -29,10 +29,15 @@ export function useCalendarEvents() {
 
       try {
         // Fetch bookings (where user is customer or business)
-        const { data: bookingsData } = await supabase
+        const { data: bookingsData, error } = await supabase
           .from('bookings')
           .select('id, title, start_time, status')
           .or(`customer_id.eq.${userId},business_id.eq.${userId}`);
+
+        if (error) {
+          console.error("Error fetching booking events:", error);
+          return [];
+        }
 
         if (!bookingsData) return [];
 
@@ -64,14 +69,19 @@ export function useCalendarEvents() {
 
       try {
         // Fetch manual entries
-        const { data: manualData } = await supabase
+        const { data, error } = await supabase
           .from('calendar_manual_entries')
           .select('id, title, description, date, location, start_time, end_time')
           .eq('user_id', userId);
 
-        if (!manualData) return [];
+        if (error) {
+          console.error("Error fetching manual events:", error);
+          return [];
+        }
 
-        return manualData.map(entry => ({
+        if (!data) return [];
+
+        return data.map(entry => ({
           id: entry.id,
           title: entry.title,
           description: entry.description,
@@ -96,15 +106,20 @@ export function useCalendarEvents() {
 
       try {
         // Fetch reminders
-        const { data: remindersData } = await supabase
+        const { data, error } = await supabase
           .from('reminders')
           .select('id, message, reminder_time')
           .eq('user_id', userId)
           .eq('is_active', true);
 
-        if (!remindersData) return [];
+        if (error) {
+          console.error("Error fetching reminder events:", error);
+          return [];
+        }
 
-        return remindersData.map(reminder => ({
+        if (!data) return [];
+
+        return data.map(reminder => ({
           id: reminder.id,
           title: reminder.message,
           date: new Date(reminder.reminder_time),

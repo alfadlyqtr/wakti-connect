@@ -6,9 +6,10 @@ import { format } from 'date-fns';
 
 interface TaskListProps {
   tasks: CalendarEvent[];
+  onDelete?: (id: string, type: string) => void;
 }
 
-export const TaskList: React.FC<TaskListProps> = ({ tasks }) => {
+export const TaskList: React.FC<TaskListProps> = ({ tasks, onDelete }) => {
   const getEventTypeIcon = (type: string) => {
     switch (type) {
       case 'task':

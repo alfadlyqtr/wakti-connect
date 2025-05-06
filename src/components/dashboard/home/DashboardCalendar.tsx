@@ -1,264 +1,199 @@
+import React, { useEffect, useState } from 'react';
+import { format, startOfMonth, startOfWeek, endOfMonth, endOfWeek, eachDayOfInterval, addDays, isSameMonth, isSameDay } from 'date-fns';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { TaskList } from './TaskList';
+import { CalendarEvent } from '@/types/calendar.types';
+import { useCalendarEvents } from '@/hooks/useCalendarEvents';
+import CalendarLegend from './CalendarLegend';
+import EventDot from './EventDot';
+import EventCountBadge from './EventCountBadge';
 
-import React, { useState, useEffect } from "react";
-import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent } from "@/components/ui/card";
-import { CalendarEvent, DayEventTypes } from "@/types/calendar.types";
-import CalendarDayCell from "./CalendarDayCell";
-import { format, isSameDay } from "date-fns";
-import CalendarLegend from "./CalendarLegend";
-import { TaskList } from "./TaskList";
-import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
-
-interface DashboardCalendarProps {
-  events?: CalendarEvent[];
-  isCompact?: boolean;
-}
-
-// Fetches both user tasks and bookings as calendar events (no dummy data)
-const useRealCalendarEvents = (userId: string | null) => {
-  return useQuery({
-    queryKey: ['calendarEvents', userId],
-    queryFn: async () => {
-      if (!userId) return [];
-      const results: CalendarEvent[] = [];
-
-      // Fetch tasks
-      const { data: tasksData, error: tasksError } = await supabase
-        .from('tasks')
-        .select('id, title, due_date, status')
-        .eq('user_id', userId)
-        .not('due_date', 'is', null);
-
-      if (!tasksError && tasksData) {
-        results.push(...tasksData.map(task => ({
-          id: task.id,
-          title: task.title,
-          date: new Date(task.due_date as string),
-          type: "task" as const,
-          status: task.status
-        })));
-      }
-
-      // Fetch bookings (where user is customer or business)
-      const { data: bookingsData } = await supabase
-        .from('bookings')
-        .select('id, title, start_time, status')
-        .or(`customer_id.eq.${userId},business_id.eq.${userId}`);
-      if (bookingsData) {
-        results.push(...bookingsData.map(booking => ({
-          id: booking.id,
-          title: booking.title,
-          date: new Date(booking.start_time as string),
-          type: "booking" as const,
-          status: booking.status
-        })));
-      }
-
-      // Fetch manual entries and custom events
-      try {
-        // Try to fetch from calendar_manual_entries
-        const { data: manualEntriesData } = await supabase
-          .from('calendar_manual_entries')
-          .select('id, title, date, description, location')
-          .eq('user_id', userId);
-
-        if (manualEntriesData) {
-          results.push(...manualEntriesData.map(entry => ({
-            id: entry.id,
-            title: entry.title,
-            date: new Date(entry.date as string),
-            type: "manual" as const,
-            description: entry.description,
-            location: entry.location
-          })));
-        }
-      } catch (err) {
-        console.log("Manual entries table might not exist yet:", err);
-      }
-
-      // Fetch events from events table
-      try {
-        const { data: eventsData } = await supabase
-          .from('events')
-          .select('id, title, start_time')
-          .eq('user_id', userId);
-
-        if (eventsData) {
-          results.push(...eventsData.map(event => ({
-            id: event.id,
-            title: event.title,
-            date: new Date(event.start_time as string),
-            type: "event" as const
-          })));
-        }
-      } catch (err) {
-        console.log("Error fetching events:", err);
-      }
-
-      // Fetch reminders
-      try {
-        const { data: remindersData } = await supabase
-          .from('reminders')
-          .select('id, message, reminder_time')
-          .eq('user_id', userId);
-
-        if (remindersData) {
-          results.push(...remindersData.map(reminder => ({
-            id: reminder.id,
-            title: reminder.message,
-            date: new Date(reminder.reminder_time as string),
-            type: "reminder" as const
-          })));
-        }
-      } catch (err) {
-        console.log("Error fetching reminders:", err);
-      }
-
-      return results;
-    },
-    enabled: !!userId,
-  });
+// Helper function to get days for the calendar view
+const getDaysForCalendarView = (date: Date) => {
+  const start = startOfWeek(startOfMonth(date), { weekStartsOn: 0 });
+  const end = endOfWeek(endOfMonth(date), { weekStartsOn: 0 });
+  return eachDayOfInterval({ start, end });
 };
 
-export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
-  isCompact = false,
-}) => {
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [userId, setUserId] = useState<string | null>(null);
-  const { toast } = useToast();
+// Format day of month with ordinal suffix
+const formatDayWithOrdinal = (day: number) => {
+  const suffixes = ['th', 'st', 'nd', 'rd'];
+  const relevantDigits = (day % 100);
+  const suffix = (relevantDigits >= 11 && relevantDigits <= 13) ? 'th' : suffixes[(day % 10)] || 'th';
+  return `${day}${suffix}`;
+};
 
-  // Get current userId for filtering
-  useEffect(() => {
-    supabase.auth.getSession().then(result => {
-      const id = result.data?.session?.user?.id;
-      setUserId(id || null);
-    });
-  }, []);
+const DashboardCalendar: React.FC = () => {
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedDay, setSelectedDay] = useState(new Date());
+  const [calendarDays, setCalendarDays] = useState<Date[]>([]);
 
-  // Get task and booking events for this user
-  const { data: events = [], isLoading, refetch } = useRealCalendarEvents(userId);
-
-  // Helper: filter events for specific date
-  const getEventsForDate = (date: Date) => {
-    return events.filter(event => isSameDay(new Date(event.date), date));
-  };
-
-  const getEventTypesForDate = (date: Date): DayEventTypes => {
-    const dateEvents = getEventsForDate(date);
-    return {
-      hasTasks: dateEvents.some(event => event.type === "task"),
-      hasBookings: dateEvents.some(event => event.type === "booking"),
-      hasEvents: dateEvents.some(event => event.type === "event"),
-      hasManualEntries: dateEvents.some(event => event.type === "manual"),
-      hasReminders: dateEvents.some(event => event.type === "reminder")
-    };
-  };
-
-  const selectedDateEvents = getEventsForDate(selectedDate);
+  // Use the unified calendar hook
+  const { events, isLoading } = useCalendarEvents();
   
-  // Delete a manual entry
-  const handleDeleteEntry = async (entryId: string, entryType: string) => {
-    if (!userId) return;
+  // Update calendar days when month changes
+  useEffect(() => {
+    setCalendarDays(getDaysForCalendarView(currentMonth));
+  }, [currentMonth]);
+
+  // Navigation functions
+  const nextMonth = () => {
+    setCurrentMonth(prevMonth => {
+      const nextMonth = new Date(prevMonth);
+      nextMonth.setMonth(nextMonth.getMonth() + 1);
+      return nextMonth;
+    });
+  };
+
+  const prevMonth = () => {
+    setCurrentMonth(prevMonth => {
+      const prevMonthDate = new Date(prevMonth);
+      prevMonthDate.setMonth(prevMonthDate.getMonth() - 1);
+      return prevMonthDate;
+    });
+  };
+
+  // Filter events for the selected day
+  const selectedDayEvents = events.filter(event => 
+    event.date && isSameDay(new Date(event.date), selectedDay)
+  );
+
+  // Group events by type for the calendar cells
+  const getEventsForDay = (day: Date) => {
+    return events.filter(event => 
+      event.date && isSameDay(new Date(event.date), day)
+    );
+  };
+
+  // Render day names row
+  const renderDayNames = () => {
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    return dayNames.map(day => (
+      <div key={day} className="py-2 font-medium">
+        {day}
+      </div>
+    ));
+  };
+
+  // Render a single calendar day cell
+  const renderCalendarDay = (day: Date, index: number) => {
+    const isCurrentMonth = isSameMonth(day, currentMonth);
+    const isToday = isSameDay(day, new Date());
+    const isSelected = isSameDay(day, selectedDay);
+    const dayEvents = getEventsForDay(day);
     
-    try {
-      let error;
-      
-      if (entryType === "manual") {
-        const result = await supabase
-          .from('calendar_manual_entries')
-          .delete()
-          .eq('id', entryId)
-          .eq('user_id', userId);
-        error = result.error;
-      } else if (entryType === "task") {
-        const result = await supabase
-          .from('tasks')
-          .delete()
-          .eq('id', entryId)
-          .eq('user_id', userId);
-        error = result.error;
-      }
-      
-      if (error) {
-        throw error;
-      }
-      
-      toast({
-        title: "Entry deleted",
-        description: "The calendar entry has been removed",
-      });
-      
-      refetch();
-    } catch (err) {
-      console.error("Error deleting entry:", err);
-      toast({
-        title: "Delete failed",
-        description: "There was an error deleting the entry",
-        variant: "destructive",
-      });
-    }
+    // Count events by type
+    const eventCounts = {
+      tasks: dayEvents.filter(e => e.type === 'task').length,
+      events: dayEvents.filter(e => e.type === 'event').length,
+      bookings: dayEvents.filter(e => e.type === 'booking').length,
+      manualEntries: dayEvents.filter(e => e.type === 'manual').length,
+      reminders: dayEvents.filter(e => e.type === 'reminder').length
+    };
+    
+    const hasEvents = dayEvents.length > 0;
+    
+    return (
+      <div
+        key={index}
+        className={`
+          relative h-12 p-1 border-t
+          ${isCurrentMonth ? 'bg-background' : 'bg-muted/30 text-muted-foreground'}
+          ${isSelected ? 'bg-accent' : ''}
+          ${isToday ? 'font-bold' : ''}
+        `}
+        onClick={() => setSelectedDay(day)}
+      >
+        <div className="flex justify-between items-start h-full">
+          <span className={`text-xs ${isSelected ? 'text-accent-foreground' : ''}`}>
+            {day.getDate()}
+          </span>
+          
+          {hasEvents && (
+            <div className="flex flex-wrap gap-0.5 justify-end">
+              {eventCounts.tasks > 0 && <EventDot type="task" />}
+              {eventCounts.events > 0 && <EventDot type="event" />}
+              {eventCounts.bookings > 0 && <EventDot type="booking" />}
+              {eventCounts.manualEntries > 0 && <EventDot type="manual" />}
+              {eventCounts.reminders > 0 && <EventDot type="reminder" />}
+            </div>
+          )}
+          
+          {hasEvents && dayEvents.length > 1 && (
+            <div className="absolute bottom-1 right-1">
+              <EventCountBadge count={dayEvents.length} />
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // Render all calendar days
+  const renderCalendarDays = () => {
+    return calendarDays.map((day, index) => renderCalendarDay(day, index));
   };
 
   return (
-    <div className="space-y-4">
-      {isLoading ? (
-        <Card>
-          <CardContent>
-            <div className="h-52 flex items-center justify-center text-muted-foreground">Loading calendar…</div>
-          </CardContent>
-        </Card>
-      ) : (
-        <>
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={(date) => date && setSelectedDate(date)}
-            className="rounded-md border bg-gradient-to-br from-white via-white to-[#E5DEFF]/20 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800"
-            components={{
-              Day: ({ date, ...props }) => (
-                <CalendarDayCell
-                  date={date}
-                  selected={isSameDay(date, selectedDate)}
-                  eventTypes={getEventTypesForDate(date)}
-                  onSelect={(date) => setSelectedDate(date)}
-                  {...props}
-                />
-              ),
-            }}
-          />
-
-          <CalendarLegend showBookings={true} showManualEntries={true} showEvents={true} showReminders={true} />
-
-          {selectedDateEvents.length > 0 ? (
-            <div className="mt-4">
-              <div className="flex items-center gap-2 mb-2">
-                <h3 className="text-sm font-medium">
-                  {format(selectedDate, "MMMM d, yyyy")}
-                </h3>
-                <Badge variant="outline" className="ml-2 bg-white/50 text-xs">
-                  {selectedDateEvents.length} {selectedDateEvents.length === 1 ? 'event' : 'events'}
-                </Badge>
-              </div>
-
-              <div className="bg-white/50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700 p-2">
-                <TaskList 
-                  tasks={selectedDateEvents} 
-                  onDelete={(id, type) => handleDeleteEntry(id, type)} 
-                />
-              </div>
-            </div>
-          ) : (
-            <div className="text-center py-4 text-muted-foreground text-sm bg-white/50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700">
-              No events for {format(selectedDate, "MMMM d, yyyy")}
-            </div>
-          )}
-        </>
-      )}
-    </div>
+    <Card className="h-full">
+      {/* Calendar header */}
+      <div className="p-4 border-b">
+        <div className="flex items-center justify-between">
+          <div className="flex gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={prevMonth}
+              className="h-7 w-7"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              <span className="sr-only">Previous month</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={nextMonth}
+              className="h-7 w-7"
+            >
+              <ChevronRight className="h-4 w-4" />
+              <span className="sr-only">Next month</span>
+            </Button>
+          </div>
+          <h2 className="text-lg font-semibold">
+            {format(currentMonth, 'MMMM yyyy')}
+          </h2>
+          <CalendarLegend />
+        </div>
+      </div>
+      
+      {/* Calendar grid */}
+      <div className="grid grid-cols-7 gap-px text-xs text-center">
+        {/* Day names row */}
+        {renderDayNames()}
+        
+        {/* Calendar days */}
+        {renderCalendarDays()}
+      </div>
+      
+      {/* Selected day's events */}
+      <div className="p-4 border-t">
+        <h3 className="font-medium mb-3">
+          {format(selectedDay, 'MMMM d, yyyy')} 
+          {isLoading && <span className="ml-2 text-xs text-muted-foreground">(Loading...)</span>}
+        </h3>
+        {selectedDayEvents.length ? (
+          // Pass only tasks prop, not onDelete since this is display-only
+          <TaskList tasks={selectedDayEvents} />
+        ) : (
+          <div className="text-center py-2 text-sm text-muted-foreground">
+            No events for this day
+          </div>
+        )}
+      </div>
+    </Card>
   );
 };
+
+export default DashboardCalendar;
