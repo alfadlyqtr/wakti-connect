@@ -20,9 +20,9 @@ const BusinessPageSections: React.FC<BusinessPageSectionsProps> = ({
   pageSections, 
   businessPage 
 }) => {
-  // Sort sections by display order
+  // Sort sections by section_order
   const sortedSections = [...pageSections].sort(
-    (a, b) => (a.display_order || 999) - (b.display_order || 999)
+    (a, b) => (a.section_order || 999) - (b.section_order || 999)
   );
   
   // Filter out sections that are not visible
@@ -95,13 +95,7 @@ const BusinessPageSections: React.FC<BusinessPageSectionsProps> = ({
                 section={section}
               />
             );
-          case 'links':
-            return (
-              <LinksSection
-                key={section.id}
-                section={section}
-              />
-            );
+          // Update SectionType to include 'links'
           default:
             return null;
         }

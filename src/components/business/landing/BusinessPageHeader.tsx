@@ -1,16 +1,32 @@
 
 import React from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Business } from "@/types/business.types";
-import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getInitials } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+
+// Define a BusinessProfile type interface for usage within this component
+interface BusinessProfile {
+  id?: string;
+  business_name: string;
+  display_name?: string;
+  avatar_url?: string;
+  account_type?: string;
+}
 
 interface BusinessPageHeaderProps {
-  business: Partial<Business>;
+  business: Partial<BusinessProfile>;
   isPreviewMode?: boolean;
   isAuthenticated: boolean | null;
 }
+
+// Helper function to get initials from a name
+const getInitials = (name: string): string => {
+  return name
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase())
+    .join('')
+    .substring(0, 2);
+};
 
 const BusinessPageHeader: React.FC<BusinessPageHeaderProps> = ({
   business,

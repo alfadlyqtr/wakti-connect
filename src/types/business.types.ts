@@ -1,4 +1,3 @@
-
 export interface BusinessProfile {
   id: string;
   business_name: string;
@@ -70,7 +69,7 @@ export interface BusinessPageSection {
   id: string;
   page_id: string;
   section_type: SectionType;
-  section_order: number;
+  section_order: number;  // This was display_order, fixing to section_order
   section_content: any;
   is_visible: boolean;
   created_at?: string;
@@ -93,7 +92,8 @@ export type SectionType =
   | 'testimonials'
   | 'booking'
   | 'instagram'
-  | 'chatbot'; // Add chatbot as a new section type
+  | 'chatbot'
+  | 'links'; // Added 'links' to the SectionType
 
 export interface BusinessSocialLink {
   id: string;
