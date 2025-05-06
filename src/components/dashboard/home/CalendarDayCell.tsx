@@ -46,7 +46,7 @@ const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
         // Always apply a prominent highlight for today's date, regardless of selection
         isCurrentDay && "ring-2 ring-primary ring-inset",
         // Make cells a bit larger on mobile for easier touch interaction
-        isMobile && "h-14"
+        isMobile && "h-16"
       )}
     >
       <time dateTime={format(date, 'yyyy-MM-dd')} className="font-medium">
@@ -55,7 +55,7 @@ const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
       
       {/* Simplified event indicators for mobile */}
       {isMobile && hasEvents ? (
-        <div className="absolute bottom-1 right-1 w-2 h-2 rounded-full bg-primary"></div>
+        <div className="absolute bottom-1 right-1 w-2.5 h-2.5 rounded-full bg-primary"></div>
       ) : (
         /* Detailed event indicators for larger screens */
         hasEvents && (

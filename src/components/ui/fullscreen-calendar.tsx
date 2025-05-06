@@ -1,10 +1,11 @@
 
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, isToday } from 'date-fns';
+import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, isToday, parse } from 'date-fns';
+import { Plus, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import CalendarDayCell from '@/components/dashboard/home/CalendarDayCell';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface DayData {
   day: Date;
@@ -48,9 +49,31 @@ export const FullScreenCalendar: React.FC<FullScreenCalendarProps> = ({
     ? ['S', 'M', 'T', 'W', 'T', 'F', 'S'] 
     : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-  // Navigation
-  const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
-  const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
+  // Handle month selection
+  const handleMonthChange = (value: string) => {
+    const [month, year] = value.split('-');
+    const newDate = new Date(parseInt(year), parseInt(month), 1);
+    setCurrentMonth(newDate);
+  };
+  
+  // Generate month options for the dropdown
+  const monthOptions = React.useMemo(() => {
+    const options = [];
+    const currentYear = new Date().getFullYear();
+    
+    // Add months for current year and next year
+    for (let year = currentYear - 1; year <= currentYear + 1; year++) {
+      for (let month = 0; month < 12; month++) {
+        const date = new Date(year, month, 1);
+        options.push({
+          value: `${month}-${year}`,
+          label: format(date, 'MMMM yyyy')
+        });
+      }
+    }
+    
+    return options;
+  }, []);
   
   // Handle day selection
   const handleDaySelect = (day: Date) => {
@@ -72,31 +95,41 @@ export const FullScreenCalendar: React.FC<FullScreenCalendarProps> = ({
   };
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="p-4 flex items-center justify-between border-b">
-        <div className="flex items-center">
-          <Button variant="ghost" size="sm" onClick={prevMonth} className="mr-1">
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="sm" onClick={nextMonth} className="mr-3">
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-          <h2 className="text-lg font-semibold">
-            {format(currentMonth, 'MMMM yyyy')}
-          </h2>
+    <div className="h-full flex flex-col w-full">
+      <div className="p-3 md:p-4 flex items-center justify-between border-b">
+        <div className="flex-1 max-w-[180px] md:max-w-xs">
+          <Select 
+            value={`${currentMonth.getMonth()}-${currentMonth.getFullYear()}`}
+            onValueChange={handleMonthChange}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue>
+                {format(currentMonth, 'MMMM yyyy')}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {monthOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
         </div>
         {onAddEntry && (
-          <Button size="sm" variant="outline" onClick={onAddEntry}>
-            <Plus className="h-4 w-4 mr-1" /> Add Event
+          <Button size="sm" variant="outline" onClick={onAddEntry} className="whitespace-nowrap">
+            <Plus className="h-4 w-4 mr-1" /> Add Entry
           </Button>
         )}
       </div>
 
-      <div className="flex-1 overflow-auto">
-        <div className="grid grid-cols-7 h-full">
+      <div className="flex-1 overflow-auto w-full">
+        <div className="grid grid-cols-7 h-full w-full max-w-none">
           {/* Weekday headers */}
           {dayNames.map((day, i) => (
-            <div key={i} className="p-2 text-center text-sm font-medium border-b">
+            <div key={i} className="p-1 md:p-2 text-center text-sm font-medium border-b">
               {day}
             </div>
           ))}

@@ -154,8 +154,8 @@ const DashboardCalendarPage: React.FC = () => {
       <Separator className="my-2" />
 
       {/* Make the calendar section take full width on mobile */}
-      <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-3'} gap-4`}>
-        <Card className={`${isMobile ? 'w-full px-0' : 'col-span-1 lg:col-span-2'} overflow-hidden relative`}>
+      <div className={`grid ${isMobile ? 'grid-cols-1 gap-0' : 'grid-cols-1 lg:grid-cols-3 gap-4'}`}>
+        <Card className={`${isMobile ? 'w-full px-0 border-0 shadow-none' : 'col-span-1 lg:col-span-2'} overflow-hidden relative`}>
           <FullScreenCalendar 
             data={calendarData}
             isLoading={isLoading}
