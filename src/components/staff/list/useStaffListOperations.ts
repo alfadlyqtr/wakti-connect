@@ -66,29 +66,18 @@ export const useStaffListOperations = () => {
   const syncStaffRecords = async () => {
     setIsSyncing(true);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData.session) {
-        throw new Error('Not authenticated');
-      }
-
-      const response = await fetch('/api/sync-staff-records', {
+      // Call the Supabase Edge Function directly instead of using fetch
+      const { data, error } = await supabase.functions.invoke('sync-staff-records', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${sessionData.session.access_token}`,
-          'Content-Type': 'application/json'
-        }
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to sync staff records');
+      if (error) {
+        throw new Error(error.message || 'Failed to sync staff records');
       }
-
-      const result = await response.json();
       
       toast({
         title: "Staff Synchronized",
-        description: `Successfully synchronized ${result.data?.synced?.length || 0} staff records.`
+        description: `Successfully synchronized ${data?.synced?.length || 0} staff records.`
       });
       
       // Refresh staff list
@@ -99,6 +88,7 @@ export const useStaffListOperations = () => {
         description: error.message || "Failed to sync staff records",
         variant: "destructive"
       });
+      console.error("Staff sync error:", error);
     } finally {
       setIsSyncing(false);
     }

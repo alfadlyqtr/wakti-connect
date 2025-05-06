@@ -21,3 +21,6 @@ enabled = true
 
 [functions.tomtom-geocode]
 verify_jwt = false
+
+[functions.sync-staff-records]
+verify_jwt = true
