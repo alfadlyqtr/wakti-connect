@@ -26,7 +26,11 @@ const formatDayWithOrdinal = (day: number) => {
   return `${day}${suffix}`;
 };
 
-const DashboardCalendar: React.FC = () => {
+interface DashboardCalendarProps {
+  isCompact?: boolean;
+}
+
+const DashboardCalendar: React.FC<DashboardCalendarProps> = ({ isCompact = false }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState(new Date());
   const [calendarDays, setCalendarDays] = useState<Date[]>([]);
