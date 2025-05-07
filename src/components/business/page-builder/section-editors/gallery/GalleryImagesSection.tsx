@@ -1,10 +1,10 @@
 
-import React from "react";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Trash2, GripVertical, ArrowUp, ArrowDown, Pencil } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Pencil, Trash2, ArrowUp, ArrowDown, Eye, AlertCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 interface GalleryImagesSectionProps {
@@ -16,175 +16,147 @@ const GalleryImagesSection: React.FC<GalleryImagesSectionProps> = ({
   images,
   handleInputChange
 }) => {
-  const [editingIndex, setEditingIndex] = React.useState<number | null>(null);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
   
-  const handleMoveImage = (index: number, direction: 'up' | 'down') => {
-    if (direction === 'up' && index === 0) return;
-    if (direction === 'down' && index === images.length - 1) return;
+  if (images.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-8 text-center border-2 border-dashed border-muted-foreground/20 rounded-md">
+        <AlertCircle className="h-8 w-8 text-muted-foreground mb-2" />
+        <h3 className="font-medium text-lg">No Images Added Yet</h3>
+        <p className="text-muted-foreground mt-1">Use the Upload tab to add images to your gallery.</p>
+      </div>
+    );
+  }
+  
+  // Move an image up in the array
+  const moveImageUp = (index: number) => {
+    if (index <= 0) return;
     
     const newImages = [...images];
-    const targetIndex = direction === 'up' ? index - 1 : index + 1;
-    
-    // Swap the images
     const temp = newImages[index];
-    newImages[index] = newImages[targetIndex];
-    newImages[targetIndex] = temp;
+    newImages[index] = newImages[index - 1];
+    newImages[index - 1] = temp;
     
     handleInputChange('images', newImages);
   };
   
-  const handleRemoveImage = (index: number) => {
+  // Move an image down in the array
+  const moveImageDown = (index: number) => {
+    if (index >= images.length - 1) return;
+    
+    const newImages = [...images];
+    const temp = newImages[index];
+    newImages[index] = newImages[index + 1];
+    newImages[index + 1] = temp;
+    
+    handleInputChange('images', newImages);
+  };
+  
+  // Delete an image from the array
+  const deleteImage = (index: number) => {
     const newImages = [...images];
     newImages.splice(index, 1);
     handleInputChange('images', newImages);
     
-    // Clear editing state if the removed image was being edited
+    // Clear editing mode if the deleted image was being edited
     if (editingIndex === index) {
       setEditingIndex(null);
     } else if (editingIndex !== null && editingIndex > index) {
-      // Adjust editing index if a preceding image was removed
+      // Adjust editingIndex if we deleted an image before it
       setEditingIndex(editingIndex - 1);
     }
   };
   
-  const handleUpdateImageDetails = (index: number, field: string, value: string) => {
+  // Update image properties
+  const updateImageProperty = (index: number, property: string, value: string) => {
     const newImages = [...images];
     newImages[index] = {
       ...newImages[index],
-      [field]: value
+      [property]: value
     };
     handleInputChange('images', newImages);
   };
   
   return (
     <div className="space-y-4">
-      <Label>Gallery Images</Label>
-      
-      {images.length === 0 ? (
-        <div className="text-center border border-dashed rounded-md p-4">
-          <p className="text-sm text-muted-foreground">No images in gallery yet</p>
-          <p className="text-xs text-muted-foreground mt-1">Go to the Upload tab to add images</p>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {images.map((image, index) => (
-            <Card key={index} className="overflow-hidden">
-              <CardContent className="p-0">
-                {editingIndex === index ? (
-                  <div className="p-3 space-y-3">
-                    <div className="grid grid-cols-[80px_1fr] gap-3 items-center">
-                      <img 
-                        src={image.url} 
-                        alt={image.alt || `Gallery image ${index+1}`}
-                        className="w-20 h-20 object-cover rounded" 
-                      />
-                      <div className="space-y-2">
-                        <div>
-                          <Label htmlFor={`image-alt-${index}`} className="text-xs">Alt Text</Label>
-                          <Input
-                            id={`image-alt-${index}`}
-                            value={image.alt || ""}
-                            onChange={(e) => handleUpdateImageDetails(index, 'alt', e.target.value)}
-                            placeholder="Image description"
-                            className="text-sm"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor={`image-caption-${index}`} className="text-xs">Caption</Label>
-                      <Textarea
-                        id={`image-caption-${index}`}
-                        value={image.caption || ""}
-                        onChange={(e) => handleUpdateImageDetails(index, 'caption', e.target.value)}
-                        placeholder="Image caption (optional)"
-                        rows={2}
-                        className="text-sm"
-                      />
-                    </div>
-                    
-                    <div className="flex justify-between">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => setEditingIndex(null)}
-                      >
-                        Done
-                      </Button>
-                      
-                      <Button 
-                        variant="destructive" 
-                        size="sm"
-                        onClick={() => handleRemoveImage(index)}
-                      >
-                        <Trash2 className="h-4 w-4 mr-1" />
-                        Remove
-                      </Button>
-                    </div>
+      <div className="grid grid-cols-1 gap-4">
+        {images.map((image, index) => (
+          <Card key={index} className={`overflow-hidden ${editingIndex === index ? 'ring-2 ring-primary' : ''}`}>
+            <div className="flex flex-col sm:flex-row">
+              <div className="w-full sm:w-1/3 h-48 bg-muted relative">
+                <img 
+                  src={image.url} 
+                  alt={image.alt || `Gallery image ${index + 1}`} 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              
+              {editingIndex === index ? (
+                <div className="flex-1 p-4 space-y-3">
+                  <div className="space-y-2">
+                    <Label htmlFor={`image-alt-${index}`}>Image Caption/Title</Label>
+                    <Input 
+                      id={`image-alt-${index}`}
+                      value={image.alt || ''}
+                      onChange={(e) => updateImageProperty(index, 'alt', e.target.value)}
+                      placeholder="Describe this image"
+                    />
                   </div>
-                ) : (
-                  <div className="flex items-center">
-                    <div className="p-2 text-gray-400">
-                      <GripVertical className="h-5 w-5" />
-                    </div>
-                    
-                    <div className="flex-1 flex items-center gap-3 p-2">
-                      <img 
-                        src={image.url} 
-                        alt={image.alt || `Gallery image ${index+1}`}
-                        className="w-12 h-12 object-cover rounded" 
-                      />
-                      
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">
-                          {image.alt || `Image ${index+1}`}
-                        </p>
-                        {image.caption && (
-                          <p className="text-xs text-gray-500 truncate">
-                            {image.caption}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center p-2 gap-1">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8"
-                        disabled={index === 0}
-                        onClick={() => handleMoveImage(index, 'up')}
-                      >
-                        <ArrowUp className="h-4 w-4" />
-                      </Button>
-                      
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8"
-                        disabled={index === images.length - 1}
-                        onClick={() => handleMoveImage(index, 'down')}
-                      >
-                        <ArrowDown className="h-4 w-4" />
-                      </Button>
-                      
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8"
-                        onClick={() => setEditingIndex(index)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                    </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor={`image-caption-${index}`}>Detailed Caption</Label>
+                    <Textarea 
+                      id={`image-caption-${index}`}
+                      value={image.caption || ''}
+                      onChange={(e) => updateImageProperty(index, 'caption', e.target.value)}
+                      placeholder="Add more details about this image (optional)"
+                      rows={3}
+                    />
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+                  
+                  <div className="pt-2 flex justify-end">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setEditingIndex(null)}
+                    >
+                      Done
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex-1 p-4 flex justify-between">
+                  <div>
+                    <h3 className="font-medium truncate">
+                      {image.alt || `Image ${index + 1}`}
+                    </h3>
+                    {image.caption && (
+                      <p className="text-sm text-muted-foreground line-clamp-1 mt-1">
+                        {image.caption}
+                      </p>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center space-x-1">
+                    <Button variant="ghost" size="icon" onClick={() => moveImageUp(index)} disabled={index === 0}>
+                      <ArrowUp className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => moveImageDown(index)} disabled={index === images.length - 1}>
+                      <ArrowDown className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => setEditingIndex(index)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-600" onClick={() => deleteImage(index)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 };

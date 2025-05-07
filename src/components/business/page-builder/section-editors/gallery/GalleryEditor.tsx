@@ -1,13 +1,17 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EditorProps } from "../types";
 import GalleryUploadSection from "./GalleryUploadSection";
 import GalleryImagesSection from "./GalleryImagesSection";
+import GalleryTemplateSection from "./GalleryTemplateSection";
+import SectionStyleEditor from "../SectionStyleEditor";
+import { useSectionEditor } from "@/hooks/useSectionEditor";
 
 const GalleryEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }) => {
+  const { handleStyleChange } = useSectionEditor();
   // Initialize the images array if it doesn't exist
   const images = contentData.images || [];
   
@@ -30,13 +34,21 @@ const GalleryEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="subtitle">Gallery Subtitle</Label>
+        <Label htmlFor="description">Gallery Description</Label>
         <Input
-          id="subtitle"
-          name="subtitle"
-          value={contentData.subtitle || ""}
+          id="description"
+          name="description"
+          value={contentData.description || ""}
           onChange={handleTextInputChange}
           placeholder="Check out our recent work"
+        />
+      </div>
+      
+      {/* Layout templates section */}
+      <div className="pt-4 border-t border-border">
+        <GalleryTemplateSection 
+          contentData={contentData}
+          handleInputChange={handleInputChange}
         />
       </div>
       
@@ -60,6 +72,15 @@ const GalleryEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }
           />
         </TabsContent>
       </Tabs>
+      
+      {/* Section styling options */}
+      <div className="pt-4 border-t border-border">
+        <SectionStyleEditor
+          contentData={contentData}
+          handleInputChange={handleInputChange}
+          handleStyleChange={handleStyleChange}
+        />
+      </div>
     </div>
   );
 };
