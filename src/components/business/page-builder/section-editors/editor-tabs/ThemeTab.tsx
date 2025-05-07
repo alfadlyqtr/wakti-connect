@@ -6,11 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ColorInput } from "@/components/inputs/ColorInput";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, Loader2, AlignLeft, AlignCenter, AlignRight } from "lucide-react";
-import { PageSettings } from "../types";
-import { toast } from "@/components/ui/use-toast";
-import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { AlignLeft, AlignCenter, AlignRight } from "lucide-react";
+import { PageSettings } from "../../simple-builder/types";
 
 interface ThemeTabProps {
   pageSettings: PageSettings;
@@ -18,8 +15,6 @@ interface ThemeTabProps {
 }
 
 const ThemeTab: React.FC<ThemeTabProps> = ({ pageSettings, setPageSettings }) => {
-  const [isUploading, setIsUploading] = useState(false);
-  
   const handleInputChange = (field: keyof PageSettings, value: any) => {
     setPageSettings({
       ...pageSettings,
@@ -27,56 +22,24 @@ const ThemeTab: React.FC<ThemeTabProps> = ({ pageSettings, setPageSettings }) =>
     });
   };
 
-  const handleBackgroundImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleContactInfoChange = (field: string, value: any) => {
+    setPageSettings({
+      ...pageSettings,
+      contactInfo: {
+        ...pageSettings.contactInfo,
+        [field]: value
+      }
+    });
+  };
 
-    setIsUploading(true);
-    
-    try {
-      // Get the current user
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) {
-        throw new Error("You must be logged in to upload images");
+  const handleSocialLinkChange = (field: string, value: any) => {
+    setPageSettings({
+      ...pageSettings,
+      socialLinks: {
+        ...pageSettings.socialLinks,
+        [field]: value
       }
-      
-      const businessId = session.user.id;
-      
-      // Upload the image using the service
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-      const filePath = `${businessId}/backgrounds/${fileName}`;
-      
-      const { error: uploadError, data } = await supabase.storage
-        .from('business')
-        .upload(filePath, file);
-        
-      if (uploadError) {
-        throw uploadError;
-      }
-      
-      const { data: { publicUrl } } = supabase.storage
-        .from('business')
-        .getPublicUrl(filePath);
-      
-      // Update the background image URL
-      handleInputChange('backgroundImage', publicUrl);
-      
-      toast({
-        title: "Background image uploaded",
-        description: "Your site background image has been updated"
-      });
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      toast({
-        title: "Upload failed",
-        description: error instanceof Error ? error.message : "Failed to upload background image",
-        variant: "destructive"
-      });
-    } finally {
-      setIsUploading(false);
-      e.target.value = '';
-    }
+    });
   };
 
   const fontFamilyOptions = [
@@ -153,8 +116,6 @@ const ThemeTab: React.FC<ThemeTabProps> = ({ pageSettings, setPageSettings }) =>
             <Label>Text Alignment</Label>
             <div className="flex space-x-2">
               <Button 
-                type="button"
-                size="sm"
                 variant={pageSettings.textAlignment === 'left' ? 'default' : 'outline'}
                 onClick={() => handleInputChange('textAlignment', 'left')}
                 className="flex-1"
@@ -163,8 +124,6 @@ const ThemeTab: React.FC<ThemeTabProps> = ({ pageSettings, setPageSettings }) =>
                 Left
               </Button>
               <Button 
-                type="button"
-                size="sm"
                 variant={pageSettings.textAlignment === 'center' ? 'default' : 'outline'}
                 onClick={() => handleInputChange('textAlignment', 'center')}
                 className="flex-1"
@@ -173,8 +132,6 @@ const ThemeTab: React.FC<ThemeTabProps> = ({ pageSettings, setPageSettings }) =>
                 Center
               </Button>
               <Button 
-                type="button"
-                size="sm"
                 variant={pageSettings.textAlignment === 'right' ? 'default' : 'outline'}
                 onClick={() => handleInputChange('textAlignment', 'right')}
                 className="flex-1"
@@ -221,54 +178,6 @@ const ThemeTab: React.FC<ThemeTabProps> = ({ pageSettings, setPageSettings }) =>
               value={pageSettings.backgroundColor || "#ffffff"}
               onChange={(value) => handleInputChange('backgroundColor', value)}
             />
-          </div>
-          
-          <div className="space-y-2">
-            <Label>Background Image</Label>
-            <div className="flex flex-col space-y-2">
-              <Button 
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => document.getElementById('site-background-upload')?.click()}
-                disabled={isUploading}
-                className="w-full"
-              >
-                {isUploading ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Upload className="mr-2 h-4 w-4" />
-                )}
-                {isUploading ? 'Uploading...' : 'Upload Background Image'}
-              </Button>
-              
-              <input
-                id="site-background-upload"
-                type="file"
-                accept="image/*"
-                onChange={handleBackgroundImageUpload}
-                className="hidden"
-              />
-              
-              {pageSettings.backgroundImage && (
-                <div className="mt-2 border p-2 rounded">
-                  <img
-                    src={pageSettings.backgroundImage}
-                    alt="Background preview"
-                    className="h-24 w-full object-cover rounded"
-                  />
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="sm"
-                    className="mt-2 w-full"
-                    onClick={() => handleInputChange('backgroundImage', '')}
-                  >
-                    Remove Image
-                  </Button>
-                </div>
-              )}
-            </div>
           </div>
         </TabsContent>
         

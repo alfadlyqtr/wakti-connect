@@ -13,17 +13,31 @@ const BusinessGallerySection: React.FC<BusinessGallerySectionProps> = ({ content
     columns = 3,
     layout = "grid", // grid, cards, masonry
     imageFit = "cover",
-    showCaption = false
+    showCaption = false,
+    backgroundColor,
+    textColor,
+    textAlignment = "center"
   } = content;
   
   if (!images || images.length === 0) {
     return null;
   }
   
+  const sectionStyles = {
+    backgroundColor: backgroundColor || undefined,
+    color: textColor || undefined
+  };
+  
+  const textAlignmentClass = {
+    left: "text-left",
+    center: "text-center",
+    right: "text-right"
+  }[textAlignment] || "text-center";
+  
   return (
-    <section className="py-12 md:py-16">
+    <section className="py-12 md:py-16" style={sectionStyles}>
       <div className="container mx-auto px-4">
-        <div className="text-center mb-10">
+        <div className={`${textAlignmentClass} mb-10`}>
           <h2 className="text-3xl font-bold mb-4">{title}</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">{description}</p>
         </div>
@@ -54,7 +68,7 @@ const BusinessGallerySection: React.FC<BusinessGallerySectionProps> = ({ content
           </div>
         ) : layout === "masonry" ? (
           // Masonry Layout
-          <div className="columns-1 md:columns-2 lg:columns-3 gap-4 space-y-4">
+          <div className={`columns-1 md:columns-2 lg:columns-3 gap-4 space-y-4`}>
             {images.map((image: any, index: number) => (
               <div key={index} className="break-inside-avoid">
                 <img 
@@ -72,7 +86,7 @@ const BusinessGallerySection: React.FC<BusinessGallerySectionProps> = ({ content
           </div>
         ) : (
           // Default Grid Layout
-          <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-${columns} gap-4`}>
+          <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-${columns} gap-4`}>
             {images.map((image: any, index: number) => (
               <div key={index} className="aspect-square overflow-hidden rounded-lg shadow-sm group">
                 <img 

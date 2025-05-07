@@ -30,8 +30,13 @@ const TopBar: React.FC<TopBarProps> = ({
   isPublishing = false
 }) => {
   const copyToClipboard = () => {
-    if (pageUrl && pageUrl !== '#') {
-      navigator.clipboard.writeText(pageUrl);
+    // Generate the correct URL format for business landing pages
+    const actualUrl = pageSettings.slug ? 
+      `https://${pageSettings.slug}.wakti.app` : 
+      'No URL available yet';
+    
+    if (actualUrl !== 'No URL available yet') {
+      navigator.clipboard.writeText(actualUrl);
       toast({
         title: "URL copied to clipboard",
         description: "You can now paste it anywhere.",
@@ -45,6 +50,11 @@ const TopBar: React.FC<TopBarProps> = ({
     }
   };
 
+  // Generate the correct URL display for business landing pages
+  const displayUrl = pageSettings.slug ? 
+    `https://${pageSettings.slug}.wakti.app` : 
+    'No URL available yet';
+
   return (
     <div className="bg-white border-b p-3 flex items-center justify-between">
       <div className="flex items-center">
@@ -52,7 +62,7 @@ const TopBar: React.FC<TopBarProps> = ({
         <div className="flex items-center bg-gray-100 rounded-md max-w-md">
           <Globe className="mx-2 h-4 w-4 text-gray-500" />
           <Input 
-            value={pageUrl !== '#' ? pageUrl : 'No URL available yet'} 
+            value={displayUrl} 
             readOnly
             className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
           />
@@ -60,7 +70,7 @@ const TopBar: React.FC<TopBarProps> = ({
             variant="ghost" 
             size="sm" 
             onClick={copyToClipboard}
-            disabled={pageUrl === '#'}
+            disabled={!pageSettings.slug}
             className="mr-1"
           >
             <Copy className="h-4 w-4" />

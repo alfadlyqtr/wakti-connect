@@ -58,18 +58,34 @@ const GalleryUploadSection: React.FC<GalleryUploadSectionProps> = ({
             continue; // Skip this file but try the rest
           }
           
-          // Upload the image
-          const imageUrl = await uploadBusinessImage(businessId, file, 'gallery');
+          // Create unique file path
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+          const filePath = `${businessId}/gallery/${fileName}`;
+          
+          // Upload directly to Supabase storage
+          const { error: uploadError, data } = await supabase.storage
+            .from('business')
+            .upload(filePath, file);
+            
+          if (uploadError) {
+            throw uploadError;
+          }
+          
+          // Get public URL
+          const { data: { publicUrl } } = supabase.storage
+            .from('business')
+            .getPublicUrl(filePath);
           
           // Create image object
           newImages.push({
-            url: imageUrl,
+            url: publicUrl,
             alt: file.name.split('.')[0].replace(/[_-]/g, ' '),
             caption: '',
             size: 100 // Default size (percentage)
           });
           
-          console.log("Successfully uploaded image:", imageUrl);
+          console.log("Successfully uploaded image:", publicUrl);
         } catch (error) {
           console.error("Error uploading image:", error);
           toast({

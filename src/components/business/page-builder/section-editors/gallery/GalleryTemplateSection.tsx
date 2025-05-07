@@ -7,7 +7,6 @@ import {
   Columns, 
   Grid3X3, 
   Images, 
-  LayoutList, 
   FileImage
 } from "lucide-react";
 import { EditorProps } from "../types";

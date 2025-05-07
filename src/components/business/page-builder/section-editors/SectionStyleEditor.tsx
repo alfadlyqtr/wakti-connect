@@ -5,7 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ColorInput } from "@/components/inputs/ColorInput";
-import { AlignCenter, AlignLeft, AlignRight, Upload } from "lucide-react";
+import { AlignCenter, AlignLeft, AlignRight, Upload, Loader2 } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SectionStyleEditorProps {
   contentData: any;
@@ -28,22 +30,56 @@ const SectionStyleEditor: React.FC<SectionStyleEditorProps> = ({
     }
   };
 
-  const handleBackgroundImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBackgroundImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Here you would typically upload to storage, but for now we'll use a FileReader
-    // to convert to base64 for demo purposes
     setIsUploading(true);
     
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (reader.readyState === 2) {
-        handleInputChange('backgroundImageUrl', reader.result);
-        setIsUploading(false);
+    try {
+      // Get the current user
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        throw new Error("You must be logged in to upload images");
       }
-    };
-    reader.readAsDataURL(file);
+      
+      const businessId = session.user.id;
+      
+      // Upload the image using the service
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+      const filePath = `${businessId}/backgrounds/${fileName}`;
+      
+      const { error: uploadError, data } = await supabase.storage
+        .from('business')
+        .upload(filePath, file);
+        
+      if (uploadError) {
+        throw uploadError;
+      }
+      
+      const { data: { publicUrl } } = supabase.storage
+        .from('business')
+        .getPublicUrl(filePath);
+      
+      // Update the background image URL
+      handleInputChange('backgroundImageUrl', publicUrl);
+      
+      toast({
+        title: "Background image uploaded",
+        description: "Your background image has been updated"
+      });
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      toast({
+        title: "Upload failed",
+        description: error instanceof Error ? error.message : "Failed to upload background image",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploading(false);
+      e.target.value = '';
+    }
   };
 
   return (
@@ -107,9 +143,14 @@ const SectionStyleEditor: React.FC<SectionStyleEditorProps> = ({
             size="sm"
             onClick={() => document.getElementById('background-image-upload')?.click()}
             disabled={isUploading}
+            className="w-full"
           >
-            <Upload className="mr-2 h-4 w-4" />
-            {isUploading ? 'Uploading...' : 'Upload Image'}
+            {isUploading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Upload className="mr-2 h-4 w-4" />
+            )}
+            {isUploading ? 'Uploading...' : 'Upload Background Image'}
           </Button>
           
           <input
