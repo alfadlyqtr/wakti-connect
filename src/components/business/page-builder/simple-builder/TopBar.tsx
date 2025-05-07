@@ -17,6 +17,8 @@ interface TopBarProps {
   isSaving?: boolean;
   isPublishing?: boolean;
   getPublicPageUrl?: () => string;
+  handleSave?: () => Promise<void>;
+  handlePublish?: () => Promise<void>;
 }
 
 const TopBar: React.FC<TopBarProps> = ({ 
@@ -29,7 +31,9 @@ const TopBar: React.FC<TopBarProps> = ({
   pageSettings,
   isSaving = false,
   isPublishing = false,
-  getPublicPageUrl = () => "#"
+  getPublicPageUrl = () => "#",
+  handleSave,
+  handlePublish
 }) => {
   const copyToClipboard = () => {
     if (pageUrl && pageUrl !== '#') {
@@ -47,12 +51,20 @@ const TopBar: React.FC<TopBarProps> = ({
     }
   };
   
-  const handleSave = () => {
-    onSave();
+  const handleSaveClick = () => {
+    if (handleSave) {
+      handleSave();
+    } else {
+      onSave();
+    }
   };
   
-  const handlePublish = () => {
-    onPublish();
+  const handlePublishClick = () => {
+    if (handlePublish) {
+      handlePublish();
+    } else {
+      onPublish();
+    }
   };
 
   return (
@@ -81,7 +93,7 @@ const TopBar: React.FC<TopBarProps> = ({
       <div className="flex items-center gap-2">
         <Button 
           variant="outline" 
-          onClick={handleSave} 
+          onClick={handleSaveClick} 
           className="gap-1"
           disabled={isSaving}
         >
@@ -104,7 +116,7 @@ const TopBar: React.FC<TopBarProps> = ({
         
         <Button 
           variant="default" 
-          onClick={handlePublish} 
+          onClick={handlePublishClick} 
           className="bg-wakti-navy"
           disabled={isPublishing}
         >
