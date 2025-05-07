@@ -79,3 +79,80 @@ export const updateBusinessLogo = async (
     throw error;
   }
 };
+
+/**
+ * Updates the profile avatar for a user
+ */
+export const updateProfileAvatar = async (
+  userId: string,
+  file: File
+): Promise<string> => {
+  try {
+    // Create a unique file name
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+    const filePath = `avatars/${userId}/${fileName}`;
+    
+    // Upload the file
+    const { error: uploadError } = await supabase
+      .storage
+      .from('avatars')
+      .upload(filePath, file);
+      
+    if (uploadError) throw uploadError;
+    
+    // Get the public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('avatars')
+      .getPublicUrl(filePath);
+    
+    // Update the profile record
+    const { error } = await supabase
+      .from('profiles')
+      .update({ avatar_url: publicUrl })
+      .eq('id', userId);
+      
+    if (error) throw error;
+    
+    return publicUrl;
+  } catch (error) {
+    console.error("Error updating profile avatar:", error);
+    toast({
+      variant: "destructive",
+      title: "Avatar update failed",
+      description: error instanceof Error ? error.message : "Failed to update avatar"
+    });
+    throw error;
+  }
+};
+
+/**
+ * Updates user profile data
+ */
+export const updateProfileData = async (
+  userId: string,
+  profileData: Record<string, any>
+): Promise<void> => {
+  try {
+    const { error } = await supabase
+      .from('profiles')
+      .update(profileData)
+      .eq('id', userId);
+      
+    if (error) throw error;
+    
+    toast({
+      title: "Profile updated",
+      description: "Your profile information has been updated successfully."
+    });
+  } catch (error) {
+    console.error("Error updating profile data:", error);
+    toast({
+      variant: "destructive",
+      title: "Update failed",
+      description: error instanceof Error ? error.message : "Failed to update profile"
+    });
+    throw error;
+  }
+};
+

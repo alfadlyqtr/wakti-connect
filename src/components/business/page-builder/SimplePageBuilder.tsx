@@ -442,6 +442,20 @@ const SimplePageBuilder: React.FC = () => {
     }
   };
   
+  // Helper function to map section to BusinessPageSection
+  const mapSectionToPageSection = (section: any, index: number): BusinessPageSection => {
+    return {
+      id: section.id || undefined,
+      page_id: ownerBusinessPage?.id || "",
+      section_type: section.type, // This was likely using section_title incorrectly
+      section_order: index,
+      section_content: section.content || {},
+      is_visible: true,
+      created_at: section.created_at || new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+  };
+  
   if (isLoading || ownerPageLoading || sectionsLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
