@@ -20,6 +20,7 @@ interface SectionsTabProps {
   removeSection: (index: number) => void;
   moveSectionUp: (index: number) => void;
   moveSectionDown: (index: number) => void;
+  setActiveSectionIndex: (index: number | null) => void;
 }
 
 const SectionsTab: React.FC<SectionsTabProps> = ({
@@ -29,7 +30,8 @@ const SectionsTab: React.FC<SectionsTabProps> = ({
   addSection,
   removeSection,
   moveSectionUp,
-  moveSectionDown
+  moveSectionDown,
+  setActiveSectionIndex
 }) => {
   const sectionTypes = [
     { id: 'header', label: 'Header/Hero' },
@@ -53,9 +55,14 @@ const SectionsTab: React.FC<SectionsTabProps> = ({
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={() => updateSection(activeSectionIndex, {
-                ...sections[activeSectionIndex]
-              })}
+              onClick={() => {
+                // Update the section first
+                updateSection(activeSectionIndex, {
+                  ...sections[activeSectionIndex]
+                });
+                // Then clear the active section to go back to list view
+                setActiveSectionIndex(null);
+              }}
             >
               Back to List
             </Button>
@@ -99,7 +106,7 @@ const SectionsTab: React.FC<SectionsTabProps> = ({
                     <Button 
                       variant="ghost" 
                       className="flex justify-start items-center gap-2 h-auto p-2 text-left hover:bg-transparent"
-                      onClick={() => updateSection(index, section)}
+                      onClick={() => setActiveSectionIndex(index)}
                     >
                       <Layout className="h-4 w-4" />
                       <div>

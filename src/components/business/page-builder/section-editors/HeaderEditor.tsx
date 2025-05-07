@@ -10,7 +10,7 @@ import { useSectionEditor } from "@/hooks/useSectionEditor";
 const HeaderEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }) => {
   const { handleStyleChange } = useSectionEditor();
   
-  // Create an adapter function for input components
+  // Create an adapter function for input components to handle the type mismatch
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     handleInputChange(e.target.name, e.target.value);
   };

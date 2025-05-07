@@ -19,6 +19,7 @@ interface EditorPanelProps {
   removeSection: (index: number) => void;
   moveSectionUp: (index: number) => void;
   moveSectionDown: (index: number) => void;
+  setActiveSectionIndex: (index: number | null) => void;
 }
 
 const EditorPanel: React.FC<EditorPanelProps> = ({
@@ -32,7 +33,8 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
   addSection,
   removeSection,
   moveSectionUp,
-  moveSectionDown
+  moveSectionDown,
+  setActiveSectionIndex
 }) => {
   return (
     <div className="w-80 bg-white border-l flex flex-col h-full overflow-hidden">
@@ -62,6 +64,7 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
               removeSection={removeSection}
               moveSectionUp={moveSectionUp}
               moveSectionDown={moveSectionDown}
+              setActiveSectionIndex={setActiveSectionIndex}
             />
           </TabsContent>
           

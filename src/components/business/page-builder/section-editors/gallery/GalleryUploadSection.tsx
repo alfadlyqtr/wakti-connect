@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 
 interface GalleryUploadSectionProps {
   images: any[];
-  handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  handleInputChange: (name: string, value: any) => void;
 }
 
 const GalleryUploadSection: React.FC<GalleryUploadSectionProps> = ({
@@ -69,6 +69,7 @@ const GalleryUploadSection: React.FC<GalleryUploadSectionProps> = ({
             size: 100 // Default size (percentage)
           });
           
+          console.log("Successfully uploaded image:", imageUrl);
         } catch (error) {
           console.error("Error uploading image:", error);
           toast({
@@ -81,16 +82,17 @@ const GalleryUploadSection: React.FC<GalleryUploadSectionProps> = ({
       
       setProgress(100);
       
+      if (newImages.length === 0) {
+        throw new Error("Failed to upload any images");
+      }
+      
+      console.log("New images to add:", newImages);
+      
       // Update the content data with the new images
       const updatedImages = [...images, ...newImages];
       
-      // Use type assertion to fix TypeScript errors with synthetic events
-      handleInputChange({
-        target: {
-          name: 'images',
-          value: updatedImages
-        }
-      } as unknown as React.ChangeEvent<HTMLInputElement>);
+      // Update parent component state
+      handleInputChange('images', updatedImages);
       
       toast({
         title: "Images uploaded",

@@ -11,6 +11,8 @@ export const uploadBusinessImage = async (
   folder: string = 'general'
 ): Promise<string> => {
   try {
+    console.log(`Starting upload of ${file.name} to ${folder} folder for business ${businessId}`);
+    
     // Check if the bucket exists, if not, try to create it
     const { data: buckets } = await supabase
       .storage
@@ -29,18 +31,27 @@ export const uploadBusinessImage = async (
     const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
     const filePath = `${businessId}/${folder}/${fileName}`;
     
+    console.log(`Uploading file to ${filePath}`);
+    
     // Upload the file
-    const { error: uploadError } = await supabase
+    const { error: uploadError, data: uploadData } = await supabase
       .storage
       .from('business-assets')
       .upload(filePath, file);
       
-    if (uploadError) throw uploadError;
+    if (uploadError) {
+      console.error("Upload error details:", uploadError);
+      throw new Error(`Upload failed: ${uploadError.message}`);
+    }
+    
+    console.log("Upload successful:", uploadData);
     
     // Get the public URL
     const { data: { publicUrl } } = supabase.storage
       .from('business-assets')
       .getPublicUrl(filePath);
+      
+    console.log("Public URL generated:", publicUrl);
       
     return publicUrl;
   } catch (error) {
@@ -155,4 +166,3 @@ export const updateProfileData = async (
     throw error;
   }
 };
-

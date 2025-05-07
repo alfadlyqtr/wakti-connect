@@ -11,7 +11,7 @@ const GalleryEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }
   // Initialize the images array if it doesn't exist
   const images = contentData.images || [];
   
-  // Create an adapter function for standard input components
+  // Create an adapter function for standard input components to handle the type mismatch
   const handleStandardInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     handleInputChange(e.target.name, e.target.value);
   };
