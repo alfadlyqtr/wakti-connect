@@ -1,6 +1,6 @@
 
 import { RouteObject, Navigate, useParams } from "react-router-dom";
-import BusinessPage from "@/pages/business/BusinessLandingPage";
+import SimpleBusinessLandingPage from "@/pages/business/SimpleBusinessLandingPage";
 import BookingPage from "@/pages/booking/BookingPage";
 import BookingConfirmationPage from "@/pages/booking/BookingConfirmationPage";
 
@@ -16,11 +16,11 @@ const BusinessRedirect = () => {
 export const businessRoutes: RouteObject[] = [
   {
     path: ":slug",
-    element: <BusinessRedirect />,
+    element: <SimpleBusinessLandingPage />,
   },
   {
     path: ":slug/preview",
-    element: <BusinessPage isPreview={true} />,
+    element: <SimpleBusinessLandingPage isPreview={true} />,
   },
 ];
 
