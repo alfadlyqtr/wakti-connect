@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
 import { Copy, Eye, Globe, Save, Loader2 } from "lucide-react";
+import { PageSettings } from "./types";
 
 interface TopBarProps {
   pageUrl: string;
@@ -12,6 +13,10 @@ interface TopBarProps {
   onSave: () => void;
   isEditMode: boolean;
   setEditMode: (isEdit: boolean) => void;
+  pageSettings: PageSettings;
+  isSaving?: boolean;
+  isPublishing?: boolean;
+  getPublicPageUrl?: () => string;
 }
 
 const TopBar: React.FC<TopBarProps> = ({ 
@@ -20,11 +25,12 @@ const TopBar: React.FC<TopBarProps> = ({
   onPublish, 
   onSave,
   isEditMode,
-  setEditMode
+  setEditMode,
+  pageSettings,
+  isSaving = false,
+  isPublishing = false,
+  getPublicPageUrl = () => "#"
 }) => {
-  const [isSaving, setIsSaving] = useState(false);
-  const [isPublishing, setIsPublishing] = useState(false);
-  
   const copyToClipboard = () => {
     if (pageUrl && pageUrl !== '#') {
       navigator.clipboard.writeText(pageUrl);
@@ -42,23 +48,11 @@ const TopBar: React.FC<TopBarProps> = ({
   };
   
   const handleSave = () => {
-    setIsSaving(true);
-    try {
-      onSave();
-    } finally {
-      // Usually we'd wait for the promise to resolve, but for simplicity:
-      setTimeout(() => setIsSaving(false), 500);
-    }
+    onSave();
   };
   
   const handlePublish = () => {
-    setIsPublishing(true);
-    try {
-      onPublish();
-    } finally {
-      // Usually we'd wait for the promise to resolve, but for simplicity:
-      setTimeout(() => setIsPublishing(false), 500);
-    }
+    onPublish();
   };
 
   return (

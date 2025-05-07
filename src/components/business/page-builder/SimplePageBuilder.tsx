@@ -1,164 +1,203 @@
 
 import React, { useState, useEffect } from "react";
-import { useBusinessPage } from "@/hooks/business-page";
-import { toast } from "@/components/ui/use-toast";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
-import EditorPanel from "./simple-builder/EditorPanel";
-import PagePreview from "./simple-builder/PagePreview";
+import { useNavigate } from "react-router-dom";
 import TopBar from "./simple-builder/TopBar";
-import CreateBusinessPageForm from "./CreateBusinessPageForm";
+import PagePreview from "./simple-builder/PagePreview";
+import EditorPanel from "./simple-builder/EditorPanel";
 import { SectionType, PageSettings } from "./simple-builder/types";
-import { BusinessPageSection } from "@/types/business.types";
+import { useBusinessPage } from "@/hooks/business-page";
+import { useToast } from "@/components/ui/use-toast";
+import CreateBusinessPageForm from "./CreateBusinessPageForm";
+import { BusinessPage, BusinessPageSection } from "@/types/business.types";
 
-const initialPageSettings: PageSettings = {
-  title: "My Business Page",
-  theme: "default",
-  primaryColor: "#3B82F6",
-  fontFamily: "Inter, sans-serif",
+// Default settings for a new page
+const defaultPageSettings: PageSettings = {
+  title: "My Business",
+  theme: "light",
+  primaryColor: "#0047AB",
+  fontFamily: "Inter",
   businessHours: [
     { day: "Monday", hours: "9:00 AM - 5:00 PM", isOpen: true },
     { day: "Tuesday", hours: "9:00 AM - 5:00 PM", isOpen: true },
     { day: "Wednesday", hours: "9:00 AM - 5:00 PM", isOpen: true },
     { day: "Thursday", hours: "9:00 AM - 5:00 PM", isOpen: true },
     { day: "Friday", hours: "9:00 AM - 5:00 PM", isOpen: true },
-    { day: "Saturday", hours: "10:00 AM - 3:00 PM", isOpen: true },
-    { day: "Sunday", hours: "Closed", isOpen: false }
+    { day: "Saturday", hours: "10:00 AM - 3:00 PM", isOpen: false },
+    { day: "Sunday", hours: "Closed", isOpen: false },
   ],
   contactInfo: {
-    email: "contact@business.com",
-    phone: "+1 (555) 123-4567",
-    address: "123 Business St, City, State 12345",
-    whatsapp: ""
+    email: "",
+    phone: "",
+    address: "",
+    whatsapp: "",
   },
   socialLinks: {
     instagram: "",
     facebook: "",
     twitter: "",
-    linkedin: ""
+    linkedin: "",
   },
   googleMapsUrl: "",
-  tmwChatbotCode: ""
+  tmwChatbotCode: "",
 };
 
 const SimplePageBuilder: React.FC = () => {
-  const [activeTab, setActiveTab] = useState("sections");
-  const [sections, setSections] = useState<SectionType[]>([]);
-  const [pageSettings, setPageSettings] = useState(initialPageSettings);
-  const [activeSectionIndex, setActiveSectionIndex] = useState<number | null>(null);
-  const [isEditMode, setEditMode] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isPublishing, setIsPublishing] = useState(false);
-
-  const { 
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  
+  const {
     ownerBusinessPage, 
-    ownerPageLoading, 
     pageSections,
     updatePage,
     updateSection,
-    autoSavePage,
-    getPublicPageUrl
+    createPage,
+    getPublicPageUrl,
   } = useBusinessPage();
-
-  // Map database sections to our internal format when loaded
+  
+  // Local state for building the page
+  const [sections, setSections] = useState<SectionType[]>([]);
+  const [pageSettings, setPageSettings] = useState<PageSettings>(defaultPageSettings);
+  const [activeTab, setActiveTab] = useState("sections");
+  const [activeSectionIndex, setActiveSectionIndex] = useState<number | null>(null);
+  const [pageData, setPageData] = useState<Partial<BusinessPage>>({
+    page_title: "",
+    description: "",
+    primary_color: "#0047AB",
+    secondary_color: "#FFFFFF",
+  });
+  const [isEditMode, setIsEditMode] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  
+  // Convert database sections to local format when data changes
   useEffect(() => {
     if (pageSections && pageSections.length > 0) {
-      const mappedSections = pageSections.map(mapPageSectionToSection);
+      const mappedSections: SectionType[] = pageSections.map((section) => mapDatabaseSectionToLocal(section));
       setSections(mappedSections);
     }
   }, [pageSections]);
-
-  // Map business page settings when owner page is loaded
+  
+  // Update page settings from business page data
   useEffect(() => {
     if (ownerBusinessPage) {
-      setPageSettings(prev => ({
+      setPageData({
+        page_title: ownerBusinessPage.page_title,
+        description: ownerBusinessPage.description,
+        primary_color: ownerBusinessPage.primary_color,
+        secondary_color: ownerBusinessPage.secondary_color,
+      });
+      
+      // Also update the page settings
+      setPageSettings((prev) => ({
         ...prev,
-        title: ownerBusinessPage.page_title || prev.title,
-        primaryColor: ownerBusinessPage.primary_color || prev.primaryColor,
-        fontFamily: ownerBusinessPage.font_family || prev.fontFamily,
+        title: ownerBusinessPage.page_title || "My Business",
+        primaryColor: ownerBusinessPage.primary_color || "#0047AB",
       }));
     }
   }, [ownerBusinessPage]);
-
-  const handleSectionUpdate = async (section: SectionType, index: number) => {
-    const updatedSections = [...sections];
-    updatedSections[index] = section;
-    setSections(updatedSections);
+  
+  // Map a database section to our local format
+  const mapDatabaseSectionToLocal = (section: BusinessPageSection): SectionType => {
+    const content = section.section_content || {};
     
-    if (ownerBusinessPage && pageSections && pageSections[index]) {
+    return {
+      type: section.section_type,
+      title: content.title || "",
+      subtitle: content.subtitle || "",
+      image: content.image_url || "",
+      layouts: content.layouts || ["default"],
+      activeLayout: content.active_layout || "default",
+      content: content,
+    };
+  };
+  
+  // Map a local section to database format for saving
+  const mapLocalSectionToDatabase = (section: SectionType, index: number): Partial<BusinessPageSection> => {
+    return {
+      section_type: section.type,
+      section_order: index,
+      section_content: {
+        title: section.title,
+        subtitle: section.subtitle,
+        image_url: section.image,
+        layouts: section.layouts,
+        active_layout: section.activeLayout,
+        ...section.content,
+      },
+      is_visible: true,
+    };
+  };
+  
+  // Handle section updates
+  const handleSectionUpdate = async (index: number, updatedSection: SectionType) => {
+    if (index < 0 || index >= sections.length) return;
+    
+    const newSections = [...sections];
+    newSections[index] = updatedSection;
+    setSections(newSections);
+    
+    // If this is a database section, update it there too
+    if (pageSections && pageSections[index]) {
+      const dbSection = pageSections[index];
+      const updatedData = mapLocalSectionToDatabase(updatedSection, index);
+      
       try {
-        const pageSection = pageSections[index];
         await updateSection.mutateAsync({ 
-          sectionId: pageSection.id, 
-          data: {
-            section_type: section.type,
-            section_content: section.content,
-            section_order: index
-          } 
-        });
-        toast({
-          title: "Section updated",
-          description: "Your changes have been saved successfully."
+          sectionId: dbSection.id,
+          data: updatedData
         });
       } catch (error) {
         console.error("Error updating section:", error);
         toast({
+          title: "Error updating section",
+          description: "Your changes couldn't be saved. Please try again.",
           variant: "destructive",
-          title: "Error",
-          description: "Failed to save section changes."
         });
       }
     }
   };
-
-  const mapPageSectionToSection = (pageSection: BusinessPageSection): SectionType => {
-    return {
-      type: pageSection.section_type,
-      title: pageSection.section_content?.title || "",
-      subtitle: pageSection.section_content?.subtitle || "",
-      image: pageSection.section_content?.image || "",
-      layouts: pageSection.section_content?.layouts || ["default"],
-      activeLayout: pageSection.section_content?.activeLayout || "default",
-      content: pageSection.section_content || {}
-    };
-  };
-
-  const addSection = (type: string) => {
-    // Default content for new section based on type
+  
+  // Add a new section
+  const handleAddSection = (type: string) => {
     const newSection: SectionType = {
       type,
-      title: `New ${type} Section`,
-      subtitle: `This is a ${type} section`,
+      title: `New ${type.charAt(0).toUpperCase() + type.slice(1)}`,
+      subtitle: "",
+      image: "",
       layouts: ["default"],
       activeLayout: "default",
-      content: {}
+      content: {},
     };
     
-    setSections([...sections, newSection]);
-    setActiveSectionIndex(sections.length);
+    const newSections = [...sections, newSection];
+    setSections(newSections);
+    setActiveSectionIndex(newSections.length - 1); // Focus the new section
   };
   
-  const removeSection = (index: number) => {
-    const updatedSections = sections.filter((_, i) => i !== index);
-    setSections(updatedSections);
+  // Remove a section
+  const handleRemoveSection = (index: number) => {
+    const newSections = [...sections];
+    newSections.splice(index, 1);
+    setSections(newSections);
     
+    // Clear active section if it was the removed one
     if (activeSectionIndex === index) {
       setActiveSectionIndex(null);
-    } else if (activeSectionIndex && activeSectionIndex > index) {
+    }
+    // Or adjust the active index if needed
+    else if (activeSectionIndex !== null && activeSectionIndex > index) {
       setActiveSectionIndex(activeSectionIndex - 1);
     }
   };
   
-  const moveSectionUp = (index: number) => {
-    if (index === 0) return;
+  // Move a section up in the list
+  const handleMoveSectionUp = (index: number) => {
+    if (index <= 0) return;
+    const newSections = [...sections];
+    [newSections[index], newSections[index - 1]] = [newSections[index - 1], newSections[index]];
+    setSections(newSections);
     
-    const updatedSections = [...sections];
-    const temp = updatedSections[index - 1];
-    updatedSections[index - 1] = updatedSections[index];
-    updatedSections[index] = temp;
-    
-    setSections(updatedSections);
-    
+    // Update active section index if needed
     if (activeSectionIndex === index) {
       setActiveSectionIndex(index - 1);
     } else if (activeSectionIndex === index - 1) {
@@ -166,157 +205,182 @@ const SimplePageBuilder: React.FC = () => {
     }
   };
   
-  const moveSectionDown = (index: number) => {
-    if (index === sections.length - 1) return;
+  // Move a section down in the list
+  const handleMoveSectionDown = (index: number) => {
+    if (index >= sections.length - 1) return;
+    const newSections = [...sections];
+    [newSections[index], newSections[index + 1]] = [newSections[index + 1], newSections[index]];
+    setSections(newSections);
     
-    const updatedSections = [...sections];
-    const temp = updatedSections[index + 1];
-    updatedSections[index + 1] = updatedSections[index];
-    updatedSections[index] = temp;
-    
-    setSections(updatedSections);
-    
+    // Update active section index if needed
     if (activeSectionIndex === index) {
       setActiveSectionIndex(index + 1);
     } else if (activeSectionIndex === index + 1) {
       setActiveSectionIndex(index);
     }
   };
-
-  const handleSave = async () => {
+  
+  // Handle page data changes (for create form)
+  const handlePageDataChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setPageData({
+      ...pageData,
+      [name]: value,
+    });
+  };
+  
+  // Handle page saving
+  const handleSavePageSettings = async () => {
     setIsSaving(true);
     try {
-      if (ownerBusinessPage) {
-        await updatePage.mutateAsync({
+      if (!ownerBusinessPage?.id) {
+        // Create new page
+        const createdPage = await createPage.mutateAsync({
+          page_title: pageData.page_title,
+          description: pageData.description,
+          primary_color: pageData.primary_color,
+          secondary_color: pageData.secondary_color,
+        });
+        
+        if (createdPage) {
+          toast({
+            title: "Success",
+            description: "Your business page has been created.",
+          });
+          // No need to navigate, we'll get the updated ownerBusinessPage from the query
+        }
+      } else {
+        // Update existing page
+        await updatePage.mutateAsync({ 
           pageId: ownerBusinessPage.id,
           data: {
             page_title: pageSettings.title,
             primary_color: pageSettings.primaryColor,
-            font_family: pageSettings.fontFamily,
+            // Add other fields as needed
           }
         });
         
         toast({
-          title: "Page saved",
-          description: "Your page has been saved successfully."
+          title: "Success",
+          description: "Your changes have been saved.",
         });
       }
     } catch (error) {
       console.error("Error saving page:", error);
       toast({
+        title: "Error",
+        description: "Your changes couldn't be saved. Please try again.",
         variant: "destructive",
-        title: "Save failed",
-        description: "There was an error saving your page."
       });
     } finally {
       setIsSaving(false);
     }
   };
-
-  const handlePublish = async () => {
+  
+  // Handle publishing the page
+  const handlePublishPage = async () => {
+    if (!ownerBusinessPage?.id) {
+      toast({
+        title: "Error",
+        description: "You need to create a page before publishing.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsPublishing(true);
     try {
-      if (ownerBusinessPage) {
-        await updatePage.mutateAsync({
-          pageId: ownerBusinessPage.id,
-          data: { 
-            is_published: true
-          }
-        });
-        
-        toast({
-          title: "Page published",
-          description: "Your page is now live and accessible to the public."
-        });
-      }
+      await updatePage.mutateAsync({ 
+        pageId: ownerBusinessPage.id,
+        data: {
+          is_published: true,
+        }
+      });
+      
+      toast({
+        title: "Success",
+        description: "Your business page has been published.",
+      });
+      
+      // Optionally navigate to the published page
+      window.open(getPublicPageUrl(), '_blank');
     } catch (error) {
       console.error("Error publishing page:", error);
       toast({
+        title: "Error",
+        description: "Your page couldn't be published. Please try again.",
         variant: "destructive",
-        title: "Publish failed",
-        description: "There was an error publishing your page."
       });
     } finally {
       setIsPublishing(false);
     }
   };
-
-  // If page not found, show create page form
-  if (!ownerBusinessPage && !ownerPageLoading) {
-    return <CreateBusinessPageForm />;
-  }
-
-  // If still loading, show loading state
-  if (ownerPageLoading) {
-    return (
-      <div className="flex items-center justify-center h-[80vh]">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-t-wakti-navy border-r-wakti-navy border-b-wakti-navy border-l-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-lg font-medium">Loading your page...</p>
-        </div>
-      </div>
-    );
-  }
-
+  
+  // Handle preview
+  const handlePreviewPage = () => {
+    if (!ownerBusinessPage?.page_slug) {
+      toast({
+        title: "Error",
+        description: "Your page needs to be saved before preview.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    window.open(`/${ownerBusinessPage.page_slug}/preview`, '_blank');
+  };
+  
   return (
     <div className="flex flex-col h-screen">
-      <TopBar 
-        pageUrl={getPublicPageUrl()} 
-        onPreview={() => setEditMode(false)}
-        onPublish={handlePublish}
-        onSave={handleSave}
-        isEditMode={isEditMode}
-        setEditMode={setEditMode}
-      />
-      
-      {!isEditMode ? (
-        <div className="flex-1 bg-gray-100 overflow-auto">
-          <div className="max-w-6xl mx-auto my-8 px-4">
-            <Alert className="mb-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                This is a preview of your page. <button className="underline" onClick={() => setEditMode(true)}>Return to editor</button>
-              </AlertDescription>
-            </Alert>
-            
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      {!ownerBusinessPage ? (
+        <CreateBusinessPageForm 
+          pageData={pageData}
+          handlePageDataChange={handlePageDataChange}
+          createPage={createPage}
+          handleSavePageSettings={handleSavePageSettings}
+        />
+      ) : (
+        <>
+          <TopBar
+            pageUrl={getPublicPageUrl()}
+            onPreview={handlePreviewPage}
+            onPublish={handlePublishPage}
+            onSave={handleSavePageSettings}
+            isEditMode={isEditMode}
+            setEditMode={setIsEditMode}
+            pageSettings={pageSettings}
+            isSaving={isSaving}
+            isPublishing={isPublishing}
+          />
+          
+          <div className="flex flex-1 overflow-hidden">
+            <div className="flex-1 overflow-auto p-6 bg-gray-50">
               <PagePreview 
-                sections={sections}
+                sections={sections} 
                 activeSectionIndex={activeSectionIndex}
                 setActiveSectionIndex={setActiveSectionIndex}
                 pageSettings={pageSettings}
-                addSection={addSection}
+                addSection={handleAddSection}
+                onSectionClick={setActiveSectionIndex}
               />
             </div>
-          </div>
-        </div>
-      ) : (
-        <div className="flex flex-1 overflow-hidden">
-          <div className="flex-1 bg-gray-100 overflow-auto">
-            <PagePreview 
+            
+            <EditorPanel 
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
               sections={sections}
-              activeSectionIndex={activeSectionIndex}
-              setActiveSectionIndex={setActiveSectionIndex}
               pageSettings={pageSettings}
-              addSection={addSection}
+              setPageSettings={setPageSettings}
+              activeSectionIndex={activeSectionIndex}
+              updateSection={handleSectionUpdate}
+              addSection={handleAddSection}
+              removeSection={handleRemoveSection}
+              moveSectionUp={handleMoveSectionUp}
+              moveSectionDown={handleMoveSectionDown}
+              setActiveSectionIndex={setActiveSectionIndex}
             />
           </div>
-          
-          <EditorPanel 
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            sections={sections}
-            pageSettings={pageSettings}
-            setPageSettings={setPageSettings}
-            activeSectionIndex={activeSectionIndex}
-            updateSection={handleSectionUpdate}
-            addSection={addSection}
-            removeSection={removeSection}
-            moveSectionUp={moveSectionUp}
-            moveSectionDown={moveSectionDown}
-            setActiveSectionIndex={setActiveSectionIndex}
-          />
-        </div>
+        </>
       )}
     </div>
   );

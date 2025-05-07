@@ -19,6 +19,8 @@ interface PagePreviewProps {
   setActiveSectionIndex: (index: number | null) => void;
   pageSettings: PageSettings;
   addSection: (type: string) => void;
+  activeSection?: SectionType;
+  onSectionClick?: (index: number) => void;
 }
 
 const PagePreview: React.FC<PagePreviewProps> = ({
@@ -26,7 +28,9 @@ const PagePreview: React.FC<PagePreviewProps> = ({
   activeSectionIndex,
   setActiveSectionIndex,
   pageSettings,
-  addSection
+  addSection,
+  activeSection,
+  onSectionClick
 }) => {
   // Function to render the appropriate section component based on type
   const renderSection = (section: SectionType, index: number) => {
@@ -34,7 +38,13 @@ const PagePreview: React.FC<PagePreviewProps> = ({
     const commonProps = {
       section,
       isActive,
-      onClick: () => setActiveSectionIndex(index),
+      onClick: () => {
+        if (onSectionClick) {
+          onSectionClick(index);
+        } else {
+          setActiveSectionIndex(index);
+        }
+      }
     };
 
     switch (section.type) {
