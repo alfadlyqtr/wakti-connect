@@ -1,10 +1,18 @@
 
 import React, { useState } from "react";
 import { SectionType } from "../types";
-import { Loader2, Plus, Image, AlertCircle } from "lucide-react";
+import { Loader2, Plus, Image, AlertCircle, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { uploadBusinessImage } from "@/services/profile/updateProfileService";
+import { 
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { Button } from "@/components/ui/button";
 
 interface GallerySectionProps {
   section: SectionType;
@@ -130,6 +138,34 @@ const GallerySection: React.FC<GallerySectionProps> = ({ section, isActive, onCl
             ))}
           </div>
         );
+      
+      case "carousel":
+        return (
+          <Carousel className="w-full max-w-5xl mx-auto">
+            <CarouselContent>
+              {galleryImages.map((image: any, index: number) => (
+                <CarouselItem key={index}>
+                  <div className="p-1">
+                    <div className="rounded-lg overflow-hidden aspect-[16/9]">
+                      <img 
+                        src={image.url} 
+                        alt={image.alt || `Gallery image ${index + 1}`} 
+                        className="w-full h-full object-cover"
+                      />
+                      {showCaption && image.caption && (
+                        <div className="p-2 bg-black/60 text-white">
+                          <p className="text-sm">{image.caption}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="left-2" />
+            <CarouselNext className="right-2" />
+          </Carousel>
+        );
         
       default: // grid layout
         return (
@@ -164,17 +200,6 @@ const GallerySection: React.FC<GallerySectionProps> = ({ section, isActive, onCl
         
         {renderGalleryLayout()}
         
-        {isActive && galleryImages.length === 0 && (
-          <div className="mt-4 flex justify-center">
-            <div className="text-center max-w-md">
-              <AlertCircle className="h-8 w-8 mx-auto text-amber-500 mb-2" />
-              <p className="text-sm text-gray-500">
-                No images have been added to this gallery yet. Use the editor panel to upload images.
-              </p>
-            </div>
-          </div>
-        )}
-        
         {isActive && (
           <div className="mt-6 flex justify-center">
             <input
@@ -204,6 +229,23 @@ const GallerySection: React.FC<GallerySectionProps> = ({ section, isActive, onCl
       {isActive && (
         <div className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 text-xs rounded">
           Editing
+        </div>
+      )}
+      
+      {galleryImages.length === 0 && !isActive && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100/50">
+          <Button 
+            variant="outline"
+            size="sm"
+            className="bg-white flex items-center gap-2"
+            onClick={(e) => {
+              e.stopPropagation();
+              document.getElementById('gallery-upload')?.click();
+            }}
+          >
+            <Upload className="h-4 w-4" />
+            <span>Add Images</span>
+          </Button>
         </div>
       )}
     </div>

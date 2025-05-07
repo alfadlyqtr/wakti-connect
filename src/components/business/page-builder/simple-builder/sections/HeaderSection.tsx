@@ -1,6 +1,8 @@
 
 import React from "react";
 import { SectionType } from "../types";
+import { Upload } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface HeaderSectionProps {
   section: SectionType;
@@ -89,6 +91,23 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({ section, isActive, onClic
       {isActive && (
         <div className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 text-xs rounded">
           Editing
+        </div>
+      )}
+      
+      {!section.content?.backgroundImageUrl && !isActive && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100/50">
+          <Button 
+            variant="outline"
+            size="sm"
+            className="bg-white/80"
+            onClick={(e) => {
+              e.stopPropagation();
+              // We just trigger the click event, the actual upload happens in the editor
+            }}
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            <span>Add Background Image</span>
+          </Button>
         </div>
       )}
     </div>

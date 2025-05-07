@@ -9,11 +9,14 @@ import GalleryImagesSection from "./GalleryImagesSection";
 import GalleryTemplateSection from "./GalleryTemplateSection";
 import SectionStyleEditor from "../SectionStyleEditor";
 import { useSectionEditor } from "@/hooks/useSectionEditor";
+import { Button } from "@/components/ui/button";
+import { Upload } from "lucide-react";
 
 const GalleryEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }) => {
   const { handleStyleChange } = useSectionEditor();
   // Initialize the images array if it doesn't exist
   const images = contentData.images || [];
+  const [activeTab, setActiveTab] = useState<string>("layout");
   
   // Create an adapter function for standard input components
   const handleTextInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -44,19 +47,33 @@ const GalleryEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }
         />
       </div>
       
-      {/* Layout templates section */}
-      <div className="pt-4 border-t border-border">
-        <GalleryTemplateSection 
-          contentData={contentData}
-          handleInputChange={handleInputChange}
-        />
-      </div>
-      
-      <Tabs defaultValue="images" className="w-full">
-        <TabsList className="grid grid-cols-2 w-full">
-          <TabsTrigger value="images">Gallery Images</TabsTrigger>
-          <TabsTrigger value="upload">Upload Images</TabsTrigger>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid grid-cols-3 w-full">
+          <TabsTrigger value="layout">Layout</TabsTrigger>
+          <TabsTrigger value="images">Images ({images.length})</TabsTrigger>
+          <TabsTrigger value="upload">Add Images</TabsTrigger>
         </TabsList>
+        
+        <TabsContent value="layout" className="pt-4">
+          <GalleryTemplateSection 
+            contentData={contentData}
+            handleInputChange={handleInputChange}
+          />
+          
+          {/* Quick upload button in layout tab */}
+          {images.length === 0 && (
+            <div className="flex justify-center mt-6 pt-4 border-t border-border">
+              <Button
+                variant="outline"
+                className="w-full flex items-center justify-center gap-2"
+                onClick={() => setActiveTab("upload")}
+              >
+                <Upload className="h-4 w-4" />
+                <span>Upload Your First Image</span>
+              </Button>
+            </div>
+          )}
+        </TabsContent>
         
         <TabsContent value="images" className="pt-4">
           <GalleryImagesSection 
