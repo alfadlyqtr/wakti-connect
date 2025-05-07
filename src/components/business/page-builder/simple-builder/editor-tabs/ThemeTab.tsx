@@ -1,16 +1,38 @@
 
 import React from "react";
+import { PageSettings } from "../types";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ColorInput } from "@/components/inputs/ColorInput";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, Loader2, AlignLeft, AlignCenter, AlignRight } from "lucide-react";
-import { PageSettings } from "../types";
-import { toast } from "@/components/ui/use-toast";
-import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { AlignCenter, AlignLeft, AlignRight } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+
+// Font options with preview styles
+const fontOptions = [
+  { value: "Inter", label: "Inter", style: { fontFamily: "Inter, sans-serif" } },
+  { value: "Playfair Display", label: "Playfair Display", style: { fontFamily: "'Playfair Display', serif" } },
+  { value: "Red Rose", label: "Red Rose", style: { fontFamily: "'Red Rose', sans-serif" } },
+  { value: "Cairo", label: "Cairo", style: { fontFamily: "'Cairo', sans-serif" } },
+  { value: "Arial", label: "Arial", style: { fontFamily: "Arial, sans-serif" } },
+  { value: "Verdana", label: "Verdana", style: { fontFamily: "Verdana, sans-serif" } },
+  { value: "Georgia", label: "Georgia", style: { fontFamily: "Georgia, serif" } },
+  { value: "Times New Roman", label: "Times New Roman", style: { fontFamily: "'Times New Roman', serif" } }
+];
+
+// Common text colors with labels
+const textColorPresets = [
+  { value: "#000000", label: "Black" },
+  { value: "#333333", label: "Dark Gray" },
+  { value: "#666666", label: "Medium Gray" },
+  { value: "#777777", label: "Gray" },
+  { value: "#FFFFFF", label: "White" },
+  { value: "#4f46e5", label: "Indigo" },
+  { value: "#10b981", label: "Emerald" },
+  { value: "#ef4444", label: "Red" }
+];
 
 interface ThemeTabProps {
   pageSettings: PageSettings;
@@ -18,181 +40,30 @@ interface ThemeTabProps {
 }
 
 const ThemeTab: React.FC<ThemeTabProps> = ({ pageSettings, setPageSettings }) => {
-  const [isUploading, setIsUploading] = useState(false);
-  
-  const handleInputChange = (field: keyof PageSettings, value: any) => {
+  const updateSettings = (key: string, value: any) => {
     setPageSettings({
       ...pageSettings,
-      [field]: value
+      [key]: value
     });
   };
 
-  const handleBackgroundImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setIsUploading(true);
-    
-    try {
-      // Get the current user
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) {
-        throw new Error("You must be logged in to upload images");
-      }
-      
-      const businessId = session.user.id;
-      
-      // Upload the image using the service
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-      const filePath = `${businessId}/backgrounds/${fileName}`;
-      
-      const { error: uploadError, data } = await supabase.storage
-        .from('business')
-        .upload(filePath, file);
-        
-      if (uploadError) {
-        throw uploadError;
-      }
-      
-      const { data: { publicUrl } } = supabase.storage
-        .from('business')
-        .getPublicUrl(filePath);
-      
-      // Update the background image URL
-      handleInputChange('backgroundImage', publicUrl);
-      
-      toast({
-        title: "Background image uploaded",
-        description: "Your site background image has been updated"
-      });
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      toast({
-        title: "Upload failed",
-        description: error instanceof Error ? error.message : "Failed to upload background image",
-        variant: "destructive"
-      });
-    } finally {
-      setIsUploading(false);
-      e.target.value = '';
-    }
-  };
-
-  const fontFamilyOptions = [
-    { label: "Inter", value: "Inter" },
-    { label: "Roboto", value: "Roboto" },
-    { label: "Open Sans", value: "Open Sans" },
-    { label: "Montserrat", value: "Montserrat" },
-    { label: "Playfair Display", value: "Playfair Display" }
-  ];
-
-  const headingStyleOptions = [
-    { label: "Default", value: "default" },
-    { label: "Bold", value: "bold" },
-    { label: "Elegant", value: "elegant" },
-    { label: "Modern", value: "modern" }
-  ];
-
-  const buttonStyleOptions = [
-    { label: "Default", value: "default" },
-    { label: "Rounded", value: "rounded" },
-    { label: "Outline", value: "outline" },
-    { label: "Minimal", value: "minimal" }
-  ];
-
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="typography">
-        <TabsList className="grid grid-cols-3 w-full mb-4">
-          <TabsTrigger value="typography">Typography</TabsTrigger>
+      <Tabs defaultValue="colors">
+        <TabsList className="w-full">
           <TabsTrigger value="colors">Colors</TabsTrigger>
+          <TabsTrigger value="typography">Typography</TabsTrigger>
           <TabsTrigger value="layout">Layout</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="typography" className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="fontFamily">Font Family</Label>
-            <Select 
-              value={pageSettings.fontFamily || "Inter"} 
-              onValueChange={(value) => handleInputChange("fontFamily", value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a font" />
-              </SelectTrigger>
-              <SelectContent>
-                {fontFamilyOptions.map((font) => (
-                  <SelectItem key={font.value} value={font.value}>
-                    {font.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="headingStyle">Heading Style</Label>
-            <Select 
-              value={pageSettings.headingStyle || "default"} 
-              onValueChange={(value) => handleInputChange("headingStyle", value as PageSettings['headingStyle'])}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a style" />
-              </SelectTrigger>
-              <SelectContent>
-                {headingStyleOptions.map((style) => (
-                  <SelectItem key={style.value} value={style.value}>
-                    {style.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="space-y-2">
-            <Label>Text Alignment</Label>
-            <div className="flex space-x-2">
-              <Button 
-                type="button"
-                size="sm"
-                variant={pageSettings.textAlignment === 'left' ? 'default' : 'outline'}
-                onClick={() => handleInputChange('textAlignment', 'left')}
-                className="flex-1"
-              >
-                <AlignLeft className="mr-2 h-4 w-4" />
-                Left
-              </Button>
-              <Button 
-                type="button"
-                size="sm"
-                variant={pageSettings.textAlignment === 'center' ? 'default' : 'outline'}
-                onClick={() => handleInputChange('textAlignment', 'center')}
-                className="flex-1"
-              >
-                <AlignCenter className="mr-2 h-4 w-4" />
-                Center
-              </Button>
-              <Button 
-                type="button"
-                size="sm"
-                variant={pageSettings.textAlignment === 'right' ? 'default' : 'outline'}
-                onClick={() => handleInputChange('textAlignment', 'right')}
-                className="flex-1"
-              >
-                <AlignRight className="mr-2 h-4 w-4" />
-                Right
-              </Button>
-            </div>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="colors" className="space-y-4">
+        {/* Colors Tab */}
+        <TabsContent value="colors" className="space-y-5 pt-4">
           <div className="space-y-2">
             <Label htmlFor="primaryColor">Primary Color</Label>
             <ColorInput
               id="primaryColor"
               value={pageSettings.primaryColor}
-              onChange={(value) => handleInputChange('primaryColor', value)}
+              onChange={(value) => updateSettings('primaryColor', value)}
             />
           </div>
           
@@ -200,17 +71,8 @@ const ThemeTab: React.FC<ThemeTabProps> = ({ pageSettings, setPageSettings }) =>
             <Label htmlFor="secondaryColor">Secondary Color</Label>
             <ColorInput
               id="secondaryColor"
-              value={pageSettings.secondaryColor || "#10b981"}
-              onChange={(value) => handleInputChange('secondaryColor', value)}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="textColor">Text Color</Label>
-            <ColorInput
-              id="textColor"
-              value={pageSettings.textColor || "#000000"}
-              onChange={(value) => handleInputChange('textColor', value)}
+              value={pageSettings.secondaryColor}
+              onChange={(value) => updateSettings('secondaryColor', value)}
             />
           </div>
           
@@ -219,86 +81,136 @@ const ThemeTab: React.FC<ThemeTabProps> = ({ pageSettings, setPageSettings }) =>
             <ColorInput
               id="backgroundColor"
               value={pageSettings.backgroundColor || "#ffffff"}
-              onChange={(value) => handleInputChange('backgroundColor', value)}
+              onChange={(value) => updateSettings('backgroundColor', value)}
             />
           </div>
           
           <div className="space-y-2">
-            <Label>Background Image</Label>
-            <div className="flex flex-col space-y-2">
-              <Button 
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => document.getElementById('site-background-upload')?.click()}
-                disabled={isUploading}
-                className="w-full"
-              >
-                {isUploading ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Upload className="mr-2 h-4 w-4" />
-                )}
-                {isUploading ? 'Uploading...' : 'Upload Background Image'}
-              </Button>
-              
-              <input
-                id="site-background-upload"
-                type="file"
-                accept="image/*"
-                onChange={handleBackgroundImageUpload}
-                className="hidden"
-              />
-              
-              {pageSettings.backgroundImage && (
-                <div className="mt-2 border p-2 rounded">
-                  <img
-                    src={pageSettings.backgroundImage}
-                    alt="Background preview"
-                    className="h-24 w-full object-cover rounded"
-                  />
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="sm"
-                    className="mt-2 w-full"
-                    onClick={() => handleInputChange('backgroundImage', '')}
-                  >
-                    Remove Image
-                  </Button>
-                </div>
-              )}
+            <Label htmlFor="textColor">Text Color</Label>
+            <ColorInput
+              id="textColor"
+              value={pageSettings.textColor || "#000000"}
+              onChange={(value) => updateSettings('textColor', value)}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label>Text Color Presets</Label>
+            <div className="grid grid-cols-4 gap-2">
+              {textColorPresets.map((color) => (
+                <Button
+                  key={color.value}
+                  type="button"
+                  variant="outline"
+                  className="h-8 w-full p-0"
+                  style={{ 
+                    backgroundColor: color.value,
+                    borderColor: color.value === "#FFFFFF" ? "#e5e7eb" : color.value
+                  }}
+                  title={color.label}
+                  onClick={() => updateSettings('textColor', color.value)}
+                />
+              ))}
             </div>
           </div>
         </TabsContent>
         
-        <TabsContent value="layout" className="space-y-4">
+        {/* Typography Tab */}
+        <TabsContent value="typography" className="space-y-5 pt-4">
           <div className="space-y-2">
-            <Label htmlFor="buttonStyle">Button Style</Label>
-            <Select 
-              value={pageSettings.buttonStyle || "default"} 
-              onValueChange={(value) => handleInputChange("buttonStyle", value as PageSettings['buttonStyle'])}
+            <Label htmlFor="fontFamily">Font Family</Label>
+            <Select
+              value={pageSettings.fontFamily}
+              onValueChange={(value) => updateSettings('fontFamily', value)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select a button style" />
+                <SelectValue placeholder="Select a font" />
               </SelectTrigger>
               <SelectContent>
-                {buttonStyleOptions.map((style) => (
-                  <SelectItem key={style.value} value={style.value}>
-                    {style.label}
+                {fontOptions.map((font) => (
+                  <SelectItem 
+                    key={font.value} 
+                    value={font.value}
+                    style={font.style}
+                  >
+                    {font.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            
+            {/* Font preview */}
+            {pageSettings.fontFamily && (
+              <div 
+                className="mt-3 p-3 border rounded"
+                style={{ fontFamily: pageSettings.fontFamily }}
+              >
+                <p className="text-sm">Regular text in {pageSettings.fontFamily}</p>
+                <p className="text-base">Base size text</p>
+                <p className="text-lg">Large text</p>
+                <p className="text-xl font-bold">Bold heading</p>
+              </div>
+            )}
           </div>
-          
+
+          <div className="space-y-2">
+            <Label>Default Text Alignment</Label>
+            <div className="flex space-x-2">
+              <Button 
+                type="button"
+                size="sm"
+                variant={pageSettings.textAlignment === 'left' ? 'default' : 'outline'}
+                onClick={() => updateSettings('textAlignment', 'left')}
+              >
+                <AlignLeft className="h-4 w-4" />
+              </Button>
+              <Button 
+                type="button"
+                size="sm"
+                variant={pageSettings.textAlignment === 'center' ? 'default' : 'outline'}
+                onClick={() => updateSettings('textAlignment', 'center')}
+              >
+                <AlignCenter className="h-4 w-4" />
+              </Button>
+              <Button 
+                type="button"
+                size="sm"
+                variant={pageSettings.textAlignment === 'right' ? 'default' : 'outline'}
+                onClick={() => updateSettings('textAlignment', 'right')}
+              >
+                <AlignRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="headingStyle">Heading Style</Label>
+            <Select 
+              value={pageSettings.headingStyle || 'default'}
+              onValueChange={(value) => updateSettings('headingStyle', value)}
+            >
+              <SelectTrigger id="headingStyle">
+                <SelectValue placeholder="Select heading style" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="default">Default</SelectItem>
+                <SelectItem value="bold">Bold</SelectItem>
+                <SelectItem value="elegant">Elegant</SelectItem>
+                <SelectItem value="modern">Modern</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </TabsContent>
+        
+        {/* Layout Tab */}
+        <TabsContent value="layout" className="space-y-5 pt-4">
           <div className="space-y-2">
             <Label htmlFor="sectionSpacing">Section Spacing</Label>
             <Select 
-              value={pageSettings.sectionSpacing || "default"} 
-              onValueChange={(value) => handleInputChange("sectionSpacing", value as PageSettings['sectionSpacing'])}
+              value={pageSettings.sectionSpacing || 'default'}
+              onValueChange={(value) => updateSettings('sectionSpacing', value)}
             >
-              <SelectTrigger>
+              <SelectTrigger id="sectionSpacing">
                 <SelectValue placeholder="Select spacing" />
               </SelectTrigger>
               <SelectContent>
@@ -312,11 +224,11 @@ const ThemeTab: React.FC<ThemeTabProps> = ({ pageSettings, setPageSettings }) =>
           <div className="space-y-2">
             <Label htmlFor="contentMaxWidth">Content Width</Label>
             <Select 
-              value={pageSettings.contentMaxWidth || "default"} 
-              onValueChange={(value) => handleInputChange("contentMaxWidth", value as PageSettings['contentMaxWidth'])}
+              value={pageSettings.contentMaxWidth || 'default'}
+              onValueChange={(value) => updateSettings('contentMaxWidth', value)}
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Select width" />
+              <SelectTrigger id="contentMaxWidth">
+                <SelectValue placeholder="Select content width" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="narrow">Narrow</SelectItem>
@@ -326,8 +238,34 @@ const ThemeTab: React.FC<ThemeTabProps> = ({ pageSettings, setPageSettings }) =>
               </SelectContent>
             </Select>
           </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="buttonStyle">Button Style</Label>
+            <Select 
+              value={pageSettings.buttonStyle || 'default'}
+              onValueChange={(value) => updateSettings('buttonStyle', value)}
+            >
+              <SelectTrigger id="buttonStyle">
+                <SelectValue placeholder="Select button style" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="default">Default</SelectItem>
+                <SelectItem value="rounded">Rounded</SelectItem>
+                <SelectItem value="outline">Outline</SelectItem>
+                <SelectItem value="minimal">Minimal</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </TabsContent>
       </Tabs>
+      
+      <Separator />
+      
+      <div className="bg-gray-50 rounded-md p-3">
+        <p className="text-sm text-muted-foreground">
+          Theme settings apply across your entire page. To style individual sections, select a section and use the section styling options.
+        </p>
+      </div>
     </div>
   );
 };

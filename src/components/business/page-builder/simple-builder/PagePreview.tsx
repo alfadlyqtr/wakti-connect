@@ -70,18 +70,34 @@ const PagePreview: React.FC<PagePreviewProps> = ({
         return null;
     }
   };
+  
+  // Apply page-level styling based on pageSettings
+  const pageStyle = {
+    fontFamily: pageSettings.fontFamily || 'Inter, sans-serif',
+    color: pageSettings.textColor || '#000000',
+    backgroundColor: pageSettings.backgroundColor || '#ffffff'
+  };
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto" style={pageStyle}>
       {/* Add section button at the top */}
       <div className="flex justify-center my-4">
         <Button 
           variant="outline" 
           className="flex items-center gap-2"
           onClick={() => {
-            // Show dropdown or modal with section options
-            const sectionType = prompt("Enter section type: header, about, gallery, contact, hours, testimonials, booking, instagram, chatbot");
-            if (sectionType) {
+            // Show dropdown with section options
+            const sectionTypes = [
+              "header", "about", "gallery", "contact", 
+              "hours", "testimonials", "booking", 
+              "instagram", "chatbot"
+            ];
+            
+            const sectionType = prompt(
+              "Choose a section type: " + sectionTypes.join(", ")
+            );
+            
+            if (sectionType && sectionTypes.includes(sectionType)) {
               addSection(sectionType);
             }
           }}
@@ -103,9 +119,19 @@ const PagePreview: React.FC<PagePreviewProps> = ({
                 variant="outline" 
                 size="sm"
                 className="rounded-full h-8 w-8 p-0 bg-white shadow-sm"
-                onClick={() => {
-                  const sectionType = prompt("Enter section type: header, about, gallery, contact, hours, testimonials, booking, instagram, chatbot");
-                  if (sectionType) {
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const sectionTypes = [
+                    "header", "about", "gallery", "contact", 
+                    "hours", "testimonials", "booking", 
+                    "instagram", "chatbot"
+                  ];
+                  
+                  const sectionType = prompt(
+                    "Choose a section type: " + sectionTypes.join(", ")
+                  );
+                  
+                  if (sectionType && sectionTypes.includes(sectionType)) {
                     addSection(sectionType);
                   }
                 }}
@@ -125,8 +151,17 @@ const PagePreview: React.FC<PagePreviewProps> = ({
             variant="default" 
             className="flex items-center gap-2"
             onClick={() => {
-              const sectionType = prompt("Enter section type: header, about, gallery, contact, hours, testimonials, booking, instagram, chatbot");
-              if (sectionType) {
+              const sectionTypes = [
+                "header", "about", "gallery", "contact", 
+                "hours", "testimonials", "booking", 
+                "instagram", "chatbot"
+              ];
+              
+              const sectionType = prompt(
+                "Choose a section type: " + sectionTypes.join(", ")
+              );
+              
+              if (sectionType && sectionTypes.includes(sectionType)) {
                 addSection(sectionType);
               }
             }}

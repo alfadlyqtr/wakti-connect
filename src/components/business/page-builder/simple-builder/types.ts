@@ -11,6 +11,7 @@ export interface SectionType {
 }
 
 export interface PageSettings {
+  id?: string; // Added ID as an optional property for database integration
   title: string;
   slug: string;
   primaryColor: string;
