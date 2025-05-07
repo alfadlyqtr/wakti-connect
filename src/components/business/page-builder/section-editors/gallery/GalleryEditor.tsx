@@ -11,8 +11,8 @@ const GalleryEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }
   // Initialize the images array if it doesn't exist
   const images = contentData.images || [];
   
-  // Create an adapter function for standard input components to handle the type mismatch
-  const handleStandardInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  // Create an adapter function for standard input components
+  const handleTextInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     handleInputChange(e.target.name, e.target.value);
   };
   
@@ -24,7 +24,7 @@ const GalleryEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }
           id="title"
           name="title"
           value={contentData.title || ""}
-          onChange={handleStandardInputChange}
+          onChange={handleTextInputChange}
           placeholder="Our Gallery"
         />
       </div>
@@ -35,7 +35,7 @@ const GalleryEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }
           id="subtitle"
           name="subtitle"
           value={contentData.subtitle || ""}
-          onChange={handleStandardInputChange}
+          onChange={handleTextInputChange}
           placeholder="Check out our recent work"
         />
       </div>

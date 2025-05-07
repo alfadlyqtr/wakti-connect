@@ -56,7 +56,7 @@ const SectionsTab: React.FC<SectionsTabProps> = ({
               variant="ghost" 
               size="sm" 
               onClick={() => {
-                // Update the section first
+                // First update the section with any changes
                 updateSection(activeSectionIndex, {
                   ...sections[activeSectionIndex]
                 });
