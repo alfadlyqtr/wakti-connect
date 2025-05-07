@@ -5,6 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { ColorInput } from "@/components/inputs/ColorInput";
+import { Separator } from "@/components/ui/separator";
+import { AlignCenter, AlignLeft, AlignRight, Upload } from "lucide-react";
 
 interface ThemeTabProps {
   pageSettings: PageSettings;
@@ -19,99 +24,245 @@ const ThemeTab: React.FC<ThemeTabProps> = ({ pageSettings, setPageSettings }) =>
     });
   };
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Create a reader to read the file
+    const reader = new FileReader();
+
+    // Define what happens on file load
+    reader.onload = (event) => {
+      const backgroundImage = event.target?.result as string;
+      setPageSettings({
+        ...pageSettings,
+        backgroundImage
+      });
+    };
+
+    // Read the file as a data URL
+    reader.readAsDataURL(file);
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h3 className="text-sm font-medium mb-2">Font Style</h3>
-        <Select
-          value={pageSettings.fontFamily}
-          onValueChange={(value) => updateSettings('fontFamily', value)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select a font" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Inter">Inter</SelectItem>
-            <SelectItem value="Poppins">Poppins</SelectItem>
-            <SelectItem value="Roboto">Roboto</SelectItem>
-            <SelectItem value="Open Sans">Open Sans</SelectItem>
-            <SelectItem value="Lato">Lato</SelectItem>
-            <SelectItem value="Montserrat">Montserrat</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <Tabs defaultValue="typography" className="w-full">
+        <TabsList className="w-full grid grid-cols-3">
+          <TabsTrigger value="typography">Typography</TabsTrigger>
+          <TabsTrigger value="colors">Colors</TabsTrigger>
+          <TabsTrigger value="layout">Layout</TabsTrigger>
+        </TabsList>
 
-      <div>
-        <h3 className="text-sm font-medium mb-2">Color Scheme</h3>
-        <div className="grid grid-cols-3 gap-2">
-          <ColorOption color="#8B5CF6" label="Purple" selected={pageSettings.primaryColor === '#8B5CF6'} onClick={() => updateSettings('primaryColor', '#8B5CF6')} />
-          <ColorOption color="#06b6d4" label="Cyan" selected={pageSettings.primaryColor === '#06b6d4'} onClick={() => updateSettings('primaryColor', '#06b6d4')} />
-          <ColorOption color="#10b981" label="Emerald" selected={pageSettings.primaryColor === '#10b981'} onClick={() => updateSettings('primaryColor', '#10b981')} />
-          <ColorOption color="#f59e0b" label="Amber" selected={pageSettings.primaryColor === '#f59e0b'} onClick={() => updateSettings('primaryColor', '#f59e0b')} />
-          <ColorOption color="#ef4444" label="Red" selected={pageSettings.primaryColor === '#ef4444'} onClick={() => updateSettings('primaryColor', '#ef4444')} />
-          <ColorOption color="#6366f1" label="Indigo" selected={pageSettings.primaryColor === '#6366f1'} onClick={() => updateSettings('primaryColor', '#6366f1')} />
-        </div>
-        <div className="mt-4">
-          <Label htmlFor="custom-color">Custom Color</Label>
-          <Input
-            id="custom-color"
-            type="color"
-            value={pageSettings.primaryColor}
-            onChange={(e) => updateSettings('primaryColor', e.target.value)}
-            className="mt-1 h-10"
-          />
-        </div>
-      </div>
+        <TabsContent value="typography" className="space-y-4 pt-4">
+          <div>
+            <h3 className="text-sm font-medium mb-2">Font Family</h3>
+            <Select
+              value={pageSettings.fontFamily}
+              onValueChange={(value) => updateSettings('fontFamily', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a font" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Inter">Inter</SelectItem>
+                <SelectItem value="Poppins">Poppins</SelectItem>
+                <SelectItem value="Roboto">Roboto</SelectItem>
+                <SelectItem value="Open Sans">Open Sans</SelectItem>
+                <SelectItem value="Lato">Lato</SelectItem>
+                <SelectItem value="Montserrat">Montserrat</SelectItem>
+                <SelectItem value="Playfair Display">Playfair Display</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-      <div>
-        <h3 className="text-sm font-medium mb-2">Button Style</h3>
-        <RadioGroup
-          value={pageSettings.theme}
-          onValueChange={(value) => updateSettings('theme', value)}
-          className="grid grid-cols-2 gap-2"
-        >
-          <div className="flex items-center space-x-2 border rounded-md p-2">
-            <RadioGroupItem value="default" id="theme-default" />
-            <Label htmlFor="theme-default">Default</Label>
+          <div>
+            <h3 className="text-sm font-medium mb-2">Text Color</h3>
+            <ColorInput
+              value={pageSettings.textColor || "#000000"}
+              onChange={(value) => updateSettings('textColor', value)}
+            />
           </div>
-          <div className="flex items-center space-x-2 border rounded-md p-2">
-            <RadioGroupItem value="rounded" id="theme-rounded" />
-            <Label htmlFor="theme-rounded">Rounded</Label>
+
+          <div>
+            <h3 className="text-sm font-medium mb-2">Text Alignment</h3>
+            <div className="flex space-x-2">
+              <Button 
+                variant={pageSettings.textAlignment === 'left' ? 'default' : 'outline'} 
+                size="sm"
+                onClick={() => updateSettings('textAlignment', 'left')}
+              >
+                <AlignLeft className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant={pageSettings.textAlignment === 'center' ? 'default' : 'outline'} 
+                size="sm"
+                onClick={() => updateSettings('textAlignment', 'center')}
+              >
+                <AlignCenter className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant={pageSettings.textAlignment === 'right' ? 'default' : 'outline'} 
+                size="sm"
+                onClick={() => updateSettings('textAlignment', 'right')}
+              >
+                <AlignRight className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-          <div className="flex items-center space-x-2 border rounded-md p-2">
-            <RadioGroupItem value="outline" id="theme-outline" />
-            <Label htmlFor="theme-outline">Outline</Label>
+
+          <div>
+            <h3 className="text-sm font-medium mb-2">Heading Style</h3>
+            <Select
+              value={pageSettings.headingStyle || "default"}
+              onValueChange={(value) => updateSettings('headingStyle', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select heading style" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="default">Default</SelectItem>
+                <SelectItem value="bold">Bold</SelectItem>
+                <SelectItem value="elegant">Elegant</SelectItem>
+                <SelectItem value="modern">Modern</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          <div className="flex items-center space-x-2 border rounded-md p-2">
-            <RadioGroupItem value="minimal" id="theme-minimal" />
-            <Label htmlFor="theme-minimal">Minimal</Label>
+        </TabsContent>
+
+        <TabsContent value="colors" className="space-y-4 pt-4">
+          <div>
+            <h3 className="text-sm font-medium mb-2">Primary Color</h3>
+            <ColorInput
+              value={pageSettings.primaryColor}
+              onChange={(value) => updateSettings('primaryColor', value)}
+            />
           </div>
-        </RadioGroup>
-      </div>
+
+          <div>
+            <h3 className="text-sm font-medium mb-2">Secondary Color</h3>
+            <ColorInput
+              value={pageSettings.secondaryColor}
+              onChange={(value) => updateSettings('secondaryColor', value)}
+            />
+          </div>
+
+          <div>
+            <h3 className="text-sm font-medium mb-2">Background Color</h3>
+            <ColorInput
+              value={pageSettings.backgroundColor || "#ffffff"}
+              onChange={(value) => updateSettings('backgroundColor', value)}
+            />
+          </div>
+
+          <div>
+            <h3 className="text-sm font-medium mb-2">Background Image</h3>
+            <div className="flex flex-col space-y-2">
+              <div className="flex items-center space-x-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  type="button"
+                  onClick={() => document.getElementById('bg-upload')?.click()}
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload Image
+                </Button>
+                {pageSettings.backgroundImage && (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => updateSettings('backgroundImage', undefined)}
+                  >
+                    Remove
+                  </Button>
+                )}
+              </div>
+              <input 
+                id="bg-upload"
+                type="file" 
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileUpload}
+              />
+              {pageSettings.backgroundImage && (
+                <div className="mt-2 border rounded-md p-2">
+                  <img 
+                    src={pageSettings.backgroundImage} 
+                    alt="Background preview" 
+                    className="h-20 object-cover rounded"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="layout" className="space-y-4 pt-4">
+          <div>
+            <h3 className="text-sm font-medium mb-2">Button Style</h3>
+            <RadioGroup
+              value={pageSettings.buttonStyle || "default"}
+              onValueChange={(value) => updateSettings('buttonStyle', value)}
+              className="grid grid-cols-2 gap-2"
+            >
+              <div className="flex items-center space-x-2 border rounded-md p-2">
+                <RadioGroupItem value="default" id="buttonStyle-default" />
+                <Label htmlFor="buttonStyle-default">Default</Label>
+              </div>
+              <div className="flex items-center space-x-2 border rounded-md p-2">
+                <RadioGroupItem value="rounded" id="buttonStyle-rounded" />
+                <Label htmlFor="buttonStyle-rounded">Rounded</Label>
+              </div>
+              <div className="flex items-center space-x-2 border rounded-md p-2">
+                <RadioGroupItem value="outline" id="buttonStyle-outline" />
+                <Label htmlFor="buttonStyle-outline">Outline</Label>
+              </div>
+              <div className="flex items-center space-x-2 border rounded-md p-2">
+                <RadioGroupItem value="minimal" id="buttonStyle-minimal" />
+                <Label htmlFor="buttonStyle-minimal">Minimal</Label>
+              </div>
+            </RadioGroup>
+          </div>
+
+          <Separator className="my-4" />
+
+          <div>
+            <h3 className="text-sm font-medium mb-2">Section Spacing</h3>
+            <Select
+              value={pageSettings.sectionSpacing || "default"}
+              onValueChange={(value) => updateSettings('sectionSpacing', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select spacing" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="compact">Compact</SelectItem>
+                <SelectItem value="default">Default</SelectItem>
+                <SelectItem value="spacious">Spacious</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-medium mb-2">Content Width</h3>
+            <Select
+              value={pageSettings.contentMaxWidth || "default"}
+              onValueChange={(value) => updateSettings('contentMaxWidth', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select width" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="narrow">Narrow</SelectItem>
+                <SelectItem value="default">Default</SelectItem>
+                <SelectItem value="wide">Wide</SelectItem>
+                <SelectItem value="full">Full Width</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
-  );
-};
-
-// Helper component for color selection
-const ColorOption: React.FC<{
-  color: string;
-  label: string;
-  selected: boolean;
-  onClick: () => void;
-}> = ({ color, label, selected, onClick }) => {
-  return (
-    <button
-      className={`flex flex-col items-center justify-center p-2 border rounded-md transition-all ${
-        selected ? 'ring-2 ring-offset-2 ring-black' : 'hover:border-gray-400'
-      }`}
-      onClick={onClick}
-    >
-      <div
-        className="w-6 h-6 rounded-full mb-1"
-        style={{ backgroundColor: color }}
-      ></div>
-      <span className="text-xs">{label}</span>
-    </button>
   );
 };
 

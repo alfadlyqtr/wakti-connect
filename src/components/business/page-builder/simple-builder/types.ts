@@ -24,6 +24,12 @@ export interface PageSettings {
   theme?: string;
   tmwChatbotCode?: string;
   googleMapsUrl?: string;
+  backgroundImage?: string;
+  textAlignment?: 'left' | 'center' | 'right';
+  headingStyle?: 'default' | 'bold' | 'elegant' | 'modern';
+  buttonStyle?: 'default' | 'rounded' | 'outline' | 'minimal';
+  sectionSpacing?: 'compact' | 'default' | 'spacious';
+  contentMaxWidth?: 'narrow' | 'default' | 'wide' | 'full';
   contactInfo?: {
     email?: string;
     phone?: string;

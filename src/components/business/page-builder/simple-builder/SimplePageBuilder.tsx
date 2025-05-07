@@ -4,6 +4,7 @@ import EditorPanel from "./EditorPanel";
 import PagePreview from "./PagePreview";
 import { SectionType, PageSettings } from "./types";
 import { toast } from "@/components/ui/use-toast";
+import TopBar from "./TopBar";
 
 const SimplePageBuilder: React.FC = () => {
   // Initialize with an empty array - no default sections
@@ -12,6 +13,12 @@ const SimplePageBuilder: React.FC = () => {
   const [activeSectionIndex, setActiveSectionIndex] = useState<number | null>(null);
   
   const [activeTab, setActiveTab] = useState("sections");
+  
+  const [isEditMode, setIsEditMode] = useState(true);
+  
+  const [isSaving, setIsSaving] = useState(false);
+  
+  const [isPublishing, setIsPublishing] = useState(false);
   
   const [pageSettings, setPageSettings] = useState<PageSettings>({
     title: "My Business Page",
@@ -141,33 +148,98 @@ const SimplePageBuilder: React.FC = () => {
     }
   };
   
+  // Mock functions for top bar actions
+  const handleSave = () => {
+    setIsSaving(true);
+    
+    // Simulate API call
+    setTimeout(() => {
+      setIsSaving(false);
+      toast({
+        title: "Changes saved",
+        description: "Your page has been saved successfully",
+      });
+    }, 1500);
+  };
+  
+  const handlePreview = () => {
+    setIsEditMode(false);
+    
+    toast({
+      title: "Preview mode",
+      description: "You are now previewing your page",
+    });
+    
+    // Switch back to edit mode after 5 seconds for demo purposes
+    setTimeout(() => {
+      setIsEditMode(true);
+    }, 5000);
+  };
+  
+  const handlePublish = () => {
+    setIsPublishing(true);
+    
+    // Simulate API call
+    setTimeout(() => {
+      setIsPublishing(false);
+      setPageSettings({
+        ...pageSettings,
+        isPublished: true
+      });
+      
+      toast({
+        title: "Page published",
+        description: "Your page is now live",
+      });
+    }, 2000);
+  };
+  
+  // Generate a mock page URL
+  const pageUrl = pageSettings.isPublished && pageSettings.slug 
+    ? `https://wakti.app/business/${pageSettings.slug}` 
+    : '#';
+  
   return (
-    <div className="flex h-screen">
-      <div className="flex-1 overflow-auto bg-gray-50 p-4">
-        <PagePreview 
+    <div className="flex flex-col h-screen">
+      <TopBar 
+        pageUrl={pageUrl}
+        onPreview={handlePreview}
+        onPublish={handlePublish}
+        onSave={handleSave}
+        isEditMode={isEditMode}
+        setEditMode={setIsEditMode}
+        pageSettings={pageSettings}
+        isSaving={isSaving}
+        isPublishing={isPublishing}
+      />
+      
+      <div className="flex flex-1 overflow-hidden">
+        <div className="flex-1 overflow-auto bg-gray-50 p-4">
+          <PagePreview 
+            sections={sections}
+            activeSection={activeSectionIndex !== null ? sections[activeSectionIndex] : undefined}
+            activeSectionIndex={activeSectionIndex}
+            setActiveSectionIndex={setActiveSectionIndex}
+            addSection={addSection}
+            pageSettings={pageSettings}
+          />
+        </div>
+        
+        <EditorPanel 
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
           sections={sections}
-          activeSection={activeSectionIndex !== null ? sections[activeSectionIndex] : undefined}
-          activeSectionIndex={activeSectionIndex}
-          setActiveSectionIndex={setActiveSectionIndex}
-          addSection={addSection}
           pageSettings={pageSettings}
+          setPageSettings={setPageSettings}
+          activeSectionIndex={activeSectionIndex}
+          updateSection={updateSection}
+          addSection={addSection}
+          removeSection={removeSection}
+          moveSectionUp={moveSectionUp}
+          moveSectionDown={moveSectionDown}
+          setActiveSectionIndex={setActiveSectionIndex}
         />
       </div>
-      
-      <EditorPanel 
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        sections={sections}
-        pageSettings={pageSettings}
-        setPageSettings={setPageSettings}
-        activeSectionIndex={activeSectionIndex}
-        updateSection={updateSection}
-        addSection={addSection}
-        removeSection={removeSection}
-        moveSectionUp={moveSectionUp}
-        moveSectionDown={moveSectionDown}
-        setActiveSectionIndex={setActiveSectionIndex}
-      />
     </div>
   );
 };
