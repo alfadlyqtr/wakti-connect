@@ -8,7 +8,7 @@ import {
   Grid3X3, 
   Images, 
   FileImage, 
-  Carousel
+  SlidersHorizontal
 } from "lucide-react";
 import { EditorProps } from "../types";
 
@@ -52,7 +52,7 @@ const GalleryTemplateSection: React.FC<EditorProps> = ({
     {
       id: "carousel-layout",
       name: "Carousel",
-      icon: <Carousel className="h-5 w-5" />,
+      icon: <SlidersHorizontal className="h-5 w-5" />,
       value: "carousel",
     }
   ];
