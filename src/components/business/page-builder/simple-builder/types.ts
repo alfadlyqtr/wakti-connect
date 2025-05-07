@@ -1,42 +1,24 @@
 
-export type SectionType = {
+export interface SectionType {
+  id: string;
   type: string;
-  title: string;
-  subtitle: string;
+  title?: string;
+  subtitle?: string;
+  description?: string;
   image?: string;
-  layouts: string[];
-  activeLayout: string;
-  content: Record<string, any>;
-};
+  content?: Record<string, any>;
+  activeLayout?: string;
+}
 
-export type PageSettings = {
+export interface PageSettings {
   title: string;
-  theme: string;
+  slug: string;
   primaryColor: string;
-  fontFamily: string;
-  businessHours: BusinessHour[];
-  contactInfo: ContactInfo;
-  socialLinks: SocialLinks;
-  googleMapsUrl: string;
-  tmwChatbotCode: string;
-};
-
-export type BusinessHour = {
-  day: string;
-  hours: string;
-  isOpen: boolean;
-};
-
-export type ContactInfo = {
-  email: string;
-  phone: string;
-  address: string;
-  whatsapp: string;
-};
-
-export type SocialLinks = {
-  instagram: string;
-  facebook: string;
-  twitter: string;
-  linkedin: string;
-};
+  secondaryColor: string;
+  description: string;
+  isPublished: boolean;
+  fontFamily?: string;
+  textColor?: string;
+  backgroundColor?: string;
+  logo?: string;
+}
