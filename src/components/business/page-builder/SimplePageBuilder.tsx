@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useBusinessPage } from "@/hooks/business-page";
 import { BusinessPage, BusinessPageSection } from "@/types/business.types";
-import { PageBuilderEmptyState } from "./PageBuilderEmptyState";
+import PageBuilderEmptyState from "./PageBuilderEmptyState";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PagePreviewTab from "./PagePreviewTab";
 import { Separator } from "@/components/ui/separator";
