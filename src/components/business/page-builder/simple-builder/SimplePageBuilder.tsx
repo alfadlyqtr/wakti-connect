@@ -19,7 +19,33 @@ const SimplePageBuilder: React.FC = () => {
     primaryColor: "#4f46e5",
     secondaryColor: "#10b981",
     description: "",
-    isPublished: false
+    isPublished: false,
+    fontFamily: "Inter",
+    textColor: "#000000",
+    backgroundColor: "#ffffff",
+    contactInfo: {
+      email: "",
+      phone: "",
+      address: "",
+      whatsapp: ""
+    },
+    socialLinks: {
+      facebook: "",
+      instagram: "",
+      twitter: "",
+      linkedin: ""
+    },
+    businessHours: [
+      { day: "Monday", hours: "9:00 AM - 5:00 PM", isOpen: true },
+      { day: "Tuesday", hours: "9:00 AM - 5:00 PM", isOpen: true },
+      { day: "Wednesday", hours: "9:00 AM - 5:00 PM", isOpen: true },
+      { day: "Thursday", hours: "9:00 AM - 5:00 PM", isOpen: true },
+      { day: "Friday", hours: "9:00 AM - 5:00 PM", isOpen: true },
+      { day: "Saturday", hours: "10:00 AM - 3:00 PM", isOpen: false },
+      { day: "Sunday", hours: "Closed", isOpen: false }
+    ],
+    googleMapsUrl: "",
+    tmwChatbotCode: ""
   });
   
   // Function to update a specific section
