@@ -1,132 +1,81 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { ProfileWithEmail } from "@/hooks/useProfileSettings";
+import { toast } from "@/components/ui/use-toast";
 
-// Check if the profile_images bucket exists and create it if not
-export const initializeProfileStorage = async () => {
-  try {
-    // Check if bucket exists
-    const { data: buckets } = await supabase.storage.listBuckets();
-    const bucketExists = buckets?.some(bucket => bucket.name === 'profile_images');
-    
-    // Create bucket if it doesn't exist
-    if (!bucketExists) {
-      console.log("Using existing profile_images bucket");
-    }
-  } catch (error) {
-    console.error("Error initializing profile storage:", error);
-  }
-};
-
-// Initialize business assets bucket
-export const initializeBusinessAssetsStorage = async () => {
-  try {
-    // We don't need to check if bucket exists as we've created it in SQL migration
-    // Just log that we're using it
-    console.log("Using business_assets bucket");
-  } catch (error) {
-    console.error("Error initializing business assets storage:", error);
-  }
-};
-
-// Update profile with form data
-export const updateProfileData = async (
-  profileId: string,
-  data: Partial<ProfileWithEmail>
-) => {
-  const { data: updatedProfile, error } = await supabase
-    .from('profiles')
-    .update({
-      ...data,
-      updated_at: new Date().toISOString()
-    })
-    .eq('id', profileId)
-    .select()
-    .single();
-    
-  if (error) throw error;
-  return updatedProfile;
-};
-
-// Update avatar image
-export const updateProfileAvatar = async (
-  profileId: string,
-  file: File
-): Promise<string> => {
-  // Initialize storage if needed
-  await initializeProfileStorage();
-  
-  // Create a unique file path
-  const fileExt = file.name.split('.').pop();
-  const fileName = `${profileId}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-  const filePath = `avatars/${fileName}`;
-  
-  // Upload the file
-  const { error: uploadError } = await supabase.storage
-    .from('profile_images')
-    .upload(filePath, file);
-  
-  if (uploadError) throw uploadError;
-  
-  // Get the public URL
-  const { data: urlData } = supabase.storage
-    .from('profile_images')
-    .getPublicUrl(filePath);
-  
-  if (!urlData.publicUrl) throw new Error("Failed to get public URL");
-  
-  // Update the profile with the new avatar URL
-  await updateProfileData(profileId, { avatar_url: urlData.publicUrl });
-  
-  return urlData.publicUrl;
-};
-
-// Upload business image (for gallery, logo, etc)
+/**
+ * Uploads a file to the business assets storage bucket
+ */
 export const uploadBusinessImage = async (
   businessId: string,
   file: File,
-  folder = 'gallery'
+  folder: string = 'general'
 ): Promise<string> => {
-  await initializeBusinessAssetsStorage();
-  
-  // Validate file size (5MB max)
-  if (file.size > 5 * 1024 * 1024) {
-    throw new Error("File size exceeds 5MB limit");
+  try {
+    // Check if the bucket exists, if not, try to create it
+    const { data: buckets } = await supabase
+      .storage
+      .listBuckets();
+      
+    const bucketExists = buckets?.some(b => b.name === 'business-assets');
+    
+    if (!bucketExists) {
+      console.warn('Bucket business-assets does not exist, uploads will fail');
+      // Note: we can't create buckets from client-side
+      throw new Error('Upload storage is not configured. Please contact support.');
+    }
+    
+    // Create a unique file name
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+    const filePath = `${businessId}/${folder}/${fileName}`;
+    
+    // Upload the file
+    const { error: uploadError } = await supabase
+      .storage
+      .from('business-assets')
+      .upload(filePath, file);
+      
+    if (uploadError) throw uploadError;
+    
+    // Get the public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('business-assets')
+      .getPublicUrl(filePath);
+      
+    return publicUrl;
+  } catch (error) {
+    console.error("Error in uploadBusinessImage:", error);
+    throw error;
   }
-  
-  // Validate file type
-  const fileExt = file.name.split('.').pop()?.toLowerCase();
-  const allowedTypes = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-  
-  if (!fileExt || !allowedTypes.includes(fileExt)) {
-    throw new Error("Only JPG, PNG, GIF and WEBP images are allowed");
-  }
-  
-  // Create a unique file path
-  const fileName = `${businessId}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-  const filePath = `${folder}/${fileName}`;
-  
-  // Upload the file
-  const { error: uploadError } = await supabase.storage
-    .from('business_assets')
-    .upload(filePath, file);
-  
-  if (uploadError) throw uploadError;
-  
-  // Get the public URL
-  const { data: urlData } = supabase.storage
-    .from('business_assets')
-    .getPublicUrl(filePath);
-  
-  if (!urlData.publicUrl) throw new Error("Failed to get public URL");
-  
-  return urlData.publicUrl;
 };
 
-// Update business logo
+/**
+ * Updates the business logo for a business profile
+ */
 export const updateBusinessLogo = async (
   businessId: string,
   file: File
 ): Promise<string> => {
-  return uploadBusinessImage(businessId, file, 'logos');
+  try {
+    // Upload the image using the shared function
+    const logoUrl = await uploadBusinessImage(businessId, file, 'logos');
+    
+    // Update the profile record with the new logo URL
+    const { error } = await supabase
+      .from('business_pages')
+      .update({ logo_url: logoUrl })
+      .eq('business_id', businessId);
+      
+    if (error) throw error;
+    
+    return logoUrl;
+  } catch (error) {
+    console.error("Error updating business logo:", error);
+    toast({
+      variant: "destructive",
+      title: "Logo update failed",
+      description: error instanceof Error ? error.message : "Failed to update logo"
+    });
+    throw error;
+  }
 };

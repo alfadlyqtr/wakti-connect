@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
-import { Copy, Eye, Globe, Save } from "lucide-react";
+import { Copy, Eye, Globe, Save, Loader2 } from "lucide-react";
 
 interface TopBarProps {
   pageUrl: string;
@@ -22,6 +22,9 @@ const TopBar: React.FC<TopBarProps> = ({
   isEditMode,
   setEditMode
 }) => {
+  const [isSaving, setIsSaving] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  
   const copyToClipboard = () => {
     if (pageUrl && pageUrl !== '#') {
       navigator.clipboard.writeText(pageUrl);
@@ -35,6 +38,26 @@ const TopBar: React.FC<TopBarProps> = ({
         description: "Create and publish your page first to get a URL.",
         variant: "destructive",
       });
+    }
+  };
+  
+  const handleSave = () => {
+    setIsSaving(true);
+    try {
+      onSave();
+    } finally {
+      // Usually we'd wait for the promise to resolve, but for simplicity:
+      setTimeout(() => setIsSaving(false), 500);
+    }
+  };
+  
+  const handlePublish = () => {
+    setIsPublishing(true);
+    try {
+      onPublish();
+    } finally {
+      // Usually we'd wait for the promise to resolve, but for simplicity:
+      setTimeout(() => setIsPublishing(false), 500);
     }
   };
 
@@ -62,18 +85,39 @@ const TopBar: React.FC<TopBarProps> = ({
       </div>
       
       <div className="flex items-center gap-2">
-        <Button variant="outline" onClick={onSave} className="gap-1">
-          <Save className="h-4 w-4" />
-          Save
+        <Button 
+          variant="outline" 
+          onClick={handleSave} 
+          className="gap-1"
+          disabled={isSaving}
+        >
+          {isSaving ? (
+            <Loader2 className="h-4 w-4 animate-spin mr-1" />
+          ) : (
+            <Save className="h-4 w-4 mr-1" />
+          )}
+          {isSaving ? 'Saving...' : 'Save'}
         </Button>
         
-        <Button variant="outline" onClick={onPreview} className="gap-1">
-          <Eye className="h-4 w-4" />
+        <Button 
+          variant="outline" 
+          onClick={onPreview} 
+          className="gap-1"
+        >
+          <Eye className="h-4 w-4 mr-1" />
           Preview
         </Button>
         
-        <Button variant="default" onClick={onPublish} className="bg-wakti-navy">
-          Publish
+        <Button 
+          variant="default" 
+          onClick={handlePublish} 
+          className="bg-wakti-navy"
+          disabled={isPublishing}
+        >
+          {isPublishing ? (
+            <Loader2 className="h-4 w-4 animate-spin mr-1" />
+          ) : null}
+          {isPublishing ? 'Publishing...' : 'Publish'}
         </Button>
       </div>
     </div>
