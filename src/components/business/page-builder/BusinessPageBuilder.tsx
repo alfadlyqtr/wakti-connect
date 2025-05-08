@@ -10,6 +10,7 @@ import { useUpdatePageMutation } from "@/hooks/business-page/useBusinessPageMuta
 import { toast } from "@/components/ui/use-toast";
 import { generateSlug } from "@/utils/string-utils";
 import { supabase } from "@/integrations/supabase/client";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
 // Initial state for the business page data
 const initialPageData: BusinessPageData = {
@@ -90,6 +91,10 @@ const BusinessPageBuilder = () => {
   const [lastSaveAttempt, setLastSaveAttempt] = useState<Date | null>(null);
   const updatePageMutation = useUpdatePageMutation();
   
+  // Get the user's profile data to access the business_name for the URL
+  const { data: { user } } = await supabase.auth.getUser();
+  const { profile, isLoading: profileLoading } = useUserProfile(user?.id || "");
+  
   // Load saved page data from Supabase if available
   useEffect(() => {
     const loadPageData = async () => {
@@ -120,8 +125,22 @@ const BusinessPageBuilder = () => {
       setSaveStatus("saving");
       setLastSaveAttempt(new Date());
       
-      // Generate a slug from the business name
-      const pageSlug = generateSlug(pageData.pageSetup.businessName);
+      // Generate a slug from the business name in profile settings, not the page title
+      // This ensures the URL is based on the business name in account settings
+      let pageSlug = "";
+      
+      if (profile?.business_name) {
+        pageSlug = generateSlug(profile.business_name);
+      } else {
+        // If no business name is set in profile, inform the user
+        toast({
+          variant: "destructive",
+          title: "Missing business name",
+          description: "Please set your business name in your account settings to generate a URL."
+        });
+        setSaveStatus("unsaved");
+        return;
+      }
       
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError || !user) {
@@ -242,6 +261,7 @@ const BusinessPageBuilder = () => {
         <TopBar 
           onSettingsClick={toggleSettingsDialog} 
           pageData={pageData}
+          businessName={profile?.business_name}
         />
         <div className="flex flex-1 overflow-hidden">
           <LeftPanel />

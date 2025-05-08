@@ -20,15 +20,22 @@ interface UserProfile {
 export const useUserProfile = (userId: string) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     const loadProfile = async () => {
+      if (!userId) {
+        setIsLoading(false);
+        return;
+      }
+      
       try {
         setIsLoading(true);
         const data = await getUserProfile(userId);
         setProfile(data as UserProfile);
       } catch (error) {
         console.error('Error loading user profile:', error);
+        setError(error instanceof Error ? error : new Error('Unknown error loading profile'));
       } finally {
         setIsLoading(false);
       }
@@ -39,5 +46,5 @@ export const useUserProfile = (userId: string) => {
     }
   }, [userId]);
 
-  return { profile, isLoading };
+  return { profile, isLoading, error };
 };

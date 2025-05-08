@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Settings, Globe, Copy, ExternalLink, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,17 +14,21 @@ import {
 interface TopBarProps {
   onSettingsClick: () => void;
   pageData: BusinessPageData;
+  businessName?: string | null;
 }
 
-export const TopBar = ({ onSettingsClick, pageData }: TopBarProps) => {
+export const TopBar = ({ onSettingsClick, pageData, businessName }: TopBarProps) => {
   const { handleSave, saveStatus } = useBusinessPage();
   const [showURLInfo, setShowURLInfo] = useState(false);
   
-  // Generate a properly formatted URL based on the business name from user settings
-  // This is intentionally not using the page title as seen in the UI
+  // Generate a properly formatted URL based on the business name from user profile settings
   const getPreviewUrl = () => {
-    // Here we should be using the business name from the user's profile settings
-    // For this implementation, just show the correct format
+    // Return URL based on businessName from user's profile settings if available
+    if (businessName) {
+      const slug = generateSlug(businessName);
+      return `www.wakti.qa/${slug}`;
+    }
+    // Otherwise show a placeholder
     return `www.wakti.qa/your-business-name`;
   };
   
