@@ -39,29 +39,34 @@ export const useCreatePageDataMutation = () => {
       console.log('Generated slug:', pageSlug);
       console.log('Saving page data:', JSON.stringify(pageData).substring(0, 200) + '...');
       
-      // We need to handle the JSON conversion for Supabase
-      const { data: response, error } = await supabase
-        .from('business_pages_data')
-        .insert({
-          user_id: userId,
-          page_slug: pageSlug,
-          page_data: pageData as unknown as Json // Proper casting to Json type
-        })
-        .select()
-        .single();
+      try {
+        // Handle the JSON conversion for Supabase
+        const { data: response, error } = await supabase
+          .from('business_pages_data')
+          .insert({
+            user_id: userId,
+            page_slug: pageSlug,
+            page_data: pageData as unknown as Json // Proper casting to Json type
+          })
+          .select()
+          .single();
+          
+        if (error) {
+          console.error("Error creating business page data:", error);
+          throw error;
+        }
         
-      if (error) {
-        console.error("Error creating business page data:", error);
-        throw error;
+        console.log("Create response:", response);
+        
+        // Convert the returned page_data back to BusinessPageData
+        return {
+          ...response,
+          page_data: response.page_data as unknown as BusinessPageData
+        } as BusinessPageDataRecord;
+      } catch (error: any) {
+        console.error("Exception in createPageData:", error);
+        throw new Error(`Failed to save page: ${error.message || 'Unknown error'}`);
       }
-      
-      console.log("Create response:", response);
-      
-      // Convert the returned page_data back to BusinessPageData
-      return {
-        ...response,
-        page_data: response.page_data as unknown as BusinessPageData
-      } as BusinessPageDataRecord;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['businessPageData'] });
@@ -105,37 +110,42 @@ export const useUpdatePageDataMutation = () => {
       console.log('Updating page with id:', id);
       console.log('Page data preview:', JSON.stringify(pageData).substring(0, 200) + '...');
       
-      // Prepare the data to update
-      const updateData: Record<string, any> = {
-        page_data: pageData as unknown as Json, // Properly cast to Json type
-        updated_at: new Date().toISOString()
-      };
-      
-      // Update the slug if requested
-      if (updateSlug) {
-        updateData.page_slug = generateSlug(pageData.pageSetup.businessName || "my-business");
-        console.log('Updating slug to:', updateData.page_slug);
-      }
-      
-      const { data: response, error } = await supabase
-        .from('business_pages_data')
-        .update(updateData)
-        .eq('id', id)
-        .select()
-        .single();
+      try {
+        // Prepare the data to update
+        const updateData: Record<string, any> = {
+          page_data: pageData as unknown as Json, // Properly cast to Json type
+          updated_at: new Date().toISOString()
+        };
         
-      if (error) {
-        console.error("Error updating business page data:", error);
-        throw error;
+        // Update the slug if requested
+        if (updateSlug) {
+          updateData.page_slug = generateSlug(pageData.pageSetup.businessName || "my-business");
+          console.log('Updating slug to:', updateData.page_slug);
+        }
+        
+        const { data: response, error } = await supabase
+          .from('business_pages_data')
+          .update(updateData)
+          .eq('id', id)
+          .select()
+          .single();
+          
+        if (error) {
+          console.error("Error updating business page data:", error);
+          throw error;
+        }
+        
+        console.log("Update response:", response);
+        
+        // Convert the returned page_data back to BusinessPageData
+        return {
+          ...response,
+          page_data: response.page_data as unknown as BusinessPageData
+        } as BusinessPageDataRecord;
+      } catch (error: any) {
+        console.error("Exception in updatePageData:", error);
+        throw new Error(`Failed to update page: ${error.message || 'Unknown error'}`);
       }
-      
-      console.log("Update response:", response);
-      
-      // Convert the returned page_data back to BusinessPageData
-      return {
-        ...response,
-        page_data: response.page_data as unknown as BusinessPageData
-      } as BusinessPageDataRecord;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['businessPageData'] });
@@ -178,34 +188,39 @@ export const usePublishPageMutation = () => {
         };
       }
       
-      // Update the published state in the page data
-      const updatedPageData = {
-        ...pageData,
-        published
-      };
-      
-      const { data: response, error } = await supabase
-        .from('business_pages_data')
-        .update({
-          page_data: updatedPageData as unknown as Json, // Properly cast to Json type
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', id)
-        .select()
-        .single();
+      try {
+        // Update the published state in the page data
+        const updatedPageData = {
+          ...pageData,
+          published
+        };
         
-      if (error) {
-        console.error("Error publishing business page:", error);
-        throw error;
+        const { data: response, error } = await supabase
+          .from('business_pages_data')
+          .update({
+            page_data: updatedPageData as unknown as Json, // Properly cast to Json type
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', id)
+          .select()
+          .single();
+          
+        if (error) {
+          console.error("Error publishing business page:", error);
+          throw error;
+        }
+        
+        console.log("Publish response:", response);
+        
+        // Convert the returned page_data back to BusinessPageData
+        return {
+          ...response,
+          page_data: response.page_data as unknown as BusinessPageData
+        } as BusinessPageDataRecord;
+      } catch (error: any) {
+        console.error("Exception in publishPage:", error);
+        throw new Error(`Failed to ${published ? 'publish' : 'unpublish'} page: ${error.message || 'Unknown error'}`);
       }
-      
-      console.log("Publish response:", response);
-      
-      // Convert the returned page_data back to BusinessPageData
-      return {
-        ...response,
-        page_data: response.page_data as unknown as BusinessPageData
-      } as BusinessPageDataRecord;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['businessPageData'] });

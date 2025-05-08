@@ -30,7 +30,7 @@ export const TopBar = ({ onSettingsClick, pageData, businessName, onPublish, pag
     const slug = name.toLowerCase()
       .replace(/[^\w\s-]/g, '')
       .replace(/\s+/g, '-');
-    return `${slug}.wakti.app`;
+    return `${slug}.wakti.qa`;  // Changed from .wakti.app to .wakti.qa
   };
   
   // Generate URL display - ensure we're using the correct data path

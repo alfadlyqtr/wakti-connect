@@ -5,7 +5,7 @@ import { useBusinessPage } from "../../context/BusinessPageContext";
 export const PageHeader = () => {
   const { pageData } = useBusinessPage();
   
-  // Ensure we're using the correct path to businessName and alignment
+  // Get business name from pageSetup and ensure it's properly displayed
   const businessName = pageData.pageSetup?.businessName || "My Business";
   const alignment = pageData.pageSetup?.alignment || "center";
   
@@ -16,7 +16,6 @@ export const PageHeader = () => {
     right: "text-right"
   }[alignment];
 
-  // Log page data for debugging
   console.log("PageHeader rendering with data:", {
     businessName,
     alignment,
