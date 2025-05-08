@@ -3,11 +3,7 @@ import React from "react";
 import { Helmet } from "react-helmet-async";
 import { Navigate } from "react-router-dom";
 
-interface BusinessLandingPageProps {
-  isPreview?: boolean;
-}
-
-const SimpleBusinessLandingPage: React.FC<BusinessLandingPageProps> = () => {
+const SimpleBusinessLandingPage = () => {
   return (
     <>
       <Helmet>

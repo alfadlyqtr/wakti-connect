@@ -1,20 +1,10 @@
 
-import { RouteObject, Navigate, useParams } from "react-router-dom";
+import { RouteObject, Navigate } from "react-router-dom";
 import BookingPage from "@/pages/booking/BookingPage";
 import BookingConfirmationPage from "@/pages/booking/BookingConfirmationPage";
 
-// Redirect component to handle backward compatibility
-const BusinessRedirect = () => {
-  const params = useParams<{ slug: string }>();
-  if (!params.slug) {
-    return <Navigate to="/" />;
-  }
-  return <Navigate to={`/${params.slug}`} />;
-};
-
-export const businessRoutes: RouteObject[] = [
-  // Business landing page routes removed
-];
+// Empty business routes - all redirected to home
+export const businessRoutes: RouteObject[] = [];
 
 // Booking routes - now completely separate from business routes
 export const bookingRoutes: RouteObject[] = [
