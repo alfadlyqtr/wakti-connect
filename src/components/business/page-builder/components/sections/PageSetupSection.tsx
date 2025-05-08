@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { GripVertical, Save, InfoCircle } from "lucide-react";
+import { GripVertical, Save, Info } from "lucide-react";
 import { useBusinessPage } from "../../context/BusinessPageContext";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Button } from "@/components/ui/button";
@@ -83,7 +83,7 @@ export const PageSetupSection = () => {
               <Label htmlFor="businessName">Page Title</Label>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <InfoCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                  <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
                 </TooltipTrigger>
                 <TooltipContent className="max-w-xs">
                   <p className="text-xs">
