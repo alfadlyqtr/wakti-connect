@@ -134,14 +134,23 @@ const BusinessPageBuilder = () => {
     section: K,
     data: Partial<BusinessPageData[K]>
   ) => {
-    setPageData(prevData => ({
-      ...prevData,
-      [section]: {
-        ...prevData[section],
-        // Convert the data to a plain object first before spreading
-        ...Object.fromEntries(Object.entries(data || {}))
-      }
-    }));
+    setPageData(prevData => {
+      // Create a copy of the current section data
+      const currentSection = prevData[section];
+      
+      // Create a new section by merging current section with new data
+      // We first ensure both are treated as regular objects
+      const updatedSection = {
+        ...currentSection,
+        ...(data as object)  // Cast to object to satisfy TypeScript
+      };
+      
+      // Return updated state with the new section
+      return {
+        ...prevData,
+        [section]: updatedSection
+      };
+    });
     setSaveStatus('unsaved');
   };
   
