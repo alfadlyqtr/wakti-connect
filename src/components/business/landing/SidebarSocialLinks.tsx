@@ -22,9 +22,10 @@ const SidebarSocialLinks: React.FC<SidebarSocialLinksProps> = ({
 
   return (
     <>
+      {/* Desktop version - inside the page with proper padding */}
       <div className="fixed z-30 top-1/2 transform -translate-y-1/2 hidden md:block"
            style={{
-             [position === 'left' ? 'left' : 'right']: '10px',
+             [position === 'left' ? 'left' : 'right']: '20px',
            }}>
         <SocialIconsGroup 
           socialLinks={socialLinks}
@@ -35,9 +36,10 @@ const SidebarSocialLinks: React.FC<SidebarSocialLinksProps> = ({
         />
       </div>
       
+      {/* Mobile version - with smaller padding */}
       <div className="fixed z-30 top-1/2 transform -translate-y-1/2 block md:hidden"
            style={{
-             [position === 'left' ? 'left' : 'right']: '5px',
+             [position === 'left' ? 'left' : 'right']: '10px',
            }}>
         <SocialIconsGroup 
           socialLinks={socialLinks}

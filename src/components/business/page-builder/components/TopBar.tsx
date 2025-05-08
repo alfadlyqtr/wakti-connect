@@ -15,7 +15,7 @@ interface TopBarProps {
 export const TopBar = ({ onSettingsClick, pageData }: TopBarProps) => {
   const { handleSave, saveStatus } = useBusinessPage();
   
-  // Generate a properly formatted URL based on the business name
+  // Generate a properly formatted URL based on the page title
   const getPreviewUrl = () => {
     // Use the business name for the URL
     const businessName = pageData.pageSetup.businessName || 'your-business';

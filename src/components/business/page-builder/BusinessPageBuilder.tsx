@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { TopBar } from "./components/TopBar";
@@ -86,6 +87,7 @@ const BusinessPageBuilder = () => {
   const [pageData, setPageData] = useState<BusinessPageData>(initialPageData);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"saved" | "unsaved" | "saving">("saved");
+  const [lastSaveAttempt, setLastSaveAttempt] = useState<Date | null>(null);
   const updatePageMutation = useUpdatePageMutation();
   
   // Load saved page data from Supabase if available
@@ -116,6 +118,7 @@ const BusinessPageBuilder = () => {
   const handleSave = async () => {
     try {
       setSaveStatus("saving");
+      setLastSaveAttempt(new Date());
       
       // Generate a slug from the business name
       const pageSlug = generateSlug(pageData.pageSetup.businessName);
@@ -124,6 +127,13 @@ const BusinessPageBuilder = () => {
       if (userError || !user) {
         throw userError || new Error("No authenticated user");
       }
+      
+      // Log the data being saved for debugging
+      console.log("Saving page data:", {
+        userId: user.id,
+        pageSlug,
+        pageData
+      });
       
       // Save to Supabase - properly handling the types
       const { error } = await supabase
@@ -135,7 +145,10 @@ const BusinessPageBuilder = () => {
           updated_at: new Date().toISOString()
         }, { onConflict: 'user_id' });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error:", error);
+        throw error;
+      }
       
       // If successful, update state
       setSaveStatus("saved");
@@ -143,13 +156,13 @@ const BusinessPageBuilder = () => {
         title: "Changes saved",
         description: "Your page settings have been updated."
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving page data:", error);
       setSaveStatus("unsaved");
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to save changes. Please try again."
+        title: "Error saving changes",
+        description: error.message || "Failed to save changes. Please try again."
       });
     }
   };
@@ -185,19 +198,26 @@ const BusinessPageBuilder = () => {
       // Get the current section data
       const currentSection = prev[section];
       
-      // Create a new section object
-      const updatedSection = { ...currentSection } as BusinessPageData[K];
-      
-      // Apply updates from the data parameter
-      Object.keys(data).forEach(key => {
-        const typedKey = key as keyof typeof data;
-        if (data[typedKey] !== undefined) {
-          (updatedSection as any)[key] = data[typedKey];
-        }
-      });
-      
-      // Assign the updated section back to the section key
-      updated[section] = updatedSection;
+      // Type-safe way to update the section data
+      if (typeof currentSection === 'object' && currentSection !== null) {
+        // Create a new object with merged properties
+        const mergedSection = {} as any;
+        
+        // Copy existing properties
+        Object.keys(currentSection).forEach(key => {
+          mergedSection[key] = (currentSection as any)[key];
+        });
+        
+        // Apply updates
+        Object.keys(data).forEach(key => {
+          if ((data as any)[key] !== undefined) {
+            mergedSection[key] = (data as any)[key];
+          }
+        });
+        
+        // Assign the new merged section
+        updated[section] = mergedSection as BusinessPageData[K];
+      }
       
       return updated;
     });

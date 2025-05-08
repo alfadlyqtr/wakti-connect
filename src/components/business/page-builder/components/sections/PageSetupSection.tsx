@@ -51,7 +51,7 @@ export const PageSetupSection = () => {
               id="businessName" 
               value={businessName} 
               onChange={handleBusinessNameChange} 
-              placeholder="Enter your business name"
+              placeholder="Enter your page title"
             />
           </div>
 

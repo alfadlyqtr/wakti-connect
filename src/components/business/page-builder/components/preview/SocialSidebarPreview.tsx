@@ -108,7 +108,8 @@ export const SocialSidebarPreview = () => {
     return null;
   }
 
-  const positionClass = position === "left" ? "left-4" : "right-4";
+  // Adjust positioning to be inside the page content
+  const positionClass = position === "left" ? "left-8" : "right-8";
   
   return (
     <div 
