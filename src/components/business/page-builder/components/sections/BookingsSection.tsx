@@ -7,6 +7,7 @@ import { GripVertical, Grid2X2, List } from "lucide-react";
 import { useBusinessPage, ViewStyle } from "../../context/BusinessPageContext";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 // Mock booking templates for demo
 const mockTemplates = [
