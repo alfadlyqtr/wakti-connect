@@ -33,11 +33,35 @@ export const useBusinessPageDataQuery = (userId?: string) => {
       
       if (!data) return null;
       
-      // Convert the JSON page_data back to BusinessPageData type
-      return {
-        ...data,
-        page_data: data.page_data as unknown as BusinessPageData
-      } as BusinessPageDataRecord;
+      try {
+        // Convert the JSON page_data back to BusinessPageData type
+        // Add validation to ensure page_data has the expected structure
+        const pageData = data.page_data as unknown as BusinessPageData;
+        
+        // Ensure pageSetup exists and has default values if needed
+        if (!pageData.pageSetup) {
+          pageData.pageSetup = {
+            businessName: "My Business",
+            alignment: "center",
+            visible: true
+          };
+        }
+        
+        // Log the processed data
+        console.log("Processed business page data:", {
+          id: data.id,
+          pageSlug: data.page_slug,
+          pageSetup: pageData.pageSetup
+        });
+        
+        return {
+          ...data,
+          page_data: pageData
+        } as BusinessPageDataRecord;
+      } catch (parseError) {
+        console.error("Error processing page data:", parseError);
+        throw new Error("Failed to process page data");
+      }
     },
     enabled: !!userId
   });

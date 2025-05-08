@@ -23,9 +23,24 @@ export const TopBar = ({ onSettingsClick, pageData, businessName, onPublish, pag
   const { handleSave, saveStatus } = useBusinessPage();
   const [showURLInfo, setShowURLInfo] = useState(false);
   
+  // Generate URL display - ensure we're using the correct data path
+  const displayUrl = pageData.pageSetup?.businessName ? 
+    `${generatePageUrl(pageData.pageSetup.businessName)}` : 
+    (pageUrl || "No URL yet");
+  
+  // Helper function to generate URL from business name
+  const generatePageUrl = (name: string): string => {
+    if (!name) return "";
+    // Convert to lowercase, replace spaces with hyphens, remove special chars
+    const slug = name.toLowerCase()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/\s+/g, '-');
+    return `${slug}.wakti.app`;
+  };
+  
   // Copy URL to clipboard
   const copyToClipboard = () => {
-    if (!pageUrl) {
+    if (!displayUrl || displayUrl === "No URL yet") {
       toast({
         title: "No URL available",
         description: "Save and publish your page first to get a URL.",
@@ -33,7 +48,7 @@ export const TopBar = ({ onSettingsClick, pageData, businessName, onPublish, pag
       return;
     }
     
-    navigator.clipboard.writeText(`https://${pageUrl}`);
+    navigator.clipboard.writeText(`https://${displayUrl}`);
     toast({
       title: "URL copied to clipboard",
       description: "You can now paste it anywhere.",
@@ -42,14 +57,14 @@ export const TopBar = ({ onSettingsClick, pageData, businessName, onPublish, pag
   
   // Open URL in new tab
   const openUrl = () => {
-    if (!pageUrl) {
+    if (!displayUrl || displayUrl === "No URL yet") {
       toast({
         title: "No URL available", 
         description: "Save and publish your page first to get a URL."
       });
       return;
     }
-    window.open(`https://${pageUrl}`, '_blank');
+    window.open(`https://${displayUrl}`, '_blank');
   };
 
   // Display title from the page data
@@ -70,13 +85,13 @@ export const TopBar = ({ onSettingsClick, pageData, businessName, onPublish, pag
       <div className="flex items-center gap-2">
         <div className="flex items-center border rounded-md px-2 py-1 bg-gray-50">
           <Globe className="h-4 w-4 text-gray-500 mr-2" />
-          <span className="font-mono text-sm">{pageUrl ? `https://${pageUrl}` : "No URL yet"}</span>
+          <span className="font-mono text-sm">{displayUrl ? `https://${displayUrl}` : "No URL yet"}</span>
           <Button 
             variant="ghost" 
             size="sm" 
             className="h-6 w-6 p-0 ml-2"
             onClick={copyToClipboard}
-            disabled={!pageUrl}
+            disabled={!displayUrl || displayUrl === "No URL yet"}
           >
             <Copy className="h-3 w-3" />
           </Button>
@@ -85,7 +100,7 @@ export const TopBar = ({ onSettingsClick, pageData, businessName, onPublish, pag
             size="sm" 
             className="h-6 w-6 p-0"
             onClick={openUrl}
-            disabled={!pageUrl}
+            disabled={!displayUrl || displayUrl === "No URL yet"}
           >
             <ExternalLink className="h-3 w-3" />
           </Button>

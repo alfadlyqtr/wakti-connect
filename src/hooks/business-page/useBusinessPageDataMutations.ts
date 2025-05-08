@@ -24,8 +24,17 @@ export const useCreatePageDataMutation = () => {
     mutationFn: async (data: { pageData: BusinessPageData; userId: string }): Promise<BusinessPageDataRecord> => {
       const { pageData, userId } = data;
       
+      // Ensure pageSetup exists with required fields
+      if (!pageData.pageSetup) {
+        pageData.pageSetup = {
+          businessName: "My Business",
+          alignment: "center",
+          visible: true
+        };
+      }
+      
       // Generate a slug based on the business name if not provided
-      const pageSlug = generateSlug(pageData.pageSetup.businessName);
+      const pageSlug = generateSlug(pageData.pageSetup.businessName || "my-business");
       
       console.log('Generated slug:', pageSlug);
       console.log('Saving page data:', JSON.stringify(pageData).substring(0, 200) + '...');
@@ -84,6 +93,15 @@ export const useUpdatePageDataMutation = () => {
     }): Promise<BusinessPageDataRecord> => {
       const { id, pageData, updateSlug } = data;
       
+      // Ensure pageSetup exists with required fields
+      if (!pageData.pageSetup) {
+        pageData.pageSetup = {
+          businessName: "My Business",
+          alignment: "center",
+          visible: true
+        };
+      }
+      
       console.log('Updating page with id:', id);
       console.log('Page data preview:', JSON.stringify(pageData).substring(0, 200) + '...');
       
@@ -95,7 +113,7 @@ export const useUpdatePageDataMutation = () => {
       
       // Update the slug if requested
       if (updateSlug) {
-        updateData.page_slug = generateSlug(pageData.pageSetup.businessName);
+        updateData.page_slug = generateSlug(pageData.pageSetup.businessName || "my-business");
         console.log('Updating slug to:', updateData.page_slug);
       }
       
@@ -150,6 +168,15 @@ export const usePublishPageMutation = () => {
       const { id, published, pageData } = data;
       
       console.log(`${published ? 'Publishing' : 'Unpublishing'} page with id:`, id);
+      
+      // Ensure pageSetup exists with required fields
+      if (!pageData.pageSetup) {
+        pageData.pageSetup = {
+          businessName: "My Business",
+          alignment: "center",
+          visible: true
+        };
+      }
       
       // Update the published state in the page data
       const updatedPageData = {
