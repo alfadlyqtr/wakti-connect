@@ -138,7 +138,7 @@ const BusinessPageBuilder = () => {
       ...prevData,
       [section]: {
         ...prevData[section],
-        ...(data as any) // Using type assertion to fix spread type error
+        ...Object.assign({}, data) // Fix for spread types error
       }
     }));
     setSaveStatus('unsaved');
@@ -228,7 +228,7 @@ const BusinessPageBuilder = () => {
         <TopBar 
           onSettingsClick={() => setIsSettingsOpen(true)}
           pageData={pageData}
-          businessName={user?.businessName ?? ""}
+          businessName={user?.profile?.business_name ?? ""}
           onPublish={handlePublish}
           pageUrl={getPageUrl()}
         />

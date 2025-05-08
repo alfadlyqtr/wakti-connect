@@ -35,7 +35,7 @@ export const useCreatePageDataMutation = () => {
           user_id: userId,
           page_slug: pageSlug,
           // Convert BusinessPageData to JSON before sending to Supabase using type assertion
-          page_data: pageData as unknown as object
+          page_data: pageData as any
         })
         .select()
         .single();
@@ -83,7 +83,7 @@ export const useUpdatePageDataMutation = () => {
       
       // Prepare the data to update
       const updateData: any = {
-        page_data: pageData as unknown as object,
+        page_data: pageData as any,
         updated_at: new Date().toISOString()
       };
       
@@ -149,7 +149,7 @@ export const usePublishPageMutation = () => {
       const { data: response, error } = await supabase
         .from('business_pages_data')
         .update({
-          page_data: updatedPageData as unknown as object,
+          page_data: updatedPageData as any,
           updated_at: new Date().toISOString()
         })
         .eq('id', id)
