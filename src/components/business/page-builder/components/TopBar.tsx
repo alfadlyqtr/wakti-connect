@@ -23,11 +23,6 @@ export const TopBar = ({ onSettingsClick, pageData, businessName, onPublish, pag
   const { handleSave, saveStatus } = useBusinessPage();
   const [showURLInfo, setShowURLInfo] = useState(false);
   
-  // Generate URL display - ensure we're using the correct data path
-  const displayUrl = pageData.pageSetup?.businessName ? 
-    `${generatePageUrl(pageData.pageSetup.businessName)}` : 
-    (pageUrl || "No URL yet");
-  
   // Helper function to generate URL from business name
   const generatePageUrl = (name: string): string => {
     if (!name) return "";
@@ -37,6 +32,11 @@ export const TopBar = ({ onSettingsClick, pageData, businessName, onPublish, pag
       .replace(/\s+/g, '-');
     return `${slug}.wakti.app`;
   };
+  
+  // Generate URL display - ensure we're using the correct data path
+  const displayUrl = pageData.pageSetup?.businessName ? 
+    `${generatePageUrl(pageData.pageSetup.businessName)}` : 
+    (pageUrl || "No URL yet");
   
   // Copy URL to clipboard
   const copyToClipboard = () => {
