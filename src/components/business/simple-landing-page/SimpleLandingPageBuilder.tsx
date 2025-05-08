@@ -1,838 +1,560 @@
 
 import React, { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "@/components/ui/use-toast";
-import { Loader2, Upload, Instagram, Phone, MapPin } from "lucide-react";
+import { Label } from "@/components/ui/label";
 import { useLogoUpload } from "@/hooks/useLogoUpload";
-import { supabase } from "@/integrations/supabase/client";
-import { useBookingTemplates } from "@/hooks/useBookingTemplates";
-import { BookingTemplateCard } from "../page-builder/components/BookingTemplateCard";
-import { generateGoogleMapsUrl } from "@/config/maps";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import SimpleLandingPageView from "./SimpleLandingPageView";
+import { Loader2, Upload } from "lucide-react";
 
-interface BusinessPageData {
-  id?: string;
-  business_id?: string;
+interface GalleryImage {
+  url: string;
+  id: string;
+}
+
+interface BusinessPage {
+  id: string;
+  business_id: string;
   page_title: string;
   page_slug: string;
-  description: string;
+  description?: string;
   logo_url?: string;
   is_published: boolean;
-  whatsapp_url?: string;
-  instagram_url?: string;
-  location?: string;
 }
 
 const SimpleLandingPageBuilder = () => {
-  // Get business ID (for production, get from auth context)
-  const [businessId, setBusinessId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isPublishing, setIsPublishing] = useState(false);
-  const [activeTab, setActiveTab] = useState("info");
-  const [pageData, setPageData] = useState<BusinessPageData>({
-    page_title: "",
-    page_slug: "",
-    description: "",
-    is_published: false,
-    whatsapp_url: "",
-    instagram_url: "",
-    location: ""
-  });
-  const [galleryImages, setGalleryImages] = useState<Array<{url: string, alt: string}>>([]);
-  const [newImageFile, setNewImageFile] = useState<File | null>(null);
-  const [uploadingImage, setUploadingImage] = useState(false);
+  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState<string>("edit");
+  const [loading, setLoading] = useState<boolean>(true);
+  const [saving, setSaving] = useState<boolean>(false);
+  const { uploadingLogo, handleLogoUpload } = useLogoUpload();
   
-  // Logo upload hook
-  const { uploadingLogo, handleLogoUpload } = useLogoUpload(businessId, (logoUrl) => {
-    setPageData(prev => ({ ...prev, logo_url: logoUrl }));
-  });
+  // Business info state
+  const [businessName, setBusinessName] = useState<string>("");
+  const [description, setDescription] = useState<string>("");
+  const [logoUrl, setLogoUrl] = useState<string>("");
   
-  // Get booking templates
-  const { templates, isLoading: loadingTemplates } = useBookingTemplates(businessId || "");
+  // Contact info state
+  const [googleMapsUrl, setGoogleMapsUrl] = useState<string>("");
+  const [whatsappNumber, setWhatsappNumber] = useState<string>("");
+  const [instagramUrl, setInstagramUrl] = useState<string>("");
   
-  // Load business ID and page data
+  // Gallery state
+  const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
+  const [uploadingImage, setUploadingImage] = useState<boolean>(false);
+  
+  // Page state
+  const [pageId, setPageId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [pageData, setPageData] = useState<any>(null);
+  
+  // Load user profile and page data
   useEffect(() => {
-    const fetchBusinessId = async () => {
+    const loadUserData = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+        setLoading(true);
         
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('id, business_id')
-          .eq('id', user.id)
+        // Get current user
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) {
+          toast({
+            title: "Not authenticated",
+            description: "Please log in to edit your business page",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+        
+        setUserId(session.user.id);
+        
+        // Get business page
+        const { data: pageData, error: pageError } = await supabase
+          .from('business_pages')
+          .select('*')
+          .eq('business_id', session.user.id)
           .single();
+        
+        if (pageError && pageError.code !== 'PGRST116') { // Not found is ok
+          toast({
+            title: "Error loading page data",
+            description: pageError.message,
+            variant: "destructive",
+          });
+        }
+        
+        if (pageData) {
+          // Page exists
+          setPageId(pageData.id);
+          setBusinessName(pageData.page_title || "");
+          setDescription(pageData.description || "");
+          setLogoUrl(pageData.logo_url || "");
+          setPageData(pageData);
           
-        if (profile?.business_id) {
-          setBusinessId(profile.business_id);
-          
-          // Fetch business page data
-          const { data: pageData } = await supabase
-            .from('business_pages')
+          // Load section data
+          const { data: sectionsData, error: sectionsError } = await supabase
+            .from('business_page_sections')
             .select('*')
-            .eq('business_id', profile.business_id)
-            .maybeSingle();
+            .eq('page_id', pageData.id)
+            .order('section_order', { ascending: true });
+          
+          if (sectionsError) {
+            console.error("Error loading sections", sectionsError);
+          } else if (sectionsData) {
+            // Process sections
+            const contactSection = sectionsData.find(s => s.section_type === 'contact');
+            const gallerySection = sectionsData.find(s => s.section_type === 'gallery');
             
-          if (pageData) {
-            setPageData(pageData);
+            if (contactSection && contactSection.section_content) {
+              try {
+                const contactContent = typeof contactSection.section_content === 'string' 
+                  ? JSON.parse(contactSection.section_content)
+                  : contactSection.section_content;
+                  
+                setGoogleMapsUrl(contactContent.googleMapsUrl || "");
+                setWhatsappNumber(contactContent.whatsappNumber || "");
+                setInstagramUrl(contactContent.instagramUrl || "");
+              } catch (e) {
+                console.error("Error parsing contact section", e);
+              }
+            }
             
-            // Fetch gallery images
-            const { data: galleryData } = await supabase
-              .from('business_page_sections')
-              .select('section_content')
-              .eq('page_id', pageData.id)
-              .eq('section_type', 'gallery')
-              .maybeSingle();
-              
-            if (galleryData?.section_content?.images) {
-              setGalleryImages(galleryData.section_content.images);
+            if (gallerySection && gallerySection.section_content) {
+              try {
+                const galleryContent = typeof gallerySection.section_content === 'string'
+                  ? JSON.parse(gallerySection.section_content)
+                  : gallerySection.section_content;
+                  
+                if (galleryContent && Array.isArray(galleryContent.images)) {
+                  setGalleryImages(galleryContent.images);
+                }
+              } catch (e) {
+                console.error("Error parsing gallery section", e);
+              }
             }
           }
         }
-        
-        setIsLoading(false);
       } catch (error) {
-        console.error("Error fetching business data:", error);
+        console.error("Error loading data:", error);
         toast({
-          variant: "destructive",
           title: "Error",
-          description: "Failed to load business data"
+          description: "Failed to load page data",
+          variant: "destructive",
         });
-        setIsLoading(false);
+      } finally {
+        setLoading(false);
       }
     };
     
-    fetchBusinessId();
-  }, []);
+    loadUserData();
+  }, [toast]);
   
-  // Handle form field changes
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setPageData(prev => ({ ...prev, [name]: value }));
-  };
-  
-  // Handle logo upload
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      handleLogoUpload(e.target.files[0]);
-    }
+  // Handle logo upload success
+  const handleLogoUploadSuccess = (url: string) => {
+    setLogoUrl(url);
   };
   
   // Handle gallery image upload
-  const handleImageUpload = async () => {
-    if (!newImageFile || !businessId) return;
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !e.target.files[0] || !userId) return;
+    
+    const file = e.target.files[0];
+    setUploadingImage(true);
     
     try {
-      setUploadingImage(true);
-      
-      // Create a unique file name
-      const fileExt = newImageFile.name.split('.').pop();
+      // Create a unique filename
+      const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
-      const filePath = `${businessId}/gallery/${fileName}`;
+      const filePath = `${userId}/gallery/${fileName}`;
       
-      // Upload image
-      const { data: uploadData, error: uploadError } = await supabase
-        .storage
+      // Upload the file
+      const { error: uploadError } = await supabase.storage
         .from('business-assets')
-        .upload(filePath, newImageFile);
-        
+        .upload(filePath, file);
+      
       if (uploadError) throw uploadError;
       
-      // Get the URL
+      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('business-assets')
         .getPublicUrl(filePath);
-        
+      
       // Add to gallery
-      const newImage = { url: publicUrl, alt: newImageFile.name.split('.')[0] };
-      const updatedGallery = [...galleryImages, newImage];
-      setGalleryImages(updatedGallery);
+      const newImage = {
+        url: publicUrl,
+        id: Math.random().toString(36).substring(2, 10)
+      };
       
-      // Save gallery to database if page exists
-      if (pageData.id) {
-        const { data: existingSection } = await supabase
-          .from('business_page_sections')
-          .select('id')
-          .eq('page_id', pageData.id)
-          .eq('section_type', 'gallery')
-          .maybeSingle();
-          
-        if (existingSection) {
-          await supabase
-            .from('business_page_sections')
-            .update({ 
-              section_content: { 
-                title: "Gallery", 
-                images: updatedGallery 
-              } 
-            })
-            .eq('id', existingSection.id);
-        } else {
-          await supabase
-            .from('business_page_sections')
-            .insert({
-              page_id: pageData.id,
-              section_type: 'gallery',
-              section_order: 2,
-              is_visible: true,
-              section_content: { 
-                title: "Gallery", 
-                images: updatedGallery 
-              }
-            });
-        }
-      }
-      
-      setNewImageFile(null);
+      setGalleryImages([...galleryImages, newImage]);
       toast({
         title: "Image uploaded",
-        description: "Gallery image has been added"
+        description: "Gallery image has been added successfully",
       });
     } catch (error) {
       console.error("Error uploading image:", error);
       toast({
-        variant: "destructive",
         title: "Upload failed",
-        description: "Could not upload the image"
+        description: "Failed to upload image",
+        variant: "destructive",
       });
     } finally {
       setUploadingImage(false);
     }
   };
   
-  // Handle image selection
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setNewImageFile(e.target.files[0]);
-    }
+  // Remove gallery image
+  const removeImage = (id: string) => {
+    setGalleryImages(galleryImages.filter(img => img.id !== id));
   };
   
-  // Handle removing an image
-  const handleRemoveImage = async (index: number) => {
-    const updatedGallery = [...galleryImages];
-    updatedGallery.splice(index, 1);
-    setGalleryImages(updatedGallery);
+  // Save the page data
+  const savePage = async () => {
+    if (!userId) return;
     
-    // Update database if page exists
-    if (pageData.id) {
-      const { data: existingSection } = await supabase
-        .from('business_page_sections')
-        .select('id')
-        .eq('page_id', pageData.id)
-        .eq('section_type', 'gallery')
-        .maybeSingle();
-        
-      if (existingSection) {
-        await supabase
-          .from('business_page_sections')
-          .update({ 
-            section_content: { 
-              title: "Gallery", 
-              images: updatedGallery 
-            } 
-          })
-          .eq('id', existingSection.id);
-      }
-    }
-  };
-  
-  // Save page data
-  const handleSave = async () => {
+    setSaving(true);
     try {
-      setIsSaving(true);
+      // Create or update the page
+      let pageId = pageData?.id;
       
-      // Validate required fields
-      if (!pageData.page_title || !pageData.page_slug) {
-        toast({
-          variant: "destructive",
-          title: "Missing information",
-          description: "Business name and URL slug are required"
-        });
-        setIsSaving(false);
-        return;
-      }
-      
-      let pageId = pageData.id;
-      
-      if (pageId) {
-        // Update existing page
-        const { error } = await supabase
-          .from('business_pages')
-          .update({
-            page_title: pageData.page_title,
-            page_slug: pageData.page_slug,
-            description: pageData.description,
-            logo_url: pageData.logo_url,
-            whatsapp_url: pageData.whatsapp_url,
-            instagram_url: pageData.instagram_url,
-            location: pageData.location
-          })
-          .eq('id', pageId);
-          
-        if (error) throw error;
-      } else if (businessId) {
+      if (!pageId) {
         // Create new page
-        const { data: newPage, error } = await supabase
+        const slug = businessName.toLowerCase().replace(/\s+/g, '-');
+        
+        const { data: newPage, error: pageError } = await supabase
           .from('business_pages')
-          .insert({
-            business_id: businessId,
-            page_title: pageData.page_title,
-            page_slug: pageData.page_slug,
-            description: pageData.description,
-            logo_url: pageData.logo_url,
-            whatsapp_url: pageData.whatsapp_url,
-            instagram_url: pageData.instagram_url,
-            location: pageData.location,
-            is_published: false
-          })
+          .insert([
+            {
+              business_id: userId,
+              page_title: businessName,
+              page_slug: slug,
+              description: description,
+              logo_url: logoUrl,
+              is_published: true
+            }
+          ])
           .select()
           .single();
-          
-        if (error) throw error;
         
+        if (pageError) throw pageError;
         pageId = newPage.id;
-        setPageData(prev => ({ ...prev, id: newPage.id }));
+        setPageId(newPage.id);
+      } else {
+        // Update existing page
+        const { error: updateError } = await supabase
+          .from('business_pages')
+          .update({
+            page_title: businessName,
+            description: description,
+            logo_url: logoUrl,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', pageId);
         
-        // Create default sections
+        if (updateError) throw updateError;
+      }
+      
+      // Update contact section
+      const contactContent = {
+        googleMapsUrl,
+        whatsappNumber,
+        instagramUrl
+      };
+      
+      // Check if contact section exists
+      const { data: contactSection, error: contactError } = await supabase
+        .from('business_page_sections')
+        .select()
+        .eq('page_id', pageId)
+        .eq('section_type', 'contact')
+        .single();
+      
+      if (contactError && contactError.code !== 'PGRST116') throw contactError;
+      
+      if (contactSection) {
+        // Update existing contact section
+        await supabase
+          .from('business_page_sections')
+          .update({
+            section_content: contactContent,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', contactSection.id);
+      } else {
+        // Create new contact section
         await supabase
           .from('business_page_sections')
           .insert([
             {
               page_id: pageId,
-              section_type: 'header',
-              section_order: 0,
-              is_visible: true,
-              section_content: {
-                title: pageData.page_title,
-                subtitle: "",
-                logo_url: pageData.logo_url
-              }
-            },
-            {
-              page_id: pageId,
-              section_type: 'about',
-              section_order: 1,
-              is_visible: true,
-              section_content: {
-                title: "About Us",
-                description: pageData.description
-              }
-            },
+              section_type: 'contact',
+              section_order: 2,
+              section_content: contactContent,
+              is_visible: true
+            }
+          ]);
+      }
+      
+      // Update gallery section
+      const galleryContent = {
+        images: galleryImages
+      };
+      
+      // Check if gallery section exists
+      const { data: gallerySection, error: galleryError } = await supabase
+        .from('business_page_sections')
+        .select()
+        .eq('page_id', pageId)
+        .eq('section_type', 'gallery')
+        .single();
+      
+      if (galleryError && galleryError.code !== 'PGRST116') throw galleryError;
+      
+      if (gallerySection) {
+        // Update existing gallery section
+        await supabase
+          .from('business_page_sections')
+          .update({
+            section_content: galleryContent,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', gallerySection.id);
+      } else {
+        // Create new gallery section
+        await supabase
+          .from('business_page_sections')
+          .insert([
             {
               page_id: pageId,
               section_type: 'gallery',
-              section_order: 2,
-              is_visible: true,
-              section_content: {
-                title: "Gallery",
-                images: galleryImages
-              }
-            },
-            {
-              page_id: pageId,
-              section_type: 'contact',
               section_order: 3,
-              is_visible: true,
-              section_content: {
-                title: "Contact Us",
-                whatsapp: pageData.whatsapp_url,
-                instagram: pageData.instagram_url,
-                location: pageData.location
-              }
-            },
-            {
-              page_id: pageId,
-              section_type: 'booking',
-              section_order: 4,
-              is_visible: true,
-              section_content: {
-                title: "Our Services",
-                subtitle: "Book your appointment today"
-              }
+              section_content: galleryContent,
+              is_visible: true
             }
           ]);
       }
       
       toast({
-        title: "Changes saved",
-        description: "Your landing page has been updated"
+        title: "Success",
+        description: "Your business page has been saved successfully",
       });
+      
+      // Reload data to make sure we have updated content
+      const { data: updatedPage } = await supabase
+        .from('business_pages')
+        .select('*')
+        .eq('id', pageId)
+        .single();
+      
+      if (updatedPage) {
+        setPageData(updatedPage);
+      }
+      
     } catch (error) {
       console.error("Error saving page:", error);
       toast({
+        title: "Error",
+        description: "Failed to save page data",
         variant: "destructive",
-        title: "Save failed",
-        description: "Could not save your changes"
       });
     } finally {
-      setIsSaving(false);
+      setSaving(false);
     }
   };
   
-  // Publish page
-  const handlePublish = async () => {
-    try {
-      setIsPublishing(true);
-      
-      if (!pageData.id) {
-        await handleSave();
-      }
-      
-      await supabase
-        .from('business_pages')
-        .update({ is_published: true })
-        .eq('id', pageData.id);
-        
-      setPageData(prev => ({ ...prev, is_published: true }));
-      
-      toast({
-        title: "Page published",
-        description: "Your landing page is now live"
-      });
-    } catch (error) {
-      console.error("Error publishing page:", error);
-      toast({
-        variant: "destructive",
-        title: "Publishing failed",
-        description: "Could not publish your landing page"
-      });
-    } finally {
-      setIsPublishing(false);
-    }
-  };
-  
-  // Get live URL
-  const getLiveUrl = () => {
-    return pageData.is_published && pageData.page_slug
-      ? `https://wakti.app/${pageData.page_slug}`
-      : null;
-  };
-  
-  // Preview page
-  const handlePreview = () => {
-    const previewUrl = pageData.page_slug
-      ? `/${pageData.page_slug}/preview`
-      : null;
-      
-    if (previewUrl) {
-      window.open(previewUrl, '_blank');
-    } else {
-      toast({
-        variant: "destructive",
-        title: "Preview unavailable",
-        description: "Please set a URL slug first"
-      });
-    }
-  };
-  
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2">Loading business page...</span>
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="mr-2 h-8 w-8 animate-spin" />
+        <p>Loading your business page...</p>
       </div>
     );
   }
-
+  
   return (
-    <div className="container mx-auto p-4 max-w-6xl">
-      <div className="flex flex-col md:flex-row justify-between items-start gap-6">
-        {/* Editor Panel */}
-        <div className="w-full md:w-1/2 bg-white rounded-lg shadow p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold">Business Landing Page</h1>
-            
-            <div className="flex space-x-2">
-              {pageData.is_published && (
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    const url = getLiveUrl();
-                    if (url) {
-                      window.open(url, '_blank');
-                    }
-                  }}
-                >
-                  View Live
-                </Button>
-              )}
-              
-              <Button 
-                variant="outline"
-                onClick={handlePreview}
-              >
-                Preview
-              </Button>
-              
-              <Button
-                variant="outline"
-                onClick={handleSave}
-                disabled={isSaving}
-              >
-                {isSaving ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Saving...
-                  </>
-                ) : "Save"}
-              </Button>
-              
-              <Button
-                onClick={handlePublish}
-                disabled={isPublishing || isSaving}
-              >
-                {isPublishing ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Publishing...
-                  </>
-                ) : pageData.is_published ? "Update" : "Publish"}
-              </Button>
-            </div>
-          </div>
-          
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid grid-cols-3 w-full">
-              <TabsTrigger value="info">Business Info</TabsTrigger>
-              <TabsTrigger value="gallery">Gallery</TabsTrigger>
-              <TabsTrigger value="contact">Contact & Social</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="info" className="space-y-6 mt-6">
-              <div>
-                <h2 className="text-lg font-medium mb-4">Basic Information</h2>
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Business Page Builder</h1>
+      
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="mb-4">
+          <TabsTrigger value="edit">Edit Page</TabsTrigger>
+          <TabsTrigger value="preview">Preview</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="edit">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Basic Info Section */}
+            <Card>
+              <CardContent className="pt-6">
+                <h2 className="text-xl font-semibold mb-4">Business Information</h2>
                 
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1" htmlFor="page_title">
-                      Business Name
-                    </label>
-                    <Input
-                      id="page_title"
-                      name="page_title"
-                      placeholder="Your Business Name"
-                      value={pageData.page_title}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium mb-1" htmlFor="page_slug">
-                      URL Slug
-                    </label>
-                    <div className="flex">
-                      <span className="inline-flex items-center px-3 bg-gray-100 border border-r-0 border-gray-300 rounded-l-md">
-                        wakti.app/
-                      </span>
-                      <Input
-                        id="page_slug"
-                        name="page_slug"
-                        placeholder="your-business"
-                        value={pageData.page_slug}
-                        onChange={handleInputChange}
-                        className="rounded-l-none"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium mb-1" htmlFor="description">
-                      Business Description
-                    </label>
-                    <Textarea
-                      id="description"
-                      name="description"
-                      placeholder="Tell people about your business..."
-                      value={pageData.description}
-                      onChange={handleInputChange}
-                      rows={5}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium mb-3" htmlFor="logo">
-                      Business Logo
-                    </label>
-                    <div className="flex items-center gap-4">
-                      {pageData.logo_url ? (
-                        <img 
-                          src={pageData.logo_url} 
-                          alt="Business Logo" 
-                          className="h-24 w-24 object-contain bg-gray-100 border rounded-lg"
-                        />
-                      ) : (
-                        <div className="h-24 w-24 flex items-center justify-center bg-gray-100 border rounded-lg">
-                          No logo
-                        </div>
-                      )}
-                      
-                      <div className="flex flex-col">
+                <div className="mb-4">
+                  <Label htmlFor="businessName">Business Name</Label>
+                  <Input 
+                    id="businessName"
+                    value={businessName}
+                    onChange={(e) => setBusinessName(e.target.value)}
+                    placeholder="Your Business Name"
+                    className="mt-1"
+                  />
+                </div>
+                
+                <div className="mb-4">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea 
+                    id="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Describe your business"
+                    className="mt-1"
+                    rows={4}
+                  />
+                </div>
+                
+                <div className="mb-4">
+                  <Label>Business Logo</Label>
+                  <div className="mt-2 flex items-center">
+                    {logoUrl && (
+                      <div className="relative mr-4">
+                        <img src={logoUrl} alt="Logo" className="h-20 w-20 object-contain" />
+                      </div>
+                    )}
+                    <div>
+                      <Button variant="outline" disabled={uploadingLogo} asChild>
                         <label className="cursor-pointer">
-                          <div className="flex items-center space-x-2 py-2 px-4 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors">
-                            <Upload size={16} />
-                            <span>{pageData.logo_url ? "Change Logo" : "Upload Logo"}</span>
-                          </div>
-                          <input 
-                            type="file" 
-                            accept="image/*" 
+                          {uploadingLogo ? "Uploading..." : "Upload Logo"}
+                          <input
+                            type="file"
+                            accept="image/*"
                             className="hidden"
-                            onChange={handleLogoChange}
+                            onChange={(e) => handleLogoUpload(e, handleLogoUploadSuccess)}
                           />
                         </label>
-                        
-                        {uploadingLogo && (
-                          <p className="text-sm text-muted-foreground mt-2 flex items-center">
-                            <Loader2 className="h-3 w-3 animate-spin mr-1" /> Uploading...
-                          </p>
-                        )}
-                      </div>
+                      </Button>
                     </div>
                   </div>
                 </div>
-              </div>
-            </TabsContent>
+              </CardContent>
+            </Card>
             
-            <TabsContent value="gallery" className="space-y-6 mt-6">
-              <div>
-                <h2 className="text-lg font-medium mb-4">Image Gallery</h2>
+            {/* Contact Info Section */}
+            <Card>
+              <CardContent className="pt-6">
+                <h2 className="text-xl font-semibold mb-4">Contact Information</h2>
                 
-                {galleryImages.length > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
-                    {galleryImages.map((image, index) => (
-                      <div key={index} className="relative group">
-                        <img
-                          src={image.url}
-                          alt={image.alt}
-                          className="w-full aspect-square object-cover rounded-lg"
-                        />
-                        <button
-                          className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={() => handleRemoveImage(index)}
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground mb-6">
-                    No images yet. Add some to showcase your business.
-                  </p>
-                )}
-                
-                <div className="border rounded-lg p-4">
-                  <p className="text-sm font-medium mb-3">Add New Image</p>
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageSelect}
-                      disabled={uploadingImage}
-                    />
-                    <Button
-                      onClick={handleImageUpload}
-                      disabled={!newImageFile || uploadingImage}
-                    >
-                      {uploadingImage ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                          Uploading...
-                        </>
-                      ) : "Upload Image"}
-                    </Button>
-                  </div>
+                <div className="mb-4">
+                  <Label htmlFor="googleMaps">Google Maps URL</Label>
+                  <Input 
+                    id="googleMaps"
+                    value={googleMapsUrl}
+                    onChange={(e) => setGoogleMapsUrl(e.target.value)}
+                    placeholder="https://maps.google.com/..."
+                    className="mt-1"
+                  />
                 </div>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="contact" className="space-y-6 mt-6">
-              <div>
-                <h2 className="text-lg font-medium mb-4">Contact & Social Media</h2>
                 
-                <div className="space-y-4">
-                  <div>
-                    <label className="flex items-center gap-2 text-sm font-medium mb-1" htmlFor="whatsapp_url">
-                      <Phone size={16} />
-                      WhatsApp Number
-                    </label>
-                    <Input
-                      id="whatsapp_url"
-                      name="whatsapp_url"
-                      placeholder="+1234567890"
-                      value={pageData.whatsapp_url}
-                      onChange={handleInputChange}
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Enter your full phone number with country code
-                    </p>
-                  </div>
-                  
-                  <div>
-                    <label className="flex items-center gap-2 text-sm font-medium mb-1" htmlFor="instagram_url">
-                      <Instagram size={16} />
-                      Instagram Username
-                    </label>
-                    <div className="flex">
-                      <span className="inline-flex items-center px-3 bg-gray-100 border border-r-0 border-gray-300 rounded-l-md">
-                        instagram.com/
-                      </span>
-                      <Input
-                        id="instagram_url"
-                        name="instagram_url"
-                        placeholder="yourusername"
-                        value={pageData.instagram_url}
-                        onChange={handleInputChange}
-                        className="rounded-l-none"
-                      />
+                <div className="mb-4">
+                  <Label htmlFor="whatsapp">WhatsApp Number</Label>
+                  <Input 
+                    id="whatsapp"
+                    value={whatsappNumber}
+                    onChange={(e) => setWhatsappNumber(e.target.value)}
+                    placeholder="+1234567890"
+                    className="mt-1"
+                  />
+                </div>
+                
+                <div className="mb-4">
+                  <Label htmlFor="instagram">Instagram URL</Label>
+                  <Input 
+                    id="instagram"
+                    value={instagramUrl}
+                    onChange={(e) => setInstagramUrl(e.target.value)}
+                    placeholder="https://instagram.com/yourbusiness"
+                    className="mt-1"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+            
+            {/* Gallery Section */}
+            <Card className="md:col-span-2">
+              <CardContent className="pt-6">
+                <h2 className="text-xl font-semibold mb-4">Gallery</h2>
+                
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-4">
+                  {galleryImages.map((image) => (
+                    <div key={image.id} className="relative aspect-square border rounded-md overflow-hidden">
+                      <img src={image.url} alt="Gallery" className="w-full h-full object-cover" />
+                      <Button 
+                        variant="destructive" 
+                        size="sm" 
+                        className="absolute top-2 right-2" 
+                        onClick={() => removeImage(image.id)}
+                      >
+                        X
+                      </Button>
                     </div>
-                  </div>
-                  
-                  <div>
-                    <label className="flex items-center gap-2 text-sm font-medium mb-1" htmlFor="location">
-                      <MapPin size={16} />
-                      Business Location
-                    </label>
-                    <Input
-                      id="location"
-                      name="location"
-                      placeholder="123 Main St, City, Country"
-                      value={pageData.location}
-                      onChange={handleInputChange}
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Enter your full address to create a Google Maps link
-                    </p>
-                  </div>
+                  ))}
+                  {galleryImages.length < 6 && (
+                    <div className="aspect-square border border-dashed rounded-md flex flex-col items-center justify-center p-4">
+                      <Button variant="ghost" disabled={uploadingImage} asChild>
+                        <label className="cursor-pointer flex flex-col items-center">
+                          <Upload className="h-8 w-8 mb-2" />
+                          {uploadingImage ? "Uploading..." : "Add Image"}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleImageUpload}
+                          />
+                        </label>
+                      </Button>
+                    </div>
+                  )}
                 </div>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
-        
-        {/* Preview Panel */}
-        <div className="w-full md:w-1/2">
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="border-b p-4">
-              <h2 className="font-medium">Page Preview</h2>
-            </div>
+                <p className="text-sm text-muted-foreground">Upload up to 6 images to showcase your business</p>
+              </CardContent>
+            </Card>
             
-            <div className="p-4 space-y-8 max-h-[800px] overflow-y-auto">
-              {/* Header Preview */}
-              <div className="text-center p-6">
-                {pageData.logo_url && (
-                  <div className="flex justify-center mb-4">
-                    <img 
-                      src={pageData.logo_url} 
-                      alt="Business Logo" 
-                      className="h-24 object-contain"
-                    />
-                  </div>
-                )}
-                <h1 className="text-3xl font-bold">{pageData.page_title || "Your Business Name"}</h1>
-              </div>
-              
-              {/* About Section Preview */}
-              {pageData.description && (
-                <div className="py-4">
-                  <h2 className="text-2xl font-bold mb-4 text-center">About Us</h2>
-                  <p className="text-gray-700">{pageData.description}</p>
-                </div>
-              )}
-              
-              {/* Gallery Preview */}
-              {galleryImages.length > 0 && (
-                <div className="py-4">
-                  <h2 className="text-2xl font-bold mb-4 text-center">Gallery</h2>
-                  <div className="grid grid-cols-2 gap-4">
-                    {galleryImages.slice(0, 6).map((image, index) => (
-                      <div key={index} className="aspect-square">
-                        <img
-                          src={image.url}
-                          alt={image.alt}
-                          className="w-full h-full object-cover rounded-lg"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              
-              {/* Contact Preview */}
-              <div className="py-4">
-                <h2 className="text-2xl font-bold mb-4 text-center">Contact Us</h2>
-                <div className="flex flex-wrap justify-center gap-4">
-                  {pageData.whatsapp_url && (
-                    <a
-                      href={`https://wa.me/${pageData.whatsapp_url.replace(/\+/g, '')}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-                    >
-                      <Phone size={20} />
-                      <span>WhatsApp</span>
-                    </a>
-                  )}
-                  
-                  {pageData.instagram_url && (
-                    <a
-                      href={`https://instagram.com/${pageData.instagram_url}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-                    >
-                      <Instagram size={20} />
-                      <span>Instagram</span>
-                    </a>
-                  )}
-                  
-                  {pageData.location && (
-                    <a
-                      href={generateGoogleMapsUrl(pageData.location)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-                    >
-                      <MapPin size={20} />
-                      <span>Map</span>
-                    </a>
-                  )}
-                </div>
-              </div>
-              
-              {/* Booking Templates Preview */}
-              <div className="py-4">
-                <h2 className="text-2xl font-bold mb-4 text-center">Our Services</h2>
-                
-                {loadingTemplates ? (
-                  <div className="flex justify-center py-8">
-                    <Loader2 className="h-8 w-8 animate-spin" />
-                  </div>
-                ) : templates && templates.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {templates.map(template => (
-                      <Card key={template.id} className="overflow-hidden">
-                        <CardContent className="p-4">
-                          <BookingTemplateCard template={template} preview={true} />
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
-                    <p className="text-muted-foreground">
-                      No booking templates available yet. Add them in the Bookings tab.
-                    </p>
-                  </div>
-                )}
-              </div>
+            {/* Save Button */}
+            <div className="md:col-span-2 flex justify-end">
+              <Button 
+                onClick={savePage} 
+                disabled={saving || !businessName}
+                className="px-8"
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : "Save Page"}
+              </Button>
             </div>
           </div>
-        </div>
-      </div>
+        </TabsContent>
+        
+        <TabsContent value="preview">
+          <Card>
+            <CardContent className="p-0">
+              {pageData ? (
+                <div className="border rounded-md overflow-hidden">
+                  <SimpleLandingPageView isPreview={true} />
+                </div>
+              ) : (
+                <div className="p-8 text-center">
+                  <p>Please save your page first to see the preview</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
