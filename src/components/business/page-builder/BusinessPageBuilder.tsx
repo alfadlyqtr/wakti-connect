@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { TopBar } from "./components/TopBar";
@@ -118,15 +119,18 @@ const BusinessPageBuilder = () => {
   ) => {
     setPageData(prev => {
       const updated: BusinessPageData = { ...prev };
-      const sectionData = prev[section];
       
-      // Create updated section by copying existing section data and applying new data
-      const updatedSection = { ...sectionData } as BusinessPageData[K];
+      // Directly copy the section to ensure type safety
+      const currentSection = prev[section];
+      
+      // Create a new object by manually copying properties
+      const updatedSection = { ...currentSection } as BusinessPageData[K];
       
       // Apply each property from data to updatedSection
       Object.keys(data).forEach(key => {
         const typedKey = key as keyof typeof data;
         if (data[typedKey] !== undefined) {
+          // Type assertion to handle the assignment
           (updatedSection as any)[key] = data[typedKey];
         }
       });
