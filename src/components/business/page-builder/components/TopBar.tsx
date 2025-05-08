@@ -1,9 +1,9 @@
+
 import React, { useState } from "react";
 import { Settings, Globe, Copy, ExternalLink, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BusinessPageData } from "../context/BusinessPageContext";
 import { useBusinessPage } from "../context/BusinessPageContext";
-import { generateSlug } from "@/utils/string-utils";
 import { toast } from "@/components/ui/use-toast";
 import { 
   Tooltip,
@@ -15,26 +15,17 @@ interface TopBarProps {
   onSettingsClick: () => void;
   pageData: BusinessPageData;
   businessName?: string | null;
+  onPublish: () => void;
+  pageUrl: string;
 }
 
-export const TopBar = ({ onSettingsClick, pageData, businessName }: TopBarProps) => {
+export const TopBar = ({ onSettingsClick, pageData, businessName, onPublish, pageUrl }: TopBarProps) => {
   const { handleSave, saveStatus } = useBusinessPage();
   const [showURLInfo, setShowURLInfo] = useState(false);
   
-  // Generate a properly formatted URL based on the business name from user profile settings
-  const getPreviewUrl = () => {
-    // Return URL based on businessName from user's profile settings if available
-    if (businessName) {
-      const slug = generateSlug(businessName);
-      return `www.wakti.qa/${slug}`;
-    }
-    // Otherwise show a placeholder
-    return `www.wakti.qa/your-business-name`;
-  };
-  
   // Copy URL to clipboard
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(getPreviewUrl());
+    navigator.clipboard.writeText(pageUrl);
     toast({
       title: "URL copied to clipboard",
       description: "You can now paste it anywhere.",
@@ -43,7 +34,7 @@ export const TopBar = ({ onSettingsClick, pageData, businessName }: TopBarProps)
   
   // Open URL in new tab
   const openUrl = () => {
-    window.open(`https://${getPreviewUrl()}`, '_blank');
+    window.open(`https://${pageUrl}`, '_blank');
   };
 
   return (
@@ -61,7 +52,7 @@ export const TopBar = ({ onSettingsClick, pageData, businessName }: TopBarProps)
       <div className="flex items-center gap-2">
         <div className="flex items-center border rounded-md px-2 py-1 bg-gray-50">
           <Globe className="h-4 w-4 text-gray-500 mr-2" />
-          <span className="font-mono text-sm">{getPreviewUrl()}</span>
+          <span className="font-mono text-sm">{pageUrl}</span>
           <Button 
             variant="ghost" 
             size="sm" 
@@ -104,13 +95,22 @@ export const TopBar = ({ onSettingsClick, pageData, businessName }: TopBarProps)
            saveStatus === "saving" ? "Saving..." : 
            "You have unsaved changes"}
         </div>
+        
         <Button
           onClick={handleSave}
           disabled={saveStatus === "saved" || saveStatus === "saving"}
+          variant="outline"
+          size="sm"
+        >
+          {saveStatus === "saving" ? "Saving..." : "Save"}
+        </Button>
+        
+        <Button
+          onClick={onPublish}
           variant="default"
           size="sm"
         >
-          {saveStatus === "saving" ? "Saving..." : "Publish"}
+          {pageData.published ? "Unpublish" : "Publish"}
         </Button>
       </div>
     </div>

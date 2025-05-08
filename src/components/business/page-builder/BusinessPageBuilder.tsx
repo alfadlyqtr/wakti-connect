@@ -6,7 +6,6 @@ import { Separator } from "@/components/ui/separator";
 import { LeftPanel } from "./components/LeftPanel";
 import { PreviewPanel } from "./components/PreviewPanel";
 import { useUserProfile } from "@/hooks/useUserProfile";
-import { useUpdatePageMutation } from "@/hooks/business-page/useBusinessPageMutations";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { 
@@ -14,6 +13,12 @@ import {
   BusinessPageData, 
   BusinessPageContextType 
 } from "./context/BusinessPageContext";
+import { 
+  useCreatePageDataMutation, 
+  useUpdatePageDataMutation,
+  usePublishPageMutation
+} from "@/hooks/business-page/useBusinessPageDataMutations";
+import { useBusinessPageDataQuery } from "@/hooks/business-page/useBusinessPageDataQueries";
 
 const BusinessPageBuilder: React.FC = () => {
   // Initial page data state
@@ -105,6 +110,7 @@ const BusinessPageBuilder: React.FC = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"saved" | "unsaved" | "saving">("saved");
   const [userId, setUserId] = useState<string | null>(null);
+  const [pageRecordId, setPageRecordId] = useState<string | null>(null);
   
   // Get the current user
   useEffect(() => {
@@ -116,13 +122,35 @@ const BusinessPageBuilder: React.FC = () => {
     fetchUser();
   }, []);
   
-  // Get the user's profile data to access the business_name for the URL
-  const { profile, isLoading: profileLoading, error: profileError } = useUserProfile(userId || "");
-  const updatePageMutation = useUpdatePageMutation();
+  // Get the user's profile data
+  const { profile, isLoading: profileLoading } = useUserProfile(userId || "");
+  
+  // Get existing page data
+  const { 
+    data: existingPageData,
+    isLoading: pageDataLoading
+  } = useBusinessPageDataQuery(userId || "");
+  
+  // Initialize mutations
+  const createPageMutation = useCreatePageDataMutation();
+  const updatePageMutation = useUpdatePageDataMutation();
+  const publishPageMutation = usePublishPageMutation();
+  
+  // Load existing page data if available
+  useEffect(() => {
+    if (existingPageData?.page_data && !pageDataLoading) {
+      setPageData(existingPageData.page_data);
+      setPageRecordId(existingPageData.id || null);
+      console.log("Loaded existing page data:", existingPageData);
+    }
+  }, [existingPageData, pageDataLoading]);
   
   // Update page data
   const updatePageData = (data: Partial<BusinessPageData>) => {
-    setPageData(prev => ({ ...prev, ...data }));
+    setPageData(prev => ({
+      ...prev,
+      ...data
+    }));
     setSaveStatus("unsaved");
   };
   
@@ -138,29 +166,35 @@ const BusinessPageBuilder: React.FC = () => {
     setSaveStatus("unsaved");
   };
   
-  // Toggle visibility of a section
-  const toggleSectionVisibility = (sectionName: keyof BusinessPageData, visible: boolean) => {
-    if (sectionName in pageData && 'visible' in pageData[sectionName]) {
-      updateSectionData(sectionName, { visible } as any);
-    }
-  };
-  
   // Handle saving the page
   const handleSave = async () => {
+    if (!userId) {
+      toast({
+        variant: "destructive",
+        title: "Authentication required",
+        description: "Please sign in to save your business page."
+      });
+      return;
+    }
+    
     setSaveStatus("saving");
     try {
-      // This would be replaced with actual API call in a real app
-      // Example: await updatePage({ id: page.id, data: pageData })
-      console.log("Saving page data:", pageData);
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // If we have an existing page, update it; otherwise create a new one
+      if (pageRecordId) {
+        await updatePageMutation.mutateAsync({
+          id: pageRecordId,
+          pageData,
+          updateSlug: true
+        });
+      } else {
+        const result = await createPageMutation.mutateAsync({
+          userId,
+          pageData
+        });
+        setPageRecordId(result.id || null);
+      }
       
       setSaveStatus("saved");
-      toast({
-        title: "Page saved",
-        description: "Your changes have been saved successfully."
-      });
     } catch (error) {
       console.error("Error saving page:", error);
       setSaveStatus("unsaved");
@@ -172,13 +206,75 @@ const BusinessPageBuilder: React.FC = () => {
     }
   };
   
+  // Handle publishing the page
+  const handlePublish = async () => {
+    if (!userId) {
+      toast({
+        variant: "destructive",
+        title: "Authentication required",
+        description: "Please sign in to publish your business page."
+      });
+      return;
+    }
+    
+    if (!pageRecordId) {
+      // Save first if we don't have a page record yet
+      try {
+        setSaveStatus("saving");
+        const result = await createPageMutation.mutateAsync({
+          userId,
+          pageData: { ...pageData, published: true }
+        });
+        setPageRecordId(result.id || null);
+        setSaveStatus("saved");
+        return;
+      } catch (error) {
+        console.error("Error creating page before publishing:", error);
+        setSaveStatus("unsaved");
+        toast({
+          variant: "destructive",
+          title: "Publish failed",
+          description: "There was a problem creating your page."
+        });
+        return;
+      }
+    }
+    
+    try {
+      await publishPageMutation.mutateAsync({
+        id: pageRecordId,
+        published: !pageData.published,
+        pageData
+      });
+      
+      // Update the local state
+      setPageData(prev => ({
+        ...prev,
+        published: !prev.published
+      }));
+      
+    } catch (error) {
+      console.error("Error publishing page:", error);
+      toast({
+        variant: "destructive",
+        title: "Publish failed",
+        description: "There was a problem publishing your changes."
+      });
+    }
+  };
+  
   // Get the public page URL
   const getPublicPageUrl = () => {
-    // Use business_name from profile if available, otherwise use a generic placeholder
-    if (profile && profile.business_name) {
+    if (existingPageData?.page_slug) {
+      return `www.wakti.qa/${existingPageData.page_slug}`;
+    }
+    
+    // If we don't have a saved page, use the business name from profile
+    if (profile?.business_name) {
       const slug = profile.business_name.toLowerCase().replace(/\s+/g, '-');
       return `www.wakti.qa/${slug}`;
     }
+    
     return "www.wakti.qa/your-business-name";
   };
   
@@ -190,6 +286,15 @@ const BusinessPageBuilder: React.FC = () => {
     saveStatus,
     handleSave,
   };
+  
+  // Show loading state while fetching data
+  if (pageDataLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-lg">Loading your business page...</div>
+      </div>
+    );
+  }
 
   return (
     <BusinessPageContext.Provider value={contextValue}>
@@ -197,7 +302,9 @@ const BusinessPageBuilder: React.FC = () => {
         <TopBar 
           onSettingsClick={() => setSettingsOpen(true)} 
           pageData={pageData}
-          businessName={profile?.business_name} 
+          businessName={profile?.business_name}
+          onPublish={handlePublish}
+          pageUrl={getPublicPageUrl()}
         />
         <Separator />
         <div className="flex flex-1 overflow-hidden">
