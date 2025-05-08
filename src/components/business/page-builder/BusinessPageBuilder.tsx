@@ -135,15 +135,12 @@ const BusinessPageBuilder = () => {
     data: Partial<BusinessPageData[K]>
   ) => {
     setPageData(prevData => {
-      // Create a copy of the current section data
-      const currentSection = prevData[section];
+      // Create a deep copy of the current section
+      const currentSection = {...prevData[section]};
       
       // Create a new section by merging current section with new data
-      // We first ensure both are treated as regular objects
-      const updatedSection = {
-        ...currentSection,
-        ...(data as object)  // Cast to object to satisfy TypeScript
-      };
+      const dataAsObject = data as Record<string, unknown>;
+      const updatedSection = {...currentSection, ...dataAsObject};
       
       // Return updated state with the new section
       return {
@@ -238,7 +235,7 @@ const BusinessPageBuilder = () => {
         <TopBar 
           onSettingsClick={() => setIsSettingsOpen(true)}
           pageData={pageData}
-          businessName={user?.profile?.business_name ?? ""}
+          businessName={user?.profile?.business_name || ""}
           onPublish={handlePublish}
           pageUrl={getPageUrl()}
         />

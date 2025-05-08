@@ -14,7 +14,7 @@ export const PageHeader = () => {
 
   return (
     <header className={`${textAlignClass} py-4`}>
-      <h1 className="text-3xl font-bold">{businessName}</h1>
+      <h1 className="text-3xl font-bold">{businessName || "My Business"}</h1>
     </header>
   );
 };

@@ -25,7 +25,7 @@ export const TopBar = ({ onSettingsClick, pageData, businessName, onPublish, pag
   
   // Copy URL to clipboard
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(pageUrl);
+    navigator.clipboard.writeText(`https://${pageUrl}`);
     toast({
       title: "URL copied to clipboard",
       description: "You can now paste it anywhere.",
@@ -36,6 +36,9 @@ export const TopBar = ({ onSettingsClick, pageData, businessName, onPublish, pag
   const openUrl = () => {
     window.open(`https://${pageUrl}`, '_blank');
   };
+
+  // Display title from the page data
+  const displayTitle = pageData.pageSetup.businessName || businessName || "My Business";
 
   return (
     <div className="border-b bg-card shadow-sm p-2 flex items-center justify-between">
@@ -52,12 +55,13 @@ export const TopBar = ({ onSettingsClick, pageData, businessName, onPublish, pag
       <div className="flex items-center gap-2">
         <div className="flex items-center border rounded-md px-2 py-1 bg-gray-50">
           <Globe className="h-4 w-4 text-gray-500 mr-2" />
-          <span className="font-mono text-sm">{pageUrl}</span>
+          <span className="font-mono text-sm">{pageUrl ? `https://${pageUrl}` : "No URL yet"}</span>
           <Button 
             variant="ghost" 
             size="sm" 
             className="h-6 w-6 p-0 ml-2"
             onClick={copyToClipboard}
+            disabled={!pageUrl}
           >
             <Copy className="h-3 w-3" />
           </Button>
@@ -66,6 +70,7 @@ export const TopBar = ({ onSettingsClick, pageData, businessName, onPublish, pag
             size="sm" 
             className="h-6 w-6 p-0"
             onClick={openUrl}
+            disabled={!pageUrl}
           >
             <ExternalLink className="h-3 w-3" />
           </Button>
@@ -107,7 +112,7 @@ export const TopBar = ({ onSettingsClick, pageData, businessName, onPublish, pag
         
         <Button
           onClick={onPublish}
-          variant="default"
+          variant={pageData.published ? "destructive" : "default"}
           size="sm"
         >
           {pageData.published ? "Unpublish" : "Publish"}
