@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { BusinessPageDataRecord } from "./useBusinessPageDataMutations";
 import { BusinessPageData } from "@/components/business/page-builder/context/BusinessPageContext";
+import { Json } from "@/types/supabase";
 
 // Fetch business page data for the current user
 export const useBusinessPageDataQuery = (userId?: string) => {

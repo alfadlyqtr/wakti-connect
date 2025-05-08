@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { BusinessPageData } from "@/components/business/page-builder/context/BusinessPageContext";
 import { generateSlug } from "@/utils/string-utils";
+import { Json } from "@/types/supabase";
 
 // Interface for the database business_pages_data table
 export interface BusinessPageDataRecord {
@@ -35,7 +36,7 @@ export const useCreatePageDataMutation = () => {
         .insert({
           user_id: userId,
           page_slug: pageSlug,
-          page_data: pageData as unknown as object // Cast to object to fix type issue with Supabase
+          page_data: pageData as unknown as Json // Proper casting to Json type
         })
         .select()
         .single();
@@ -88,7 +89,7 @@ export const useUpdatePageDataMutation = () => {
       
       // Prepare the data to update
       const updateData: Record<string, any> = {
-        page_data: pageData as unknown as object, // Cast to object for Supabase
+        page_data: pageData as unknown as Json, // Properly cast to Json type
         updated_at: new Date().toISOString()
       };
       
@@ -159,7 +160,7 @@ export const usePublishPageMutation = () => {
       const { data: response, error } = await supabase
         .from('business_pages_data')
         .update({
-          page_data: updatedPageData as unknown as object, // Cast to object for Supabase
+          page_data: updatedPageData as unknown as Json, // Properly cast to Json type
           updated_at: new Date().toISOString()
         })
         .eq('id', id)
