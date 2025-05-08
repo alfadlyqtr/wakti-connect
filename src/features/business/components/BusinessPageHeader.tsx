@@ -1,3 +1,4 @@
+import React from "react";
 
-// Re-export from the original location while we migrate
-export { default } from '@/components/business/landing/BusinessPageHeader';
+// This is a placeholder for the removed BusinessPageHeader component
+export default () => null;

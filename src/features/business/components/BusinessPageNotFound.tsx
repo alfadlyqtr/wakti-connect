@@ -1,3 +1,2 @@
-
-// Re-export from the original location while we migrate
-export { default } from '@/components/business/landing/BusinessPageNotFound';
+// This is a placeholder for the removed BusinessPageNotFound component
+export default () => null;

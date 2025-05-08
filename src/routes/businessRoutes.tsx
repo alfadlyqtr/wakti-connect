@@ -1,6 +1,5 @@
 
 import { RouteObject, Navigate, useParams } from "react-router-dom";
-import SimpleBusinessLandingPage from "@/pages/business/SimpleBusinessLandingPage";
 import BookingPage from "@/pages/booking/BookingPage";
 import BookingConfirmationPage from "@/pages/booking/BookingConfirmationPage";
 
@@ -14,14 +13,7 @@ const BusinessRedirect = () => {
 };
 
 export const businessRoutes: RouteObject[] = [
-  {
-    path: ":slug",
-    element: <SimpleBusinessLandingPage />,
-  },
-  {
-    path: ":slug/preview",
-    element: <SimpleBusinessLandingPage isPreview={true} />,
-  },
+  // Business landing page routes removed
 ];
 
 // Booking routes - now completely separate from business routes

@@ -1,20 +1,19 @@
 
 import React from "react";
 import { Helmet } from "react-helmet-async";
-import SimpleLandingPageView from "@/components/business/simple-landing-page/SimpleLandingPageView";
+import { Navigate } from "react-router-dom";
 
 interface BusinessLandingPageProps {
   isPreview?: boolean;
 }
 
-const SimpleBusinessLandingPage: React.FC<BusinessLandingPageProps> = ({ isPreview = false }) => {
+const SimpleBusinessLandingPage: React.FC<BusinessLandingPageProps> = () => {
   return (
     <>
       <Helmet>
-        <title>Business Landing Page</title>
-        <meta name="description" content="Business landing page" />
+        <title>Feature Removed | WAKTI</title>
       </Helmet>
-      <SimpleLandingPageView isPreview={isPreview} />
+      <Navigate to="/" replace />
     </>
   );
 };

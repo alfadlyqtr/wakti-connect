@@ -1,3 +1,2 @@
-
-// Re-export from the original location while we migrate
-export { default } from '@/components/business/landing/BusinessHours';
+// This is a placeholder for the removed BusinessHours component
+export default () => null;
