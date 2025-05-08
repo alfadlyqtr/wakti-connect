@@ -4,17 +4,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { GripVertical, AlignLeft, AlignCenter, AlignRight } from "lucide-react";
-import { useBusinessPage, TextAlignment } from "../../context/BusinessPageContext";
+import { GripVertical } from "lucide-react";
+import { useBusinessPage } from "../../context/BusinessPageContext";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 export const PageSetupSection = () => {
   const { pageData, updateSectionData } = useBusinessPage();
   const { businessName, alignment, visible } = pageData.pageSetup;
 
+  const handleBusinessNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    updateSectionData("pageSetup", { businessName: e.target.value });
+  };
+
   const handleAlignmentChange = (value: string) => {
-    if (value as TextAlignment) {
-      updateSectionData("pageSetup", { alignment: value as TextAlignment });
+    if (value) {
+      updateSectionData("pageSetup", { alignment: value as "left" | "center" | "right" });
     }
   };
 
@@ -42,11 +46,11 @@ export const PageSetupSection = () => {
       <CardContent>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="business-name">Business Name</Label>
+            <Label htmlFor="businessName">Business Name</Label>
             <Input 
-              id="business-name" 
+              id="businessName" 
               value={businessName} 
-              onChange={(e) => updateSectionData("pageSetup", { businessName: e.target.value })}
+              onChange={handleBusinessNameChange} 
               placeholder="Enter your business name"
             />
           </div>
@@ -55,18 +59,18 @@ export const PageSetupSection = () => {
             <Label>Text Alignment</Label>
             <ToggleGroup 
               type="single" 
-              value={alignment}
+              value={alignment} 
               onValueChange={handleAlignmentChange}
-              className="flex justify-start"
+              className="justify-start"
             >
-              <ToggleGroupItem value="left" aria-label="Left align">
-                <AlignLeft className="h-4 w-4" />
+              <ToggleGroupItem value="left" aria-label="Align left">
+                Left
               </ToggleGroupItem>
-              <ToggleGroupItem value="center" aria-label="Center align">
-                <AlignCenter className="h-4 w-4" />
+              <ToggleGroupItem value="center" aria-label="Align center">
+                Center
               </ToggleGroupItem>
-              <ToggleGroupItem value="right" aria-label="Right align">
-                <AlignRight className="h-4 w-4" />
+              <ToggleGroupItem value="right" aria-label="Align right">
+                Right
               </ToggleGroupItem>
             </ToggleGroup>
           </div>

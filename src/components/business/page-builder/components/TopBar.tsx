@@ -14,14 +14,14 @@ interface TopBarProps {
 export const TopBar = ({ onSettingsClick, pageData }: TopBarProps) => {
   const { handleSave, saveStatus } = useBusinessPage();
   
-  // Generate a properly formatted URL based on the page title
+  // Generate a properly formatted URL based on the business name
   const getPreviewUrl = () => {
-    // Use the page title - this is what was configured as the business name in the UI
-    const pageTitle = pageData.pageSetup.businessName || 'your-landing-page';
-    const slug = generateSlug(pageTitle);
+    // Use the business name for the URL
+    const businessName = pageData.pageSetup.businessName || 'your-business';
+    const slug = generateSlug(businessName);
     
-    // Return main-url/slug format
-    return `${window.location.origin}/${slug}`;
+    // Return main-url/slug format as specified: www.wakti.qam/(Business Name)
+    return `www.wakti.qam/${slug}`;
   };
 
   return (

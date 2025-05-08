@@ -93,14 +93,18 @@ const BusinessPageBuilder = () => {
   useEffect(() => {
     const loadPageData = async () => {
       try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        
         const { data: pageData, error } = await supabase
           .from('business_pages_data')
           .select('page_data, page_slug')
-          .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+          .eq('user_id', user.id)
           .single();
         
         if (pageData?.page_data) {
-          setPageData(pageData.page_data);
+          // Type assertion to cast the JSON data to BusinessPageData
+          setPageData(pageData.page_data as unknown as BusinessPageData);
           setSaveStatus("saved");
         }
       } catch (error) {
@@ -115,18 +119,20 @@ const BusinessPageBuilder = () => {
     try {
       setSaveStatus("saving");
       
-      // Generate a slug from the page title (not business name)
+      // Generate a slug from the business name
       const pageSlug = generateSlug(pageData.pageSetup.businessName);
       
-      const { data: userResponse, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw userError || new Error("No authenticated user");
+      }
       
-      // Save to Supabase
+      // Save to Supabase - properly handling the types
       const { error } = await supabase
         .from('business_pages_data')
         .upsert({
-          user_id: userResponse.user.id,
-          page_data: pageData,
+          user_id: user.id,
+          page_data: pageData as any, // Cast to any to avoid TypeScript errors with JSON types
           page_slug: pageSlug
         }, { onConflict: 'user_id' });
       
