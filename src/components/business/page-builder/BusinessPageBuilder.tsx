@@ -1,11 +1,14 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { TopBar } from "./components/TopBar";
 import { LeftPanel } from "./components/LeftPanel";
 import { PreviewPanel } from "./components/PreviewPanel";
 import { BusinessPageContext, BusinessPageData } from "./context/BusinessPageContext";
 import { SettingsDialog } from "./components/SettingsDialog";
+import { useUpdatePageMutation } from "@/hooks/business-page/useBusinessPageMutations";
+import { toast } from "@/components/ui/use-toast";
+import { generateSlug } from "@/utils/string-utils";
 
 // Initial state for the business page data
 const initialPageData: BusinessPageData = {
@@ -83,59 +86,112 @@ const BusinessPageBuilder = () => {
   const [pageData, setPageData] = useState<BusinessPageData>(initialPageData);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"saved" | "unsaved" | "saving">("saved");
+  const updatePageMutation = useUpdatePageMutation();
+  
+  // Load saved page data from Supabase if available
+  useEffect(() => {
+    const loadPageData = async () => {
+      try {
+        const { data: pageData } = await supabase
+          .from('business_pages_data')
+          .select('page_data')
+          .eq('user_id', supabase.auth.user()?.id)
+          .single();
+        
+        if (pageData?.page_data) {
+          setPageData(pageData.page_data);
+          setSaveStatus("saved");
+        }
+      } catch (error) {
+        console.error("Error loading page data:", error);
+      }
+    };
+    
+    loadPageData();
+  }, []);
   
   const handleSave = async () => {
     try {
       setSaveStatus("saving");
-      // Here we would save the data to the database
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      
+      // Generate a slug from the business name
+      const pageSlug = generateSlug(pageData.pageSetup.businessName);
+      
+      // Save to Supabase
+      const { error } = await supabase
+        .from('business_pages_data')
+        .upsert({
+          user_id: supabase.auth.user()?.id,
+          page_data: pageData,
+          page_slug: pageSlug
+        }, { onConflict: 'user_id' });
+      
+      if (error) throw error;
+      
+      // If successful, update state
       setSaveStatus("saved");
+      toast({
+        title: "Changes saved",
+        description: "Your page settings have been updated."
+      });
     } catch (error) {
       console.error("Error saving page data:", error);
       setSaveStatus("unsaved");
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to save changes. Please try again."
+      });
     }
   };
 
-  // Fix the spread type error by explicitly typing the spread operation
+  // Safe update function that avoids spread operator issues
   const updatePageData = (newData: Partial<BusinessPageData>) => {
     setPageData(prev => {
-      const updated: BusinessPageData = { ...prev };
+      const updated = { ...prev } as BusinessPageData;
+      
       // Apply each property from newData to updated
       Object.keys(newData).forEach(key => {
         const typedKey = key as keyof BusinessPageData;
         if (newData[typedKey] !== undefined) {
-          (updated[typedKey] as any) = newData[typedKey];
+          // Handle each property individually with proper typing
+          updated[typedKey] = newData[typedKey] as any;
         }
       });
+      
       return updated;
     });
     setSaveStatus("unsaved");
   };
 
-  // Fix the spread type error by handling section data properly
+  // Safe update for section data that avoids spread operator issues
   const updateSectionData = <K extends keyof BusinessPageData>(
     section: K,
     data: Partial<BusinessPageData[K]>
   ) => {
     setPageData(prev => {
-      const updated: BusinessPageData = { ...prev };
+      // Create a new state object
+      const updated = { ...prev } as BusinessPageData;
       
-      // Directly copy the section to ensure type safety
+      // Get the current section data
       const currentSection = prev[section];
       
-      // Create a new object by manually copying properties
-      const updatedSection = { ...currentSection } as BusinessPageData[K];
+      // Create a new section object
+      let updatedSection: any = {};
       
-      // Apply each property from data to updatedSection
-      Object.keys(data).forEach(key => {
-        const typedKey = key as keyof typeof data;
-        if (data[typedKey] !== undefined) {
-          // Type assertion to handle the assignment
-          (updatedSection as any)[key] = data[typedKey];
-        }
-      });
+      // Copy all properties from current section
+      for (const key in currentSection) {
+        updatedSection[key] = (currentSection as any)[key];
+      }
       
-      updated[section] = updatedSection;
+      // Apply updates from the data parameter
+      for (const key in data) {
+        updatedSection[key] = (data as any)[key];
+      }
+      
+      // Assign the updated section back to the section key
+      updated[section] = updatedSection as BusinessPageData[K];
+      
       return updated;
     });
     setSaveStatus("unsaved");

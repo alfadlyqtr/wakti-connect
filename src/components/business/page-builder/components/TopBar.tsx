@@ -4,6 +4,7 @@ import { Settings, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BusinessPageData } from "../context/BusinessPageContext";
 import { useBusinessPage } from "../context/BusinessPageContext";
+import { generateSlug } from "@/utils/string-utils";
 
 interface TopBarProps {
   onSettingsClick: () => void;
@@ -13,11 +14,12 @@ interface TopBarProps {
 export const TopBar = ({ onSettingsClick, pageData }: TopBarProps) => {
   const { handleSave, saveStatus } = useBusinessPage();
   
-  // Generate a placeholder URL for preview
+  // Generate a properly formatted URL based on the page title
   const getPreviewUrl = () => {
-    const businessName = pageData.pageSetup.businessName || 'your-business';
-    const slug = businessName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-    return `yourdomain.com/${slug}`;
+    // Use the page title or fall back to business name if needed
+    const pageTitle = pageData.pageSetup.businessName || 'your-landing-page';
+    const slug = generateSlug(pageTitle);
+    return `${window.location.origin}/${slug}`;
   };
 
   return (
