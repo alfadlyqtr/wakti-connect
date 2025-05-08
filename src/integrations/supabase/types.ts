@@ -910,6 +910,33 @@ export type Database = {
         }
         Relationships: []
       }
+      business_pages_data: {
+        Row: {
+          created_at: string
+          id: string
+          page_data: Json
+          page_slug: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          page_data?: Json
+          page_slug?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          page_data?: Json
+          page_slug?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       business_section_templates: {
         Row: {
           created_at: string

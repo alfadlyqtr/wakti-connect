@@ -9,6 +9,7 @@ import { SettingsDialog } from "./components/SettingsDialog";
 import { useUpdatePageMutation } from "@/hooks/business-page/useBusinessPageMutations";
 import { toast } from "@/components/ui/use-toast";
 import { generateSlug } from "@/utils/string-utils";
+import { supabase } from "@/integrations/supabase/client";
 
 // Initial state for the business page data
 const initialPageData: BusinessPageData = {
@@ -92,10 +93,10 @@ const BusinessPageBuilder = () => {
   useEffect(() => {
     const loadPageData = async () => {
       try {
-        const { data: pageData } = await supabase
+        const { data: pageData, error } = await supabase
           .from('business_pages_data')
-          .select('page_data')
-          .eq('user_id', supabase.auth.user()?.id)
+          .select('page_data, page_slug')
+          .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
           .single();
         
         if (pageData?.page_data) {
@@ -114,14 +115,17 @@ const BusinessPageBuilder = () => {
     try {
       setSaveStatus("saving");
       
-      // Generate a slug from the business name
+      // Generate a slug from the page title (not business name)
       const pageSlug = generateSlug(pageData.pageSetup.businessName);
+      
+      const { data: userResponse, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
       
       // Save to Supabase
       const { error } = await supabase
         .from('business_pages_data')
         .upsert({
-          user_id: supabase.auth.user()?.id,
+          user_id: userResponse.user.id,
           page_data: pageData,
           page_slug: pageSlug
         }, { onConflict: 'user_id' });

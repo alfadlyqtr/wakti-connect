@@ -16,9 +16,11 @@ export const TopBar = ({ onSettingsClick, pageData }: TopBarProps) => {
   
   // Generate a properly formatted URL based on the page title
   const getPreviewUrl = () => {
-    // Use the page title or fall back to business name if needed
+    // Use the page title - this is what was configured as the business name in the UI
     const pageTitle = pageData.pageSetup.businessName || 'your-landing-page';
     const slug = generateSlug(pageTitle);
+    
+    // Return main-url/slug format
     return `${window.location.origin}/${slug}`;
   };
 
