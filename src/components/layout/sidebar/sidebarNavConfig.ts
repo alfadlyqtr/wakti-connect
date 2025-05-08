@@ -11,7 +11,6 @@ import {
   Brain,
   Mic,
   CheckSquare,
-  Building2,
   ScrollText,
   Headphones,
   Bell,
@@ -67,12 +66,6 @@ export const navItems = [
     path: "staff",
     label: "Staff",
     icon: Users,
-    showFor: ["business"],
-  },
-  {
-    path: "business-page",
-    label: "Business Page",
-    icon: Building2,
     showFor: ["business"],
   },
   {
