@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { TopBar } from "./components/TopBar";
@@ -103,7 +102,6 @@ const BusinessPageBuilder = () => {
           .single();
         
         if (pageData?.page_data) {
-          // Type assertion to cast the JSON data to BusinessPageData
           setPageData(pageData.page_data as unknown as BusinessPageData);
           setSaveStatus("saved");
         }
@@ -133,7 +131,8 @@ const BusinessPageBuilder = () => {
         .upsert({
           user_id: user.id,
           page_data: pageData as any, // Cast to any to avoid TypeScript errors with JSON types
-          page_slug: pageSlug
+          page_slug: pageSlug,
+          updated_at: new Date().toISOString()
         }, { onConflict: 'user_id' });
       
       if (error) throw error;
@@ -187,20 +186,18 @@ const BusinessPageBuilder = () => {
       const currentSection = prev[section];
       
       // Create a new section object
-      let updatedSection: any = {};
-      
-      // Copy all properties from current section
-      for (const key in currentSection) {
-        updatedSection[key] = (currentSection as any)[key];
-      }
+      const updatedSection = { ...currentSection } as BusinessPageData[K];
       
       // Apply updates from the data parameter
-      for (const key in data) {
-        updatedSection[key] = (data as any)[key];
-      }
+      Object.keys(data).forEach(key => {
+        const typedKey = key as keyof typeof data;
+        if (data[typedKey] !== undefined) {
+          (updatedSection as any)[key] = data[typedKey];
+        }
+      });
       
       // Assign the updated section back to the section key
-      updated[section] = updatedSection as BusinessPageData[K];
+      updated[section] = updatedSection;
       
       return updated;
     });

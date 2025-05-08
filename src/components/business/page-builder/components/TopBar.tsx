@@ -1,10 +1,11 @@
 
 import React from "react";
-import { Settings, Globe } from "lucide-react";
+import { Settings, Globe, Copy, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BusinessPageData } from "../context/BusinessPageContext";
 import { useBusinessPage } from "../context/BusinessPageContext";
 import { generateSlug } from "@/utils/string-utils";
+import { toast } from "@/components/ui/use-toast";
 
 interface TopBarProps {
   onSettingsClick: () => void;
@@ -20,8 +21,22 @@ export const TopBar = ({ onSettingsClick, pageData }: TopBarProps) => {
     const businessName = pageData.pageSetup.businessName || 'your-business';
     const slug = generateSlug(businessName);
     
-    // Return main-url/slug format as specified: www.wakti.qam/(Business Name)
-    return `www.wakti.qam/${slug}`;
+    // Return the correct URL format: www.wakti.qa/business-name
+    return `www.wakti.qa/${slug}`;
+  };
+  
+  // Copy URL to clipboard
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(getPreviewUrl());
+    toast({
+      title: "URL copied to clipboard",
+      description: "You can now paste it anywhere.",
+    });
+  };
+  
+  // Open URL in new tab
+  const openUrl = () => {
+    window.open(`https://${getPreviewUrl()}`, '_blank');
   };
 
   return (
@@ -36,9 +51,27 @@ export const TopBar = ({ onSettingsClick, pageData }: TopBarProps) => {
         <span>Landing Page Settings</span>
       </Button>
 
-      <div className="flex items-center gap-1 text-sm text-muted-foreground">
-        <Globe className="h-4 w-4" />
-        <span className="font-mono">{getPreviewUrl()}</span>
+      <div className="flex items-center gap-2">
+        <div className="flex items-center border rounded-md px-2 py-1 bg-gray-50">
+          <Globe className="h-4 w-4 text-gray-500 mr-2" />
+          <span className="font-mono text-sm">{getPreviewUrl()}</span>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-6 w-6 p-0 ml-2"
+            onClick={copyToClipboard}
+          >
+            <Copy className="h-3 w-3" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-6 w-6 p-0"
+            onClick={openUrl}
+          >
+            <ExternalLink className="h-3 w-3" />
+          </Button>
+        </div>
       </div>
 
       <div className="flex items-center gap-2">

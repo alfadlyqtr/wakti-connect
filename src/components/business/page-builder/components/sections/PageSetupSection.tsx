@@ -46,7 +46,7 @@ export const PageSetupSection = () => {
       <CardContent>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="businessName">Business Name</Label>
+            <Label htmlFor="businessName">Page Title</Label>
             <Input 
               id="businessName" 
               value={businessName} 

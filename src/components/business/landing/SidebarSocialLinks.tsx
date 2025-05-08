@@ -22,7 +22,10 @@ const SidebarSocialLinks: React.FC<SidebarSocialLinksProps> = ({
 
   return (
     <>
-      <div className="fixed left-4 top-1/2 transform -translate-y-1/2 z-30 hidden md:block">
+      <div className="fixed z-30 top-1/2 transform -translate-y-1/2 hidden md:block"
+           style={{
+             [position === 'left' ? 'left' : 'right']: '10px',
+           }}>
         <SocialIconsGroup 
           socialLinks={socialLinks}
           style={style || "default"}
@@ -32,7 +35,10 @@ const SidebarSocialLinks: React.FC<SidebarSocialLinksProps> = ({
         />
       </div>
       
-      <div className="fixed left-2 top-1/2 transform -translate-y-1/2 z-30 block md:hidden">
+      <div className="fixed z-30 top-1/2 transform -translate-y-1/2 block md:hidden"
+           style={{
+             [position === 'left' ? 'left' : 'right']: '5px',
+           }}>
         <SocialIconsGroup 
           socialLinks={socialLinks}
           style={style || "default"}
