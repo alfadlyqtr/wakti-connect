@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { TopBar } from "./components/TopBar";
@@ -96,31 +95,44 @@ const BusinessPageBuilder = () => {
     }
   };
 
-  // Fix the spread type error by casting newData as Partial<BusinessPageData>
+  // Fix the spread type error by explicitly typing the spread operation
   const updatePageData = (newData: Partial<BusinessPageData>) => {
-    setPageData(prev => ({
-      ...prev,
-      ...newData
-    }));
+    setPageData(prev => {
+      const updated: BusinessPageData = { ...prev };
+      // Apply each property from newData to updated
+      Object.keys(newData).forEach(key => {
+        const typedKey = key as keyof BusinessPageData;
+        if (newData[typedKey] !== undefined) {
+          (updated[typedKey] as any) = newData[typedKey];
+        }
+      });
+      return updated;
+    });
     setSaveStatus("unsaved");
   };
 
-  // Fix the spread type error by using a type cast to ensure section data is handled properly
+  // Fix the spread type error by handling section data properly
   const updateSectionData = <K extends keyof BusinessPageData>(
     section: K,
     data: Partial<BusinessPageData[K]>
   ) => {
     setPageData(prev => {
-      // Create a new object for the section data with proper typing
-      const updatedSection = {
-        ...prev[section],
-        ...data
-      } as BusinessPageData[K];
+      const updated: BusinessPageData = { ...prev };
+      const sectionData = prev[section];
       
-      return {
-        ...prev,
-        [section]: updatedSection
-      };
+      // Create updated section by copying existing section data and applying new data
+      const updatedSection = { ...sectionData } as BusinessPageData[K];
+      
+      // Apply each property from data to updatedSection
+      Object.keys(data).forEach(key => {
+        const typedKey = key as keyof typeof data;
+        if (data[typedKey] !== undefined) {
+          (updatedSection as any)[key] = data[typedKey];
+        }
+      });
+      
+      updated[section] = updatedSection;
+      return updated;
     });
     setSaveStatus("unsaved");
   };
