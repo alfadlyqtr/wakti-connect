@@ -25,6 +25,14 @@ export const TopBar = ({ onSettingsClick, pageData, businessName, onPublish, pag
   
   // Copy URL to clipboard
   const copyToClipboard = () => {
+    if (!pageUrl) {
+      toast({
+        title: "No URL available",
+        description: "Save and publish your page first to get a URL.",
+      });
+      return;
+    }
+    
     navigator.clipboard.writeText(`https://${pageUrl}`);
     toast({
       title: "URL copied to clipboard",
@@ -34,6 +42,13 @@ export const TopBar = ({ onSettingsClick, pageData, businessName, onPublish, pag
   
   // Open URL in new tab
   const openUrl = () => {
+    if (!pageUrl) {
+      toast({
+        title: "No URL available", 
+        description: "Save and publish your page first to get a URL."
+      });
+      return;
+    }
     window.open(`https://${pageUrl}`, '_blank');
   };
 

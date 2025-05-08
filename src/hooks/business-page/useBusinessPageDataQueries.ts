@@ -9,7 +9,10 @@ export const useBusinessPageDataQuery = (userId?: string) => {
   return useQuery({
     queryKey: ['businessPageData', userId],
     queryFn: async () => {
-      if (!userId) return null;
+      if (!userId) {
+        console.log("No user ID provided for business page data query");
+        return null;
+      }
       
       console.log("Fetching business page data for user:", userId);
       

@@ -27,16 +27,16 @@ export const useCreatePageDataMutation = () => {
       const pageSlug = generateSlug(pageData.pageSetup.businessName);
       
       console.log('Generated slug:', pageSlug);
+      console.log('Saving page data:', JSON.stringify(pageData).substring(0, 200) + '...');
       
-      // We need to stringify the BusinessPageData to make it compatible with Supabase's JSON type
+      // We need to handle the JSON conversion for Supabase
       const { data: response, error } = await supabase
         .from('business_pages_data')
         .insert({
           user_id: userId,
           page_slug: pageSlug,
-          // Use a type assertion to handle the JSON conversion
-          page_data: pageData
-        } as any)
+          page_data: pageData as unknown as object // Cast to object to fix type issue with Supabase
+        })
         .select()
         .single();
         
@@ -45,7 +45,9 @@ export const useCreatePageDataMutation = () => {
         throw error;
       }
       
-      // Convert the returned page_data back to BusinessPageData using type assertion
+      console.log("Create response:", response);
+      
+      // Convert the returned page_data back to BusinessPageData
       return {
         ...response,
         page_data: response.page_data as unknown as BusinessPageData
@@ -81,20 +83,24 @@ export const useUpdatePageDataMutation = () => {
     }): Promise<BusinessPageDataRecord> => {
       const { id, pageData, updateSlug } = data;
       
+      console.log('Updating page with id:', id);
+      console.log('Page data preview:', JSON.stringify(pageData).substring(0, 200) + '...');
+      
       // Prepare the data to update
       const updateData: Record<string, any> = {
-        page_data: pageData,
+        page_data: pageData as unknown as object, // Cast to object for Supabase
         updated_at: new Date().toISOString()
       };
       
       // Update the slug if requested
       if (updateSlug) {
         updateData.page_slug = generateSlug(pageData.pageSetup.businessName);
+        console.log('Updating slug to:', updateData.page_slug);
       }
       
       const { data: response, error } = await supabase
         .from('business_pages_data')
-        .update(updateData as any)
+        .update(updateData)
         .eq('id', id)
         .select()
         .single();
@@ -103,6 +109,8 @@ export const useUpdatePageDataMutation = () => {
         console.error("Error updating business page data:", error);
         throw error;
       }
+      
+      console.log("Update response:", response);
       
       // Convert the returned page_data back to BusinessPageData
       return {
@@ -140,6 +148,8 @@ export const usePublishPageMutation = () => {
     }): Promise<BusinessPageDataRecord> => {
       const { id, published, pageData } = data;
       
+      console.log(`${published ? 'Publishing' : 'Unpublishing'} page with id:`, id);
+      
       // Update the published state in the page data
       const updatedPageData = {
         ...pageData,
@@ -149,7 +159,7 @@ export const usePublishPageMutation = () => {
       const { data: response, error } = await supabase
         .from('business_pages_data')
         .update({
-          page_data: updatedPageData as any,
+          page_data: updatedPageData as unknown as object, // Cast to object for Supabase
           updated_at: new Date().toISOString()
         })
         .eq('id', id)
@@ -160,6 +170,8 @@ export const usePublishPageMutation = () => {
         console.error("Error publishing business page:", error);
         throw error;
       }
+      
+      console.log("Publish response:", response);
       
       // Convert the returned page_data back to BusinessPageData
       return {

@@ -111,8 +111,11 @@ const BusinessPageBuilder = () => {
   // Load existing data if available
   useEffect(() => {
     if (existingPageData?.page_data) {
+      console.log("Setting page data from existing data:", existingPageData.page_data);
       setPageData(existingPageData.page_data);
       setSaveStatus('saved');
+    } else {
+      console.log("No existing page data found.");
     }
   }, [existingPageData]);
 
@@ -135,12 +138,15 @@ const BusinessPageBuilder = () => {
     data: Partial<BusinessPageData[K]>
   ) => {
     setPageData(prevData => {
-      // Create a deep copy of the current section
-      const currentSection = {...prevData[section]};
+      // Type safe cloning of section data
+      const currentSection = prevData[section];
       
-      // Create a new section by merging current section with new data
-      const dataAsObject = data as Record<string, unknown>;
-      const updatedSection = {...currentSection, ...dataAsObject};
+      // Handle the spread safely by converting both to plain objects
+      const currentSectionObject = { ...(currentSection as object) };
+      const dataObject = { ...(data as object) };
+      
+      // Merge the objects
+      const updatedSection = Object.assign({}, currentSectionObject, dataObject);
       
       // Return updated state with the new section
       return {
@@ -153,23 +159,30 @@ const BusinessPageBuilder = () => {
   
   // Handle save action
   const handleSave = async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      console.error("Cannot save: No user ID found");
+      return;
+    }
     
     setSaveStatus('saving');
+    console.log("Starting save operation...");
     try {
       if (existingPageData?.id) {
         // Update existing page
+        console.log("Updating existing page:", existingPageData.id);
         await updateMutation.mutateAsync({
           id: existingPageData.id,
           pageData: pageData,
         });
       } else {
         // Create new page
+        console.log("Creating new page for user:", user.id);
         await createMutation.mutateAsync({
           pageData: pageData,
           userId: user.id,
         });
       }
+      console.log("Save operation successful");
       setSaveStatus('saved');
     } catch (error) {
       console.error("Error saving page:", error);
@@ -179,30 +192,45 @@ const BusinessPageBuilder = () => {
   
   // Handle publish/unpublish action
   const handlePublish = async () => {
-    if (!user?.id || !existingPageData?.id) {
+    if (!user?.id) {
+      console.error("Cannot publish: No user ID found");
+      return;
+    }
+      
+    if (!existingPageData?.id) {
       // If we don't have a saved page yet, save first then publish
+      console.log("No existing page data, saving first before publishing");
       await handleSave();
-      // Fetch the saved page data again
-      const { data } = await supabase
-        .from('business_pages_data')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false })
-        .single();
-        
-      if (data) {
-        await publishMutation.mutateAsync({
-          id: data.id,
-          pageData: pageData,
-          published: !pageData.published,
-        });
-        
-        setPageData(prev => ({...prev, published: !prev.published}));
+      
+      try {
+        // Fetch the saved page data again
+        const { data } = await supabase
+          .from('business_pages_data')
+          .select('*')
+          .eq('user_id', user?.id)
+          .order('created_at', { ascending: false })
+          .single();
+          
+        if (data) {
+          console.log("Publishing newly saved page", data.id);
+          await publishMutation.mutateAsync({
+            id: data.id,
+            pageData: pageData,
+            published: !pageData.published,
+          });
+          
+          setPageData(prev => ({...prev, published: !prev.published}));
+        } else {
+          console.error("Failed to retrieve newly saved page data");
+        }
+      } catch (error) {
+        console.error("Error during save and publish flow:", error);
       }
       return;
     }
     
     try {
+      console.log("Publishing existing page", existingPageData.id);
       await publishMutation.mutateAsync({
         id: existingPageData.id,
         pageData: pageData,
@@ -210,6 +238,7 @@ const BusinessPageBuilder = () => {
       });
       
       setPageData(prev => ({...prev, published: !prev.published}));
+      console.log("Publish status updated to:", !pageData.published);
     } catch (error) {
       console.error("Error publishing page:", error);
     }
@@ -217,7 +246,11 @@ const BusinessPageBuilder = () => {
 
   // Construct the public URL for the page
   const getPageUrl = () => {
-    if (!existingPageData?.page_slug) return "";
+    if (!existingPageData?.page_slug) {
+      console.log("No page slug available for URL");
+      return "";
+    }
+    console.log("Page URL generated:", `${existingPageData.page_slug}.wakti.app`);
     return `${existingPageData.page_slug}.wakti.app`;
   };
 
