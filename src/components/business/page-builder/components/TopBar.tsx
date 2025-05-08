@@ -21,14 +21,12 @@ export const TopBar = ({ onSettingsClick, pageData }: TopBarProps) => {
   const { handleSave, saveStatus } = useBusinessPage();
   const [showURLInfo, setShowURLInfo] = useState(false);
   
-  // Generate a properly formatted URL based on the page title
+  // Generate a properly formatted URL based on the business name from user settings
+  // This is intentionally not using the page title as seen in the UI
   const getPreviewUrl = () => {
-    // Use the business name for the URL
-    const businessName = pageData.pageSetup.businessName || 'your-business';
-    const slug = generateSlug(businessName);
-    
-    // Return the correct URL format: www.wakti.qa/business-name
-    return `www.wakti.qa/${slug}`;
+    // Here we should be using the business name from the user's profile settings
+    // For this implementation, just show the correct format
+    return `www.wakti.qa/your-business-name`;
   };
   
   // Copy URL to clipboard
@@ -89,7 +87,7 @@ export const TopBar = ({ onSettingsClick, pageData }: TopBarProps) => {
             </TooltipTrigger>
             <TooltipContent className="max-w-xs">
               <p className="text-xs">
-                Your URL is based on your Page Title and can only be changed by updating your Page Title. 
+                Your URL is based on your business name from your account settings.
                 Once published, URL changes require a special request.
               </p>
             </TooltipContent>

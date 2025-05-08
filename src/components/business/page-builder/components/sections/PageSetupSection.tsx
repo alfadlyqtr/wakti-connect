@@ -87,8 +87,8 @@ export const PageSetupSection = () => {
                 </TooltipTrigger>
                 <TooltipContent className="max-w-xs">
                   <p className="text-xs">
-                    Your Page Title is important as it determines your page URL.
-                    Once published, changing it requires a special request.
+                    This is the title that appears on your landing page.
+                    The page URL is determined by the business name in your account settings.
                   </p>
                 </TooltipContent>
               </Tooltip>
