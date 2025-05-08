@@ -5,9 +5,10 @@ import { LeftPanel } from "./components/LeftPanel";
 import { PreviewPanel } from "./components/PreviewPanel";
 import { TopBar } from "./components/TopBar";
 import { SettingsDialog } from "./components/SettingsDialog";
-import { useUser } from "@/hooks/useUser";
+import { useUser } from "@/hooks/auth/useUser";  // Fixing the import path
 import { useBusinessPageDataQuery } from "@/hooks/business-page/useBusinessPageDataQueries";
 import { useCreatePageDataMutation, useUpdatePageDataMutation, usePublishPageMutation } from "@/hooks/business-page/useBusinessPageDataMutations";
+import { supabase } from "@/integrations/supabase/client"; // Adding missing supabase import
 
 // Default values for a new business page
 const defaultPageData: BusinessPageData = {
@@ -137,7 +138,7 @@ const BusinessPageBuilder = () => {
       ...prevData,
       [section]: {
         ...prevData[section],
-        ...data
+        ...(data as any) // Using type assertion to fix spread type error
       }
     }));
     setSaveStatus('unsaved');

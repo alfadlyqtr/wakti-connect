@@ -26,13 +26,15 @@ export const useCreatePageDataMutation = () => {
       // Generate a slug based on the business name if not provided
       const pageSlug = generateSlug(pageData.pageSetup.businessName);
       
+      console.log('Generated slug:', pageSlug);
+      
       // We need to stringify the BusinessPageData to make it compatible with Supabase's JSON type
       const { data: response, error } = await supabase
         .from('business_pages_data')
         .insert({
           user_id: userId,
           page_slug: pageSlug,
-          // Convert BusinessPageData to JSON before sending to Supabase
+          // Convert BusinessPageData to JSON before sending to Supabase using type assertion
           page_data: pageData as unknown as object
         })
         .select()
@@ -43,7 +45,7 @@ export const useCreatePageDataMutation = () => {
         throw error;
       }
       
-      // Convert the returned page_data back to BusinessPageData
+      // Convert the returned page_data back to BusinessPageData using type assertion
       return {
         ...response,
         page_data: response.page_data as unknown as BusinessPageData
