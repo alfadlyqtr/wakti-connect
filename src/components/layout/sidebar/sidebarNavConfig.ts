@@ -1,3 +1,4 @@
+
 import {
   Home,
   CalendarDays,
@@ -16,6 +17,7 @@ import {
   Bell,
   MessageSquare,
   Calendar,
+  Building2,
 } from "lucide-react";
 import { UserRole } from "@/types/roles";
 
@@ -66,6 +68,12 @@ export const navItems = [
     path: "staff",
     label: "Staff",
     icon: Users,
+    showFor: ["business"],
+  },
+  {
+    path: "business-page",
+    label: "Business Page",
+    icon: Building2,
     showFor: ["business"],
   },
   {

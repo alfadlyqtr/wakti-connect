@@ -5,7 +5,7 @@ import SimpleInvitationCreator from '@/components/invitations/SimpleInvitationCr
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getSimpleInvitationById } from '@/services/invitation/simple-invitations';
-import DashboardBusinessPage from '@/pages/dashboard/DashboardBusinessPage';
+import BusinessPageBuilder from '@/components/business/page-builder/BusinessPageBuilder';
 
 const InvitationEdit = () => {
   const { id } = useParams<{ id: string }>();
@@ -53,7 +53,7 @@ export const dashboardRoutes = [
   },
   {
     path: "business-page",
-    element: <DashboardBusinessPage />,
+    element: <BusinessPageBuilder />,
   },
 ];
 
