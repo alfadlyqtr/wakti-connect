@@ -96,22 +96,32 @@ const BusinessPageBuilder = () => {
     }
   };
 
+  // Fix the spread type error by casting newData as Partial<BusinessPageData>
   const updatePageData = (newData: Partial<BusinessPageData>) => {
-    setPageData(prev => ({ ...prev, ...newData }));
+    setPageData(prev => ({
+      ...prev,
+      ...newData
+    }));
     setSaveStatus("unsaved");
   };
 
+  // Fix the spread type error by using a type cast to ensure section data is handled properly
   const updateSectionData = <K extends keyof BusinessPageData>(
     section: K,
     data: Partial<BusinessPageData[K]>
   ) => {
-    setPageData(prev => ({
-      ...prev,
-      [section]: {
+    setPageData(prev => {
+      // Create a new object for the section data with proper typing
+      const updatedSection = {
         ...prev[section],
         ...data
-      }
-    }));
+      } as BusinessPageData[K];
+      
+      return {
+        ...prev,
+        [section]: updatedSection
+      };
+    });
     setSaveStatus("unsaved");
   };
 
