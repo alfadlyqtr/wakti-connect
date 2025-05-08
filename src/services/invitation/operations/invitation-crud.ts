@@ -4,7 +4,7 @@ import { toast } from '@/components/ui/use-toast';
 import { SimpleInvitation } from '@/types/invitation.types';
 import { InvitationData, InvitationDbRecord } from '../invitation-types';
 import { mapDbRecordToSimpleInvitation } from '../utils/invitation-mappers';
-import { generateEnhancedSlug } from '@/utils/string-utils';
+import { generateSlug } from '@/utils/string-utils';
 
 /**
  * Create a simple invitation record
@@ -27,10 +27,10 @@ export const createSimpleInvitation = async (invitationData: InvitationData): Pr
     // Get display name or full name to use in slug
     const displayName = userProfile?.display_name || userProfile?.full_name;
     
-    // Generate enhanced slug with user info and title
-    const slug = generateEnhancedSlug(session.user.id, displayName, invitationData.title);
+    // Generate slug with user info and title
+    const slug = generateCustomSlug(session.user.id, displayName, invitationData.title);
     
-    console.log('Generated enhanced slug:', slug);
+    console.log('Generated custom slug:', slug);
     
     // Add the slug to the invitation data
     const dataWithSlug = {
@@ -85,10 +85,10 @@ export const updateSimpleInvitation = async (id: string, invitationData: Partial
       // Get display name or full name to use in slug
       const displayName = userProfile?.display_name || userProfile?.full_name;
       
-      // Generate enhanced slug with user info and title
-      dataToUpdate.share_link = generateEnhancedSlug(session.user.id, displayName, invitationData.title);
+      // Generate slug with user info and title
+      dataToUpdate.share_link = generateCustomSlug(session.user.id, displayName, invitationData.title);
       
-      console.log('Updated enhanced slug:', dataToUpdate.share_link);
+      console.log('Updated custom slug:', dataToUpdate.share_link);
     }
 
     const { data, error } = await supabase
@@ -113,3 +113,21 @@ export const updateSimpleInvitation = async (id: string, invitationData: Partial
     return null;
   }
 };
+
+/**
+ * Helper function to generate a custom slug with user information and title
+ */
+function generateCustomSlug(userId: string, displayName: string | null, title: string): string {
+  // Create a base from display name or first part of userId if no display name
+  const nameBase = displayName 
+    ? generateSlug(displayName).substring(0, 15) 
+    : userId.substring(0, 8);
+  
+  // Create a slug from the title
+  const titleSlug = generateSlug(title).substring(0, 30);
+  
+  // Combine them with a unique timestamp to ensure uniqueness
+  const timestamp = new Date().getTime().toString().substring(6, 10);
+  
+  return `${nameBase}-${titleSlug}-${timestamp}`;
+}
