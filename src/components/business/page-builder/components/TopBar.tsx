@@ -1,11 +1,16 @@
 
-import React from "react";
-import { Settings, Globe, Copy, ExternalLink } from "lucide-react";
+import React, { useState } from "react";
+import { Settings, Globe, Copy, ExternalLink, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BusinessPageData } from "../context/BusinessPageContext";
 import { useBusinessPage } from "../context/BusinessPageContext";
 import { generateSlug } from "@/utils/string-utils";
 import { toast } from "@/components/ui/use-toast";
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface TopBarProps {
   onSettingsClick: () => void;
@@ -14,6 +19,7 @@ interface TopBarProps {
 
 export const TopBar = ({ onSettingsClick, pageData }: TopBarProps) => {
   const { handleSave, saveStatus } = useBusinessPage();
+  const [showURLInfo, setShowURLInfo] = useState(false);
   
   // Generate a properly formatted URL based on the page title
   const getPreviewUrl = () => {
@@ -71,6 +77,23 @@ export const TopBar = ({ onSettingsClick, pageData }: TopBarProps) => {
           >
             <ExternalLink className="h-3 w-3" />
           </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0"
+              >
+                <Info className="h-3 w-3" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs">
+              <p className="text-xs">
+                Your URL is based on your Page Title and can only be changed by updating your Page Title. 
+                Once published, URL changes require a special request.
+              </p>
+            </TooltipContent>
+          </Tooltip>
         </div>
       </div>
 

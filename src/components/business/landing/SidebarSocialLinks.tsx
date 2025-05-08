@@ -20,6 +20,8 @@ const SidebarSocialLinks: React.FC<SidebarSocialLinksProps> = ({
     return null;
   }
 
+  // Calculate positions for different viewports
+  // Use relative positioning for better page integration
   return (
     <>
       {/* Desktop version - inside the page with proper padding */}
