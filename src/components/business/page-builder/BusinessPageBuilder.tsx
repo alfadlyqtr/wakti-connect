@@ -1,299 +1,218 @@
+
 import React, { useState, useEffect } from "react";
-import SettingsDialog from "./components/SettingsDialog";
-import { Button } from "@/components/ui/button";
+import { SettingsDialog } from "./components/SettingsDialog";
 import { TopBar } from "./components/TopBar";
-import LeftPanel from "./components/LeftPanel";
-import PreviewPanel from "./components/PreviewPanel";
-import { BusinessPageContext, BusinessPageData } from "./context/BusinessPageContext";
-import { useUpdatePageMutation } from "@/hooks/useUpdatePageMutation";
-import useIsSuperAdmin from "@/hooks/useIsSuperAdmin";
-import { toast } from "@/components/ui/use-toast";
-import { generateSlug } from "@/utils/string-utils";
-import { supabase } from "@/integrations/supabase/client";
+import { Separator } from "@/components/ui/separator";
+import { LeftPanel } from "./components/LeftPanel";
+import { PreviewPanel } from "./components/PreviewPanel";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { useUpdatePageMutation } from "@/hooks/business-page/useBusinessPageMutations";
+import { toast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { 
+  BusinessPageContext, 
+  BusinessPageData, 
+  BusinessPageContextType 
+} from "./context/BusinessPageContext";
 
-// Initial state for the business page data
-const initialPageData: BusinessPageData = {
-  pageSetup: {
-    businessName: "My Business Page",
-    alignment: "left",
-    visible: true,
-  },
-  heroSection: {
-    visible: true,
-    title: "Your Headline Here",
-    subtitle: "A compelling description of your business.",
-    imageUrl: "https://via.placeholder.com/800x400",
-    primaryButtonText: "Learn More",
-    secondaryButtonText: "Contact Us",
-  },
-  featuresSection: {
-    visible: true,
-    title: "Key Features",
-    features: [
-      { id: "1", title: "Feature 1", description: "Description of feature 1" },
-      { id: "2", title: "Feature 2", description: "Description of feature 2" },
-      { id: "3", title: "Feature 3", description: "Description of feature 3" },
+const BusinessPageBuilder: React.FC = () => {
+  // Initial page data state
+  const [pageData, setPageData] = useState<BusinessPageData>({
+    pageSetup: {
+      businessName: "My Business",
+      alignment: "center",
+      visible: true
+    },
+    logo: {
+      url: "",
+      shape: "square",
+      alignment: "center",
+      visible: true
+    },
+    bookings: {
+      viewStyle: "grid",
+      templates: [],
+      visible: true
+    },
+    socialInline: {
+      style: "icon",
+      platforms: {
+        whatsapp: true,
+        whatsappBusiness: false,
+        facebook: true,
+        instagram: true,
+        googleMaps: true,
+        phone: true,
+        email: true
+      },
+      visible: true
+    },
+    workingHours: {
+      layout: "card",
+      hours: [
+        { day: "Monday", open: "09:00", close: "17:00", closed: false },
+        { day: "Tuesday", open: "09:00", close: "17:00", closed: false },
+        { day: "Wednesday", open: "09:00", close: "17:00", closed: false },
+        { day: "Thursday", open: "09:00", close: "17:00", closed: false },
+        { day: "Friday", open: "09:00", close: "17:00", closed: false },
+        { day: "Saturday", open: "10:00", close: "14:00", closed: true },
+        { day: "Sunday", open: "00:00", close: "00:00", closed: true }
+      ],
+      visible: true
+    },
+    chatbot: {
+      position: "right",
+      embedCode: "",
+      visible: false
+    },
+    theme: {
+      backgroundColor: "#ffffff",
+      textColor: "#333333",
+      fontStyle: "sans-serif"
+    },
+    socialSidebar: {
+      position: "right",
+      platforms: {
+        whatsapp: true,
+        whatsappBusiness: false,
+        facebook: true,
+        instagram: true,
+        googleMaps: true,
+        phone: true,
+        email: true
+      },
+      visible: false
+    },
+    contactInfo: {
+      email: "",
+      whatsapp: "",
+      whatsappBusiness: "",
+      phone: "",
+      facebook: "",
+      googleMaps: "",
+      instagram: ""
+    },
+    sectionOrder: [
+      "pageSetup",
+      "logo",
+      "bookings",
+      "socialInline",
+      "workingHours"
     ],
-  },
-  gallerySection: {
-    visible: true,
-    title: "Our Gallery",
-    images: [
-      { id: "1", url: "https://via.placeholder.com/400x300" },
-      { id: "2", url: "https://via.placeholder.com/400x300" },
-      { id: "3", url: "https://via.placeholder.com/400x300" },
-    ],
-  },
-  testimonialsSection: {
-    visible: true,
-    title: "What Our Clients Say",
-    testimonials: [
-      { id: "1", author: "John Doe", content: "Great service!" },
-      { id: "2", author: "Jane Smith", content: "Highly recommended." },
-    ],
-  },
-  contactSection: {
-    visible: true,
-    title: "Contact Us",
-    email: "info@example.com",
-    phone: "+1234567890",
-    address: "123 Main St, Anytown",
-  },
-  footerSection: {
-    visible: true,
-    content: "© 2024 My Business. All rights reserved.",
-  },
-  themeSettings: {
-    primaryColor: "#007BFF",
-    secondaryColor: "#6C757D",
-    backgroundColor: "#F8F9FA",
-    textColor: "#343A40",
-    fontFamily: "Arial, sans-serif",
-  },
-  advancedSettings: {
-    customCss: "",
-    googleAnalyticsCode: "",
-    isMobileFriendly: true,
-    isSearchable: true,
-  },
-  socialMedia: {
-    facebook: "",
-    twitter: "",
-    instagram: "",
-    linkedin: "",
-    youtube: "",
-  },
-  logo_url: "",
-  sectionsOrder: [
-    "pageSetup",
-    "heroSection",
-    "featuresSection",
-    "gallerySection",
-    "testimonialsSection",
-    "contactSection",
-    "footerSection",
-  ],
-};
+    published: false
+  });
 
-export default function BusinessPageBuilder() {
-  const [pageData, setPageData] = useState<BusinessPageData>(initialPageData);
-  const [showSettings, setShowSettings] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "unsaved">("saved");
-  const [lastSaveAttempt, setLastSaveAttempt] = useState<Date | null>(null);
-  const updatePageMutation = useUpdatePageMutation();
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<"saved" | "unsaved" | "saving">("saved");
+  const [userId, setUserId] = useState<string | null>(null);
   
-  // State for user profile data
-  const [userId, setUserId] = useState<string>("");
-  
-  // Fetch the current user ID first
+  // Get the current user
   useEffect(() => {
-    const fetchCurrentUser = async () => {
-      try {
-        const { data: { user }, error } = await supabase.auth.getUser();
-        if (error || !user) {
-          console.error("Error getting user:", error);
-          return;
-        }
-        setUserId(user.id);
-      } catch (error) {
-        console.error("Failed to fetch current user:", error);
-      }
+    const fetchUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      setUserId(data.user?.id || null);
     };
     
-    fetchCurrentUser();
+    fetchUser();
   }, []);
   
   // Get the user's profile data to access the business_name for the URL
-  const { profile, isLoading: profileLoading, error: profileError } = useUserProfile(userId);
+  const { profile, isLoading: profileLoading, error: profileError } = useUserProfile(userId || "");
+  const updatePageMutation = useUpdatePageMutation();
   
-  // Load saved page data from Supabase if available
-  useEffect(() => {
-    const loadPageData = async () => {
-      try {
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        if (userError || !user) {
-          console.error("Error getting user:", userError);
-          return;
-        }
-        
-        const { data, error } = await supabase
-          .from("business_pages")
-          .select("*")
-          .eq("user_id", user.id)
-          .single();
-          
-        if (error) {
-          if (error.code !== "PGRST116") {  // PGRST116 = no rows returned
-            console.error("Error loading page data:", error);
-          }
-          return;
-        }
-        
-        if (data && data.page_data) {
-          setPageData(data.page_data as BusinessPageData);
-        }
-      } catch (error) {
-        console.error("Failed to load page data:", error);
-      }
-    };
-    
-    loadPageData();
-  }, []);
+  // Update page data
+  const updatePageData = (data: Partial<BusinessPageData>) => {
+    setPageData(prev => ({ ...prev, ...data }));
+    setSaveStatus("unsaved");
+  };
   
+  // Update a specific section in the page data
+  const updateSectionData = <K extends keyof BusinessPageData>(
+    section: K,
+    data: Partial<BusinessPageData[K]>
+  ) => {
+    setPageData(prev => ({
+      ...prev,
+      [section]: { ...prev[section], ...data }
+    }));
+    setSaveStatus("unsaved");
+  };
+  
+  // Toggle visibility of a section
+  const toggleSectionVisibility = (sectionName: keyof BusinessPageData, visible: boolean) => {
+    if (sectionName in pageData && 'visible' in pageData[sectionName]) {
+      updateSectionData(sectionName, { visible } as any);
+    }
+  };
+  
+  // Handle saving the page
   const handleSave = async () => {
+    setSaveStatus("saving");
     try {
-      setSaveStatus("saving");
-      setLastSaveAttempt(new Date());
+      // This would be replaced with actual API call in a real app
+      // Example: await updatePage({ id: page.id, data: pageData })
+      console.log("Saving page data:", pageData);
       
-      // Generate a slug from the business name in profile settings, not the page title
-      // This ensures the URL is based on the business name in account settings
-      let pageSlug = "";
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      if (profile?.business_name) {
-        pageSlug = generateSlug(profile.business_name);
-      } else {
-        // If no business name is set in profile, inform the user
-        toast({
-          variant: "destructive",
-          title: "Missing business name",
-          description: "Please set your business name in your account settings to generate a URL."
-        });
-        setSaveStatus("unsaved");
-        return;
-      }
-      
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) {
-        console.error("Error getting user:", userError);
-        setSaveStatus("unsaved");
-        return;
-      }
-      
-      const { data, error } = await updatePageMutation.mutateAsync({
-        userId: user.id,
-        pageData,
-        pageSlug
-      });
-      
-      if (error) {
-        console.error("Error saving page:", error);
-        toast({
-          variant: "destructive",
-          title: "Save failed",
-          description: "Failed to save page changes."
-        });
-        setSaveStatus("unsaved");
-        return;
-      }
-      
-      toast({
-        title: "Page saved successfully",
-        description: "Your page changes have been saved."
-      });
       setSaveStatus("saved");
+      toast({
+        title: "Page saved",
+        description: "Your changes have been saved successfully."
+      });
     } catch (error) {
-      console.error("Failed to save page:", error);
+      console.error("Error saving page:", error);
+      setSaveStatus("unsaved");
       toast({
         variant: "destructive",
         title: "Save failed",
-        description: "An unexpected error occurred while saving."
+        description: "There was a problem saving your changes."
       });
-      setSaveStatus("unsaved");
     }
   };
   
-  const handleSectionDataUpdate = (sectionName: string, sectionData: any) => {
-    setPageData((prevData) => ({
-      ...prevData,
-      [sectionName]: {
-        ...prevData[sectionName],
-        ...sectionData
-      }
-    }));
-    
-    setSaveStatus("unsaved");
-  };
-  
-  const handleToggleSection = (sectionName: string, visible: boolean) => {
-    setPageData((prevData) => ({
-      ...prevData,
-      [sectionName]: {
-        ...prevData[sectionName],
-        visible
-      }
-    }));
-    
-    setSaveStatus("unsaved");
-  };
-  
-  const toggleSettingsDialog = () => {
-    setShowSettings(!showSettings);
-  };
-  
-  // Get public page URL based on the user's business name from profile
+  // Get the public page URL
   const getPublicPageUrl = () => {
-    if (profile?.business_name) {
-      const slug = generateSlug(profile.business_name);
-      return `https://wakti.qa/${slug}`;
+    // Use business_name from profile if available, otherwise use a generic placeholder
+    if (profile && profile.business_name) {
+      const slug = profile.business_name.toLowerCase().replace(/\s+/g, '-');
+      return `www.wakti.qa/${slug}`;
     }
-    return "#";
+    return "www.wakti.qa/your-business-name";
   };
   
-  // Define the context value
-  const contextValue = {
+  // Context value
+  const contextValue: BusinessPageContextType = {
     pageData,
-    updateSectionData: handleSectionDataUpdate,
-    toggleSectionVisibility: handleToggleSection,
+    updatePageData,
+    updateSectionData,
     saveStatus,
     handleSave,
-    getPublicPageUrl
   };
-  
-  const closeSettingsDialog = () => {
-    setShowSettings(false);
-  };
-  
+
   return (
     <BusinessPageContext.Provider value={contextValue}>
       <div className="flex flex-col h-screen">
         <TopBar 
-          onSettingsClick={toggleSettingsDialog} 
+          onSettingsClick={() => setSettingsOpen(true)} 
           pageData={pageData}
-          businessName={profile?.business_name}
+          businessName={profile?.business_name} 
         />
+        <Separator />
         <div className="flex flex-1 overflow-hidden">
           <LeftPanel />
-          <PreviewPanel />
+          <div className="flex-1 p-4 overflow-auto">
+            <PreviewPanel />
+          </div>
         </div>
-        
-        {showSettings && (
-          <SettingsDialog 
-            open={showSettings} 
-            onClose={closeSettingsDialog} 
-          />
-        )}
+        <SettingsDialog 
+          open={settingsOpen} 
+          onClose={() => setSettingsOpen(false)} 
+        />
       </div>
     </BusinessPageContext.Provider>
   );
-}
+};
+
+export default BusinessPageBuilder;

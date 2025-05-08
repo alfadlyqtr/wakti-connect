@@ -2,8 +2,8 @@
 import { useState, useEffect } from "react";
 import { getUserProfile } from "@/services/users/userProfileService";
 
-// Define interface locally since we're getting type errors
-interface UserProfile {
+// Define interface for profile with business_name
+export interface UserProfile {
   id: string;
   full_name: string | null;
   display_name: string | null;
