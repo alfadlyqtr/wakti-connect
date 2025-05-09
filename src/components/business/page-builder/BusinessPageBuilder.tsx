@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { BusinessPage } from "@/types/business.types";
@@ -214,7 +213,7 @@ const BusinessPageBuilder: React.FC = () => {
       updatePageData: handleSavePageData,
       updateSectionData: handleUpdateSection,
       saveStatus: saveStatus,
-      handleSave: () => handleSavePageData(pageData.page_data)
+      handleSave: () => handleSavePageData(pageData.page_data as any)
     }}>
       <Helmet>
         <title>Business Page Builder | WAKTI</title>

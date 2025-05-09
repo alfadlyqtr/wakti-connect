@@ -47,7 +47,7 @@ export const useBusinessPageDataQuery = (userId?: string) => {
       }
 
       // Return the data as is, the component will handle default values
-      return data as BusinessPageDataRecord;
+      return data as unknown as BusinessPageDataRecord;
     },
     enabled: !!effectiveUserId
   });
