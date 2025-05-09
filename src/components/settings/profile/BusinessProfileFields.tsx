@@ -1,32 +1,55 @@
 
 import React from "react";
-import { FieldErrors } from "react-hook-form";
-import { Input } from "@/components/ui/input";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { ProfileFormData } from "@/hooks/useProfileForm";
-import { Separator } from "@/components/ui/separator";
-import BusinessHoursField from "./BusinessHoursField";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
+import { FieldErrors } from "react-hook-form";
+import { ProfileFormData } from "@/hooks/useProfileForm";
+import { ExternalLink } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useWatch } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
+import { BusinessHoursField } from "./BusinessHoursField";
 
 interface BusinessProfileFieldsProps {
-  watch?: any;
+  watch: any;
   errors: FieldErrors<ProfileFormData>;
   readOnly?: boolean;
 }
 
 const BusinessProfileFields: React.FC<BusinessProfileFieldsProps> = ({ 
   watch, 
-  errors,
+  errors, 
   readOnly = false
 }) => {
-  const chatbotEnabled = watch?.("business_chatbot_enabled");
+  const navigate = useNavigate();
+  const form = watch();
+  const slug = useWatch({ name: "slug" });
+  
+  const handleViewProfile = () => {
+    if (slug) {
+      window.open(`/${slug}`, '_blank');
+    }
+  };
   
   return (
     <>
+      <h3 className="text-lg font-medium mb-4 flex justify-between items-center">
+        <span>Business Information</span>
+        {slug && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleViewProfile}
+            className="flex items-center gap-1"
+          >
+            <ExternalLink className="h-3 w-3" />
+            View Profile
+          </Button>
+        )}
+      </h3>
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {/* Business Name - Ensuring this field is present */}
         <FormField
           name="business_name"
           render={({ field }) => (
@@ -35,18 +58,16 @@ const BusinessProfileFields: React.FC<BusinessProfileFieldsProps> = ({
               <FormControl>
                 <Input
                   {...field}
-                  className={`${readOnly ? "bg-gray-50" : ""}`}
-                  placeholder="Your business name"
+                  placeholder="Enter your business name"
                   readOnly={readOnly}
+                  className={readOnly ? "bg-gray-50" : ""}
                 />
               </FormControl>
-              {errors.business_name && (
-                <FormMessage>{errors.business_name.message}</FormMessage>
-              )}
+              {errors.business_name && <FormMessage>{errors.business_name.message}</FormMessage>}
             </FormItem>
           )}
         />
-
+        
         <FormField
           name="business_type"
           render={({ field }) => (
@@ -55,45 +76,16 @@ const BusinessProfileFields: React.FC<BusinessProfileFieldsProps> = ({
               <FormControl>
                 <Input
                   {...field}
-                  className={`${readOnly ? "bg-gray-50" : ""}`}
-                  placeholder="Type of business"
+                  placeholder="Enter your business type"
                   readOnly={readOnly}
+                  className={readOnly ? "bg-gray-50" : ""}
                 />
               </FormControl>
-              {errors.business_type && (
-                <FormMessage>{errors.business_type.message}</FormMessage>
-              )}
+              {errors.business_type && <FormMessage>{errors.business_type.message}</FormMessage>}
             </FormItem>
           )}
         />
-      </div>
-      
-      <div className="mt-5">
-        <FormField
-          name="business_address"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Business Description</FormLabel>
-              <FormControl>
-                <Textarea
-                  {...field}
-                  className={`${readOnly ? "bg-gray-50" : ""} min-h-[100px]`}
-                  placeholder="Describe your business"
-                  readOnly={readOnly}
-                />
-              </FormControl>
-              {errors.business_address && (
-                <FormMessage>{errors.business_address.message}</FormMessage>
-              )}
-            </FormItem>
-          )}
-        />
-      </div>
-      
-      <Separator className="my-6" />
-      <h3 className="text-lg font-medium mb-4">Contact Information</h3>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        
         <FormField
           name="business_email"
           render={({ field }) => (
@@ -103,14 +95,12 @@ const BusinessProfileFields: React.FC<BusinessProfileFieldsProps> = ({
                 <Input
                   {...field}
                   type="email"
-                  className={`${readOnly ? "bg-gray-50" : ""}`}
-                  placeholder="business@example.com"
+                  placeholder="Enter your business email"
                   readOnly={readOnly}
+                  className={readOnly ? "bg-gray-50" : ""}
                 />
               </FormControl>
-              {errors.business_email && (
-                <FormMessage>{errors.business_email.message}</FormMessage>
-              )}
+              {errors.business_email && <FormMessage>{errors.business_email.message}</FormMessage>}
             </FormItem>
           )}
         />
@@ -123,14 +113,13 @@ const BusinessProfileFields: React.FC<BusinessProfileFieldsProps> = ({
               <FormControl>
                 <Input
                   {...field}
-                  className={`${readOnly ? "bg-gray-50" : ""}`}
-                  placeholder="+123456789"
+                  type="tel"
+                  placeholder="Enter your business phone"
                   readOnly={readOnly}
+                  className={readOnly ? "bg-gray-50" : ""}
                 />
               </FormControl>
-              {errors.business_phone && (
-                <FormMessage>{errors.business_phone.message}</FormMessage>
-              )}
+              {errors.business_phone && <FormMessage>{errors.business_phone.message}</FormMessage>}
             </FormItem>
           )}
         />
@@ -143,22 +132,37 @@ const BusinessProfileFields: React.FC<BusinessProfileFieldsProps> = ({
               <FormControl>
                 <Input
                   {...field}
-                  className={`${readOnly ? "bg-gray-50" : ""}`}
-                  placeholder="https://example.com"
+                  placeholder="e.g., www.yourbusiness.com"
                   readOnly={readOnly}
+                  className={readOnly ? "bg-gray-50" : ""}
                 />
               </FormControl>
-              {errors.business_website && (
-                <FormMessage>{errors.business_website.message}</FormMessage>
-              )}
+              {errors.business_website && <FormMessage>{errors.business_website.message}</FormMessage>}
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          name="business_address"
+          render={({ field }) => (
+            <FormItem className="md:col-span-2">
+              <FormLabel>Business Description</FormLabel>
+              <FormControl>
+                <Textarea
+                  {...field}
+                  placeholder="Enter a description of your business"
+                  rows={3}
+                  readOnly={readOnly}
+                  className={readOnly ? "bg-gray-50" : ""}
+                />
+              </FormControl>
+              {errors.business_address && <FormMessage>{errors.business_address.message}</FormMessage>}
             </FormItem>
           )}
         />
       </div>
-      
-      <Separator className="my-6" />
-      <h3 className="text-lg font-medium mb-4">Social Media</h3>
-      
+
+      <h3 className="text-lg font-medium mt-6 mb-4">Social Media & Contact</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <FormField
           name="business_whatsapp"
@@ -168,14 +172,12 @@ const BusinessProfileFields: React.FC<BusinessProfileFieldsProps> = ({
               <FormControl>
                 <Input
                   {...field}
-                  className={`${readOnly ? "bg-gray-50" : ""}`}
-                  placeholder="+123456789"
+                  placeholder="Enter WhatsApp number"
                   readOnly={readOnly}
+                  className={readOnly ? "bg-gray-50" : ""}
                 />
               </FormControl>
-              {errors.business_whatsapp && (
-                <FormMessage>{errors.business_whatsapp.message}</FormMessage>
-              )}
+              {errors.business_whatsapp && <FormMessage>{errors.business_whatsapp.message}</FormMessage>}
             </FormItem>
           )}
         />
@@ -188,14 +190,12 @@ const BusinessProfileFields: React.FC<BusinessProfileFieldsProps> = ({
               <FormControl>
                 <Input
                   {...field}
-                  className={`${readOnly ? "bg-gray-50" : ""}`}
-                  placeholder="+123456789"
+                  placeholder="Enter WhatsApp Business number"
                   readOnly={readOnly}
+                  className={readOnly ? "bg-gray-50" : ""}
                 />
               </FormControl>
-              {errors.business_whatsapp_business && (
-                <FormMessage>{errors.business_whatsapp_business.message}</FormMessage>
-              )}
+              {errors.business_whatsapp_business && <FormMessage>{errors.business_whatsapp_business.message}</FormMessage>}
             </FormItem>
           )}
         />
@@ -208,14 +208,12 @@ const BusinessProfileFields: React.FC<BusinessProfileFieldsProps> = ({
               <FormControl>
                 <Input
                   {...field}
-                  className={`${readOnly ? "bg-gray-50" : ""}`}
-                  placeholder="@your_instagram"
+                  placeholder="@yourbusiness"
                   readOnly={readOnly}
+                  className={readOnly ? "bg-gray-50" : ""}
                 />
               </FormControl>
-              {errors.business_instagram && (
-                <FormMessage>{errors.business_instagram.message}</FormMessage>
-              )}
+              {errors.business_instagram && <FormMessage>{errors.business_instagram.message}</FormMessage>}
             </FormItem>
           )}
         />
@@ -224,18 +222,16 @@ const BusinessProfileFields: React.FC<BusinessProfileFieldsProps> = ({
           name="business_facebook"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Facebook Page</FormLabel>
+              <FormLabel>Facebook Page URL</FormLabel>
               <FormControl>
                 <Input
                   {...field}
-                  className={`${readOnly ? "bg-gray-50" : ""}`}
-                  placeholder="facebook.com/your_page"
+                  placeholder="https://facebook.com/yourbusiness"
                   readOnly={readOnly}
+                  className={readOnly ? "bg-gray-50" : ""}
                 />
               </FormControl>
-              {errors.business_facebook && (
-                <FormMessage>{errors.business_facebook.message}</FormMessage>
-              )}
+              {errors.business_facebook && <FormMessage>{errors.business_facebook.message}</FormMessage>}
             </FormItem>
           )}
         />
@@ -248,70 +244,60 @@ const BusinessProfileFields: React.FC<BusinessProfileFieldsProps> = ({
               <FormControl>
                 <Input
                   {...field}
-                  className={`${readOnly ? "bg-gray-50" : ""}`}
                   placeholder="Google Maps URL"
                   readOnly={readOnly}
+                  className={readOnly ? "bg-gray-50" : ""}
                 />
               </FormControl>
-              {errors.business_google_maps && (
-                <FormMessage>{errors.business_google_maps.message}</FormMessage>
-              )}
+              {errors.business_google_maps && <FormMessage>{errors.business_google_maps.message}</FormMessage>}
             </FormItem>
           )}
         />
       </div>
       
-      <Separator className="my-6" />
-      <h3 className="text-lg font-medium mb-4">Business Hours</h3>
+      <div className="mt-6">
+        <BusinessHoursField />
+      </div>
       
-      <BusinessHoursField />
-      
-      <Separator className="my-6" />
-      <h3 className="text-lg font-medium mb-4">TMW AI Chatbot</h3>
-      
-      <div className="space-y-6">
-        <div className="flex items-center space-x-2">
-          <FormField
-            name="business_chatbot_enabled"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-center space-x-3 space-y-0">
-                <FormControl>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                    disabled={readOnly}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <Label htmlFor="chatbot-enabled">
-                    Enable TMW AI Chatbot
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    Add an AI chatbot to your business page
-                  </p>
-                </div>
-              </FormItem>
-            )}
-          />
-        </div>
+      <h3 className="text-lg font-medium mt-6 mb-4">TMW AI Chatbot</h3>
+      <div className="space-y-4">
+        <FormField
+          name="business_chatbot_enabled"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <FormLabel className="text-base">Enable Chatbot</FormLabel>
+                <FormMessage />
+              </div>
+              <FormControl>
+                <input
+                  type="checkbox"
+                  checked={field.value}
+                  onChange={field.onChange}
+                  disabled={readOnly}
+                  className="mr-2 h-4 w-4"
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
         
-        {chatbotEnabled && (
+        {watch('business_chatbot_enabled') && (
           <FormField
             name="business_chatbot_code"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Chatbot Code</FormLabel>
+                <FormLabel>Chatbot Embed Code</FormLabel>
                 <FormControl>
                   <Textarea
                     {...field}
-                    className={`${readOnly ? "bg-gray-50" : ""} min-h-[150px] font-mono text-sm`}
-                    placeholder="Paste your chatbot code here"
+                    placeholder="Paste your chatbot embed code here"
+                    rows={5}
                     readOnly={readOnly}
+                    className={readOnly ? "bg-gray-50" : ""}
                   />
                 </FormControl>
-                {errors.business_chatbot_code && (
-                  <FormMessage>{errors.business_chatbot_code.message}</FormMessage>
-                )}
+                {errors.business_chatbot_code && <FormMessage>{errors.business_chatbot_code.message}</FormMessage>}
               </FormItem>
             )}
           />

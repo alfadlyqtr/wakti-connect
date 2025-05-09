@@ -36,6 +36,9 @@ export interface ProfileFormData {
   
   // Contact fields
   telephone?: string;
+  
+  // Profile slug for sharing
+  slug?: string;
 }
 
 interface ProfileFormOptions {
@@ -77,6 +80,7 @@ export const useProfileForm = (
       business_chatbot_enabled: (profile as any)?.business_chatbot_enabled || false,
       business_chatbot_code: (profile as any)?.business_chatbot_code || '',
       telephone: profile?.telephone || '',
+      slug: profile?.slug || '',
     }
   });
   
