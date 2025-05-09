@@ -3,6 +3,7 @@ export type TextAlignment = 'left' | 'center' | 'right';
 export type HeadingStyle = 'default' | 'serif' | 'modern' | 'minimal';
 export type ButtonStyle = 'default' | 'outline' | 'minimal' | 'rounded';
 export type SectionSpacing = 'compact' | 'default' | 'spacious';
+export type LogoShape = 'circle' | 'square';
 
 export interface SectionType {
   id: string;
@@ -74,10 +75,11 @@ export interface BusinessPageData {
     businessName: string;
     alignment: TextAlignment;
     visible: boolean;
+    description?: string;
   };
   logo: {
     url: string;
-    shape: string;
+    shape: LogoShape;
     alignment: string;
     visible: boolean;
   };

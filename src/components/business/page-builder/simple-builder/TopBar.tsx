@@ -99,7 +99,7 @@ const TopBar: React.FC<TopBarProps> = ({
           className="gap-1"
         >
           <Eye className="h-4 w-4 mr-1" />
-          Preview
+          {isEditMode ? 'Preview' : 'Edit'}
         </Button>
         
         <Button 
