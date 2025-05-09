@@ -10,6 +10,14 @@ export type PublicBusinessProfile = Tables<"profiles"> & {
     duration: number;
     price: number | null;
   }[];
+  business_hours?: string;
+  business_chatbot_enabled?: boolean;
+  business_chatbot_code?: string;
+  business_whatsapp?: string;
+  business_whatsapp_business?: string;
+  business_instagram?: string;
+  business_facebook?: string;
+  business_google_maps?: string;
 };
 
 export const getPublicProfileBySlug = async (slug: string): Promise<PublicBusinessProfile | null> => {

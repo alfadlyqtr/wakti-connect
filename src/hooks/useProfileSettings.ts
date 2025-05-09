@@ -9,6 +9,15 @@ export type ProfileWithEmail = Tables<"profiles"> & {
   business_email?: string;
   business_phone?: string;
   business_website?: string;
+  business_whatsapp?: string;
+  business_whatsapp_business?: string;
+  business_instagram?: string;
+  business_facebook?: string;
+  business_google_maps?: string;
+  business_hours?: string;
+  business_chatbot_enabled?: boolean;
+  business_chatbot_code?: string;
+  slug?: string;
 };
 
 export const useProfileSettings = () => {
@@ -65,7 +74,18 @@ export const useProfileSettings = () => {
               po_box: '',
               business_type: '',
               business_address: '',
-              // Add the missing properties that were added in our SQL migration
+              business_email: '',
+              business_phone: '',
+              business_website: '',
+              business_whatsapp: '',
+              business_whatsapp_business: '',
+              business_instagram: '',
+              business_facebook: '',
+              business_google_maps: '',
+              business_hours: '',
+              business_chatbot_enabled: false,
+              business_chatbot_code: '',
+              slug: '',
               is_active: true,
               last_login_at: null,
               email: session.user.email
@@ -173,7 +193,7 @@ export const useProfileSettings = () => {
     data,
     isLoading,
     error,
-    updateProfile: updateProfile.mutate,
-    isUpdating: updateProfile.isPending
+    updateProfile: updateProfile?.mutate,
+    isUpdating: updateProfile?.isPending
   };
 };
