@@ -209,7 +209,7 @@ const BusinessPageBuilder: React.FC = () => {
   // Create a page data context provider and render the page builder interface
   return (
     <BusinessPageContext.Provider value={{
-      pageData: pageData.page_data,
+      pageData: pageData.page_data as any,
       updatePageData: handleSavePageData,
       updateSectionData: handleUpdateSection,
       saveStatus: saveStatus,

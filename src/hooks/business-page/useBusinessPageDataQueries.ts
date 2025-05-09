@@ -46,7 +46,7 @@ export const useBusinessPageDataQuery = (userId?: string) => {
         return null;
       }
 
-      // Return the data as is, the component will handle default values
+      // Cast the data to the correct type
       return data as unknown as BusinessPageDataRecord;
     },
     enabled: !!effectiveUserId
