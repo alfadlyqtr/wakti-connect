@@ -123,6 +123,11 @@ export const useProfileSettings = () => {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) throw new Error("No active session");
         
+        // Handle special business_hours field if it's an object (to prevent JSON errors)
+        if (updatedData.business_hours && typeof updatedData.business_hours === 'object') {
+          updatedData.business_hours = JSON.stringify(updatedData.business_hours);
+        }
+        
         // Remove email property as it's not in the profiles table
         const { email, ...profileData } = updatedData;
         

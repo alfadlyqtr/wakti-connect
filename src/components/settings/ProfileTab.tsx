@@ -11,6 +11,8 @@ import FeedbackForm from "./profile/FeedbackForm";
 import { User, Palette, MessageSquare, UserCog } from "lucide-react";
 import AccountInfoForm from "./account/AccountInfoForm";
 import { useStaffPermissions } from "@/hooks/useStaffPermissions";
+import BusinessProfileTab from "./profile/BusinessProfileTab";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface ProfileTabProps {
   profile?: (Tables<"profiles"> & {
@@ -53,6 +55,98 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ profile: propProfile }) => {
   
   const isBusinessAccount = profile.account_type === 'business';
   
+  // If it's a business account, show the business profile tab with a simplified form
+  if (isBusinessAccount) {
+    return (
+      <div className="space-y-6">
+        {/* Account Information Section - First card */}
+        <Card className="border-gray-200 shadow-sm overflow-hidden">
+          <CardHeader className="px-4 sm:px-6 pb-4 bg-gradient-to-r from-wakti-blue/5 to-wakti-blue/10">
+            <div className="flex items-center gap-2">
+              <UserCog className="h-5 w-5 text-wakti-blue" />
+              <div>
+                <CardTitle>Account Information</CardTitle>
+                <CardDescription>
+                  {isStaff ? "View your account settings" : "Manage your account settings and personal details"}
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="px-4 sm:px-6 pt-4">
+            <div className={`${isMobile ? 'flex flex-col' : 'flex items-center'} gap-4 mb-5`}>
+              <ProfileAvatar profile={profile} />
+            </div>
+            <AccountInfoForm profile={profile} />
+          </CardContent>
+        </Card>
+        
+        {/* Simplified Business Profile Tab */}
+        <BusinessProfileTab />
+        
+        {/* Full Details Section - With Tabs */}
+        <Card className="border-gray-200 shadow-sm overflow-hidden">
+          <CardHeader className="px-4 sm:px-6 pb-4 bg-gradient-to-r from-wakti-blue/5 to-wakti-blue/10">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <User className="h-5 w-5 text-wakti-blue" />
+                <div>
+                  <CardTitle>Additional Information</CardTitle>
+                  <CardDescription>
+                    {isStaff 
+                      ? "View detailed information" 
+                      : "Manage additional business details"
+                    }
+                  </CardDescription>
+                </div>
+              </div>
+              <span className="text-xs bg-wakti-blue/10 text-wakti-blue px-3 py-1 rounded-full font-medium">
+                Advanced Settings
+              </span>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-5 px-4 sm:px-6 pt-4">
+            <ProfileForm profile={profile} />
+          </CardContent>
+        </Card>
+        
+        {/* Theme Toggle Section - Third card */}
+        <Card className="border-gray-200 shadow-sm overflow-hidden">
+          <CardHeader className="px-4 sm:px-6 pb-4 bg-gradient-to-r from-wakti-blue/5 to-wakti-blue/10">
+            <div className="flex items-center gap-2">
+              <Palette className="h-5 w-5 text-wakti-blue" />
+              <div>
+                <CardTitle>Appearance Settings</CardTitle>
+                <CardDescription>Choose your preferred theme</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="px-4 sm:px-6 pt-4">
+            <ThemeToggle initialTheme={profile.theme_preference || 'light'} />
+          </CardContent>
+        </Card>
+        
+        {/* Feedback Section - Last card - Hide for staff users */}
+        {!isStaff && (
+          <Card className="border-gray-200 shadow-sm overflow-hidden">
+            <CardHeader className="px-4 sm:px-6 pb-4 bg-gradient-to-r from-wakti-blue/5 to-wakti-blue/10">
+              <div className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5 text-wakti-blue" />
+                <div>
+                  <CardTitle>Feedback</CardTitle>
+                  <CardDescription>Share your thoughts with us</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="px-4 sm:px-6 pt-4">
+              <FeedbackForm />
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    );
+  }
+  
+  // For non-business accounts, show the original layout
   return (
     <div className="space-y-6">
       {/* Account Information Section - First card */}
@@ -83,21 +177,15 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ profile: propProfile }) => {
             <div className="flex items-center gap-2">
               <User className="h-5 w-5 text-wakti-blue" />
               <div>
-                <CardTitle>{isBusinessAccount ? "Business Details" : "Profile Information"}</CardTitle>
+                <CardTitle>Profile Information</CardTitle>
                 <CardDescription>
                   {isStaff 
                     ? "View your profile information" 
-                    : isBusinessAccount
-                      ? "Manage your business information and contact details"
-                      : "Update your public profile information"}
+                    : "Update your public profile information"
+                  }
                 </CardDescription>
               </div>
             </div>
-            {isBusinessAccount && (
-              <span className="text-xs bg-wakti-blue/10 text-wakti-blue px-3 py-1 rounded-full font-medium">
-                Business Account
-              </span>
-            )}
           </div>
         </CardHeader>
         <CardContent className="space-y-5 px-4 sm:px-6 pt-4">
