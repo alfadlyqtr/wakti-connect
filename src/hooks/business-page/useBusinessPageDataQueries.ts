@@ -5,7 +5,7 @@ import { BusinessPageData } from "@/components/business/page-builder/simple-buil
 import { useUser } from "@/hooks/auth/useUser";
 
 // Define the type directly here since the import was causing an error
-type BusinessPageDataRecord = {
+export type BusinessPageDataRecord = {
   id: string;
   user_id: string;
   page_slug?: string;
@@ -46,8 +46,11 @@ export const useBusinessPageDataQuery = (userId?: string) => {
         return null;
       }
 
-      // Cast the data to the correct type
-      return data as unknown as BusinessPageDataRecord;
+      // Properly cast the data to our expected record type with proper type assertion
+      return {
+        ...data,
+        page_data: data.page_data as unknown as BusinessPageData
+      } as BusinessPageDataRecord;
     },
     enabled: !!effectiveUserId
   });
