@@ -31,11 +31,68 @@ const PageBuilderEmptyState: React.FC<PageBuilderEmptyStateProps> = ({ createPag
     
     try {
       await createPage({
-        business_id: user?.id,
-        page_title: pageName,
-        is_published: false,
-        primary_color: "#3B82F6",
-        secondary_color: "#60A5FA"
+        userId: user?.id,  // Changed from business_id to userId to match the API
+        pageData: {        // Added pageData object to match the mutation function
+          pageSetup: {
+            businessName: pageName,
+            alignment: "center",
+            visible: true
+          },
+          logo: { url: "", shape: "circle", alignment: "center", visible: true },
+          bookings: { viewStyle: "grid", templates: [], visible: true },
+          socialInline: { 
+            style: "icon", 
+            platforms: {
+              whatsapp: false,
+              whatsappBusiness: false,
+              facebook: false,
+              instagram: false,
+              googleMaps: false,
+              phone: false,
+              email: false
+            },
+            visible: true
+          },
+          workingHours: { 
+            layout: "card", 
+            hours: [], 
+            visible: true
+          },
+          chatbot: { 
+            position: "right", 
+            embedCode: "", 
+            visible: false
+          },
+          theme: {
+            backgroundColor: "#ffffff",
+            textColor: "#000000",
+            fontStyle: "sans-serif"
+          },
+          socialSidebar: { 
+            position: "right", 
+            platforms: {
+              whatsapp: false,
+              whatsappBusiness: false,
+              facebook: false,
+              instagram: false,
+              googleMaps: false,
+              phone: false,
+              email: false
+            },
+            visible: false
+          },
+          contactInfo: {
+            email: "",
+            whatsapp: "",
+            whatsappBusiness: "",
+            phone: "",
+            facebook: "",
+            googleMaps: "",
+            instagram: ""
+          },
+          sectionOrder: ["pageSetup", "logo", "bookings", "socialInline", "workingHours"],
+          published: false
+        }
       });
       
       toast({
