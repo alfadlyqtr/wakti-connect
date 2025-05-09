@@ -3,7 +3,7 @@ import { RouteObject, Navigate } from "react-router-dom";
 import BookingPage from "@/pages/booking/BookingPage";
 import BookingConfirmationPage from "@/pages/booking/BookingConfirmationPage";
 
-// Empty business routes - all redirected to home
+// Empty business routes - all removed
 export const businessRoutes: RouteObject[] = [];
 
 // Booking routes - now completely separate from business routes

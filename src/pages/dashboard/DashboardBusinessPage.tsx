@@ -1,17 +1,8 @@
 
 import React from "react";
-import { Helmet } from "react-helmet-async";
-import SimplePageBuilder from "@/components/business/page-builder/SimplePageBuilder";
+import { Navigate } from "react-router-dom";
 
-const DashboardBusinessPage = () => {
-  return (
-    <>
-      <Helmet>
-        <title>Business Page Builder | WAKTI</title>
-      </Helmet>
-      <SimplePageBuilder />
-    </>
-  );
-};
+// Redirect to dashboard instead of showing business page
+const DashboardBusinessPage = () => <Navigate to="/dashboard" replace />;
 
 export default DashboardBusinessPage;

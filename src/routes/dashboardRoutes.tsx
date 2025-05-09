@@ -5,7 +5,6 @@ import SimpleInvitationCreator from '@/components/invitations/SimpleInvitationCr
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getSimpleInvitationById } from '@/services/invitation/simple-invitations';
-import SimplePageBuilder from '@/components/business/page-builder/SimplePageBuilder';
 
 const InvitationEdit = () => {
   const { id } = useParams<{ id: string }>();
@@ -51,10 +50,7 @@ export const dashboardRoutes = [
     path: "events/edit/:id",
     element: <InvitationEdit />,
   },
-  {
-    path: "business-page",
-    element: <SimplePageBuilder />,
-  },
+  // Business page route removed
 ];
 
 export default dashboardRoutes;

@@ -1,9 +1,7 @@
 
 import React from "react";
-import SimpleBusinessPageBuilder from "./SimpleBusinessPageBuilder";
 
-const SimplePageBuilder = () => {
-  return <SimpleBusinessPageBuilder />;
-};
+// This is a placeholder for the removed SimplePageBuilder component
+const SimplePageBuilder = () => null;
 
 export default SimplePageBuilder;
