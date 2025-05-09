@@ -24,21 +24,8 @@ export interface ProfileFormData {
   business_phone?: string;
   business_website?: string;
   
-  // New business social media and contact fields
-  business_whatsapp?: string;
-  business_whatsapp_business?: string;
-  business_instagram?: string;
-  business_facebook?: string;
-  business_google_maps?: string;
-  business_hours?: string;
-  business_chatbot_enabled?: boolean;
-  business_chatbot_code?: string;
-  
   // Contact fields
   telephone?: string;
-  
-  // Profile slug for sharing
-  slug?: string;
 }
 
 interface ProfileFormOptions {
@@ -70,17 +57,7 @@ export const useProfileForm = (
       business_email: (profile as any)?.business_email || '',
       business_phone: (profile as any)?.business_phone || '',
       business_website: (profile as any)?.business_website || '',
-      // New business fields
-      business_whatsapp: (profile as any)?.business_whatsapp || '',
-      business_whatsapp_business: (profile as any)?.business_whatsapp_business || '',
-      business_instagram: (profile as any)?.business_instagram || '',
-      business_facebook: (profile as any)?.business_facebook || '',
-      business_google_maps: (profile as any)?.business_google_maps || '',
-      business_hours: (profile as any)?.business_hours || '',
-      business_chatbot_enabled: (profile as any)?.business_chatbot_enabled || false,
-      business_chatbot_code: (profile as any)?.business_chatbot_code || '',
       telephone: profile?.telephone || '',
-      slug: profile?.slug || '',
     }
   });
   
@@ -117,15 +94,6 @@ export const useProfileForm = (
         business_email: data.business_email as any,
         business_phone: data.business_phone as any,
         business_website: data.business_website as any,
-        // New business fields
-        business_whatsapp: data.business_whatsapp as any,
-        business_whatsapp_business: data.business_whatsapp_business as any,
-        business_instagram: data.business_instagram as any,
-        business_facebook: data.business_facebook as any,
-        business_google_maps: data.business_google_maps as any,
-        business_hours: data.business_hours as any,
-        business_chatbot_enabled: data.business_chatbot_enabled as any,
-        business_chatbot_code: data.business_chatbot_code as any,
         telephone: data.telephone
       });
       
