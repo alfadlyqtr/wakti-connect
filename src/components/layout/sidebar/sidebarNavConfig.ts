@@ -17,7 +17,6 @@ import {
   Bell,
   MessageSquare,
   Calendar,
-  Building2,
 } from "lucide-react";
 import { UserRole } from "@/types/roles";
 
@@ -70,12 +69,7 @@ export const navItems = [
     icon: Users,
     showFor: ["business"],
   },
-  {
-    path: "business-page",
-    label: "Business Page",
-    icon: Building2,
-    showFor: ["business"],
-  },
+  // Business Page entry removed
   {
     path: "analytics",
     label: "Analytics",
