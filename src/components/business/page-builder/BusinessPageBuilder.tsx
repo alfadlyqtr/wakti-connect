@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { BusinessPage } from "@/types/business.types";
-import { useAuth } from "@/hooks/useAuth"; // Using correct import path
+import { useAuth } from "@/hooks/useAuth/index"; // Using correct import path
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useBusinessPageDataQuery } from "@/hooks/business-page/useBusinessPageDataQueries";
 import PageBuilderEmptyState from "./PageBuilderEmptyState";
@@ -15,7 +15,8 @@ import { PreviewPanel } from "./components/PreviewPanel";
 // The main business page builder component
 const BusinessPageBuilder: React.FC = () => {
   const { user } = useAuth();
-  const { profile } = useUserProfile();
+  const { profile } = useUserProfile(user?.id || ""); // Provide user ID or empty string to prevent error
+  
   const [isPublishing, setIsPublishing] = useState(false);
   
   // Query to fetch the business page data - passing user ID properly
