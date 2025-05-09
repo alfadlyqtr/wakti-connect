@@ -3,7 +3,6 @@ import { createRoot } from 'react-dom/client';
 import App from './App';
 import './index.css';
 import './App.css';
-import { AuthProvider } from '@/features/auth/context/AuthContext';
 import { CurrencyProvider } from './contexts/CurrencyContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from "@/components/theme-provider";
@@ -28,11 +27,9 @@ root.render(
   <QueryClientProvider client={queryClient}>
     <HelmetProvider>
       <ThemeProvider defaultTheme="system" storageKey="ui-theme">
-        <AuthProvider>
-          <CurrencyProvider>
-            <App />
-          </CurrencyProvider>
-        </AuthProvider>
+        <CurrencyProvider>
+          <App />
+        </CurrencyProvider>
       </ThemeProvider>
     </HelmetProvider>
   </QueryClientProvider>

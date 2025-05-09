@@ -1,9 +1,8 @@
 
 import { createBrowserRouter } from "react-router-dom";
-import App from "./App";
 import PublicLayout from "@/components/layout/PublicLayout";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
-import AuthLayout from "@/features/auth/components/AuthShell";
+import AuthShell from "@/features/auth/components/AuthShell";
 import { publicRoutes } from "./routes";
 import { authRoutes } from "./routes";
 import { dashboardRoutes } from "./routes/dashboardRoutes";
@@ -12,9 +11,14 @@ import { businessRoutes } from "./routes";
 import SlugResolver from "./components/business/SlugResolver";
 import BusinessProfilePage from "./pages/BusinessProfilePage";
 
+// Root application layout that doesn't depend on App.tsx
+const RootLayout = ({ children }: { children: React.ReactNode }) => {
+  return <>{children}</>;
+};
+
 export const router = createBrowserRouter([
   {
-    element: <App />,
+    element: <RootLayout />,
     children: [
       {
         element: <PublicLayout />,
@@ -22,7 +26,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "auth/*",
-        element: <AuthLayout />,
+        element: <AuthShell />,
         children: authRoutes,
       },
       {
