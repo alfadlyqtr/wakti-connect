@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProfileTab from "@/components/settings/ProfileTab";
@@ -8,6 +9,7 @@ import CurrencyTab from "@/components/settings/CurrencyTab";
 import BillingTab from "@/components/settings/BillingTab";
 import { useProfileSettings } from "@/hooks/useProfileSettings";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import BusinessProfileTab from "@/components/settings/BusinessProfileTab";
 
 const DashboardSettings = () => {
   const [userRole, setUserRole] = useState<string | null>(null);
@@ -38,11 +40,16 @@ const DashboardSettings = () => {
         </p>
       </div>
       
-      <Tabs defaultValue="profile" className="space-y-6">
+      <Tabs defaultValue="account" className="space-y-6">
         <TabsList className="flex overflow-x-auto no-scrollbar">
-          <TabsTrigger value="profile" className="px-3 py-1.5 whitespace-nowrap">
-            {isBusinessAccount ? "Business Account" : "Profile"}
+          <TabsTrigger value="account" className="px-3 py-1.5 whitespace-nowrap">
+            Account Info
           </TabsTrigger>
+          {isBusinessAccount && (
+            <TabsTrigger value="business-profile" className="px-3 py-1.5 whitespace-nowrap">
+              Business Profile
+            </TabsTrigger>
+          )}
           <TabsTrigger value="notifications" className="px-3 py-1.5 whitespace-nowrap">
             Notifications
           </TabsTrigger>
@@ -63,9 +70,15 @@ const DashboardSettings = () => {
           )}
         </TabsList>
         
-        <TabsContent value="profile" className="space-y-4">
+        <TabsContent value="account" className="space-y-4">
           <ProfileTab />
         </TabsContent>
+        
+        {isBusinessAccount && (
+          <TabsContent value="business-profile" className="space-y-4">
+            <BusinessProfileTab />
+          </TabsContent>
+        )}
         
         <TabsContent value="notifications" className="space-y-4">
           <NotificationsTab />

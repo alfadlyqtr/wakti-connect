@@ -1707,8 +1707,11 @@ export type Database = {
           auto_approve_contacts: boolean | null
           avatar_url: string | null
           business_address: string | null
+          business_email: string | null
           business_name: string | null
+          business_phone: string | null
           business_type: string | null
+          business_website: string | null
           city: string | null
           country: string | null
           created_at: string
@@ -1725,6 +1728,7 @@ export type Database = {
           occupation: string | null
           po_box: string | null
           postal_code: string | null
+          slug: string | null
           state_province: string | null
           street_address: string | null
           telephone: string | null
@@ -1737,8 +1741,11 @@ export type Database = {
           auto_approve_contacts?: boolean | null
           avatar_url?: string | null
           business_address?: string | null
+          business_email?: string | null
           business_name?: string | null
+          business_phone?: string | null
           business_type?: string | null
+          business_website?: string | null
           city?: string | null
           country?: string | null
           created_at?: string
@@ -1755,6 +1762,7 @@ export type Database = {
           occupation?: string | null
           po_box?: string | null
           postal_code?: string | null
+          slug?: string | null
           state_province?: string | null
           street_address?: string | null
           telephone?: string | null
@@ -1767,8 +1775,11 @@ export type Database = {
           auto_approve_contacts?: boolean | null
           avatar_url?: string | null
           business_address?: string | null
+          business_email?: string | null
           business_name?: string | null
+          business_phone?: string | null
           business_type?: string | null
+          business_website?: string | null
           city?: string | null
           country?: string | null
           created_at?: string
@@ -1785,6 +1796,7 @@ export type Database = {
           occupation?: string | null
           po_box?: string | null
           postal_code?: string | null
+          slug?: string | null
           state_province?: string | null
           street_address?: string | null
           telephone?: string | null
@@ -2396,6 +2408,10 @@ export type Database = {
       expire_old_messages: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      generate_slug: {
+        Args: { name: string }
+        Returns: string
       }
       generate_unique_business_slug: {
         Args: { business_name: string }
