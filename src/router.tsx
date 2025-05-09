@@ -2,11 +2,11 @@
 import { createBrowserRouter } from "react-router-dom";
 import App from "./App";
 import PublicLayout from "@/components/layout/PublicLayout";
-import DashboardLayout from "@/features/dashboard/layout/DashboardLayout";
-import AuthLayout from "@/features/auth/layout/AuthLayout";
+import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import AuthLayout from "@/features/auth/components/AuthShell";
 import { publicRoutes } from "./routes";
 import { authRoutes } from "./routes";
-import { dashboardRoutes } from "@/features/dashboard/routes";
+import { dashboardRoutes } from "./routes/dashboardRoutes";
 import { superadminRoutes } from "./routes";
 import { businessRoutes } from "./routes";
 import SlugResolver from "./components/business/SlugResolver";
