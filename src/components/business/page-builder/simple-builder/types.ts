@@ -1,4 +1,9 @@
 
+export type TextAlignment = 'left' | 'center' | 'right';
+export type HeadingStyle = 'default' | 'serif' | 'modern' | 'minimal';
+export type ButtonStyle = 'default' | 'outline' | 'minimal' | 'rounded';
+export type SectionSpacing = 'compact' | 'default' | 'spacious';
+
 export interface SectionType {
   id: string;
   type: string;
@@ -7,6 +12,8 @@ export interface SectionType {
   description?: string;
   content: Record<string, any>;
   activeLayout: string;
+  image?: string;
+  backgroundImageUrl?: string;
 }
 
 export interface PageSettings {
@@ -38,4 +45,11 @@ export interface PageSettings {
   }>;
   googleMapsUrl: string;
   tmwChatbotCode: string;
+  
+  // New properties to fix type errors
+  textAlignment?: TextAlignment;
+  headingStyle?: HeadingStyle;
+  buttonStyle?: ButtonStyle;
+  sectionSpacing?: SectionSpacing;
+  contentMaxWidth?: string;
 }

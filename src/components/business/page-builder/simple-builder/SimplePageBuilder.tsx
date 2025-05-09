@@ -1,43 +1,34 @@
 
 import React, { useState, useEffect } from "react";
-import { useAuth } from "@/hooks/useAuth/index";
+import { useUser } from "@/hooks/auth/useUser";
+import { v4 as uuidv4 } from "uuid";
 import { toast } from "@/components/ui/use-toast";
 import TopBar from "./TopBar";
 import EditorPanel from "./EditorPanel";
 import PagePreview from "./PagePreview";
-import { SectionType, PageSettings } from "./types";
-import { useCreateBusinessPageDataMutation, useBusinessPageDataQuery, useUpdateBusinessPageDataMutation } from "@/hooks/business-page/useBusinessPageDataMutations";
+import { SectionType, PageSettings, TextAlignment } from "./types";
+import { useCreateBusinessPageDataMutation, useUpdateBusinessPageDataMutation } from "@/hooks/business-page/useBusinessPageDataMutations";
+import { useBusinessPageDataQuery } from "@/hooks/business-page/useBusinessPageDataQueries";
 
 const SimplePageBuilder: React.FC = () => {
-  const { user } = useAuth();
+  const { user } = useUser();
+  const [activeTab, setActiveTab] = useState("sections");
   const [sections, setSections] = useState<SectionType[]>([]);
   const [activeSectionIndex, setActiveSectionIndex] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState("sections");
-  const [isEditMode, setIsEditMode] = useState(true);
+  const [isEditMode, setEditMode] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   
-  // Get existing page data if it exists
-  const {
-    data: pageData,
-    isLoading,
-    refetch
-  } = useBusinessPageDataQuery(user?.id || undefined);
-  
-  // Mutations for creating and updating page data
-  const createPageMutation = useCreateBusinessPageDataMutation();
-  const updatePageMutation = useUpdateBusinessPageDataMutation();
-  
-  const [pageSettings, setPageSettings] = useState<PageSettings>({
+  const defaultPageSettings: PageSettings = {
     title: "My Business Page",
     slug: "",
-    primaryColor: "#4f46e5",
-    secondaryColor: "#10b981",
-    description: "",
+    primaryColor: "#3B82F6",
+    secondaryColor: "#10B981",
+    description: "Welcome to my business page",
     isPublished: false,
-    fontFamily: "Inter",
-    textColor: "#000000",
-    backgroundColor: "#ffffff",
+    fontFamily: "Inter, sans-serif",
+    textColor: "#333333",
+    backgroundColor: "#FFFFFF",
     contactInfo: {
       email: "",
       phone: "",
@@ -56,190 +47,261 @@ const SimplePageBuilder: React.FC = () => {
       { day: "Wednesday", hours: "9:00 AM - 5:00 PM", isOpen: true },
       { day: "Thursday", hours: "9:00 AM - 5:00 PM", isOpen: true },
       { day: "Friday", hours: "9:00 AM - 5:00 PM", isOpen: true },
-      { day: "Saturday", hours: "10:00 AM - 3:00 PM", isOpen: false },
+      { day: "Saturday", hours: "10:00 AM - 3:00 PM", isOpen: true },
       { day: "Sunday", hours: "Closed", isOpen: false }
     ],
     googleMapsUrl: "",
-    tmwChatbotCode: ""
-  });
+    tmwChatbotCode: "",
+    textAlignment: "left",
+    headingStyle: "default",
+    buttonStyle: "default",
+    sectionSpacing: "default",
+    contentMaxWidth: "1200px"
+  };
   
-  // Initialize with default sections for a new page
+  const [pageSettings, setPageSettings] = useState<PageSettings>(defaultPageSettings);
+  
+  // Query for existing data
+  const { data: existingPageData, isLoading: isLoadingData } = useBusinessPageDataQuery(user?.id);
+  const createBusinessPageData = useCreateBusinessPageDataMutation();
+  const updateBusinessPageData = useUpdateBusinessPageDataMutation();
+  
+  // Initialize with default sections if none exist
   useEffect(() => {
-    if (!isLoading && !pageData && sections.length === 0) {
-      setSections([
+    if (!sections.length) {
+      const defaultSections: SectionType[] = [
         {
-          id: "header-" + Date.now(),
+          id: uuidv4(),
           type: "header",
-          title: "Business Name",
-          subtitle: "Your tagline goes here",
+          title: "Welcome to My Business",
+          subtitle: "Professional services at your fingertips",
           content: {
             logoUrl: "",
             alignment: "center"
           },
           activeLayout: "default"
-        },
-        {
-          id: "booking-" + Date.now(),
-          type: "booking",
-          title: "Our Services",
-          subtitle: "Book your appointment today",
-          content: {
-            displayType: "grid",
-            templates: []
-          },
-          activeLayout: "grid"
-        },
-        {
-          id: "hours-" + Date.now(),
-          type: "hours",
-          title: "Business Hours",
-          subtitle: "When you can visit us",
-          content: {},
-          activeLayout: "standard"
-        },
-        {
-          id: "social-" + Date.now(),
-          type: "social",
-          title: "Connect With Us",
-          subtitle: "",
-          content: {},
-          activeLayout: "horizontal"
         }
-      ]);
-    } else if (!isLoading && pageData) {
-      // If we have existing page data, load it
-      try {
-        // Load page settings
-        const data = pageData.page_data;
-        if (data) {
-          setPageSettings(prev => ({
-            ...prev,
-            title: data.pageSetup?.businessName || prev.title,
-            slug: pageData.page_slug || "",
-            isPublished: !!data.published,
-            primaryColor: data.theme?.backgroundColor || prev.primaryColor,
-            textColor: data.theme?.textColor || prev.textColor,
-            fontFamily: data.theme?.fontStyle || prev.fontFamily,
-            tmwChatbotCode: data.chatbot?.embedCode || ""
-          }));
-          
-          // Create sections based on the loaded data
-          const newSections: SectionType[] = [];
-          
-          // Header section
-          newSections.push({
-            id: "header-1",
-            type: "header",
-            title: data.pageSetup?.businessName || "Business Name",
-            subtitle: "Your tagline goes here",
-            content: {
-              logoUrl: data.logo?.url || "",
-              alignment: data.pageSetup?.alignment || "center"
-            },
-            activeLayout: "default"
-          });
-          
-          // Booking section
-          newSections.push({
-            id: "booking-1",
-            type: "booking",
-            title: "Our Services",
-            subtitle: "Book your appointment today",
-            content: {
-              displayType: data.bookings?.viewStyle || "grid",
-              templates: data.bookings?.templates || []
-            },
-            activeLayout: data.bookings?.viewStyle || "grid"
-          });
-          
-          // Hours section
-          newSections.push({
-            id: "hours-1",
-            type: "hours",
-            title: "Business Hours",
-            subtitle: "When you can visit us",
-            content: {
-              hours: data.workingHours?.hours || []
-            },
-            activeLayout: "standard"
-          });
-          
-          // Social section
-          newSections.push({
-            id: "social-1",
-            type: "social",
-            title: "Connect With Us",
-            subtitle: "",
-            content: {
-              platforms: data.socialInline?.platforms || {
-                whatsapp: false,
-                facebook: false,
-                instagram: false,
-                email: false,
-                phone: false
-              }
-            },
-            activeLayout: "horizontal"
-          });
-          
-          // Set the loaded sections
-          setSections(newSections);
+      ];
+      setSections(defaultSections);
+    }
+  }, [sections]);
+  
+  // Load existing data when available
+  useEffect(() => {
+    if (existingPageData && !isLoadingData) {
+      const pageData = existingPageData.page_data;
+      
+      if (pageData) {
+        // Load sections if available
+        if (pageData.sections && Array.isArray(pageData.sections)) {
+          setSections(pageData.sections);
         }
-      } catch (error) {
-        console.error("Error parsing page data:", error);
-        toast({
-          variant: "destructive",
-          title: "Error loading page data",
-          description: "Could not load your page data properly."
-        });
+        
+        // Load page settings if available
+        if (pageData.settings) {
+          setPageSettings({
+            ...defaultPageSettings,
+            ...pageData.settings
+          });
+        }
       }
     }
-  }, [isLoading, pageData]);
+  }, [existingPageData, isLoadingData]);
   
-  // Function to update a specific section
-  const updateSection = (index: number, section: SectionType) => {
-    const updatedSections = [...sections];
-    updatedSections[index] = section;
-    setSections(updatedSections);
+  const handleSave = async () => {
+    if (!user) {
+      toast({
+        title: "Not logged in",
+        description: "You need to be logged in to save your page",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsSaving(true);
+    
+    try {
+      const pageData = {
+        sections,
+        settings: pageSettings
+      };
+      
+      // If we have existing data, update it, otherwise create new
+      if (existingPageData) {
+        await updateBusinessPageData.mutateAsync({ 
+          id: existingPageData.id, 
+          pageData 
+        });
+      } else {
+        await createBusinessPageData.mutateAsync({ 
+          userId: user.id, 
+          pageData 
+        });
+      }
+      
+      toast({
+        title: "Page saved",
+        description: "Your page has been saved successfully",
+      });
+    } catch (error) {
+      console.error("Error saving page:", error);
+      toast({
+        title: "Failed to save",
+        description: "There was an error saving your page",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
   
-  // Function to add a new section
+  const handlePublish = async () => {
+    if (!user) {
+      toast({
+        title: "Not logged in",
+        description: "You need to be logged in to publish your page",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Ensure we have a slug
+    if (!pageSettings.slug) {
+      // Generate a slug from the title
+      const newSlug = pageSettings.title
+        .toLowerCase()
+        .replace(/[^\w\s]/g, '')
+        .replace(/\s+/g, '-');
+        
+      setPageSettings({
+        ...pageSettings,
+        slug: newSlug
+      });
+    }
+    
+    setIsPublishing(true);
+    
+    try {
+      const updatedSettings = {
+        ...pageSettings,
+        isPublished: true
+      };
+      
+      setPageSettings(updatedSettings);
+      
+      const pageData = {
+        sections,
+        settings: updatedSettings
+      };
+      
+      // If we have existing data, update it, otherwise create new
+      if (existingPageData) {
+        await updateBusinessPageData.mutateAsync({ 
+          id: existingPageData.id, 
+          pageData 
+        });
+      } else {
+        await createBusinessPageData.mutateAsync({ 
+          userId: user.id, 
+          pageData 
+        });
+      }
+      
+      toast({
+        title: "Page published",
+        description: `Your page is now live at ${pageSettings.slug}.wakti.app`,
+      });
+    } catch (error) {
+      console.error("Error publishing page:", error);
+      toast({
+        title: "Failed to publish",
+        description: "There was an error publishing your page",
+        variant: "destructive",
+      });
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+  
+  const handlePreview = () => {
+    setEditMode(false);
+    toast({
+      title: "Preview mode",
+      description: "You are now viewing your page as visitors will see it",
+    });
+  };
+  
   const addSection = (type: string) => {
-    // Create new section with empty default content
     const newSection: SectionType = {
-      id: `${type}-${Date.now()}`,
+      id: uuidv4(),
       type,
-      title: "",
+      title: `New ${type.charAt(0).toUpperCase() + type.slice(1)} Section`,
       subtitle: "",
       description: "",
       content: {},
-      activeLayout: type === 'header' ? 'default' : 'standard'
+      activeLayout: "default"
     };
+    
+    if (type === "header") {
+      newSection.content = { 
+        logoUrl: "", 
+        alignment: "center" as TextAlignment 
+      };
+    } else if (type === "booking") {
+      newSection.content = { 
+        templates: [], 
+        viewStyle: "grid" 
+      };
+    } else if (type === "hours") {
+      newSection.content = { 
+        hours: [...pageSettings.businessHours] 
+      };
+    } else if (type === "social") {
+      newSection.content = { 
+        platforms: { 
+          facebook: pageSettings.socialLinks.facebook || false,
+          instagram: pageSettings.socialLinks.instagram || false,
+          twitter: pageSettings.socialLinks.twitter || false,
+          linkedin: pageSettings.socialLinks.linkedin || false
+        } 
+      };
+    } else if (type === "chatbot") {
+      newSection.content = { 
+        embedCode: pageSettings.tmwChatbotCode || ""
+      };
+    }
     
     setSections([...sections, newSection]);
     setActiveSectionIndex(sections.length);
     setActiveTab("sections");
   };
   
-  // Function to remove a section
+  const updateSection = (index: number, section: SectionType) => {
+    const updatedSections = [...sections];
+    updatedSections[index] = section;
+    setSections(updatedSections);
+  };
+  
   const removeSection = (index: number) => {
-    const updatedSections = sections.filter((_, i) => i !== index);
+    const updatedSections = [...sections];
+    updatedSections.splice(index, 1);
     setSections(updatedSections);
     
     if (activeSectionIndex === index) {
       setActiveSectionIndex(null);
-    } else if (activeSectionIndex !== null && activeSectionIndex > index) {
+    } else if (activeSectionIndex && activeSectionIndex > index) {
       setActiveSectionIndex(activeSectionIndex - 1);
     }
   };
   
-  // Functions to move sections up and down
   const moveSectionUp = (index: number) => {
     if (index === 0) return;
+    
     const updatedSections = [...sections];
     const temp = updatedSections[index];
     updatedSections[index] = updatedSections[index - 1];
     updatedSections[index - 1] = temp;
+    
     setSections(updatedSections);
     
     if (activeSectionIndex === index) {
@@ -251,10 +313,12 @@ const SimplePageBuilder: React.FC = () => {
   
   const moveSectionDown = (index: number) => {
     if (index === sections.length - 1) return;
+    
     const updatedSections = [...sections];
     const temp = updatedSections[index];
     updatedSections[index] = updatedSections[index + 1];
     updatedSections[index + 1] = temp;
+    
     setSections(updatedSections);
     
     if (activeSectionIndex === index) {
@@ -264,235 +328,38 @@ const SimplePageBuilder: React.FC = () => {
     }
   };
   
-  // Convert the sections to the format needed for the API
-  const prepareSaveData = () => {
-    // Create the basic structure
-    const saveData = {
-      pageSetup: {
-        businessName: pageSettings.title,
-        alignment: "center",
-        visible: true
-      },
-      logo: { url: "", shape: "circle", alignment: "center", visible: true },
-      bookings: { viewStyle: "grid", templates: [], visible: true },
-      socialInline: { 
-        style: "icon", 
-        platforms: {
-          whatsapp: false,
-          whatsappBusiness: false,
-          facebook: false,
-          instagram: false,
-          googleMaps: false,
-          phone: false,
-          email: false
-        },
-        visible: true
-      },
-      workingHours: { 
-        layout: "card", 
-        hours: [], 
-        visible: true
-      },
-      chatbot: { 
-        position: "right", 
-        embedCode: pageSettings.tmwChatbotCode || "", 
-        visible: !!pageSettings.tmwChatbotCode
-      },
-      theme: {
-        backgroundColor: pageSettings.backgroundColor,
-        textColor: pageSettings.textColor,
-        fontStyle: pageSettings.fontFamily
-      },
-      socialSidebar: { 
-        position: "right", 
-        platforms: {
-          whatsapp: false,
-          whatsappBusiness: false,
-          facebook: false,
-          instagram: false,
-          googleMaps: false,
-          phone: false,
-          email: false
-        },
-        visible: false
-      },
-      contactInfo: {
-        email: pageSettings.contactInfo.email,
-        whatsapp: pageSettings.contactInfo.whatsapp,
-        phone: pageSettings.contactInfo.phone,
-        facebook: pageSettings.socialLinks.facebook,
-        googleMaps: pageSettings.googleMapsUrl,
-        instagram: pageSettings.socialLinks.instagram
-      },
-      sectionOrder: ["pageSetup", "logo", "bookings", "socialInline", "workingHours"],
-      published: pageSettings.isPublished
-    };
-    
-    // Update data based on sections
-    sections.forEach(section => {
-      if (section.type === "header") {
-        saveData.pageSetup.businessName = section.title;
-        if (section.content.alignment) {
-          saveData.pageSetup.alignment = section.content.alignment;
-        }
-        if (section.content.logoUrl) {
-          saveData.logo.url = section.content.logoUrl;
-        }
-      }
-      else if (section.type === "booking") {
-        saveData.bookings.viewStyle = (section.content.displayType || "grid") as any;
-        saveData.bookings.templates = section.content.templates || [];
-      }
-      else if (section.type === "hours") {
-        saveData.workingHours.hours = section.content.hours || [];
-      }
-      else if (section.type === "social") {
-        if (section.content.platforms) {
-          saveData.socialInline.platforms = {
-            ...saveData.socialInline.platforms,
-            ...section.content.platforms
-          };
-        }
-      }
-    });
-    
-    return saveData;
-  };
-  
-  // Handle save functionality
-  const handleSave = async () => {
-    if (!user?.id) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "You must be logged in to save your page"
-      });
-      return;
-    }
-    
-    setIsSaving(true);
-    
-    try {
-      const saveData = prepareSaveData();
-      
-      if (pageData) {
-        // Update existing page
-        await updatePageMutation.mutateAsync({
-          id: pageData.id,
-          pageData: saveData
-        });
-      } else {
-        // Create new page
-        await createPageMutation.mutateAsync({
-          userId: user.id,
-          pageData: saveData
-        });
-        refetch(); // Refetch to get the new page data with ID
-      }
-      
-      toast({
-        title: "Changes saved",
-        description: "Your page has been saved successfully",
-      });
-    } catch (error) {
-      console.error("Error saving page:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to save your page. Please try again."
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-  
-  // Handle preview mode
-  const handlePreview = () => {
-    setIsEditMode(false);
-    toast({
-      title: "Preview mode",
-      description: "You are now previewing your page",
-    });
-  };
-  
-  // Handle publish functionality
-  const handlePublish = async () => {
-    setIsPublishing(true);
-    
-    try {
-      const saveData = prepareSaveData();
-      saveData.published = true;
-      
-      if (pageData) {
-        // Update existing page
-        await updatePageMutation.mutateAsync({
-          id: pageData.id,
-          pageData: saveData
-        });
-        
-        setPageSettings(prev => ({
-          ...prev,
-          isPublished: true
-        }));
-        
-        toast({
-          title: "Page published",
-          description: "Your page is now live",
-        });
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "You need to save your page before publishing.",
-        });
-      }
-    } catch (error) {
-      console.error("Error publishing page:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to publish your page. Please try again.",
-      });
-    } finally {
-      setIsPublishing(false);
-    }
-  };
-  
-  // Generate page URL
-  const pageUrl = pageSettings.isPublished && pageSettings.slug 
-    ? `https://${pageSettings.slug}.wakti.app` 
-    : '#';
-  
-  if (isLoading) {
+  const pageUrl = pageSettings.slug ? `https://${pageSettings.slug}.wakti.app` : 'URL will be generated when published';
+
+  // Loading state
+  if (isLoadingData) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex justify-center items-center h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading your page builder...</p>
+          <p className="text-xl font-medium">Loading your page builder...</p>
+          <p className="text-gray-500">Please wait while we load your data</p>
         </div>
       </div>
     );
   }
   
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-screen overflow-hidden bg-gray-50">
       <TopBar 
         pageUrl={pageUrl}
         onPreview={handlePreview}
         onPublish={handlePublish}
         onSave={handleSave}
         isEditMode={isEditMode}
-        setEditMode={setIsEditMode}
+        setEditMode={setEditMode}
         pageSettings={pageSettings}
         isSaving={isSaving}
         isPublishing={isPublishing}
       />
       
       <div className="flex flex-1 overflow-hidden">
-        <div className="flex-1 overflow-auto bg-gray-50 p-4">
+        <div className="flex-1 overflow-auto p-8 bg-gray-100">
           <PagePreview 
             sections={sections}
-            activeSection={activeSectionIndex !== null ? sections[activeSectionIndex] : undefined}
             activeSectionIndex={activeSectionIndex}
             setActiveSectionIndex={setActiveSectionIndex}
             addSection={addSection}
@@ -500,20 +367,22 @@ const SimplePageBuilder: React.FC = () => {
           />
         </div>
         
-        <EditorPanel 
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          sections={sections}
-          pageSettings={pageSettings}
-          setPageSettings={setPageSettings}
-          activeSectionIndex={activeSectionIndex}
-          updateSection={updateSection}
-          addSection={addSection}
-          removeSection={removeSection}
-          moveSectionUp={moveSectionUp}
-          moveSectionDown={moveSectionDown}
-          setActiveSectionIndex={setActiveSectionIndex}
-        />
+        {isEditMode && (
+          <EditorPanel
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            sections={sections}
+            pageSettings={pageSettings}
+            setPageSettings={setPageSettings}
+            activeSectionIndex={activeSectionIndex}
+            updateSection={updateSection}
+            addSection={addSection}
+            removeSection={removeSection}
+            moveSectionUp={moveSectionUp}
+            moveSectionDown={moveSectionDown}
+            setActiveSectionIndex={setActiveSectionIndex}
+          />
+        )}
       </div>
     </div>
   );

@@ -130,8 +130,8 @@ const SectionEditor: React.FC<SectionEditorProps> = ({ section, updateSection })
               <Label htmlFor="backgroundImageUrl">Background Image URL</Label>
               <Input
                 id="backgroundImageUrl"
-                name="image"
-                value={sectionState.image || ""}
+                name="backgroundImageUrl"
+                value={sectionState.backgroundImageUrl || ""}
                 onChange={handleInputChange}
                 placeholder="Enter image URL"
               />

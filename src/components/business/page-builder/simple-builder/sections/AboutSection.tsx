@@ -9,65 +9,94 @@ interface AboutSectionProps {
 }
 
 const AboutSection: React.FC<AboutSectionProps> = ({ section, isActive, onClick }) => {
+  const { title, subtitle, description, content = {}, activeLayout = "standard" } = section;
+  
   const renderLayout = () => {
-    switch (section.activeLayout) {
-      case "right-image":
+    switch (activeLayout) {
+      case 'columns':
         return (
-          <div className="flex flex-col md:flex-row">
-            <div className="flex-1 p-8">
-              <h2 className="text-3xl font-bold mb-4">{section.title}</h2>
-              <p className="text-gray-600">{section.content.description}</p>
+          <div className="grid md:grid-cols-2 gap-8">
+            <div>
+              <h3 className="text-2xl font-medium mb-4">{title}</h3>
+              <p className="text-gray-600 mb-4">{description}</p>
             </div>
-            <div className="flex-1 bg-gray-200 min-h-[300px] flex items-center justify-center">
-              {section.image ? (
-                <img src={section.image} alt={section.title} className="w-full h-full object-cover" />
-              ) : (
-                <div className="text-gray-500">Image</div>
+            <div className="flex justify-center items-center">
+              {section.backgroundImageUrl && (
+                <img
+                  src={section.backgroundImageUrl}
+                  alt={title}
+                  className="max-w-full h-auto rounded-lg"
+                />
               )}
             </div>
           </div>
         );
-      case "centered":
+      
+      case 'image-left':
         return (
-          <div className="text-center p-8 max-w-3xl mx-auto">
-            <h2 className="text-3xl font-bold mb-4">{section.title}</h2>
-            <div className="mb-6">
-              {section.image ? (
-                <img src={section.image} alt={section.title} className="w-48 h-48 object-cover mx-auto rounded-full" />
-              ) : (
-                <div className="w-48 h-48 bg-gray-200 mx-auto rounded-full flex items-center justify-center">
-                  <span className="text-gray-500">Image</span>
-                </div>
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="flex justify-center items-center">
+              {section.backgroundImageUrl && (
+                <img
+                  src={section.backgroundImageUrl}
+                  alt={title}
+                  className="max-w-full h-auto rounded-lg"
+                />
               )}
             </div>
-            <p className="text-gray-600">{section.content.description}</p>
+            <div>
+              <h3 className="text-2xl font-medium mb-4">{title}</h3>
+              <p className="text-gray-600 mb-4">{description}</p>
+            </div>
           </div>
         );
-      default: // left-image layout
+      
+      case 'image-right':
         return (
-          <div className="flex flex-col md:flex-row">
-            <div className="flex-1 bg-gray-200 min-h-[300px] flex items-center justify-center">
-              {section.image ? (
-                <img src={section.image} alt={section.title} className="w-full h-full object-cover" />
-              ) : (
-                <div className="text-gray-500">Image</div>
+          <div className="grid md:grid-cols-2 gap-8">
+            <div>
+              <h3 className="text-2xl font-medium mb-4">{title}</h3>
+              <p className="text-gray-600 mb-4">{description}</p>
+            </div>
+            <div className="flex justify-center items-center">
+              {section.backgroundImageUrl && (
+                <img
+                  src={section.backgroundImageUrl}
+                  alt={title}
+                  className="max-w-full h-auto rounded-lg"
+                />
               )}
             </div>
-            <div className="flex-1 p-8">
-              <h2 className="text-3xl font-bold mb-4">{section.title}</h2>
-              <p className="text-gray-600">{section.content.description}</p>
-            </div>
+          </div>
+        );
+      
+      default:
+        return (
+          <div className="max-w-3xl mx-auto">
+            <h3 className="text-2xl font-medium mb-4">{title}</h3>
+            <p className="text-gray-600 mb-6">{description}</p>
+            {section.backgroundImageUrl && (
+              <img
+                src={section.backgroundImageUrl}
+                alt={title}
+                className="max-w-full h-auto rounded-lg mx-auto"
+              />
+            )}
           </div>
         );
     }
   };
-
+  
   return (
-    <div 
-      className={`relative transition-all ${isActive ? 'ring-2 ring-blue-500' : 'hover:ring-2 hover:ring-gray-300'}`}
+    <div
+      className={`p-8 transition-all ${isActive ? 'ring-2 ring-blue-500' : 'hover:ring-2 hover:ring-gray-300'}`}
       onClick={onClick}
     >
+      <h2 className="text-3xl font-bold mb-4 text-center">{title}</h2>
+      {subtitle && <p className="text-xl text-gray-600 mb-8 text-center">{subtitle}</p>}
+      
       {renderLayout()}
+      
       {isActive && (
         <div className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 text-xs rounded">
           Editing
