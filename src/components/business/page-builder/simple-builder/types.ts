@@ -80,7 +80,7 @@ export interface BusinessPageData {
   logo: {
     url: string;
     shape: LogoShape;
-    alignment: string;
+    alignment: TextAlignment; // Ensure this is TextAlignment, not string
     visible: boolean;
   };
   bookings: {
@@ -95,7 +95,7 @@ export interface BusinessPageData {
   };
   workingHours: {
     layout: string;
-    hours: WorkingHour[];
+    hours: WorkingHour[]; // This matches our WorkingHour interface
     visible: boolean;
   };
   chatbot: {
@@ -118,7 +118,7 @@ export interface BusinessPageData {
   published: boolean;
   sections?: SectionType[];
   pageUrl?: string;  
-  pageSlug?: string; // Add the pageSlug property
+  pageSlug?: string; // Added pageSlug property
 }
 
 // Define a basic type for representing database business_pages_data table structure

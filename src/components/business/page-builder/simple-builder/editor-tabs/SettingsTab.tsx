@@ -1,246 +1,124 @@
+
 import React from "react";
-import { PageSettings } from "../types";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
+import { BusinessPageData } from "../types";
 import { generateSlug } from "@/utils/string-utils";
+import { Button } from "@/components/ui/button";
+import { Copy } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
 
 interface SettingsTabProps {
-  pageSettings: PageSettings;
-  setPageSettings: (settings: PageSettings) => void;
+  pageSettings: any;
+  setPageSettings: (settings: any) => void;
+  pageData?: BusinessPageData;
 }
 
-const SettingsTab: React.FC<SettingsTabProps> = ({ pageSettings, setPageSettings }) => {
-  const updateSettings = (key: string, value: any) => {
+const SettingsTab: React.FC<SettingsTabProps> = ({ 
+  pageSettings, 
+  setPageSettings,
+  pageData
+}) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
     setPageSettings({
       ...pageSettings,
-      [key]: value
+      [name]: value
     });
-  };
-
-  const updateContactInfo = (key: string, value: string) => {
-    setPageSettings({
-      ...pageSettings,
-      contactInfo: {
-        ...pageSettings.contactInfo,
-        [key]: value
-      }
-    });
-  };
-
-  const updateSocialLink = (key: string, value: string) => {
-    setPageSettings({
-      ...pageSettings,
-      socialLinks: {
-        ...pageSettings.socialLinks,
-        [key]: value
-      }
-    });
-  };
-
-  const updateBusinessHour = (index: number, key: string, value: any) => {
-    const newHours = [...pageSettings.businessHours];
-    newHours[index] = {
-      ...newHours[index],
-      [key]: value
-    };
-    
-    updateSettings('businessHours', newHours);
   };
 
   const handleSlugChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Auto-generate a slug from the input, ensuring it's URL-safe
-    const rawValue = e.target.value;
-    const safeSlug = generateSlug(rawValue);
-    updateSettings('slug', safeSlug);
+    let value = e.target.value;
+    // Generate valid slug format from input
+    value = generateSlug(value);
+    
+    setPageSettings({
+      ...pageSettings,
+      slug: value
+    });
+  };
+
+  const copyToClipboard = () => {
+    if (!pageSettings.slug) {
+      toast({
+        title: "No URL available",
+        description: "Please set a URL slug first.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const fullUrl = `wakti.qa/${pageSettings.slug}`;
+    navigator.clipboard.writeText(fullUrl);
+    toast({
+      title: "URL copied to clipboard",
+      description: "You can now paste it anywhere.",
+    });
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div>
-        <h3 className="text-sm font-medium mb-2">Basic Information</h3>
-        <div className="space-y-3">
-          <div>
-            <Label htmlFor="page-title">Page Title</Label>
-            <Input
-              id="page-title"
-              value={pageSettings.title}
-              onChange={(e) => updateSettings('title', e.target.value)}
-              className="mt-1"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="page-slug">
-              URL Slug
-              <span className="text-xs text-gray-500 ml-2">
-                (Your page will be accessible at wakti.qa/your-slug)
-              </span>
-            </Label>
-            <div className="flex items-center mt-1">
-              <div className="bg-gray-100 px-3 py-2 text-gray-500 rounded-l-md border-y border-l">
-                wakti.qa/
-              </div>
-              <Input
-                id="page-slug"
-                value={pageSettings.slug || ''}
-                onChange={handleSlugChange}
-                placeholder="your-business-name"
-                className="rounded-l-none"
-              />
-            </div>
-          </div>
-        </div>
+        <Label htmlFor="title">Page Title</Label>
+        <Input
+          id="title"
+          name="title"
+          value={pageSettings.title || ''}
+          onChange={handleChange}
+          placeholder="My Business Page"
+        />
       </div>
-
-      <Separator />
-
+      
       <div>
-        <h3 className="text-sm font-medium mb-2">Contact Information</h3>
-        <div className="space-y-3">
-          <div>
-            <Label htmlFor="contact-email">Email</Label>
+        <Label htmlFor="slug">URL Slug</Label>
+        <div className="flex items-center gap-2">
+          <div className="flex-1 flex items-center bg-gray-100 rounded-md">
+            <span className="text-gray-500 pl-3 pr-0">wakti.qa/</span>
             <Input
-              id="contact-email"
-              type="email"
-              value={pageSettings.contactInfo.email}
-              onChange={(e) => updateContactInfo('email', e.target.value)}
-              className="mt-1"
+              id="slug"
+              name="slug"
+              value={pageSettings.slug || ''}
+              onChange={handleSlugChange}
+              placeholder="my-business"
+              className="border-0 bg-transparent focus-visible:ring-0"
             />
           </div>
-          
-          <div>
-            <Label htmlFor="contact-phone">Phone</Label>
-            <Input
-              id="contact-phone"
-              type="tel"
-              value={pageSettings.contactInfo.phone}
-              onChange={(e) => updateContactInfo('phone', e.target.value)}
-              className="mt-1"
-            />
-          </div>
-          
-          <div>
-            <Label htmlFor="contact-address">Address</Label>
-            <Textarea
-              id="contact-address"
-              value={pageSettings.contactInfo.address}
-              onChange={(e) => updateContactInfo('address', e.target.value)}
-              className="mt-1"
-            />
-          </div>
-          
-          <div>
-            <Label htmlFor="contact-whatsapp">WhatsApp (optional)</Label>
-            <Input
-              id="contact-whatsapp"
-              type="tel"
-              value={pageSettings.contactInfo.whatsapp}
-              onChange={(e) => updateContactInfo('whatsapp', e.target.value)}
-              className="mt-1"
-            />
-          </div>
+          <Button variant="outline" size="icon" onClick={copyToClipboard}>
+            <Copy className="h-4 w-4" />
+          </Button>
         </div>
+        <p className="text-xs text-gray-500 mt-1">
+          This is the URL where people will find your page
+        </p>
       </div>
-
-      <Separator />
-
+      
       <div>
-        <h3 className="text-sm font-medium mb-2">Social Media Links</h3>
-        <div className="space-y-3">
-          <div>
-            <Label htmlFor="social-instagram">Instagram</Label>
-            <Input
-              id="social-instagram"
-              value={pageSettings.socialLinks.instagram}
-              onChange={(e) => updateSocialLink('instagram', e.target.value)}
-              className="mt-1"
-              placeholder="https://instagram.com/yourbusiness"
-            />
-          </div>
-          
-          <div>
-            <Label htmlFor="social-facebook">Facebook</Label>
-            <Input
-              id="social-facebook"
-              value={pageSettings.socialLinks.facebook}
-              onChange={(e) => updateSocialLink('facebook', e.target.value)}
-              className="mt-1"
-              placeholder="https://facebook.com/yourbusiness"
-            />
-          </div>
-          
-          <div>
-            <Label htmlFor="social-twitter">Twitter</Label>
-            <Input
-              id="social-twitter"
-              value={pageSettings.socialLinks.twitter}
-              onChange={(e) => updateSocialLink('twitter', e.target.value)}
-              className="mt-1"
-              placeholder="https://twitter.com/yourbusiness"
-            />
-          </div>
-          
-          <div>
-            <Label htmlFor="social-linkedin">LinkedIn</Label>
-            <Input
-              id="social-linkedin"
-              value={pageSettings.socialLinks.linkedin}
-              onChange={(e) => updateSocialLink('linkedin', e.target.value)}
-              className="mt-1"
-              placeholder="https://linkedin.com/company/yourbusiness"
-            />
-          </div>
-        </div>
+        <Label htmlFor="description">Page Description</Label>
+        <Input
+          id="description"
+          name="description"
+          value={pageSettings.description || ''}
+          onChange={handleChange}
+          placeholder="A short description of your page"
+        />
       </div>
-
-      <Separator />
-
+      
       <div>
-        <h3 className="text-sm font-medium mb-2">Business Hours</h3>
-        <div className="space-y-3">
-          {pageSettings.businessHours.map((day, index) => (
-            <div key={index} className="flex items-center justify-between">
-              <div className="w-1/3">
-                <Label>{day.day}</Label>
-              </div>
-              <div className="w-1/2">
-                <Input
-                  value={day.hours}
-                  onChange={(e) => updateBusinessHour(index, 'hours', e.target.value)}
-                  disabled={!day.isOpen}
-                />
-              </div>
-              <div className="flex items-center ml-2">
-                <Switch
-                  checked={day.isOpen}
-                  onCheckedChange={(checked) => updateBusinessHour(index, 'isOpen', checked)}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <Separator />
-
-      <div>
-        <h3 className="text-sm font-medium mb-2">Maps Link</h3>
-        <div>
-          <Label htmlFor="google-maps">Google Maps URL</Label>
-          <Input
-            id="google-maps"
-            value={pageSettings.googleMapsUrl}
-            onChange={(e) => updateSettings('googleMapsUrl', e.target.value)}
-            className="mt-1"
-            placeholder="https://goo.gl/maps/yourbusiness"
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            Enter the link to your business on Google Maps
-          </p>
-        </div>
+        <Label htmlFor="fontFamily">Font Family</Label>
+        <select
+          id="fontFamily"
+          name="fontFamily"
+          value={pageSettings.fontFamily || 'system-ui'}
+          onChange={(e) => handleChange(e as any)}
+          className="w-full border border-gray-300 rounded-md p-2"
+        >
+          <option value="system-ui">System UI</option>
+          <option value="Arial, sans-serif">Arial</option>
+          <option value="'Times New Roman', serif">Times New Roman</option>
+          <option value="'Courier New', monospace">Courier New</option>
+          <option value="Georgia, serif">Georgia</option>
+          <option value="'Segoe UI', sans-serif">Segoe UI</option>
+        </select>
       </div>
     </div>
   );

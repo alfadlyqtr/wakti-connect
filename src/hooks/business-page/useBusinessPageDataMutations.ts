@@ -1,19 +1,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
-import { BusinessPageData } from "@/components/business/page-builder/context/BusinessPageContext";
 import { Json } from "@/types/supabase";
 import { generateSlug } from "@/utils/string-utils";
-
-// Define the record type that comes back from the database
-export interface BusinessPageDataRecord {
-  id: string;
-  user_id: string;
-  page_slug: string | null;
-  created_at: string;
-  updated_at: string;
-  page_data: BusinessPageData;
-}
+import { BusinessPageData, BusinessPageRecord } from "@/components/business/page-builder/simple-builder/types";
 
 // Create new business page data
 export const useCreateBusinessPageDataMutation = () => {
@@ -25,8 +15,8 @@ export const useCreateBusinessPageDataMutation = () => {
       
       try {
         // Generate a slug from business name if available
-        let pageSlug = null;
-        if (pageData.pageSetup?.businessName) {
+        let pageSlug = pageData.pageSlug || null;
+        if (!pageSlug && pageData.pageSetup?.businessName) {
           pageSlug = generateSlug(pageData.pageSetup.businessName);
         }
         
@@ -60,7 +50,7 @@ export const useCreateBusinessPageDataMutation = () => {
         return {
           ...data,
           page_data: data.page_data as unknown as BusinessPageData
-        } as BusinessPageDataRecord;
+        } as BusinessPageRecord;
       } catch (err) {
         console.error("Exception during create business page data:", err);
         throw err;
@@ -131,7 +121,7 @@ export const useUpdateBusinessPageDataMutation = () => {
         return {
           ...data,
           page_data: data.page_data as unknown as BusinessPageData
-        } as BusinessPageDataRecord;
+        } as BusinessPageRecord;
       } catch (err) {
         console.error("Exception during update business page data:", err);
         throw err;
