@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
@@ -68,7 +67,12 @@ export const useProfileSettings = () => {
               // Add the missing properties that were added in our SQL migration
               is_active: true,
               last_login_at: null,
-              email: session.user.email
+              email: session.user.email,
+              // Add the missing properties causing the TypeScript error
+              business_email: '',
+              business_phone: '',
+              business_website: '',
+              slug: ''
             };
             return defaultProfile;
           }
