@@ -55,9 +55,18 @@ export interface PageSettings {
 
 export interface WorkingHour {
   day: string;
-  open: string;
-  close: string;
-  closed: boolean;
+  hours: string;
+  isOpen: boolean;
+}
+
+export interface SocialPlatforms {
+  whatsapp: boolean;
+  whatsappBusiness: boolean;
+  facebook: boolean;
+  instagram: boolean;
+  googleMaps: boolean;
+  phone: boolean;
+  email: boolean;
 }
 
 export interface BusinessPageData {
@@ -79,12 +88,12 @@ export interface BusinessPageData {
   };
   socialInline: {
     style: string;
-    platforms: Record<string, boolean>;
+    platforms: SocialPlatforms;
     visible: boolean;
   };
   workingHours: {
     layout: string;
-    hours: any[];
+    hours: WorkingHour[];
     visible: boolean;
   };
   chatbot: {
@@ -99,11 +108,11 @@ export interface BusinessPageData {
   };
   socialSidebar: {
     position: string;
-    platforms: Record<string, boolean>;
+    platforms: SocialPlatforms;
     visible: boolean;
   };
   contactInfo: Record<string, string>;
   sectionOrder: string[];
   published: boolean;
-  sections?: SectionType[]; // Add this to make it valid with our structure
+  sections?: SectionType[];
 }
