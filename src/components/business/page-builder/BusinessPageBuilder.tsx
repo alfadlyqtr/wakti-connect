@@ -24,7 +24,7 @@ const BusinessPageBuilder: React.FC = () => {
     isLoading,
     error,
     refetch
-  } = useBusinessPageDataQuery(user?.id);
+  } = useBusinessPageDataQuery(user?.id || undefined);
   
   // Mutations for creating and updating page data
   const createPageMutation = useCreateBusinessPageDataMutation();
@@ -112,7 +112,7 @@ const BusinessPageBuilder: React.FC = () => {
       handleSave: async () => {} // We'll implement this in a future update
     }}>
       <div className="flex h-full max-h-screen">
-        <LeftPanel />
+        <LeftPanel isPublishing={isPublishing} onPublish={handlePublish} />
         <PreviewPanel />
       </div>
     </BusinessPageContext.Provider>
