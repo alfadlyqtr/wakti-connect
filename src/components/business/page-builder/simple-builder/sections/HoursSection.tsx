@@ -10,13 +10,13 @@ interface HoursSectionProps {
 
 const HoursSection: React.FC<HoursSectionProps> = ({ section, isActive, onClick }) => {
   const defaultHours = [
-    { day: "Monday", hours: "9:00 AM - 5:00 PM" },
-    { day: "Tuesday", hours: "9:00 AM - 5:00 PM" },
-    { day: "Wednesday", hours: "9:00 AM - 5:00 PM" },
-    { day: "Thursday", hours: "9:00 AM - 5:00 PM" },
-    { day: "Friday", hours: "9:00 AM - 5:00 PM" },
-    { day: "Saturday", hours: "10:00 AM - 3:00 PM" },
-    { day: "Sunday", hours: "Closed" }
+    { day: "Monday", hours: "9:00 AM - 5:00 PM", isOpen: true },
+    { day: "Tuesday", hours: "9:00 AM - 5:00 PM", isOpen: true },
+    { day: "Wednesday", hours: "9:00 AM - 5:00 PM", isOpen: true },
+    { day: "Thursday", hours: "9:00 AM - 5:00 PM", isOpen: true },
+    { day: "Friday", hours: "9:00 AM - 5:00 PM", isOpen: true },
+    { day: "Saturday", hours: "10:00 AM - 3:00 PM", isOpen: true },
+    { day: "Sunday", hours: "Closed", isOpen: false }
   ];
 
   return (

@@ -1,27 +1,27 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { useUser } from "@/hooks/auth/useUser";
-import { useToast } from "@/hooks/use-toast";
 import TopBar from "./TopBar";
 import EditorPanel from "./EditorPanel";
 import PagePreview from "./PagePreview";
-import { SectionType, PageSettings } from "./types";
+import { SectionType, PageSettings, BusinessPageData, TextAlignment } from "./types";
+import { useUser } from "@/hooks/auth/useUser";
 import { useBusinessPageDataQuery } from "@/hooks/business-page/useBusinessPageDataQueries";
 import { useCreateBusinessPageDataMutation, useUpdateBusinessPageDataMutation } from "@/hooks/business-page/useBusinessPageDataMutations";
+import { toast } from "@/components/ui/use-toast";
 
 const SimplePageBuilder: React.FC = () => {
   const { user } = useUser();
-  const { toast } = useToast();
+  const userId = user?.id;
   
-  // States for sections and page settings
+  // State for sections and settings
   const [sections, setSections] = useState<SectionType[]>([]);
   const [pageSettings, setPageSettings] = useState<PageSettings>({
     title: "My Business",
     slug: "",
-    primaryColor: "#4f46e5",
-    secondaryColor: "#10b981",
-    description: "Welcome to my business page",
+    description: "",
+    primaryColor: "#3B82F6",
+    secondaryColor: "#10B981",
     isPublished: false,
     fontFamily: "sans-serif",
     textColor: "#000000",
@@ -30,350 +30,413 @@ const SimplePageBuilder: React.FC = () => {
       email: "",
       phone: "",
       address: "",
-      whatsapp: ""
+      whatsapp: "",
     },
     socialLinks: {
       facebook: "",
       instagram: "",
       twitter: "",
-      linkedin: ""
+      linkedin: "",
     },
-    businessHours: [
-      { day: "Monday", hours: "9:00 AM - 5:00 PM", isOpen: true },
-      { day: "Tuesday", hours: "9:00 AM - 5:00 PM", isOpen: true },
-      { day: "Wednesday", hours: "9:00 AM - 5:00 PM", isOpen: true },
-      { day: "Thursday", hours: "9:00 AM - 5:00 PM", isOpen: true },
-      { day: "Friday", hours: "9:00 AM - 5:00 PM", isOpen: true },
-      { day: "Saturday", hours: "10:00 AM - 3:00 PM", isOpen: true },
-      { day: "Sunday", hours: "Closed", isOpen: false }
-    ],
+    businessHours: [],
     googleMapsUrl: "",
     tmwChatbotCode: "",
     textAlignment: "left",
     headingStyle: "default",
     buttonStyle: "default",
     sectionSpacing: "default",
-    contentMaxWidth: "1200px"
+    contentMaxWidth: "1200px",
   });
-  
-  const [activeTab, setActiveTab] = useState("sections");
+
+  // State for active section and editor panel tab
   const [activeSectionIndex, setActiveSectionIndex] = useState<number | null>(null);
-  const [editMode, setEditMode] = useState(true);
+  const [activeTab, setActiveTab] = useState<string>("sections");
+  
+  // Queries and mutations for saving and loading data
+  const { data: pageData, isLoading } = useBusinessPageDataQuery(userId);
+  const createPageDataMutation = useCreateBusinessPageDataMutation();
+  const updatePageDataMutation = useUpdateBusinessPageDataMutation();
+  
+  // Handle active section
+  const activeSection = activeSectionIndex !== null ? sections[activeSectionIndex] : undefined;
+  
+  // Saving and loading state
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
-  
-  // Query existing data
-  const { data: pageData, isLoading } = useBusinessPageDataQuery(user?.id);
+  const [isEditMode, setEditMode] = useState(true);
 
-  // Mutations for creating and updating data
-  const createPageMutation = useCreateBusinessPageDataMutation();
-  const updatePageMutation = useUpdateBusinessPageDataMutation();
-  
-  // Load existing data or initialize with default values
+  // Load data from backend
   useEffect(() => {
-    if (pageData) {
-      // Initialize with the data from the database
-      const defaultSections: SectionType[] = [
-        {
-          id: uuidv4(),
-          type: "header",
-          title: pageData.page_data?.pageSetup?.businessName || "My Business",
-          subtitle: "Welcome to my business",
-          content: { logoUrl: pageData.page_data?.logo?.url || "" },
-          activeLayout: "default"
-        }
-      ];
+    if (pageData && !isLoading) {
+      // Convert from database format to local state
+      // Check if page_data exists and has the required properties
+      const storedData = pageData.page_data as BusinessPageData;
       
-      setSections(pageData.page_data?.sections || defaultSections);
-      
-      // We need to map our BusinessPageData to our PageSettings format
-      if (pageData.page_data) {
+      if (storedData) {
+        // Extract sections if they exist
+        const storedSections = storedData.sections || [];
+        setSections(storedSections);
+        
+        // Convert from the database business hours format to our local format
+        const businessHours = storedData.workingHours?.hours?.map((hour: any) => {
+          if ('day' in hour && 'open' in hour && 'close' in hour && 'closed' in hour) {
+            // If it's already in our format with open/close/closed
+            return {
+              day: hour.day,
+              hours: hour.closed ? 'Closed' : `${hour.open} - ${hour.close}`,
+              isOpen: !hour.closed
+            };
+          } else if ('day' in hour && 'hours' in hour && 'isOpen' in hour) {
+            // If it's already in the expected format
+            return hour;
+          } else {
+            // Default fallback
+            return {
+              day: 'Unknown',
+              hours: 'Unknown',
+              isOpen: false
+            };
+          }
+        }) || [];
+
+        // Convert the stored data to page settings
         setPageSettings({
-          title: pageData.page_data.pageSetup?.businessName || "My Business",
+          title: storedData.pageSetup?.businessName || "My Business",
           slug: pageData.page_slug || "",
-          primaryColor: pageData.page_data.theme?.backgroundColor || "#4f46e5",
-          secondaryColor: "#10b981",
-          description: "Welcome to my business page",
-          isPublished: pageData.page_data.published || false,
-          fontFamily: pageData.page_data.theme?.fontStyle || "sans-serif",
-          textColor: pageData.page_data.theme?.textColor || "#000000",
-          backgroundColor: pageData.page_data.theme?.backgroundColor || "#ffffff",
+          description: "",
+          primaryColor: storedData.theme?.backgroundColor || "#3B82F6",
+          secondaryColor: "#10B981",
+          isPublished: storedData.published || false,
+          fontFamily: storedData.theme?.fontStyle || "sans-serif",
+          textColor: storedData.theme?.textColor || "#000000",
+          backgroundColor: storedData.theme?.backgroundColor || "#ffffff",
           contactInfo: {
-            email: pageData.page_data.contactInfo?.email || "",
-            phone: pageData.page_data.contactInfo?.phone || "",
+            email: storedData.contactInfo?.email || "",
+            phone: storedData.contactInfo?.phone || "",
             address: "",
-            whatsapp: pageData.page_data.contactInfo?.whatsapp || ""
+            whatsapp: storedData.contactInfo?.whatsapp || "",
           },
           socialLinks: {
-            facebook: pageData.page_data.contactInfo?.facebook || "",
-            instagram: pageData.page_data.contactInfo?.instagram || "",
+            facebook: storedData.contactInfo?.facebook || "",
+            instagram: storedData.contactInfo?.instagram || "",
             twitter: "",
-            linkedin: ""
+            linkedin: "",
           },
-          businessHours: pageData.page_data.workingHours?.hours || [
-            { day: "Monday", hours: "9:00 AM - 5:00 PM", isOpen: true },
-            { day: "Tuesday", hours: "9:00 AM - 5:00 PM", isOpen: true },
-            { day: "Wednesday", hours: "9:00 AM - 5:00 PM", isOpen: true },
-            { day: "Thursday", hours: "9:00 AM - 5:00 PM", isOpen: true },
-            { day: "Friday", hours: "9:00 AM - 5:00 PM", isOpen: true },
-            { day: "Saturday", hours: "10:00 AM - 3:00 PM", isOpen: true },
-            { day: "Sunday", hours: "Closed", isOpen: false }
-          ],
-          googleMapsUrl: pageData.page_data.contactInfo?.googleMaps || "",
-          tmwChatbotCode: pageData.page_data.chatbot?.embedCode || "",
-          textAlignment: "left",
+          businessHours: businessHours,
+          googleMapsUrl: storedData.contactInfo?.googleMaps || "",
+          tmwChatbotCode: storedData.chatbot?.embedCode || "",
+          textAlignment: (storedData.pageSetup?.alignment as TextAlignment) || "left",
           headingStyle: "default",
-          buttonStyle: "default",
+          buttonStyle: "default", 
           sectionSpacing: "default",
-          contentMaxWidth: "1200px"
+          contentMaxWidth: "1200px",
         });
       }
     }
-  }, [pageData]);
+  }, [pageData, isLoading]);
+
+  // Convert data for saving to database
+  const prepareDataForSaving = () => {
+    // Create default working hours if none exist
+    const workingHours = pageSettings.businessHours.length > 0 
+      ? pageSettings.businessHours.map(hour => ({
+          day: hour.day,
+          open: hour.isOpen ? hour.hours.split(' - ')[0] || '9:00' : '9:00',
+          close: hour.isOpen ? hour.hours.split(' - ')[1] || '17:00' : '17:00',
+          closed: !hour.isOpen
+        }))
+      : [
+          { day: "Monday", open: "09:00", close: "17:00", closed: false },
+          { day: "Tuesday", open: "09:00", close: "17:00", closed: false },
+          { day: "Wednesday", open: "09:00", close: "17:00", closed: false },
+          { day: "Thursday", open: "09:00", close: "17:00", closed: false },
+          { day: "Friday", open: "09:00", close: "17:00", closed: false },
+          { day: "Saturday", open: "10:00", close: "14:00", closed: true },
+          { day: "Sunday", open: "10:00", close: "14:00", closed: true },
+        ];
   
-  // Get active section if any
-  const activeSection = activeSectionIndex !== null ? sections[activeSectionIndex] : undefined;
-  
-  // Update section in the array
-  const updateSection = (index: number, section: SectionType) => {
-    const newSections = [...sections];
-    newSections[index] = section;
-    setSections(newSections);
-  };
-  
-  // Add a new section of the specified type
-  const addSection = (type: string) => {
-    const newSection: SectionType = {
-      id: uuidv4(),
-      type,
-      title: `New ${type.charAt(0).toUpperCase() + type.slice(1)}`,
-      content: {},
-      activeLayout: "default",
+    const businessPageData: BusinessPageData = {
+      pageSetup: {
+        businessName: pageSettings.title,
+        alignment: pageSettings.textAlignment as TextAlignment || 'left',
+        visible: true
+      },
+      logo: {
+        url: pageSettings.contactInfo.whatsapp || "",
+        shape: "circle",
+        alignment: "center",
+        visible: true
+      },
+      bookings: {
+        viewStyle: "grid",
+        templates: [],
+        visible: true
+      },
+      socialInline: {
+        style: "icon",
+        platforms: {
+          whatsapp: !!pageSettings.contactInfo.whatsapp,
+          whatsappBusiness: false,
+          facebook: !!pageSettings.socialLinks.facebook,
+          instagram: !!pageSettings.socialLinks.instagram,
+          googleMaps: !!pageSettings.googleMapsUrl,
+          phone: !!pageSettings.contactInfo.phone,
+          email: !!pageSettings.contactInfo.email
+        },
+        visible: true
+      },
+      workingHours: {
+        layout: "card",
+        hours: workingHours,
+        visible: true
+      },
+      chatbot: {
+        position: "right",
+        embedCode: pageSettings.tmwChatbotCode,
+        visible: !!pageSettings.tmwChatbotCode
+      },
+      theme: {
+        backgroundColor: pageSettings.backgroundColor,
+        textColor: pageSettings.textColor,
+        fontStyle: pageSettings.fontFamily
+      },
+      socialSidebar: {
+        position: "right",
+        platforms: {
+          whatsapp: false,
+          whatsappBusiness: false,
+          facebook: false,
+          instagram: false,
+          googleMaps: false,
+          phone: false,
+          email: false
+        },
+        visible: false
+      },
+      contactInfo: {
+        email: pageSettings.contactInfo.email,
+        whatsapp: pageSettings.contactInfo.whatsapp,
+        whatsappBusiness: "",
+        phone: pageSettings.contactInfo.phone,
+        facebook: pageSettings.socialLinks.facebook,
+        googleMaps: pageSettings.googleMapsUrl,
+        instagram: pageSettings.socialLinks.instagram
+      },
+      sectionOrder: ["pageSetup", "logo", "bookings", "socialInline", "workingHours"],
+      published: pageSettings.isPublished,
+      sections: sections
     };
-    
-    setSections([...sections, newSection]);
-    setActiveSectionIndex(sections.length);
-    setActiveTab("sections");
+
+    return businessPageData;
   };
   
-  // Remove a section from the array
-  const removeSection = (index: number) => {
-    const newSections = [...sections];
-    newSections.splice(index, 1);
-    setSections(newSections);
-    setActiveSectionIndex(null);
-  };
-  
-  // Move section up in the order
-  const moveSectionUp = (index: number) => {
-    if (index === 0) return;
-    const newSections = [...sections];
-    const temp = newSections[index];
-    newSections[index] = newSections[index - 1];
-    newSections[index - 1] = temp;
-    setSections(newSections);
-    setActiveSectionIndex(index - 1);
-  };
-  
-  // Move section down in the order
-  const moveSectionDown = (index: number) => {
-    if (index === sections.length - 1) return;
-    const newSections = [...sections];
-    const temp = newSections[index];
-    newSections[index] = newSections[index + 1];
-    newSections[index + 1] = temp;
-    setSections(newSections);
-    setActiveSectionIndex(index + 1);
-  };
-  
-  // Handle save operation
+  // Save page data
   const handleSave = async () => {
-    if (!user) {
+    if (!userId) {
       toast({
-        title: "Not logged in",
-        description: "You need to be logged in to save your page",
-        variant: "destructive"
+        title: "Error",
+        description: "You must be logged in to save.",
+        variant: "destructive",
       });
       return;
     }
     
     setIsSaving(true);
-    
     try {
-      // Convert our current data format to the BusinessPageData expected by the API
-      const businessPageData = {
-        pageSetup: {
-          businessName: pageSettings.title,
-          alignment: "center",
-          visible: true
-        },
-        logo: { 
-          url: sections.find(s => s.type === "header")?.content?.logoUrl || "",
-          shape: "circle", 
-          alignment: "center", 
-          visible: true 
-        },
-        bookings: { 
-          viewStyle: "grid", 
-          templates: [], 
-          visible: true 
-        },
-        socialInline: { 
-          style: "icon", 
-          platforms: {
-            whatsapp: !!pageSettings.contactInfo.whatsapp,
-            facebook: !!pageSettings.socialLinks.facebook,
-            instagram: !!pageSettings.socialLinks.instagram,
-            googleMaps: !!pageSettings.googleMapsUrl,
-            phone: !!pageSettings.contactInfo.phone,
-            email: !!pageSettings.contactInfo.email,
-            whatsappBusiness: false
-          },
-          visible: true
-        },
-        workingHours: { 
-          layout: "card", 
-          hours: pageSettings.businessHours, 
-          visible: true
-        },
-        chatbot: { 
-          position: "right", 
-          embedCode: pageSettings.tmwChatbotCode, 
-          visible: !!pageSettings.tmwChatbotCode
-        },
-        theme: {
-          backgroundColor: pageSettings.backgroundColor,
-          textColor: pageSettings.textColor,
-          fontStyle: pageSettings.fontFamily
-        },
-        socialSidebar: { 
-          position: "right", 
-          platforms: {
-            whatsapp: false,
-            whatsappBusiness: false,
-            facebook: false,
-            instagram: false,
-            googleMaps: false,
-            phone: false,
-            email: false
-          },
-          visible: false
-        },
-        contactInfo: {
-          email: pageSettings.contactInfo.email,
-          whatsapp: pageSettings.contactInfo.whatsapp,
-          whatsappBusiness: "",
-          phone: pageSettings.contactInfo.phone,
-          facebook: pageSettings.socialLinks.facebook,
-          googleMaps: pageSettings.googleMapsUrl,
-          instagram: pageSettings.socialLinks.instagram
-        },
-        sectionOrder: ["pageSetup", "logo", "bookings", "socialInline", "workingHours"],
-        published: pageSettings.isPublished,
-        // Add the sections array
-        sections: sections
-      };
+      const businessPageData = prepareDataForSaving();
       
       if (pageData) {
-        // Update existing page
-        await updatePageMutation.mutateAsync({
+        await updatePageDataMutation.mutateAsync({
           id: pageData.id,
-          pageData: businessPageData
+          user_id: userId,
+          page_data: businessPageData,
+          page_slug: pageSettings.slug
         });
-      } else if (user?.id) {
-        // Create new page
-        await createPageMutation.mutateAsync({
-          userId: user.id,
-          pageData: businessPageData
+      } else {
+        await createPageDataMutation.mutateAsync({
+          user_id: userId,
+          page_data: businessPageData,
+          page_slug: pageSettings.slug || generateSlug(pageSettings.title)
         });
       }
       
       toast({
-        title: "Saved successfully",
-        description: "Your business page has been saved",
+        title: "Success",
+        description: "Page saved successfully.",
       });
-    } catch (error) {
-      console.error("Error saving business page:", error);
+    } catch (err) {
+      console.error("Error saving page:", err);
       toast({
-        title: "Failed to save",
-        description: "There was an error saving your business page",
-        variant: "destructive"
+        title: "Error",
+        description: "Failed to save page. Please try again.",
+        variant: "destructive",
       });
     } finally {
       setIsSaving(false);
     }
   };
   
-  // Handle publish operation
+  // Publish page
   const handlePublish = async () => {
-    setIsPublishing(true);
-    
-    try {
-      // Update isPublished flag in settings
-      const updatedSettings = {
-        ...pageSettings,
-        isPublished: true
-      };
-      setPageSettings(updatedSettings);
-      
-      // Then save
-      await handleSave();
-      
+    if (!pageSettings.slug) {
       toast({
-        title: "Published successfully",
-        description: "Your business page is now live",
+        title: "Error",
+        description: "Please set a URL slug before publishing.",
+        variant: "destructive",
       });
-    } catch (error) {
-      console.error("Error publishing business page:", error);
+      return;
+    }
+    
+    setIsPublishing(true);
+    try {
+      // Update local state
+      setPageSettings((prev) => ({
+        ...prev,
+        isPublished: true,
+      }));
+      
+      // Save with published flag
+      const businessPageData = prepareDataForSaving();
+      businessPageData.published = true;
+      
+      if (pageData) {
+        await updatePageDataMutation.mutateAsync({
+          id: pageData.id,
+          user_id: userId,
+          page_data: businessPageData,
+          page_slug: pageSettings.slug
+        });
+      } else {
+        await createPageDataMutation.mutateAsync({
+          user_id: userId,
+          page_data: businessPageData,
+          page_slug: pageSettings.slug || generateSlug(pageSettings.title)
+        });
+      }
+      
       toast({
-        title: "Failed to publish",
-        description: "There was an error publishing your business page",
-        variant: "destructive"
+        title: "Success",
+        description: "Your page has been published!",
+      });
+    } catch (err) {
+      console.error("Error publishing page:", err);
+      toast({
+        title: "Error",
+        description: "Failed to publish page. Please try again.",
+        variant: "destructive",
       });
     } finally {
       setIsPublishing(false);
     }
   };
   
-  // Handle preview operation
+  // Preview page
   const handlePreview = () => {
-    setEditMode(!editMode);
+    setEditMode(false);
+    // Navigate to preview mode or toggle preview state
+    setTimeout(() => {
+      setEditMode(true);
+    }, 1500);
+    
+    toast({
+      title: "Preview Mode",
+      description: "This is a preview of your page. In a real deployment, you would see the actual page.",
+    });
   };
   
-  // Get the public URL of the business page
-  const getPageUrl = () => {
-    return `https://${pageSettings.slug || "your-business"}.wakti.app`;
+  // Generate a slug from title
+  const generateSlug = (title: string) => {
+    return title
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^\w\-]+/g, '')
+      .replace(/\-\-+/g, '-')
+      .replace(/^-+/, '')
+      .replace(/-+$/, '');
   };
   
-  // If still loading, show loading state
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-dashed rounded-full animate-spin border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your business page...</p>
-        </div>
-      </div>
-    );
-  }
+  // Section CRUD operations
+  const addSection = (type: string) => {
+    const newSection: SectionType = {
+      id: uuidv4(),
+      type,
+      title: `New ${type.charAt(0).toUpperCase() + type.slice(1)} Section`,
+      content: {},
+      activeLayout: "standard",
+    };
+    
+    setSections((prev) => [...prev, newSection]);
+    setActiveSectionIndex(sections.length);
+    setActiveTab("sections");
+  };
+  
+  const updateSection = (index: number, updatedSection: SectionType) => {
+    const newSections = [...sections];
+    newSections[index] = updatedSection;
+    setSections(newSections);
+  };
+  
+  const removeSection = (index: number) => {
+    const newSections = [...sections];
+    newSections.splice(index, 1);
+    setSections(newSections);
+    
+    if (activeSectionIndex === index) {
+      setActiveSectionIndex(null);
+    } else if (activeSectionIndex !== null && activeSectionIndex > index) {
+      setActiveSectionIndex(activeSectionIndex - 1);
+    }
+  };
+  
+  const moveSectionUp = (index: number) => {
+    if (index === 0) return;
+    const newSections = [...sections];
+    const temp = newSections[index - 1];
+    newSections[index - 1] = newSections[index];
+    newSections[index] = temp;
+    setSections(newSections);
+    
+    if (activeSectionIndex === index) {
+      setActiveSectionIndex(index - 1);
+    } else if (activeSectionIndex === index - 1) {
+      setActiveSectionIndex(index);
+    }
+  };
+  
+  const moveSectionDown = (index: number) => {
+    if (index === sections.length - 1) return;
+    const newSections = [...sections];
+    const temp = newSections[index + 1];
+    newSections[index + 1] = newSections[index];
+    newSections[index] = temp;
+    setSections(newSections);
+    
+    if (activeSectionIndex === index) {
+      setActiveSectionIndex(index + 1);
+    } else if (activeSectionIndex === index + 1) {
+      setActiveSectionIndex(index);
+    }
+  };
   
   return (
     <div className="flex flex-col h-screen">
-      <TopBar 
-        pageUrl={getPageUrl()}
+      {/* Top Bar */}
+      <TopBar
+        pageUrl={`https://${pageSettings.slug || 'example'}.wakti.app`}
         onPreview={handlePreview}
         onPublish={handlePublish}
         onSave={handleSave}
-        isEditMode={editMode}
+        isEditMode={isEditMode}
         setEditMode={setEditMode}
         pageSettings={pageSettings}
         isSaving={isSaving}
         isPublishing={isPublishing}
       />
       
-      <div className="flex flex-row flex-1 overflow-hidden">
-        <div className="flex-1 overflow-auto p-4 bg-gray-50">
-          <PagePreview 
+      <div className="flex flex-1 overflow-hidden">
+        {/* Main content area - Preview */}
+        <div className="flex-1 p-6 bg-gray-100 overflow-auto">
+          <PagePreview
             sections={sections}
             activeSection={activeSection}
             activeSectionIndex={activeSectionIndex}
@@ -383,22 +446,21 @@ const SimplePageBuilder: React.FC = () => {
           />
         </div>
         
-        {editMode && (
-          <EditorPanel 
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            sections={sections}
-            pageSettings={pageSettings}
-            setPageSettings={setPageSettings}
-            activeSectionIndex={activeSectionIndex}
-            updateSection={updateSection}
-            addSection={addSection}
-            removeSection={removeSection}
-            moveSectionUp={moveSectionUp}
-            moveSectionDown={moveSectionDown}
-            setActiveSectionIndex={setActiveSectionIndex}
-          />
-        )}
+        {/* Editor panel */}
+        <EditorPanel
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          sections={sections}
+          pageSettings={pageSettings}
+          setPageSettings={setPageSettings}
+          activeSectionIndex={activeSectionIndex}
+          updateSection={updateSection}
+          addSection={addSection}
+          removeSection={removeSection}
+          moveSectionUp={moveSectionUp}
+          moveSectionDown={moveSectionDown}
+          setActiveSectionIndex={setActiveSectionIndex}
+        />
       </div>
     </div>
   );

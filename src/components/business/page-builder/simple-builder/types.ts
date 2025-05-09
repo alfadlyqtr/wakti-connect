@@ -46,10 +46,64 @@ export interface PageSettings {
   googleMapsUrl: string;
   tmwChatbotCode: string;
   
-  // New properties to fix type errors
   textAlignment?: TextAlignment;
   headingStyle?: HeadingStyle;
   buttonStyle?: ButtonStyle;
   sectionSpacing?: SectionSpacing;
   contentMaxWidth?: string;
+}
+
+export interface WorkingHour {
+  day: string;
+  open: string;
+  close: string;
+  closed: boolean;
+}
+
+export interface BusinessPageData {
+  pageSetup: {
+    businessName: string;
+    alignment: TextAlignment;
+    visible: boolean;
+  };
+  logo: {
+    url: string;
+    shape: string;
+    alignment: string;
+    visible: boolean;
+  };
+  bookings: {
+    viewStyle: string;
+    templates: any[];
+    visible: boolean;
+  };
+  socialInline: {
+    style: string;
+    platforms: Record<string, boolean>;
+    visible: boolean;
+  };
+  workingHours: {
+    layout: string;
+    hours: any[];
+    visible: boolean;
+  };
+  chatbot: {
+    position: string;
+    embedCode: string;
+    visible: boolean;
+  };
+  theme: {
+    backgroundColor: string;
+    textColor: string;
+    fontStyle: string;
+  };
+  socialSidebar: {
+    position: string;
+    platforms: Record<string, boolean>;
+    visible: boolean;
+  };
+  contactInfo: Record<string, string>;
+  sectionOrder: string[];
+  published: boolean;
+  sections?: SectionType[]; // Add this to make it valid with our structure
 }
