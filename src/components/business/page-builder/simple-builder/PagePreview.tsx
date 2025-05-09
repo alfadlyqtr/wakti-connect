@@ -1,176 +1,111 @@
 
 import React from "react";
 import { SectionType, PageSettings } from "./types";
-import { PlusCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import HeaderSection from "./sections/HeaderSection";
-import AboutSection from "./sections/AboutSection";
-import GallerySection from "./sections/GallerySection";
-import ContactSection from "./sections/ContactSection";
-import HoursSection from "./sections/HoursSection";
-import TestimonialsSection from "./sections/TestimonialsSection";
 import BookingSection from "./sections/BookingSection";
-import InstagramSection from "./sections/InstagramSection";
+import HoursSection from "./sections/HoursSection";
+import SocialSection from "./sections/SocialSection";
 import ChatbotSection from "./sections/ChatbotSection";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface PagePreviewProps {
   sections: SectionType[];
+  activeSection?: SectionType;
   activeSectionIndex: number | null;
   setActiveSectionIndex: (index: number | null) => void;
-  pageSettings: PageSettings;
   addSection: (type: string) => void;
-  activeSection?: SectionType;
-  onSectionClick?: (index: number) => void;
+  pageSettings: PageSettings;
 }
 
-const PagePreview: React.FC<PagePreviewProps> = ({
-  sections,
-  activeSectionIndex,
+const PagePreview: React.FC<PagePreviewProps> = ({ 
+  sections, 
+  activeSection, 
+  activeSectionIndex, 
   setActiveSectionIndex,
-  pageSettings,
   addSection,
-  activeSection,
-  onSectionClick
+  pageSettings
 }) => {
-  // Function to render the appropriate section component based on type
   const renderSection = (section: SectionType, index: number) => {
     const isActive = activeSectionIndex === index;
-    const commonProps = {
-      section,
-      isActive,
-      onClick: () => {
-        if (onSectionClick) {
-          onSectionClick(index);
-        } else {
-          setActiveSectionIndex(index);
-        }
-      }
-    };
-
-    switch (section.type) {
-      case 'header':
-        return <HeaderSection key={index} {...commonProps} />;
-      case 'about':
-        return <AboutSection key={index} {...commonProps} />;
-      case 'gallery':
-        return <GallerySection key={index} {...commonProps} />;
-      case 'contact':
-        return <ContactSection key={index} {...commonProps} />;
-      case 'hours':
-        return <HoursSection key={index} {...commonProps} />;
-      case 'testimonials':
-        return <TestimonialsSection key={index} {...commonProps} />;
-      case 'booking':
-        return <BookingSection key={index} {...commonProps} />;
-      case 'instagram':
-        return <InstagramSection key={index} {...commonProps} />;
-      case 'chatbot':
-        return <ChatbotSection key={index} {...commonProps} />;
+    
+    switch(section.type) {
+      case "header":
+        return <HeaderSection 
+          section={section} 
+          isActive={isActive} 
+          onClick={() => setActiveSectionIndex(index)} 
+        />;
+      case "booking":
+        return <BookingSection 
+          section={section} 
+          isActive={isActive} 
+          onClick={() => setActiveSectionIndex(index)} 
+        />;
+      case "hours":
+        return <HoursSection 
+          section={section} 
+          isActive={isActive} 
+          onClick={() => setActiveSectionIndex(index)} 
+        />;
+      case "social":
+        return <SocialSection 
+          section={section} 
+          isActive={isActive} 
+          onClick={() => setActiveSectionIndex(index)} 
+        />;
+      case "chatbot":
+        return <ChatbotSection 
+          section={section} 
+          isActive={isActive} 
+          onClick={() => setActiveSectionIndex(index)} 
+        />;
       default:
-        return null;
+        return <div>Unknown section type</div>;
     }
   };
   
-  // Apply page-level styling based on pageSettings
-  const pageStyle = {
-    fontFamily: pageSettings.fontFamily || 'Inter, sans-serif',
-    color: pageSettings.textColor || '#000000',
-    backgroundColor: pageSettings.backgroundColor || '#ffffff'
-  };
-
   return (
-    <div className="max-w-4xl mx-auto" style={pageStyle}>
-      {/* Add section button at the top */}
-      <div className="flex justify-center my-4">
-        <Button 
-          variant="outline" 
-          className="flex items-center gap-2"
-          onClick={() => {
-            // Show dropdown with section options
-            const sectionTypes = [
-              "header", "about", "gallery", "contact", 
-              "hours", "testimonials", "booking", 
-              "instagram", "chatbot"
-            ];
-            
-            const sectionType = prompt(
-              "Choose a section type: " + sectionTypes.join(", ")
-            );
-            
-            if (sectionType && sectionTypes.includes(sectionType)) {
-              addSection(sectionType);
-            }
-          }}
-        >
-          <PlusCircle className="h-4 w-4" />
-          Add Section
-        </Button>
-      </div>
-      
-      {/* Render all sections */}
-      <div className="space-y-8">
+    <div 
+      className="max-w-5xl mx-auto bg-white rounded-lg shadow-sm"
+      style={{
+        fontFamily: pageSettings.fontFamily,
+        color: pageSettings.textColor,
+        backgroundColor: pageSettings.backgroundColor
+      }}
+    >
+      {/* Live preview of the page */}
+      <div className="divide-y">
         {sections.map((section, index) => (
-          <div key={index} className="relative">
+          <div key={section.id} className="relative">
             {renderSection(section, index)}
-            
-            {/* Add section button between sections */}
-            <div className="absolute left-1/2 bottom-0 transform -translate-x-1/2 translate-y-1/2 z-10">
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="rounded-full h-8 w-8 p-0 bg-white shadow-sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  const sectionTypes = [
-                    "header", "about", "gallery", "contact", 
-                    "hours", "testimonials", "booking", 
-                    "instagram", "chatbot"
-                  ];
-                  
-                  const sectionType = prompt(
-                    "Choose a section type: " + sectionTypes.join(", ")
-                  );
-                  
-                  if (sectionType && sectionTypes.includes(sectionType)) {
-                    addSection(sectionType);
-                  }
-                }}
-              >
-                <PlusCircle className="h-4 w-4" />
-              </Button>
-            </div>
           </div>
         ))}
       </div>
       
-      {/* Add section button at the bottom if no sections */}
-      {sections.length === 0 && (
-        <div className="flex flex-col items-center justify-center bg-gray-50 p-12 rounded-lg border-2 border-dashed border-gray-300">
-          <p className="text-gray-500 mb-4">Your page is empty. Add your first section to get started.</p>
-          <Button 
-            variant="default" 
-            className="flex items-center gap-2"
-            onClick={() => {
-              const sectionTypes = [
-                "header", "about", "gallery", "contact", 
-                "hours", "testimonials", "booking", 
-                "instagram", "chatbot"
-              ];
-              
-              const sectionType = prompt(
-                "Choose a section type: " + sectionTypes.join(", ")
-              );
-              
-              if (sectionType && sectionTypes.includes(sectionType)) {
-                addSection(sectionType);
-              }
-            }}
-          >
-            <PlusCircle className="h-4 w-4" />
-            Add First Section
-          </Button>
+      {/* Add section button */}
+      <div className="p-8 text-center border-t">
+        <div className="inline-flex flex-col items-center gap-2">
+          <p className="text-sm text-muted-foreground">Add a new section</p>
+          <div className="flex flex-wrap justify-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => addSection("header")}>
+              <Plus className="h-4 w-4 mr-1" /> Header
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => addSection("booking")}>
+              <Plus className="h-4 w-4 mr-1" /> Booking
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => addSection("hours")}>
+              <Plus className="h-4 w-4 mr-1" /> Hours
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => addSection("social")}>
+              <Plus className="h-4 w-4 mr-1" /> Social
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => addSection("chatbot")}>
+              <Plus className="h-4 w-4 mr-1" /> Chatbot
+            </Button>
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };

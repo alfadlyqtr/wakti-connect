@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Helmet } from "react-helmet-async";
-import BusinessPageBuilder from "@/components/business/page-builder/BusinessPageBuilder";
+import SimplePageBuilder from "@/components/business/page-builder/simple-builder/SimplePageBuilder";
 
 const DashboardBusinessPage = () => {
   return (
@@ -9,7 +9,7 @@ const DashboardBusinessPage = () => {
       <Helmet>
         <title>Business Page Builder | WAKTI</title>
       </Helmet>
-      <BusinessPageBuilder />
+      <SimplePageBuilder />
     </>
   );
 };
