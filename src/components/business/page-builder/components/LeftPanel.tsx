@@ -10,8 +10,15 @@ import { WorkingHoursSection } from "./sections/WorkingHoursSection";
 import { ChatbotSection } from "./sections/ChatbotSection";
 import { ThemeOptionsSection } from "./sections/ThemeOptionsSection";
 import { SocialSidebarSection } from "./sections/SocialSidebarSection";
+import { Button } from "@/components/ui/button";
+import { Send } from "lucide-react";
 
-export const LeftPanel = () => {
+interface LeftPanelProps {
+  isPublishing?: boolean;
+  onPublish?: () => Promise<void>;
+}
+
+export const LeftPanel = ({ isPublishing, onPublish }: LeftPanelProps) => {
   const { pageData, updatePageData } = useBusinessPage();
   
   const handleReorderSections = (startIndex: number, endIndex: number) => {
@@ -43,6 +50,20 @@ export const LeftPanel = () => {
           <SocialSidebarSection />
         </div>
       </ScrollArea>
+
+      {onPublish && (
+        <div className="p-4 border-t">
+          <Button 
+            className="w-full" 
+            variant="default" 
+            onClick={onPublish}
+            disabled={isPublishing}
+          >
+            {isPublishing ? "Publishing..." : "Publish Page"}
+            <Send className="ml-2 h-4 w-4" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

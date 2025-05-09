@@ -2,15 +2,15 @@
 import React, { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { BusinessPage } from "@/types/business.types";
-import { useAuth } from "@/hooks/useAuth"; // Fixed import path
+import { useAuth } from "@/hooks/useAuth"; // Using correct import path
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useBusinessPageDataQuery } from "@/hooks/business-page/useBusinessPageDataQueries";
 import PageBuilderEmptyState from "./PageBuilderEmptyState";
-import { BusinessPageContext } from "./context/BusinessPageContext"; // Removed BusinessPageProvider import
+import { BusinessPageContext } from "./context/BusinessPageContext";
 import { useCreateBusinessPageDataMutation, useUpdateBusinessPageDataMutation } from "@/hooks/business-page/useBusinessPageDataMutations";
 import { toast } from "@/components/ui/use-toast";
-import { LeftPanel } from "./components/LeftPanel"; // Fixed import syntax
-import { PreviewPanel } from "./components/PreviewPanel"; // Fixed import syntax
+import { LeftPanel } from "./components/LeftPanel";
+import { PreviewPanel } from "./components/PreviewPanel";
 
 // The main business page builder component
 const BusinessPageBuilder: React.FC = () => {
@@ -18,13 +18,13 @@ const BusinessPageBuilder: React.FC = () => {
   const { profile } = useUserProfile();
   const [isPublishing, setIsPublishing] = useState(false);
   
-  // Query to fetch the business page data
+  // Query to fetch the business page data - passing user ID properly
   const {
     data: pageData,
     isLoading,
     error,
     refetch
-  } = useBusinessPageDataQuery(user?.id); // User ID is now properly passed
+  } = useBusinessPageDataQuery(user?.id);
   
   // Mutations for creating and updating page data
   const createPageMutation = useCreateBusinessPageDataMutation();
@@ -99,7 +99,7 @@ const BusinessPageBuilder: React.FC = () => {
   
   // If no page data exists, show empty state
   if (!pageData) {
-    return <PageBuilderEmptyState createPage={createPageMutation.mutateAsync} />; // Fixed props
+    return <PageBuilderEmptyState createPage={createPageMutation.mutateAsync} />;
   }
   
   // Create a page data context provider and render the page builder interface
@@ -112,11 +112,7 @@ const BusinessPageBuilder: React.FC = () => {
       handleSave: async () => {} // We'll implement this in a future update
     }}>
       <div className="flex h-full max-h-screen">
-        <LeftPanel 
-          pageData={pageData} 
-          isPublishing={isPublishing}
-          onPublish={handlePublish}
-        />
+        <LeftPanel />
         <PreviewPanel />
       </div>
     </BusinessPageContext.Provider>
