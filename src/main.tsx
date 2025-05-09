@@ -1,7 +1,6 @@
 
 import { createRoot } from 'react-dom/client';
-import { RouterProvider } from 'react-router-dom';
-import { router } from './router';
+import App from './App';
 import './index.css';
 import './App.css';
 import { AuthProvider } from '@/features/auth/context/AuthContext';
@@ -31,7 +30,7 @@ root.render(
       <ThemeProvider defaultTheme="system" storageKey="ui-theme">
         <AuthProvider>
           <CurrencyProvider>
-            <RouterProvider router={router} />
+            <App />
           </CurrencyProvider>
         </AuthProvider>
       </ThemeProvider>
