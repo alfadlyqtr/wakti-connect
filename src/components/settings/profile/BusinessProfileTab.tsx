@@ -39,9 +39,9 @@ const BusinessProfileTab = () => {
         <div className="flex items-center gap-2">
           <Building2 className="h-5 w-5 text-wakti-blue" />
           <div>
-            <CardTitle>Essential Business Information</CardTitle>
+            <CardTitle>Business Profile</CardTitle>
             <CardDescription>
-              Update your core business details shown on your public profile
+              Manage all your business information in one place
             </CardDescription>
           </div>
         </div>
