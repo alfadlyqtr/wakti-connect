@@ -1,886 +1,724 @@
 
 import React, { useState, useEffect } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { useUser } from '@/hooks/auth/useUser';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Eye, Save } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "@/components/ui/use-toast";
+import { useUser } from "@/hooks/auth/useUser";
+import { supabase } from "@/integrations/supabase/client";
+import { Json } from "@/types/supabase";
 import SimpleLoading from './SimpleLoading';
 import SimplePagePreview from './SimplePagePreview';
-import TopBar from './TopBar';
-import { BusinessPageData, LogoShape, WorkingHour } from './types';
-import { useLogoUpload } from '@/hooks/useLogoUpload';
+import { 
+  BusinessPageData, 
+  TextAlignment, 
+  LogoShape, 
+  HeadingStyle, 
+  ButtonStyle, 
+  SectionSpacing, 
+  WorkingHour,
+  BusinessPageRecord,
+  SocialPlatforms 
+} from './types';
 
-const Builder = () => {
+const DAYS_OF_WEEK = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+const Builder: React.FC = () => {
   const { user } = useUser();
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isPublishing, setIsPublishing] = useState(false);
-  const [isEditMode, setEditMode] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [pageData, setPageData] = useState<BusinessPageData>({
     pageSetup: {
-      businessName: '',
-      alignment: 'center',
+      businessName: "",
+      alignment: "center" as TextAlignment,
       visible: true,
-      description: '',
+      description: ""
     },
     logo: {
-      url: '',
-      shape: 'circle' as LogoShape,
-      alignment: 'center',
-      visible: true,
+      url: "",
+      shape: "circle" as LogoShape,
+      alignment: "center",
+      visible: true
     },
     bookings: {
-      viewStyle: 'grid',
+      viewStyle: "grid",
       templates: [],
-      visible: true,
+      visible: true
     },
     socialInline: {
-      style: 'icon',
+      style: "icon",
       platforms: {
-        whatsapp: true,
+        whatsapp: false,
         whatsappBusiness: false,
-        facebook: true,
-        instagram: true,
-        googleMaps: true,
-        phone: true,
-        email: true,
+        facebook: false,
+        instagram: false,
+        googleMaps: false,
+        phone: false,
+        email: false
       },
-      visible: true,
+      visible: true
     },
     workingHours: {
-      layout: 'card',
-      hours: [
-        {
-          day: 'Monday',
-          hours: '9:00 AM - 5:00 PM',
-          isOpen: true,
-        },
-        {
-          day: 'Tuesday',
-          hours: '9:00 AM - 5:00 PM',
-          isOpen: true,
-        },
-        {
-          day: 'Wednesday',
-          hours: '9:00 AM - 5:00 PM',
-          isOpen: true,
-        },
-        {
-          day: 'Thursday',
-          hours: '9:00 AM - 5:00 PM',
-          isOpen: true,
-        },
-        {
-          day: 'Friday',
-          hours: '9:00 AM - 5:00 PM',
-          isOpen: true,
-        },
-        {
-          day: 'Saturday',
-          hours: '10:00 AM - 3:00 PM',
-          isOpen: false,
-        },
-        {
-          day: 'Sunday',
-          hours: 'Closed',
-          isOpen: false,
-        },
-      ],
-      visible: true,
+      layout: "card",
+      hours: DAYS_OF_WEEK.map((day) => ({
+        day,
+        hours: "9:00 AM - 5:00 PM",
+        isOpen: true
+      })),
+      visible: true
     },
     chatbot: {
-      position: 'right',
-      embedCode: '',
-      visible: false,
+      position: "right",
+      embedCode: "",
+      visible: false
     },
     theme: {
-      backgroundColor: '#ffffff',
-      textColor: '#333333',
-      fontStyle: 'sans-serif',
+      backgroundColor: "#ffffff",
+      textColor: "#000000",
+      fontStyle: "sans-serif"
     },
     socialSidebar: {
-      position: 'right',
+      position: "right",
       platforms: {
-        whatsapp: true,
+        whatsapp: false,
         whatsappBusiness: false,
-        facebook: true,
-        instagram: true,
-        googleMaps: true,
-        phone: true,
-        email: true,
+        facebook: false,
+        instagram: false,
+        googleMaps: false,
+        phone: false,
+        email: false
       },
-      visible: false,
+      visible: false
     },
     contactInfo: {
-      email: '',
-      phone: '',
-      whatsapp: '',
-      whatsappBusiness: '',
-      facebook: '',
-      instagram: '',
-      googleMaps: '',
+      email: "",
+      whatsapp: "",
+      whatsappBusiness: "",
+      phone: "",
+      facebook: "",
+      googleMaps: "",
+      instagram: ""
     },
-    sectionOrder: ['pageSetup', 'logo', 'bookings', 'socialInline', 'workingHours'],
+    sectionOrder: ["pageSetup", "logo", "bookings", "socialInline", "workingHours"],
     published: false,
+    sections: []
   });
+  const [existingPageId, setExistingPageId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<string>("content");
   
-  const [pageId, setPageId] = useState<string | null>(null);
-  const [pageUrl, setPageUrl] = useState<string>('');
-  
-  // Add logo upload hook
-  const { uploadingLogo, handleLogoUpload } = useLogoUpload(
-    user?.id,
-    (logoUrl) => {
-      setPageData(prevData => ({
-        ...prevData,
-        logo: {
-          ...prevData.logo,
-          url: logoUrl,
-        },
-      }));
-    }
-  );
-
+  // Load existing page data if available
   useEffect(() => {
-    if (user?.id) {
-      loadPageData();
-    }
+    const fetchPageData = async () => {
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
+      
+      try {
+        const { data, error } = await supabase
+          .from('business_pages_data')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1);
+        
+        if (error) {
+          console.error("Error fetching business page data:", error);
+          throw error;
+        }
+        
+        if (data && data.length > 0) {
+          const record = data[0];
+          setExistingPageId(record.id);
+          
+          // Parse the page_data and apply defaults where needed
+          const parsedData = record.page_data as any;
+          
+          // Handle theme defaults
+          if (!parsedData.theme) {
+            parsedData.theme = {
+              backgroundColor: "#ffffff",
+              textColor: "#000000",
+              fontStyle: "sans-serif"
+            };
+          }
+          
+          // Add description to pageSetup if it doesn't exist
+          if (parsedData.pageSetup && !parsedData.pageSetup.description) {
+            parsedData.pageSetup.description = "";
+          }
+          
+          // Ensure working hours has the correct structure
+          if (!parsedData.workingHours || !parsedData.workingHours.hours) {
+            parsedData.workingHours = {
+              ...parsedData.workingHours,
+              hours: DAYS_OF_WEEK.map((day) => ({
+                day,
+                hours: "9:00 AM - 5:00 PM",
+                isOpen: true
+              }))
+            };
+          }
+          
+          // Ensure contact info has all required fields
+          if (!parsedData.contactInfo) {
+            parsedData.contactInfo = {
+              email: "",
+              whatsapp: "",
+              whatsappBusiness: "",
+              phone: "",
+              facebook: "",
+              googleMaps: "",
+              instagram: ""
+            };
+          }
+          
+          // Make sure platforms exist in social sections
+          const defaultPlatforms = {
+            whatsapp: false,
+            whatsappBusiness: false,
+            facebook: false,
+            instagram: false,
+            googleMaps: false,
+            phone: false,
+            email: false
+          };
+          
+          if (!parsedData.socialInline || !parsedData.socialInline.platforms) {
+            parsedData.socialInline = {
+              ...parsedData.socialInline,
+              platforms: defaultPlatforms
+            };
+          }
+          
+          if (!parsedData.socialSidebar || !parsedData.socialSidebar.platforms) {
+            parsedData.socialSidebar = {
+              ...parsedData.socialSidebar,
+              platforms: defaultPlatforms
+            };
+          }
+          
+          // Set standard fields if missing
+          if (!parsedData.headingStyle) parsedData.headingStyle = "default" as HeadingStyle;
+          if (!parsedData.buttonStyle) parsedData.buttonStyle = "default" as ButtonStyle;
+          if (!parsedData.sectionSpacing) parsedData.sectionSpacing = "default" as SectionSpacing;
+          
+          setPageData(parsedData as BusinessPageData);
+        }
+      } catch (err) {
+        console.error("Error loading business page data:", err);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load your business page data",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchPageData();
   }, [user?.id]);
-
-  const loadPageData = async () => {
-    if (!user?.id) return;
+  
+  const handleSave = async () => {
+    if (!user?.id) {
+      toast({
+        variant: "destructive",
+        title: "Authentication Required",
+        description: "Please login to save your business page",
+      });
+      return;
+    }
+    
+    setSaving(true);
     
     try {
-      setIsLoading(true);
-      
-      const { data, error } = await supabase
-        .from('business_pages_data')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      
-      if (error) {
-        throw error;
+      let pageSlug = null;
+      if (pageData.pageSetup?.businessName) {
+        pageSlug = pageData.pageSetup.businessName
+          .toLowerCase()
+          .replace(/[^\w\s-]/g, '')
+          .replace(/\s+/g, '-');
       }
       
-      if (data) {
-        // Convert from JSON if needed
-        setPageId(data.id);
+      if (existingPageId) {
+        // Update existing page data
+        const { data, error } = await supabase
+          .from('business_pages_data')
+          .update({
+            page_slug: pageSlug,
+            page_data: pageData as unknown as Json,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingPageId);
         
-        if (data.page_slug) {
-          setPageUrl(`https://${data.page_slug}.wakti.app`);
+        if (error) {
+          throw error;
         }
         
-        // Check if page_data is already a parsed object or still a string
-        let parsedData: BusinessPageData;
+        toast({
+          title: "Page Updated",
+          description: "Your business page has been updated successfully",
+        });
+      } else {
+        // Create new page data
+        const { data, error } = await supabase
+          .from('business_pages_data')
+          .insert({
+            user_id: user.id,
+            page_slug: pageSlug,
+            page_data: pageData as unknown as Json
+          });
         
-        if (typeof data.page_data === 'string') {
-          try {
-            parsedData = JSON.parse(data.page_data) as BusinessPageData;
-          } catch (e) {
-            console.error('Error parsing page data', e);
-            parsedData = { ...pageData };
-          }
-        } else {
-          parsedData = data.page_data as unknown as BusinessPageData;
+        if (error) {
+          throw error;
         }
         
-        // Ensure the loaded data has all the required fields
-        const initializedData = {
-          ...pageData,
-          ...parsedData,
-          pageSetup: {
-            ...pageData.pageSetup,
-            ...parsedData.pageSetup,
-          },
-          theme: {
-            ...pageData.theme,
-            ...parsedData.theme,
-          },
-          contactInfo: {
-            ...pageData.contactInfo,
-            ...parsedData.contactInfo,
-          },
-          logo: {
-            ...pageData.logo,
-            ...parsedData.logo,
-          },
-          workingHours: {
-            ...pageData.workingHours,
-            hours: parsedData.workingHours?.hours || pageData.workingHours.hours,
-          },
-          chatbot: {
-            ...pageData.chatbot,
-            ...parsedData.chatbot,
-          },
-        };
-        
-        setPageData(initializedData);
+        toast({
+          title: "Page Created",
+          description: "Your business page has been created successfully",
+        });
       }
-    } catch (error) {
-      console.error('Error loading page data:', error);
+    } catch (err: any) {
+      console.error("Error saving business page data:", err);
       toast({
-        title: 'Error loading page data',
-        description: 'There was a problem loading your page data. Please try again.',
-        variant: 'destructive',
+        variant: "destructive",
+        title: "Error",
+        description: err.message || "Failed to save business page data",
       });
     } finally {
-      setIsLoading(false);
+      setSaving(false);
     }
   };
-
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-    section?: keyof BusinessPageData,
-    field?: string
+  
+  const updateField = (
+    section: keyof BusinessPageData,
+    field: string,
+    value: any
   ) => {
-    const { name, value } = e.target;
-    
-    if (section && field) {
-      setPageData(prev => ({
-        ...prev,
-        [section]: {
-          ...prev[section],
-          [field]: value,
-        },
-      }));
-    } else {
-      // Find which section contains this field 
-      // This is a simplified approach - in a real app we might have a more structured way
-      if (name === 'businessName' || name === 'description') {
-        setPageData(prev => ({
-          ...prev,
-          pageSetup: {
-            ...prev.pageSetup,
-            [name]: value,
-          },
-        }));
-      } else if (name === 'backgroundColor' || name === 'textColor' || name === 'fontStyle') {
-        setPageData(prev => ({
-          ...prev,
-          theme: {
-            ...prev.theme,
-            [name]: value,
-          },
-        }));
-      } else if (name === 'email' || name === 'phone' || name === 'whatsapp' || 
-                 name === 'facebook' || name === 'instagram' || name === 'googleMaps') {
-        setPageData(prev => ({
-          ...prev,
-          contactInfo: {
-            ...prev.contactInfo,
-            [name]: value,
-          },
-        }));
-      } else if (name === 'embedCode') {
-        setPageData(prev => ({
-          ...prev,
-          chatbot: {
-            ...prev.chatbot,
-            embedCode: value,
-          },
-        }));
-      }
-    }
-  };
-
-  const handleToggleChange = (name: string, checked: boolean) => {
-    // Handle toggles based on their names
-    if (name === 'published') {
-      setPageData(prev => ({
-        ...prev,
-        published: checked,
-      }));
-    } else if (name.startsWith('platforms.')) {
-      const platform = name.split('.')[1];
-      setPageData(prev => ({
-        ...prev,
-        socialInline: {
-          ...prev.socialInline,
-          platforms: {
-            ...prev.socialInline.platforms,
-            [platform]: checked,
-          },
-        },
-      }));
-    } else if (name.startsWith('visible.')) {
-      const section = name.split('.')[1] as keyof BusinessPageData;
-      setPageData(prev => ({
-        ...prev,
-        [section]: {
-          ...prev[section as keyof typeof prev],
-          visible: checked,
-        },
-      }));
-    } else if (name.startsWith('workingHours.')) {
-      const dayIndex = parseInt(name.split('.')[1]);
-      const newHours = [...pageData.workingHours.hours];
-      newHours[dayIndex] = {
-        ...newHours[dayIndex],
-        isOpen: checked,
-      };
-      setPageData(prev => ({
-        ...prev,
-        workingHours: {
-          ...prev.workingHours,
-          hours: newHours,
-        },
-      }));
-    } else if (name === 'chatbotVisible') {
-      setPageData(prev => ({
-        ...prev,
-        chatbot: {
-          ...prev.chatbot,
-          visible: checked,
-        },
-      }));
-    }
-  };
-
-  const handleSelectChange = (name: string, value: string) => {
-    if (name === 'logoShape') {
-      setPageData(prev => ({
-        ...prev,
-        logo: {
-          ...prev.logo,
-          shape: value as LogoShape,
-        },
-      }));
-    } else if (name === 'fontStyle') {
-      setPageData(prev => ({
-        ...prev,
-        theme: {
-          ...prev.theme,
-          fontStyle: value,
-        },
-      }));
-    } else if (name === 'chatbotPosition') {
-      setPageData(prev => ({
-        ...prev,
-        chatbot: {
-          ...prev.chatbot,
-          position: value,
-        },
-      }));
-    }
-  };
-
-  const handleWorkingHourChange = (index: number, value: string) => {
-    const newHours = [...pageData.workingHours.hours];
-    newHours[index] = {
-      ...newHours[index],
-      hours: value,
-    };
-    setPageData(prev => ({
+    setPageData((prev) => ({
       ...prev,
-      workingHours: {
-        ...prev.workingHours,
-        hours: newHours,
-      },
+      [section]: {
+        ...prev[section],
+        [field]: value
+      }
     }));
   };
 
-  const handleSave = async () => {
-    if (!user?.id) return;
-    
-    try {
-      setIsSaving(true);
-      
-      // Create the data structure to save
-      const saveData = {
-        user_id: user.id,
-        page_data: pageData,
-        page_slug: pageData.pageSetup.businessName
-          .toLowerCase()
-          .replace(/[^a-zA-Z0-9]/g, '-')
-          .replace(/-+/g, '-'),
-      };
-      
-      if (pageId) {
-        // Update existing
-        const { error } = await supabase
-          .from('business_pages_data')
-          .update(saveData)
-          .eq('id', pageId);
-          
-        if (error) throw error;
-      } else {
-        // Insert new
-        const { data, error } = await supabase
-          .from('business_pages_data')
-          .insert(saveData)
-          .select();
-          
-        if (error) throw error;
-        if (data && data[0]) {
-          setPageId(data[0].id);
+  const updateNestedField = (
+    section: keyof BusinessPageData,
+    parent: string,
+    field: string,
+    value: any
+  ) => {
+    setPageData((prev) => ({
+      ...prev,
+      [section]: {
+        ...prev[section],
+        [parent]: {
+          ...(prev[section] as any)[parent],
+          [field]: value
         }
       }
-      
-      toast({
-        title: "Page saved",
-        description: "Your page has been saved successfully.",
-      });
-    } catch (error) {
-      console.error('Error saving page:', error);
-      toast({
-        title: 'Error saving page',
-        description: 'There was a problem saving your page. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSaving(false);
-    }
+    }));
   };
-
-  const handlePublish = async () => {
-    if (!user?.id) return;
-    
-    try {
-      setIsPublishing(true);
-      
-      // First save the page
-      await handleSave();
-      
-      // Then update the published status
-      const updatedPageData = {
-        ...pageData,
-        published: true,
-      };
-      
-      await supabase
-        .from('business_pages_data')
-        .update({
-          page_data: updatedPageData,
-        })
-        .eq('id', pageId);
-        
-      setPageData(updatedPageData);
-      
-      // Generate page URL if not already set
-      if (!pageUrl) {
-        const slug = pageData.pageSetup.businessName
-          .toLowerCase()
-          .replace(/[^a-zA-Z0-9]/g, '-')
-          .replace(/-+/g, '-');
-        
-        setPageUrl(`https://${slug}.wakti.app`);
+  
+  const updateSocialPlatform = (
+    section: 'socialInline' | 'socialSidebar',
+    platform: keyof SocialPlatforms,
+    value: boolean
+  ) => {
+    setPageData((prev) => ({
+      ...prev,
+      [section]: {
+        ...prev[section],
+        platforms: {
+          ...(prev[section] as any).platforms,
+          [platform]: value
+        }
       }
-      
-      toast({
-        title: "Page published",
-        description: "Your page has been published successfully.",
-      });
-    } catch (error) {
-      console.error('Error publishing page:', error);
-      toast({
-        title: 'Error publishing page',
-        description: 'There was a problem publishing your page. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsPublishing(false);
-    }
+    }));
   };
-
-  const handlePreview = () => {
-    setEditMode(!isEditMode);
+  
+  const updateWorkingHour = (
+    index: number,
+    field: keyof WorkingHour,
+    value: string | boolean
+  ) => {
+    setPageData((prev) => {
+      const newHours = [...prev.workingHours.hours];
+      newHours[index] = {
+        ...newHours[index],
+        [field]: value
+      };
+      return {
+        ...prev,
+        workingHours: {
+          ...prev.workingHours,
+          hours: newHours
+        }
+      };
+    });
   };
-
-  const getPublicPageUrl = () => {
-    if (!pageUrl) {
-      return '#';
-    }
-    return pageUrl;
-  };
-
-  if (isLoading) {
+  
+  if (loading) {
     return <SimpleLoading />;
   }
-
+  
   return (
-    <div className="flex flex-col h-full">
-      <TopBar 
-        pageUrl={getPublicPageUrl()}
-        onPreview={handlePreview}
-        onPublish={handlePublish}
-        onSave={handleSave}
-        isEditMode={isEditMode}
-        setEditMode={setEditMode}
-        pageSettings={{
-          title: pageData.pageSetup.businessName,
-          slug: pageUrl.split('//')[1]?.split('.')[0] || '',
-          primaryColor: '#3B82F6',
-          secondaryColor: '#10B981',
-          description: pageData.pageSetup.description || '',
-          isPublished: pageData.published,
-          fontFamily: pageData.theme.fontStyle,
-          textColor: pageData.theme.textColor,
-          backgroundColor: pageData.theme.backgroundColor,
-          contactInfo: {
-            email: pageData.contactInfo.email,
-            phone: pageData.contactInfo.phone,
-            address: '',
-            whatsapp: pageData.contactInfo.whatsapp,
-          },
-          socialLinks: {
-            facebook: pageData.contactInfo.facebook,
-            instagram: pageData.contactInfo.instagram,
-            twitter: '',
-            linkedin: '',
-          },
-          businessHours: pageData.workingHours.hours.map(hour => ({ 
-            day: hour.day, 
-            hours: hour.hours,
-            isOpen: hour.isOpen
-          })),
-          googleMapsUrl: pageData.contactInfo.googleMaps,
-          tmwChatbotCode: pageData.chatbot.embedCode,
-        }}
-        isSaving={isSaving}
-        isPublishing={isPublishing}
-      />
-      
-      <div className="flex flex-1 overflow-hidden">
-        {isEditMode ? (
-          <div className="w-1/2 overflow-auto p-4 bg-gray-50 border-r">
-            <Tabs defaultValue="business-details">
-              <TabsList className="mb-4 w-full">
-                <TabsTrigger value="business-details">Business Details</TabsTrigger>
-                <TabsTrigger value="contact-info">Contact & Hours</TabsTrigger>
-                <TabsTrigger value="appearance">Appearance</TabsTrigger>
-                <TabsTrigger value="integrations">Integrations</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="business-details">
+    <div className="container mx-auto py-6">
+      <div className="flex flex-col gap-6 md:flex-row">
+        {/* Editor Panel */}
+        <div className="w-full md:w-1/2 lg:w-2/5">
+          <div className="mb-4 flex items-center justify-between">
+            <h1 className="text-2xl font-bold">Business Page Editor</h1>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setPageData(prev => ({...prev, published: !prev.published}))}
+              >
+                {pageData.published ? "Unpublish" : "Publish"}
+              </Button>
+              <Button 
+                onClick={handleSave} 
+                disabled={saving}
+                size="sm"
+              >
+                {saving ? "Saving..." : "Save Changes"}
+              </Button>
+            </div>
+          </div>
+          
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid grid-cols-3 mb-4">
+              <TabsTrigger value="content">Content</TabsTrigger>
+              <TabsTrigger value="appearance">Appearance</TabsTrigger>
+              <TabsTrigger value="integrations">Integrations</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="content">
+              <div className="space-y-6">
+                {/* Business Details */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>Business Information</CardTitle>
+                    <CardTitle>Business Details</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="businessName">Business Name</Label>
-                      <Input 
-                        id="businessName" 
-                        name="businessName" 
-                        value={pageData.pageSetup.businessName} 
-                        onChange={handleInputChange}
+                      <Input
+                        id="businessName"
+                        value={pageData.pageSetup.businessName}
+                        onChange={(e) => updateField("pageSetup", "businessName", e.target.value)}
+                        placeholder="Enter your business name"
                       />
                     </div>
-                    
                     <div className="space-y-2">
                       <Label htmlFor="description">Description</Label>
-                      <Textarea 
-                        id="description" 
-                        name="description" 
-                        value={pageData.pageSetup.description || ''}
-                        onChange={handleInputChange}
-                        rows={4}
+                      <Textarea
+                        id="description"
+                        value={pageData.pageSetup.description || ""}
+                        onChange={(e) => updateField("pageSetup", "description", e.target.value)}
+                        placeholder="Describe your business"
+                        rows={3}
                       />
                     </div>
-                    
                     <div className="space-y-2">
-                      <Label>Logo</Label>
-                      {pageData.logo.url && (
-                        <div className="mb-2">
-                          <img 
-                            src={pageData.logo.url} 
-                            alt="Business Logo" 
-                            className="h-20 w-20 object-contain border rounded"
-                          />
-                        </div>
-                      )}
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => handleLogoUpload(e)}
-                        disabled={uploadingLogo}
-                      />
-                      <div className="flex items-center space-x-2 mt-2">
-                        <Label>Logo Shape:</Label>
-                        <select 
-                          value={pageData.logo.shape}
-                          onChange={(e) => handleSelectChange('logoShape', e.target.value)}
-                          className="border rounded px-2 py-1"
-                        >
-                          <option value="circle">Circle</option>
-                          <option value="square">Square</option>
-                        </select>
-                      </div>
+                      <Label htmlFor="alignment">Text Alignment</Label>
+                      <Select
+                        value={pageData.pageSetup.alignment}
+                        onValueChange={(value: TextAlignment) => updateField("pageSetup", "alignment", value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select alignment" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="left">Left</SelectItem>
+                          <SelectItem value="center">Center</SelectItem>
+                          <SelectItem value="right">Right</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </CardContent>
                 </Card>
-              </TabsContent>
-              
-              <TabsContent value="contact-info">
-                <Card className="mb-4">
+                
+                {/* Logo */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Logo</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="logoUrl">Logo URL</Label>
+                      <Input
+                        id="logoUrl"
+                        value={pageData.logo.url}
+                        onChange={(e) => updateField("logo", "url", e.target.value)}
+                        placeholder="Enter logo URL"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="logoShape">Logo Shape</Label>
+                      <Select
+                        value={pageData.logo.shape}
+                        onValueChange={(value: LogoShape) => updateField("logo", "shape", value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select shape" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="circle">Circle</SelectItem>
+                          <SelectItem value="square">Square</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Label htmlFor="logoVisible">Show Logo</Label>
+                      <Switch
+                        id="logoVisible"
+                        checked={pageData.logo.visible}
+                        onCheckedChange={(value) => updateField("logo", "visible", value)}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* Contact Information */}
+                <Card>
                   <CardHeader>
                     <CardTitle>Contact Information</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email Address</Label>
-                      <Input 
-                        id="email" 
-                        name="email" 
-                        value={pageData.contactInfo.email} 
-                        onChange={handleInputChange}
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        value={pageData.contactInfo.email}
+                        onChange={(e) => updateField("contactInfo", "email", e.target.value)}
+                        placeholder="your@email.com"
+                        type="email"
                       />
                     </div>
-                    
                     <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number</Label>
-                      <Input 
-                        id="phone" 
-                        name="phone" 
-                        value={pageData.contactInfo.phone} 
-                        onChange={handleInputChange}
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="whatsapp">WhatsApp Number</Label>
-                      <Input 
-                        id="whatsapp" 
-                        name="whatsapp" 
-                        value={pageData.contactInfo.whatsapp} 
-                        onChange={handleInputChange}
+                      <Label htmlFor="phone">Phone</Label>
+                      <Input
+                        id="phone"
+                        value={pageData.contactInfo.phone}
+                        onChange={(e) => updateField("contactInfo", "phone", e.target.value)}
+                        placeholder="+1234567890"
                       />
                     </div>
                   </CardContent>
                 </Card>
                 
-                <Card className="mb-4">
+                {/* Social Media */}
+                <Card>
                   <CardHeader>
                     <CardTitle>Social Media</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="facebook">Facebook URL</Label>
-                      <Input 
-                        id="facebook" 
-                        name="facebook" 
-                        value={pageData.contactInfo.facebook} 
-                        onChange={handleInputChange}
-                        placeholder="https://facebook.com/yourbusiness"
+                      <Label htmlFor="facebook">Facebook</Label>
+                      <Input
+                        id="facebook"
+                        value={pageData.contactInfo.facebook}
+                        onChange={(e) => updateField("contactInfo", "facebook", e.target.value)}
+                        placeholder="Facebook URL"
                       />
                     </div>
-                    
                     <div className="space-y-2">
-                      <Label htmlFor="instagram">Instagram URL</Label>
-                      <Input 
-                        id="instagram" 
-                        name="instagram" 
-                        value={pageData.contactInfo.instagram} 
-                        onChange={handleInputChange}
-                        placeholder="https://instagram.com/yourbusiness"
+                      <Label htmlFor="instagram">Instagram</Label>
+                      <Input
+                        id="instagram"
+                        value={pageData.contactInfo.instagram}
+                        onChange={(e) => updateField("contactInfo", "instagram", e.target.value)}
+                        placeholder="Instagram URL"
                       />
                     </div>
-                    
                     <div className="space-y-2">
-                      <Label htmlFor="googleMaps">Google Maps URL</Label>
-                      <Input 
-                        id="googleMaps" 
-                        name="googleMaps" 
-                        value={pageData.contactInfo.googleMaps} 
-                        onChange={handleInputChange}
-                        placeholder="https://maps.google.com/..."
+                      <Label htmlFor="whatsapp">WhatsApp</Label>
+                      <Input
+                        id="whatsapp"
+                        value={pageData.contactInfo.whatsapp}
+                        onChange={(e) => updateField("contactInfo", "whatsapp", e.target.value)}
+                        placeholder="WhatsApp number"
                       />
                     </div>
-                    
-                    <div className="mt-4">
-                      <Label className="block mb-2">Show Social Icons</Label>
-                      <div className="flex flex-col space-y-2">
-                        {Object.keys(pageData.socialInline.platforms).map((platform) => (
-                          <div key={platform} className="flex items-center space-x-2">
-                            <Switch
-                              checked={pageData.socialInline.platforms[platform as keyof SocialPlatforms]}
-                              onCheckedChange={(checked) => handleToggleChange(`platforms.${platform}`, checked)}
-                            />
-                            <Label>{platform.charAt(0).toUpperCase() + platform.slice(1)}</Label>
-                          </div>
-                        ))}
-                      </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="googleMaps">Google Maps</Label>
+                      <Input
+                        id="googleMaps"
+                        value={pageData.contactInfo.googleMaps}
+                        onChange={(e) => updateField("contactInfo", "googleMaps", e.target.value)}
+                        placeholder="Google Maps URL"
+                      />
                     </div>
                   </CardContent>
                 </Card>
                 
+                {/* Business Hours */}
                 <Card>
                   <CardHeader>
                     <CardTitle>Business Hours</CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    {pageData.workingHours.hours.map((day, index) => (
-                      <div key={day.day} className="flex items-center mb-2">
-                        <div className="w-24">{day.day}</div>
-                        <div className="flex-1">
+                  <CardContent className="space-y-4">
+                    {pageData.workingHours.hours.map((hour, index) => (
+                      <div key={hour.day} className="grid grid-cols-12 gap-2 items-center">
+                        <span className="col-span-3 font-medium">{hour.day}</span>
+                        <div className="col-span-6">
                           <Input
-                            value={day.hours}
-                            onChange={(e) => handleWorkingHourChange(index, e.target.value)}
-                            disabled={!day.isOpen}
+                            value={hour.hours}
+                            onChange={(e) => updateWorkingHour(index, "hours", e.target.value)}
+                            disabled={!hour.isOpen}
                           />
                         </div>
-                        <div className="ml-2 flex items-center">
+                        <div className="col-span-3 flex items-center space-x-2">
+                          <Label htmlFor={`day-${index}`}>Open</Label>
                           <Switch
-                            checked={day.isOpen}
-                            onCheckedChange={(checked) => handleToggleChange(`workingHours.${index}`, checked)}
+                            id={`day-${index}`}
+                            checked={hour.isOpen}
+                            onCheckedChange={(value) => updateWorkingHour(index, "isOpen", value)}
                           />
-                          <span className="ml-2">{day.isOpen ? 'Open' : 'Closed'}</span>
                         </div>
                       </div>
                     ))}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              
-              <TabsContent value="appearance">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Visual Settings</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="backgroundColor">Background Color</Label>
-                      <div className="flex items-center space-x-2">
-                        <input 
-                          type="color" 
-                          id="backgroundColor"
-                          name="backgroundColor" 
-                          value={pageData.theme.backgroundColor} 
-                          onChange={handleInputChange}
-                          className="w-10 h-10"
-                        />
-                        <Input 
-                          value={pageData.theme.backgroundColor} 
-                          onChange={handleInputChange}
-                          name="backgroundColor"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="textColor">Text Color</Label>
-                      <div className="flex items-center space-x-2">
-                        <input 
-                          type="color" 
-                          id="textColor"
-                          name="textColor" 
-                          value={pageData.theme.textColor} 
-                          onChange={handleInputChange}
-                          className="w-10 h-10"
-                        />
-                        <Input 
-                          value={pageData.theme.textColor} 
-                          onChange={handleInputChange}
-                          name="textColor"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="fontStyle">Font Style</Label>
-                      <select 
-                        id="fontStyle"
-                        value={pageData.theme.fontStyle} 
-                        onChange={(e) => handleSelectChange('fontStyle', e.target.value)}
-                        className="w-full border rounded px-3 py-2"
-                      >
-                        <option value="sans-serif">Sans Serif</option>
-                        <option value="serif">Serif</option>
-                        <option value="monospace">Monospace</option>
-                      </select>
-                    </div>
-                    
-                    <div className="pt-4">
-                      <h3 className="font-medium mb-2">Section Visibility</h3>
-                      <div className="space-y-2">
-                        {['logo', 'bookings', 'socialInline', 'workingHours'].map((section) => (
-                          <div key={section} className="flex items-center space-x-2">
-                            <Switch
-                              checked={pageData[section as keyof BusinessPageData]?.visible || false}
-                              onCheckedChange={(checked) => handleToggleChange(`visible.${section}`, checked)}
-                            />
-                            <Label>{section.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())}</Label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              
-              <TabsContent value="integrations">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>TMW Chatbot Integration</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center space-x-2 mb-4">
+                    <div className="flex items-center space-x-2">
+                      <Label htmlFor="workingHoursVisible">Show Business Hours</Label>
                       <Switch
-                        checked={pageData.chatbot.visible}
-                        onCheckedChange={(checked) => handleToggleChange('chatbotVisible', checked)}
-                        id="chatbotVisible"
+                        id="workingHoursVisible"
+                        checked={pageData.workingHours.visible}
+                        onCheckedChange={(value) => updateField("workingHours", "visible", value)}
                       />
-                      <Label htmlFor="chatbotVisible">Enable TMW Chatbot</Label>
                     </div>
-                    
-                    {pageData.chatbot.visible && (
-                      <>
-                        <div className="space-y-2">
-                          <Label htmlFor="embedCode">TMW Chatbot Embed Code</Label>
-                          <Textarea 
-                            id="embedCode" 
-                            name="embedCode" 
-                            value={pageData.chatbot.embedCode} 
-                            onChange={handleInputChange}
-                            rows={6}
-                            placeholder="Paste your TMW Chatbot embed code here..."
-                          />
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="chatbotPosition">Chatbot Position</Label>
-                          <select 
-                            id="chatbotPosition"
-                            value={pageData.chatbot.position}
-                            onChange={(e) => handleSelectChange('chatbotPosition', e.target.value)}
-                            className="w-full border rounded px-3 py-2"
-                          >
-                            <option value="left">Left Side</option>
-                            <option value="right">Right Side</option>
-                          </select>
-                        </div>
-                      </>
-                    )}
                   </CardContent>
                 </Card>
-              </TabsContent>
-            </Tabs>
+              </div>
+            </TabsContent>
             
-            <div className="mt-4 flex justify-end">
-              <Button 
-                onClick={handleSave}
-                disabled={isSaving}
-                className="flex items-center"
-              >
-                <Save className="mr-2 h-4 w-4" />
-                {isSaving ? 'Saving...' : 'Save Changes'}
-              </Button>
-            </div>
-          </div>
-        ) : null}
+            <TabsContent value="appearance">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Appearance Settings</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="backgroundColor">Background Color</Label>
+                    <div className="flex items-center space-x-2">
+                      <Input
+                        id="backgroundColor"
+                        value={pageData.theme.backgroundColor}
+                        onChange={(e) => updateField("theme", "backgroundColor", e.target.value)}
+                        placeholder="#ffffff"
+                      />
+                      <input
+                        type="color"
+                        value={pageData.theme.backgroundColor}
+                        onChange={(e) => updateField("theme", "backgroundColor", e.target.value)}
+                        className="h-10 w-10 cursor-pointer rounded border"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="textColor">Text Color</Label>
+                    <div className="flex items-center space-x-2">
+                      <Input
+                        id="textColor"
+                        value={pageData.theme.textColor}
+                        onChange={(e) => updateField("theme", "textColor", e.target.value)}
+                        placeholder="#000000"
+                      />
+                      <input
+                        type="color"
+                        value={pageData.theme.textColor}
+                        onChange={(e) => updateField("theme", "textColor", e.target.value)}
+                        className="h-10 w-10 cursor-pointer rounded border"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="fontStyle">Font Style</Label>
+                    <Select
+                      value={pageData.theme.fontStyle}
+                      onValueChange={(value) => updateField("theme", "fontStyle", value)}
+                    >
+                      <SelectTrigger id="fontStyle">
+                        <SelectValue placeholder="Select font style" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="sans-serif">Sans Serif</SelectItem>
+                        <SelectItem value="serif">Serif</SelectItem>
+                        <SelectItem value="monospace">Monospace</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="integrations">
+              <Card>
+                <CardHeader>
+                  <CardTitle>TMW Chatbot Integration</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="chatbotCode">Chatbot Embed Code</Label>
+                    <Textarea
+                      id="chatbotCode"
+                      value={pageData.chatbot.embedCode}
+                      onChange={(e) => updateField("chatbot", "embedCode", e.target.value)}
+                      placeholder="Paste your TMW chatbot embed code here"
+                      rows={4}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="chatbotPosition">Chatbot Position</Label>
+                    <Select
+                      value={pageData.chatbot.position}
+                      onValueChange={(value) => updateField("chatbot", "position", value)}
+                    >
+                      <SelectTrigger id="chatbotPosition">
+                        <SelectValue placeholder="Select position" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="left">Left</SelectItem>
+                        <SelectItem value="right">Right</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2 pt-2">
+                    <Switch
+                      id="chatbotEnabled"
+                      checked={pageData.chatbot.visible}
+                      onCheckedChange={(value) => updateField("chatbot", "visible", value)}
+                    />
+                    <Label htmlFor="chatbotEnabled">Enable Chatbot</Label>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
         
-        <div className={`${isEditMode ? 'w-1/2' : 'w-full'} overflow-auto border-l`}>
-          <SimplePagePreview pageData={pageData} />
+        {/* Preview Panel */}
+        <div className="w-full md:w-1/2 lg:w-3/5 bg-slate-50 rounded-lg border border-slate-200 overflow-hidden">
+          <div className="p-4 bg-white border-b border-slate-200 flex items-center justify-between">
+            <h2 className="text-lg font-medium">Preview</h2>
+            <div className="text-xs text-slate-500">{pageData.published ? "Published" : "Draft"}</div>
+          </div>
+          <div className="p-4 h-[calc(100vh-13rem)] overflow-y-auto">
+            <SimplePagePreview pageData={pageData} />
+          </div>
         </div>
       </div>
     </div>

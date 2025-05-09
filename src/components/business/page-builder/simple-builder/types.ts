@@ -5,6 +5,16 @@ export type ButtonStyle = 'default' | 'outline' | 'minimal' | 'rounded';
 export type SectionSpacing = 'compact' | 'default' | 'spacious';
 export type LogoShape = 'circle' | 'square';
 
+export interface SocialPlatforms {
+  whatsapp: boolean;
+  whatsappBusiness: boolean;
+  facebook: boolean;
+  instagram: boolean;
+  googleMaps: boolean;
+  phone: boolean;
+  email: boolean;
+}
+
 export interface SectionType {
   id: string;
   type: string;
@@ -58,16 +68,6 @@ export interface WorkingHour {
   day: string;
   hours: string;
   isOpen: boolean;
-}
-
-export interface SocialPlatforms {
-  whatsapp: boolean;
-  whatsappBusiness: boolean;
-  facebook: boolean;
-  instagram: boolean;
-  googleMaps: boolean;
-  phone: boolean;
-  email: boolean;
 }
 
 export interface BusinessPageData {

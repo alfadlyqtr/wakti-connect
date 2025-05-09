@@ -1,149 +1,128 @@
 
 import React from 'react';
 import { BusinessPageData } from './types';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface SimplePagePreviewProps {
   pageData: BusinessPageData;
 }
 
 const SimplePagePreview: React.FC<SimplePagePreviewProps> = ({ pageData }) => {
+  const { pageSetup, logo, workingHours, contactInfo, theme, chatbot } = pageData;
+
+  // Function to get text alignment class
+  const getAlignmentClass = (alignment: string) => {
+    switch (alignment) {
+      case 'left': return 'text-left';
+      case 'right': return 'text-right';
+      case 'center': return 'text-center';
+      default: return 'text-left';
+    }
+  };
+
+  // Format website style based on theme
+  const websiteStyle = {
+    fontFamily: theme.fontStyle === 'serif' ? 'Georgia, serif' : 
+               theme.fontStyle === 'monospace' ? 'monospace' : 
+               'system-ui, sans-serif',
+    backgroundColor: theme.backgroundColor,
+    color: theme.textColor,
+  };
+
   return (
-    <div className="h-full overflow-auto">
-      <div 
-        className="min-h-full" 
-        style={{ 
-          fontFamily: pageData.theme.fontStyle, 
-          backgroundColor: pageData.theme.backgroundColor,
-          color: pageData.theme.textColor
-        }}
-      >
-        {/* Header */}
-        <header className="p-6 flex flex-col items-center border-b">
-          {pageData.logo.url && (
-            <div className="mb-4">
-              <img 
-                src={pageData.logo.url} 
-                alt={pageData.pageSetup.businessName} 
-                className="h-20 w-20 object-contain"
-                style={{ borderRadius: pageData.logo.shape === "circle" ? "50%" : "0" }}
-              />
-            </div>
-          )}
-          <h1 className="text-2xl font-bold mb-2">{pageData.pageSetup.businessName}</h1>
-          {pageData.pageSetup.description && (
-            <p className="text-center max-w-md">{pageData.pageSetup.description}</p>
-          )}
-        </header>
+    <div style={websiteStyle} className="min-h-[800px] border rounded-md overflow-hidden">
+      {/* Header Section */}
+      <header className={`py-8 px-4 ${getAlignmentClass(pageSetup.alignment)}`}>
+        {logo.visible && logo.url && (
+          <div className="flex justify-center mb-4">
+            <img 
+              src={logo.url} 
+              alt={pageSetup.businessName} 
+              className={`h-24 w-24 object-contain ${logo.shape === 'circle' ? 'rounded-full' : 'rounded-md'}`}
+            />
+          </div>
+        )}
+        <h1 className="text-3xl font-bold">{pageSetup.businessName}</h1>
+        {pageSetup.description && (
+          <p className="mt-2">{pageSetup.description}</p>
+        )}
+      </header>
 
-        <main className="p-6 max-w-2xl mx-auto">
-          {/* Contact Information */}
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">Contact</h2>
-            <div className="space-y-2">
-              {pageData.contactInfo.email && (
-                <div className="flex items-center gap-2">
-                  <span>📧</span>
-                  <span>{pageData.contactInfo.email}</span>
-                </div>
-              )}
-              {pageData.contactInfo.phone && (
-                <div className="flex items-center gap-2">
-                  <span>📞</span>
-                  <span>{pageData.contactInfo.phone}</span>
-                </div>
-              )}
-              {pageData.contactInfo.whatsapp && (
-                <div className="flex items-center gap-2">
-                  <span>💬</span>
-                  <span>WhatsApp: {pageData.contactInfo.whatsapp}</span>
-                </div>
-              )}
-            </div>
-          </section>
+      {/* Contact Information */}
+      <section className="py-6 px-4 bg-opacity-10" style={{backgroundColor: `${theme.backgroundColor}ee`}}>
+        <h2 className="text-xl font-bold mb-4 text-center">Contact Information</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+          {contactInfo.email && (
+            <Card>
+              <CardContent className="p-4">
+                <h3 className="font-medium">Email</h3>
+                <p>{contactInfo.email}</p>
+              </CardContent>
+            </Card>
+          )}
+          
+          {contactInfo.phone && (
+            <Card>
+              <CardContent className="p-4">
+                <h3 className="font-medium">Phone</h3>
+                <p>{contactInfo.phone}</p>
+              </CardContent>
+            </Card>
+          )}
+          
+          {contactInfo.whatsapp && (
+            <Card>
+              <CardContent className="p-4">
+                <h3 className="font-medium">WhatsApp</h3>
+                <p>{contactInfo.whatsapp}</p>
+              </CardContent>
+            </Card>
+          )}
+          
+          {(contactInfo.facebook || contactInfo.instagram) && (
+            <Card>
+              <CardContent className="p-4">
+                <h3 className="font-medium">Social Media</h3>
+                {contactInfo.facebook && <p className="mb-1">Facebook</p>}
+                {contactInfo.instagram && <p>Instagram</p>}
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </section>
 
-          {/* Social Links */}
-          {(pageData.contactInfo.facebook || pageData.contactInfo.instagram) && (
-            <section className="mb-8">
-              <h2 className="text-xl font-semibold mb-4">Follow Us</h2>
-              <div className="flex gap-4">
-                {pageData.contactInfo.facebook && (
-                  <a 
-                    href={pageData.contactInfo.facebook} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="px-4 py-2 bg-blue-600 text-white rounded"
-                  >
-                    Facebook
-                  </a>
-                )}
-                {pageData.contactInfo.instagram && (
-                  <a 
-                    href={pageData.contactInfo.instagram} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="px-4 py-2 bg-pink-600 text-white rounded"
-                  >
-                    Instagram
-                  </a>
-                )}
+      {/* Business Hours */}
+      {workingHours.visible && (
+        <section className="py-6 px-4">
+          <h2 className="text-xl font-bold mb-4 text-center">Business Hours</h2>
+          <div className="max-w-md mx-auto">
+            {workingHours.hours.map((hour) => (
+              <div key={hour.day} className="flex justify-between py-2 border-b">
+                <span className="font-medium">{hour.day}</span>
+                <span>{hour.isOpen ? hour.hours : 'Closed'}</span>
               </div>
-            </section>
-          )}
+            ))}
+          </div>
+        </section>
+      )}
 
-          {/* Business Hours */}
-          {pageData.workingHours.visible && (
-            <section className="mb-8">
-              <h2 className="text-xl font-semibold mb-4">Business Hours</h2>
-              <div className="space-y-2">
-                {pageData.workingHours.hours.map((hour, index) => (
-                  <div key={index} className="flex justify-between">
-                    <span>{hour.day}</span>
-                    <span>{hour.isOpen ? hour.hours : "Closed"}</span>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
+      {/* Chatbot Preview */}
+      {chatbot.visible && chatbot.embedCode && (
+        <div className={`fixed bottom-6 ${chatbot.position === 'left' ? 'left-6' : 'right-6'}`}>
+          <div className="bg-blue-500 text-white p-3 rounded-full shadow-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+          </div>
+          <div className="mt-2 text-xs text-center text-gray-500">TMW Chatbot</div>
+        </div>
+      )}
 
-          {/* Location */}
-          {pageData.contactInfo.googleMaps && (
-            <section className="mb-8">
-              <h2 className="text-xl font-semibold mb-4">Location</h2>
-              <a 
-                href={pageData.contactInfo.googleMaps} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="inline-block px-4 py-2 bg-blue-600 text-white rounded"
-              >
-                View on Google Maps
-              </a>
-            </section>
-          )}
-
-          {/* Booking */}
-          {pageData.bookings.visible && (
-            <section className="mb-8">
-              <h2 className="text-xl font-semibold mb-4">Bookings</h2>
-              <p>Bookings are available for this business. Contact us to schedule an appointment.</p>
-            </section>
-          )}
-
-          {/* Chatbot Preview Placeholder */}
-          {pageData.chatbot.visible && (
-            <div 
-              className="fixed bottom-4 right-4 bg-white p-4 rounded-lg shadow-lg border"
-              style={{ display: pageData.chatbot.position === 'right' ? 'block' : 'none' }}
-            >
-              <p className="font-semibold">Chatbot</p>
-              <p className="text-sm text-gray-500">The chatbot will appear here on the published page.</p>
-            </div>
-          )}
-        </main>
-
-        <footer className="p-6 border-t text-center">
-          <p className="text-sm opacity-75">© {new Date().getFullYear()} {pageData.pageSetup.businessName}</p>
-        </footer>
-      </div>
+      {/* Footer */}
+      <footer className="py-6 px-4 mt-8 text-center" style={{backgroundColor: `${theme.backgroundColor}cc`}}>
+        <p className="text-sm opacity-70">© {new Date().getFullYear()} {pageSetup.businessName}</p>
+        <p className="text-xs mt-1 opacity-50">Powered by WAKTI</p>
+      </footer>
     </div>
   );
 };
