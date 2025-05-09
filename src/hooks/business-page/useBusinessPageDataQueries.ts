@@ -17,6 +17,21 @@ export const useBusinessPageDataQuery = (userId?: string) => {
       
       console.log("Fetching business page data for user:", userId);
       
+      // First, get the user's business name from their profile
+      const { data: userProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('business_name, full_name')
+        .eq('id', userId)
+        .single();
+        
+      if (profileError) {
+        console.warn("Error fetching user profile:", profileError);
+      }
+      
+      const businessNameFromProfile = userProfile?.business_name || userProfile?.full_name || null;
+      console.log("Business name from profile:", businessNameFromProfile);
+      
+      // Now get their business page data
       const { data, error } = await supabase
         .from('business_pages_data')
         .select('*')
@@ -31,20 +46,88 @@ export const useBusinessPageDataQuery = (userId?: string) => {
       
       console.log("Fetched business page data:", data);
       
-      if (!data) return null;
+      if (!data) {
+        // If no data exists, generate default with the business name from profile
+        const defaultPageData: BusinessPageData = {
+          pageSetup: {
+            businessName: businessNameFromProfile || "My Business",
+            alignment: "center",
+            visible: true
+          },
+          logo: { url: "", shape: "circle", alignment: "center", visible: true },
+          bookings: { viewStyle: "grid", templates: [], visible: true },
+          socialInline: { 
+            style: "icon", 
+            platforms: {
+              whatsapp: false,
+              whatsappBusiness: false,
+              facebook: false,
+              instagram: false,
+              googleMaps: false,
+              phone: false,
+              email: false
+            },
+            visible: true
+          },
+          workingHours: { 
+            layout: "card", 
+            hours: [], 
+            visible: true
+          },
+          chatbot: { 
+            position: "right", 
+            embedCode: "", 
+            visible: false
+          },
+          theme: {
+            backgroundColor: "#ffffff",
+            textColor: "#000000",
+            fontStyle: "sans-serif"
+          },
+          socialSidebar: { 
+            position: "right", 
+            platforms: {
+              whatsapp: false,
+              whatsappBusiness: false,
+              facebook: false,
+              instagram: false,
+              googleMaps: false,
+              phone: false,
+              email: false
+            },
+            visible: false
+          },
+          contactInfo: {
+            email: "",
+            whatsapp: "",
+            whatsappBusiness: "",
+            phone: "",
+            facebook: "",
+            googleMaps: "",
+            instagram: ""
+          },
+          sectionOrder: ["pageSetup", "logo", "bookings", "socialInline", "workingHours"],
+          published: false
+        };
+        
+        console.log("Created default page data with businessName:", defaultPageData.pageSetup.businessName);
+        return null;
+      }
       
       try {
         // Convert the JSON page_data back to BusinessPageData type
-        // Add validation to ensure page_data has the expected structure
         const pageData = data.page_data as unknown as BusinessPageData;
         
         // Ensure pageSetup exists and has default values if needed
         if (!pageData.pageSetup) {
           pageData.pageSetup = {
-            businessName: "My Business",
+            businessName: businessNameFromProfile || "My Business",
             alignment: "center",
             visible: true
           };
+        } else if (!pageData.pageSetup.businessName && businessNameFromProfile) {
+          // If we have a business name from the profile but none in the page data, use it
+          pageData.pageSetup.businessName = businessNameFromProfile;
         }
         
         // Log the processed data

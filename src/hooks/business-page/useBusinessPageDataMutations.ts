@@ -3,50 +3,51 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { BusinessPageData } from "@/components/business/page-builder/context/BusinessPageContext";
-import { generateSlug } from "@/utils/string-utils";
 import { Json } from "@/types/supabase";
 
-// Interface for the database business_pages_data table
+// Define the record type that comes back from the database
 export interface BusinessPageDataRecord {
-  id?: string;
+  id: string;
   user_id: string;
   page_slug: string | null;
+  created_at: string;
+  updated_at: string;
   page_data: BusinessPageData;
-  created_at?: string;
-  updated_at?: string;
 }
 
-// Create a new page data record
-export const useCreatePageDataMutation = () => {
+// Generate a slug from business name
+const generateSlug = (businessName: string): string => {
+  if (!businessName) return '';
+  return businessName
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/\s+/g, '-');
+};
+
+// Create new business page data
+export const useCreateBusinessPageDataMutation = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (data: { pageData: BusinessPageData; userId: string }): Promise<BusinessPageDataRecord> => {
-      const { pageData, userId } = data;
-      
-      // Ensure pageSetup exists with required fields
-      if (!pageData.pageSetup) {
-        pageData.pageSetup = {
-          businessName: "My Business",
-          alignment: "center",
-          visible: true
-        };
-      }
-      
-      // Generate a slug based on the business name if not provided
-      const pageSlug = generateSlug(pageData.pageSetup.businessName || "my-business");
-      
-      console.log('Generated slug:', pageSlug);
-      console.log('Saving page data:', JSON.stringify(pageData).substring(0, 200) + '...');
+    mutationFn: async ({ userId, pageData }: { userId: string; pageData: BusinessPageData }) => {
+      console.log("Creating business page data with:", { userId, pageData });
       
       try {
-        // Handle the JSON conversion for Supabase
-        const { data: response, error } = await supabase
+        // Generate a slug from business name if available
+        let pageSlug = null;
+        if (pageData.pageSetup?.businessName) {
+          pageSlug = generateSlug(pageData.pageSetup.businessName);
+        }
+        
+        // Type assertion to convert BusinessPageData to Json
+        const pageDataJson = pageData as unknown as Json;
+        
+        const { data, error } = await supabase
           .from('business_pages_data')
           .insert({
             user_id: userId,
             page_slug: pageSlug,
-            page_data: pageData as unknown as Json // Proper casting to Json type
+            page_data: pageDataJson
           })
           .select()
           .single();
@@ -56,76 +57,61 @@ export const useCreatePageDataMutation = () => {
           throw error;
         }
         
-        console.log("Create response:", response);
+        console.log("Successfully created business page data:", data);
         
-        // Convert the returned page_data back to BusinessPageData
+        // Convert the returned page_data JSON back to BusinessPageData
         return {
-          ...response,
-          page_data: response.page_data as unknown as BusinessPageData
+          ...data,
+          page_data: data.page_data as unknown as BusinessPageData
         } as BusinessPageDataRecord;
-      } catch (error: any) {
-        console.error("Exception in createPageData:", error);
-        throw new Error(`Failed to save page: ${error.message || 'Unknown error'}`);
+      } catch (err) {
+        console.error("Exception during create business page data:", err);
+        throw err;
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['businessPageData'] });
       toast({
-        title: "Page saved",
-        description: "Your business page has been saved successfully."
+        title: "Success",
+        description: "Your business page data has been saved",
       });
     },
     onError: (error: any) => {
-      console.error("Detailed error when saving business page:", error);
+      console.error("Error creating business page data:", error);
       toast({
         variant: "destructive",
-        title: "Save failed",
-        description: error.message || "Failed to save business page"
+        title: "Save Failed",
+        description: error.message || "Failed to save business page data",
       });
     }
   });
 };
 
-// Update an existing page data record
-export const useUpdatePageDataMutation = () => {
+// Update existing business page data
+export const useUpdateBusinessPageDataMutation = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (data: { 
-      id: string; 
-      pageData: BusinessPageData;
-      updateSlug?: boolean;
-    }): Promise<BusinessPageDataRecord> => {
-      const { id, pageData, updateSlug } = data;
-      
-      // Ensure pageSetup exists with required fields
-      if (!pageData.pageSetup) {
-        pageData.pageSetup = {
-          businessName: "My Business",
-          alignment: "center",
-          visible: true
-        };
-      }
-      
-      console.log('Updating page with id:', id);
-      console.log('Page data preview:', JSON.stringify(pageData).substring(0, 200) + '...');
+    mutationFn: async ({ id, pageData }: { id: string; pageData: BusinessPageData }) => {
+      console.log("Updating business page data:", { id, pageData });
       
       try {
-        // Prepare the data to update
-        const updateData: Record<string, any> = {
-          page_data: pageData as unknown as Json, // Properly cast to Json type
-          updated_at: new Date().toISOString()
-        };
-        
-        // Update the slug if requested
-        if (updateSlug) {
-          updateData.page_slug = generateSlug(pageData.pageSetup.businessName || "my-business");
-          console.log('Updating slug to:', updateData.page_slug);
+        // Generate or update slug from business name if available
+        let pageSlug = null;
+        if (pageData.pageSetup?.businessName) {
+          pageSlug = generateSlug(pageData.pageSetup.businessName);
         }
         
-        const { data: response, error } = await supabase
+        // Type assertion to convert BusinessPageData to Json
+        const pageDataJson = pageData as unknown as Json;
+        
+        const { data, error } = await supabase
           .from('business_pages_data')
-          .update(updateData)
+          .update({
+            page_slug: pageSlug,
+            page_data: pageDataJson,
+            updated_at: new Date().toISOString()
+          })
           .eq('id', id)
           .select()
           .single();
@@ -135,107 +121,27 @@ export const useUpdatePageDataMutation = () => {
           throw error;
         }
         
-        console.log("Update response:", response);
+        console.log("Successfully updated business page data:", data);
         
-        // Convert the returned page_data back to BusinessPageData
+        // Convert the returned page_data JSON back to BusinessPageData
         return {
-          ...response,
-          page_data: response.page_data as unknown as BusinessPageData
+          ...data,
+          page_data: data.page_data as unknown as BusinessPageData
         } as BusinessPageDataRecord;
-      } catch (error: any) {
-        console.error("Exception in updatePageData:", error);
-        throw new Error(`Failed to update page: ${error.message || 'Unknown error'}`);
+      } catch (err) {
+        console.error("Exception during update business page data:", err);
+        throw err;
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['businessPageData'] });
-      toast({
-        title: "Page saved",
-        description: "Your business page has been updated successfully."
-      });
     },
     onError: (error: any) => {
-      console.error("Detailed error when updating business page:", error);
+      console.error("Error updating business page data:", error);
       toast({
         variant: "destructive",
-        title: "Save failed",
-        description: error.message || "Failed to update business page"
-      });
-    }
-  });
-};
-
-// Toggle the published state of a page
-export const usePublishPageMutation = () => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async (data: { 
-      id: string; 
-      published: boolean;
-      pageData: BusinessPageData;
-    }): Promise<BusinessPageDataRecord> => {
-      const { id, published, pageData } = data;
-      
-      console.log(`${published ? 'Publishing' : 'Unpublishing'} page with id:`, id);
-      
-      // Ensure pageSetup exists with required fields
-      if (!pageData.pageSetup) {
-        pageData.pageSetup = {
-          businessName: "My Business",
-          alignment: "center",
-          visible: true
-        };
-      }
-      
-      try {
-        // Update the published state in the page data
-        const updatedPageData = {
-          ...pageData,
-          published
-        };
-        
-        const { data: response, error } = await supabase
-          .from('business_pages_data')
-          .update({
-            page_data: updatedPageData as unknown as Json, // Properly cast to Json type
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', id)
-          .select()
-          .single();
-          
-        if (error) {
-          console.error("Error publishing business page:", error);
-          throw error;
-        }
-        
-        console.log("Publish response:", response);
-        
-        // Convert the returned page_data back to BusinessPageData
-        return {
-          ...response,
-          page_data: response.page_data as unknown as BusinessPageData
-        } as BusinessPageDataRecord;
-      } catch (error: any) {
-        console.error("Exception in publishPage:", error);
-        throw new Error(`Failed to ${published ? 'publish' : 'unpublish'} page: ${error.message || 'Unknown error'}`);
-      }
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['businessPageData'] });
-      const action = data?.page_data?.published ? "published" : "unpublished";
-      toast({
-        title: `Page ${action}`,
-        description: `Your business page has been ${action} successfully.`
-      });
-    },
-    onError: (error: any) => {
-      console.error("Detailed error when publishing business page:", error);
-      toast({
-        variant: "destructive",
-        title: "Publish failed",
-        description: error.message || "Failed to publish business page"
+        title: "Save Failed",
+        description: error.message || "Failed to save changes to your business page",
       });
     }
   });
