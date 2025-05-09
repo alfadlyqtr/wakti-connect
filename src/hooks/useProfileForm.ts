@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "@/components/ui/use-toast";
 import { updateProfileData } from "@/services/profile/updateProfileService";
 import { Tables } from "@/integrations/supabase/types";
+import { generateSlug } from "@/utils/string-utils";
 
 export interface ProfileFormData {
   display_name: string;
@@ -23,6 +24,7 @@ export interface ProfileFormData {
   business_email?: string;
   business_phone?: string;
   business_website?: string;
+  slug?: string;
   
   // Contact fields
   telephone?: string;
@@ -57,6 +59,7 @@ export const useProfileForm = (
       business_email: (profile as any)?.business_email || '',
       business_phone: (profile as any)?.business_phone || '',
       business_website: (profile as any)?.business_website || '',
+      slug: profile?.slug || '',
       telephone: profile?.telephone || '',
     }
   });
@@ -77,6 +80,15 @@ export const useProfileForm = (
         return;
       }
 
+      // For business accounts, update the slug if business name has changed
+      let updatedSlug = data.slug;
+      if (isBusinessAccount && 
+          data.business_name && 
+          data.business_name !== profile.business_name &&
+          !data.slug) {
+        updatedSlug = generateSlug(data.business_name);
+      }
+      
       // Regular update for users with full permissions
       await updateProfileData(profile.id, {
         display_name: data.display_name,
@@ -94,8 +106,13 @@ export const useProfileForm = (
         business_email: data.business_email as any,
         business_phone: data.business_phone as any,
         business_website: data.business_website as any,
+        slug: updatedSlug,
         telephone: data.telephone
       });
+      
+      if (updatedSlug && updatedSlug !== data.slug) {
+        form.setValue('slug', updatedSlug);
+      }
       
       toast({
         title: isBusinessAccount ? "Business info updated" : "Profile updated",
@@ -127,6 +144,12 @@ export const useProfileForm = (
           message: 'This business email is already registered. Please use a different email.' 
         });
         errorMessage = "This business email is already registered. Please use a different email.";
+      } else if (error.message && error.message.includes("slug already exists")) {
+        form.setError('slug', { 
+          type: 'manual',
+          message: 'This profile URL is already taken. Please choose a different one.' 
+        });
+        errorMessage = "This profile URL is already taken. Please try a different one.";
       }
       
       toast({
