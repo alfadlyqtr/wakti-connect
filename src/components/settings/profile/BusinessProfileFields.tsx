@@ -1,357 +1,345 @@
 
 import React from "react";
-import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from "@/components/ui/form";
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch"; // Add this import
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { FieldErrors } from "react-hook-form";
-import { Button } from "@/components/ui/button";
-import { Eye } from "lucide-react";
-import { useWatch } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
-import BusinessHoursField from "./BusinessHoursField";
+import { useWatch } from "react-hook-form";
+import BusinessHoursField from "./BusinessHoursField"; // Fixed import
 
 interface BusinessProfileFieldsProps {
-  watch?: any;
-  errors?: FieldErrors;
+  watch: any;
+  errors: any;
   readOnly?: boolean;
 }
 
-const BusinessProfileFields: React.FC<BusinessProfileFieldsProps> = ({ watch, errors = {}, readOnly = false }) => {
+const BusinessProfileFields: React.FC<BusinessProfileFieldsProps> = ({ 
+  watch, 
+  errors, 
+  readOnly = false 
+}) => {
   const navigate = useNavigate();
-  const slug = useWatch({ name: 'slug' }) || '';
-  const businessName = useWatch({ name: 'business_name' }) || '';
-  
+  const slug = useWatch({ name: 'slug' });
+  const businessName = watch('business_name');
+
+  // Function to view public business profile
   const viewPublicProfile = () => {
     if (slug) {
-      // Open in new tab
-      window.open(`/${slug}`, '_blank');
+      // Open in a new tab
+      window.open(`/business/${slug}`, '_blank');
     }
   };
-  
+
   return (
-    <>
-      <Card className="border-gray-200 shadow-sm">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-lg">Business Details</CardTitle>
-              <CardDescription>Information about your business</CardDescription>
-            </div>
-            {slug && (
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={viewPublicProfile}
-                className="flex items-center gap-1"
-              >
-                <Eye className="h-4 w-4" />
-                <span>View Profile</span>
-              </Button>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              name="business_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Business Name <span className="text-destructive">*</span></FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="Your business name"
-                      {...field}
-                      disabled={readOnly}
-                      value={field.value || ''}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              name="business_type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Business Type</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="e.g. Retail, Healthcare, Consulting"
-                      {...field}
-                      disabled={readOnly}
-                      value={field.value || ''}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-            
+    <div>
+      <div className="border border-border rounded-lg p-4 space-y-4 mb-6">
+        <h3 className="text-lg font-medium">Business Information</h3>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <FormField
-            name="business_address"
+            name="business_name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Business Description</FormLabel>
+                <FormLabel>Business Name</FormLabel>
                 <FormControl>
-                  <Textarea 
-                    placeholder="Describe what your business does"
-                    className="min-h-[100px]"
+                  <Input
                     {...field}
+                    placeholder="Enter your business name"
                     disabled={readOnly}
-                    value={field.value || ''}
                   />
                 </FormControl>
-                <FormMessage />
+                {errors.business_name && (
+                  <FormMessage>{errors.business_name.message}</FormMessage>
+                )}
               </FormItem>
             )}
           />
-        </CardContent>
-      </Card>
-          
-      <Card className="border-gray-200 shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg">Contact Information</CardTitle>
-          <CardDescription>How customers can reach your business</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              name="business_email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Business Email</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="contact@yourbusiness.com"
-                      type="email"
-                      {...field}
-                      disabled={readOnly}
-                      value={field.value || ''}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              name="business_phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Business Phone</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="+1 (555) 123-4567"
-                      {...field}
-                      disabled={readOnly}
-                      value={field.value || ''}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              name="business_website"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Website</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="www.yourbusiness.com"
-                      {...field}
-                      disabled={readOnly}
-                      value={field.value || ''}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        </CardContent>
-      </Card>
-          
-      <Card className="border-gray-200 shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg">Social Media Links</CardTitle>
-          <CardDescription>Connect with customers on social platforms</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              name="business_whatsapp"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>WhatsApp</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="+1 (555) 123-4567"
-                      {...field}
-                      disabled={readOnly}
-                      value={field.value || ''}
-                    />
-                  </FormControl>
-                  <FormDescription>Personal WhatsApp number</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              name="business_whatsapp_business"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>WhatsApp Business</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="+1 (555) 123-4567"
-                      {...field}
-                      disabled={readOnly}
-                      value={field.value || ''}
-                    />
-                  </FormControl>
-                  <FormDescription>Business WhatsApp number</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              name="business_instagram"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Instagram</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="@yourbusiness"
-                      {...field}
-                      disabled={readOnly}
-                      value={field.value || ''}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              name="business_facebook"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Facebook Page URL</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="https://facebook.com/yourbusiness"
-                      {...field}
-                      disabled={readOnly}
-                      value={field.value || ''}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              name="business_google_maps"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Google Maps URL</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="https://maps.google.com/?q=yourbusiness"
-                      {...field}
-                      disabled={readOnly}
-                      value={field.value || ''}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        </CardContent>
-      </Card>
-      
-      <Card className="border-gray-200 shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg">Business Hours</CardTitle>
-          <CardDescription>When customers can visit or contact you</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <BusinessHoursField />
-        </CardContent>
-      </Card>
-      
-      <Card className="border-gray-200 shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg">AI Chatbot</CardTitle>
-          <CardDescription>Add an AI chatbot to your business profile</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+
           <FormField
-            name="business_chatbot_enabled"
+            name="business_type"
             render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                <div className="space-y-0.5">
-                  <FormLabel>Enable Chatbot</FormLabel>
-                  <FormDescription>
-                    Allow customers to interact with a chatbot on your profile
-                  </FormDescription>
-                </div>
+              <FormItem>
+                <FormLabel>Business Type</FormLabel>
                 <FormControl>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
+                  <Input
+                    {...field}
+                    placeholder="e.g., Retail, Restaurant, Salon"
                     disabled={readOnly}
                   />
                 </FormControl>
+                {errors.business_type && (
+                  <FormMessage>{errors.business_type.message}</FormMessage>
+                )}
               </FormItem>
             )}
           />
-          
-          {watch?.("business_chatbot_enabled") && (
-            <FormField
-              name="business_chatbot_code"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Chatbot Embed Code</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Paste your chatbot embed code here"
-                      className="min-h-[150px] font-mono text-xs"
-                      {...field}
-                      disabled={readOnly}
-                      value={field.value || ''}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Paste the HTML embed code from your chatbot provider
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
+        </div>
+        
+        <FormField
+          name="business_address"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Business Description</FormLabel>
+              <FormControl>
+                <Textarea
+                  {...field}
+                  placeholder="Describe your business"
+                  disabled={readOnly}
+                  className="min-h-24"
+                />
+              </FormControl>
+              {errors.business_address && (
+                <FormMessage>{errors.business_address.message}</FormMessage>
               )}
-            />
+            </FormItem>
           )}
-        </CardContent>
-      </Card>
-      
-      <div className="mt-6">
+        />
+
         {slug && (
-          <div className="mb-6 p-4 bg-muted/50 rounded-lg">
-            <p className="text-sm text-muted-foreground mb-1">Your business profile is available at:</p>
-            <p className="font-medium break-all">
-              {window.location.origin}/{slug}
-            </p>
+          <div className="flex flex-wrap items-center gap-2 mt-2">
+            <div className="text-sm">
+              <span className="text-muted-foreground">Public URL: </span>
+              <span className="font-medium break-all">/business/{slug}</span>
+            </div>
+            <button
+              type="button"
+              className="px-2 py-1 text-xs bg-primary text-primary-foreground rounded"
+              onClick={viewPublicProfile}
+            >
+              View Profile
+            </button>
           </div>
         )}
       </div>
-    </>
+      
+      <div className="border border-border rounded-lg p-4 space-y-4 mb-6">
+        <h3 className="text-lg font-medium">Contact Information</h3>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <FormField
+            name="business_email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Business Email</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    type="email"
+                    placeholder="contact@yourbusiness.com"
+                    disabled={readOnly}
+                  />
+                </FormControl>
+                {errors.business_email && (
+                  <FormMessage>{errors.business_email.message}</FormMessage>
+                )}
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            name="business_phone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Business Phone</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    placeholder="+1 (555) 123-4567"
+                    disabled={readOnly}
+                  />
+                </FormControl>
+                {errors.business_phone && (
+                  <FormMessage>{errors.business_phone.message}</FormMessage>
+                )}
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            name="business_website"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Business Website</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    placeholder="https://www.yourbusiness.com"
+                    disabled={readOnly}
+                  />
+                </FormControl>
+                {errors.business_website && (
+                  <FormMessage>{errors.business_website.message}</FormMessage>
+                )}
+              </FormItem>
+            )}
+          />
+        </div>
+      </div>
+      
+      <div className="border border-border rounded-lg p-4 space-y-4 mb-6">
+        <h3 className="text-lg font-medium">Social Media & Integrations</h3>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <FormField
+            name="business_whatsapp"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>WhatsApp Number</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    placeholder="+1 (555) 123-4567"
+                    disabled={readOnly}
+                  />
+                </FormControl>
+                {errors.business_whatsapp && (
+                  <FormMessage>{errors.business_whatsapp.message}</FormMessage>
+                )}
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            name="business_whatsapp_business"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>WhatsApp Business Link</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    placeholder="https://wa.me/message/YOURLINK"
+                    disabled={readOnly}
+                  />
+                </FormControl>
+                {errors.business_whatsapp_business && (
+                  <FormMessage>{errors.business_whatsapp_business.message}</FormMessage>
+                )}
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            name="business_instagram"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Instagram Profile</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    placeholder="https://instagram.com/yourbusiness"
+                    disabled={readOnly}
+                  />
+                </FormControl>
+                {errors.business_instagram && (
+                  <FormMessage>{errors.business_instagram.message}</FormMessage>
+                )}
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            name="business_facebook"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Facebook Profile</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    placeholder="https://facebook.com/yourbusiness"
+                    disabled={readOnly}
+                  />
+                </FormControl>
+                {errors.business_facebook && (
+                  <FormMessage>{errors.business_facebook.message}</FormMessage>
+                )}
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            name="business_google_maps"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Google Maps Link</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    placeholder="https://goo.gl/maps/yourlocation"
+                    disabled={readOnly}
+                  />
+                </FormControl>
+                {errors.business_google_maps && (
+                  <FormMessage>{errors.business_google_maps.message}</FormMessage>
+                )}
+              </FormItem>
+            )}
+          />
+        </div>
+      </div>
+      
+      {/* Business Hours Section */}
+      <div className="border border-border rounded-lg p-4 space-y-4 mb-6">
+        <h3 className="text-lg font-medium">Business Hours</h3>
+        <BusinessHoursField />
+      </div>
+
+      {/* Chatbot Integration Section */}
+      <div className="border border-border rounded-lg p-4 space-y-4 mb-6">
+        <h3 className="text-lg font-medium">Customer Support Chatbot</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Enable a customer support chatbot on your public business profile.
+        </p>
+        
+        <FormField
+          name="business_chatbot_enabled"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <FormLabel className="text-base">
+                  Enable Chatbot
+                </FormLabel>
+                <div className="text-sm text-muted-foreground">
+                  Display a support chatbot on your public profile
+                </div>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                  disabled={readOnly}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+        
+        {watch('business_chatbot_enabled') && (
+          <FormField
+            name="business_chatbot_code"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Chatbot Code (optional)</FormLabel>
+                <FormControl>
+                  <Textarea
+                    {...field}
+                    placeholder="Paste your custom chatbot code here"
+                    disabled={readOnly}
+                    className="min-h-24 font-mono text-sm"
+                  />
+                </FormControl>
+                <div className="text-xs text-muted-foreground">
+                  You can paste embed code from third-party chatbot providers
+                </div>
+                {errors.business_chatbot_code && (
+                  <FormMessage>{errors.business_chatbot_code.message}</FormMessage>
+                )}
+              </FormItem>
+            )}
+          />
+        )}
+      </div>
+    </div>
   );
 };
 
