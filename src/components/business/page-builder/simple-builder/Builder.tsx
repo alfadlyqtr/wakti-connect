@@ -1,1049 +1,888 @@
 
-// import all the code from the previous SimplePageBuilder component
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2 } from 'lucide-react';
-import { useTMWChatbot } from '@/hooks/tmw-chatbot';
-import { BusinessPageData, TextAlignment, LogoShape } from './types';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useUser } from '@/hooks/auth/useUser';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Eye, Save } from 'lucide-react';
+import SimpleLoading from './SimpleLoading';
 import SimplePagePreview from './SimplePagePreview';
 import TopBar from './TopBar';
-import { supabase } from '@/integrations/supabase/client';
+import { BusinessPageData, LogoShape, WorkingHour } from './types';
+import { useLogoUpload } from '@/hooks/useLogoUpload';
 
-// Create a simple loading component instead of importing one
-const SimpleLoader = () => (
-  <div className="flex items-center justify-center h-full">
-    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-    <span className="ml-2">Loading...</span>
-  </div>
-);
-
-const Builder: React.FC = () => {
+const Builder = () => {
+  const { user } = useUser();
   const { toast } = useToast();
-  const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isSaving, setIsSaving] = useState<boolean>(false);
-  const [isPublishing, setIsPublishing] = useState<boolean>(false);
-  const [isEditMode, setIsEditMode] = useState<boolean>(true);
-  const [pageId, setPageId] = useState<string | null>(null);
-
-  // Define default page data structure with initial empty values
-  const defaultPageData: BusinessPageData = {
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [isEditMode, setEditMode] = useState(true);
+  const [pageData, setPageData] = useState<BusinessPageData>({
     pageSetup: {
       businessName: '',
-      alignment: 'center' as TextAlignment,
+      alignment: 'center',
       visible: true,
-      description: ''
+      description: '',
     },
     logo: {
       url: '',
       shape: 'circle' as LogoShape,
       alignment: 'center',
-      visible: true
+      visible: true,
     },
     bookings: {
       viewStyle: 'grid',
       templates: [],
-      visible: true
+      visible: true,
     },
     socialInline: {
       style: 'icon',
       platforms: {
-        whatsapp: false,
+        whatsapp: true,
         whatsappBusiness: false,
-        facebook: false,
-        instagram: false,
-        googleMaps: false,
-        phone: false,
-        email: false
+        facebook: true,
+        instagram: true,
+        googleMaps: true,
+        phone: true,
+        email: true,
       },
-      visible: true
+      visible: true,
     },
     workingHours: {
       layout: 'card',
       hours: [
-        { day: 'Monday', hours: '9:00 AM - 5:00 PM', isOpen: true },
-        { day: 'Tuesday', hours: '9:00 AM - 5:00 PM', isOpen: true },
-        { day: 'Wednesday', hours: '9:00 AM - 5:00 PM', isOpen: true },
-        { day: 'Thursday', hours: '9:00 AM - 5:00 PM', isOpen: true },
-        { day: 'Friday', hours: '9:00 AM - 5:00 PM', isOpen: true },
-        { day: 'Saturday', hours: '10:00 AM - 3:00 PM', isOpen: true },
-        { day: 'Sunday', hours: 'Closed', isOpen: false }
+        {
+          day: 'Monday',
+          hours: '9:00 AM - 5:00 PM',
+          isOpen: true,
+        },
+        {
+          day: 'Tuesday',
+          hours: '9:00 AM - 5:00 PM',
+          isOpen: true,
+        },
+        {
+          day: 'Wednesday',
+          hours: '9:00 AM - 5:00 PM',
+          isOpen: true,
+        },
+        {
+          day: 'Thursday',
+          hours: '9:00 AM - 5:00 PM',
+          isOpen: true,
+        },
+        {
+          day: 'Friday',
+          hours: '9:00 AM - 5:00 PM',
+          isOpen: true,
+        },
+        {
+          day: 'Saturday',
+          hours: '10:00 AM - 3:00 PM',
+          isOpen: false,
+        },
+        {
+          day: 'Sunday',
+          hours: 'Closed',
+          isOpen: false,
+        },
       ],
-      visible: true
+      visible: true,
     },
     chatbot: {
       position: 'right',
       embedCode: '',
-      visible: false
+      visible: false,
     },
     theme: {
       backgroundColor: '#ffffff',
-      textColor: '#000000',
-      fontStyle: 'sans-serif'
+      textColor: '#333333',
+      fontStyle: 'sans-serif',
     },
     socialSidebar: {
       position: 'right',
       platforms: {
-        whatsapp: false,
+        whatsapp: true,
         whatsappBusiness: false,
-        facebook: false,
-        instagram: false,
-        googleMaps: false,
-        phone: false,
-        email: false
+        facebook: true,
+        instagram: true,
+        googleMaps: true,
+        phone: true,
+        email: true,
       },
-      visible: false
+      visible: false,
     },
     contactInfo: {
       email: '',
       phone: '',
       whatsapp: '',
+      whatsappBusiness: '',
       facebook: '',
       instagram: '',
-      googleMaps: ''
+      googleMaps: '',
     },
-    sectionOrder: ["pageSetup", "logo", "bookings", "socialInline", "workingHours"],
+    sectionOrder: ['pageSetup', 'logo', 'bookings', 'socialInline', 'workingHours'],
     published: false,
-    sections: []
-  };
-
-  const [pageData, setPageData] = useState<BusinessPageData>(defaultPageData);
-  const [pageSettings, setPageSettings] = useState({
-    title: '',
-    slug: '',
-    primaryColor: '#3B82F6',
-    secondaryColor: '#10B981',
-    description: '',
-    isPublished: false,
-    fontFamily: 'sans-serif',
-    textColor: '#000000',
-    backgroundColor: '#ffffff',
-    contactInfo: {
-      email: '',
-      phone: '',
-      address: '',
-      whatsapp: ''
-    },
-    socialLinks: {
-      facebook: '',
-      instagram: '',
-      twitter: '',
-      linkedin: ''
-    },
-    businessHours: [
-      { day: 'Monday', hours: '9:00 AM - 5:00 PM', isOpen: true },
-      { day: 'Tuesday', hours: '9:00 AM - 5:00 PM', isOpen: true },
-      { day: 'Wednesday', hours: '9:00 AM - 5:00 PM', isOpen: true },
-      { day: 'Thursday', hours: '9:00 AM - 5:00 PM', isOpen: true },
-      { day: 'Friday', hours: '9:00 AM - 5:00 PM', isOpen: true },
-      { day: 'Saturday', hours: '10:00 AM - 3:00 PM', isOpen: true },
-      { day: 'Sunday', hours: 'Closed', isOpen: false }
-    ],
-    googleMapsUrl: '',
-    tmwChatbotCode: '',
-    textAlignment: 'left' as TextAlignment,
-    headingStyle: 'default' as HeadingStyle,
-    buttonStyle: 'default' as ButtonStyle,
-    sectionSpacing: 'default' as SectionSpacing,
-    contentMaxWidth: '1200px'
   });
-
-  // Initialize TMW chatbot (if enabled)
-  useTMWChatbot(
-    pageData.chatbot.visible,
-    pageData.chatbot.embedCode,
-    'tmw-chatbot-container'
+  
+  const [pageId, setPageId] = useState<string | null>(null);
+  const [pageUrl, setPageUrl] = useState<string>('');
+  
+  // Add logo upload hook
+  const { uploadingLogo, handleLogoUpload } = useLogoUpload(
+    user?.id,
+    (logoUrl) => {
+      setPageData(prevData => ({
+        ...prevData,
+        logo: {
+          ...prevData.logo,
+          url: logoUrl,
+        },
+      }));
+    }
   );
 
-  // Fetch user's page data on component mount
   useEffect(() => {
-    async function fetchPageData() {
-      try {
-        setIsLoading(true);
-        
-        // Get the current user
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session?.user) {
-          toast({
-            title: "Authentication Error",
-            description: "Please log in to access the page builder",
-            variant: "destructive"
-          });
-          navigate('/login');
-          return;
-        }
-        
-        // Check if user already has a business page
-        const { data: pageData, error } = await supabase
-          .from('business_pages_data')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .single();
-        
-        if (error && error.code !== 'PGRST116') { // Not found is not an error for us
-          throw error;
-        }
-        
-        if (pageData) {
-          setPageId(pageData.id);
-          setPageData(pageData.page_data as BusinessPageData);
-          
-          // Update page settings
-          setPageSettings({
-            title: pageData.page_data.pageSetup.businessName || '',
-            slug: pageData.page_slug || '',
-            primaryColor: pageData.page_data.theme.backgroundColor || '#3B82F6',
-            secondaryColor: '#10B981',
-            description: pageData.page_data.pageSetup.description || '',
-            isPublished: pageData.page_data.published || false,
-            fontFamily: pageData.page_data.theme.fontStyle || 'sans-serif',
-            textColor: pageData.page_data.theme.textColor || '#000000',
-            backgroundColor: pageData.page_data.theme.backgroundColor || '#ffffff',
-            contactInfo: {
-              email: pageData.page_data.contactInfo.email || '',
-              phone: pageData.page_data.contactInfo.phone || '',
-              address: pageData.page_data.contactInfo.address || '',
-              whatsapp: pageData.page_data.contactInfo.whatsapp || ''
-            },
-            socialLinks: {
-              facebook: pageData.page_data.contactInfo.facebook || '',
-              instagram: pageData.page_data.contactInfo.instagram || '',
-              twitter: '',
-              linkedin: ''
-            },
-            businessHours: pageData.page_data.workingHours.hours || [],
-            googleMapsUrl: pageData.page_data.contactInfo.googleMaps || '',
-            tmwChatbotCode: pageData.page_data.chatbot.embedCode || '',
-            textAlignment: 'left' as TextAlignment,
-            headingStyle: 'default' as HeadingStyle,
-            buttonStyle: 'default' as ButtonStyle,
-            sectionSpacing: 'default' as SectionSpacing,
-            contentMaxWidth: '1200px'
-          });
-        }
-      } catch (error) {
-        console.error("Error loading business page data:", error);
-        toast({
-          title: "Error loading page",
-          description: "Could not load your business page data",
-          variant: "destructive"
-        });
-      } finally {
-        setIsLoading(false);
-      }
+    if (user?.id) {
+      loadPageData();
     }
+  }, [user?.id]);
+
+  const loadPageData = async () => {
+    if (!user?.id) return;
     
-    fetchPageData();
-  }, [navigate, toast]);
-  
-  // Handle input change
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    try {
+      setIsLoading(true);
+      
+      const { data, error } = await supabase
+        .from('business_pages_data')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (error) {
+        throw error;
+      }
+      
+      if (data) {
+        // Convert from JSON if needed
+        setPageId(data.id);
+        
+        if (data.page_slug) {
+          setPageUrl(`https://${data.page_slug}.wakti.app`);
+        }
+        
+        // Check if page_data is already a parsed object or still a string
+        let parsedData: BusinessPageData;
+        
+        if (typeof data.page_data === 'string') {
+          try {
+            parsedData = JSON.parse(data.page_data) as BusinessPageData;
+          } catch (e) {
+            console.error('Error parsing page data', e);
+            parsedData = { ...pageData };
+          }
+        } else {
+          parsedData = data.page_data as unknown as BusinessPageData;
+        }
+        
+        // Ensure the loaded data has all the required fields
+        const initializedData = {
+          ...pageData,
+          ...parsedData,
+          pageSetup: {
+            ...pageData.pageSetup,
+            ...parsedData.pageSetup,
+          },
+          theme: {
+            ...pageData.theme,
+            ...parsedData.theme,
+          },
+          contactInfo: {
+            ...pageData.contactInfo,
+            ...parsedData.contactInfo,
+          },
+          logo: {
+            ...pageData.logo,
+            ...parsedData.logo,
+          },
+          workingHours: {
+            ...pageData.workingHours,
+            hours: parsedData.workingHours?.hours || pageData.workingHours.hours,
+          },
+          chatbot: {
+            ...pageData.chatbot,
+            ...parsedData.chatbot,
+          },
+        };
+        
+        setPageData(initializedData);
+      }
+    } catch (error) {
+      console.error('Error loading page data:', error);
+      toast({
+        title: 'Error loading page data',
+        description: 'There was a problem loading your page data. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    section?: keyof BusinessPageData,
+    field?: string
+  ) => {
     const { name, value } = e.target;
     
-    // Determine which section of pageData to update
-    if (name === 'businessName') {
+    if (section && field) {
       setPageData(prev => ({
         ...prev,
-        pageSetup: {
-          ...prev.pageSetup,
-          businessName: value
-        }
+        [section]: {
+          ...prev[section],
+          [field]: value,
+        },
       }));
-      
-      setPageSettings(prev => ({
-        ...prev,
-        title: value
-      }));
-      
-    } else if (name === 'description') {
+    } else {
+      // Find which section contains this field 
+      // This is a simplified approach - in a real app we might have a more structured way
+      if (name === 'businessName' || name === 'description') {
+        setPageData(prev => ({
+          ...prev,
+          pageSetup: {
+            ...prev.pageSetup,
+            [name]: value,
+          },
+        }));
+      } else if (name === 'backgroundColor' || name === 'textColor' || name === 'fontStyle') {
+        setPageData(prev => ({
+          ...prev,
+          theme: {
+            ...prev.theme,
+            [name]: value,
+          },
+        }));
+      } else if (name === 'email' || name === 'phone' || name === 'whatsapp' || 
+                 name === 'facebook' || name === 'instagram' || name === 'googleMaps') {
+        setPageData(prev => ({
+          ...prev,
+          contactInfo: {
+            ...prev.contactInfo,
+            [name]: value,
+          },
+        }));
+      } else if (name === 'embedCode') {
+        setPageData(prev => ({
+          ...prev,
+          chatbot: {
+            ...prev.chatbot,
+            embedCode: value,
+          },
+        }));
+      }
+    }
+  };
+
+  const handleToggleChange = (name: string, checked: boolean) => {
+    // Handle toggles based on their names
+    if (name === 'published') {
       setPageData(prev => ({
         ...prev,
-        pageSetup: {
-          ...prev.pageSetup,
-          description: value
-        }
+        published: checked,
       }));
-      
-      setPageSettings(prev => ({
+    } else if (name.startsWith('platforms.')) {
+      const platform = name.split('.')[1];
+      setPageData(prev => ({
         ...prev,
-        description: value
+        socialInline: {
+          ...prev.socialInline,
+          platforms: {
+            ...prev.socialInline.platforms,
+            [platform]: checked,
+          },
+        },
       }));
-      
-    } else if (name === 'slug') {
-      setPageSettings(prev => ({
+    } else if (name.startsWith('visible.')) {
+      const section = name.split('.')[1] as keyof BusinessPageData;
+      setPageData(prev => ({
         ...prev,
-        slug: value
+        [section]: {
+          ...prev[section as keyof typeof prev],
+          visible: checked,
+        },
       }));
-      
-    } else if (name === 'logo_url') {
+    } else if (name.startsWith('workingHours.')) {
+      const dayIndex = parseInt(name.split('.')[1]);
+      const newHours = [...pageData.workingHours.hours];
+      newHours[dayIndex] = {
+        ...newHours[dayIndex],
+        isOpen: checked,
+      };
+      setPageData(prev => ({
+        ...prev,
+        workingHours: {
+          ...prev.workingHours,
+          hours: newHours,
+        },
+      }));
+    } else if (name === 'chatbotVisible') {
+      setPageData(prev => ({
+        ...prev,
+        chatbot: {
+          ...prev.chatbot,
+          visible: checked,
+        },
+      }));
+    }
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
+    if (name === 'logoShape') {
       setPageData(prev => ({
         ...prev,
         logo: {
           ...prev.logo,
-          url: value
-        }
+          shape: value as LogoShape,
+        },
       }));
-      
-    } else if (name === 'fontFamily') {
+    } else if (name === 'fontStyle') {
       setPageData(prev => ({
         ...prev,
         theme: {
           ...prev.theme,
-          fontStyle: value
-        }
+          fontStyle: value,
+        },
       }));
-      
-      setPageSettings(prev => ({
-        ...prev,
-        fontFamily: value
-      }));
-      
-    } else if (name === 'backgroundColor') {
-      setPageData(prev => ({
-        ...prev,
-        theme: {
-          ...prev.theme,
-          backgroundColor: value
-        }
-      }));
-      
-      setPageSettings(prev => ({
-        ...prev,
-        backgroundColor: value
-      }));
-      
-    } else if (name === 'textColor') {
-      setPageData(prev => ({
-        ...prev,
-        theme: {
-          ...prev.theme,
-          textColor: value
-        }
-      }));
-      
-      setPageSettings(prev => ({
-        ...prev,
-        textColor: value
-      }));
-      
-    } else if (name === 'primaryColor') {
-      setPageSettings(prev => ({
-        ...prev,
-        primaryColor: value
-      }));
-      
-    } else if (name === 'secondaryColor') {
-      setPageSettings(prev => ({
-        ...prev,
-        secondaryColor: value
-      }));
-      
-    } else if (name === 'tmwChatbotCode') {
+    } else if (name === 'chatbotPosition') {
       setPageData(prev => ({
         ...prev,
         chatbot: {
           ...prev.chatbot,
-          embedCode: value
-        }
-      }));
-      
-      setPageSettings(prev => ({
-        ...prev,
-        tmwChatbotCode: value
-      }));
-      
-    } else if (name.startsWith('contactInfo.')) {
-      const field = name.split('.')[1];
-      
-      setPageData(prev => ({
-        ...prev,
-        contactInfo: {
-          ...prev.contactInfo,
-          [field]: value
-        }
-      }));
-      
-      if (field === 'email' || field === 'phone' || field === 'whatsapp') {
-        setPageSettings(prev => ({
-          ...prev,
-          contactInfo: {
-            ...prev.contactInfo,
-            [field]: value
-          }
-        }));
-      }
-      
-    } else if (name.startsWith('socialLinks.')) {
-      const platform = name.split('.')[1];
-      
-      setPageSettings(prev => ({
-        ...prev,
-        socialLinks: {
-          ...prev.socialLinks,
-          [platform]: value
-        }
-      }));
-      
-      // Also update in contactInfo for the page data
-      setPageData(prev => ({
-        ...prev,
-        contactInfo: {
-          ...prev.contactInfo,
-          [platform]: value
-        }
+          position: value,
+        },
       }));
     }
   };
-  
-  // Toggle switch change handler
-  const handleToggleChange = (name: string, checked: boolean) => {
-    if (name === 'chatbotEnabled') {
-      setPageData(prev => ({
-        ...prev,
-        chatbot: {
-          ...prev.chatbot,
-          visible: checked
-        }
-      }));
-    } else if (name === 'published') {
-      setPageData(prev => ({
-        ...prev,
-        published: checked
-      }));
-      
-      setPageSettings(prev => ({
-        ...prev,
-        isPublished: checked
-      }));
-    }
+
+  const handleWorkingHourChange = (index: number, value: string) => {
+    const newHours = [...pageData.workingHours.hours];
+    newHours[index] = {
+      ...newHours[index],
+      hours: value,
+    };
+    setPageData(prev => ({
+      ...prev,
+      workingHours: {
+        ...prev.workingHours,
+        hours: newHours,
+      },
+    }));
   };
-  
-  // Handle save button click
+
   const handleSave = async () => {
+    if (!user?.id) return;
+    
     try {
       setIsSaving(true);
       
-      if (!pageSettings.title.trim()) {
-        toast({
-          title: "Business name required",
-          description: "Please enter a name for your business page",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      // Generate a slug if none exists
-      let slug = pageSettings.slug;
-      if (!slug.trim()) {
-        slug = pageSettings.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-      }
-      
-      // Get the current user
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session?.user) {
-        toast({
-          title: "Authentication Error",
-          description: "Please log in to save your business page",
-          variant: "destructive"
-        });
-        return;
-      }
+      // Create the data structure to save
+      const saveData = {
+        user_id: user.id,
+        page_data: pageData,
+        page_slug: pageData.pageSetup.businessName
+          .toLowerCase()
+          .replace(/[^a-zA-Z0-9]/g, '-')
+          .replace(/-+/g, '-'),
+      };
       
       if (pageId) {
-        // Update existing page
+        // Update existing
         const { error } = await supabase
           .from('business_pages_data')
-          .update({
-            page_slug: slug,
-            page_data: pageData,
-            updated_at: new Date().toISOString()
-          })
+          .update(saveData)
           .eq('id', pageId);
           
         if (error) throw error;
-        
-        toast({
-          title: "Page saved",
-          description: "Your business page has been updated successfully",
-        });
       } else {
-        // Create new page
+        // Insert new
         const { data, error } = await supabase
           .from('business_pages_data')
-          .insert({
-            user_id: session.user.id,
-            page_slug: slug,
-            page_data: pageData
-          })
-          .select('id')
-          .single();
+          .insert(saveData)
+          .select();
           
         if (error) throw error;
-        
-        setPageId(data.id);
-        
-        toast({
-          title: "Page created",
-          description: "Your business page has been created successfully",
-        });
+        if (data && data[0]) {
+          setPageId(data[0].id);
+        }
       }
       
-      // Update the page settings with the generated slug
-      setPageSettings(prev => ({
-        ...prev,
-        slug
-      }));
-      
-    } catch (error: any) {
-      console.error("Error saving business page:", error);
       toast({
-        title: "Error saving page",
-        description: error.message || "Please try again",
-        variant: "destructive"
+        title: "Page saved",
+        description: "Your page has been saved successfully.",
+      });
+    } catch (error) {
+      console.error('Error saving page:', error);
+      toast({
+        title: 'Error saving page',
+        description: 'There was a problem saving your page. Please try again.',
+        variant: 'destructive',
       });
     } finally {
       setIsSaving(false);
     }
   };
-  
-  // Handle publish button click
+
   const handlePublish = async () => {
+    if (!user?.id) return;
+    
     try {
       setIsPublishing(true);
       
-      // Save the page first with published flag
+      // First save the page
+      await handleSave();
+      
+      // Then update the published status
       const updatedPageData = {
         ...pageData,
-        published: true
+        published: true,
       };
       
-      // Update state 
-      setPageData(updatedPageData);
-      setPageSettings(prev => ({
-        ...prev,
-        isPublished: true
-      }));
-      
-      if (!pageId) {
-        // Save the page first
-        await handleSave();
-        return;
-      }
-      
-      // Update the page with published flag
-      const { error } = await supabase
+      await supabase
         .from('business_pages_data')
         .update({
           page_data: updatedPageData,
-          updated_at: new Date().toISOString()
         })
         .eq('id', pageId);
         
-      if (error) throw error;
+      setPageData(updatedPageData);
+      
+      // Generate page URL if not already set
+      if (!pageUrl) {
+        const slug = pageData.pageSetup.businessName
+          .toLowerCase()
+          .replace(/[^a-zA-Z0-9]/g, '-')
+          .replace(/-+/g, '-');
+        
+        setPageUrl(`https://${slug}.wakti.app`);
+      }
       
       toast({
         title: "Page published",
-        description: `Your business page is now live at ${getPublicPageUrl()}`,
+        description: "Your page has been published successfully.",
       });
-      
-    } catch (error: any) {
-      console.error("Error publishing business page:", error);
+    } catch (error) {
+      console.error('Error publishing page:', error);
       toast({
-        title: "Error publishing page",
-        description: error.message || "Please try again",
-        variant: "destructive"
+        title: 'Error publishing page',
+        description: 'There was a problem publishing your page. Please try again.',
+        variant: 'destructive',
       });
     } finally {
       setIsPublishing(false);
     }
   };
-  
-  // Generate a public URL for the page
+
+  const handlePreview = () => {
+    setEditMode(!isEditMode);
+  };
+
   const getPublicPageUrl = () => {
-    if (!pageSettings.slug) return "#";
-    return `https://${pageSettings.slug}.wakti.app`;
+    if (!pageUrl) {
+      return '#';
+    }
+    return pageUrl;
   };
-  
-  // Handle preview mode
-  const togglePreview = () => {
-    setIsEditMode(prev => !prev);
-  };
-  
+
   if (isLoading) {
-    return <SimpleLoader />;
+    return <SimpleLoading />;
   }
-  
+
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-full">
       <TopBar 
-        pageUrl={pageSettings.slug}
-        onPreview={togglePreview}
+        pageUrl={getPublicPageUrl()}
+        onPreview={handlePreview}
         onPublish={handlePublish}
         onSave={handleSave}
         isEditMode={isEditMode}
-        setEditMode={setIsEditMode}
-        pageSettings={pageSettings}
+        setEditMode={setEditMode}
+        pageSettings={{
+          title: pageData.pageSetup.businessName,
+          slug: pageUrl.split('//')[1]?.split('.')[0] || '',
+          primaryColor: '#3B82F6',
+          secondaryColor: '#10B981',
+          description: pageData.pageSetup.description || '',
+          isPublished: pageData.published,
+          fontFamily: pageData.theme.fontStyle,
+          textColor: pageData.theme.textColor,
+          backgroundColor: pageData.theme.backgroundColor,
+          contactInfo: {
+            email: pageData.contactInfo.email,
+            phone: pageData.contactInfo.phone,
+            address: '',
+            whatsapp: pageData.contactInfo.whatsapp,
+          },
+          socialLinks: {
+            facebook: pageData.contactInfo.facebook,
+            instagram: pageData.contactInfo.instagram,
+            twitter: '',
+            linkedin: '',
+          },
+          businessHours: pageData.workingHours.hours.map(hour => ({ 
+            day: hour.day, 
+            hours: hour.hours,
+            isOpen: hour.isOpen
+          })),
+          googleMapsUrl: pageData.contactInfo.googleMaps,
+          tmwChatbotCode: pageData.chatbot.embedCode,
+        }}
         isSaving={isSaving}
         isPublishing={isPublishing}
       />
       
-      <div className="flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden">
         {isEditMode ? (
-          <div className="flex h-full">
-            {/* Left panel: Settings and options */}
-            <div className="w-1/3 bg-gray-50 overflow-y-auto p-4 border-r">
-              <Tabs defaultValue="general">
-                <TabsList className="mb-4">
-                  <TabsTrigger value="general">General</TabsTrigger>
-                  <TabsTrigger value="contact">Contact</TabsTrigger>
-                  <TabsTrigger value="hours">Hours</TabsTrigger>
-                  <TabsTrigger value="appearance">Appearance</TabsTrigger>
-                  <TabsTrigger value="integrations">Integrations</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="general">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Basic Info</CardTitle>
-                      <CardDescription>Set up your business page identity</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="businessName">Business Name*</Label>
-                        <Input
-                          id="businessName"
-                          name="businessName"
-                          value={pageData.pageSetup.businessName}
-                          onChange={handleInputChange}
-                          placeholder="Your Business Name"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="description">Description</Label>
-                        <Textarea
-                          id="description"
-                          name="description"
-                          value={pageData.pageSetup.description || ''}
-                          onChange={handleInputChange}
-                          placeholder="Brief description of your business"
-                          rows={3}
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="slug">Custom URL</Label>
-                        <div className="flex items-center">
-                          <span className="text-sm text-gray-500 mr-1">https://</span>
-                          <Input
-                            id="slug"
-                            name="slug"
-                            value={pageSettings.slug}
-                            onChange={handleInputChange}
-                            placeholder="your-business"
-                            className="flex-1"
+          <div className="w-1/2 overflow-auto p-4 bg-gray-50 border-r">
+            <Tabs defaultValue="business-details">
+              <TabsList className="mb-4 w-full">
+                <TabsTrigger value="business-details">Business Details</TabsTrigger>
+                <TabsTrigger value="contact-info">Contact & Hours</TabsTrigger>
+                <TabsTrigger value="appearance">Appearance</TabsTrigger>
+                <TabsTrigger value="integrations">Integrations</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="business-details">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Business Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="businessName">Business Name</Label>
+                      <Input 
+                        id="businessName" 
+                        name="businessName" 
+                        value={pageData.pageSetup.businessName} 
+                        onChange={handleInputChange}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="description">Description</Label>
+                      <Textarea 
+                        id="description" 
+                        name="description" 
+                        value={pageData.pageSetup.description || ''}
+                        onChange={handleInputChange}
+                        rows={4}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label>Logo</Label>
+                      {pageData.logo.url && (
+                        <div className="mb-2">
+                          <img 
+                            src={pageData.logo.url} 
+                            alt="Business Logo" 
+                            className="h-20 w-20 object-contain border rounded"
                           />
-                          <span className="text-sm text-gray-500 ml-1">.wakti.app</span>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          Choose a unique identifier for your page URL
-                        </p>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="logo_url">Logo URL</Label>
-                        <Input
-                          id="logo_url"
-                          name="logo_url"
-                          value={pageData.logo.url}
-                          onChange={handleInputChange}
-                          placeholder="https://example.com/your-logo.png"
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Enter a URL to your business logo
-                        </p>
-                      </div>
-
-                      <div className="flex items-center justify-between pt-2">
-                        <div className="flex flex-col">
-                          <span className="font-medium">Published</span>
-                          <span className="text-sm text-muted-foreground">Make your page public</span>
-                        </div>
-                        <Switch
-                          checked={pageData.published}
-                          onCheckedChange={(checked) => handleToggleChange('published', checked)}
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-                
-                <TabsContent value="contact">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Contact Information</CardTitle>
-                      <CardDescription>Add ways for customers to reach you</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input
-                          id="email"
-                          name="contactInfo.email"
-                          value={pageData.contactInfo.email || ''}
-                          onChange={handleInputChange}
-                          placeholder="your@email.com"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="phone">Phone</Label>
-                        <Input
-                          id="phone"
-                          name="contactInfo.phone"
-                          value={pageData.contactInfo.phone || ''}
-                          onChange={handleInputChange}
-                          placeholder="+1 (234) 567-8901"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="whatsapp">WhatsApp</Label>
-                        <Input
-                          id="whatsapp"
-                          name="contactInfo.whatsapp"
-                          value={pageData.contactInfo.whatsapp || ''}
-                          onChange={handleInputChange}
-                          placeholder="+1 (234) 567-8901"
-                        />
-                      </div>
-                      
-                      <div className="pt-4 border-t">
-                        <h4 className="text-sm font-medium mb-2">Social Links</h4>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="facebook">Facebook</Label>
-                          <Input
-                            id="facebook"
-                            name="socialLinks.facebook"
-                            value={pageSettings.socialLinks.facebook}
-                            onChange={handleInputChange}
-                            placeholder="https://facebook.com/yourbusiness"
-                          />
-                        </div>
-                        
-                        <div className="space-y-2 mt-2">
-                          <Label htmlFor="instagram">Instagram</Label>
-                          <Input
-                            id="instagram"
-                            name="socialLinks.instagram"
-                            value={pageSettings.socialLinks.instagram}
-                            onChange={handleInputChange}
-                            placeholder="https://instagram.com/yourbusiness"
-                          />
-                        </div>
-                        
-                        <div className="space-y-2 mt-2">
-                          <Label htmlFor="googleMaps">Google Maps</Label>
-                          <Input
-                            id="googleMaps"
-                            name="contactInfo.googleMaps"
-                            value={pageData.contactInfo.googleMaps || ''}
-                            onChange={handleInputChange}
-                            placeholder="https://maps.google.com/..."
-                          />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-                
-                <TabsContent value="hours">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Business Hours</CardTitle>
-                      <CardDescription>Set your regular operating hours</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      {pageData.workingHours.hours.map((day, index) => (
-                        <div key={index} className="flex justify-between items-center py-2 border-b last:border-0">
-                          <span className="font-medium">{day.day}</span>
-                          <div className="flex items-center gap-2">
-                            <Input
-                              value={day.hours}
-                              onChange={(e) => {
-                                const newHours = [...pageData.workingHours.hours];
-                                newHours[index] = { 
-                                  ...newHours[index], 
-                                  hours: e.target.value 
-                                };
-                                
-                                setPageData(prev => ({
-                                  ...prev,
-                                  workingHours: {
-                                    ...prev.workingHours,
-                                    hours: newHours
-                                  }
-                                }));
-                                
-                                // Also update pageSettings
-                                const newBusinessHours = [...pageSettings.businessHours];
-                                newBusinessHours[index] = {
-                                  ...newBusinessHours[index],
-                                  hours: e.target.value
-                                };
-                                
-                                setPageSettings(prev => ({
-                                  ...prev,
-                                  businessHours: newBusinessHours
-                                }));
-                              }}
-                              className="max-w-[180px]"
-                            />
-                            <Switch
-                              checked={day.isOpen}
-                              onCheckedChange={(checked) => {
-                                const newHours = [...pageData.workingHours.hours];
-                                newHours[index] = { 
-                                  ...newHours[index], 
-                                  isOpen: checked,
-                                  hours: checked ? newHours[index].hours : 'Closed'
-                                };
-                                
-                                setPageData(prev => ({
-                                  ...prev,
-                                  workingHours: {
-                                    ...prev.workingHours,
-                                    hours: newHours
-                                  }
-                                }));
-                                
-                                // Also update pageSettings
-                                const newBusinessHours = [...pageSettings.businessHours];
-                                newBusinessHours[index] = {
-                                  ...newBusinessHours[index],
-                                  isOpen: checked,
-                                  hours: checked ? newBusinessHours[index].hours : 'Closed'
-                                };
-                                
-                                setPageSettings(prev => ({
-                                  ...prev,
-                                  businessHours: newBusinessHours
-                                }));
-                              }}
-                            />
-                          </div>
-                        </div>
-                      ))}
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-                
-                <TabsContent value="appearance">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Appearance</CardTitle>
-                      <CardDescription>Customize how your page looks</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="fontFamily">Font</Label>
-                        <select
-                          id="fontFamily"
-                          name="fontFamily"
-                          value={pageData.theme.fontStyle}
-                          onChange={(e) => handleInputChange(e as any)}
-                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2"
-                        >
-                          <option value="sans-serif">Sans-serif</option>
-                          <option value="serif">Serif</option>
-                          <option value="monospace">Monospace</option>
-                        </select>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="backgroundColor">Background Color</Label>
-                          <div className="flex">
-                            <Input
-                              type="color"
-                              id="backgroundColor"
-                              name="backgroundColor"
-                              value={pageData.theme.backgroundColor}
-                              onChange={handleInputChange}
-                              className="w-12 p-1 h-10"
-                            />
-                            <Input
-                              type="text"
-                              value={pageData.theme.backgroundColor}
-                              onChange={handleInputChange}
-                              name="backgroundColor"
-                              className="flex-1 ml-2"
-                            />
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="textColor">Text Color</Label>
-                          <div className="flex">
-                            <Input
-                              type="color"
-                              id="textColor"
-                              name="textColor"
-                              value={pageData.theme.textColor}
-                              onChange={handleInputChange}
-                              className="w-12 p-1 h-10"
-                            />
-                            <Input
-                              type="text"
-                              value={pageData.theme.textColor}
-                              onChange={handleInputChange}
-                              name="textColor"
-                              className="flex-1 ml-2"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="primaryColor">Primary Color</Label>
-                          <div className="flex">
-                            <Input
-                              type="color"
-                              id="primaryColor"
-                              name="primaryColor"
-                              value={pageSettings.primaryColor}
-                              onChange={handleInputChange}
-                              className="w-12 p-1 h-10"
-                            />
-                            <Input
-                              type="text"
-                              value={pageSettings.primaryColor}
-                              onChange={handleInputChange}
-                              name="primaryColor"
-                              className="flex-1 ml-2"
-                            />
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="secondaryColor">Secondary Color</Label>
-                          <div className="flex">
-                            <Input
-                              type="color"
-                              id="secondaryColor"
-                              name="secondaryColor"
-                              value={pageSettings.secondaryColor}
-                              onChange={handleInputChange}
-                              className="w-12 p-1 h-10"
-                            />
-                            <Input
-                              type="text"
-                              value={pageSettings.secondaryColor}
-                              onChange={handleInputChange}
-                              name="secondaryColor"
-                              className="flex-1 ml-2"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-                
-                <TabsContent value="integrations">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Chatbot Integration</CardTitle>
-                      <CardDescription>Add a chatbot to your business page</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex flex-col">
-                          <span className="font-medium">Enable Chatbot</span>
-                          <span className="text-sm text-muted-foreground">Add a TMW chatbot to your page</span>
-                        </div>
-                        <Switch
-                          checked={pageData.chatbot.visible}
-                          onCheckedChange={(checked) => handleToggleChange('chatbotEnabled', checked)}
-                        />
-                      </div>
-
-                      {pageData.chatbot.visible && (
-                        <div className="space-y-2">
-                          <Label htmlFor="tmwChatbotCode">Chatbot Embed Code</Label>
-                          <Textarea
-                            id="tmwChatbotCode"
-                            name="tmwChatbotCode"
-                            value={pageData.chatbot.embedCode}
-                            onChange={handleInputChange}
-                            placeholder="<script>...</script> or <iframe>...</iframe>"
-                            rows={6}
-                            className="font-mono text-sm"
-                          />
-                          <p className="text-xs text-muted-foreground">
-                            Paste the embed code for your TMW chatbot here
-                          </p>
                         </div>
                       )}
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              </Tabs>
-
-              <div className="mt-6 flex justify-between">
-                <Button 
-                  variant="outline" 
-                  onClick={() => navigate('/dashboard')}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={handleSave} 
-                  disabled={isSaving}
-                >
-                  {isSaving ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Saving...
-                    </>
-                  ) : "Save Changes"}
-                </Button>
-              </div>
-            </div>
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleLogoUpload(e)}
+                        disabled={uploadingLogo}
+                      />
+                      <div className="flex items-center space-x-2 mt-2">
+                        <Label>Logo Shape:</Label>
+                        <select 
+                          value={pageData.logo.shape}
+                          onChange={(e) => handleSelectChange('logoShape', e.target.value)}
+                          className="border rounded px-2 py-1"
+                        >
+                          <option value="circle">Circle</option>
+                          <option value="square">Square</option>
+                        </select>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="contact-info">
+                <Card className="mb-4">
+                  <CardHeader>
+                    <CardTitle>Contact Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email Address</Label>
+                      <Input 
+                        id="email" 
+                        name="email" 
+                        value={pageData.contactInfo.email} 
+                        onChange={handleInputChange}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Phone Number</Label>
+                      <Input 
+                        id="phone" 
+                        name="phone" 
+                        value={pageData.contactInfo.phone} 
+                        onChange={handleInputChange}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="whatsapp">WhatsApp Number</Label>
+                      <Input 
+                        id="whatsapp" 
+                        name="whatsapp" 
+                        value={pageData.contactInfo.whatsapp} 
+                        onChange={handleInputChange}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card className="mb-4">
+                  <CardHeader>
+                    <CardTitle>Social Media</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="facebook">Facebook URL</Label>
+                      <Input 
+                        id="facebook" 
+                        name="facebook" 
+                        value={pageData.contactInfo.facebook} 
+                        onChange={handleInputChange}
+                        placeholder="https://facebook.com/yourbusiness"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="instagram">Instagram URL</Label>
+                      <Input 
+                        id="instagram" 
+                        name="instagram" 
+                        value={pageData.contactInfo.instagram} 
+                        onChange={handleInputChange}
+                        placeholder="https://instagram.com/yourbusiness"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="googleMaps">Google Maps URL</Label>
+                      <Input 
+                        id="googleMaps" 
+                        name="googleMaps" 
+                        value={pageData.contactInfo.googleMaps} 
+                        onChange={handleInputChange}
+                        placeholder="https://maps.google.com/..."
+                      />
+                    </div>
+                    
+                    <div className="mt-4">
+                      <Label className="block mb-2">Show Social Icons</Label>
+                      <div className="flex flex-col space-y-2">
+                        {Object.keys(pageData.socialInline.platforms).map((platform) => (
+                          <div key={platform} className="flex items-center space-x-2">
+                            <Switch
+                              checked={pageData.socialInline.platforms[platform as keyof SocialPlatforms]}
+                              onCheckedChange={(checked) => handleToggleChange(`platforms.${platform}`, checked)}
+                            />
+                            <Label>{platform.charAt(0).toUpperCase() + platform.slice(1)}</Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Business Hours</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {pageData.workingHours.hours.map((day, index) => (
+                      <div key={day.day} className="flex items-center mb-2">
+                        <div className="w-24">{day.day}</div>
+                        <div className="flex-1">
+                          <Input
+                            value={day.hours}
+                            onChange={(e) => handleWorkingHourChange(index, e.target.value)}
+                            disabled={!day.isOpen}
+                          />
+                        </div>
+                        <div className="ml-2 flex items-center">
+                          <Switch
+                            checked={day.isOpen}
+                            onCheckedChange={(checked) => handleToggleChange(`workingHours.${index}`, checked)}
+                          />
+                          <span className="ml-2">{day.isOpen ? 'Open' : 'Closed'}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="appearance">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Visual Settings</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="backgroundColor">Background Color</Label>
+                      <div className="flex items-center space-x-2">
+                        <input 
+                          type="color" 
+                          id="backgroundColor"
+                          name="backgroundColor" 
+                          value={pageData.theme.backgroundColor} 
+                          onChange={handleInputChange}
+                          className="w-10 h-10"
+                        />
+                        <Input 
+                          value={pageData.theme.backgroundColor} 
+                          onChange={handleInputChange}
+                          name="backgroundColor"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="textColor">Text Color</Label>
+                      <div className="flex items-center space-x-2">
+                        <input 
+                          type="color" 
+                          id="textColor"
+                          name="textColor" 
+                          value={pageData.theme.textColor} 
+                          onChange={handleInputChange}
+                          className="w-10 h-10"
+                        />
+                        <Input 
+                          value={pageData.theme.textColor} 
+                          onChange={handleInputChange}
+                          name="textColor"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="fontStyle">Font Style</Label>
+                      <select 
+                        id="fontStyle"
+                        value={pageData.theme.fontStyle} 
+                        onChange={(e) => handleSelectChange('fontStyle', e.target.value)}
+                        className="w-full border rounded px-3 py-2"
+                      >
+                        <option value="sans-serif">Sans Serif</option>
+                        <option value="serif">Serif</option>
+                        <option value="monospace">Monospace</option>
+                      </select>
+                    </div>
+                    
+                    <div className="pt-4">
+                      <h3 className="font-medium mb-2">Section Visibility</h3>
+                      <div className="space-y-2">
+                        {['logo', 'bookings', 'socialInline', 'workingHours'].map((section) => (
+                          <div key={section} className="flex items-center space-x-2">
+                            <Switch
+                              checked={pageData[section as keyof BusinessPageData]?.visible || false}
+                              onCheckedChange={(checked) => handleToggleChange(`visible.${section}`, checked)}
+                            />
+                            <Label>{section.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())}</Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="integrations">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>TMW Chatbot Integration</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center space-x-2 mb-4">
+                      <Switch
+                        checked={pageData.chatbot.visible}
+                        onCheckedChange={(checked) => handleToggleChange('chatbotVisible', checked)}
+                        id="chatbotVisible"
+                      />
+                      <Label htmlFor="chatbotVisible">Enable TMW Chatbot</Label>
+                    </div>
+                    
+                    {pageData.chatbot.visible && (
+                      <>
+                        <div className="space-y-2">
+                          <Label htmlFor="embedCode">TMW Chatbot Embed Code</Label>
+                          <Textarea 
+                            id="embedCode" 
+                            name="embedCode" 
+                            value={pageData.chatbot.embedCode} 
+                            onChange={handleInputChange}
+                            rows={6}
+                            placeholder="Paste your TMW Chatbot embed code here..."
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="chatbotPosition">Chatbot Position</Label>
+                          <select 
+                            id="chatbotPosition"
+                            value={pageData.chatbot.position}
+                            onChange={(e) => handleSelectChange('chatbotPosition', e.target.value)}
+                            className="w-full border rounded px-3 py-2"
+                          >
+                            <option value="left">Left Side</option>
+                            <option value="right">Right Side</option>
+                          </select>
+                        </div>
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
             
-            {/* Right panel: Preview */}
-            <div className="w-2/3 overflow-y-auto bg-gray-100 p-4">
-              <div className="max-w-3xl mx-auto">
-                <h2 className="text-xl font-semibold mb-4">Page Preview</h2>
-                <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                  <SimplePagePreview pageData={pageData} />
-                </div>
-              </div>
+            <div className="mt-4 flex justify-end">
+              <Button 
+                onClick={handleSave}
+                disabled={isSaving}
+                className="flex items-center"
+              >
+                <Save className="mr-2 h-4 w-4" />
+                {isSaving ? 'Saving...' : 'Save Changes'}
+              </Button>
             </div>
           </div>
-        ) : (
-          <div className="h-full overflow-y-auto bg-gray-100 p-4">
-            <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md overflow-hidden">
-              <SimplePagePreview pageData={pageData} />
-            </div>
-          </div>
-        )}
+        ) : null}
+        
+        <div className={`${isEditMode ? 'w-1/2' : 'w-full'} overflow-auto border-l`}>
+          <SimplePagePreview pageData={pageData} />
+        </div>
       </div>
-      
-      {/* TMW Chatbot container */}
-      <div id="tmw-chatbot-container" />
     </div>
   );
 };

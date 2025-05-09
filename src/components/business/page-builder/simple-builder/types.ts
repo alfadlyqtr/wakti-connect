@@ -118,3 +118,13 @@ export interface BusinessPageData {
   published: boolean;
   sections?: SectionType[];
 }
+
+// Define a basic type for representing database business_pages_data table structure
+export interface BusinessPageRecord {
+  id?: string;
+  user_id: string;
+  page_data: any; // Will be JSON.stringify(BusinessPageData)
+  page_slug?: string;
+  created_at?: string;
+  updated_at?: string;
+}
