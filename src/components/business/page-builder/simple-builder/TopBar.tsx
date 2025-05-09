@@ -32,7 +32,7 @@ const TopBar: React.FC<TopBarProps> = ({
   const copyToClipboard = () => {
     // Generate the correct URL format for business landing pages
     const actualUrl = pageSettings.slug ? 
-      `https://${pageSettings.slug}.wakti.app` : 
+      `https://wakti.qa/${pageSettings.slug}` : 
       'No URL available yet';
     
     if (actualUrl !== 'No URL available yet') {
@@ -52,7 +52,7 @@ const TopBar: React.FC<TopBarProps> = ({
 
   // Generate the correct URL display for business landing pages
   const displayUrl = pageSettings.slug ? 
-    `https://${pageSettings.slug}.wakti.app` : 
+    `wakti.qa/${pageSettings.slug}` : 
     'No URL available yet';
 
   return (

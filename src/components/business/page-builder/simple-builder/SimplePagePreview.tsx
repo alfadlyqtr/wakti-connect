@@ -29,8 +29,25 @@ const SimplePagePreview: React.FC<SimplePagePreviewProps> = ({ pageData }) => {
     color: theme.textColor,
   };
 
+  // Display the page URL based on slug if available
+  const pageUrlDisplay = pageData.pageSlug ? 
+    `wakti.qa/${pageData.pageSlug}` : 
+    'wakti.qa/your-business-page';
+
   return (
     <div style={websiteStyle} className="min-h-[800px] border rounded-md overflow-hidden">
+      {/* URL Display at the top */}
+      <div className="bg-gray-100 text-gray-800 text-sm px-4 py-1 flex items-center">
+        <span className="inline-block mr-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="2" y1="12" x2="22" y2="12"></line>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+          </svg>
+        </span>
+        {pageUrlDisplay}
+      </div>
+
       {/* Header Section */}
       <header className={`py-8 px-4 ${getAlignmentClass(pageSetup.alignment)}`}>
         {logo.visible && logo.url && (

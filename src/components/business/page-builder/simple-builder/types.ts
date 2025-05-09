@@ -117,6 +117,8 @@ export interface BusinessPageData {
   sectionOrder: string[];
   published: boolean;
   sections?: SectionType[];
+  pageUrl?: string;  // Added to track the full URL
+  pageSlug?: string; // Added to track the custom slug
 }
 
 // Define a basic type for representing database business_pages_data table structure

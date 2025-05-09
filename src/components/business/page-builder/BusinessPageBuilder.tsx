@@ -1,8 +1,8 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { BusinessPage } from "@/types/business.types";
-import { useAuth } from "@/hooks/useAuth/index"; // Using correct import path
+import { useAuth } from "@/hooks/useAuth/index";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useBusinessPageDataQuery } from "@/hooks/business-page/useBusinessPageDataQueries";
 import PageBuilderEmptyState from "./PageBuilderEmptyState";
@@ -11,13 +11,15 @@ import { useCreateBusinessPageDataMutation, useUpdateBusinessPageDataMutation } 
 import { toast } from "@/components/ui/use-toast";
 import { LeftPanel } from "./components/LeftPanel";
 import { PreviewPanel } from "./components/PreviewPanel";
+import { generateSlug } from "@/utils/string-utils";
 
 // The main business page builder component
 const BusinessPageBuilder: React.FC = () => {
   const { user } = useAuth();
-  const { profile } = useUserProfile(user?.id || ""); // Provide user ID or empty string to prevent error
+  const { profile } = useUserProfile(user?.id || "");
   
   const [isPublishing, setIsPublishing] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
   
   // Query to fetch the business page data - passing user ID properly
   const {
@@ -31,17 +33,45 @@ const BusinessPageBuilder: React.FC = () => {
   const createPageMutation = useCreateBusinessPageDataMutation();
   const updatePageMutation = useUpdateBusinessPageDataMutation();
   
+  // Function to generate or update slug if needed
+  const ensureValidSlug = (data: any) => {
+    // If no pageSlug in page_data, generate one from business name
+    if (!data.page_data.pageSlug && data.page_data.pageSetup?.businessName) {
+      const generatedSlug = generateSlug(data.page_data.pageSetup.businessName);
+      return {
+        ...data,
+        page_data: {
+          ...data.page_data,
+          pageSlug: generatedSlug
+        }
+      };
+    }
+    return data;
+  };
+  
   // Function to handle publishing the page
   const handlePublish = async () => {
+    if (!user?.id) {
+      toast({
+        variant: "destructive",
+        title: "Authentication Error",
+        description: "You must be logged in to publish a page.",
+      });
+      return;
+    }
+    
     try {
       setIsPublishing(true);
       
       if (pageData) {
+        // Ensure the page data has a valid slug
+        const updatedPageData = ensureValidSlug(pageData);
+        
         // If page data exists, update it with published flag set to true
         await updatePageMutation.mutateAsync({
-          id: pageData.id,
+          id: updatedPageData.id,
           pageData: {
-            ...pageData.page_data,
+            ...updatedPageData.page_data,
             published: true
           }
         });
@@ -49,6 +79,9 @@ const BusinessPageBuilder: React.FC = () => {
           title: "Success",
           description: "Your page has been published successfully!",
         });
+        
+        // Refetch to get the latest data
+        refetch();
       } else {
         toast({
           variant: "destructive",
@@ -66,6 +99,77 @@ const BusinessPageBuilder: React.FC = () => {
     } finally {
       setIsPublishing(false);
     }
+  };
+  
+  // Function to handle saving page data
+  const handleSavePageData = async (updatedPageData: any) => {
+    if (!user?.id) {
+      toast({
+        variant: "destructive",
+        title: "Authentication Error",
+        description: "You must be logged in to save changes.",
+      });
+      return;
+    }
+    
+    setSaveStatus('saving');
+    
+    try {
+      // Ensure there's a valid slug
+      const dataWithSlug = {
+        ...updatedPageData,
+        pageSlug: updatedPageData.pageSlug || 
+                 (updatedPageData.pageSetup?.businessName ? 
+                   generateSlug(updatedPageData.pageSetup.businessName) : 
+                   undefined)
+      };
+      
+      if (pageData) {
+        // Update existing page data
+        await updatePageMutation.mutateAsync({
+          id: pageData.id,
+          pageData: dataWithSlug
+        });
+      } else {
+        // Create new page data
+        await createPageMutation.mutateAsync({
+          userId: user.id,
+          pageData: dataWithSlug
+        });
+      }
+      
+      setSaveStatus('saved');
+      toast({
+        title: "Changes saved",
+        description: "Your changes have been saved successfully.",
+      });
+      
+      // Refetch to get the latest data including any generated slugs
+      refetch();
+    } catch (error) {
+      console.error("Error saving page data:", error);
+      setSaveStatus('unsaved');
+      toast({
+        variant: "destructive",
+        title: "Save failed",
+        description: "There was a problem saving your changes. Please try again.",
+      });
+    }
+  };
+  
+  // Function to update specific sections of page data
+  const handleUpdateSection = (sectionKey: string, newData: any) => {
+    if (!pageData) return;
+    
+    setSaveStatus('unsaved');
+    
+    const updatedPageData = {
+      ...pageData.page_data,
+      [sectionKey]: newData
+    };
+    
+    // Auto-save after section updates
+    handleSavePageData(updatedPageData);
   };
   
   // If still loading, display loading state
@@ -107,11 +211,14 @@ const BusinessPageBuilder: React.FC = () => {
   return (
     <BusinessPageContext.Provider value={{
       pageData: pageData.page_data,
-      updatePageData: () => {}, // We'll implement this in a future update
-      updateSectionData: () => {}, // We'll implement this in a future update
-      saveStatus: 'saved',
-      handleSave: async () => {} // We'll implement this in a future update
+      updatePageData: handleSavePageData,
+      updateSectionData: handleUpdateSection,
+      saveStatus: saveStatus,
+      handleSave: () => handleSavePageData(pageData.page_data)
     }}>
+      <Helmet>
+        <title>Business Page Builder | WAKTI</title>
+      </Helmet>
       <div className="flex h-full max-h-screen">
         <LeftPanel isPublishing={isPublishing} onPublish={handlePublish} />
         <PreviewPanel />

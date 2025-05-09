@@ -1,9 +1,9 @@
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { BusinessPageData } from "@/components/business/page-builder/context/BusinessPageContext";
 import { Json } from "@/types/supabase";
+import { generateSlug } from "@/utils/string-utils";
 
 // Define the record type that comes back from the database
 export interface BusinessPageDataRecord {
@@ -14,15 +14,6 @@ export interface BusinessPageDataRecord {
   updated_at: string;
   page_data: BusinessPageData;
 }
-
-// Generate a slug from business name
-const generateSlug = (businessName: string): string => {
-  if (!businessName) return '';
-  return businessName
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/\s+/g, '-');
-};
 
 // Create new business page data
 export const useCreateBusinessPageDataMutation = () => {
@@ -39,8 +30,14 @@ export const useCreateBusinessPageDataMutation = () => {
           pageSlug = generateSlug(pageData.pageSetup.businessName);
         }
         
+        // Also store the slug in the page_data for UI access
+        const enhancedPageData = {
+          ...pageData,
+          pageSlug: pageSlug
+        };
+        
         // Type assertion to convert BusinessPageData to Json
-        const pageDataJson = pageData as unknown as Json;
+        const pageDataJson = enhancedPageData as unknown as Json;
         
         const { data, error } = await supabase
           .from('business_pages_data')
@@ -97,13 +94,20 @@ export const useUpdateBusinessPageDataMutation = () => {
       
       try {
         // Generate or update slug from business name if available
-        let pageSlug = null;
-        if (pageData.pageSetup?.businessName) {
+        // But keep existing slug if provided already in pageData
+        let pageSlug = pageData.pageSlug;
+        if (!pageSlug && pageData.pageSetup?.businessName) {
           pageSlug = generateSlug(pageData.pageSetup.businessName);
         }
         
+        // Update the pageSlug in the pageData object too
+        const enhancedPageData = {
+          ...pageData,
+          pageSlug: pageSlug
+        };
+        
         // Type assertion to convert BusinessPageData to Json
-        const pageDataJson = pageData as unknown as Json;
+        const pageDataJson = enhancedPageData as unknown as Json;
         
         const { data, error } = await supabase
           .from('business_pages_data')

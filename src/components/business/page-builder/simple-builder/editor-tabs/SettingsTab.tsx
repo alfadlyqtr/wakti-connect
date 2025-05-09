@@ -1,4 +1,3 @@
-
 import React from "react";
 import { PageSettings } from "../types";
 import { Input } from "@/components/ui/input";
@@ -6,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
+import { generateSlug } from "@/utils/string-utils";
 
 interface SettingsTabProps {
   pageSettings: PageSettings;
@@ -50,6 +50,13 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ pageSettings, setPageSettings
     updateSettings('businessHours', newHours);
   };
 
+  const handleSlugChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Auto-generate a slug from the input, ensuring it's URL-safe
+    const rawValue = e.target.value;
+    const safeSlug = generateSlug(rawValue);
+    updateSettings('slug', safeSlug);
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -63,6 +70,27 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ pageSettings, setPageSettings
               onChange={(e) => updateSettings('title', e.target.value)}
               className="mt-1"
             />
+          </div>
+
+          <div>
+            <Label htmlFor="page-slug">
+              URL Slug
+              <span className="text-xs text-gray-500 ml-2">
+                (Your page will be accessible at wakti.qa/your-slug)
+              </span>
+            </Label>
+            <div className="flex items-center mt-1">
+              <div className="bg-gray-100 px-3 py-2 text-gray-500 rounded-l-md border-y border-l">
+                wakti.qa/
+              </div>
+              <Input
+                id="page-slug"
+                value={pageSettings.slug || ''}
+                onChange={handleSlugChange}
+                placeholder="your-business-name"
+                className="rounded-l-none"
+              />
+            </div>
           </div>
         </div>
       </div>
