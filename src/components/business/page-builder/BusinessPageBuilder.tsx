@@ -1,289 +1,118 @@
 
 import React, { useState, useEffect } from "react";
-import { BusinessPageContext, BusinessPageData, BusinessPageContextType } from "./context/BusinessPageContext";
-import { LeftPanel } from "./components/LeftPanel";
-import { PreviewPanel } from "./components/PreviewPanel";
-import { TopBar } from "./components/TopBar";
-import { SettingsDialog } from "./components/SettingsDialog";
-import { useUser } from "@/hooks/auth/useUser";
+import { BusinessPage } from "@/types/business.types";
+import { useAuth } from "@/hooks/auth";
+import { useUserProfile } from "@/hooks/useUserProfile";
 import { useBusinessPageDataQuery } from "@/hooks/business-page/useBusinessPageDataQueries";
-import { useCreatePageDataMutation, useUpdatePageDataMutation, usePublishPageMutation } from "@/hooks/business-page/useBusinessPageDataMutations";
-import { supabase } from "@/integrations/supabase/client";
+import PageBuilderEmptyState from "./PageBuilderEmptyState";
+import { BusinessPageProvider } from "./context/BusinessPageContext";
+import { useCreateBusinessPageDataMutation, useUpdateBusinessPageDataMutation } from "@/hooks/business-page/useBusinessPageDataMutations";
+import { toast } from "@/components/ui/use-toast";
+import LeftPanel from "./components/LeftPanel";
+import PreviewPanel from "./components/PreviewPanel";
 
-// Default values for a new business page
-const defaultPageData: BusinessPageData = {
-  pageSetup: {
-    businessName: "My Business",
-    alignment: "center",
-    visible: true
-  },
-  logo: {
-    url: "",
-    shape: "square",
-    alignment: "center",
-    visible: true
-  },
-  bookings: {
-    viewStyle: "grid",
-    templates: [],
-    visible: true
-  },
-  socialInline: {
-    style: "icon",
-    platforms: {
-      whatsapp: true,
-      whatsappBusiness: false,
-      facebook: true,
-      instagram: true,
-      googleMaps: true,
-      phone: true,
-      email: true
-    },
-    visible: true
-  },
-  workingHours: {
-    layout: "card",
-    hours: [
-      { day: "Monday", open: "9:00", close: "17:00", closed: false },
-      { day: "Tuesday", open: "9:00", close: "17:00", closed: false },
-      { day: "Wednesday", open: "9:00", close: "17:00", closed: false },
-      { day: "Thursday", open: "9:00", close: "17:00", closed: false },
-      { day: "Friday", open: "9:00", close: "17:00", closed: false },
-      { day: "Saturday", open: "10:00", close: "14:00", closed: true },
-      { day: "Sunday", open: "11:00", close: "16:00", closed: true }
-    ],
-    visible: true
-  },
-  chatbot: {
-    position: "right",
-    embedCode: "",
-    visible: false
-  },
-  theme: {
-    backgroundColor: "#f5f5f5",
-    textColor: "#333333",
-    fontStyle: "sans-serif"
-  },
-  socialSidebar: {
-    position: "right",
-    platforms: {
-      whatsapp: true,
-      whatsappBusiness: false,
-      facebook: true,
-      instagram: true,
-      googleMaps: true,
-      phone: true,
-      email: true
-    },
-    visible: true
-  },
-  contactInfo: {
-    email: "",
-    whatsapp: "",
-    whatsappBusiness: "",
-    phone: "",
-    facebook: "",
-    googleMaps: "",
-    instagram: ""
-  },
-  sectionOrder: [
-    "logo",
-    "bookings",
-    "socialInline",
-    "workingHours",
-    "chatbot",
-    "socialSidebar"
-  ],
-  published: false
-};
-
-const BusinessPageBuilder = () => {
-  const { user } = useUser();
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [pageData, setPageData] = useState<BusinessPageData>(defaultPageData);
-  const [saveStatus, setSaveStatus] = useState<'saved' | 'unsaved' | 'saving'>('saved');
+// The main business page builder component
+const BusinessPageBuilder: React.FC = () => {
+  const { user } = useAuth();
+  const { profile } = useUserProfile();
+  const [isPublishing, setIsPublishing] = useState(false);
   
-  const { data: existingPageData, isLoading } = useBusinessPageDataQuery(user?.id);
-  const createMutation = useCreatePageDataMutation();
-  const updateMutation = useUpdatePageDataMutation();
-  const publishMutation = usePublishPageMutation();
+  // Query to fetch the business page data
+  const {
+    data: pageData,
+    isLoading,
+    error,
+    refetch
+  } = useBusinessPageDataQuery(user?.id);
   
-  // Load existing data if available
-  useEffect(() => {
-    if (existingPageData?.page_data) {
-      console.log("Setting page data from existing data:", existingPageData.page_data);
-      setPageData(existingPageData.page_data);
-      setSaveStatus('saved');
-    } else {
-      console.log("No existing page data found.");
-    }
-  }, [existingPageData]);
-
-  // Set save status to unsaved when page data changes
-  useEffect(() => {
-    if (!isLoading) {
-      setSaveStatus('unsaved');
-    }
-  }, [pageData, isLoading]);
-
-  // Update page data with partial data
-  const updatePageData = (updatedData: Partial<BusinessPageData>) => {
-    setPageData(prevData => ({...prevData, ...updatedData}));
-    setSaveStatus('unsaved');
-  };
-
-  // Update specific section within page data
-  const updateSectionData = <K extends keyof BusinessPageData>(
-    section: K,
-    data: Partial<BusinessPageData[K]>
-  ) => {
-    setPageData(prevData => {
-      // Type safe cloning of section data
-      const currentSection = prevData[section];
-      
-      // Handle the spread safely by converting both to plain objects
-      const currentSectionObject = { ...(currentSection as object) };
-      const dataObject = { ...(data as object) };
-      
-      // Merge the objects
-      const updatedSection = Object.assign({}, currentSectionObject, dataObject);
-      
-      // Return updated state with the new section
-      return {
-        ...prevData,
-        [section]: updatedSection
-      };
-    });
-    setSaveStatus('unsaved');
-  };
+  // Mutations for creating and updating page data
+  const createPageMutation = useCreateBusinessPageDataMutation();
+  const updatePageMutation = useUpdateBusinessPageDataMutation();
   
-  // Handle save action
-  const handleSave = async () => {
-    if (!user?.id) {
-      console.error("Cannot save: No user ID found");
-      return;
-    }
-    
-    setSaveStatus('saving');
-    console.log("Starting save operation...");
+  // Function to handle publishing the page
+  const handlePublish = async () => {
     try {
-      if (existingPageData?.id) {
-        // Update existing page
-        console.log("Updating existing page:", existingPageData.id);
-        await updateMutation.mutateAsync({
-          id: existingPageData.id,
-          pageData: pageData,
+      setIsPublishing(true);
+      
+      if (pageData) {
+        // If page data exists, update it with published flag set to true
+        await updatePageMutation.mutateAsync({
+          id: pageData.id,
+          pageData: {
+            ...pageData.page_data,
+            published: true
+          }
+        });
+        toast({
+          title: "Success",
+          description: "Your page has been published successfully!",
         });
       } else {
-        // Create new page
-        console.log("Creating new page for user:", user.id);
-        await createMutation.mutateAsync({
-          pageData: pageData,
-          userId: user.id,
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "You need to save your page before publishing.",
         });
       }
-      console.log("Save operation successful");
-      setSaveStatus('saved');
     } catch (error) {
-      console.error("Error saving page:", error);
-      setSaveStatus('unsaved');
+      console.error("Error publishing page:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to publish your page. Please try again.",
+      });
+    } finally {
+      setIsPublishing(false);
     }
   };
   
-  // Handle publish/unpublish action
-  const handlePublish = async () => {
-    if (!user?.id) {
-      console.error("Cannot publish: No user ID found");
-      return;
-    }
-      
-    if (!existingPageData?.id) {
-      // If we don't have a saved page yet, save first then publish
-      console.log("No existing page data, saving first before publishing");
-      await handleSave();
-      
-      try {
-        // Fetch the saved page data again
-        const { data } = await supabase
-          .from('business_pages_data')
-          .select('*')
-          .eq('user_id', user?.id)
-          .order('created_at', { ascending: false })
-          .single();
-          
-        if (data) {
-          console.log("Publishing newly saved page", data.id);
-          await publishMutation.mutateAsync({
-            id: data.id,
-            pageData: pageData,
-            published: !pageData.published,
-          });
-          
-          setPageData(prev => ({...prev, published: !prev.published}));
-        } else {
-          console.error("Failed to retrieve newly saved page data");
-        }
-      } catch (error) {
-        console.error("Error during save and publish flow:", error);
-      }
-      return;
-    }
-    
-    try {
-      console.log("Publishing existing page", existingPageData.id);
-      await publishMutation.mutateAsync({
-        id: existingPageData.id,
-        pageData: pageData,
-        published: !pageData.published,
-      });
-      
-      setPageData(prev => ({...prev, published: !prev.published}));
-      console.log("Publish status updated to:", !pageData.published);
-    } catch (error) {
-      console.error("Error publishing page:", error);
-    }
-  };
-
-  // Construct the public URL for the page
-  const getPageUrl = () => {
-    if (!existingPageData?.page_slug) {
-      console.log("No page slug available for URL");
-      return "";
-    }
-    console.log("Page URL generated:", `${existingPageData.page_slug}.wakti.app`);
-    return `${existingPageData.page_slug}.wakti.app`;
-  };
-
-  const contextValue: BusinessPageContextType = {
-    pageData,
-    updatePageData,
-    updateSectionData,
-    saveStatus,
-    handleSave,
-  };
-
-  return (
-    <BusinessPageContext.Provider value={contextValue}>
-      <div className="flex flex-col h-screen">
-        <TopBar 
-          onSettingsClick={() => setIsSettingsOpen(true)}
-          pageData={pageData}
-          businessName={user?.profile?.business_name || ""}
-          onPublish={handlePublish}
-          pageUrl={getPageUrl()}
-        />
-        <div className="flex flex-1 overflow-hidden">
-          <LeftPanel />
-          <div className="flex-1 p-4 overflow-auto">
-            <PreviewPanel />
-          </div>
+  // If still loading, display loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading your page builder...</p>
         </div>
-        <SettingsDialog 
-          open={isSettingsOpen} 
-          onClose={() => setIsSettingsOpen(false)} 
-        />
       </div>
-    </BusinessPageContext.Provider>
+    );
+  }
+  
+  // If there's an error, display error state
+  if (error) {
+    return (
+      <div className="text-center p-8">
+        <h2 className="text-xl font-semibold text-red-600 mb-2">Error</h2>
+        <p className="text-gray-600 mb-4">
+          Could not load your business page. Please try again later.
+        </p>
+        <button
+          onClick={() => refetch()}
+          className="px-4 py-2 bg-primary text-white rounded hover:bg-primary/90"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
+  
+  // If no page data exists, show empty state
+  if (!pageData) {
+    return <PageBuilderEmptyState userId={user?.id} />;
+  }
+  
+  // Render the page builder interface
+  return (
+    <BusinessPageProvider initialData={pageData.page_data}>
+      <div className="flex h-full max-h-screen">
+        <LeftPanel 
+          pageData={pageData} 
+          isPublishing={isPublishing}
+          onPublish={handlePublish}
+        />
+        <PreviewPanel />
+      </div>
+    </BusinessPageProvider>
   );
 };
 

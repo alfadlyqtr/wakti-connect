@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { AIAssistantChatCard } from '../AIAssistantChatCard';
-import { vi } from 'vitest';
+import { vi, describe, it, expect, afterEach } from 'vitest';
 import { AIMessage, AIAssistantRole } from '@/types/ai-assistant.types';
 import '@testing-library/jest-dom'; // Add this to bring in toBeInTheDocument matcher
 
@@ -58,12 +58,12 @@ describe('AIAssistantChatCard', () => {
   });
   
   it('renders empty state when no messages', () => {
-    render(<AIAssistantChatCard {...defaultProps} />);
+    const { getByTestId } = render(<AIAssistantChatCard {...defaultProps} />);
     
-    expect(screen.getByTestId('mock-empty-state')).toBeInTheDocument();
-    expect(screen.getByTestId('mock-role-selector')).toBeInTheDocument();
-    expect(screen.getByTestId('mock-message-input')).toBeInTheDocument();
-    expect(screen.getByTestId('mock-powered-by')).toBeInTheDocument();
+    expect(getByTestId('mock-empty-state')).toBeInTheDocument();
+    expect(getByTestId('mock-role-selector')).toBeInTheDocument();
+    expect(getByTestId('mock-message-input')).toBeInTheDocument();
+    expect(getByTestId('mock-powered-by')).toBeInTheDocument();
   });
   
   it('renders chat when messages exist', () => {
@@ -72,16 +72,16 @@ describe('AIAssistantChatCard', () => {
       messages: [{ id: '1', role: 'assistant' as const, content: 'Hello', timestamp: new Date() }],
     };
     
-    render(<AIAssistantChatCard {...props} />);
+    const { getByTestId, queryByTestId } = render(<AIAssistantChatCard {...props} />);
     
-    expect(screen.getByTestId('mock-assistant-chat')).toBeInTheDocument();
-    expect(screen.queryByTestId('mock-empty-state')).not.toBeInTheDocument();
+    expect(getByTestId('mock-assistant-chat')).toBeInTheDocument();
+    expect(queryByTestId('mock-empty-state')).not.toBeInTheDocument();
   });
   
   it('calls setInputMessage when prompt is clicked', () => {
-    render(<AIAssistantChatCard {...defaultProps} />);
+    const { getByText } = render(<AIAssistantChatCard {...defaultProps} />);
     
-    fireEvent.click(screen.getByText('Use prompt'));
+    getByText('Use prompt').click();
     
     expect(mockSetInputMessage).toHaveBeenCalledWith('Test prompt');
   });
@@ -92,9 +92,9 @@ describe('AIAssistantChatCard', () => {
       messages: [{ id: '1', role: 'assistant' as const, content: 'Hello', timestamp: new Date() }],
     };
     
-    render(<AIAssistantChatCard {...props} />);
+    const { getByTitle } = render(<AIAssistantChatCard {...props} />);
     
-    expect(screen.getByTitle('Clear chat')).toBeInTheDocument();
+    expect(getByTitle('Clear chat')).toBeInTheDocument();
   });
   
   it('calls clearMessages when clear button is clicked', () => {
@@ -103,9 +103,9 @@ describe('AIAssistantChatCard', () => {
       messages: [{ id: '1', role: 'assistant' as const, content: 'Hello', timestamp: new Date() }],
     };
     
-    render(<AIAssistantChatCard {...props} />);
+    const { getByTitle } = render(<AIAssistantChatCard {...props} />);
     
-    fireEvent.click(screen.getByTitle('Clear chat'));
+    getByTitle('Clear chat').click();
     
     expect(mockClearMessages).toHaveBeenCalled();
   });

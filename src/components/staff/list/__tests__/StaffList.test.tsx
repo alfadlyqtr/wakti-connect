@@ -1,5 +1,5 @@
 
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { StaffList } from '../StaffList';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { expect, vi, describe, it, beforeEach } from 'vitest';
@@ -93,7 +93,7 @@ describe('StaffList', () => {
   });
 
   it('renders without crashing', () => {
-    render(
+    const { getByTestId } = render(
       <QueryClientProvider client={queryClient}>
         <StaffList
           staffMembers={mockStaffMembers}
@@ -105,12 +105,12 @@ describe('StaffList', () => {
       </QueryClientProvider>
     );
 
-    expect(screen.getByTestId('staff-list-header')).toBeInTheDocument();
-    expect(screen.getByTestId('staff-list-content')).toBeInTheDocument();
+    expect(getByTestId('staff-list-header')).toBeInTheDocument();
+    expect(getByTestId('staff-list-content')).toBeInTheDocument();
   });
 
   it('displays loading state', () => {
-    render(
+    const { getByText } = render(
       <QueryClientProvider client={queryClient}>
         <StaffList
           staffMembers={[]}
@@ -122,13 +122,13 @@ describe('StaffList', () => {
       </QueryClientProvider>
     );
 
-    expect(screen.getByText(/loading staff members/i)).toBeInTheDocument();
+    expect(getByText(/loading staff members/i)).toBeInTheDocument();
   });
 
   it('displays error state', () => {
     const error = new Error('Failed to load staff');
     
-    render(
+    const { getByText } = render(
       <QueryClientProvider client={queryClient}>
         <StaffList
           staffMembers={[]}
@@ -140,11 +140,11 @@ describe('StaffList', () => {
       </QueryClientProvider>
     );
 
-    expect(screen.getByText(/failed to load staff/i)).toBeInTheDocument();
+    expect(getByText(/failed to load staff/i)).toBeInTheDocument();
   });
 
   it('handles empty staff list', () => {
-    render(
+    const { getByText } = render(
       <QueryClientProvider client={queryClient}>
         <StaffList
           staffMembers={[]}
@@ -156,6 +156,6 @@ describe('StaffList', () => {
       </QueryClientProvider>
     );
 
-    expect(screen.getByText(/no staff members found/i)).toBeInTheDocument();
+    expect(getByText(/no staff members found/i)).toBeInTheDocument();
   });
 });

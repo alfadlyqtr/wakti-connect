@@ -1,5 +1,5 @@
 
-import { renderHook, waitFor } from '@testing-library/react';
+import { renderHook } from '@testing-library/react';
 import { useStaffStatus } from '../useStaffStatus';
 import { supabase } from '@/integrations/supabase/client';
 import { vi, describe, it, beforeEach, expect } from 'vitest';
@@ -51,10 +51,10 @@ describe('useStaffStatus', () => {
 
     const { result } = renderHook(() => useStaffStatus(), { wrapper });
 
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    });
+    // Use a promise to wait for the async operations to complete
+    await new Promise(process.nextTick);
 
+    expect(result.current.isLoading).toBe(false);
     expect(result.current.staffRelationId).toBe('123');
   });
 
@@ -70,11 +70,10 @@ describe('useStaffStatus', () => {
 
     const { result } = renderHook(() => useStaffStatus(), { wrapper });
 
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    });
+    // Use a promise to wait for the async operations to complete
+    await new Promise(process.nextTick);
 
+    expect(result.current.isLoading).toBe(false);
     expect(result.current.error).toBeTruthy();
   });
 });
-

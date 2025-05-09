@@ -1,8 +1,9 @@
 
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { AISettingsProvider, useAISettings } from '../AISettingsContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { describe, it, expect } from 'vitest';
 import '@testing-library/jest-dom'; // Add this to bring in toBeInTheDocument matcher
 
 // Create a test component that uses the context
@@ -40,7 +41,7 @@ describe('AISettingsContext', () => {
   it('renders the provider without crashing', () => {
     const queryClient = new QueryClient();
     
-    render(
+    const { getByText } = render(
       <QueryClientProvider client={queryClient}>
         <AISettingsProvider>
           <TestComponent />
@@ -49,6 +50,6 @@ describe('AISettingsContext', () => {
     );
     
     // Initial loading state
-    expect(screen.getByText('Loading settings...')).toBeInTheDocument();
+    expect(getByText('Loading settings...')).toBeInTheDocument();
   });
 });
