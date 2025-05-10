@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
@@ -65,10 +64,13 @@ export const useProfileSettings = () => {
               po_box: '',
               business_type: '',
               business_address: '',
-              // Add the missing properties that were added in our SQL migration
+              email: session.user.email,
+              slug: null,
+              business_email: null,
+              business_phone: null,
+              business_website: null,
               is_active: true,
-              last_login_at: null,
-              email: session.user.email
+              last_login_at: null
             };
             return defaultProfile;
           }

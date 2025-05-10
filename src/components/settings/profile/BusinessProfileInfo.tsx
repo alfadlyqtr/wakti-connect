@@ -7,7 +7,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Tables } from "@/integrations/supabase/types";
 
 interface BusinessProfileInfoProps {
-  profile: Tables['profiles']['Row'];
+  profile: Tables<"profiles">;
 }
 
 const BusinessProfileInfo: React.FC<BusinessProfileInfoProps> = ({ profile }) => {
