@@ -12,7 +12,11 @@ import SlugResolver from "./components/business/SlugResolver";
 import BusinessProfilePage from "./pages/BusinessProfilePage";
 
 // Root application layout that doesn't depend on App.tsx
-const RootLayout = ({ children }: { children: React.ReactNode }) => {
+interface RootLayoutProps {
+  children: React.ReactNode;
+}
+
+const RootLayout = ({ children }: RootLayoutProps) => {
   return <>{children}</>;
 };
 
