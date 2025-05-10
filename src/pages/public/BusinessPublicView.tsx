@@ -6,8 +6,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { SectionContainer } from "@/components/ui/section-container";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { Separator } from "@/components/ui/separator";
-import { Mail, Phone, Globe, Info } from "lucide-react";
+import { Mail, Phone, Globe, Info, Clock } from "lucide-react";
 import BusinessBookingTemplatesSection from "@/components/business/landing/sections/BusinessBookingTemplatesSection";
+import BusinessHoursSection from "@/components/business/landing/sections/BusinessHoursSection";
+import SocialIconsGroup from "@/components/business/landing/SocialIconsGroup";
+import { useBusinessSocialLinks } from "@/hooks/useBusinessSocialLinks";
 import { Tables } from "@/integrations/supabase/types";
 
 const BusinessPublicView = () => {
@@ -15,7 +18,11 @@ const BusinessPublicView = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [profile, setProfile] = useState<Tables<"profiles"> | null>(null);
-
+  
+  // Get social links for the business
+  const { socialLinks, isLoading: loadingSocialLinks } = 
+    useBusinessSocialLinks(profile?.id);
+  
   useEffect(() => {
     const fetchBusinessProfile = async () => {
       try {
@@ -77,6 +84,24 @@ const BusinessPublicView = () => {
       </div>
     );
   }
+
+  // Define default business hours structure 
+  const businessHoursContent = {
+    title: "Business Hours",
+    subtitle: "When you can visit us",
+    description: "Our operating hours",
+    hours: [
+      { day: "Monday", hours: "9:00 AM - 5:00 PM" },
+      { day: "Tuesday", hours: "9:00 AM - 5:00 PM" },
+      { day: "Wednesday", hours: "9:00 AM - 5:00 PM" },
+      { day: "Thursday", hours: "9:00 AM - 5:00 PM" },
+      { day: "Friday", hours: "9:00 AM - 5:00 PM" },
+      { day: "Saturday", hours: "10:00 AM - 3:00 PM" },
+      { day: "Sunday", hours: "Closed" }
+    ],
+    showCurrentDay: true,
+    layout: "list"
+  };
 
   return (
     <div className="pb-12">
@@ -153,6 +178,19 @@ const BusinessPublicView = () => {
                     </div>
                   )}
                 </div>
+
+                {/* Social Links */}
+                {!loadingSocialLinks && socialLinks && socialLinks.length > 0 && (
+                  <div className="mt-6">
+                    <h4 className="text-sm font-medium mb-2 text-muted-foreground">Connect With Us</h4>
+                    <SocialIconsGroup 
+                      socialLinks={socialLinks}
+                      style="colored"
+                      size="default"
+                      className="justify-start"
+                    />
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -160,10 +198,33 @@ const BusinessPublicView = () => {
           <div>
             <Card className="h-full">
               <CardHeader>
-                <CardTitle>Business Hours</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-blue-600" />
+                  Business Hours
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">Please contact us for our business hours</p>
+                <div className="space-y-2">
+                  {businessHoursContent.hours.map((item, index) => {
+                    const isToday = new Date().getDay() === (index === 6 ? 0 : index + 1); // Adjust index for Sunday
+                    return (
+                      <div 
+                        key={index} 
+                        className={`flex justify-between py-2 border-b ${isToday && businessHoursContent.showCurrentDay ? "bg-primary/10 px-2 rounded" : ""}`}
+                      >
+                        <div className="font-medium">{item.day}</div>
+                        <div className="flex items-center">
+                          <span>{item.hours}</span>
+                          {isToday && businessHoursContent.showCurrentDay && (
+                            <span className="ml-2 text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
+                              Today
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </CardContent>
             </Card>
           </div>
