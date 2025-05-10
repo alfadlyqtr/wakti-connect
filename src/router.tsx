@@ -11,49 +11,36 @@ import { businessRoutes } from "./routes";
 import SlugResolver from "./components/business/SlugResolver";
 import BusinessProfilePage from "./pages/BusinessProfilePage";
 
-// Root application layout that doesn't depend on App.tsx
-interface RootLayoutProps {
-  children: React.ReactNode;
-}
-
-const RootLayout = ({ children }: RootLayoutProps) => {
-  return <>{children}</>;
-};
-
 export const router = createBrowserRouter([
   {
-    element: <RootLayout>{/* Child routes will be automatically inserted here by react-router */}</RootLayout>,
-    children: [
-      {
-        element: <PublicLayout />,
-        children: publicRoutes,
-      },
-      {
-        path: "auth/*",
-        element: <AuthShell />,
-        children: authRoutes,
-      },
-      {
-        path: "dashboard/*",
-        element: <DashboardLayout />,
-        children: dashboardRoutes,
-      },
-      {
-        path: "superadmin/*",
-        children: superadminRoutes,
-      },
-      {
-        path: "booking/*",
-        children: businessRoutes,
-      },
-      {
-        path: "b/:slug",
-        element: <SlugResolver />
-      },
-      {
-        path: "profile/:slug",
-        element: <BusinessProfilePage />
-      }
-    ],
+    path: "/",
+    element: <PublicLayout />,
+    children: publicRoutes,
   },
+  {
+    path: "auth/*",
+    element: <AuthShell />,
+    children: authRoutes,
+  },
+  {
+    path: "dashboard/*",
+    element: <DashboardLayout />,
+    children: dashboardRoutes,
+  },
+  {
+    path: "superadmin/*",
+    children: superadminRoutes,
+  },
+  {
+    path: "booking/*",
+    children: businessRoutes,
+  },
+  {
+    path: "b/:slug",
+    element: <SlugResolver />
+  },
+  {
+    path: "profile/:slug",
+    element: <BusinessProfilePage />
+  }
 ]);
