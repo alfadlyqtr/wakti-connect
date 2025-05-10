@@ -1,211 +1,192 @@
 
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { BookingModalContent } from '@/components/business/landing/booking';
-import { Loader2, Calendar, Clock } from 'lucide-react';
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { SectionContainer } from "@/components/ui/section-container";
+import { SectionHeading } from "@/components/ui/section-heading";
+import { Separator } from "@/components/ui/separator";
+import { Mail, Phone, Globe, Info } from "lucide-react";
+import BusinessBookingTemplatesSection from "@/components/business/landing/sections/BusinessBookingTemplatesSection";
+import { Tables } from "@/integrations/supabase/types";
 
-const BusinessPublicView: React.FC = () => {
+const BusinessPublicView = () => {
   const { slug, businessId } = useParams<{ slug?: string; businessId?: string }>();
-  const [business, setBusiness] = useState<any | null>(null);
-  const [templates, setTemplates] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedTemplate, setSelectedTemplate] = useState<any | null>(null);
-  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [profile, setProfile] = useState<Tables<"profiles"> | null>(null);
 
   useEffect(() => {
-    const fetchBusinessData = async () => {
-      setIsLoading(true);
-      setError(null);
-
+    const fetchBusinessProfile = async () => {
       try {
-        let id = businessId;
-
-        // If we have a slug but no businessId, resolve the slug to an ID
-        if (!id && slug) {
-          const { data: slugData, error: slugError } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('slug', slug)
-            .single();
-
-          if (slugError) throw new Error('Business not found');
-          id = slugData.id;
+        setLoading(true);
+        
+        let query = supabase.from('profiles').select('*');
+        
+        if (businessId) {
+          query = query.eq('id', businessId);
+        } else if (slug) {
+          query = query.eq('slug', slug);
+        } else {
+          throw new Error("No business identifier provided");
         }
-
-        if (!id) {
-          throw new Error('No business identifier provided');
+        
+        const { data, error } = await query.single();
+        
+        if (error) {
+          console.error("Error fetching business profile:", error);
+          setError("Could not find the business profile");
+          return;
         }
-
-        // Fetch business profile data
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', id)
-          .single();
-
-        if (profileError) throw profileError;
-
-        // Fetch booking templates
-        const { data: templatesData, error: templatesError } = await supabase
-          .from('booking_templates')
-          .select(`
-            *,
-            service:service_id (
-              name,
-              description,
-              price
-            ),
-            staff:staff_assigned_id (
-              name
-            )
-          `)
-          .eq('business_id', id)
-          .eq('is_published', true);
-
-        if (templatesError) throw templatesError;
-
-        setBusiness(profileData);
-        setTemplates(templatesData || []);
-      } catch (err: any) {
-        console.error('Error fetching business data:', err);
-        setError(err.message || 'Failed to load business information');
+        
+        setProfile(data);
+      } catch (err) {
+        console.error("Exception during profile fetch:", err);
+        setError("An unexpected error occurred");
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
 
-    fetchBusinessData();
+    fetchBusinessProfile();
   }, [slug, businessId]);
 
-  const handleBookNow = (template: any) => {
-    setSelectedTemplate(template);
-    setShowBookingModal(true);
-  };
-
-  // Format duration from minutes to hours and minutes
-  const formatDuration = (minutes: number) => {
-    if (minutes < 60) return `${minutes} minutes`;
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-    if (remainingMinutes === 0) return `${hours} hour${hours > 1 ? 's' : ''}`;
-    return `${hours} hour${hours > 1 ? 's' : ''} ${remainingMinutes} min`;
-  };
-
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="container mx-auto py-12 flex justify-center items-center min-h-[50vh]">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <div className="h-12 w-12 border-4 border-t-transparent border-primary rounded-full animate-spin"></div>
       </div>
     );
   }
 
-  if (error || !business) {
+  if (error || !profile) {
     return (
-      <div className="container mx-auto py-12 text-center">
+      <div className="container mx-auto px-4 py-16 text-center">
         <h1 className="text-3xl font-bold mb-4">Business Not Found</h1>
-        <p className="text-muted-foreground mb-8">{error || "The business you're looking for doesn't exist or isn't available."}</p>
-        <Button variant="outline" onClick={() => window.history.back()}>Go Back</Button>
+        <p className="text-muted-foreground">Sorry, we couldn't find the business you're looking for.</p>
+      </div>
+    );
+  }
+
+  // Make sure business profile exists
+  if (profile.account_type !== "business") {
+    return (
+      <div className="container mx-auto px-4 py-16 text-center">
+        <h1 className="text-3xl font-bold mb-4">Not a Business Profile</h1>
+        <p className="text-muted-foreground">This profile is not a business account.</p>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <Card className="mb-8">
-        <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <Avatar className="h-16 w-16">
-              <AvatarImage src={business.avatar_url || ''} alt={business.business_name || business.display_name} />
-              <AvatarFallback>{(business.business_name || business.display_name || 'B').substring(0, 2).toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <div>
-              <CardTitle className="text-2xl">{business.business_name || business.display_name}</CardTitle>
-              {business.occupation && <CardDescription>{business.occupation}</CardDescription>}
-            </div>
-          </div>
-        </CardHeader>
-        
-        {business.description && (
-          <CardContent>
-            <p>{business.description}</p>
-          </CardContent>
-        )}
-      </Card>
-
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold mb-6">Available Services</h2>
-        
-        {templates.length === 0 ? (
-          <Card>
-            <CardContent className="py-8 text-center">
-              <p className="text-muted-foreground">This business has no available services for booking at this time.</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {templates.map(template => (
-              <Card key={template.id} className="overflow-hidden hover:shadow-md transition-all">
-                <CardHeader>
-                  <CardTitle>{template.name}</CardTitle>
-                  {template.description && (
-                    <CardDescription>{template.description}</CardDescription>
-                  )}
-                </CardHeader>
-                
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <Clock className="mr-2 h-4 w-4" />
-                      {formatDuration(template.duration)}
-                    </div>
-                    
-                    {template.price && (
-                      <div className="text-lg font-semibold">
-                        ${template.price.toFixed(2)}
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-                
-                <CardContent className="pt-0">
-                  <Button 
-                    className="w-full" 
-                    onClick={() => handleBookNow(template)}
-                  >
-                    Book Now
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <Dialog open={showBookingModal} onOpenChange={setShowBookingModal}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>{selectedTemplate?.name}</DialogTitle>
-            <DialogDescription>
-              {selectedTemplate?.description || "Book your appointment"}
-            </DialogDescription>
-          </DialogHeader>
-          
-          {selectedTemplate && business && (
-            <BookingModalContent
-              template={selectedTemplate}
-              businessId={business.id}
-              onClose={() => setShowBookingModal(false)}
-            />
+    <div className="pb-12">
+      {/* Hero section with business name */}
+      <section className="bg-gradient-to-r from-blue-600 to-blue-800 py-16 mb-8">
+        <div className="container mx-auto px-4 text-center">
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
+            {profile.business_name || "Business Profile"}
+          </h1>
+          {profile.business_type && (
+            <p className="text-xl text-white/80 mt-2">{profile.business_type}</p>
           )}
-        </DialogContent>
-      </Dialog>
+        </div>
+      </section>
+
+      <SectionContainer className="mb-12">
+        {/* Business Information */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2">
+            <Card className="h-full">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Info className="h-5 w-5 text-blue-600" />
+                  About Us
+                </CardTitle>
+                <CardDescription>
+                  Business Details
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {profile.business_address && (
+                  <div className="prose max-w-none">
+                    <p>{profile.business_address}</p>
+                  </div>
+                )}
+                
+                <Separator className="my-4" />
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {profile.business_email && (
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">Email</p>
+                        <p>{profile.business_email}</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {profile.business_phone && (
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">Phone</p>
+                        <p>{profile.business_phone}</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {profile.business_website && (
+                    <div className="flex items-center gap-2">
+                      <Globe className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">Website</p>
+                        <a 
+                          href={profile.business_website.startsWith('http') ? profile.business_website : `https://${profile.business_website}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline"
+                        >
+                          {profile.business_website}
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <div>
+            <Card className="h-full">
+              <CardHeader>
+                <CardTitle>Business Hours</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">Please contact us for our business hours</p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </SectionContainer>
+      
+      {/* Services/Booking section */}
+      <SectionContainer>
+        <SectionHeading
+          title="Our Services"
+          subtitle="Book an appointment with us"
+          centered={true}
+        />
+        
+        <BusinessBookingTemplatesSection 
+          content={{
+            title: "Available Services",
+            subtitle: "Book your appointment today",
+            description: "Browse our services and book your appointment online"
+          }}
+          businessId={profile.id}
+        />
+      </SectionContainer>
     </div>
   );
 };
