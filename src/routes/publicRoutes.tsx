@@ -13,6 +13,7 @@ import LandingPage from '@/pages/public/LandingPage';
 import FaqPage from '@/pages/public/FaqPage';
 import PrivacyPage from '@/pages/public/PrivacyPage';
 import TermsPage from '@/pages/public/TermsPage';
+import BusinessPublicView from '@/pages/public/BusinessPublicView';
 
 // Temporary placeholder component for missing pages
 const PlaceholderPage = ({ title }: { title: string }) => (
@@ -58,6 +59,14 @@ export const publicRoutes = [
   {
     path: 'i/:shareId',
     element: <SharedInvitationView />,
+  },
+  {
+    path: 'b/:slug',
+    element: <BusinessPublicView />,
+  },
+  {
+    path: 'business/:businessId',
+    element: <BusinessPublicView />,
   },
   {
     path: '*',

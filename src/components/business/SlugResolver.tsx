@@ -6,12 +6,12 @@ import SimpleLoading from "./page-builder/simple-builder/SimpleLoading";
 
 const SlugResolver = () => {
   const { slug } = useParams<{ slug: string }>();
-  const [pageId, setPageId] = useState<string | null>(null);
+  const [redirectTo, setRedirectTo] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchPageBySlug = async () => {
+    const fetchBySlug = async () => {
       if (!slug) {
         setIsLoading(false);
         setError("No slug provided");
@@ -19,42 +19,52 @@ const SlugResolver = () => {
       }
 
       try {
-        const { data, error } = await supabase
+        // First check if this is a business profile slug
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('slug', slug)
+          .maybeSingle();
+
+        if (profileData) {
+          setRedirectTo(`/business/${profileData.id}`);
+          return;
+        }
+
+        // If not a profile, check if it's a business page slug
+        const { data: pageData, error: pageError } = await supabase
           .from('business_pages_data')
           .select('id')
           .eq('page_slug', slug)
-          .single();
+          .maybeSingle();
 
-        if (error) {
-          console.error("Error fetching page by slug:", error);
-          setError("Page not found");
-        } else if (data) {
-          setPageId(data.id);
+        if (pageData) {
+          setRedirectTo(`/view/business-page/${pageData.id}`);
         } else {
           setError("Page not found");
         }
       } catch (err) {
-        console.error("Exception during page fetch:", err);
+        console.error("Exception during slug resolution:", err);
         setError("An unexpected error occurred");
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchPageBySlug();
+    fetchBySlug();
   }, [slug]);
 
   if (isLoading) {
     return <SimpleLoading />;
   }
 
-  if (error || !pageId) {
+  if (error || !redirectTo) {
     // If page not found, redirect to homepage
     return <Navigate to="/" replace />;
   }
 
-  // If page found, redirect to the business page view
-  return <Navigate to={`/view/business-page/${pageId}`} replace />;
+  // Redirect to the resolved destination
+  return <Navigate to={redirectTo} replace />;
 };
 
 export default SlugResolver;
