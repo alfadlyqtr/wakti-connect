@@ -18,9 +18,7 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
 
 export const router = createBrowserRouter([
   {
-    element: <RootLayout>
-      {/* Child routes will be automatically inserted here by react-router */}
-    </RootLayout>,
+    element: <RootLayout>{/* Child routes will be automatically inserted here by react-router */}</RootLayout>,
     children: [
       {
         element: <PublicLayout />,
