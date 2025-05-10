@@ -10,7 +10,6 @@ import BillingTab from "@/components/settings/BillingTab";
 import { useProfileSettings } from "@/hooks/useProfileSettings";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import BusinessProfileTab from "@/components/settings/BusinessProfileTab";
-import { useSearchParams } from "react-router-dom";
 
 const DashboardSettings = () => {
   const [userRole, setUserRole] = useState<string | null>(null);
@@ -18,8 +17,6 @@ const DashboardSettings = () => {
   const { user } = useAuth();
   const { data: profileData } = useProfileSettings();
   const isMobile = useMediaQuery("(max-width: 640px)");
-  const [searchParams] = useSearchParams();
-  const tabParam = searchParams.get('tab');
   
   useEffect(() => {
     const storedRole = localStorage.getItem('userRole');
@@ -34,11 +31,6 @@ const DashboardSettings = () => {
     return <div className="mx-auto max-w-7xl py-6">Loading...</div>;
   }
   
-  // Determine default tab based on URL parameter or use account as default
-  const defaultTab = tabParam && ['account', 'business-profile', 'notifications', 'billing', 'currency', 'ai-assistant'].includes(tabParam)
-    ? tabParam
-    : 'account';
-  
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6">
       <div className="mb-6 sm:mb-8">
@@ -48,7 +40,7 @@ const DashboardSettings = () => {
         </p>
       </div>
       
-      <Tabs defaultValue={defaultTab} className="space-y-6">
+      <Tabs defaultValue="account" className="space-y-6">
         <TabsList className="flex overflow-x-auto no-scrollbar">
           <TabsTrigger value="account" className="px-3 py-1.5 whitespace-nowrap">
             Account Info

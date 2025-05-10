@@ -7,12 +7,11 @@ import SimpleLoading from "./page-builder/simple-builder/SimpleLoading";
 const SlugResolver = () => {
   const { slug } = useParams<{ slug: string }>();
   const [pageId, setPageId] = useState<string | null>(null);
-  const [profileId, setProfileId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchBySlug = async () => {
+    const fetchPageBySlug = async () => {
       if (!slug) {
         setIsLoading(false);
         setError("No slug provided");
@@ -20,59 +19,42 @@ const SlugResolver = () => {
       }
 
       try {
-        // First, check if this is a business profile slug
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('slug', slug)
-          .eq('account_type', 'business')
-          .maybeSingle();
-
-        if (profileData) {
-          setProfileId(profileData.id);
-          setIsLoading(false);
-          return;
-        }
-
-        // If not a profile, check if it's a business page
-        const { data: pageData, error: pageError } = await supabase
+        const { data, error } = await supabase
           .from('business_pages_data')
           .select('id')
           .eq('page_slug', slug)
-          .maybeSingle();
+          .single();
 
-        if (pageData) {
-          setPageId(pageData.id);
+        if (error) {
+          console.error("Error fetching page by slug:", error);
+          setError("Page not found");
+        } else if (data) {
+          setPageId(data.id);
         } else {
-          setError("Page or profile not found");
+          setError("Page not found");
         }
       } catch (err) {
-        console.error("Exception during fetch:", err);
+        console.error("Exception during page fetch:", err);
         setError("An unexpected error occurred");
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchBySlug();
+    fetchPageBySlug();
   }, [slug]);
 
   if (isLoading) {
     return <SimpleLoading />;
   }
 
-  if (profileId) {
-    // If it's a business profile, redirect to the business profile page
-    return <Navigate to={`/profile/${slug}`} replace />;
+  if (error || !pageId) {
+    // If page not found, redirect to homepage
+    return <Navigate to="/" replace />;
   }
 
-  if (pageId) {
-    // If it's a business page, redirect to the business page view
-    return <Navigate to={`/view/business-page/${pageId}`} replace />;
-  }
-
-  // If neither found, redirect to homepage
-  return <Navigate to="/" replace />;
+  // If page found, redirect to the business page view
+  return <Navigate to={`/view/business-page/${pageId}`} replace />;
 };
 
 export default SlugResolver;
