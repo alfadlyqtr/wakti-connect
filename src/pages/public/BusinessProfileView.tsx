@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,54 +5,63 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { SectionContainer } from "@/components/ui/section-container";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { Separator } from "@/components/ui/separator";
-import { Mail, Phone, Globe, MapPin, Info } from "lucide-react";
+import { Mail, Phone, Globe, Info, Calendar, Clock, MapPin, Users } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
+import { Button } from "@/components/ui/button";
+import { Tables } from "@/integrations/supabase/types";
 import BusinessHours from "@/components/business/landing/BusinessHours";
+import { generateDirectionsUrl } from "@/utils/locationUtils";
 import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
-import { BookingTemplateWithRelations } from "@/types/booking.types";
 
-interface BusinessProfile {
+// Define BookingTemplateWithRelations type
+interface BookingTemplateWithRelations {
   id: string;
-  business_name: string;
-  full_name?: string;
-  avatar_url?: string;
-  business_type?: string;
-  business_address?: string;
-  business_email?: string;
-  business_phone?: string;
-  business_website?: string;
+  name: string;
+  description: string | null;
+  price: number | null;
+  duration: number;
+  is_published: boolean;
+  business_id: string;
+  service_id: string | null;
+  staff_assigned_id: string | null;
+  max_daily_bookings: number | null;
+  default_starting_hour: number;
+  default_ending_hour: number;
+  created_at: string;
+  updated_at: string;
+  service?: {
+    name: string;
+    description: string | null;
+  } | null;
+  staff?: {
+    name: string;
+  } | null;
 }
 
 const BusinessProfileView = () => {
-  const { businessId } = useParams<{ businessId: string }>();
+  const { slug, businessId } = useParams<{ slug?: string; businessId?: string }>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [profile, setProfile] = useState<BusinessProfile | null>(null);
-  const [businessHours, setBusinessHours] = useState<any[]>([]);
-  const [bookingServices, setBookingServices] = useState<BookingTemplateWithRelations[]>([]);
-  const { formatCurrency } = useCurrencyFormat({ businessId });
-  
+  const [profile, setProfile] = useState<Tables<"profiles"> | null>(null);
+  const [bookingTemplates, setBookingTemplates] = useState<BookingTemplateWithRelations[]>([]);
+  const { formatCurrency } = useCurrencyFormat();
+
   useEffect(() => {
     const fetchBusinessProfile = async () => {
       try {
         setLoading(true);
         
-        // Fetch business profile
-        const { data, error } = await supabase
-          .from('profiles')
-          .select(`
-            id, 
-            business_name, 
-            full_name, 
-            avatar_url, 
-            business_type, 
-            business_address, 
-            business_email, 
-            business_phone, 
-            business_website
-          `)
-          .eq('id', businessId)
-          .single();
+        let query = supabase.from('profiles').select('*');
+        
+        if (businessId) {
+          query = query.eq('id', businessId);
+        } else if (slug) {
+          query = query.eq('slug', slug);
+        } else {
+          throw new Error("No business identifier provided");
+        }
+        
+        const { data, error } = await query.single();
         
         if (error) {
           console.error("Error fetching business profile:", error);
@@ -63,40 +71,21 @@ const BusinessProfileView = () => {
         
         setProfile(data);
         
-        // Fetch business hours
-        const { data: hoursData, error: hoursError } = await supabase
-          .from('business_hours')
-          .select('*')
-          .eq('business_id', businessId)
-          .single();
-        
-        if (!hoursError && hoursData) {
-          setBusinessHours(hoursData.hours || []);
-        }
-        
-        // Fetch booking services/templates
-        const { data: servicesData, error: servicesError } = await supabase
+        // Fetch booking templates with all fields
+        const { data: templatesData, error: templatesError } = await supabase
           .from('booking_templates')
           .select(`
-            id,
-            name,
-            description,
-            price,
-            duration,
-            is_published,
-            service:service_id (
-              name,
-              description
-            ),
-            staff:staff_assigned_id (
-              name
-            )
+            *,
+            service:service_id (name, description),
+            staff:staff_assigned_id (name)
           `)
-          .eq('business_id', businessId)
+          .eq('business_id', data.id)
           .eq('is_published', true);
-        
-        if (!servicesError && servicesData) {
-          setBookingServices(servicesData);
+          
+        if (templatesError) {
+          console.error("Error fetching booking templates:", templatesError);
+        } else if (templatesData) {
+          setBookingTemplates(templatesData as BookingTemplateWithRelations[]);
         }
         
       } catch (err) {
@@ -107,10 +96,8 @@ const BusinessProfileView = () => {
       }
     };
 
-    if (businessId) {
-      fetchBusinessProfile();
-    }
-  }, [businessId]);
+    fetchBusinessProfile();
+  }, [slug, businessId]);
 
   if (loading) {
     return (
@@ -128,6 +115,28 @@ const BusinessProfileView = () => {
       </div>
     );
   }
+
+  // Make sure business profile exists
+  if (profile.account_type !== "business") {
+    return (
+      <div className="container mx-auto px-4 py-16 text-center">
+        <h1 className="text-3xl font-bold mb-4">Not a Business Profile</h1>
+        <p className="text-muted-foreground">This profile is not a business account.</p>
+      </div>
+    );
+  }
+
+  const handleWhatsAppClick = () => {
+    const phoneNumber = profile.business_phone;
+    const message = `Hello, I would like to inquire about your services.`;
+
+    if (phoneNumber) {
+      const whatsappLink = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+      window.open(whatsappLink, '_blank');
+    } else {
+      alert('WhatsApp number not available.');
+    }
+  };
 
   return (
     <div className="pb-12">
@@ -159,12 +168,8 @@ const BusinessProfileView = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 {profile.business_address && (
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-5 w-5 text-blue-600 flex-shrink-0" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Address</p>
-                      <p>{profile.business_address}</p>
-                    </div>
+                  <div className="prose max-w-none">
+                    <p>{profile.business_address}</p>
                   </div>
                 )}
                 
@@ -207,23 +212,6 @@ const BusinessProfileView = () => {
                       </div>
                     </div>
                   )}
-                  
-                  {profile.business_phone && (
-                    <div className="flex items-center gap-2">
-                      <FaWhatsapp className="h-4 w-4 mr-2 text-blue-600 flex-shrink-0" />
-                      <div>
-                        <p className="text-sm text-muted-foreground">WhatsApp</p>
-                        <a 
-                          href={`https://wa.me/${profile.business_phone.replace(/[^0-9]/g, '')}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline"
-                        >
-                          {profile.business_phone}
-                        </a>
-                      </div>
-                    </div>
-                  )}
                 </div>
               </CardContent>
             </Card>
@@ -235,8 +223,8 @@ const BusinessProfileView = () => {
                 <CardTitle>Business Hours</CardTitle>
               </CardHeader>
               <CardContent>
-                {businessHours?.length > 0 ? (
-                  <BusinessHours businessHours={businessHours} />
+                {profile.id ? (
+                  <BusinessHours businessHours={[]} />
                 ) : (
                   <p className="text-muted-foreground">Please contact us for our business hours</p>
                 )}
@@ -246,43 +234,129 @@ const BusinessProfileView = () => {
         </div>
       </SectionContainer>
       
-      {/* Services/Booking section */}
-      {bookingServices.length > 0 && (
+      {/* Services Section */}
+      {bookingTemplates.length > 0 && (
         <SectionContainer>
           <SectionHeading
             title="Our Services"
-            subtitle="Book an appointment with us"
+            subtitle="Explore our services and book an appointment today"
             centered={true}
           />
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-            {bookingServices.map(service => (
-              <Card key={service.id} className="overflow-hidden">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {bookingTemplates.map((template) => (
+              <Card key={template.id} className="shadow-md hover:shadow-lg transition-shadow duration-300">
                 <CardHeader>
-                  <CardTitle>{service.name}</CardTitle>
-                  {service.description && (
-                    <CardDescription>{service.description}</CardDescription>
+                  <CardTitle className="text-lg font-semibold">{template.name}</CardTitle>
+                  {template.service?.name && (
+                    <CardDescription>{template.service.name}</CardDescription>
                   )}
                 </CardHeader>
-                <CardContent>
-                  <div className="flex justify-between items-center">
-                    <div className="flex flex-col">
-                      <span className="text-sm text-muted-foreground">Duration</span>
-                      <span>{service.duration} minutes</span>
-                    </div>
-                    {service.price && (
-                      <div className="flex flex-col items-end">
-                        <span className="text-sm text-muted-foreground">Price</span>
-                        <span className="font-medium">{formatCurrency(service.price)}</span>
-                      </div>
-                    )}
+                <CardContent className="space-y-2">
+                  <p className="text-sm text-muted-foreground">{template.description || "No description available."}</p>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Calendar className="h-4 w-4" />
+                    <span>{template.duration} Minutes</span>
                   </div>
+                  {template.price !== null && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Clock className="h-4 w-4" />
+                      <span>{formatCurrency(template.price)}</span>
+                    </div>
+                  )}
+                  {template.staff?.name && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Users className="h-4 w-4" />
+                      <span>{template.staff.name}</span>
+                    </div>
+                  )}
                 </CardContent>
+                <CardFooter className="flex justify-between items-center">
+                  {profile.business_address && (
+                    <a
+                      href={generateDirectionsUrl(`https://www.google.com/maps?q=${encodeURIComponent(profile.business_address)}`)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline text-sm"
+                    >
+                      Get Directions
+                    </a>
+                  )}
+                  <Button variant="primary">Book Now</Button>
+                </CardFooter>
               </Card>
             ))}
           </div>
         </SectionContainer>
       )}
+
+      {/* Contact Section */}
+      <SectionContainer>
+        <SectionHeading
+          title="Contact Us"
+          subtitle="Get in touch with us"
+          centered={true}
+        />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="shadow-md">
+            <CardHeader>
+              <CardTitle>Contact Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {profile.business_address && (
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5 text-blue-600" />
+                  <a
+                    href={generateDirectionsUrl(`https://www.google.com/maps?q=${encodeURIComponent(profile.business_address)}`)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
+                  >
+                    {profile.business_address}
+                  </a>
+                </div>
+              )}
+              {profile.business_phone && (
+                <div className="flex items-center gap-2">
+                  <Phone className="h-5 w-5 text-blue-600" />
+                  <span>{profile.business_phone}</span>
+                </div>
+              )}
+              {profile.business_email && (
+                <div className="flex items-center gap-2">
+                  <Mail className="h-5 w-5 text-blue-600" />
+                  <a href={`mailto:${profile.business_email}`} className="text-blue-600 hover:underline">
+                    {profile.business_email}
+                  </a>
+                </div>
+              )}
+              {profile.business_website && (
+                <div className="flex items-center gap-2">
+                  <Globe className="h-5 w-5 text-blue-600" />
+                  <a
+                    href={profile.business_website.startsWith('http') ? profile.business_website : `https://${profile.business_website}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
+                  >
+                    {profile.business_website}
+                  </a>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+          <Card className="shadow-md">
+            <CardHeader>
+              <CardTitle>Quick Inquiry</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Button className="w-full" onClick={handleWhatsAppClick}>
+                <FaWhatsapp className="mr-2" />
+                Contact via WhatsApp
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </SectionContainer>
     </div>
   );
 };

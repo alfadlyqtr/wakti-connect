@@ -1,165 +1,155 @@
-
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { fetchSimpleInvitations } from '@/services/invitation/simple-invitations';
+import React, { useState, useEffect } from 'react';
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { Button } from '@/components/ui/button';
+import { Input } from "@/components/ui/input"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Plus, Edit, Trash2, Eye } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { deleteSimpleInvitation, getSimpleInvitations } from '@/services/invitation/operations/invitation-management';
+import { toast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
 import EventCard from '@/components/events/EventCard';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, CalendarDays } from 'lucide-react';
 
-interface SimpleInvitationsListProps {
-  isEventsList?: boolean;
+interface Event {
+  id: string;
+  title: string;
+  description: string;
+  start_time: string;
+  location: string;
 }
 
-const SimpleInvitationsList: React.FC<SimpleInvitationsListProps> = ({ isEventsList = false }) => {
+const SimpleInvitationsList = ({ isEventsList = false }) => {
+  const [events, setEvents] = useState<Event[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
-  const pageTitle = isEventsList ? "Events" : "Invitations";
-  const createLabel = isEventsList ? "New Event" : "New Invitation";
-  const createPath = isEventsList ? "/dashboard/events/new" : "/dashboard/invitations/new";
 
-  // Fetch invitations or events
-  const { data: invitations, isLoading, error, refetch } = useQuery({
-    queryKey: ['simple-invitations', isEventsList],
-    queryFn: () => fetchSimpleInvitations(isEventsList),
-  });
+  useEffect(() => {
+    refresh();
+  }, []);
 
-  const handleCreateNew = () => {
-    navigate(createPath);
+  const refresh = async () => {
+    try {
+      const invitations = await getSimpleInvitations(isEventsList);
+      setEvents(invitations);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to load events.',
+        variant: 'destructive',
+      });
+    }
   };
 
-  const handleEdit = (id: string) => {
-    navigate(isEventsList ? `/dashboard/events/edit/${id}` : `/dashboard/invitations/edit/${id}`);
+  const handleEditEvent = (eventId: string) => {
+    navigate(`/dashboard/events/edit/${eventId}`);
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-col space-y-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{pageTitle}</h1>
-          <Button onClick={handleCreateNew}>
-            <Plus className="mr-2 h-4 w-4" />
-            {createLabel}
-          </Button>
-        </div>
-        <div className="p-8 text-center">
-          <p>Loading {isEventsList ? 'events' : 'invitations'}...</p>
-        </div>
-      </div>
-    );
-  }
+  const handleDeleteEvent = async (eventId: string) => {
+    try {
+      await deleteSimpleInvitation(eventId);
+      toast({
+        title: 'Success',
+        description: 'Event deleted successfully.',
+      });
+      refresh(); // Refresh the list after deletion
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to delete event.',
+        variant: 'destructive',
+      });
+    }
+  };
 
-  if (error) {
-    return (
-      <div className="flex flex-col space-y-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{pageTitle}</h1>
-          <Button onClick={handleCreateNew}>
-            <Plus className="mr-2 h-4 w-4" />
-            {createLabel}
-          </Button>
-        </div>
-        <Card className="border-destructive">
-          <CardContent className="pt-6">
-            <p className="text-center text-destructive">
-              Error loading {isEventsList ? 'events' : 'invitations'}.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const handleViewEvent = (eventId: string) => {
+    navigate(`/dashboard/events/view/${eventId}`);
+  };
 
-  if (!invitations || invitations.length === 0) {
-    return (
-      <div className="flex flex-col space-y-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{pageTitle}</h1>
-          <Button onClick={handleCreateNew}>
-            <Plus className="mr-2 h-4 w-4" />
-            {createLabel}
-          </Button>
-        </div>
-        <Card>
-          <CardHeader className="text-center">
-            <CalendarDays className="h-12 w-12 mx-auto text-muted-foreground" />
-            <CardTitle className="mt-2">No {isEventsList ? 'Events' : 'Invitations'} Found</CardTitle>
-          </CardHeader>
-          <CardContent className="text-center pb-6">
-            <p className="text-muted-foreground mb-4">
-              You haven't created any {isEventsList ? 'events' : 'invitations'} yet.
-            </p>
-            <Button onClick={handleCreateNew}>
-              <Plus className="mr-2 h-4 w-4" />
-              {createLabel}
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const filteredEvents = events.filter(event =>
+    event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    event.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
-    <div className="flex flex-col space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{pageTitle}</h1>
-        <Button onClick={handleCreateNew}>
-          <Plus className="mr-2 h-4 w-4" />
-          {createLabel}
-        </Button>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {invitations.map((invitation) => (
-          <EventCard
-            key={invitation.id}
-            event={{
-              id: invitation.id,
-              title: invitation.title,
-              description: invitation.description,
-              location: invitation.location,
-              location_title: invitation.locationTitle,
-              start_time: invitation.date ? `${invitation.date}T${invitation.time || '00:00'}` : '',
-              end_time: '',
-              is_all_day: !invitation.time,
-              status: 'published',
-              user_id: invitation.userId,
-              created_at: invitation.createdAt,
-              updated_at: invitation.updatedAt || '',
-              customization: {
-                background: {
-                  // Filter out 'ai' type which isn't supported in EventCustomization
-                  type: invitation.customization.background.type === 'gradient' || 
-                        invitation.customization.background.type === 'ai' ? 
-                        'solid' : invitation.customization.background.type,
-                  value: invitation.customization.background.value
-                },
-                font: {
-                  family: invitation.customization.font.family,
-                  size: invitation.customization.font.size,
-                  color: invitation.customization.font.color,
-                  weight: invitation.customization.font.weight,
-                  // Cast alignment to TextAlign or undefined
-                  alignment: invitation.customization.font.alignment as "left" | "center" | "right" | "justify" | undefined
-                },
-                buttons: {
-                  accept: {
-                    background: '#4CAF50',
-                    color: '#ffffff',
-                    shape: 'rounded'
-                  },
-                  decline: {
-                    background: '#F44336',
-                    color: '#ffffff',
-                    shape: 'rounded'
-                  }
-                }
-              },
-              shareId: invitation.shareId
-            }}
-            onEdit={() => handleEdit(invitation.id)}
-            refreshEvents={() => refetch()}
-          />
-        ))}
+    <div className="container mx-auto py-10">
+      <Card>
+        <CardHeader>
+          <CardTitle>{isEventsList ? 'Events' : 'Invitations'}</CardTitle>
+          <CardDescription>Manage your {isEventsList ? 'events' : 'invitations'} here.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="mb-4 flex justify-between items-center">
+            <Input
+              type="text"
+              placeholder={`Search ${isEventsList ? 'events' : 'invitations'}...`}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <Button asChild>
+              <Link to={`/dashboard/${isEventsList ? 'events' : 'invitations'}/create`}>
+                <Plus className="mr-2 h-4 w-4" />
+                Create {isEventsList ? 'Event' : 'Invitation'}
+              </Link>
+            </Button>
+          </div>
+          <Table>
+            <TableCaption>A list of your {isEventsList ? 'events' : 'invitations'}.</TableCaption>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Title</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredEvents.map((event) => (
+                <TableRow key={event.id}>
+                  <TableCell className="font-medium">{event.title}</TableCell>
+                  <TableCell>{event.description}</TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="ghost" size="sm" onClick={() => handleEditEvent(event.id)}>
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleDeleteEvent(event.id)}>
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleViewEvent(event.id)}>
+                      <Eye className="mr-2 h-4 w-4" />
+                      View
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+      <div className="mt-4">
+        <h2 className="text-lg font-semibold mb-2">Event Card Preview</h2>
+        <EventCard 
+          key={event.id}
+          title={event.title}
+          description={event.description}
+          date={new Date(event.start_time)}
+          location={event.location || "No location"}
+          onClick={() => handleViewEvent(event.id)}
+        />
       </div>
     </div>
   );
