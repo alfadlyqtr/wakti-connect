@@ -22,6 +22,7 @@ interface TimePickerProps {
   minTime?: string;
   maxTime?: string;
   interval?: number; // in minutes
+  disabled?: boolean; // Added disabled prop
 }
 
 export const TimePicker: React.FC<TimePickerProps> = ({
@@ -29,7 +30,8 @@ export const TimePicker: React.FC<TimePickerProps> = ({
   onChange,
   minTime = "00:00",
   maxTime = "23:59",
-  interval = 15
+  interval = 15,
+  disabled = false // Added with default value
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [timeOptions, setTimeOptions] = useState<string[]>([]);
@@ -96,12 +98,13 @@ export const TimePicker: React.FC<TimePickerProps> = ({
   
   return (
     <TooltipProvider>
-      <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <Popover open={!disabled && isOpen} onOpenChange={disabled ? undefined : setIsOpen}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
             className="w-full justify-between text-left font-normal"
             type="button"
+            disabled={disabled}
           >
             {value ? formatDisplayTime(value) : "Select time"}
             <Clock className="h-4 w-4 opacity-50 ml-2" />
@@ -116,6 +119,7 @@ export const TimePicker: React.FC<TimePickerProps> = ({
                   value={value}
                   onChange={handleTimeChange}
                   className="w-full"
+                  disabled={disabled}
                 />
               </TooltipTrigger>
               <TooltipContent>
@@ -133,6 +137,7 @@ export const TimePicker: React.FC<TimePickerProps> = ({
                     time === value ? 'bg-primary text-primary-foreground' : ''
                   }`}
                   onClick={() => handleTimeOptionClick(time)}
+                  disabled={disabled}
                 >
                   {formatDisplayTime(time)}
                 </Button>
