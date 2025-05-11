@@ -1,61 +1,82 @@
 
 import React from "react";
-import { BusinessPageSection } from "@/types/business.types";
+import { CheckCircle2, XCircle } from "lucide-react";
+import { format } from "date-fns";
 
-interface BusinessHoursProps {
-  section: BusinessPageSection;
+interface BusinessHour {
+  id: string;
+  business_id: string;
+  day_of_week: number;
+  is_open: boolean;
+  opening_time: string | null;
+  closing_time: string | null;
 }
 
-const BusinessHours = ({ section }: BusinessHoursProps) => {
-  const content = section.section_content || {};
-  
-  const {
-    title = "Business Hours",
-    hours = [
-      { day: "Monday", hours: "9:00 AM - 5:00 PM" },
-      { day: "Tuesday", hours: "9:00 AM - 5:00 PM" },
-      { day: "Wednesday", hours: "9:00 AM - 5:00 PM" },
-      { day: "Thursday", hours: "9:00 AM - 5:00 PM" },
-      { day: "Friday", hours: "9:00 AM - 5:00 PM" },
-      { day: "Saturday", hours: "10:00 AM - 3:00 PM" },
-      { day: "Sunday", hours: "Closed" }
-    ],
-    showCurrentDay = true
-  } = content;
-  
-  // Determine current day
-  const getCurrentDay = () => {
-    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    const today = days[new Date().getDay()];
-    return today;
-  };
-  
-  const currentDay = getCurrentDay();
-  
-  return (
-    <div>
-      <h2 className="text-2xl font-bold mb-4">{title}</h2>
+interface BusinessHoursProps {
+  businessHours: BusinessHour[];
+}
+
+const dayNames = [
+  "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
+];
+
+const BusinessHours: React.FC<BusinessHoursProps> = ({ businessHours }) => {
+  // Function to format a time string (e.g., "09:00:00") to a more readable format (e.g., "9:00 AM")
+  const formatTimeString = (timeString: string | null) => {
+    if (!timeString) return "";
+    
+    try {
+      // Parse time string in format "HH:MM:SS" to Date object
+      const [hours, minutes] = timeString.split(":");
+      const date = new Date();
+      date.setHours(parseInt(hours, 10));
+      date.setMinutes(parseInt(minutes, 10));
       
-      <div className="max-w-lg mx-auto">
-        {hours.map((item: any, index: number) => (
-          <div 
-            key={index}
-            className={`flex justify-between py-2 border-b border-gray-200 ${
-              showCurrentDay && item.day === currentDay ? "bg-primary/10" : ""
-            }`}
-          >
-            <div className="font-medium">{item.day}</div>
+      // Format the date to show only the time (e.g., "9:00 AM")
+      return format(date, "h:mm a");
+    } catch (error) {
+      console.error("Error formatting time:", error);
+      return timeString; // Return original string if formatting fails
+    }
+  };
+
+  // Create a lookup object for quick access
+  const hoursByDay: Record<number, BusinessHour> = {};
+  businessHours.forEach(hour => {
+    hoursByDay[hour.day_of_week] = hour;
+  });
+
+  return (
+    <div className="space-y-2">
+      {dayNames.map((day, index) => {
+        // Get the business hours for the current day (0 = Monday, 1 = Tuesday, etc.)
+        const dayHours = hoursByDay[index] || {
+          is_open: false,
+          opening_time: null,
+          closing_time: null
+        };
+
+        return (
+          <div key={index} className="flex items-center justify-between py-1.5">
+            <div className="font-medium">{day}</div>
             <div className="flex items-center">
-              <span>{item.hours}</span>
-              {showCurrentDay && item.day === currentDay && (
-                <span className="ml-2 text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
-                  Today
-                </span>
+              {dayHours.is_open ? (
+                <>
+                  <span className="text-sm">
+                    {formatTimeString(dayHours.opening_time)} - {formatTimeString(dayHours.closing_time)}
+                  </span>
+                  <CheckCircle2 className="ml-2 h-4 w-4 text-green-500" />
+                </>
+              ) : (
+                <>
+                  <span className="text-sm text-muted-foreground">Closed</span>
+                  <XCircle className="ml-2 h-4 w-4 text-muted-foreground" />
+                </>
               )}
             </div>
           </div>
-        ))}
-      </div>
+        );
+      })}
     </div>
   );
 };
