@@ -49,7 +49,9 @@ const BusinessHoursManagement: React.FC<BusinessHoursManagementProps> = ({
   const { toast } = useToast();
   
   // Get current day for highlighting
-  const currentDay = new Date().toLocaleDateString('en-US', { weekday: 'lowercase' });
+  // Fix: Get the day name using the current date and convert it to lowercase
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+  const currentDay = today as keyof typeof dayNames;
   
   const handleToggleDay = (day: string) => {
     if (readOnly) return;
@@ -114,13 +116,13 @@ const BusinessHoursManagement: React.FC<BusinessHoursManagementProps> = ({
       <CardContent>
         <div className="space-y-4">
           {Object.entries(businessHours).map(([day, hours]) => (
-            <div key={day} className={`p-3 rounded-md ${currentDay === day ? 'bg-muted' : ''}`}>
+            <div key={day} className={`p-3 rounded-md ${day === currentDay ? 'bg-muted' : ''}`}>
               <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                 <div className="flex items-center gap-2">
                   <Label className="text-base font-medium">
                     {dayNames[day]}
                   </Label>
-                  {currentDay === day && (
+                  {day === currentDay && (
                     <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
                       Today
                     </span>
