@@ -2,7 +2,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
+import { SocialPlatform as BusinessSocialPlatform } from "@/types/business.types";
 
+// Update SocialPlatform to include all options from business.types.ts
 export type SocialPlatform = 
   | "website"
   | "facebook"
@@ -10,7 +12,9 @@ export type SocialPlatform =
   | "twitter"
   | "linkedin"
   | "youtube"
-  | "tiktok";
+  | "tiktok"
+  | "pinterest"
+  | "whatsapp";
 
 export interface BusinessSocialLink {
   id: string;

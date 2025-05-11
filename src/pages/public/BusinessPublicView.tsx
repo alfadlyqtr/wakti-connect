@@ -54,9 +54,11 @@ const BusinessPublicView = () => {
   );
   
   // Convert socialLinksData to the expected BusinessSocialLink type
-  const socialLinks = socialLinksData ? socialLinksData.map(link => ({
+  // We need to ensure we're matching the BusinessSocialLink interface from useBusinessSocialLinks
+  const socialLinks: BusinessSocialLink[] = socialLinksData ? socialLinksData.map(link => ({
     ...link,
-    updated_at: link.created_at // Add missing updated_at field
+    platform: link.platform as BusinessSocialLink['platform'],
+    updated_at: link.updated_at || link.created_at, // Ensure updated_at exists
   })) : [];
 
   // Fetch business hours data
