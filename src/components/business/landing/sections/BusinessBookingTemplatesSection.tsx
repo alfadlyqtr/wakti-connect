@@ -35,7 +35,8 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
   const {
     title = "Our Services",
     subtitle = "Book your appointment today",
-    description = "Browse our services and book your appointment online"
+    description = "Browse our services and book your appointment online",
+    textColor = "#333333" // Default dark text color for better contrast
   } = content;
   
   const selectedTemplate = templates?.find(t => t.id === selectedTemplateId);
@@ -50,20 +51,20 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
   
   if (error || !templates || templates.length === 0) {
     return (
-      <div className="text-center py-8">
+      <div className="text-center py-8" style={{ color: textColor || "#333333" }}>
         <h2 className="text-2xl font-bold mb-2">{title}</h2>
         {subtitle && <p className="text-lg mb-2">{subtitle}</p>}
-        <p className="text-muted-foreground">No services available for booking at this time.</p>
+        <p className="text-gray-700">No services available for booking at this time.</p>
       </div>
     );
   }
   
   return (
     <section className="py-8">
-      <div className="text-center mb-8">
+      <div className="text-center mb-8" style={{ color: textColor || "#333333" }}>
         <h2 className="text-3xl font-bold mb-2">{title}</h2>
         {subtitle && <p className="text-xl mb-2">{subtitle}</p>}
-        {description && <p className="text-muted-foreground">{description}</p>}
+        {description && <p className="text-gray-700">{description}</p>}
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -76,13 +77,13 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
             <CardContent className="pb-2">
               <div className="space-y-4">
                 <div className="flex flex-col gap-2">
-                  <div className="flex items-center text-sm text-muted-foreground">
+                  <div className="flex items-center text-sm text-gray-600">
                     <Clock className="mr-2 h-4 w-4" />
                     {formatDuration(template.duration)}
                   </div>
                   
                   {template.price && (
-                    <div className="text-lg font-semibold">
+                    <div className="text-lg font-semibold text-gray-800">
                       {formatCurrency(template.price)}
                     </div>
                   )}
@@ -90,7 +91,7 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
                 
                 <div className="space-y-2">
                   {template.description && (
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-sm text-gray-600">
                       {template.description}
                     </div>
                   )}

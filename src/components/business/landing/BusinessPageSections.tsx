@@ -27,14 +27,27 @@ const BusinessPageSections = ({
   businessHours
 }: BusinessPageSectionsProps) => {
   // Log passed-in social links for debugging
-  console.log("BusinessPageSections received socialLinks:", socialLinks);
+  console.log("BusinessPageSections received pageSections:", pageSections);
   console.log("BusinessPageSections received businessProfile:", businessProfile);
   
   if (!pageSections || pageSections.length === 0) {
+    // If no sections, create a default booking section
     return (
-      <div className="py-12 text-center">
-        <h2 className="text-2xl font-semibold text-gray-600">No content available</h2>
-        <p className="text-gray-500 mt-2">This business page has no content sections.</p>
+      <div className="space-y-8">
+        <div className="py-12 text-center" style={{ color: businessPage.text_color || '#333333' }}>
+          <h2 className="text-2xl font-semibold">About {businessPage.page_title || businessProfile?.business_name}</h2>
+          <p className="mt-2">{businessPage.description || businessProfile?.description || 'Welcome to our business page.'}</p>
+        </div>
+        
+        {/* Always show a booking section if available */}
+        <BusinessBookingTemplatesSection 
+          content={{
+            title: 'Our Services',
+            description: 'Book your appointment online',
+            textColor: businessPage.text_color || '#333333'
+          }}
+          businessId={businessPage.business_id}
+        />
       </div>
     );
   }
@@ -45,8 +58,8 @@ const BusinessPageSections = ({
     const { id, page_id, section_type, section_content, background_color, text_color } = section;
     
     const sectionStyle = {
-      backgroundColor: background_color || '',
-      color: text_color || ''
+      backgroundColor: background_color || businessPage.background_color || '',
+      color: text_color || businessPage.text_color || '#333333'
     };
 
     switch (section_type) {
@@ -105,7 +118,10 @@ const BusinessPageSections = ({
         return (
           <div key={id} style={sectionStyle}>
             <BusinessBookingTemplatesSection 
-              content={section_content || {}}
+              content={{
+                ...section_content,
+                textColor: text_color || businessPage.text_color || '#333333'
+              }}
               businessId={businessPage.business_id}
             />
           </div>
@@ -115,7 +131,28 @@ const BusinessPageSections = ({
     }
   };
   
-  return <>{pageSections.map(renderSection)}</>;
+  // Always add a booking section at the end if one doesn't exist yet
+  const hasBookingSection = pageSections.some(section => section.section_type === 'booking');
+  
+  return (
+    <div className="space-y-8">
+      {pageSections.map(renderSection)}
+      
+      {/* Always add a booking section if one doesn't exist */}
+      {!hasBookingSection && (
+        <div style={{ color: businessPage.text_color || '#333333' }}>
+          <BusinessBookingTemplatesSection 
+            content={{
+              title: 'Our Services',
+              description: 'Book your appointment online',
+              textColor: businessPage.text_color || '#333333'
+            }}
+            businessId={businessPage.business_id}
+          />
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default BusinessPageSections;

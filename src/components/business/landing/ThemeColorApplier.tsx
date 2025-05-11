@@ -23,7 +23,9 @@ const ThemeColorApplier: React.FC<ThemeColorApplierProps> = ({ businessPage }) =
     if (businessPage) {
       console.log("Applying theme colors:", {
         primary: businessPage.primary_color,
-        secondary: businessPage.secondary_color
+        secondary: businessPage.secondary_color,
+        text: businessPage.text_color,
+        background: businessPage.background_color
       });
       
       if (businessPage.primary_color) {
@@ -35,6 +37,22 @@ const ThemeColorApplier: React.FC<ThemeColorApplierProps> = ({ businessPage }) =
         document.documentElement.style.setProperty('--secondary', businessPage.secondary_color);
         document.documentElement.style.setProperty('--secondary-rgb', hexToRGB(businessPage.secondary_color));
       }
+      
+      // Apply text color if available
+      if (businessPage.text_color) {
+        document.documentElement.style.setProperty('--business-text-color', businessPage.text_color);
+      } else {
+        // Default to dark text for better contrast
+        document.documentElement.style.setProperty('--business-text-color', '#333333');
+      }
+      
+      // Apply background color if available
+      if (businessPage.background_color) {
+        document.documentElement.style.setProperty('--business-bg-color', businessPage.background_color);
+      } else {
+        // Default to light background
+        document.documentElement.style.setProperty('--business-bg-color', '#FFFFFF');
+      }
     }
     
     return () => {
@@ -42,6 +60,8 @@ const ThemeColorApplier: React.FC<ThemeColorApplierProps> = ({ businessPage }) =
       document.documentElement.style.removeProperty('--primary-rgb');
       document.documentElement.style.removeProperty('--secondary');
       document.documentElement.style.removeProperty('--secondary-rgb');
+      document.documentElement.style.removeProperty('--business-text-color');
+      document.documentElement.style.removeProperty('--business-bg-color');
     };
   }, [businessPage]);
 

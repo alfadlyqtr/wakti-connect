@@ -12,13 +12,14 @@ const SlugResolver = () => {
   useEffect(() => {
     const resolveSlug = async () => {
       if (!slug) {
+        console.error("No slug provided to SlugResolver");
         setNotFound(true);
         setIsLoading(false);
         return;
       }
 
       try {
-        console.log(`Attempting to resolve slug: ${slug}`);
+        console.log(`SlugResolver: Attempting to resolve slug: ${slug}`);
         
         // Clean the slug to handle potential malformed URLs
         const cleanSlug = slug.replace(/[^0-9a-zA-Z-]/g, '');
@@ -31,18 +32,18 @@ const SlugResolver = () => {
           .single();
 
         if (error || !data) {
-          console.error("Error resolving slug or profile not found:", error);
+          console.error("SlugResolver: Error resolving slug or profile not found:", error);
           setNotFound(true);
           setIsLoading(false);
           return;
         }
 
-        console.log(`Successfully resolved slug to business: ${data.business_name} (${data.id})`);
+        console.log(`SlugResolver: Successfully resolved slug "${cleanSlug}" to business: ${data.business_name} (ID: ${data.id})`);
         
         // If we found a business with this slug, redirect to the business landing page
         navigate(`/business/${data.id}`, { replace: true });
       } catch (err) {
-        console.error("Error in slug resolution:", err);
+        console.error("SlugResolver: Error in slug resolution:", err);
         setNotFound(true);
         setIsLoading(false);
       }

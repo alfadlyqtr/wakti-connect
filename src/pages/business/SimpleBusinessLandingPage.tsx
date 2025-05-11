@@ -50,6 +50,8 @@ const SimpleBusinessLandingPage: React.FC = () => {
               logo_url: businessProfile.avatar_url || '',
               primary_color: '#3B82F6',
               secondary_color: '#10B981',
+              text_color: '#333333', // Default dark text color for better contrast
+              background_color: '#FFFFFF', // Default light background
               is_published: true
             });
           } else {
@@ -58,7 +60,11 @@ const SimpleBusinessLandingPage: React.FC = () => {
             return;
           }
         } else {
-          setBusinessPage(pageData);
+          // Ensure the page has text_color defined
+          setBusinessPage({
+            ...pageData,
+            text_color: pageData.text_color || '#333333' // Default dark text if not set
+          });
         }
 
         // Get page sections if we have a page
@@ -86,7 +92,8 @@ const SimpleBusinessLandingPage: React.FC = () => {
               section_content: {
                 title: businessProfile?.business_name || 'About Us',
                 description: 'Learn more about our business and what we do.',
-                content: businessProfile?.description || ''
+                content: businessProfile?.description || '',
+                textColor: '#333333' // Ensuring dark text color
               }
             }
           ];
@@ -101,7 +108,8 @@ const SimpleBusinessLandingPage: React.FC = () => {
             section_content: {
                 title: 'Our Services',
                 description: 'Browse our services and book your appointment online.',
-                content: '' // Added content property to fix the error
+                content: '',
+                textColor: '#333333' // Ensuring dark text color
             }
           });
           
