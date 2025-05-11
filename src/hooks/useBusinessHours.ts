@@ -31,7 +31,33 @@ export const useBusinessHours = (businessId?: string) => {
         throw new Error(`Error fetching business hours: ${error.message}`);
       }
       
-      return data as BusinessHours | null;
+      if (!data) return null;
+      
+      // Parse the hours JSON if it's a string
+      let parsedHours: WorkingHour[];
+      if (data.hours) {
+        try {
+          // Parse the hours if it's a string, otherwise assume it's already an array
+          parsedHours = typeof data.hours === 'string' 
+            ? JSON.parse(data.hours) 
+            : data.hours;
+          
+          // Validate the structure to ensure it matches WorkingHour[]
+          if (!Array.isArray(parsedHours)) {
+            parsedHours = [];
+          }
+        } catch (error) {
+          console.error("Error parsing business hours:", error);
+          parsedHours = [];
+        }
+      } else {
+        parsedHours = [];
+      }
+      
+      return {
+        ...data,
+        hours: parsedHours
+      } as BusinessHours;
     },
     enabled: !!businessId
   });
