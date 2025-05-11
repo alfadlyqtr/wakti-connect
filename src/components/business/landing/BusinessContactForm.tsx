@@ -57,7 +57,7 @@ export function BusinessContactForm({
         pageId,
         formData: {
           name: values.name,
-          phone: values.phone,
+          phone: values.phone, // Ensure phone is included
           message: values.message || null,
           email: null // Set email to null as it's no longer in the form
         }

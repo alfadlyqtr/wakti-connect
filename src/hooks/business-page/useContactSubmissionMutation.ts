@@ -10,13 +10,15 @@ export const useSubmitContactFormMutation = () => {
       email, 
       message, 
       businessId, 
-      pageId 
+      pageId,
+      phone 
     }: {
       name: string;
-      email: string;
-      message: string;
-      businessId?: string;
-      pageId?: string;
+      email?: string | null;
+      message?: string | null;
+      businessId: string;
+      pageId: string;
+      phone: string;  // Added required phone parameter
     }) => {
       if (!businessId) {
         throw new Error("Business ID is required");
@@ -28,8 +30,9 @@ export const useSubmitContactFormMutation = () => {
           business_id: businessId,
           page_id: pageId,
           name,
-          email,
-          message,
+          email: email || null,
+          phone,  // Include phone in the insert
+          message: message || null,
           is_read: false,
         })
         .select()
