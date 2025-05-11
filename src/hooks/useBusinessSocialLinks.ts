@@ -1,8 +1,25 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { BusinessSocialLink, SocialPlatform } from "@/types/business.types";
 import { toast } from "@/components/ui/use-toast";
+
+export type SocialPlatform = 
+  | "website"
+  | "facebook"
+  | "instagram"
+  | "twitter"
+  | "linkedin"
+  | "youtube"
+  | "tiktok";
+
+export interface BusinessSocialLink {
+  id: string;
+  business_id: string;
+  platform: SocialPlatform;
+  url: string;
+  created_at: string;
+  updated_at: string;
+}
 
 export const useBusinessSocialLinks = (businessId?: string) => {
   const queryClient = useQueryClient();
@@ -59,7 +76,7 @@ export const useBusinessSocialLinks = (businessId?: string) => {
       toast({
         variant: "destructive",
         title: "Error",
-        description: `Failed to add social link: ${error.message}`
+        description: `Failed to add social link: ${error instanceof Error ? error.message : 'Unknown error'}`
       });
     }
   });
@@ -89,7 +106,7 @@ export const useBusinessSocialLinks = (businessId?: string) => {
       toast({
         variant: "destructive",
         title: "Error",
-        description: `Failed to update social link: ${error.message}`
+        description: `Failed to update social link: ${error instanceof Error ? error.message : 'Unknown error'}`
       });
     }
   });
@@ -117,7 +134,7 @@ export const useBusinessSocialLinks = (businessId?: string) => {
       toast({
         variant: "destructive",
         title: "Error",
-        description: `Failed to delete social link: ${error.message}`
+        description: `Failed to delete social link: ${error instanceof Error ? error.message : 'Unknown error'}`
       });
     }
   });
@@ -130,3 +147,4 @@ export const useBusinessSocialLinks = (businessId?: string) => {
     deleteSocialLink
   };
 };
+
