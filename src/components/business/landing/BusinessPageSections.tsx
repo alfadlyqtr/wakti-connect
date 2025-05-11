@@ -1,6 +1,6 @@
 
 import React, { useEffect } from "react";
-import { BusinessPage, BusinessPageSection } from "@/types/business.types";
+import { BusinessPage, BusinessPageSection, BusinessSocialLink } from "@/types/business.types";
 import BusinessPageHeader from "./sections/BusinessPageHeader";
 import BusinessAbout from "./BusinessAbout";
 import BusinessGallery from "./BusinessGallery";
@@ -14,11 +14,13 @@ import { useSubmitContactFormMutation } from "@/hooks/business-page/useContactSu
 interface BusinessPageSectionsProps {
   pageSections: BusinessPageSection[];
   businessPage: BusinessPage;
+  socialLinks?: BusinessSocialLink[];
 }
 
 const BusinessPageSections: React.FC<BusinessPageSectionsProps> = ({ 
   pageSections, 
-  businessPage 
+  businessPage,
+  socialLinks
 }) => {
   // Get the submitContactForm mutation from our hook
   const contactFormMutation = useSubmitContactFormMutation();
@@ -35,7 +37,8 @@ const BusinessPageSections: React.FC<BusinessPageSectionsProps> = ({
   useEffect(() => {
     console.log("BusinessPageSections - Page Data:", businessPage);
     console.log("BusinessPageSections - Sorted Sections:", sortedSections);
-  }, [businessPage, sortedSections]);
+    console.log("BusinessPageSections - Social Links:", socialLinks);
+  }, [businessPage, sortedSections, socialLinks]);
 
   return (
     <div className="space-y-8 sm:space-y-12 md:space-y-16 lg:space-y-20 mt-6">
@@ -70,6 +73,7 @@ const BusinessPageSections: React.FC<BusinessPageSectionsProps> = ({
                 pageId={businessPage.id}
                 submitContactForm={handleContactFormSubmit}
                 primaryColor={businessPage.primary_color}
+                socialLinks={socialLinks}
               />
             );
           

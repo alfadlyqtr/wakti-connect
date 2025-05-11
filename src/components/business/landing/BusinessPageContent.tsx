@@ -30,8 +30,8 @@ const BusinessPageContent: React.FC<BusinessPageContentProps> = ({
   const showHeaderSocialLinks = socialLinks && socialLinks.length > 0 && 
     ['header', 'both'].includes(social_icons_position || '');
   
-  const showFooterSocialLinks = socialLinks && socialLinks.length > 0 && 
-    ['footer', 'both'].includes(social_icons_position || '');
+  // We'll handle footer social links differently since we're now showing them in the About section
+  const showFooterSocialLinks = false;
 
   return (
     <div
@@ -64,20 +64,11 @@ const BusinessPageContent: React.FC<BusinessPageContentProps> = ({
       
       <BusinessPageSections 
         pageSections={pageSections || []} 
-        businessPage={businessPage} 
+        businessPage={businessPage}
+        socialLinks={socialLinks} 
       />
 
-      {showFooterSocialLinks && (
-        <div className="mt-8 mb-4">
-          <SocialIconsGroup 
-            socialLinks={socialLinks || []}
-            style={(social_icons_style as any) || "default"}
-            size={(social_icons_size as any) || "default"}
-            position="footer"
-            className="pb-6"
-          />
-        </div>
-      )}
+      {/* Footer social links removed as they're now in the About section */}
     </div>
   );
 };

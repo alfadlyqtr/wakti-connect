@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
 import { Send, Loader2 } from "lucide-react";
+import { BusinessSocialLink } from "@/types/business.types";
+import SocialIconsGroup from "../SocialIconsGroup";
 
 interface BusinessAboutSectionProps {
   content: Record<string, any>;
@@ -12,6 +14,7 @@ interface BusinessAboutSectionProps {
   pageId?: string;
   primaryColor?: string;
   submitContactForm?: (data: any) => Promise<any>;
+  socialLinks?: BusinessSocialLink[];
 }
 
 const BusinessAboutSection: React.FC<BusinessAboutSectionProps> = ({ 
@@ -19,7 +22,8 @@ const BusinessAboutSection: React.FC<BusinessAboutSectionProps> = ({
   businessId,
   pageId,
   primaryColor,
-  submitContactForm
+  submitContactForm,
+  socialLinks
 }) => {
   const { 
     title = "About Us",
@@ -128,6 +132,19 @@ const BusinessAboutSection: React.FC<BusinessAboutSectionProps> = ({
                 </p>
               )}
             </div>
+
+            {socialLinks && socialLinks.length > 0 && (
+              <div className="mt-6 pt-4 border-t">
+                <h3 className="text-lg font-medium mb-3">Connect With Us</h3>
+                <SocialIconsGroup 
+                  socialLinks={socialLinks}
+                  style="colored"
+                  size="default"
+                  position="footer"
+                  className="justify-start"
+                />
+              </div>
+            )}
             
             {showMessageForm && submitContactForm && (
               <div className="mt-8">

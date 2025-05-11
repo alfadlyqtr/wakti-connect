@@ -1,6 +1,6 @@
 
 import React from "react";
-import { BusinessPageSection } from "@/types/business.types";
+import { BusinessPageSection, BusinessSocialLink } from "@/types/business.types";
 import BusinessAboutSection from "./sections/BusinessAboutSection";
 
 interface BusinessAboutProps {
@@ -9,6 +9,7 @@ interface BusinessAboutProps {
   pageId?: string;
   submitContactForm?: (data: any) => Promise<any>;
   primaryColor?: string;
+  socialLinks?: BusinessSocialLink[];
 }
 
 const BusinessAbout = ({ 
@@ -16,7 +17,8 @@ const BusinessAbout = ({
   businessId,
   pageId,
   submitContactForm,
-  primaryColor 
+  primaryColor,
+  socialLinks
 }: BusinessAboutProps) => {
   const content = section.section_content || {};
   
@@ -27,6 +29,7 @@ const BusinessAbout = ({
       pageId={pageId}
       primaryColor={primaryColor}
       submitContactForm={submitContactForm}
+      socialLinks={socialLinks}
     />
   );
 };
