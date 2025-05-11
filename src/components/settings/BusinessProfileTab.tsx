@@ -6,10 +6,10 @@ import { User } from "lucide-react";
 import { useProfileSettings } from "@/hooks/useProfileSettings";
 import { useStaffPermissions } from "@/hooks/useStaffPermissions";
 import ProfileForm from "./profile/ProfileForm";
-import BusinessProfileInfo from "./profile/BusinessProfileInfo";
 import { Separator } from "@/components/ui/separator";
-import BusinessHoursManagement from "./profile/BusinessHoursManagement";
 import SocialLinksManagement from "./profile/SocialLinksManagement";
+import BusinessHoursManagement from "./profile/BusinessHoursManagement";
+import BusinessProfileInfo from "./profile/BusinessProfileInfo";
 
 const BusinessProfileTab: React.FC = () => {
   const { data: profile, isLoading } = useProfileSettings();
@@ -68,17 +68,17 @@ const BusinessProfileTab: React.FC = () => {
       
       {!isStaff && (
         <>
-          <BusinessProfileInfo profile={profile} />
+          <SocialLinksManagement 
+            profileId={profile.id}
+            readOnly={isStaff}
+          />
           
           <BusinessHoursManagement 
             profileId={profile.id} 
             readOnly={isStaff} 
           />
           
-          <SocialLinksManagement 
-            profileId={profile.id}
-            readOnly={isStaff}
-          />
+          <BusinessProfileInfo profile={profile} />
         </>
       )}
     </div>
