@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Navigate, useParams, useLocation } from "react-router-dom";
 import { useAuth } from "@/features/auth/hooks/useAuth";
@@ -53,12 +54,14 @@ const BusinessPublicView = () => {
   );
   
   // Convert socialLinksData to the expected BusinessSocialLink type
-  // We need to ensure we're matching the BusinessSocialLink interface from useBusinessSocialLinks
+  // Ensuring all required fields exist and types match
   const socialLinks: BusinessSocialLink[] = socialLinksData ? socialLinksData.map(link => ({
-    ...link,
+    id: link.id,
+    business_id: link.business_id,
     platform: link.platform as BusinessSocialLink['platform'],
-    created_at: link.created_at || new Date().toISOString(), // Ensure created_at exists
-    updated_at: link.updated_at || link.created_at // Ensure updated_at exists
+    url: link.url,
+    created_at: link.created_at || new Date().toISOString(),
+    updated_at: link.updated_at || new Date().toISOString()
   })) : [];
 
   // Fetch business hours data
