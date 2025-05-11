@@ -6,7 +6,6 @@ import { PageSetupSection } from "./sections/PageSetupSection";
 import { LogoSection } from "./sections/LogoSection";
 import { BookingsSection } from "./sections/BookingsSection";
 import { SocialInlineSection } from "./sections/SocialInlineSection";
-import { WorkingHoursSection } from "./sections/WorkingHoursSection";
 import { ChatbotSection } from "./sections/ChatbotSection";
 import { ThemeOptionsSection } from "./sections/ThemeOptionsSection";
 import { SocialSidebarSection } from "./sections/SocialSidebarSection";
@@ -44,7 +43,6 @@ export const LeftPanel = ({ isPublishing, onPublish }: LeftPanelProps) => {
           <LogoSection />
           <BookingsSection />
           <SocialInlineSection />
-          <WorkingHoursSection />
           <ChatbotSection />
           <ThemeOptionsSection />
           <SocialSidebarSection />

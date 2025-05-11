@@ -49,18 +49,6 @@ export interface SocialInline extends PageSection {
   platforms: SocialPlatforms;
 }
 
-export interface WorkingHour {
-  day: string;
-  open: string;
-  close: string;
-  closed: boolean;
-}
-
-export interface WorkingHours extends PageSection {
-  layout: LayoutOption;
-  hours: WorkingHour[];
-}
-
 export interface Chatbot extends PageSection {
   position: Position;
   embedCode: string;
@@ -92,7 +80,6 @@ export interface BusinessPageData {
   logo: Logo;
   bookings: Bookings;
   socialInline: SocialInline;
-  workingHours: WorkingHours;
   chatbot: Chatbot;
   theme: Theme;
   socialSidebar: SocialSidebar;
