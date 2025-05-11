@@ -1,307 +1,233 @@
 
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { SectionContainer } from "@/components/ui/section-container";
-import { SectionHeading } from "@/components/ui/section-heading";
-import { Separator } from "@/components/ui/separator";
-import { Mail, Phone, Globe, Info } from "lucide-react";
-import BusinessBookingTemplatesSection from "@/components/business/landing/sections/BusinessBookingTemplatesSection";
-import { Tables } from "@/integrations/supabase/types";
-import BusinessSocialLinks from "@/components/business/landing/BusinessSocialLinks";
-import { BusinessSocialLink } from "@/types/business.types";
-import BusinessHours from "@/components/business/landing/BusinessHours";
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Mail, Phone, MapPin, Globe } from 'lucide-react';
+import { BusinessSocialLink, SocialPlatform, BusinessHour } from '@/types/business.types';
+import { Json } from '@/integrations/supabase/types';
+import BusinessHours from '@/components/business/landing/BusinessHours';
+import SocialIconsGroup from '@/components/business/landing/SocialIconsGroup';
 
-interface BusinessHour {
+interface BusinessProfileData {
   id: string;
-  business_id: string;
-  day_of_week: number;
-  is_open: boolean;
-  opening_time: string | null;
-  closing_time: string | null;
+  full_name: string;
+  display_name?: string;
+  business_name?: string;
+  avatar_url?: string;
+  business_website?: string;
+  business_email?: string;
+  business_phone?: string;
+  business_address?: string;
 }
 
 const BusinessPublicView = () => {
-  const { slug, businessId } = useParams<{ slug?: string; businessId?: string }>();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [profile, setProfile] = useState<Tables<"profiles"> | null>(null);
+  const { businessId } = useParams<{ businessId: string }>();
+  const [businessData, setBusinessData] = useState<BusinessProfileData | null>(null);
   const [socialLinks, setSocialLinks] = useState<BusinessSocialLink[]>([]);
   const [businessHours, setBusinessHours] = useState<BusinessHour[]>([]);
-  const [loadingHours, setLoadingHours] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!businessId) return;
+
     const fetchBusinessProfile = async () => {
       try {
         setLoading(true);
-        
-        let query = supabase.from('profiles').select('*');
-        
-        if (businessId) {
-          query = query.eq('id', businessId);
-        } else if (slug) {
-          query = query.eq('slug', slug);
+
+        // Fetch business profile
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', businessId)
+          .single();
+
+        if (profileError) {
+          throw new Error(`Error fetching profile: ${profileError.message}`);
+        }
+
+        setBusinessData(profileData);
+
+        // Fetch business social links
+        const { data: socialLinksData, error: socialLinksError } = await supabase
+          .from('business_social_links')
+          .select('*')
+          .eq('business_id', businessId);
+
+        if (socialLinksError) {
+          console.error('Error fetching social links:', socialLinksError);
         } else {
-          throw new Error("No business identifier provided");
+          // Map raw social links to the correct type
+          const typedSocialLinks: BusinessSocialLink[] = socialLinksData.map(link => ({
+            ...link,
+            platform: link.platform as SocialPlatform
+          }));
+          setSocialLinks(typedSocialLinks);
         }
-        
-        const { data, error } = await query.single();
-        
-        if (error) {
-          console.error("Error fetching business profile:", error);
-          setError("Could not find the business profile");
-          return;
+
+        // Fetch business hours
+        const { data: hoursData, error: hoursError } = await supabase
+          .from('business_hours')
+          .select('*')
+          .eq('business_id', businessId);
+
+        if (hoursError) {
+          console.error('Error fetching business hours:', hoursError);
+        } else if (hoursData && hoursData.length > 0) {
+          // Parse hours JSON and map to BusinessHour[]
+          try {
+            if (Array.isArray(hoursData[0].hours)) {
+              // Transform the JSON hours data to BusinessHour[] format
+              const parsedHours: BusinessHour[] = hoursData[0].hours.map((hourData: any) => ({
+                id: hourData.id || `hour-${Math.random().toString(36).substring(2, 9)}`,
+                business_id: businessId,
+                day_of_week: hourData.day_of_week,
+                is_open: hourData.is_open,
+                opening_time: hourData.opening_time,
+                closing_time: hourData.closing_time
+              }));
+              
+              setBusinessHours(parsedHours);
+            }
+          } catch (parseError) {
+            console.error('Error parsing business hours:', parseError);
+          }
         }
-        
-        setProfile(data);
-        
-        // Once we have the profile, fetch social links and business hours
-        if (data && data.id) {
-          await Promise.all([
-            fetchSocialLinks(data.id),
-            fetchBusinessHours(data.id)
-          ]);
-        }
-      } catch (err) {
-        console.error("Exception during profile fetch:", err);
-        setError("An unexpected error occurred");
+      } catch (err: any) {
+        console.error('Error fetching business data:', err);
+        setError(err.message);
       } finally {
         setLoading(false);
       }
     };
 
     fetchBusinessProfile();
-  }, [slug, businessId]);
-  
-  const fetchSocialLinks = async (profileId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('business_social_links')
-        .select('*')
-        .eq('business_id', profileId);
-        
-      if (error) {
-        console.error("Error fetching social links:", error);
-        return;
-      }
-      
-      setSocialLinks(data || []);
-    } catch (err) {
-      console.error("Exception fetching social links:", err);
-    }
-  };
-  
-  const fetchBusinessHours = async (profileId: string) => {
-    try {
-      setLoadingHours(true);
-      const { data, error } = await supabase
-        .from('business_hours')
-        .select('*')
-        .eq('business_id', profileId)
-        .single();
-        
-      if (error && error.code !== 'PGRST116') {
-        // PGRST116 is "no rows returned" which is ok - it just means no hours are set
-        console.error("Error fetching business hours:", error);
-        return;
-      }
-      
-      if (data && data.hours) {
-        // If we have structured hours data in the business_hours table
-        setBusinessHours(data.hours);
-      } else {
-        // Attempt to load legacy format if available
-        const { data: hourData, error: hourError } = await supabase
-          .from('business_hours')
-          .select('*')
-          .eq('business_id', profileId);
-          
-        if (!hourError && hourData && hourData.length > 0) {
-          setBusinessHours(hourData);
-        }
-      }
-    } catch (err) {
-      console.error("Exception fetching business hours:", err);
-    } finally {
-      setLoadingHours(false);
-    }
-  };
+  }, [businessId]);
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <div className="h-12 w-12 border-4 border-t-transparent border-primary rounded-full animate-spin"></div>
+      <div className="container mx-auto py-8 px-4">
+        <div className="text-center">
+          <p className="text-lg">Loading business profile...</p>
+        </div>
       </div>
     );
   }
 
-  if (error || !profile) {
+  if (error || !businessData) {
     return (
-      <div className="container mx-auto px-4 py-16 text-center">
-        <h1 className="text-3xl font-bold mb-4">Business Not Found</h1>
-        <p className="text-muted-foreground">Sorry, we couldn't find the business you're looking for.</p>
-      </div>
-    );
-  }
-
-  // Make sure business profile exists
-  if (profile.account_type !== "business") {
-    return (
-      <div className="container mx-auto px-4 py-16 text-center">
-        <h1 className="text-3xl font-bold mb-4">Not a Business Profile</h1>
-        <p className="text-muted-foreground">This profile is not a business account.</p>
+      <div className="container mx-auto py-8 px-4">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Business Not Found</h1>
+          <p className="text-muted-foreground">
+            {error || "We couldn't find the business profile you're looking for."}
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="pb-12">
-      {/* Hero section with business name */}
-      <section className="bg-gradient-to-r from-blue-600 to-blue-800 py-16 mb-8">
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
-            {profile.business_name || "Business Profile"}
-          </h1>
-          {profile.business_type && (
-            <p className="text-xl text-white/80 mt-2">{profile.business_type}</p>
-          )}
-          
-          {/* Display social links if available */}
-          {socialLinks && socialLinks.length > 0 && (
-            <div className="mt-6">
-              <BusinessSocialLinks 
-                socialLinks={socialLinks}
-                iconsStyle="colored"
-                size="default"
-                backgroundColor="rgba(255,255,255,0.1)"
-                textColor="#ffffff"
-                buttonClassName="mx-1"
+    <div className="container mx-auto py-8 px-4">
+      <Card className="mb-8">
+        <CardHeader>
+          <div className="flex items-center gap-4">
+            {businessData.avatar_url && (
+              <img
+                src={businessData.avatar_url}
+                alt={businessData.business_name || businessData.full_name}
+                className="rounded-full w-20 h-20 object-cover"
               />
+            )}
+            <div>
+              <h1 className="text-2xl font-bold">
+                {businessData.business_name || businessData.full_name}
+              </h1>
+              {businessData.display_name && (
+                <p className="text-muted-foreground">{businessData.display_name}</p>
+              )}
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="grid gap-4">
+          {businessData.business_address && (
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-muted-foreground" />
+              <span>{businessData.business_address}</span>
             </div>
           )}
-        </div>
-      </section>
+          {businessData.business_phone && (
+            <div className="flex items-center gap-2">
+              <Phone className="h-4 w-4 text-muted-foreground" />
+              <span>{businessData.business_phone}</span>
+            </div>
+          )}
+          {businessData.business_email && (
+            <div className="flex items-center gap-2">
+              <Mail className="h-4 w-4 text-muted-foreground" />
+              <span>{businessData.business_email}</span>
+            </div>
+          )}
+          {businessData.business_website && (
+            <div className="flex items-center gap-2">
+              <Globe className="h-4 w-4 text-muted-foreground" />
+              <a
+                href={
+                  businessData.business_website.startsWith('http')
+                    ? businessData.business_website
+                    : `https://${businessData.business_website}`
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline"
+              >
+                {businessData.business_website}
+              </a>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-      <SectionContainer className="mb-12">
-        {/* Business Information */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
-            <Card className="h-full">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Info className="h-5 w-5 text-blue-600" />
-                  About Us
-                </CardTitle>
-                <CardDescription>
-                  Business Details
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {profile.business_address && (
-                  <div className="prose max-w-none">
-                    <p>{profile.business_address}</p>
-                  </div>
-                )}
-                
-                <Separator className="my-4" />
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {profile.business_email && (
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-5 w-5 text-blue-600 flex-shrink-0" />
-                      <div>
-                        <p className="text-sm text-muted-foreground">Email</p>
-                        <p>{profile.business_email}</p>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {profile.business_phone && (
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-5 w-5 text-blue-600 flex-shrink-0" />
-                      <div>
-                        <p className="text-sm text-muted-foreground">Phone</p>
-                        <p>{profile.business_phone}</p>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {profile.business_website && (
-                    <div className="flex items-center gap-2">
-                      <Globe className="h-5 w-5 text-blue-600 flex-shrink-0" />
-                      <div>
-                        <p className="text-sm text-muted-foreground">Website</p>
-                        <a 
-                          href={profile.business_website.startsWith('http') ? profile.business_website : `https://${profile.business_website}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline"
-                        >
-                          {profile.business_website}
-                        </a>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                
-                {/* Display social links again if available (footer style) */}
-                {socialLinks && socialLinks.length > 0 && (
-                  <div className="mt-6">
-                    <h3 className="text-sm font-medium mb-2">Connect With Us</h3>
-                    <BusinessSocialLinks 
-                      socialLinks={socialLinks}
-                      iconsStyle="default"
-                      size="default"
-                    />
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-          
-          <div>
-            {/* Only show business hours if we have data */}
-            {businessHours && businessHours.length > 0 ? (
-              <Card className="h-full">
-                <CardHeader>
-                  <CardTitle>Business Hours</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <BusinessHours businessHours={businessHours} />
-                </CardContent>
-              </Card>
-            ) : !loadingHours && (
-              <Card className="h-full">
-                <CardHeader>
-                  <CardTitle>Contact Us</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">Please contact us for more information about our services and availability.</p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </div>
-      </SectionContainer>
-      
-      {/* Services/Booking section */}
-      <SectionContainer>
-        <SectionHeading
-          title="Our Services"
-          subtitle="Book an appointment with us"
-          centered={true}
-        />
-        
-        <BusinessBookingTemplatesSection 
-          content={{
-            title: "Available Services",
-            subtitle: "Book your appointment today",
-            description: "Browse our services and book your appointment online"
-          }}
-          businessId={profile.id}
-        />
-      </SectionContainer>
+      {/* Social Links Section */}
+      {socialLinks.length > 0 && (
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Connect with Us</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <SocialIconsGroup
+              socialLinks={socialLinks}
+              style="default"
+              size="default"
+              position="footer"
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Business Hours Section - only render if hours exist */}
+      {businessHours.length > 0 && (
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Business Hours</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <BusinessHours businessHours={businessHours} />
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="mt-8 text-center">
+        <Button
+          variant="outline"
+          onClick={() => window.history.back()}
+          className="mx-auto"
+        >
+          Back
+        </Button>
+      </div>
     </div>
   );
 };

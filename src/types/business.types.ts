@@ -1,4 +1,3 @@
-
 export interface BusinessProfile {
   id: string;
   business_name: string;
@@ -127,3 +126,13 @@ export interface SectionStyles {
 export type SocialIconStyle = 'default' | 'colored' | 'rounded' | 'outlined';
 export type SocialIconSize = 'small' | 'default' | 'large';
 export type SocialIconPosition = 'footer' | 'header' | 'sidebar' | 'both' | 'top' | 'bottom' | 'left' | 'right';
+
+// Define our BusinessHour interface more explicitly
+export interface BusinessHour {
+  id: string;
+  business_id: string;
+  day_of_week: number;
+  is_open: boolean;
+  opening_time: string | null;
+  closing_time: string | null;
+}
