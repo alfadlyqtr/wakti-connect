@@ -1,11 +1,13 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Clock, Plus, Trash2, Save } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Separator } from "@/components/ui/separator";
+import { useUpdatePageMutation } from "@/hooks/business-page/useBusinessPageMutations";
+import { useOwnerBusinessPageQuery } from "@/hooks/business-page/useBusinessPageQueries";
 
 interface BusinessHours {
   [key: string]: {
@@ -48,10 +50,46 @@ const BusinessHoursManagement: React.FC<BusinessHoursManagementProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   
+  // Get the business page to retrieve/save hours
+  const { data: businessPage } = useOwnerBusinessPageQuery();
+  const updatePage = useUpdatePageMutation();
+  
   // Get current day for highlighting
   // Fix: Get the day name using the current date and convert it to lowercase
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
   const currentDay = today as keyof typeof dayNames;
+
+  // Initialize business hours from database
+  useEffect(() => {
+    // If we have business page data with hours section
+    if (businessPage) {
+      const pageSections = (businessPage.page_sections || []);
+      const hoursSection = pageSections.find(section => section?.section_type === 'hours');
+      
+      if (hoursSection && hoursSection.section_content?.hours) {
+        try {
+          // Convert the format from the database to our internal format
+          const dbHours = hoursSection.section_content.hours;
+          const formattedHours: BusinessHours = { ...defaultBusinessHours };
+          
+          dbHours.forEach((hourData: any) => {
+            const dayKey = hourData.day.toLowerCase();
+            if (dayKey in formattedHours) {
+              formattedHours[dayKey] = {
+                isOpen: !hourData.closed,
+                openTime: hourData.open || "09:00",
+                closeTime: hourData.close || "17:00",
+              };
+            }
+          });
+          
+          setBusinessHours(formattedHours);
+        } catch (error) {
+          console.error("Error parsing business hours:", error);
+        }
+      }
+    }
+  }, [businessPage]);
   
   const handleToggleDay = (day: string) => {
     if (readOnly) return;
@@ -82,15 +120,70 @@ const BusinessHoursManagement: React.FC<BusinessHoursManagementProps> = ({
     
     setIsLoading(true);
     try {
-      // This would call an API to save the hours
-      // For now, we'll just simulate a successful save
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // First convert our internal format to the database format
+      const formattedHours = Object.entries(businessHours).map(([day, hours]) => ({
+        day: dayNames[day],
+        hours: hours.isOpen ? `${hours.openTime} - ${hours.closeTime}` : "Closed",
+        closed: !hours.isOpen,
+        open: hours.openTime,
+        close: hours.closeTime,
+      }));
+      
+      if (businessPage) {
+        // Find or create hours section
+        const pageSections = (businessPage.page_sections || []);
+        const hoursSection = pageSections.find(section => section?.section_type === 'hours');
+        
+        if (hoursSection) {
+          // Update existing hours section
+          await updatePage.mutateAsync({
+            pageId: businessPage.id,
+            data: {
+              page_sections: pageSections.map(section => 
+                section.section_type === 'hours' 
+                  ? {
+                      ...section,
+                      section_content: {
+                        ...(section.section_content || {}),
+                        hours: formattedHours,
+                        title: "Business Hours",
+                        description: "When you can visit us"
+                      }
+                    }
+                  : section
+              )
+            }
+          });
+        } else {
+          // Create a new hours section
+          const newHoursSection = {
+            section_type: 'hours',
+            section_order: pageSections.length + 1,
+            section_content: {
+              title: "Business Hours",
+              description: "When you can visit us",
+              hours: formattedHours,
+              showCurrentDay: true,
+              layout: "list"
+            },
+            is_visible: true
+          };
+          
+          await updatePage.mutateAsync({
+            pageId: businessPage.id,
+            data: {
+              page_sections: [...pageSections, newHoursSection]
+            }
+          });
+        }
+      }
       
       toast({
         title: "Business hours updated",
         description: "Your business hours have been updated successfully.",
       });
     } catch (error) {
+      console.error("Error updating business hours:", error);
       toast({
         title: "Update failed",
         description: "There was a problem updating your business hours.",
