@@ -1,82 +1,29 @@
-import { lazy } from "react";
-import { RouteObject } from "react-router-dom";
 
-const Home = lazy(() => import("../pages/Home"));
-const About = lazy(() => import("../pages/About"));
-const Contact = lazy(() => import("../pages/Contact"));
-const Pricing = lazy(() => import("../pages/Pricing"));
-const Blog = lazy(() => import("../pages/Blog"));
-const BlogArticle = lazy(() => import("../pages/BlogArticle"));
-const Events = lazy(() => import("../pages/Events"));
-const Legal = lazy(() => import("../pages/Legal"));
-const Account = lazy(() => import("../pages/Account"));
-const Dashboard = lazy(() => import("../pages/dashboard/Dashboard"));
-const DashboardHome = lazy(() => import("../pages/dashboard/DashboardHome"));
-const DashboardInvitations = lazy(() => import("../pages/dashboard/DashboardInvitations"));
-const DashboardEvents = lazy(() => import("../pages/dashboard/DashboardEvents"));
-const Auth = lazy(() => import("../pages/Auth"));
-import { dashboardRoutes } from "./dashboardRoutes";
+import { createBrowserRouter } from "react-router-dom";
+import { publicRoutes } from "./routes/publicRoutes";
+import { authRoutes } from "./routes/authRoutes";
+import { superadminRoutes } from "./routes/superadminRoutes";
+import { bookingRoutes } from "./routes/businessRoutes";
 import SharedEventPage from '@/pages/SharedEventPage';
+import NotFoundPage from '@/pages/NotFound';
 
-const routes: RouteObject[] = [
+// Create the router with all our routes
+const router = createBrowserRouter([
   {
     path: "/",
-    element: <Home />,
-  },
-  {
-    path: "/about",
-    element: <About />,
-  },
-  {
-    path: "/contact",
-    element: <Contact />,
-  },
-  {
-    path: "/pricing",
-    element: <Pricing />,
-  },
-  {
-    path: "/blog",
-    element: <Blog />,
-  },
-  {
-    path: "/blog/:article",
-    element: <BlogArticle />,
-  },
-  {
-    path: "/events",
-    element: <Events />,
-  },
-  {
-    path: "/legal",
-    element: <Legal />,
+    children: publicRoutes,
   },
   {
     path: "/auth",
-    element: <Auth />,
+    children: authRoutes,
   },
   {
-    path: "/account",
-    element: <Account />,
+    path: "/superadmin",
+    children: superadminRoutes,
   },
   {
-    path: "/dashboard",
-    element: <Dashboard />,
-    children: [
-      {
-        path: "",
-        element: <DashboardHome />,
-      },
-      {
-        path: "invitations",
-        element: <DashboardInvitations />,
-      },
-      {
-        path: "events",
-        element: <DashboardEvents />,
-      },
-      ...dashboardRoutes,
-    ],
+    path: "/booking",
+    children: bookingRoutes,
   },
   {
     path: "/e/:id",
@@ -86,6 +33,10 @@ const routes: RouteObject[] = [
     path: "/i/:id",
     element: <SharedEventPage />,
   },
-];
+  {
+    path: "*",
+    element: <NotFoundPage />,
+  },
+]);
 
-export default routes;
+export default router;
