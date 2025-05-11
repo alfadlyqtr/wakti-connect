@@ -40,6 +40,9 @@ const BusinessAboutSection: React.FC<BusinessAboutSectionProps> = ({
   const [phone, setPhone] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Log social links for debugging
+  console.log("BusinessAboutSection received socialLinks:", socialLinks);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -111,7 +114,7 @@ const BusinessAboutSection: React.FC<BusinessAboutSectionProps> = ({
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">{description}</p>
         </div>
         
-        <div className="flex flex-col md:flex-row gap-8 items-center">
+        <div className="flex flex-col md:flex-row gap-8 items-start">
           {image && (
             <div className="md:w-1/2">
               <img 
@@ -133,6 +136,7 @@ const BusinessAboutSection: React.FC<BusinessAboutSectionProps> = ({
               )}
             </div>
 
+            {/* Social Links Section - Make it always visible if links exist */}
             {socialLinks && socialLinks.length > 0 && (
               <div className="mt-6 pt-4 border-t">
                 <h3 className="text-lg font-medium mb-3">Connect With Us</h3>

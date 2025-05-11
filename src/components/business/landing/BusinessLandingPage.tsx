@@ -6,6 +6,7 @@ import { BusinessPage, BusinessPageSection, BusinessSocialLink } from "@/types/b
 import BusinessPageContent from "./BusinessPageContent";
 import BusinessPageNotFound from "./BusinessPageNotFound";
 import { useBusinessStyling } from "@/hooks/useBusinessStyling";
+import { useSubmitContactFormMutation } from "@/hooks/business-page/useContactSubmissionMutation";
 
 const BusinessLandingPage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -15,6 +16,7 @@ const BusinessLandingPage = () => {
   const [socialLinks, setSocialLinks] = useState<BusinessSocialLink[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [isPreviewMode] = useState(false);
+  const contactFormMutation = useSubmitContactFormMutation();
   
   // Apply business styling
   const { styling } = useBusinessStyling(businessPage?.business_id);
@@ -69,7 +71,7 @@ const BusinessLandingPage = () => {
           setPageSections(sectionsData as BusinessPageSection[]);
         }
         
-        // Fetch social links
+        // Fetch social links - Important for displaying in About section
         const { data: socialData, error: socialError } = await supabase
           .from('business_social_links')
           .select('*')
@@ -90,6 +92,11 @@ const BusinessLandingPage = () => {
     
     fetchBusinessPage();
   }, [slug]);
+
+  // Handle contact form submission
+  const handleContactFormSubmit = async (data: any) => {
+    return contactFormMutation.mutateAsync(data);
+  };
   
   if (isLoading) {
     return (
@@ -114,6 +121,7 @@ const BusinessLandingPage = () => {
         socialLinks={socialLinks}
         isPreviewMode={isPreviewMode}
         isAuthenticated={isAuthenticated}
+        submitContactForm={handleContactFormSubmit}
       />
     </div>
   );

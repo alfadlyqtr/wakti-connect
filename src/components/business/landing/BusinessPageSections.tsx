@@ -9,30 +9,23 @@ import BusinessBookingSection from "./sections/BusinessBookingSection";
 import InstagramSection from "./sections/InstagramSection";
 import ChatbotSection from "./sections/ChatbotSection";
 import ContactSection from "./sections/ContactSection";
-import { useSubmitContactFormMutation } from "@/hooks/business-page/useContactSubmissionMutation";
 
 interface BusinessPageSectionsProps {
   pageSections: BusinessPageSection[];
   businessPage: BusinessPage;
   socialLinks?: BusinessSocialLink[];
+  submitContactForm?: (data: any) => Promise<any>;
 }
 
 const BusinessPageSections: React.FC<BusinessPageSectionsProps> = ({ 
   pageSections, 
   businessPage,
-  socialLinks
+  socialLinks,
+  submitContactForm
 }) => {
-  // Get the submitContactForm mutation from our hook
-  const contactFormMutation = useSubmitContactFormMutation();
-  
   // Sort sections by order
   const sortedSections = [...pageSections].sort((a, b) => a.section_order - b.section_order);
   
-  // Handle contact form submission (this wraps the mutation function)
-  const handleContactFormSubmit = async (data: any) => {
-    return contactFormMutation.mutateAsync(data);
-  };
-
   // Add debugging to log the sections and page data
   useEffect(() => {
     console.log("BusinessPageSections - Page Data:", businessPage);
@@ -71,7 +64,7 @@ const BusinessPageSections: React.FC<BusinessPageSectionsProps> = ({
                 section={section} 
                 businessId={businessPage.business_id}
                 pageId={businessPage.id}
-                submitContactForm={handleContactFormSubmit}
+                submitContactForm={submitContactForm}
                 primaryColor={businessPage.primary_color}
                 socialLinks={socialLinks}
               />
@@ -126,7 +119,7 @@ const BusinessPageSections: React.FC<BusinessPageSectionsProps> = ({
                 section={section}
                 businessId={businessPage.business_id}
                 pageId={businessPage.id}
-                submitContactForm={handleContactFormSubmit}
+                submitContactForm={submitContactForm}
                 primaryColor={businessPage.primary_color}
               />
             );

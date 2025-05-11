@@ -22,6 +22,9 @@ const BusinessAbout = ({
 }: BusinessAboutProps) => {
   const content = section.section_content || {};
   
+  // Log social links for debugging
+  console.log("BusinessAbout component received socialLinks:", socialLinks);
+  
   return (
     <BusinessAboutSection 
       content={content}

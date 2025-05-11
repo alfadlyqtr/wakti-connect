@@ -11,6 +11,7 @@ interface BusinessPageContentProps {
   socialLinks: BusinessSocialLink[] | undefined;
   isPreviewMode: boolean;
   isAuthenticated: boolean | null;
+  submitContactForm?: (data: any) => Promise<any>;
 }
 
 const BusinessPageContent: React.FC<BusinessPageContentProps> = ({
@@ -18,7 +19,8 @@ const BusinessPageContent: React.FC<BusinessPageContentProps> = ({
   pageSections,
   socialLinks,
   isPreviewMode,
-  isAuthenticated
+  isAuthenticated,
+  submitContactForm
 }) => {
   const {
     content_max_width = "1200px",
@@ -66,6 +68,7 @@ const BusinessPageContent: React.FC<BusinessPageContentProps> = ({
         pageSections={pageSections || []} 
         businessPage={businessPage}
         socialLinks={socialLinks} 
+        submitContactForm={submitContactForm}
       />
 
       {/* Footer social links removed as they're now in the About section */}
