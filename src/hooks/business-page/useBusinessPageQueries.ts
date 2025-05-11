@@ -90,12 +90,36 @@ export const useBusinessPageQueries = () => {
       enabled: !!pageId
     });
   };
+  
+  // Fetch business social links
+  const useBusinessSocialLinksQuery = (businessId?: string) => {
+    return useQuery({
+      queryKey: ['businessSocialLinks', businessId],
+      queryFn: async () => {
+        if (!businessId) return [];
+        
+        const { data, error } = await supabase
+          .from('business_social_links')
+          .select('*')
+          .eq('business_id', businessId);
+        
+        if (error) {
+          console.error("Error fetching business social links:", error);
+          throw error;
+        }
+        
+        return data as BusinessSocialLink[] || [];
+      },
+      enabled: !!businessId
+    });
+  };
 
   // Return all queries
   return {
     useBusinessPageQuery,
     useOwnerBusinessPageQuery,
-    usePageSectionsQuery
+    usePageSectionsQuery,
+    useBusinessSocialLinksQuery
   };
 };
 
