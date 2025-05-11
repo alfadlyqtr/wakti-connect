@@ -15,7 +15,7 @@ const SimpleBusinessLandingPage: React.FC = () => {
   const [businessPage, setBusinessPage] = useState<any>(null);
   const [pageSections, setPageSections] = useState<any[]>([]);
 
-  // Use our new custom hook to fetch business data
+  // Use our custom hook to fetch business data
   const { profile: businessProfile, socialLinks, isLoading: isBusinessDataLoading, error: businessDataError } = useBusinessData(businessId);
 
   useEffect(() => {
@@ -100,7 +100,6 @@ const SimpleBusinessLandingPage: React.FC = () => {
             is_visible: true,
             section_content: {
               title: 'Our Services',
-              subtitle: 'Book your appointment today',
               description: 'Browse our services and book your appointment online.'
             }
           });

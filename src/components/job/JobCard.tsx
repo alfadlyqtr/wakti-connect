@@ -1,40 +1,22 @@
 
-import React from 'react';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Job } from '@/types/jobs.types';
-import { Clock, DollarSign, Edit, Trash2, AlertCircle } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useCurrencyFormat } from '@/hooks/useCurrencyFormat';
+import React from "react";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Job } from "@/types/jobs.types";
+import { formatCurrency } from "@/utils/formatUtils";
+import { Clock, DollarSign, Edit, Trash2 } from "lucide-react";
 
 interface JobCardProps {
   job: Job;
-  onEdit: () => void;
-  onDelete: () => void;
-  isEditable?: boolean;
+  onEdit: (job: Job) => void;
+  onDelete: (jobId: string) => void;
 }
 
-const JobCard: React.FC<JobCardProps> = ({ job, onEdit, onDelete, isEditable = true }) => {
-  const { formatCurrency } = useCurrencyFormat();
-  
+const JobCard: React.FC<JobCardProps> = ({ job, onEdit, onDelete }) => {
   return (
-    <Card className={!isEditable ? "border-amber-200 bg-amber-50/30 dark:border-amber-900 dark:bg-amber-900/10" : ""}>
+    <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg flex items-center">
-          {job.name}
-          {!isEditable && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <AlertCircle className="w-4 h-4 ml-2 text-amber-500" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>This job is in use in an active job card</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-        </CardTitle>
+        <CardTitle className="text-lg">{job.name}</CardTitle>
       </CardHeader>
       <CardContent className="pb-2">
         <div className="space-y-2 text-sm">
@@ -58,21 +40,15 @@ const JobCard: React.FC<JobCardProps> = ({ job, onEdit, onDelete, isEditable = t
         </div>
       </CardContent>
       <CardFooter className="pt-2 flex justify-between">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={onEdit} 
-          disabled={!isEditable}
-        >
+        <Button variant="outline" size="sm" onClick={() => onEdit(job)}>
           <Edit className="w-4 h-4 mr-1" />
           Edit
         </Button>
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={onDelete}
-          disabled={!isEditable}
-          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+          onClick={() => onDelete(job.id)}
+          className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
         >
           <Trash2 className="w-4 h-4 mr-1" />
           Delete

@@ -11,7 +11,7 @@ export const useCurrencyFormat = ({
   businessId, 
   locale = 'en-US', 
   currency = 'USD' 
-}: CurrencyFormatOptions) => {
+}: CurrencyFormatOptions = {}) => {
   const [formatOptions, setFormatOptions] = useState({
     locale,
     currency

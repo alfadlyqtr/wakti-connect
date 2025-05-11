@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
@@ -20,8 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { format, parseISO, differenceInMinutes, isToday, isThisWeek, isThisMonth } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { formatDateTime } from "@/utils/dateUtils";
-import { formatDuration } from "@/utils/formatUtils";
+import { formatDuration, formatDateTime } from "@/utils/formatUtils";
 import { Clock, Calendar, Filter, Timer } from "lucide-react";
 
 interface WorkHistoryProps {

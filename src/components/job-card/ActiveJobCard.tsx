@@ -21,7 +21,7 @@ const ActiveJobCard: React.FC<ActiveJobCardProps> = ({
 }) => {
   const [duration, setDuration] = useState<string>("");
   const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
-  const { formatCurrency } = useCurrencyFormat();
+  const { formatCurrency } = useCurrencyFormat({});
   
   // Update duration display
   const updateDuration = () => {

@@ -106,6 +106,23 @@ const BookingTemplatesTab: React.FC = () => {
     }
   };
 
+  // Type-safe handlers for deleting templates, availability and exceptions
+  const handleDeleteTemplate = (templateId: string) => {
+    deleteTemplate(templateId);
+  };
+  
+  const handlePublishTemplate = (templateId: string, isPublished: boolean) => {
+    publishTemplate({ templateId, isPublished });
+  };
+
+  const handleDeleteAvailability = (availabilityId: string) => {
+    deleteAvailability(availabilityId);
+  };
+  
+  const handleDeleteException = (exceptionId: string) => {
+    deleteException(exceptionId);
+  };
+
   // Display loading state if we're still fetching the business ID
   if (!businessId) {
     return (
@@ -169,8 +186,8 @@ const BookingTemplatesTab: React.FC = () => {
       <BookingTemplatesList
         templates={filteredTemplates}
         onEdit={handleEdit}
-        onDelete={deleteTemplate}
-        onPublish={(templateId, isPublished) => publishTemplate({ templateId, isPublished })}
+        onDelete={handleDeleteTemplate}
+        onPublish={handlePublishTemplate}
         onManageAvailability={handleManageAvailability}
         isDeleting={isDeleting}
         isPublishing={isPublishing}
@@ -201,12 +218,12 @@ const BookingTemplatesTab: React.FC = () => {
             ...data,
             template_id: availabilityTemplate.id
           } as any)}
-          onDeleteAvailability={deleteAvailability}
+          onDeleteAvailability={handleDeleteAvailability}
           onAddException={(data) => addException({
             ...data,
             template_id: availabilityTemplate.id
           } as any)}
-          onDeleteException={deleteException}
+          onDeleteException={handleDeleteException}
           isAddingAvailability={isAddingAvailability}
           isDeletingAvailability={isDeletingAvailability}
           isAddingException={isAddingException}

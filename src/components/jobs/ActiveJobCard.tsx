@@ -21,7 +21,7 @@ const ActiveJobCard: React.FC<ActiveJobCardProps> = ({
   const [duration, setDuration] = useState<string>("");
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const mountedRef = useRef<boolean>(true);
-  const { formatCurrency } = useCurrencyFormat();
+  const { formatCurrency } = useCurrencyFormat({});
   
   // Safe cleanup and timer management
   const cleanupTimer = () => {
