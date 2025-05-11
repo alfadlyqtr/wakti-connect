@@ -7,6 +7,7 @@ import BusinessTestimonials from "./BusinessTestimonials";
 import BusinessHeader from "./BusinessHeader";
 import BusinessContact from "./BusinessContact";
 import BusinessHours from "./BusinessHours";
+import BusinessBookingTemplatesSection from "./sections/BusinessBookingTemplatesSection";
 
 interface BusinessPageSectionsProps {
   pageSections: BusinessPageSection[];
@@ -97,6 +98,15 @@ const BusinessPageSections = ({
               pageId={page_id}
               submitContactForm={submitContactForm}
               primaryColor={businessPage.primary_color}
+            />
+          </div>
+        );
+      case 'booking':
+        return (
+          <div key={id} style={sectionStyle}>
+            <BusinessBookingTemplatesSection 
+              content={section_content || {}}
+              businessId={businessPage.business_id}
             />
           </div>
         );

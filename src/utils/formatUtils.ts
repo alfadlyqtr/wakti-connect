@@ -1,65 +1,55 @@
 
-import { format, formatDistanceStrict } from 'date-fns';
+/**
+ * Format a currency amount
+ */
+export const formatCurrency = (amount: number | null | undefined): string => {
+  if (amount === null || amount === undefined) return '';
+  
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD'
+  }).format(amount);
+};
 
-// Format currency with locale and currency code
-export const formatCurrency = (amount: number | null | undefined, currencyCode: string = 'USD'): string => {
-  if (amount === null || amount === undefined) {
-    return '-';
+/**
+ * Format a date string
+ */
+export const formatDate = (dateString: string | null | undefined): string => {
+  if (!dateString) return '';
+  
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+};
+
+/**
+ * Format a time string
+ */
+export const formatTime = (timeString: string | null | undefined): string => {
+  if (!timeString) return '';
+  
+  return new Date(timeString).toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
+
+/**
+ * Format a duration in minutes to a human-readable string
+ */
+export const formatDuration = (minutes: number): string => {
+  if (minutes < 60) {
+    return `${minutes} minutes`;
   }
   
-  // Currency formatting options for each supported currency
-  const currencyFormatOptions: Record<string, Intl.NumberFormatOptions> = {
-    USD: { style: 'currency', currency: 'USD', minimumFractionDigits: 2 },
-    QAR: { style: 'currency', currency: 'QAR', minimumFractionDigits: 2 },
-    AED: { style: 'currency', currency: 'AED', minimumFractionDigits: 2 },
-    SAR: { style: 'currency', currency: 'SAR', minimumFractionDigits: 2 },
-    KWD: { style: 'currency', currency: 'KWD', minimumFractionDigits: 3 }, // KWD uses 3 decimal places
-    BHD: { style: 'currency', currency: 'BHD', minimumFractionDigits: 3 }, // BHD uses 3 decimal places
-    OMR: { style: 'currency', currency: 'OMR', minimumFractionDigits: 3 }, // OMR uses 3 decimal places
-  };
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
   
-  // Use the options for the specified currency, or fall back to USD
-  const options = currencyFormatOptions[currencyCode] || currencyFormatOptions.USD;
+  if (remainingMinutes === 0) {
+    return `${hours} hour${hours > 1 ? 's' : ''}`;
+  }
   
-  return new Intl.NumberFormat('en-US', options).format(amount);
-};
-
-// Format duration between two dates
-export const formatDuration = (start: Date, end: Date): string => {
-  try {
-    return formatDistanceStrict(end, start);
-  } catch (error) {
-    console.error('Error formatting duration:', error);
-    return 'N/A';
-  }
-};
-
-// Format date to display format
-export const formatDate = (date: string | Date): string => {
-  try {
-    return format(new Date(date), 'MMM d, yyyy');
-  } catch (error) {
-    console.error('Error formatting date:', error);
-    return 'Invalid date';
-  }
-};
-
-// Format time to display format
-export const formatTime = (date: string | Date): string => {
-  try {
-    return format(new Date(date), 'h:mm a');
-  } catch (error) {
-    console.error('Error formatting time:', error);
-    return 'Invalid time';
-  }
-};
-
-// Format datetime to display format
-export const formatDateTime = (date: string | Date): string => {
-  try {
-    return format(new Date(date), 'MMM d, yyyy h:mm a');
-  } catch (error) {
-    console.error('Error formatting datetime:', error);
-    return 'Invalid date/time';
-  }
+  return `${hours} hour${hours > 1 ? 's' : ''} ${remainingMinutes} minute${remainingMinutes > 1 ? 's' : ''}`;
 };

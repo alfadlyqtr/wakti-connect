@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { BusinessSocialLink } from '@/types/business.types';
+import { BusinessSocialLink, SocialPlatform } from '@/types/business.types';
 
 export interface BusinessData {
   profile: any;
@@ -49,7 +49,7 @@ export const useBusinessData = (businessId?: string) => {
         }
 
         // Fetch social links for the business
-        const { data: socialLinks, error: socialLinksError } = await supabase
+        const { data: socialLinksData, error: socialLinksError } = await supabase
           .from('business_social_links')
           .select('*')
           .eq('business_id', businessId);
@@ -65,10 +65,16 @@ export const useBusinessData = (businessId?: string) => {
           return;
         }
 
+        // Convert socialLinksData to BusinessSocialLink[] with type assertion for platform
+        const typedSocialLinks: BusinessSocialLink[] = socialLinksData?.map(link => ({
+          ...link,
+          platform: link.platform as SocialPlatform
+        })) || [];
+
         // Set everything in state
         setData({
           profile,
-          socialLinks: socialLinks || [],
+          socialLinks: typedSocialLinks,
           isLoading: false,
           error: null
         });

@@ -75,8 +75,8 @@ const SimpleBusinessLandingPage: React.FC = () => {
             setPageSections(sections || []);
           }
         } else {
-          // Create default about section
-          setPageSections([
+          // Create default sections when no page sections exist
+          let defaultSections = [
             {
               id: 'default-about',
               page_id: 'default',
@@ -89,7 +89,23 @@ const SimpleBusinessLandingPage: React.FC = () => {
                 content: businessProfile?.description || ''
               }
             }
-          ]);
+          ];
+          
+          // Add a default booking section
+          defaultSections.push({
+            id: 'default-booking',
+            page_id: 'default',
+            section_type: 'booking',
+            section_order: 2,
+            is_visible: true,
+            section_content: {
+              title: 'Our Services',
+              subtitle: 'Book your appointment today',
+              description: 'Browse our services and book your appointment online.'
+            }
+          });
+          
+          setPageSections(defaultSections);
         }
 
         setIsLoading(false);

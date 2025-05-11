@@ -1,43 +1,42 @@
 
-import { useCurrency } from '@/contexts/CurrencyContext';
-import { useBusinessCurrency } from './useBusinessCurrency';
+import { useState, useEffect } from 'react';
 
-interface UseCurrencyFormatProps {
+interface CurrencyFormatOptions {
   businessId?: string;
+  locale?: string;
+  currency?: string;
 }
 
-export const useCurrencyFormat = (props?: UseCurrencyFormatProps) => {
-  const { currency: globalCurrency } = useCurrency();
-  const { currency: businessCurrency, isLoading } = useBusinessCurrency(props?.businessId);
+export const useCurrencyFormat = ({ 
+  businessId, 
+  locale = 'en-US', 
+  currency = 'USD' 
+}: CurrencyFormatOptions) => {
+  const [formatOptions, setFormatOptions] = useState({
+    locale,
+    currency
+  });
   
-  // Use business currency if available, otherwise fall back to global
-  const currency = businessCurrency || globalCurrency;
+  useEffect(() => {
+    // In a real app, you might fetch currency preferences from the business profile
+    // For now, we'll just use the defaults
+    if (businessId) {
+      console.log(`Using currency format for business: ${businessId}`);
+    }
+  }, [businessId]);
   
   const formatCurrency = (amount: number | null | undefined): string => {
-    if (amount === null || amount === undefined) {
-      return '-';
-    }
+    if (amount === null || amount === undefined) return '';
     
-    console.log('Formatting currency with:', currency, 'for amount:', amount);
-    
-    // Currency formatting options for each supported currency
-    const currencyFormatOptions: Record<string, Intl.NumberFormatOptions> = {
-      USD: { style: 'currency', currency: 'USD', minimumFractionDigits: 2 },
-      QAR: { style: 'currency', currency: 'QAR', minimumFractionDigits: 2 },
-      AED: { style: 'currency', currency: 'AED', minimumFractionDigits: 2 },
-      SAR: { style: 'currency', currency: 'SAR', minimumFractionDigits: 2 },
-      KWD: { style: 'currency', currency: 'KWD', minimumFractionDigits: 3 }, // KWD uses 3 decimal places
-      BHD: { style: 'currency', currency: 'BHD', minimumFractionDigits: 3 }, // BHD uses 3 decimal places
-      OMR: { style: 'currency', currency: 'OMR', minimumFractionDigits: 3 }, // OMR uses 3 decimal places
-    };
-    
-    // Use the options for the specified currency, or fall back to USD
-    const options = currencyFormatOptions[currency] || currencyFormatOptions.USD;
-    
-    const formatted = new Intl.NumberFormat('en-US', options).format(amount);
-    console.log('Formatted result:', formatted);
-    return formatted;
+    return new Intl.NumberFormat(formatOptions.locale, {
+      style: 'currency',
+      currency: formatOptions.currency
+    }).format(amount);
   };
   
-  return { formatCurrency, currency, isLoading };
+  return {
+    formatCurrency,
+    locale: formatOptions.locale,
+    currency: formatOptions.currency
+  };
 };
