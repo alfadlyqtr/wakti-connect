@@ -11,24 +11,23 @@ import InstagramSection from "./sections/InstagramSection";
 import ChatbotSection from "./sections/ChatbotSection";
 import ContactSection from "./sections/ContactSection";
 import { useSubmitContactFormMutation } from "@/hooks/business-page/useContactSubmissionMutation";
-import { useBusinessHours } from "@/hooks/useBusinessHours";
+import { BusinessHours as BusinessHoursType } from "@/hooks/useBusinessHours";
 
 interface BusinessPageSectionsProps {
   pageSections: BusinessPageSection[];
   businessPage: BusinessPage;
-  businessHoursId?: string; // Add this prop
+  businessHoursId?: string;
+  businessHours?: BusinessHoursType | null; // Add this prop
 }
 
 const BusinessPageSections: React.FC<BusinessPageSectionsProps> = ({ 
   pageSections, 
   businessPage,
-  businessHoursId
+  businessHoursId,
+  businessHours // Accept the business hours data directly
 }) => {
   // Get the submitContactForm mutation from our hook
   const contactFormMutation = useSubmitContactFormMutation();
-  
-  // Fetch business hours data
-  const { businessHours, isLoading: isLoadingHours } = useBusinessHours(businessHoursId);
   
   // Sort sections by order
   const sortedSections = [...pageSections].sort((a, b) => a.section_order - b.section_order);

@@ -1,254 +1,113 @@
 
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { SectionContainer } from "@/components/ui/section-container";
-import { SectionHeading } from "@/components/ui/section-heading";
-import { Separator } from "@/components/ui/separator";
-import { Mail, Phone, Globe, Info, Clock } from "lucide-react";
-import BusinessBookingTemplatesSection from "@/components/business/landing/sections/BusinessBookingTemplatesSection";
-import BusinessHoursSection from "@/components/business/landing/sections/BusinessHoursSection";
-import SocialIconsGroup from "@/components/business/landing/SocialIconsGroup";
+import { Navigate, useParams, useLocation } from "react-router-dom";
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import useBusinessPageQueries from "@/hooks/business-page/useBusinessPageQueries";
 import { useBusinessSocialLinks } from "@/hooks/useBusinessSocialLinks";
-import { Tables } from "@/integrations/supabase/types";
+import { useBusinessHours } from "@/hooks/useBusinessHours";
+import BusinessPageContent from "@/components/business/landing/BusinessPageContent";
+import PublicLayout from "@/components/layout/PublicLayout";
+import { useTitle } from "@/hooks/useTitle";
+import PageContainer from "@/components/PageContainer";
+import { Button } from "@/components/ui/button";
 
 const BusinessPublicView = () => {
-  const { slug, businessId } = useParams<{ slug?: string; businessId?: string }>();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [profile, setProfile] = useState<Tables<"profiles"> | null>(null);
+  const { slug, businessId } = useParams();
+  const location = useLocation();
+  const { user } = useAuth();
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
   
-  // Get social links for the business
-  const { socialLinks, isLoading: loadingSocialLinks } = 
-    useBusinessSocialLinks(profile?.id);
-  
+  const { useBusinessPageQuery, usePageSectionsQuery, useBusinessSocialLinksQuery } = useBusinessPageQueries();
+
+  // Use the businessId directly or derive it from the page data
+  const loadableBusinessId = businessId || null;
+
+  // Determine if preview mode is requested via URL parameter
   useEffect(() => {
-    const fetchBusinessProfile = async () => {
-      try {
-        setLoading(true);
-        
-        let query = supabase.from('profiles').select('*');
-        
-        if (businessId) {
-          query = query.eq('id', businessId);
-        } else if (slug) {
-          query = query.eq('slug', slug);
-        } else {
-          throw new Error("No business identifier provided");
-        }
-        
-        const { data, error } = await query.single();
-        
-        if (error) {
-          console.error("Error fetching business profile:", error);
-          setError("Could not find the business profile");
-          return;
-        }
-        
-        setProfile(data);
-      } catch (err) {
-        console.error("Exception during profile fetch:", err);
-        setError("An unexpected error occurred");
-      } finally {
-        setLoading(false);
-      }
-    };
+    const queryParams = new URLSearchParams(location.search);
+    setIsPreviewMode(queryParams.get('preview') === 'true');
+  }, [location.search]);
 
-    fetchBusinessProfile();
-  }, [slug, businessId]);
+  // Fetch business page data using the appropriate identifier (slug or business ID)
+  const { data: businessPage, isLoading: pageLoading, error: pageError } = useBusinessPageQuery(
+    slug || null,
+    isPreviewMode
+  );
 
-  if (loading) {
+  // Fetch page sections once we have the business page ID
+  const { data: pageSections, isLoading: sectionsLoading } = usePageSectionsQuery(
+    businessPage?.id
+  );
+
+  // Fetch social links using business ID from the page data
+  const { data: socialLinks, isLoading: linksLoading } = useBusinessSocialLinksQuery(
+    businessPage?.business_id
+  );
+
+  // Fetch business hours data
+  const { businessHours, isLoading: hoursLoading } = useBusinessHours(
+    businessPage?.business_id
+  );
+
+  // Fetch social settings
+  const { socialSettings, isLoading: settingsLoading } = useBusinessSocialLinks(
+    businessPage?.business_id
+  );
+
+  // Update the page title
+  useTitle(businessPage?.page_title || "Business Page");
+
+  // Handle various loading and error states
+  const isLoading = pageLoading || sectionsLoading || linksLoading;
+  const hasError = !!pageError;
+
+  if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <div className="h-12 w-12 border-4 border-t-transparent border-primary rounded-full animate-spin"></div>
-      </div>
+      <PublicLayout>
+        <PageContainer className="py-10">
+          <div className="flex items-center justify-center h-64">
+            <div className="h-10 w-10 border-4 border-t-transparent border-primary rounded-full animate-spin"></div>
+          </div>
+        </PageContainer>
+      </PublicLayout>
     );
   }
 
-  if (error || !profile) {
+  if (hasError || !businessPage) {
     return (
-      <div className="container mx-auto px-4 py-16 text-center">
-        <h1 className="text-3xl font-bold mb-4">Business Not Found</h1>
-        <p className="text-muted-foreground">Sorry, we couldn't find the business you're looking for.</p>
-      </div>
+      <PublicLayout>
+        <PageContainer className="py-10">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">Page Not Found</h1>
+            <p className="mb-6 text-muted-foreground">
+              Sorry, the business page you're looking for does not exist or has been removed.
+            </p>
+            <Button variant="default" onClick={() => window.history.back()}>
+              Go Back
+            </Button>
+          </div>
+        </PageContainer>
+      </PublicLayout>
     );
   }
 
-  // Make sure business profile exists
-  if (profile.account_type !== "business") {
-    return (
-      <div className="container mx-auto px-4 py-16 text-center">
-        <h1 className="text-3xl font-bold mb-4">Not a Business Profile</h1>
-        <p className="text-muted-foreground">This profile is not a business account.</p>
-      </div>
-    );
-  }
+  // Determine if the current user is authenticated and is viewing their own page
+  const isAuthenticated = !!user;
+  const isOwnPage = isAuthenticated && user.id === businessPage.business_id;
 
-  // Define default business hours structure 
-  const businessHoursContent = {
-    title: "Business Hours",
-    subtitle: "When you can visit us",
-    description: "Our operating hours",
-    hours: [
-      { day: "Monday", hours: "9:00 AM - 5:00 PM" },
-      { day: "Tuesday", hours: "9:00 AM - 5:00 PM" },
-      { day: "Wednesday", hours: "9:00 AM - 5:00 PM" },
-      { day: "Thursday", hours: "9:00 AM - 5:00 PM" },
-      { day: "Friday", hours: "9:00 AM - 5:00 PM" },
-      { day: "Saturday", hours: "10:00 AM - 3:00 PM" },
-      { day: "Sunday", hours: "Closed" }
-    ],
-    showCurrentDay: true,
-    layout: "list"
-  };
-
+  // Show the page content if a valid page was found
   return (
-    <div className="pb-12">
-      {/* Hero section with business name */}
-      <section className="bg-gradient-to-r from-blue-600 to-blue-800 py-16 mb-8">
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
-            {profile.business_name || "Business Profile"}
-          </h1>
-          {profile.business_type && (
-            <p className="text-xl text-white/80 mt-2">{profile.business_type}</p>
-          )}
-        </div>
-      </section>
-
-      <SectionContainer className="mb-12">
-        {/* Business Information */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
-            <Card className="h-full">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Info className="h-5 w-5 text-blue-600" />
-                  About Us
-                </CardTitle>
-                <CardDescription>
-                  Business Details
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {profile.business_address && (
-                  <div className="prose max-w-none">
-                    <p>{profile.business_address}</p>
-                  </div>
-                )}
-                
-                <Separator className="my-4" />
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {profile.business_email && (
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-5 w-5 text-blue-600 flex-shrink-0" />
-                      <div>
-                        <p className="text-sm text-muted-foreground">Email</p>
-                        <p>{profile.business_email}</p>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {profile.business_phone && (
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-5 w-5 text-blue-600 flex-shrink-0" />
-                      <div>
-                        <p className="text-sm text-muted-foreground">Phone</p>
-                        <p>{profile.business_phone}</p>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {profile.business_website && (
-                    <div className="flex items-center gap-2">
-                      <Globe className="h-5 w-5 text-blue-600 flex-shrink-0" />
-                      <div>
-                        <p className="text-sm text-muted-foreground">Website</p>
-                        <a 
-                          href={profile.business_website.startsWith('http') ? profile.business_website : `https://${profile.business_website}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline"
-                        >
-                          {profile.business_website}
-                        </a>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Social Links */}
-                {!loadingSocialLinks && socialLinks && socialLinks.length > 0 && (
-                  <div className="mt-6">
-                    <h4 className="text-sm font-medium mb-2 text-muted-foreground">Connect With Us</h4>
-                    <SocialIconsGroup 
-                      socialLinks={socialLinks}
-                      style="colored"
-                      size="default"
-                      className="justify-start"
-                    />
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-          
-          <div>
-            <Card className="h-full">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-blue-600" />
-                  Business Hours
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {businessHoursContent.hours.map((item, index) => {
-                    const isToday = new Date().getDay() === (index === 6 ? 0 : index + 1); // Adjust index for Sunday
-                    return (
-                      <div 
-                        key={index} 
-                        className={`flex justify-between py-2 border-b ${isToday && businessHoursContent.showCurrentDay ? "bg-primary/10 px-2 rounded" : ""}`}
-                      >
-                        <div className="font-medium">{item.day}</div>
-                        <div className="flex items-center">
-                          <span>{item.hours}</span>
-                          {isToday && businessHoursContent.showCurrentDay && (
-                            <span className="ml-2 text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
-                              Today
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </SectionContainer>
-      
-      {/* Services/Booking section */}
-      <SectionContainer>
-        <SectionHeading
-          title="Our Services"
-          subtitle="Book an appointment with us"
-          centered={true}
-        />
-        
-        <BusinessBookingTemplatesSection 
-          content={{
-            title: "Available Services",
-            subtitle: "Book your appointment today",
-            description: "Browse our services and book your appointment online"
-          }}
-          businessId={profile.id}
-        />
-      </SectionContainer>
-    </div>
+    <PublicLayout>
+      <BusinessPageContent 
+        businessPage={businessPage} 
+        pageSections={pageSections || []} 
+        socialLinks={socialLinks || []}
+        isPreviewMode={isPreviewMode}
+        isAuthenticated={isAuthenticated}
+        businessHours={businessHours}
+        displayStyle={socialSettings?.display_style || 'icons'}
+      />
+    </PublicLayout>
   );
 };
 

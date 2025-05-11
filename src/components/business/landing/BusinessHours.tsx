@@ -36,7 +36,7 @@ const BusinessHours = ({ section, businessHours }: BusinessHoursProps) => {
   } = content;
   
   // Determine which hours data to use (from database or fallback)
-  const hours = businessHours?.hours 
+  const hours = businessHours?.hours && businessHours.hours.length > 0
     ? convertHoursToDisplayFormat(businessHours.hours)
     : (content.hours || [
         { day: "Monday", hours: "9:00 AM - 5:00 PM" },

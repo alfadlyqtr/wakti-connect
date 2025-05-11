@@ -5,6 +5,7 @@ import BusinessPageHeader from "./BusinessPageHeader";
 import BusinessPageSections from "./BusinessPageSections";
 import SocialIconsGroup from "./SocialIconsGroup";
 import { useBusinessSocialLinks } from "@/hooks/useBusinessSocialLinks";
+import { BusinessHours } from "@/hooks/useBusinessHours";
 
 interface BusinessPageContentProps {
   businessPage: BusinessPage;
@@ -12,6 +13,8 @@ interface BusinessPageContentProps {
   socialLinks: BusinessSocialLink[] | undefined;
   isPreviewMode: boolean;
   isAuthenticated: boolean | null;
+  businessHours?: BusinessHours | null; // Add business hours prop
+  displayStyle?: 'icons' | 'buttons'; // Add display style prop
 }
 
 const BusinessPageContent: React.FC<BusinessPageContentProps> = ({
@@ -19,17 +22,19 @@ const BusinessPageContent: React.FC<BusinessPageContentProps> = ({
   pageSections,
   socialLinks,
   isPreviewMode,
-  isAuthenticated
+  isAuthenticated,
+  businessHours,
+  displayStyle = 'icons'
 }) => {
-  const [displayStyle, setDisplayStyle] = useState<'icons' | 'buttons'>('icons');
-  const { socialSettings } = useBusinessSocialLinks(businessPage.business_id);
-
-  // Update display style based on settings
+  // Use provided display style
+  const [localDisplayStyle, setLocalDisplayStyle] = useState<'icons' | 'buttons'>(displayStyle);
+  
+  // Update display style when prop changes
   useEffect(() => {
-    if (socialSettings) {
-      setDisplayStyle(socialSettings.display_style);
+    if (displayStyle) {
+      setLocalDisplayStyle(displayStyle);
     }
-  }, [socialSettings]);
+  }, [displayStyle]);
 
   const {
     content_max_width = "1200px",
@@ -57,7 +62,7 @@ const BusinessPageContent: React.FC<BusinessPageContentProps> = ({
             size={(social_icons_size as any) || "default"}
             position="header"
             className="justify-end"
-            displayStyle={displayStyle}
+            displayStyle={localDisplayStyle}
           />
         </div>
       )}
@@ -77,7 +82,8 @@ const BusinessPageContent: React.FC<BusinessPageContentProps> = ({
       <BusinessPageSections 
         pageSections={pageSections || []} 
         businessPage={businessPage}
-        businessHoursId={businessPage.business_id} // Pass the business ID for hours
+        businessHoursId={businessPage.business_id}
+        businessHours={businessHours} // Pass down the business hours
       />
 
       {showFooterSocialLinks && (
@@ -88,7 +94,7 @@ const BusinessPageContent: React.FC<BusinessPageContentProps> = ({
             size={(social_icons_size as any) || "default"}
             position="footer"
             className="pb-6"
-            displayStyle={displayStyle}
+            displayStyle={localDisplayStyle}
           />
         </div>
       )}
