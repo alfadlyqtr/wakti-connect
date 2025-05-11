@@ -47,3 +47,30 @@ export async function submitGuestResponse(eventId: string, name: string, respons
     throw error;
   }
 }
+
+/**
+ * Respond to an invitation as a non-authenticated user
+ */
+export async function respondToInvitation(
+  eventId: string, 
+  responseType: 'accepted' | 'declined', 
+  userInfo: { name: string }
+) {
+  try {
+    console.log("Responding to invitation:", eventId, responseType, userInfo);
+    
+    // Use the submitGuestResponse function to handle the database operation
+    const result = await submitGuestResponse(eventId, userInfo.name, responseType);
+    
+    return { 
+      success: true, 
+      data: result 
+    };
+  } catch (error: any) {
+    console.error("Error in respondToInvitation:", error);
+    return { 
+      success: false, 
+      error: error.message || "Failed to submit response"
+    };
+  }
+}

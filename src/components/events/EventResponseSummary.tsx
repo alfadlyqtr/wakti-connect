@@ -37,7 +37,17 @@ const EventResponseSummary: React.FC<EventResponseSummaryProps> = ({
       console.log("EventResponseSummary: Loading responses for event", eventId);
       const eventResponses = await fetchEventResponses(eventId);
       console.log("EventResponseSummary: Received responses:", eventResponses);
-      setResponses(eventResponses);
+      
+      // Type assertion to ensure the responses match our expected type
+      const typedResponses = eventResponses.map(response => ({
+        ...response,
+        // Ensure response is always 'accepted' or 'declined'
+        response: (response.response === 'accepted' || response.response === 'declined') 
+          ? response.response as 'accepted' | 'declined'
+          : 'declined' // Default to declined if the value is invalid
+      })) as SimpleGuestResponse[];
+      
+      setResponses(typedResponses);
     } catch (err: any) {
       console.error("Error loading responses:", err);
       setError(err.message || "Failed to load responses");
