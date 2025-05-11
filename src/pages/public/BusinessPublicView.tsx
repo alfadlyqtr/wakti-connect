@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Navigate, useParams, useLocation } from "react-router-dom";
 import { useAuth } from "@/features/auth/hooks/useAuth";
@@ -21,6 +20,7 @@ const useTitle = (title: string) => {
 };
 
 const BusinessPublicView = () => {
+  
   const { slug, businessId } = useParams();
   const location = useLocation();
   const { user } = useAuth();
@@ -64,6 +64,8 @@ const BusinessPublicView = () => {
     // Note: We're not including updated_at here as it's not required by BusinessSocialLink type
   })) : [];
 
+  
+  
   // Fetch business hours data
   const { businessHours, isLoading: hoursLoading } = useBusinessHours(
     businessPage?.business_id

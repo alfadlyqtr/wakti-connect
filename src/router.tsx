@@ -6,6 +6,8 @@ import { superadminRoutes } from "./routes/superadminRoutes";
 import { bookingRoutes } from "./routes/businessRoutes";
 import SharedEventPage from '@/pages/SharedEventPage';
 import NotFoundPage from '@/pages/NotFound';
+import DashboardLayout from '@/components/layout/DashboardLayout';
+import { dashboardRoutes } from "./routes/dashboardRoutes";
 
 // Create the router with all our routes
 const router = createBrowserRouter([
@@ -24,6 +26,11 @@ const router = createBrowserRouter([
   {
     path: "/booking",
     children: bookingRoutes,
+  },
+  {
+    path: "/dashboard",
+    element: <DashboardLayout />,
+    children: dashboardRoutes,
   },
   {
     path: "/e/:id",
