@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Route } from 'react-router-dom';
 import NotFoundPage from '@/pages/NotFound';
 import SharedInvitationView from '@/components/invitations/SharedInvitationView';
 
@@ -24,10 +23,10 @@ const PlaceholderPage = ({ title }: { title: string }) => (
   </div>
 );
 
-// Wrapper to apply the PublicLayout
-const withPublicLayout = (Component: React.ComponentType<any>) => (
+// Wrapper to apply the PublicLayout - Fixed to properly pass children
+const withPublicLayout = (Component: React.ComponentType<any>) => (props: any) => (
   <PublicLayout>
-    <Component />
+    <Component {...props} />
   </PublicLayout>
 );
 

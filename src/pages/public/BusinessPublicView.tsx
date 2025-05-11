@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from "react";
-import { Navigate, useParams, useLocation } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import useBusinessPageQueries from "@/hooks/business-page/useBusinessPageQueries";
 import { useBusinessSocialLinks } from "@/hooks/useBusinessSocialLinks";
@@ -70,52 +70,58 @@ const BusinessPublicView = () => {
   const isLoading = pageLoading || sectionsLoading || linksLoading;
   const hasError = !!pageError;
 
-  if (isLoading) {
-    return (
-      <div className="py-10">
-        <div className="container mx-auto">
-          <div className="flex items-center justify-center h-64">
-            <div className="h-10 w-10 border-4 border-t-transparent border-primary rounded-full animate-spin"></div>
+  // Content for loading, error and main states
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="py-10">
+          <div className="container mx-auto">
+            <div className="flex items-center justify-center h-64">
+              <div className="h-10 w-10 border-4 border-t-transparent border-primary rounded-full animate-spin"></div>
+            </div>
           </div>
         </div>
-      </div>
-    );
-  }
+      );
+    }
 
-  if (hasError || !businessPage) {
-    return (
-      <div className="py-10">
-        <div className="container mx-auto">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold mb-4">Page Not Found</h1>
-            <p className="mb-6 text-muted-foreground">
-              Sorry, the business page you're looking for does not exist or has been removed.
-            </p>
-            <Button variant="default" onClick={() => window.history.back()}>
-              Go Back
-            </Button>
+    if (hasError || !businessPage) {
+      return (
+        <div className="py-10">
+          <div className="container mx-auto">
+            <div className="text-center">
+              <h1 className="text-2xl font-bold mb-4">Page Not Found</h1>
+              <p className="mb-6 text-muted-foreground">
+                Sorry, the business page you're looking for does not exist or has been removed.
+              </p>
+              <Button variant="default" onClick={() => window.history.back()}>
+                Go Back
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
+      );
+    }
+
+    // Determine if the current user is authenticated and is viewing their own page
+    const isAuthenticated = !!user;
+    const isOwnPage = isAuthenticated && user.id === businessPage.business_id;
+
+    // Show the page content if a valid page was found
+    return (
+      <BusinessPageContent 
+        businessPage={businessPage} 
+        pageSections={pageSections || []} 
+        socialLinks={socialLinks || []}
+        isPreviewMode={isPreviewMode}
+        isAuthenticated={isAuthenticated}
+        businessHours={businessHours}
+        displayStyle={socialSettings?.display_style || 'icons'}
+      />
     );
-  }
+  };
 
-  // Determine if the current user is authenticated and is viewing their own page
-  const isAuthenticated = !!user;
-  const isOwnPage = isAuthenticated && user.id === businessPage.business_id;
-
-  // Show the page content if a valid page was found
-  return (
-    <BusinessPageContent 
-      businessPage={businessPage} 
-      pageSections={pageSections || []} 
-      socialLinks={socialLinks || []}
-      isPreviewMode={isPreviewMode}
-      isAuthenticated={isAuthenticated}
-      businessHours={businessHours}
-      displayStyle={socialSettings?.display_style || 'icons'}
-    />
-  );
+  // We're already returning the BusinessPublicView directly in routes, so no need to wrap it here
+  return renderContent();
 };
 
 export default BusinessPublicView;
