@@ -18,26 +18,29 @@ const SlugResolver = () => {
       }
 
       try {
+        console.log(`Attempting to resolve slug: ${slug}`);
+        
         // Clean the slug to handle potential malformed URLs
         const cleanSlug = slug.replace(/[^0-9a-zA-Z-]/g, '');
         
         // Check if the slug corresponds to a business profile
         const { data, error } = await supabase
           .from('profiles')
-          .select('id')
+          .select('id, business_name')
           .eq('slug', cleanSlug)
           .single();
 
         if (error || !data) {
-          console.error("Error resolving slug or not found:", error);
+          console.error("Error resolving slug or profile not found:", error);
           setNotFound(true);
           setIsLoading(false);
           return;
         }
 
+        console.log(`Successfully resolved slug to business: ${data.business_name} (${data.id})`);
+        
         // If we found a business with this slug, redirect to the business landing page
-        const businessId = data.id;
-        navigate(`/business/${businessId}`, { replace: true });
+        navigate(`/business/${data.id}`, { replace: true });
       } catch (err) {
         console.error("Error in slug resolution:", err);
         setNotFound(true);

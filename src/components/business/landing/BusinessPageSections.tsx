@@ -12,6 +12,7 @@ interface BusinessPageSectionsProps {
   pageSections: BusinessPageSection[];
   businessPage: BusinessPage;
   socialLinks?: BusinessSocialLink[];
+  businessProfile?: any; // Add business profile data
   submitContactForm?: (data: any) => Promise<any>;
   businessHours?: BusinessHour[];
 }
@@ -20,11 +21,13 @@ const BusinessPageSections = ({
   pageSections,
   businessPage,
   socialLinks,
+  businessProfile, // Include business profile data
   submitContactForm,
   businessHours
 }: BusinessPageSectionsProps) => {
   // Log passed-in social links for debugging
   console.log("BusinessPageSections received socialLinks:", socialLinks);
+  console.log("BusinessPageSections received businessProfile:", businessProfile);
   
   if (!pageSections || pageSections.length === 0) {
     return (
@@ -65,6 +68,7 @@ const BusinessPageSections = ({
               submitContactForm={submitContactForm}
               primaryColor={businessPage.primary_color}
               socialLinks={socialLinks}
+              businessProfile={businessProfile}
             />
           </div>
         );

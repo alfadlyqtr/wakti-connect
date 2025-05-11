@@ -9,6 +9,7 @@ interface BusinessPageContentProps {
   businessPage: BusinessPage;
   pageSections: BusinessPageSection[];
   socialLinks: BusinessSocialLink[] | undefined;
+  businessProfile?: any; // Add business profile data
   isPreviewMode: boolean;
   isAuthenticated: boolean | null;
   submitContactForm?: (data: any) => Promise<any>;
@@ -18,6 +19,7 @@ const BusinessPageContent: React.FC<BusinessPageContentProps> = ({
   businessPage,
   pageSections,
   socialLinks,
+  businessProfile, // Include business profile data
   isPreviewMode,
   isAuthenticated,
   submitContactForm
@@ -55,10 +57,10 @@ const BusinessPageContent: React.FC<BusinessPageContentProps> = ({
       <BusinessPageHeader 
         business={{
           id: businessPage.business_id,
-          business_name: businessPage.page_title,
-          display_name: businessPage.page_title,
+          business_name: businessPage.page_title || businessProfile?.business_name || "Business",
+          display_name: businessPage.page_title || businessProfile?.display_name || "Business",
           account_type: "business",
-          avatar_url: businessPage.logo_url
+          avatar_url: businessPage.logo_url || businessProfile?.avatar_url
         }} 
         isPreviewMode={isPreviewMode}
         isAuthenticated={isAuthenticated}
@@ -68,6 +70,7 @@ const BusinessPageContent: React.FC<BusinessPageContentProps> = ({
         pageSections={pageSections || []} 
         businessPage={businessPage}
         socialLinks={socialLinks} 
+        businessProfile={businessProfile}
         submitContactForm={submitContactForm}
       />
 

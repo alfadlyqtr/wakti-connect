@@ -15,6 +15,7 @@ interface BusinessAboutSectionProps {
   primaryColor?: string;
   submitContactForm?: (data: any) => Promise<any>;
   socialLinks?: BusinessSocialLink[];
+  businessProfile?: any;
 }
 
 const BusinessAboutSection: React.FC<BusinessAboutSectionProps> = ({ 
@@ -23,7 +24,8 @@ const BusinessAboutSection: React.FC<BusinessAboutSectionProps> = ({
   pageId,
   primaryColor,
   submitContactForm,
-  socialLinks
+  socialLinks,
+  businessProfile
 }) => {
   const { 
     title = "About Us",
@@ -108,14 +110,18 @@ const BusinessAboutSection: React.FC<BusinessAboutSectionProps> = ({
   
   // For debugging
   console.log("BusinessAboutSection received socialLinks:", socialLinks);
+  console.log("BusinessAboutSection received businessProfile:", businessProfile);
+
+  // Determine business name from various sources
+  const businessName = businessProfile?.business_name || content.title || "About Us";
 
   return (
     <section className="py-12 md:py-16">
       <div className="container mx-auto px-4">
         <div className="text-center mb-10">
-          <h2 className="text-3xl font-bold mb-4">{content.title || "About Us"}</h2>
+          <h2 className="text-3xl font-bold mb-4">{title || businessName}</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            {content.description || "Learn more about our business and what we do."}
+            {content.description || description || `Learn more about ${businessName}.`}
           </p>
         </div>
         
@@ -136,7 +142,7 @@ const BusinessAboutSection: React.FC<BusinessAboutSectionProps> = ({
                 <div dangerouslySetInnerHTML={{ __html: content.content }} />
               ) : (
                 <p className="text-muted-foreground">
-                  Information about the business will be displayed here.
+                  {businessProfile?.description || "Information about the business will be displayed here."}
                 </p>
               )}
             </div>

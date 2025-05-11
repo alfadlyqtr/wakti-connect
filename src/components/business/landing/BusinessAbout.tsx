@@ -10,6 +10,7 @@ interface BusinessAboutProps {
   submitContactForm?: (data: any) => Promise<any>;
   primaryColor?: string;
   socialLinks?: BusinessSocialLink[];
+  businessProfile?: any; // Include the business profile for additional information
 }
 
 const BusinessAbout = ({ 
@@ -18,7 +19,8 @@ const BusinessAbout = ({
   pageId,
   submitContactForm,
   primaryColor,
-  socialLinks
+  socialLinks,
+  businessProfile
 }: BusinessAboutProps) => {
   const content = section.section_content || {};
   
@@ -33,6 +35,7 @@ const BusinessAbout = ({
       primaryColor={primaryColor}
       submitContactForm={submitContactForm}
       socialLinks={socialLinks}
+      businessProfile={businessProfile}
     />
   );
 };
