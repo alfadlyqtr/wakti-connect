@@ -49,11 +49,14 @@ const SimpleBusinessLandingPage = () => {
           return;
         }
         
+        const businessId = businessData.id;
+        console.log("Found business ID:", businessId);
+        
         // Then fetch the page data
         const { data: pageData, error: pageError } = await supabase
           .from('business_pages')
           .select('*')
-          .eq('business_id', businessData.id)
+          .eq('business_id', businessId)
           .eq('is_published', true)
           .single();
           
@@ -82,7 +85,7 @@ const SimpleBusinessLandingPage = () => {
         const { data: socialData, error: socialError } = await supabase
           .from('business_social_links')
           .select('*')
-          .eq('business_id', businessData.id);
+          .eq('business_id', businessId);
           
         if (socialError) {
           console.error("Error fetching social links:", socialError);

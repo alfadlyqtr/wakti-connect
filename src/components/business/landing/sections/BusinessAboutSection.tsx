@@ -40,9 +40,6 @@ const BusinessAboutSection: React.FC<BusinessAboutSectionProps> = ({
   const [phone, setPhone] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Log social links for debugging
-  console.log("BusinessAboutSection received socialLinks:", socialLinks);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -106,6 +103,9 @@ const BusinessAboutSection: React.FC<BusinessAboutSectionProps> = ({
     borderColor: primaryColor
   } : {};
 
+  // Always display social links if available
+  const hasSocialLinks = socialLinks && socialLinks.length > 0;
+
   return (
     <section className="py-12 md:py-16">
       <div className="container mx-auto px-4">
@@ -136,8 +136,8 @@ const BusinessAboutSection: React.FC<BusinessAboutSectionProps> = ({
               )}
             </div>
 
-            {/* Social Links Section - Make it always visible if links exist */}
-            {socialLinks && socialLinks.length > 0 && (
+            {/* Social Links Section */}
+            {hasSocialLinks && (
               <div className="mt-6 pt-4 border-t">
                 <h3 className="text-lg font-medium mb-3">Connect With Us</h3>
                 <SocialIconsGroup 

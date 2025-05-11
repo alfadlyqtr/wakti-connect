@@ -10,6 +10,7 @@ import BillingTab from "@/components/settings/BillingTab";
 import { useProfileSettings } from "@/hooks/useProfileSettings";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import BusinessProfileTab from "@/components/settings/BusinessProfileTab";
+import SocialMediaTab from "@/components/settings/SocialMediaTab";
 
 const DashboardSettings = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -51,6 +52,11 @@ const DashboardSettings = () => {
               Business Profile
             </TabsTrigger>
           )}
+          {isBusinessAccount && (
+            <TabsTrigger value="social-media" className="px-3 py-1.5 whitespace-nowrap">
+              Social Media
+            </TabsTrigger>
+          )}
           <TabsTrigger value="notifications" className="px-3 py-1.5 whitespace-nowrap">
             Notifications
           </TabsTrigger>
@@ -78,6 +84,12 @@ const DashboardSettings = () => {
         {isBusinessAccount && (
           <TabsContent value="business-profile" className="space-y-4">
             <BusinessProfileTab />
+          </TabsContent>
+        )}
+        
+        {isBusinessAccount && (
+          <TabsContent value="social-media" className="space-y-4">
+            <SocialMediaTab />
           </TabsContent>
         )}
         

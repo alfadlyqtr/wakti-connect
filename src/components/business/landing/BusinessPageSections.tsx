@@ -1,14 +1,13 @@
 
-import React, { useEffect } from "react";
-import { BusinessPage, BusinessPageSection, BusinessSocialLink } from "@/types/business.types";
-import BusinessPageHeader from "./sections/BusinessPageHeader";
+import React from "react";
+import BusinessHero from "./BusinessHero";
 import BusinessAbout from "./BusinessAbout";
 import BusinessGallery from "./BusinessGallery";
-import BusinessTestimonialsSection from "./sections/BusinessTestimonialsSection";
-import BusinessBookingSection from "./sections/BusinessBookingSection";
-import InstagramSection from "./sections/InstagramSection";
-import ChatbotSection from "./sections/ChatbotSection";
-import ContactSection from "./sections/ContactSection";
+import BusinessTestimonials from "./BusinessTestimonials";
+import BusinessLocation from "./BusinessLocation";
+import BusinessContact from "./BusinessContact";
+import BusinessHours from "./BusinessHours";
+import { BusinessPage, BusinessPageSection, BusinessSocialLink } from "@/types/business.types";
 
 interface BusinessPageSectionsProps {
   pageSections: BusinessPageSection[];
@@ -17,135 +16,92 @@ interface BusinessPageSectionsProps {
   submitContactForm?: (data: any) => Promise<any>;
 }
 
-const BusinessPageSections: React.FC<BusinessPageSectionsProps> = ({ 
-  pageSections, 
+const BusinessPageSections = ({
+  pageSections,
   businessPage,
   socialLinks,
   submitContactForm
-}) => {
-  // Sort sections by order
-  const sortedSections = [...pageSections].sort((a, b) => a.section_order - b.section_order);
+}: BusinessPageSectionsProps) => {
+  // Log passed-in social links for debugging
+  console.log("BusinessPageSections received socialLinks:", socialLinks);
   
-  // Add debugging to log the sections and page data
-  useEffect(() => {
-    console.log("BusinessPageSections - Page Data:", businessPage);
-    console.log("BusinessPageSections - Sorted Sections:", sortedSections);
-    console.log("BusinessPageSections - Social Links:", socialLinks);
-  }, [businessPage, sortedSections, socialLinks]);
+  if (!pageSections || pageSections.length === 0) {
+    return (
+      <div className="py-12 text-center">
+        <h2 className="text-2xl font-semibold text-gray-600">No content available</h2>
+        <p className="text-gray-500 mt-2">This business page has no content sections.</p>
+      </div>
+    );
+  }
+  
+  const renderSection = (section: BusinessPageSection) => {
+    if (!section.is_visible) return null;
+    
+    const { id, page_id, section_type, section_content, background_color, text_color } = section;
+    
+    const sectionStyle = {
+      backgroundColor: background_color || '',
+      color: text_color || ''
+    };
 
-  return (
-    <div className="space-y-8 sm:space-y-12 md:space-y-16 lg:space-y-20 mt-6">
-      {sortedSections.map((section) => {
-        if (!section.is_visible) {
-          console.log(`Section ${section.section_type} (ID: ${section.id}) is not visible, skipping`);
-          return null;
-        }
-        
-        console.log(`Rendering section: ${section.section_type}`, section);
-        
-        switch (section.section_type) {
-          case 'header':
-            return (
-              <BusinessPageHeader
-                key={section.id}
-                content={{
-                  ...section.section_content,
-                  logo_url: businessPage.logo_url,
-                  primary_color: businessPage.primary_color,
-                  secondary_color: businessPage.secondary_color,
-                }}
-              />
-            );
-          
-          case 'about':
-            return (
-              <BusinessAbout 
-                key={section.id} 
-                section={section} 
-                businessId={businessPage.business_id}
-                pageId={businessPage.id}
-                submitContactForm={submitContactForm}
-                primaryColor={businessPage.primary_color}
-                socialLinks={socialLinks}
-              />
-            );
-          
-          case 'gallery':
-            return (
-              <BusinessGallery
-                key={section.id}
-                section={section}
-              />
-            );
-          
-          case 'testimonials':
-            return (
-              <BusinessTestimonialsSection
-                key={section.id}
-                content={section.section_content || {}}
-                primaryColor={businessPage.primary_color}
-              />
-            );
-          
-          case 'booking':
-            return (
-              <BusinessBookingSection
-                key={section.id}
-                content={section.section_content || {}}
-                businessId={businessPage.business_id}
-                primaryColor={businessPage.primary_color}
-              />
-            );
-          
-          case 'instagram':
-            return (
-              <InstagramSection
-                key={section.id}
-                section={section}
-              />
-            );
-          
-          case 'contact':
-            console.log("Rendering contact section with data:", {
-              sectionId: section.id,
-              content: section.section_content,
-              businessId: businessPage.business_id,
-              pageId: businessPage.id
-            });
-            
-            return (
-              <ContactSection
-                key={section.id}
-                section={section}
-                businessId={businessPage.business_id}
-                pageId={businessPage.id}
-                submitContactForm={submitContactForm}
-                primaryColor={businessPage.primary_color}
-              />
-            );
-          
-          case 'chatbot':
-            return (
-              <ChatbotSection
-                key={section.id}
-                section={section}
-                businessId={businessPage.business_id}
-              />
-            );
-          
-          default:
-            console.warn(`Unknown section type: ${section.section_type}`);
-            return (
-              <div key={section.id} className="p-4 border rounded-md">
-                <p className="text-center text-muted-foreground">
-                  Unknown section type: {section.section_type}
-                </p>
-              </div>
-            );
-        }
-      })}
-    </div>
-  );
+    switch (section_type) {
+      case 'header':
+        return (
+          <div key={id} style={sectionStyle}>
+            <BusinessHero 
+              section={section} 
+              primaryColor={businessPage.primary_color} 
+            />
+          </div>
+        );
+      case 'about':
+        return (
+          <div key={id} style={sectionStyle}>
+            <BusinessAbout 
+              section={section} 
+              businessId={businessPage.business_id}
+              pageId={page_id}
+              submitContactForm={submitContactForm}
+              primaryColor={businessPage.primary_color}
+              socialLinks={socialLinks}
+            />
+          </div>
+        );
+      case 'gallery':
+        return (
+          <div key={id} style={sectionStyle}>
+            <BusinessGallery 
+              section={section} 
+            />
+          </div>
+        );
+      case 'testimonials':
+        return (
+          <div key={id} style={sectionStyle}>
+            <BusinessTestimonials 
+              section={section} 
+            />
+          </div>
+        );
+      case 'contact':
+        return (
+          <div key={id} style={sectionStyle}>
+            <BusinessContact 
+              section={section}
+              businessId={businessPage.business_id}
+              pageId={page_id}
+              submitContactForm={submitContactForm}
+              primaryColor={businessPage.primary_color}
+              socialLinks={socialLinks}
+            />
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+  
+  return <>{pageSections.map(renderSection)}</>;
 };
 
 export default BusinessPageSections;
