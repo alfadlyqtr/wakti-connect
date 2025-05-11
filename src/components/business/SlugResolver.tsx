@@ -1,72 +1,65 @@
 
 import React, { useEffect, useState } from "react";
-import { Navigate, useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import SimpleLoading from "./page-builder/simple-builder/SimpleLoading";
 
 const SlugResolver = () => {
   const { slug } = useParams<{ slug: string }>();
-  const [redirectTo, setRedirectTo] = useState<string | null>(null);
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    const fetchBySlug = async () => {
+    const resolveSlug = async () => {
       if (!slug) {
+        setNotFound(true);
         setIsLoading(false);
-        setError("No slug provided");
         return;
       }
 
       try {
-        // First check if this is a business profile slug
-        const { data: profileData, error: profileError } = await supabase
+        // Check if the slug corresponds to a business profile
+        const { data, error } = await supabase
           .from('profiles')
           .select('id')
           .eq('slug', slug)
-          .maybeSingle();
+          .single();
 
-        if (profileData) {
-          // Set the redirect to our business profile view route
-          setRedirectTo(`/view/business/${profileData.id}`);
+        if (error || !data) {
+          console.error("Error resolving slug or not found:", error);
+          setNotFound(true);
+          setIsLoading(false);
           return;
         }
 
-        // If not a profile, check if it's a business page slug
-        const { data: pageData, error: pageError } = await supabase
-          .from('business_pages')
-          .select('page_slug')
-          .eq('page_slug', slug)
-          .maybeSingle();
-
-        if (pageData) {
-          // Direct to the business page with slug
-          setRedirectTo(`/b/${pageData.page_slug}`);
-        } else {
-          setError("Page not found");
-        }
+        // If we found a business with this slug, redirect to the business landing page
+        const businessId = data.id;
+        navigate(`/business/${businessId}`, { replace: true });
       } catch (err) {
-        console.error("Exception during slug resolution:", err);
-        setError("An unexpected error occurred");
-      } finally {
+        console.error("Error in slug resolution:", err);
+        setNotFound(true);
         setIsLoading(false);
       }
     };
 
-    fetchBySlug();
-  }, [slug]);
+    resolveSlug();
+  }, [slug, navigate]);
 
   if (isLoading) {
-    return <SimpleLoading />;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
-  if (error || !redirectTo) {
-    // If page not found, redirect to homepage
-    return <Navigate to="/" replace />;
+  if (notFound) {
+    // This will be caught by the catch-all route
+    navigate('/not-found', { replace: true });
+    return null;
   }
 
-  // Redirect to the resolved destination
-  return <Navigate to={redirectTo} replace />;
+  return null;
 };
 
 export default SlugResolver;

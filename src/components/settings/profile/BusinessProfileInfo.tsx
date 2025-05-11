@@ -15,7 +15,13 @@ const BusinessProfileInfo: React.FC<BusinessProfileInfoProps> = ({ profile }) =>
   const [copied, setCopied] = React.useState<boolean>(false);
   
   const baseUrl = window.location.origin;
-  const businessUrl = `${baseUrl}/b/${profile.slug || profile.id}`;
+  
+  // Use the businessId directly for a more reliable link
+  const businessUrl = `${baseUrl}/business/${profile.id}`;
+  
+  // Or use the slug if available (which will be resolved to the businessId)
+  // Alternatively can use the slug-based URL
+  // const businessUrl = `${baseUrl}/${profile.slug || profile.id}`;
   
   const copyLink = () => {
     navigator.clipboard.writeText(businessUrl);

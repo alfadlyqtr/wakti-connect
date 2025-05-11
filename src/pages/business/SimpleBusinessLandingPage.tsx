@@ -9,7 +9,7 @@ import BusinessPageNotFound from "@/components/business/landing/BusinessPageNotF
 import { useSubmitContactFormMutation } from "@/hooks/business-page/useContactSubmissionMutation";
 
 const SimpleBusinessLandingPage = () => {
-  const { slug } = useParams<{ slug: string }>();
+  const { businessId, slug } = useParams<{ businessId?: string; slug?: string }>();
   const [isLoading, setIsLoading] = useState(true);
   const [businessPage, setBusinessPage] = useState<BusinessPage | null>(null);
   const [pageSections, setPageSections] = useState<BusinessPageSection[]>([]);
@@ -31,32 +31,47 @@ const SimpleBusinessLandingPage = () => {
   // Fetch business page data
   useEffect(() => {
     const fetchBusinessPage = async () => {
-      if (!slug) return;
+      if (!businessId && !slug) return;
       
       setIsLoading(true);
       
       try {
-        // First fetch the business ID from slug
-        const { data: businessData, error: businessError } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('slug', slug)
-          .single();
+        // Determine which identifier to use (businessId directly or lookup by slug)
+        let targetBusinessId = businessId;
+        
+        // If we have a slug but no businessId, we need to look up the business ID first
+        if (slug && !businessId) {
+          console.log("Looking up business ID by slug:", slug);
+          const { data: businessData, error: businessError } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('slug', slug)
+            .single();
+            
+          if (businessError) {
+            console.error("Error fetching business profile by slug:", businessError);
+            setIsLoading(false);
+            return;
+          }
           
-        if (businessError) {
-          console.error("Error fetching business profile:", businessError);
+          targetBusinessId = businessData.id;
+          console.log("Found business ID from slug:", targetBusinessId);
+        }
+        
+        // With the business ID, fetch the page data
+        if (!targetBusinessId) {
+          console.error("No business ID available to fetch page data");
           setIsLoading(false);
           return;
         }
         
-        const businessId = businessData.id;
-        console.log("Found business ID:", businessId);
+        console.log("Fetching business page for ID:", targetBusinessId);
         
         // Then fetch the page data
         const { data: pageData, error: pageError } = await supabase
           .from('business_pages')
           .select('*')
-          .eq('business_id', businessId)
+          .eq('business_id', targetBusinessId)
           .eq('is_published', true)
           .single();
           
@@ -81,11 +96,11 @@ const SimpleBusinessLandingPage = () => {
           setPageSections(sectionsData as BusinessPageSection[]);
         }
         
-        // Fetch social links
+        // Fetch social links - this is the critical part we need to ensure works
         const { data: socialData, error: socialError } = await supabase
           .from('business_social_links')
           .select('*')
-          .eq('business_id', businessId);
+          .eq('business_id', targetBusinessId);
           
         if (socialError) {
           console.error("Error fetching social links:", socialError);
@@ -101,7 +116,7 @@ const SimpleBusinessLandingPage = () => {
     };
     
     fetchBusinessPage();
-  }, [slug]);
+  }, [businessId, slug]);
 
   // Handle contact form submission
   const handleContactFormSubmit = async (data: any) => {
@@ -126,7 +141,7 @@ const SimpleBusinessLandingPage = () => {
   return (
     <>
       <Helmet>
-        <title>{slug ? `${slug} | WAKTI` : 'Business Page | WAKTI'}</title>
+        <title>{businessPage.page_title ? `${businessPage.page_title} | WAKTI` : 'Business Page | WAKTI'}</title>
       </Helmet>
       <div className="min-h-screen">
         <BusinessPageContent

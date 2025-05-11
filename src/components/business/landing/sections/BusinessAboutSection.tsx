@@ -105,30 +105,35 @@ const BusinessAboutSection: React.FC<BusinessAboutSectionProps> = ({
 
   // Always display social links if available
   const hasSocialLinks = socialLinks && socialLinks.length > 0;
+  
+  // For debugging
+  console.log("BusinessAboutSection received socialLinks:", socialLinks);
 
   return (
     <section className="py-12 md:py-16">
       <div className="container mx-auto px-4">
         <div className="text-center mb-10">
-          <h2 className="text-3xl font-bold mb-4">{title}</h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">{description}</p>
+          <h2 className="text-3xl font-bold mb-4">{content.title || "About Us"}</h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            {content.description || "Learn more about our business and what we do."}
+          </p>
         </div>
         
         <div className="flex flex-col md:flex-row gap-8 items-start">
-          {image && (
+          {content.image && (
             <div className="md:w-1/2">
               <img 
-                src={image} 
+                src={content.image} 
                 alt="About us" 
                 className="rounded-lg w-full h-auto object-cover shadow-md"
               />
             </div>
           )}
           
-          <div className={image ? "md:w-1/2" : "w-full"}>
+          <div className={content.image ? "md:w-1/2" : "w-full"}>
             <div className="prose max-w-none dark:prose-invert">
-              {aboutContent ? (
-                <div dangerouslySetInnerHTML={{ __html: aboutContent }} />
+              {content.content ? (
+                <div dangerouslySetInnerHTML={{ __html: content.content }} />
               ) : (
                 <p className="text-muted-foreground">
                   Information about the business will be displayed here.
@@ -136,7 +141,7 @@ const BusinessAboutSection: React.FC<BusinessAboutSectionProps> = ({
               )}
             </div>
 
-            {/* Social Links Section */}
+            {/* Social Links Section - Always show if links available */}
             {hasSocialLinks && (
               <div className="mt-6 pt-4 border-t">
                 <h3 className="text-lg font-medium mb-3">Connect With Us</h3>
@@ -150,9 +155,10 @@ const BusinessAboutSection: React.FC<BusinessAboutSectionProps> = ({
               </div>
             )}
             
-            {showMessageForm && submitContactForm && (
+            {/* Contact form */}
+            {content.showMessageForm && submitContactForm && (
               <div className="mt-8">
-                <h3 className="text-xl font-semibold mb-4">{messageFormTitle}</h3>
+                <h3 className="text-xl font-semibold mb-4">{content.messageFormTitle || "Send us a message"}</h3>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
                     <Input 
@@ -172,7 +178,7 @@ const BusinessAboutSection: React.FC<BusinessAboutSectionProps> = ({
                   </div>
                   <div>
                     <Textarea 
-                      placeholder={messageInputPlaceholder} 
+                      placeholder={content.messageInputPlaceholder || "Type your message here..."} 
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
                       rows={4}
