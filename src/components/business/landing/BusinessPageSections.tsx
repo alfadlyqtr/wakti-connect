@@ -3,7 +3,6 @@ import React, { useEffect } from "react";
 import { BusinessPage, BusinessPageSection } from "@/types/business.types";
 import BusinessPageHeader from "./sections/BusinessPageHeader";
 import BusinessAbout from "./BusinessAbout";
-import BusinessHours from "./BusinessHours";
 import BusinessGallery from "./BusinessGallery";
 import BusinessTestimonialsSection from "./sections/BusinessTestimonialsSection";
 import BusinessBookingSection from "./sections/BusinessBookingSection";

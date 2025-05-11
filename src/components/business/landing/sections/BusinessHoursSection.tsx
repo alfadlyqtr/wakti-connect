@@ -1,7 +1,7 @@
 
 import React from "react";
 
-// Empty component since the working hours functionality has been removed
+// This component has been intentionally emptied as the business hours functionality has been removed
 const BusinessHoursSection: React.FC<any> = () => {
   return null;
 };

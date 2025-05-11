@@ -77,8 +77,9 @@ const SectionTemplateDialog: React.FC<SectionTemplateDialogProps> = ({
     }
   };
   
+  // Group templates by category if they have categories
   const groupedTemplates = templates.reduce((groups: Record<string, any[]>, template) => {
-    const category = template.category || 'General';
+    const category = 'General'; // Default category since we removed the category property
     if (!groups[category]) {
       groups[category] = [];
     }
@@ -204,10 +205,10 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
         <p className="text-sm text-muted-foreground">{template.description}</p>
       </div>
       
-      {template.previewUrl && (
+      {template.previewImageUrl && (
         <div className="mt-4 rounded-md overflow-hidden border">
           <img 
-            src={template.previewUrl} 
+            src={template.previewImageUrl} 
             alt={`Preview of ${template.name}`}
             className="w-full h-auto object-cover"
           />

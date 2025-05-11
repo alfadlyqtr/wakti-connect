@@ -2,7 +2,7 @@
 import React from "react";
 import { EditorProps } from "./types";
 
-// This is a placeholder component as we've removed the working hours functionality
+// This component has been intentionally emptied as the business hours functionality has been removed
 const HoursEditor: React.FC<EditorProps> = () => {
   return null;
 };
