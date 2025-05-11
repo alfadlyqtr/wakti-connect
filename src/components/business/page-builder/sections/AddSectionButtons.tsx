@@ -1,9 +1,8 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { SectionType } from "@/types/business.types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Plus, Layout, Image, Clock, MapPin, FileText, Star, Calendar, Instagram, MessageCircle } from "lucide-react";
+import { Loader2, Plus, Layout, Image, MapPin, FileText, Star, Calendar, Instagram, MessageCircle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface AddSectionButtonsProps {
@@ -19,7 +18,6 @@ const sectionCategories = {
   ],
   "advanced": [
     { type: "gallery" as SectionType, icon: Image, title: "Gallery", description: "Showcase photos in a grid layout" },
-    { type: "hours" as SectionType, icon: Clock, title: "Hours", description: "Display your business hours" },
     { type: "testimonials" as SectionType, icon: Star, title: "Testimonials", description: "Show customer reviews and testimonials" },
   ],
   "integration": [

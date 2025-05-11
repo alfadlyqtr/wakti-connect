@@ -3,7 +3,7 @@ import React from "react";
 import { BusinessPageSection } from "@/types/business.types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import BusinessContactForm from "./BusinessContactForm";
-import { Mail, Phone, MapPin, Clock } from "lucide-react";
+import { Mail, Phone, MapPin } from "lucide-react";
 
 interface ContactSectionProps {
   section: BusinessPageSection;
@@ -44,8 +44,7 @@ const ContactSection: React.FC<ContactSectionProps> = ({
     description: content.description || "Fill out the form below to get in touch with us.",
     email: content.email || "",
     phone: content.phone || "",
-    address: content.address || "",
-    hours: content.hours || ""
+    address: content.address || ""
   };
 
   return (
@@ -132,25 +131,6 @@ const ContactSection: React.FC<ContactSectionProps> = ({
                       </div>
                     </div>
                   )}
-                </CardContent>
-              </Card>
-            )}
-            
-            {contactInfo.hours && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Business Hours</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-start">
-                    <Clock className="h-5 w-5 mr-3 mt-0.5" style={{ color: primaryColor }} />
-                    <div>
-                      <div className="font-medium">Hours</div>
-                      <div className="text-muted-foreground whitespace-pre-line">
-                        {contactInfo.hours}
-                      </div>
-                    </div>
-                  </div>
                 </CardContent>
               </Card>
             )}

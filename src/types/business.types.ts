@@ -92,7 +92,7 @@ export type SectionType =
   | 'testimonials'
   | 'booking'
   | 'instagram'
-  | 'chatbot'; // Add chatbot as a new section type
+  | 'chatbot';
 
 export interface BusinessSocialLink {
   id: string;
@@ -127,8 +127,8 @@ export type SocialIconStyle = 'default' | 'colored' | 'rounded' | 'outlined';
 export type SocialIconSize = 'small' | 'default' | 'large';
 export type SocialIconPosition = 'footer' | 'header' | 'sidebar' | 'both' | 'top' | 'bottom' | 'left' | 'right';
 
-// Define a placeholder BusinessHour interface to maintain compatibility with existing code
-// This is an empty interface as we're removing the working hours functionality
+// Empty interface to maintain compatibility with existing code
 export interface BusinessHour {
   id: string;
 }
+
