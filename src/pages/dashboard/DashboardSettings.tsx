@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProfileTab from "@/components/settings/ProfileTab";
 import NotificationsTab from "@/components/settings/NotificationsTab";
@@ -12,20 +12,21 @@ import { useMediaQuery } from "@/hooks/useMediaQuery";
 import BusinessProfileTab from "@/components/settings/BusinessProfileTab";
 
 const DashboardSettings = () => {
-  const [userRole, setUserRole] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { user } = useAuth();
+  const { user, effectiveRole } = useAuth();
   const { data: profileData } = useProfileSettings();
   const isMobile = useMediaQuery("(max-width: 640px)");
   
-  useEffect(() => {
-    const storedRole = localStorage.getItem('userRole');
-    setUserRole(storedRole);
-    setIsLoading(false);
-  }, [user]);
+  // Use effectiveRole directly from Auth Context
+  const isStaff = effectiveRole === 'staff';
+  const isBusinessAccount = effectiveRole === 'business' || effectiveRole === 'super-admin';
   
-  const isStaff = userRole === 'staff';
-  const isBusinessAccount = userRole === 'business';
+  // Set loading to false once we have the role information
+  React.useEffect(() => {
+    if (effectiveRole) {
+      setIsLoading(false);
+    }
+  }, [effectiveRole]);
   
   if (isLoading) {
     return <div className="mx-auto max-w-7xl py-6">Loading...</div>;
