@@ -1,14 +1,13 @@
 
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tables } from "@/integrations/supabase/types";
 import { User } from "lucide-react";
 import { useProfileSettings } from "@/hooks/useProfileSettings";
 import { useStaffPermissions } from "@/hooks/useStaffPermissions";
 import ProfileForm from "./profile/ProfileForm";
-import { Separator } from "@/components/ui/separator";
-import SocialLinksManagement from "./profile/SocialLinksManagement";
-import BusinessHoursManagement from "./profile/BusinessHoursManagement";
 import BusinessProfileInfo from "./profile/BusinessProfileInfo";
+import { Separator } from "@/components/ui/separator";
 
 const BusinessProfileTab: React.FC = () => {
   const { data: profile, isLoading } = useProfileSettings();
@@ -65,20 +64,9 @@ const BusinessProfileTab: React.FC = () => {
         </CardContent>
       </Card>
       
-      {/* Social Links Management */}
-      <SocialLinksManagement 
-        profileId={profile.id}
-        readOnly={isStaff}
-      />
-      
-      {/* Business Hours Management */}
-      <BusinessHoursManagement 
-        profileId={profile.id} 
-        readOnly={isStaff} 
-      />
-      
-      {/* Business Profile Info */}
-      <BusinessProfileInfo profile={profile} />
+      {!isStaff && (
+        <BusinessProfileInfo profile={profile} />
+      )}
     </div>
   );
 };

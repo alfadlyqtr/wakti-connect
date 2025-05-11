@@ -14,45 +14,51 @@ import FaqPage from '@/pages/public/FaqPage';
 import PrivacyPage from '@/pages/public/PrivacyPage';
 import TermsPage from '@/pages/public/TermsPage';
 import BusinessPublicView from '@/pages/public/BusinessPublicView';
-import PublicLayout from '@/components/layout/PublicLayout';
 
-// Define public routes with appropriate layout wrapper
+// Temporary placeholder component for missing pages
+const PlaceholderPage = ({ title }: { title: string }) => (
+  <div className="container mx-auto px-4 py-16 text-center">
+    <h1 className="text-3xl font-bold mb-4">{title} Page</h1>
+    <p className="text-muted-foreground">This page is currently under construction.</p>
+  </div>
+);
+
 export const publicRoutes = [
   {
     index: true,
-    element: <PublicLayout><LandingPage /></PublicLayout>,
+    element: <LandingPage />,
   },
   {
     path: 'about',
-    element: <PublicLayout><AboutPage /></PublicLayout>,
+    element: <AboutPage />,
   },
   {
     path: 'contact',
-    element: <PublicLayout><ContactPage /></PublicLayout>,
+    element: <ContactPage />,
   },
   {
     path: 'features',
-    element: <PublicLayout><FeaturesPage /></PublicLayout>,
+    element: <FeaturesPage />,
   },
   {
     path: 'pricing',
-    element: <PublicLayout><PricingPage /></PublicLayout>,
+    element: <PricingPage />,
   },
   {
     path: 'privacy',
-    element: <PublicLayout><PrivacyPage /></PublicLayout>,
+    element: <PrivacyPage />,
   },
   {
     path: 'terms',
-    element: <PublicLayout><TermsPage /></PublicLayout>,
+    element: <TermsPage />,
   },
   {
     path: 'faq',
-    element: <PublicLayout><FaqPage /></PublicLayout>,
+    element: <FaqPage />,
   },
   {
     path: 'i/:shareId',
-    element: <PublicLayout><SharedInvitationView /></PublicLayout>,
+    element: <SharedInvitationView />,
   },
   {
     path: 'b/:slug',
@@ -64,7 +70,7 @@ export const publicRoutes = [
   },
   {
     path: '*',
-    element: <PublicLayout><NotFoundPage /></PublicLayout>,
+    element: <NotFoundPage />,
   },
 ];
 

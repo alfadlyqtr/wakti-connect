@@ -1,3 +1,4 @@
+
 import React from "react";
 import SocialIcon from "./SocialIcon";
 import { BusinessSocialLink, SocialIconStyle, SocialIconSize } from "@/types/business.types";
@@ -20,7 +21,6 @@ interface SocialIconsGroupProps {
   hoverBorderColor?: string;
   opacity?: number;
   scale?: number;
-  displayStyle?: 'icons' | 'buttons'; // Added display style
 }
 
 const SocialIconsGroup: React.FC<SocialIconsGroupProps> = ({
@@ -39,8 +39,7 @@ const SocialIconsGroup: React.FC<SocialIconsGroupProps> = ({
   borderWidth,
   hoverBorderColor,
   opacity = 1,
-  scale = 1,
-  displayStyle = 'icons'
+  scale = 1
 }) => {
   // Log details for debugging
   console.log("SocialIconsGroup rendering with:", {
@@ -110,7 +109,6 @@ const SocialIconsGroup: React.FC<SocialIconsGroupProps> = ({
           borderWidth={borderWidth}
           hoverBorderColor={hoverBorderColor}
           scale={scale}
-          displayStyle={displayStyle} // Pass down the display style
         />
       ))}
     </div>

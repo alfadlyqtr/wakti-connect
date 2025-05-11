@@ -1,42 +1,14 @@
+
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { BusinessSocialLink, SocialPlatform } from "@/types/business.types";
 import { toast } from "@/components/ui/use-toast";
-import { SocialPlatform as BusinessSocialPlatform } from "@/types/business.types";
-
-// Update SocialPlatform to include all options from business.types.ts
-export type SocialPlatform = 
-  | "website"
-  | "facebook"
-  | "instagram"
-  | "twitter"
-  | "linkedin"
-  | "youtube"
-  | "tiktok"
-  | "pinterest"
-  | "whatsapp";
-
-export interface BusinessSocialLink {
-  id: string;
-  business_id: string;
-  platform: SocialPlatform;
-  url: string;
-  created_at: string;
-  // We'll remove updated_at from here if it's causing type errors
-}
-
-export interface BusinessSocialSettings {
-  id: string;
-  business_id: string;
-  display_style: 'icons' | 'buttons';
-  created_at: string;
-  updated_at: string;
-}
 
 export const useBusinessSocialLinks = (businessId?: string) => {
   const queryClient = useQueryClient();
   
   // Fetch the social links for a business
-  const { data: socialLinks, isLoading: isLoadingSocialLinks } = useQuery({
+  const { data: socialLinks, isLoading } = useQuery({
     queryKey: ['businessSocialLinks', businessId],
     queryFn: async () => {
       if (!businessId) return [];
@@ -53,30 +25,6 @@ export const useBusinessSocialLinks = (businessId?: string) => {
     enabled: !!businessId
   });
   
-  // Fetch the social settings for a business
-  const { data: socialSettings, isLoading: isLoadingSettings } = useQuery({
-    queryKey: ['businessSocialSettings', businessId],
-    queryFn: async () => {
-      if (!businessId) return null;
-      
-      const { data, error } = await supabase
-        .from('business_social_settings')
-        .select('*')
-        .eq('business_id', businessId)
-        .single();
-        
-      if (error) {
-        if (error.code === 'PGRST116') {
-          return null; // No settings found, not an error
-        }
-        throw error;
-      }
-      
-      return data as BusinessSocialSettings;
-    },
-    enabled: !!businessId
-  });
-  
   // Add a new social link
   const addSocialLink = useMutation({
     mutationFn: async ({ platform, url }: { platform: SocialPlatform, url: string }) => {
@@ -89,7 +37,7 @@ export const useBusinessSocialLinks = (businessId?: string) => {
       const { data, error } = await supabase
         .from('business_social_links')
         .insert({
-          business_id: businessId || session.user.id,
+          business_id: session.user.id,
           platform,
           url
         })
@@ -101,7 +49,7 @@ export const useBusinessSocialLinks = (businessId?: string) => {
       return data as BusinessSocialLink;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['businessSocialLinks', businessId] });
+      queryClient.invalidateQueries({ queryKey: ['businessSocialLinks'] });
       toast({
         title: "Social link added",
         description: "Your social media link has been added successfully"
@@ -111,7 +59,7 @@ export const useBusinessSocialLinks = (businessId?: string) => {
       toast({
         variant: "destructive",
         title: "Error",
-        description: `Failed to add social link: ${error instanceof Error ? error.message : 'Unknown error'}`
+        description: `Failed to add social link: ${error.message}`
       });
     }
   });
@@ -131,7 +79,7 @@ export const useBusinessSocialLinks = (businessId?: string) => {
       return data as BusinessSocialLink;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['businessSocialLinks', businessId] });
+      queryClient.invalidateQueries({ queryKey: ['businessSocialLinks'] });
       toast({
         title: "Social link updated",
         description: "Your social media link has been updated successfully"
@@ -141,7 +89,7 @@ export const useBusinessSocialLinks = (businessId?: string) => {
       toast({
         variant: "destructive",
         title: "Error",
-        description: `Failed to update social link: ${error instanceof Error ? error.message : 'Unknown error'}`
+        description: `Failed to update social link: ${error.message}`
       });
     }
   });
@@ -159,7 +107,7 @@ export const useBusinessSocialLinks = (businessId?: string) => {
       return { success: true };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['businessSocialLinks', businessId] });
+      queryClient.invalidateQueries({ queryKey: ['businessSocialLinks'] });
       toast({
         title: "Social link deleted",
         description: "Your social media link has been removed"
@@ -169,70 +117,16 @@ export const useBusinessSocialLinks = (businessId?: string) => {
       toast({
         variant: "destructive",
         title: "Error",
-        description: `Failed to delete social link: ${error instanceof Error ? error.message : 'Unknown error'}`
-      });
-    }
-  });
-
-  // Update or create social settings
-  const updateSocialSettings = useMutation({
-    mutationFn: async ({ displayStyle }: { displayStyle: 'icons' | 'buttons' }) => {
-      if (!businessId) {
-        throw new Error("Business ID is required");
-      }
-      
-      if (socialSettings?.id) {
-        // Update existing settings
-        const { data, error } = await supabase
-          .from('business_social_settings')
-          .update({
-            display_style: displayStyle,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', socialSettings.id)
-          .select();
-          
-        if (error) throw error;
-        
-        return data;
-      } else {
-        // Insert new settings
-        const { data, error } = await supabase
-          .from('business_social_settings')
-          .insert({
-            business_id: businessId,
-            display_style: displayStyle
-          })
-          .select();
-          
-        if (error) throw error;
-        
-        return data;
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['businessSocialSettings', businessId] });
-      toast({
-        title: "Social display settings updated",
-        description: "Your social media display preferences have been saved."
-      });
-    },
-    onError: (error) => {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: `Failed to update social settings: ${error instanceof Error ? error.message : 'Unknown error'}`
+        description: `Failed to delete social link: ${error.message}`
       });
     }
   });
   
   return {
     socialLinks,
-    socialSettings,
-    isLoading: isLoadingSocialLinks || isLoadingSettings,
+    isLoading,
     addSocialLink,
     updateSocialLink,
-    deleteSocialLink,
-    updateSocialSettings
+    deleteSocialLink
   };
 };
