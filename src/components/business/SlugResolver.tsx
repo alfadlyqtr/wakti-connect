@@ -18,11 +18,14 @@ const SlugResolver = () => {
       }
 
       try {
+        // Clean the slug to handle potential malformed URLs
+        const cleanSlug = slug.replace(/[^0-9a-zA-Z-]/g, '');
+        
         // Check if the slug corresponds to a business profile
         const { data, error } = await supabase
           .from('profiles')
           .select('id')
-          .eq('slug', slug)
+          .eq('slug', cleanSlug)
           .single();
 
         if (error || !data) {

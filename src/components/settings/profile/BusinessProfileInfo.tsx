@@ -16,12 +16,13 @@ const BusinessProfileInfo: React.FC<BusinessProfileInfoProps> = ({ profile }) =>
   
   const baseUrl = window.location.origin;
   
-  // Use the businessId directly for a more reliable link
-  const businessUrl = `${baseUrl}/business/${profile.id}`;
+  // Ensure we have a clean business ID by removing any unwanted characters
+  const cleanBusinessId = profile?.id ? profile.id.replace(/[^0-9a-zA-Z-]/g, '') : '';
   
-  // Or use the slug if available (which will be resolved to the businessId)
-  // Alternatively can use the slug-based URL
-  // const businessUrl = `${baseUrl}/${profile.slug || profile.id}`;
+  // Use slug if available, otherwise use the cleaned business ID
+  const businessUrl = profile?.slug 
+    ? `${baseUrl}/${profile.slug}` 
+    : `${baseUrl}/business/${cleanBusinessId}`;
   
   const copyLink = () => {
     navigator.clipboard.writeText(businessUrl);
