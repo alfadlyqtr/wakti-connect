@@ -1,142 +1,138 @@
-import React, { useState, useEffect } from "react";
+
+import React, { useState } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Link, ShareIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Trash2, Link2, Plus } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "@/components/ui/use-toast";
-import { useBusinessSocialLinks, SocialPlatform } from "@/hooks/useBusinessSocialLinks";
-import { supabase } from "@/integrations/supabase/client";
+import { 
+  useBusinessSocialLinks,
+  SocialPlatform,
+  BusinessSocialLink
+} from "@/hooks/useBusinessSocialLinks";
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface SocialLinksManagementProps {
   profileId: string;
   readOnly?: boolean;
 }
 
-interface SocialLinkSettings {
-  id?: string;
-  display_style: 'icons' | 'buttons';
-}
-
 const SocialLinksManagement: React.FC<SocialLinksManagementProps> = ({ profileId, readOnly = false }) => {
-  const { socialLinks, isLoading, addSocialLink, updateSocialLink, deleteSocialLink } = useBusinessSocialLinks(profileId);
-  
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [editingLink, setEditingLink] = useState<BusinessSocialLink | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [newPlatform, setNewPlatform] = useState<SocialPlatform>("website");
   const [newUrl, setNewUrl] = useState("");
+  const [editUrl, setEditUrl] = useState("");
   const [displayStyle, setDisplayStyle] = useState<'icons' | 'buttons'>('icons');
-  const [isSettingsSaving, setIsSettingsSaving] = useState(false);
-  const [settingsId, setSettingsId] = useState<string | null>(null);
   
-  // Fetch display style settings
-  useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('business_social_settings')
-          .select('*')
-          .eq('business_id', profileId)
-          .single();
-          
-        if (error) {
-          if (error.code !== "PGRST116") { // Not found is okay
-            console.error("Error fetching social settings:", error);
-          }
-          return;
-        }
-        
-        if (data) {
-          setSettingsId(data.id);
-          setDisplayStyle(data.display_style as 'icons' | 'buttons');
-        }
-      } catch (error) {
-        console.error("Error in social settings fetch:", error);
-      }
-    };
-    
-    fetchSettings();
-  }, [profileId]);
-  
-  const handleAddLink = async () => {
-    if (!newUrl || !newPlatform) return;
-    
-    try {
-      await addSocialLink.mutateAsync({ platform: newPlatform, url: newUrl });
-      setNewUrl("");
-      setNewPlatform("website");
-    } catch (error) {
-      console.error("Error adding social link:", error);
+  const { 
+    socialLinks, 
+    socialSettings,
+    isLoading, 
+    addSocialLink, 
+    updateSocialLink, 
+    deleteSocialLink,
+    updateSocialSettings
+  } = useBusinessSocialLinks(profileId);
+
+  // Initialize display style from settings when available
+  React.useEffect(() => {
+    if (socialSettings) {
+      setDisplayStyle(socialSettings.display_style);
     }
-  };
+  }, [socialSettings]);
   
-  const handleUpdateLink = async (id: string, url: string) => {
-    try {
-      await updateSocialLink.mutateAsync({ id, url });
-    } catch (error) {
-      console.error("Error updating social link:", error);
-    }
-  };
-  
-  const handleDeleteLink = async (id: string) => {
-    try {
-      await deleteSocialLink.mutateAsync(id);
-    } catch (error) {
-      console.error("Error deleting social link:", error);
-    }
-  };
-  
-  const handleSaveSettings = async () => {
-    if (readOnly) return;
-    
-    try {
-      setIsSettingsSaving(true);
-      
-      if (settingsId) {
-        // Update existing settings
-        const { error } = await supabase
-          .from('business_social_settings')
-          .update({ 
-            display_style: displayStyle,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', settingsId);
-          
-        if (error) throw error;
-      } else {
-        // Create new settings
-        const { data, error } = await supabase
-          .from('business_social_settings')
-          .insert({ 
-            business_id: profileId,
-            display_style: displayStyle
-          })
-          .select()
-          .single();
-          
-        if (error) throw error;
-        setSettingsId(data.id);
-      }
-      
+  const handleAdd = () => {
+    if (!newUrl) {
       toast({
-        title: "Display settings saved",
-        description: "Your social media display settings have been updated"
-      });
-    } catch (error) {
-      console.error("Error saving social display settings:", error);
-      toast({
+        title: "URL required",
+        description: "Please enter a URL for the social media platform",
         variant: "destructive",
-        title: "Settings error",
-        description: "Failed to save display settings"
       });
-    } finally {
-      setIsSettingsSaving(false);
+      return;
     }
+    
+    addSocialLink.mutate(
+      { platform: newPlatform, url: newUrl },
+      {
+        onSuccess: () => {
+          setNewPlatform("website");
+          setNewUrl("");
+          setIsAddDialogOpen(false);
+        },
+      }
+    );
+  };
+  
+  const handleEdit = () => {
+    if (!editingLink || !editUrl) return;
+    
+    updateSocialLink.mutate(
+      { id: editingLink.id, url: editUrl },
+      {
+        onSuccess: () => {
+          setEditingLink(null);
+          setEditUrl("");
+          setIsEditDialogOpen(false);
+        },
+      }
+    );
+  };
+  
+  const startEdit = (link: BusinessSocialLink) => {
+    setEditingLink(link);
+    setEditUrl(link.url);
+    setIsEditDialogOpen(true);
+  };
+  
+  const handleDelete = (id: string) => {
+    if (window.confirm("Are you sure you want to delete this social media link?")) {
+      deleteSocialLink.mutate(id);
+    }
+  };
+
+  const handleDisplayStyleChange = (value: string) => {
+    const style = value as 'icons' | 'buttons';
+    setDisplayStyle(style);
+    updateSocialSettings.mutate({ displayStyle: style });
+  };
+  
+  const getPlatformLabel = (platform: SocialPlatform): string => {
+    const labels: Record<SocialPlatform, string> = {
+      website: "Website",
+      facebook: "Facebook",
+      instagram: "Instagram",
+      twitter: "Twitter",
+      linkedin: "LinkedIn",
+      youtube: "YouTube",
+      tiktok: "TikTok",
+    };
+    return labels[platform] || platform;
   };
   
   if (isLoading) {
     return (
       <Card className="border-gray-200 shadow-sm">
         <CardHeader>
-          <CardTitle>Social Links</CardTitle>
+          <CardTitle>Social Media Links</CardTitle>
           <CardDescription>Loading social links...</CardDescription>
         </CardHeader>
       </Card>
@@ -145,135 +141,176 @@ const SocialLinksManagement: React.FC<SocialLinksManagementProps> = ({ profileId
   
   return (
     <Card className="border-gray-200 shadow-sm">
-      <CardHeader>
-        <CardTitle className="text-xl">Social Media Links</CardTitle>
-        <CardDescription>Add links to your social media profiles</CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <div>
+          <CardTitle className="text-xl">Social Media Links</CardTitle>
+          <CardDescription>Connect your business on social platforms</CardDescription>
+        </div>
+        <ShareIcon className="h-5 w-5 text-gray-400" />
       </CardHeader>
       
-      <CardContent className="space-y-6">
-        {/* Display style selection */}
-        <div className="border-b pb-4">
+      <CardContent className="space-y-4 pt-2">
+        {/* Display Style Selection */}
+        <div className="mb-4">
           <h3 className="text-sm font-medium mb-2">Display Style</h3>
-          <div className="flex items-center space-x-3">
-            <Select
-              value={displayStyle}
-              onValueChange={(value: 'icons' | 'buttons') => setDisplayStyle(value)}
-              disabled={readOnly}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select display style" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="icons">Icons Only</SelectItem>
-                <SelectItem value="buttons">Buttons with Text</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={handleSaveSettings}
-              disabled={readOnly || isSettingsSaving}
-            >
-              {isSettingsSaving ? "Saving..." : "Save Display Settings"}
-            </Button>
-          </div>
+          <RadioGroup 
+            defaultValue={displayStyle} 
+            value={displayStyle}
+            onValueChange={handleDisplayStyleChange}
+            disabled={readOnly}
+            className="flex space-x-4"
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="icons" id="icons" />
+              <Label htmlFor="icons">Icons Only</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="buttons" id="buttons" />
+              <Label htmlFor="buttons">Buttons with Text</Label>
+            </div>
+          </RadioGroup>
         </div>
         
-        {/* Existing links */}
-        <div className="space-y-3">
-          <h3 className="text-sm font-medium mb-2">Your Links</h3>
-          
-          {socialLinks && socialLinks.length > 0 ? (
-            socialLinks.map((link) => (
-              <div key={link.id} className="flex items-center gap-2">
-                <Select
-                  value={link.platform}
-                  disabled={true}
-                >
-                  <SelectTrigger className="w-[140px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {/* Content not needed since it's disabled */}
-                  </SelectContent>
-                </Select>
-                
-                <Input
-                  type="url"
-                  defaultValue={link.url}
-                  className="flex-1"
-                  disabled={readOnly}
-                  onChange={(e) => {
-                    if (e.target.value !== link.url) {
-                      handleUpdateLink(link.id, e.target.value);
-                    }
-                  }}
-                  onBlur={(e) => {
-                    if (e.target.value !== link.url) {
-                      handleUpdateLink(link.id, e.target.value);
-                    }
-                  }}
-                />
+        {/* List of social links */}
+        {socialLinks && socialLinks.length > 0 ? (
+          <div className="space-y-2">
+            {socialLinks.map((link) => (
+              <div
+                key={link.id}
+                className="flex items-center justify-between rounded-md border p-3"
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
+                    <Link className="h-4 w-4 text-gray-600" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium">{getPlatformLabel(link.platform)}</h4>
+                    <p className="text-xs text-muted-foreground truncate max-w-[150px] sm:max-w-[300px]">
+                      {link.url}
+                    </p>
+                  </div>
+                </div>
                 
                 {!readOnly && (
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    onClick={() => handleDeleteLink(link.id)}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
+                  <div className="flex space-x-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => startEdit(link)}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-500 hover:text-red-600"
+                      onClick={() => handleDelete(link.id)}
+                    >
+                      Delete
+                    </Button>
+                  </div>
                 )}
               </div>
-            ))
-          ) : (
-            <div className="text-muted-foreground text-center p-4 border rounded-md">
-              No social links added yet
-            </div>
-          )}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="py-8 text-center rounded-md border border-dashed">
+            <h3 className="text-muted-foreground mb-2">No social links added yet</h3>
+            {!readOnly && (
+              <p className="text-sm text-muted-foreground">
+                Add your social media profiles to connect with customers.
+              </p>
+            )}
+          </div>
+        )}
         
-        {/* Add new link */}
         {!readOnly && (
-          <div className="pt-4 border-t">
-            <h3 className="text-sm font-medium mb-2">Add New Link</h3>
-            <div className="flex items-center gap-2">
-              <Select
-                value={newPlatform}
-                onValueChange={(value: SocialPlatform) => setNewPlatform(value)}
-              >
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="website">Website</SelectItem>
-                  <SelectItem value="facebook">Facebook</SelectItem>
-                  <SelectItem value="instagram">Instagram</SelectItem>
-                  <SelectItem value="twitter">Twitter</SelectItem>
-                  <SelectItem value="linkedin">LinkedIn</SelectItem>
-                  <SelectItem value="youtube">YouTube</SelectItem>
-                  <SelectItem value="tiktok">TikTok</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <Input
-                type="url"
-                placeholder="https://..."
-                value={newUrl}
-                onChange={(e) => setNewUrl(e.target.value)}
-                className="flex-1"
-              />
-              
-              <Button 
-                variant="outline" 
-                size="icon"
-                onClick={handleAddLink}
-                disabled={!newUrl}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
+          <div className="pt-2">
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="w-full">
+                  <ShareIcon className="mr-2 h-4 w-4" />
+                  Add Social Media Link
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Add Social Media Link</DialogTitle>
+                  <DialogDescription>
+                    Connect your business to social platforms to reach more customers.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="platform">Platform</Label>
+                    <Select
+                      value={newPlatform}
+                      onValueChange={(value) => setNewPlatform(value as SocialPlatform)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select platform" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="website">Website</SelectItem>
+                        <SelectItem value="facebook">Facebook</SelectItem>
+                        <SelectItem value="instagram">Instagram</SelectItem>
+                        <SelectItem value="twitter">Twitter</SelectItem>
+                        <SelectItem value="linkedin">LinkedIn</SelectItem>
+                        <SelectItem value="youtube">YouTube</SelectItem>
+                        <SelectItem value="tiktok">TikTok</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="url">URL</Label>
+                    <Input
+                      id="url"
+                      value={newUrl}
+                      onChange={(e) => setNewUrl(e.target.value)}
+                      placeholder="https://"
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="ghost" onClick={() => setIsAddDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleAdd} disabled={addSocialLink.isPending || !newUrl}>
+                    {addSocialLink.isPending ? "Adding..." : "Add Link"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+            
+            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Edit Social Media Link</DialogTitle>
+                  <DialogDescription>
+                    Update the URL for your {editingLink ? getPlatformLabel(editingLink.platform) : ""} link.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-url">URL</Label>
+                    <Input
+                      id="edit-url"
+                      value={editUrl}
+                      onChange={(e) => setEditUrl(e.target.value)}
+                      placeholder="https://"
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="ghost" onClick={() => setIsEditDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleEdit} disabled={updateSocialLink.isPending || !editUrl}>
+                    {updateSocialLink.isPending ? "Saving..." : "Save Changes"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         )}
       </CardContent>

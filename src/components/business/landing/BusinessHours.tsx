@@ -1,27 +1,52 @@
 
 import React from "react";
 import { BusinessPageSection } from "@/types/business.types";
+import { BusinessHours as BusinessHoursType } from "@/hooks/useBusinessHours";
+import { WorkingHour } from "@/types/business-settings.types";
 
 interface BusinessHoursProps {
   section: BusinessPageSection;
+  businessHours?: BusinessHoursType | null;
 }
 
-const BusinessHours = ({ section }: BusinessHoursProps) => {
+const BusinessHours = ({ section, businessHours }: BusinessHoursProps) => {
   const content = section.section_content || {};
   
+  // Format time from 24h format to 12h format
+  const formatTime = (time: string) => {
+    const [hours, minutes] = time.split(':');
+    const hour = parseInt(hours, 10);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${minutes} ${ampm}`;
+  };
+  
+  // Convert database working hours to display format
+  const convertHoursToDisplayFormat = (workingHours: WorkingHour[]) => {
+    return workingHours.map(hour => ({
+      day: hour.day,
+      hours: hour.closed ? 'Closed' : `${formatTime(hour.open)} - ${formatTime(hour.close)}`
+    }));
+  };
+  
+  // Use business hours from database if available, otherwise fall back to section content
   const {
     title = "Business Hours",
-    hours = [
-      { day: "Monday", hours: "9:00 AM - 5:00 PM" },
-      { day: "Tuesday", hours: "9:00 AM - 5:00 PM" },
-      { day: "Wednesday", hours: "9:00 AM - 5:00 PM" },
-      { day: "Thursday", hours: "9:00 AM - 5:00 PM" },
-      { day: "Friday", hours: "9:00 AM - 5:00 PM" },
-      { day: "Saturday", hours: "10:00 AM - 3:00 PM" },
-      { day: "Sunday", hours: "Closed" }
-    ],
     showCurrentDay = true
   } = content;
+  
+  // Determine which hours data to use (from database or fallback)
+  const hours = businessHours?.hours 
+    ? convertHoursToDisplayFormat(businessHours.hours)
+    : (content.hours || [
+        { day: "Monday", hours: "9:00 AM - 5:00 PM" },
+        { day: "Tuesday", hours: "9:00 AM - 5:00 PM" },
+        { day: "Wednesday", hours: "9:00 AM - 5:00 PM" },
+        { day: "Thursday", hours: "9:00 AM - 5:00 PM" },
+        { day: "Friday", hours: "9:00 AM - 5:00 PM" },
+        { day: "Saturday", hours: "10:00 AM - 3:00 PM" },
+        { day: "Sunday", hours: "Closed" }
+    ]);
   
   // Determine current day
   const getCurrentDay = () => {

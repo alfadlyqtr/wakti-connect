@@ -4,10 +4,10 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Clock } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { TimePicker } from "@/components/ui/time-picker";
 import { WorkingHour } from "@/types/business-settings.types";
 import { toast } from "@/components/ui/use-toast";
+import { useBusinessHours } from "@/hooks/useBusinessHours";
 
 interface BusinessHoursManagementProps {
   profileId: string;
@@ -27,44 +27,26 @@ const defaultHours: WorkingHour[] = [
 const BusinessHoursManagement: React.FC<BusinessHoursManagementProps> = ({ profileId, readOnly = false }) => {
   const [hours, setHours] = useState<WorkingHour[]>(defaultHours);
   const [isAutomatic, setIsAutomatic] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [businessHoursId, setBusinessHoursId] = useState<string | null>(null);
+  
+  const { businessHours, isLoading, upsertBusinessHours } = useBusinessHours(profileId);
 
   // Fetch hours from database
   useEffect(() => {
-    const fetchHours = async () => {
+    if (businessHours) {
+      // Parse the JSONB hours data from Supabase if needed
       try {
-        setIsLoading(true);
-        const { data, error } = await supabase
-          .from("business_hours")
-          .select("*")
-          .eq("business_id", profileId)
-          .single();
-
-        if (error) {
-          if (error.code !== "PGRST116") { // Not found is okay
-            console.error("Error fetching business hours:", error);
-          }
-          return;
-        }
-
-        if (data) {
-          setBusinessHoursId(data.id);
-          // Parse the JSONB hours data from Supabase
-          const parsedHours = data.hours as unknown as WorkingHour[];
-          setHours(parsedHours);
-          setIsAutomatic(data.is_automatic);
-        }
+        const parsedHours = typeof businessHours.hours === 'string' 
+          ? JSON.parse(businessHours.hours) 
+          : businessHours.hours;
+        
+        setHours(parsedHours);
+        setIsAutomatic(businessHours.is_automatic);
       } catch (error) {
-        console.error("Error in business hours fetch:", error);
-      } finally {
-        setIsLoading(false);
+        console.error("Error parsing business hours:", error);
       }
-    };
-
-    fetchHours();
-  }, [profileId]);
+    }
+  }, [businessHours]);
 
   const handleSaveHours = async () => {
     if (readOnly) return;
@@ -72,45 +54,13 @@ const BusinessHoursManagement: React.FC<BusinessHoursManagementProps> = ({ profi
     try {
       setIsSaving(true);
       
-      // Convert the WorkingHour[] to a properly formatted JSON string for Supabase
-      const hoursData = JSON.stringify(hours);
-      
-      if (businessHoursId) {
-        // Update existing hours
-        const { error } = await supabase
-          .from("business_hours")
-          .update({
-            hours: hoursData,
-            is_automatic: isAutomatic,
-            updated_at: new Date().toISOString()
-          })
-          .eq("id", businessHoursId);
-
-        if (error) throw error;
-      } else {
-        // Insert new hours
-        const { error } = await supabase
-          .from("business_hours")
-          .insert({
-            business_id: profileId,
-            hours: hoursData,
-            is_automatic: isAutomatic
-          });
-
-        if (error) throw error;
-      }
-
-      toast({
-        title: "Business hours updated",
-        description: "Your business hours have been saved successfully."
+      await upsertBusinessHours.mutateAsync({
+        hours,
+        isAutomatic
       });
     } catch (error) {
-      console.error("Error saving business hours:", error);
-      toast({
-        title: "Error saving hours",
-        description: "There was a problem saving your business hours.",
-        variant: "destructive"
-      });
+      console.error("Error in saving business hours:", error);
+      // Error is handled by the mutation hook
     } finally {
       setIsSaving(false);
     }

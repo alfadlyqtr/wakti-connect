@@ -1,4 +1,3 @@
-
 import React from "react";
 import { BusinessSocialLink, SocialIconStyle, SocialIconSize } from "@/types/business.types";
 import { 
@@ -25,6 +24,7 @@ interface BusinessSocialLinksProps {
   textColor?: string;
   hoverColor?: string;
   borderRadius?: string;
+  displayStyle?: 'icons' | 'buttons'; // Added this prop
 }
 
 // Custom Pinterest icon component since it's not in lucide-react
@@ -100,7 +100,8 @@ const BusinessSocialLinks = ({
   backgroundColor,
   textColor,
   hoverColor,
-  borderRadius
+  borderRadius,
+  displayStyle = 'icons' // Default to icons
 }: BusinessSocialLinksProps) => {
   const getSocialIcon = (platform: string): any => {
     switch (platform) {
@@ -173,6 +174,20 @@ const BusinessSocialLinks = ({
     }
   };
   
+  const getPlatformLabel = (platform: string): string => {
+    const labels: Record<string, string> = {
+      website: "Website",
+      facebook: "Facebook",
+      instagram: "Instagram",
+      twitter: "Twitter",
+      linkedin: "LinkedIn",
+      youtube: "YouTube",
+      tiktok: "TikTok",
+      whatsapp: "WhatsApp"
+    };
+    return labels[platform] || platform;
+  };
+  
   if (!socialLinks || socialLinks.length === 0) {
     return null;
   }
@@ -202,15 +217,26 @@ const BusinessSocialLinks = ({
           customStyle.color = '#ffffff';
         }
         
+        // Handle display style (icons or buttons)
+        const variant = displayStyle === 'buttons' 
+          ? (iconsStyle === 'outlined' ? "outline" : "default") 
+          : (iconsStyle === 'outlined' ? "outline" : iconsStyle === 'rounded' ? "secondary" : "ghost");
+        
+        const buttonClassNameModified = cn(
+          buttonClassName,
+          displayStyle === 'buttons' && "min-w-[120px] justify-start",
+          displayStyle !== 'buttons' && "rounded-full"
+        );
+        
         return (
           <Button
             key={link.id}
-            variant={iconsStyle === 'outlined' ? "outline" : iconsStyle === 'rounded' ? "secondary" : "ghost"}
+            variant={variant}
             size={btnSize}
             className={cn(
-              "rounded-full transition-transform hover:scale-110",
+              "transition-transform hover:scale-110",
               iconsStyle === 'colored' && "text-white",
-              buttonClassName,
+              buttonClassNameModified,
               hoverColor && "hover:brightness-110"
             )}
             style={customStyle}
@@ -223,6 +249,9 @@ const BusinessSocialLinks = ({
               aria-label={`Visit our ${link.platform} page`}
             >
               <Icon size={iconSize} className={iconsStyle === 'colored' ? "text-white" : ""} />
+              {displayStyle === 'buttons' && (
+                <span className="ml-2">{getPlatformLabel(link.platform)}</span>
+              )}
             </a>
           </Button>
         );

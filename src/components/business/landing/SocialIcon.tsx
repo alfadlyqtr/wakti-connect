@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -26,6 +25,7 @@ interface SocialIconProps {
   borderWidth?: string;
   hoverBorderColor?: string;
   scale?: number;
+  displayStyle?: 'icons' | 'buttons'; // Add display style
 }
 
 // Custom Pinterest icon component
@@ -102,7 +102,8 @@ const SocialIcon: React.FC<SocialIconProps> = ({
   borderColor,
   borderWidth,
   hoverBorderColor,
-  scale = 1
+  scale = 1,
+  displayStyle = 'icons' // Default to icons
 }) => {
   const getIcon = () => {
     switch (platform) {
@@ -174,6 +175,22 @@ const SocialIcon: React.FC<SocialIconProps> = ({
         return 'default';
     }
   };
+
+  // Get platform label for buttons
+  const getPlatformLabel = (platform: string): string => {
+    const labels: Record<string, string> = {
+      website: "Website",
+      facebook: "Facebook",
+      instagram: "Instagram",
+      twitter: "Twitter",
+      linkedin: "LinkedIn",
+      youtube: "YouTube",
+      tiktok: "TikTok",
+      whatsapp: "WhatsApp",
+      pinterest: "Pinterest"
+    };
+    return labels[platform] || platform;
+  };
   
   // Custom styling based on props
   const customStyle: React.CSSProperties = {
@@ -194,15 +211,24 @@ const SocialIcon: React.FC<SocialIconProps> = ({
   const iconSize = getIconSize();
   const btnSize = getButtonSize();
   
+  // Determine variant based on style and displayStyle
+  const variant = displayStyle === 'buttons' 
+    ? (style === 'outlined' ? "outline" : "default") 
+    : (style === 'outlined' ? "outline" : style === 'rounded' ? "secondary" : "ghost");
+
+  // For buttons, use appropriate classes
+  const buttonClassName = cn(
+    "transition-transform hover:scale-110",
+    style === 'colored' && "text-white",
+    hoverColor && "hover:brightness-110",
+    displayStyle === 'buttons' ? "min-w-[120px] justify-start" : "rounded-full"
+  );
+  
   return (
     <Button
-      variant={style === 'outlined' ? "outline" : style === 'rounded' ? "secondary" : "ghost"}
+      variant={variant}
       size={btnSize}
-      className={cn(
-        "rounded-full transition-transform hover:scale-110",
-        style === 'colored' && "text-white",
-        hoverColor && "hover:brightness-110"
-      )}
+      className={buttonClassName}
       style={customStyle}
       asChild
     >
@@ -213,6 +239,9 @@ const SocialIcon: React.FC<SocialIconProps> = ({
         aria-label={`Visit our ${platform} page`}
       >
         {React.cloneElement(Icon, { size: iconSize, className: style === 'colored' ? "text-white" : "" })}
+        {displayStyle === 'buttons' && (
+          <span className="ml-2">{getPlatformLabel(platform)}</span>
+        )}
       </a>
     </Button>
   );
