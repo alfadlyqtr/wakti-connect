@@ -1,13 +1,12 @@
 
 import React from "react";
-import BusinessHero from "./BusinessHero";
+import { BusinessPage, BusinessPageSection, BusinessSocialLink } from "@/types/business.types";
 import BusinessAbout from "./BusinessAbout";
 import BusinessGallery from "./BusinessGallery";
 import BusinessTestimonials from "./BusinessTestimonials";
-import BusinessLocation from "./BusinessLocation";
+import BusinessHeader from "./BusinessHeader";
 import BusinessContact from "./BusinessContact";
 import BusinessHours from "./BusinessHours";
-import { BusinessPage, BusinessPageSection, BusinessSocialLink } from "@/types/business.types";
 
 interface BusinessPageSectionsProps {
   pageSections: BusinessPageSection[];
@@ -48,9 +47,9 @@ const BusinessPageSections = ({
       case 'header':
         return (
           <div key={id} style={sectionStyle}>
-            <BusinessHero 
+            <BusinessHeader 
               section={section} 
-              primaryColor={businessPage.primary_color} 
+              businessPage={businessPage}
             />
           </div>
         );
@@ -92,7 +91,6 @@ const BusinessPageSections = ({
               pageId={page_id}
               submitContactForm={submitContactForm}
               primaryColor={businessPage.primary_color}
-              socialLinks={socialLinks}
             />
           </div>
         );

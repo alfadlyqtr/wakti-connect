@@ -1,8 +1,14 @@
-
 import React from "react";
+import { BusinessPageSection } from "@/types/business.types";
+import { Card, CardContent } from "@/components/ui/card";
 
-// Empty component since the working hours functionality has been removed
-const BusinessHours: React.FC<any> = () => {
+interface BusinessHoursProps {
+  section: BusinessPageSection;
+}
+
+const BusinessHours: React.FC<BusinessHoursProps> = ({ section }) => {
+  // Since this functionality has been removed as mentioned in the original file
+  // We're keeping it as a null component to maintain compatibility
   return null;
 };
 

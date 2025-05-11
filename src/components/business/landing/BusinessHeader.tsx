@@ -1,8 +1,6 @@
 
 import React from "react";
 import { BusinessPage, BusinessPageSection } from "@/types/business.types";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
 
 interface BusinessHeaderProps {
   section: BusinessPageSection;
@@ -10,15 +8,12 @@ interface BusinessHeaderProps {
 }
 
 const BusinessHeader = ({ section, businessPage }: BusinessHeaderProps) => {
-  const navigate = useNavigate();
   const content = section.section_content || {};
   
   const {
     title = businessPage.page_title,
     subtitle = "Book our services online",
     description = businessPage.description || "",
-    buttonText = "Book Now",
-    showButton = false // Keep as false to hide the button
   } = content;
 
   console.log("BusinessHeader rendering with logo:", businessPage.logo_url);
@@ -26,20 +21,6 @@ const BusinessHeader = ({ section, businessPage }: BusinessHeaderProps) => {
     primaryColor: businessPage.primary_color,
     secondaryColor: businessPage.secondary_color
   });
-  
-  const handleBookNow = () => {
-    if (businessPage.page_slug) {
-      navigate(`/booking/${businessPage.business_id}`);
-    } else {
-      console.error("Unable to navigate: Missing page_slug");
-    }
-  };
-  
-  // Custom button style based on business page colors
-  const buttonStyle = businessPage.primary_color ? {
-    backgroundColor: businessPage.primary_color,
-    color: "#ffffff"
-  } : {};
   
   return (
     <div className="text-center py-8 md:py-16">
@@ -63,8 +44,6 @@ const BusinessHeader = ({ section, businessPage }: BusinessHeaderProps) => {
       {description && (
         <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">{description}</p>
       )}
-      
-      {/* Button completely removed */}
     </div>
   );
 };
