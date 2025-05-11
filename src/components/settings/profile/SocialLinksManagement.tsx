@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Link, ShareIcon } from "lucide-react";
@@ -115,17 +114,20 @@ const SocialLinksManagement: React.FC<SocialLinksManagementProps> = ({ profileId
     updateSocialSettings.mutate({ displayStyle: style });
   };
   
+  const platformLabels: Record<SocialPlatform, string> = {
+    website: "Website",
+    facebook: "Facebook",
+    instagram: "Instagram",
+    twitter: "Twitter", 
+    linkedin: "LinkedIn",
+    youtube: "YouTube",
+    tiktok: "TikTok",
+    pinterest: "Pinterest", // Add this new platform
+    whatsapp: "WhatsApp"   // Add this new platform
+  };
+  
   const getPlatformLabel = (platform: SocialPlatform): string => {
-    const labels: Record<SocialPlatform, string> = {
-      website: "Website",
-      facebook: "Facebook",
-      instagram: "Instagram",
-      twitter: "Twitter",
-      linkedin: "LinkedIn",
-      youtube: "YouTube",
-      tiktok: "TikTok",
-    };
-    return labels[platform] || platform;
+    return platformLabels[platform] || platform;
   };
   
   if (isLoading) {
@@ -258,6 +260,8 @@ const SocialLinksManagement: React.FC<SocialLinksManagementProps> = ({ profileId
                         <SelectItem value="linkedin">LinkedIn</SelectItem>
                         <SelectItem value="youtube">YouTube</SelectItem>
                         <SelectItem value="tiktok">TikTok</SelectItem>
+                        <SelectItem value="pinterest">Pinterest</SelectItem>
+                        <SelectItem value="whatsapp">WhatsApp</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

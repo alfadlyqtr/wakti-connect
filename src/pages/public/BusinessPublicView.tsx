@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Navigate, useParams, useLocation } from "react-router-dom";
 import { useAuth } from "@/features/auth/hooks/useAuth";
@@ -58,7 +57,8 @@ const BusinessPublicView = () => {
   const socialLinks: BusinessSocialLink[] = socialLinksData ? socialLinksData.map(link => ({
     ...link,
     platform: link.platform as BusinessSocialLink['platform'],
-    updated_at: link.updated_at || link.created_at, // Ensure updated_at exists
+    created_at: link.created_at || new Date().toISOString(), // Ensure created_at exists
+    updated_at: link.updated_at || link.created_at // Ensure updated_at exists
   })) : [];
 
   // Fetch business hours data
