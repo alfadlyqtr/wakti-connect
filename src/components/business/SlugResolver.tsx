@@ -27,7 +27,7 @@ const SlugResolver = () => {
           .maybeSingle();
 
         if (profileData) {
-          setRedirectTo(`/business/${profileData.id}`);
+          setRedirectTo(`/view/business/${profileData.id}`);
           return;
         }
 

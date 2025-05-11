@@ -14,6 +14,8 @@ import FaqPage from '@/pages/public/FaqPage';
 import PrivacyPage from '@/pages/public/PrivacyPage';
 import TermsPage from '@/pages/public/TermsPage';
 import BusinessPublicView from '@/pages/public/BusinessPublicView';
+import BusinessProfileView from '@/pages/public/BusinessProfileView';
+import SlugResolver from '@/components/business/SlugResolver';
 
 // Temporary placeholder component for missing pages
 const PlaceholderPage = ({ title }: { title: string }) => (
@@ -63,6 +65,14 @@ export const publicRoutes = [
   {
     path: 'b/:slug',
     element: <BusinessPublicView />,
+  },
+  {
+    path: 'view/business/:businessId',
+    element: <BusinessProfileView />,
+  },
+  {
+    path: ':slug',
+    element: <SlugResolver />,
   },
   {
     path: 'business/:businessId',
