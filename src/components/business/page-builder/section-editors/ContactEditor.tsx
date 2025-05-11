@@ -135,21 +135,6 @@ const ContactEditor: React.FC<ContactEditorProps> = ({ contentData, handleInputC
               className="mt-2" 
             />
           </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="hours">Business Hours</Label>
-            <Textarea
-              id="hours"
-              name="hours"
-              value={contentData.hours || ''}
-              onChange={handleStandardInputChange}
-              placeholder="Monday - Friday: 9am - 5pm&#10;Saturday: 10am - 4pm&#10;Sunday: Closed"
-              rows={4}
-            />
-            <FormDescription>
-              Enter each day on a new line
-            </FormDescription>
-          </div>
         </TabsContent>
         
         <TabsContent value="social" className="space-y-4 pt-4">

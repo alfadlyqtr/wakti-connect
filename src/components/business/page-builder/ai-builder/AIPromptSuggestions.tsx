@@ -8,7 +8,6 @@ import {
   Image, 
   MessageSquare, 
   Instagram, 
-  Clock, 
   Star, 
   Bot 
 } from "lucide-react";
@@ -38,10 +37,6 @@ const AIPromptSuggestions: React.FC<AIPromptSuggestionsProps> = ({ onSelectSugge
     {
       icon: <Instagram className="h-3 w-3" />,
       text: "Add Instagram feed",
-    },
-    {
-      icon: <Clock className="h-3 w-3" />,
-      text: "Add business hours",
     },
     {
       icon: <Star className="h-3 w-3" />,

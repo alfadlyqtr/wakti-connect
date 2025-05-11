@@ -1,4 +1,3 @@
-
 export interface BusinessProfile {
   id: string;
   business_name: string;
@@ -131,4 +130,3 @@ export type SocialIconPosition = 'footer' | 'header' | 'sidebar' | 'both' | 'top
 export interface BusinessHour {
   id: string;
 }
-
