@@ -1,12 +1,13 @@
 
 import React, { useEffect, useState } from "react";
-import { useParams, useLocation } from "react-router-dom";
+import { Navigate, useParams, useLocation } from "react-router-dom";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import useBusinessPageQueries from "@/hooks/business-page/useBusinessPageQueries";
 import { useBusinessSocialLinks } from "@/hooks/useBusinessSocialLinks";
 import { useBusinessHours } from "@/hooks/useBusinessHours";
 import BusinessPageContent from "@/components/business/landing/BusinessPageContent";
 import PublicLayout from "@/components/layout/PublicLayout";
+import { Button } from "@/components/ui/button";
 
 // Create a simple hook for setting document title
 const useTitle = (title: string) => {
@@ -69,64 +70,51 @@ const BusinessPublicView = () => {
   const isLoading = pageLoading || sectionsLoading || linksLoading;
   const hasError = !!pageError;
 
-  // Content for loading, error and main states
-  const renderContent = () => {
-    if (isLoading) {
-      return (
-        <div className="py-10">
-          <div className="container mx-auto">
-            <div className="flex items-center justify-center h-64">
-              <div className="h-10 w-10 border-4 border-t-transparent border-primary rounded-full animate-spin"></div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    if (hasError || !businessPage) {
-      return (
-        <div className="py-10">
-          <div className="container mx-auto">
-            <div className="text-center">
-              <h1 className="text-2xl font-bold mb-4">Page Not Found</h1>
-              <p className="mb-6 text-muted-foreground">
-                Sorry, the business page you're looking for does not exist or has been removed.
-              </p>
-              <button 
-                className="px-4 py-2 bg-primary text-primary-foreground rounded-md"
-                onClick={() => window.history.back()}
-              >
-                Go Back
-              </button>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    // Determine if the current user is authenticated and is viewing their own page
-    const isAuthenticated = !!user;
-    const isOwnPage = isAuthenticated && user.id === businessPage.business_id;
-
-    // Show the page content if a valid page was found
+  if (isLoading) {
     return (
-      <BusinessPageContent 
-        businessPage={businessPage} 
-        pageSections={pageSections || []} 
-        socialLinks={socialLinks || []}
-        isPreviewMode={isPreviewMode}
-        isAuthenticated={isAuthenticated}
-        businessHours={businessHours}
-        displayStyle={socialSettings?.display_style || 'icons'}
-      />
+      <div className="py-10">
+        <div className="container mx-auto">
+          <div className="flex items-center justify-center h-64">
+            <div className="h-10 w-10 border-4 border-t-transparent border-primary rounded-full animate-spin"></div>
+          </div>
+        </div>
+      </div>
     );
-  };
+  }
 
-  // Wrap with public layout
+  if (hasError || !businessPage) {
+    return (
+      <div className="py-10">
+        <div className="container mx-auto">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">Page Not Found</h1>
+            <p className="mb-6 text-muted-foreground">
+              Sorry, the business page you're looking for does not exist or has been removed.
+            </p>
+            <Button variant="default" onClick={() => window.history.back()}>
+              Go Back
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Determine if the current user is authenticated and is viewing their own page
+  const isAuthenticated = !!user;
+  const isOwnPage = isAuthenticated && user.id === businessPage.business_id;
+
+  // Show the page content if a valid page was found
   return (
-    <PublicLayout>
-      {renderContent()}
-    </PublicLayout>
+    <BusinessPageContent 
+      businessPage={businessPage} 
+      pageSections={pageSections || []} 
+      socialLinks={socialLinks || []}
+      isPreviewMode={isPreviewMode}
+      isAuthenticated={isAuthenticated}
+      businessHours={businessHours}
+      displayStyle={socialSettings?.display_style || 'icons'}
+    />
   );
 };
 

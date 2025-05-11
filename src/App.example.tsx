@@ -1,5 +1,4 @@
 
-import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthShell, ProtectedRoute } from '@/features/auth';
 import { authRoutes, businessRoutes, publicRoutes } from '@/routes';
@@ -15,7 +14,7 @@ const App = () => {
             <Route 
               key={route.path} 
               path={`auth/${route.path}`} 
-              element={React.isValidElement(route.element) ? route.element : null} 
+              element={route.element} 
             />
           ))}
         </Route>
@@ -24,10 +23,9 @@ const App = () => {
         <Route path="/">
           {publicRoutes.map((route) => (
             <Route 
-              key={route.path || 'index'} 
+              key={route.path} 
               path={route.path} 
-              index={route.index}
-              element={React.isValidElement(route.element) ? route.element : null} 
+              element={route.element} 
             />
           ))}
         </Route>

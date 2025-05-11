@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Route } from 'react-router-dom';
 import NotFoundPage from '@/pages/NotFound';
 import SharedInvitationView from '@/components/invitations/SharedInvitationView';
 
@@ -24,50 +25,48 @@ const PlaceholderPage = ({ title }: { title: string }) => (
 );
 
 // Wrapper to apply the PublicLayout
-const withPublicLayout = (Component: React.ComponentType<any>) => {
-  return (props: any) => (
-    <PublicLayout>
-      <Component {...props} />
-    </PublicLayout>
-  );
-};
+const withPublicLayout = (Component: React.ComponentType<any>) => (
+  <PublicLayout>
+    <Component />
+  </PublicLayout>
+);
 
 export const publicRoutes = [
   {
     index: true,
-    element: <PublicLayout><LandingPage /></PublicLayout>,
+    element: withPublicLayout(LandingPage),
   },
   {
     path: 'about',
-    element: <PublicLayout><AboutPage /></PublicLayout>,
+    element: withPublicLayout(AboutPage),
   },
   {
     path: 'contact',
-    element: <PublicLayout><ContactPage /></PublicLayout>,
+    element: withPublicLayout(ContactPage),
   },
   {
     path: 'features',
-    element: <PublicLayout><FeaturesPage /></PublicLayout>,
+    element: withPublicLayout(FeaturesPage),
   },
   {
     path: 'pricing',
-    element: <PublicLayout><PricingPage /></PublicLayout>,
+    element: withPublicLayout(PricingPage),
   },
   {
     path: 'privacy',
-    element: <PublicLayout><PrivacyPage /></PublicLayout>,
+    element: withPublicLayout(PrivacyPage),
   },
   {
     path: 'terms',
-    element: <PublicLayout><TermsPage /></PublicLayout>,
+    element: withPublicLayout(TermsPage),
   },
   {
     path: 'faq',
-    element: <PublicLayout><FaqPage /></PublicLayout>,
+    element: withPublicLayout(FaqPage),
   },
   {
     path: 'i/:shareId',
-    element: <SharedInvitationView />,
+    element: withPublicLayout(SharedInvitationView),
   },
   {
     path: 'b/:slug',
@@ -79,7 +78,7 @@ export const publicRoutes = [
   },
   {
     path: '*',
-    element: <NotFoundPage />,
+    element: withPublicLayout(NotFoundPage),
   },
 ];
 
