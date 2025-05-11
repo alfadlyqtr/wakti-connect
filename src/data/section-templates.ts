@@ -254,4 +254,9 @@ export const sectionTemplates: Record<SectionType, SectionTemplate[]> = {
   chatbot: chatbotTemplates
 };
 
+// Helper function to get templates for a specific section type
+export const getTemplates = (sectionType: SectionType): SectionTemplate[] => {
+  return sectionTemplates[sectionType] || [];
+};
+
 export default sectionTemplates;
