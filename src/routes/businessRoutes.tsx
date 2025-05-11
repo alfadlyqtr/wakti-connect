@@ -2,15 +2,10 @@
 import { RouteObject } from "react-router-dom";
 import BookingPage from "@/pages/booking/BookingPage";
 import BookingConfirmationPage from "@/pages/booking/BookingConfirmationPage";
-import BusinessLandingPage from "@/pages/business/BusinessLandingPage";
 import SimpleBusinessLandingPage from "@/pages/business/SimpleBusinessLandingPage";
 
 // Business routes
 export const businessRoutes: RouteObject[] = [
-  {
-    path: "b/:slug",
-    element: <BusinessLandingPage />,
-  },
   {
     path: "business/:businessId",
     element: <SimpleBusinessLandingPage />,

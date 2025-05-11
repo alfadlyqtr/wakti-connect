@@ -13,10 +13,7 @@ import LandingPage from '@/pages/public/LandingPage';
 import FaqPage from '@/pages/public/FaqPage';
 import PrivacyPage from '@/pages/public/PrivacyPage';
 import TermsPage from '@/pages/public/TermsPage';
-import BusinessPublicView from '@/pages/public/BusinessPublicView';
-import BusinessProfileView from '@/pages/public/BusinessProfileView';
 import SlugResolver from '@/components/business/SlugResolver';
-import BusinessLandingPage from '@/pages/business/BusinessLandingPage';
 
 // Temporary placeholder component for missing pages
 const PlaceholderPage = ({ title }: { title: string }) => (
@@ -64,20 +61,8 @@ export const publicRoutes = [
     element: <SharedInvitationView />,
   },
   {
-    path: 'b/:slug',
-    element: <BusinessLandingPage />,
-  },
-  {
-    path: 'view/business/:businessId',
-    element: <BusinessProfileView />,
-  },
-  {
     path: ':slug',
     element: <SlugResolver />,
-  },
-  {
-    path: 'business/:businessId',
-    element: <BusinessPublicView />,
   },
   {
     path: '*',
