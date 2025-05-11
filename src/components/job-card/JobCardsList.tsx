@@ -159,6 +159,7 @@ const JobCardsList: React.FC<JobCardsListProps> = ({
         <CompletedJobsSection 
           completedJobs={completedJobCards} 
           filterPeriod={filterPeriod}
+          setFilterPeriod={setFilterPeriod}
           paymentFilter={paymentFilter}
           sortOption={sortOption}
           isBusinessView={isBusinessAccount}
