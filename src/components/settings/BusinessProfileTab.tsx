@@ -8,6 +8,8 @@ import { useStaffPermissions } from "@/hooks/useStaffPermissions";
 import ProfileForm from "./profile/ProfileForm";
 import BusinessProfileInfo from "./profile/BusinessProfileInfo";
 import { Separator } from "@/components/ui/separator";
+import BusinessHoursManagement from "./profile/BusinessHoursManagement";
+import SocialLinksManagement from "./profile/SocialLinksManagement";
 
 const BusinessProfileTab: React.FC = () => {
   const { data: profile, isLoading } = useProfileSettings();
@@ -65,7 +67,19 @@ const BusinessProfileTab: React.FC = () => {
       </Card>
       
       {!isStaff && (
-        <BusinessProfileInfo profile={profile} />
+        <>
+          <BusinessProfileInfo profile={profile} />
+          
+          <BusinessHoursManagement 
+            profileId={profile.id} 
+            readOnly={isStaff} 
+          />
+          
+          <SocialLinksManagement 
+            profileId={profile.id}
+            readOnly={isStaff}
+          />
+        </>
       )}
     </div>
   );
