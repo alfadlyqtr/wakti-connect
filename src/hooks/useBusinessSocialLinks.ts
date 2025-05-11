@@ -1,4 +1,3 @@
-
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
@@ -22,7 +21,7 @@ export interface BusinessSocialLink {
   platform: SocialPlatform;
   url: string;
   created_at: string;
-  updated_at: string;
+  // We'll remove updated_at from here if it's causing type errors
 }
 
 export interface BusinessSocialSettings {

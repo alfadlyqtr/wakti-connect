@@ -60,8 +60,8 @@ const BusinessPublicView = () => {
     business_id: link.business_id,
     platform: link.platform as BusinessSocialLink['platform'],
     url: link.url,
-    created_at: link.created_at || new Date().toISOString(),
-    updated_at: link.updated_at || new Date().toISOString()
+    created_at: link.created_at || new Date().toISOString()
+    // Note: We're not including updated_at here as it's not required by BusinessSocialLink type
   })) : [];
 
   // Fetch business hours data
