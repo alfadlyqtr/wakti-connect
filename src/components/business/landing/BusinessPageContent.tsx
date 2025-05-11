@@ -1,103 +1,55 @@
 
-import React, { useEffect, useState } from "react";
-import { BusinessPage, BusinessPageSection, BusinessSocialLink } from "@/types/business.types";
-import BusinessPageHeader from "./BusinessPageHeader";
-import BusinessPageSections from "./BusinessPageSections";
-import SocialIconsGroup from "./SocialIconsGroup";
-import { useBusinessSocialLinks } from "@/hooks/useBusinessSocialLinks";
-import { BusinessHours } from "@/hooks/useBusinessHours";
+import React from "react";
+import { BusinessPage, BusinessPageSection } from "@/types/business.types";
+import { BusinessSocialLink } from "@/hooks/useBusinessSocialLinks";
+import { BusinessHours } from "@/types/business.types";
+import BusinessPageHeader from "@/features/business/components/BusinessPageHeader";
+import PoweredByWAKTI from "@/components/common/PoweredByWAKTI";
 
 interface BusinessPageContentProps {
   businessPage: BusinessPage;
   pageSections: BusinessPageSection[];
-  socialLinks: BusinessSocialLink[] | undefined;
-  isPreviewMode: boolean;
-  isAuthenticated: boolean | null;
-  businessHours?: BusinessHours | null; // Add business hours prop
-  displayStyle?: 'icons' | 'buttons'; // Add display style prop
+  socialLinks: BusinessSocialLink[];
+  isPreviewMode?: boolean;
+  isAuthenticated?: boolean;
+  businessHours?: BusinessHours;
+  displayStyle?: string;
 }
 
 const BusinessPageContent: React.FC<BusinessPageContentProps> = ({
   businessPage,
   pageSections,
   socialLinks,
-  isPreviewMode,
-  isAuthenticated,
+  isPreviewMode = false,
+  isAuthenticated = false,
   businessHours,
   displayStyle = 'icons'
 }) => {
-  // Use provided display style
-  const [localDisplayStyle, setLocalDisplayStyle] = useState<'icons' | 'buttons'>(displayStyle);
-  
-  // Update display style when prop changes
-  useEffect(() => {
-    if (displayStyle) {
-      setLocalDisplayStyle(displayStyle);
-    }
-  }, [displayStyle]);
-
-  const {
-    content_max_width = "1200px",
-    social_icons_style = "default",
-    social_icons_size = "default",
-    social_icons_position = "footer",
-  } = businessPage;
-
-  const showHeaderSocialLinks = socialLinks && socialLinks.length > 0 && 
-    ['header', 'both'].includes(social_icons_position || '');
-  
-  const showFooterSocialLinks = socialLinks && socialLinks.length > 0 && 
-    ['footer', 'both'].includes(social_icons_position || '');
-
   return (
-    <div
-      style={{ maxWidth: content_max_width }}
-      className="mx-auto px-4 sm:px-6"
-    >
-      {showHeaderSocialLinks && (
-        <div className="pt-4 pb-2">
-          <SocialIconsGroup 
-            socialLinks={socialLinks || []}
-            style={(social_icons_style as any) || "default"}
-            size={(social_icons_size as any) || "default"}
-            position="header"
-            className="justify-end"
-            displayStyle={localDisplayStyle}
-          />
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold mb-2">{businessPage.business_name || "Business Name"}</h1>
+          <p className="text-muted-foreground">{businessPage.page_description || "Business description"}</p>
         </div>
-      )}
-      
-      <BusinessPageHeader 
-        business={{
-          id: businessPage.business_id,
-          business_name: businessPage.page_title,
-          display_name: businessPage.page_title,
-          account_type: "business",
-          avatar_url: businessPage.logo_url
-        }} 
-        isPreviewMode={isPreviewMode}
-        isAuthenticated={isAuthenticated}
-      />
-      
-      <BusinessPageSections 
-        pageSections={pageSections || []} 
-        businessPage={businessPage}
-        businessHoursId={businessPage.business_id}
-        businessHours={businessHours} // Pass down the business hours
-      />
+        
+        <div className="bg-card rounded-lg shadow p-6 mb-8">
+          <h2 className="text-xl font-semibold mb-4">About This Business</h2>
+          <p>{businessPage.page_description || "No description available."}</p>
+        </div>
 
-      {showFooterSocialLinks && (
-        <div className="mt-8 mb-4">
-          <SocialIconsGroup 
-            socialLinks={socialLinks || []}
-            style={(social_icons_style as any) || "default"}
-            size={(social_icons_size as any) || "default"}
-            position="footer"
-            className="pb-6"
-            displayStyle={localDisplayStyle}
-          />
+        {/* Display information about sections being available in preview mode */}
+        {pageSections.length === 0 && (
+          <div className="text-center py-10">
+            <p className="text-muted-foreground">This business hasn't added any sections to their page yet.</p>
+          </div>
+        )}
+
+        {/* Powered by WAKTI badge */}
+        <div className="mt-12 text-center">
+          <PoweredByWAKTI />
         </div>
-      )}
+      </div>
     </div>
   );
 };

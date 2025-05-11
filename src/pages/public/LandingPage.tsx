@@ -10,8 +10,6 @@ import DashboardPreview from "@/components/landing/DashboardPreview";
 const LandingPage = () => {
   return (
     <div className="min-h-screen">
-      {/* Header is now rendered in PublicLayout.tsx */}
-      
       {/* Hero Section */}
       <Hero />
 
@@ -28,8 +26,6 @@ const LandingPage = () => {
 
       {/* Call to Action */}
       <CTA />
-      
-      {/* Footer is now handled by PublicLayout.tsx */}
     </div>
   );
 };

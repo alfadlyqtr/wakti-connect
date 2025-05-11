@@ -24,49 +24,43 @@ const PlaceholderPage = ({ title }: { title: string }) => (
   </div>
 );
 
-// Wrapper to apply the PublicLayout
-const withPublicLayout = (Component: React.ComponentType<any>) => (
-  <PublicLayout>
-    <Component />
-  </PublicLayout>
-);
-
+// Define public routes with appropriate layout wrapper
 export const publicRoutes = [
   {
     index: true,
-    element: withPublicLayout(LandingPage),
+    element: <PublicLayout><LandingPage /></PublicLayout>,
   },
   {
     path: 'about',
-    element: withPublicLayout(AboutPage),
+    element: <PublicLayout><AboutPage /></PublicLayout>,
   },
   {
     path: 'contact',
-    element: withPublicLayout(ContactPage),
+    element: <PublicLayout><ContactPage /></PublicLayout>,
   },
   {
     path: 'features',
-    element: withPublicLayout(FeaturesPage),
+    element: <PublicLayout><FeaturesPage /></PublicLayout>,
   },
   {
     path: 'pricing',
-    element: withPublicLayout(PricingPage),
+    element: <PublicLayout><PricingPage /></PublicLayout>,
   },
   {
     path: 'privacy',
-    element: withPublicLayout(PrivacyPage),
+    element: <PublicLayout><PrivacyPage /></PublicLayout>,
   },
   {
     path: 'terms',
-    element: withPublicLayout(TermsPage),
+    element: <PublicLayout><TermsPage /></PublicLayout>,
   },
   {
     path: 'faq',
-    element: withPublicLayout(FaqPage),
+    element: <PublicLayout><FaqPage /></PublicLayout>,
   },
   {
     path: 'i/:shareId',
-    element: withPublicLayout(SharedInvitationView),
+    element: <PublicLayout><SharedInvitationView /></PublicLayout>,
   },
   {
     path: 'b/:slug',
@@ -78,7 +72,7 @@ export const publicRoutes = [
   },
   {
     path: '*',
-    element: withPublicLayout(NotFoundPage),
+    element: <PublicLayout><NotFoundPage /></PublicLayout>,
   },
 ];
 
