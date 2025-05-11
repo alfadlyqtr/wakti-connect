@@ -27,20 +27,21 @@ const SlugResolver = () => {
           .maybeSingle();
 
         if (profileData) {
-          // Set the redirect to our new business profile view route
+          // Set the redirect to our business profile view route
           setRedirectTo(`/view/business/${profileData.id}`);
           return;
         }
 
         // If not a profile, check if it's a business page slug
         const { data: pageData, error: pageError } = await supabase
-          .from('business_pages_data')
-          .select('id')
+          .from('business_pages')
+          .select('page_slug')
           .eq('page_slug', slug)
           .maybeSingle();
 
         if (pageData) {
-          setRedirectTo(`/view/business-page/${pageData.id}`);
+          // Direct to the business page with slug
+          setRedirectTo(`/b/${pageData.page_slug}`);
         } else {
           setError("Page not found");
         }

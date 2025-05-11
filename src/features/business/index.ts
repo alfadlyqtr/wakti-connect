@@ -1,11 +1,17 @@
 
-// This is a replacement for the previous business feature exports
-// All business page related components have been removed
+import BusinessHeader from "@/components/business/landing/BusinessHeader";
+import BusinessHours from "@/components/business/landing/BusinessHours";
+import BusinessGallery from "@/components/business/landing/BusinessGallery";
+import BusinessPageHeader from "@/components/business/landing/BusinessPageHeader";
+import BusinessPageContent from "@/components/business/landing/BusinessPageContent";
+import BusinessPageNotFound from "@/components/business/landing/BusinessPageNotFound";
 
-// Export empty placeholders to avoid breaking imports
-export const BusinessHeader = () => null;
-export const BusinessHours = () => null;
-export const BusinessGallery = () => null;
-export const BusinessPageHeader = () => null;
-export const BusinessPageContent = () => null;
-export const BusinessPageNotFound = () => null;
+// Export business page components
+export {
+  BusinessHeader,
+  BusinessHours,
+  BusinessGallery,
+  BusinessPageHeader,
+  BusinessPageContent,
+  BusinessPageNotFound
+};

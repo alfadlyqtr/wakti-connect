@@ -1,5 +1,6 @@
 
 import React from "react";
+import BusinessPageContent from "@/components/business/landing/BusinessPageContent";
 
-// This is a placeholder for the removed BusinessPageContent component
-export default () => null;
+// This is now just a re-export of the actual BusinessPageContent
+export default BusinessPageContent;

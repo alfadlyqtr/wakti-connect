@@ -1,15 +1,18 @@
 
 import React from "react";
 import { Helmet } from "react-helmet-async";
-import { Navigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import BusinessLandingPageComponent from "@/components/business/landing/BusinessLandingPage";
 
 const BusinessLandingPage = () => {
+  const { slug } = useParams<{ slug: string }>();
+  
   return (
     <>
       <Helmet>
-        <title>Feature Removed | WAKTI</title>
+        <title>{slug ? `${slug} | WAKTI` : 'Business Page | WAKTI'}</title>
       </Helmet>
-      <Navigate to="/" replace />
+      <BusinessLandingPageComponent />
     </>
   );
 };

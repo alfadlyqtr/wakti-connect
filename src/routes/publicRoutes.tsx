@@ -16,6 +16,7 @@ import TermsPage from '@/pages/public/TermsPage';
 import BusinessPublicView from '@/pages/public/BusinessPublicView';
 import BusinessProfileView from '@/pages/public/BusinessProfileView';
 import SlugResolver from '@/components/business/SlugResolver';
+import BusinessLandingPage from '@/pages/business/BusinessLandingPage';
 
 // Temporary placeholder component for missing pages
 const PlaceholderPage = ({ title }: { title: string }) => (
@@ -64,7 +65,7 @@ export const publicRoutes = [
   },
   {
     path: 'b/:slug',
-    element: <BusinessPublicView />,
+    element: <BusinessLandingPage />,
   },
   {
     path: 'view/business/:businessId',

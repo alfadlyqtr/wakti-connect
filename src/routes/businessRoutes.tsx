@@ -1,12 +1,23 @@
 
-import { RouteObject, Navigate } from "react-router-dom";
+import { RouteObject } from "react-router-dom";
 import BookingPage from "@/pages/booking/BookingPage";
 import BookingConfirmationPage from "@/pages/booking/BookingConfirmationPage";
+import BusinessLandingPage from "@/pages/business/BusinessLandingPage";
+import SimpleBusinessLandingPage from "@/pages/business/SimpleBusinessLandingPage";
 
-// Empty business routes - all removed
-export const businessRoutes: RouteObject[] = [];
+// Business routes
+export const businessRoutes: RouteObject[] = [
+  {
+    path: "b/:slug",
+    element: <BusinessLandingPage />,
+  },
+  {
+    path: "business/:businessId",
+    element: <SimpleBusinessLandingPage />,
+  }
+];
 
-// Booking routes - now completely separate from business routes
+// Booking routes
 export const bookingRoutes: RouteObject[] = [
   {
     path: ":businessId",

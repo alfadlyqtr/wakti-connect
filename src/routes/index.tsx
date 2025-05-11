@@ -1,6 +1,7 @@
 
 import { lazy } from "react";
 import { RouteObject } from "react-router-dom";
+import { businessRoutes, bookingRoutes } from "./businessRoutes";
 
 const Home = lazy(() => import("../pages/Home"));
 const About = lazy(() => import("../pages/About"));
@@ -87,6 +88,8 @@ const routes: RouteObject[] = [
     path: "/i/:id",
     element: <SharedEventPage />,
   },
+  // Add business routes here
+  ...businessRoutes,
 ];
 
 export default routes;
