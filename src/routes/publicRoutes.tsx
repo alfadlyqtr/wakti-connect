@@ -23,7 +23,7 @@ const PlaceholderPage = ({ title }: { title: string }) => (
   </div>
 );
 
-// Wrapper to apply the PublicLayout - Fixed to properly pass children
+// Wrapper to apply the PublicLayout
 const withPublicLayout = (Component: React.ComponentType<any>) => {
   const WrappedComponent = (props: any) => (
     <PublicLayout>
@@ -36,35 +36,35 @@ const withPublicLayout = (Component: React.ComponentType<any>) => {
 export const publicRoutes = [
   {
     index: true,
-    element: <LandingPage />,
+    element: withPublicLayout(LandingPage)(),
   },
   {
     path: 'about',
-    element: <AboutPage />,
+    element: withPublicLayout(AboutPage)(),
   },
   {
     path: 'contact',
-    element: <ContactPage />,
+    element: withPublicLayout(ContactPage)(),
   },
   {
     path: 'features',
-    element: <FeaturesPage />,
+    element: withPublicLayout(FeaturesPage)(),
   },
   {
     path: 'pricing',
-    element: <PricingPage />,
+    element: withPublicLayout(PricingPage)(),
   },
   {
     path: 'privacy',
-    element: <PrivacyPage />,
+    element: withPublicLayout(PrivacyPage)(),
   },
   {
     path: 'terms',
-    element: <TermsPage />,
+    element: withPublicLayout(TermsPage)(),
   },
   {
     path: 'faq',
-    element: <FaqPage />,
+    element: withPublicLayout(FaqPage)(),
   },
   {
     path: 'i/:shareId',
