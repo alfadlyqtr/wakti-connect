@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { format, parseISO } from 'date-fns';
 import { Button } from '@/components/ui/button';
@@ -6,7 +7,7 @@ import { Calendar, Clock, MapPin, Share2, MoreHorizontal } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
-import { EventResponseSummary } from '@/components/events/EventResponseSummary';
+import EventResponseSummary from '@/components/events/EventResponseSummary';
 import {
   DropdownMenu,
   DropdownMenuTrigger,

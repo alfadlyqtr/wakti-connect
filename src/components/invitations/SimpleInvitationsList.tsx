@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Table,
@@ -35,6 +36,7 @@ interface Event {
 const SimpleInvitationsList = ({ isEventsList = false }) => {
   const [events, setEvents] = useState<Event[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -44,7 +46,7 @@ const SimpleInvitationsList = ({ isEventsList = false }) => {
   const refresh = async () => {
     try {
       const invitations = await getSimpleInvitations(isEventsList);
-      setEvents(invitations);
+      setEvents(invitations as any);
     } catch (error) {
       toast({
         title: 'Error',
@@ -83,6 +85,13 @@ const SimpleInvitationsList = ({ isEventsList = false }) => {
     event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     event.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Select first event for preview if available
+  useEffect(() => {
+    if (filteredEvents.length > 0 && !selectedEvent) {
+      setSelectedEvent(filteredEvents[0]);
+    }
+  }, [filteredEvents, selectedEvent]);
 
   return (
     <div className="container mx-auto py-10">
@@ -140,17 +149,18 @@ const SimpleInvitationsList = ({ isEventsList = false }) => {
           </Table>
         </CardContent>
       </Card>
-      <div className="mt-4">
-        <h2 className="text-lg font-semibold mb-2">Event Card Preview</h2>
-        <EventCard 
-          key={event.id}
-          title={event.title}
-          description={event.description}
-          date={new Date(event.start_time)}
-          location={event.location || "No location"}
-          onClick={() => handleViewEvent(event.id)}
-        />
-      </div>
+      {selectedEvent && (
+        <div className="mt-4">
+          <h2 className="text-lg font-semibold mb-2">Event Card Preview</h2>
+          <EventCard 
+            title={selectedEvent.title}
+            description={selectedEvent.description}
+            date={new Date(selectedEvent.start_time)}
+            location={selectedEvent.location || "No location"}
+            onClick={() => handleViewEvent(selectedEvent.id)}
+          />
+        </div>
+      )}
     </div>
   );
 };
