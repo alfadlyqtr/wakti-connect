@@ -7,9 +7,18 @@ import { useBusinessSocialLinks } from "@/hooks/useBusinessSocialLinks";
 import { useBusinessHours } from "@/hooks/useBusinessHours";
 import BusinessPageContent from "@/components/business/landing/BusinessPageContent";
 import PublicLayout from "@/components/layout/PublicLayout";
-import { useTitle } from "@/hooks/useTitle";
-import PageContainer from "@/components/PageContainer";
 import { Button } from "@/components/ui/button";
+
+// Create a simple hook for setting document title
+const useTitle = (title: string) => {
+  useEffect(() => {
+    const prevTitle = document.title;
+    document.title = title;
+    return () => {
+      document.title = prevTitle;
+    };
+  }, [title]);
+};
 
 const BusinessPublicView = () => {
   const { slug, businessId } = useParams();
@@ -63,20 +72,20 @@ const BusinessPublicView = () => {
 
   if (isLoading) {
     return (
-      <PublicLayout>
-        <PageContainer className="py-10">
+      <div className="py-10">
+        <div className="container mx-auto">
           <div className="flex items-center justify-center h-64">
             <div className="h-10 w-10 border-4 border-t-transparent border-primary rounded-full animate-spin"></div>
           </div>
-        </PageContainer>
-      </PublicLayout>
+        </div>
+      </div>
     );
   }
 
   if (hasError || !businessPage) {
     return (
-      <PublicLayout>
-        <PageContainer className="py-10">
+      <div className="py-10">
+        <div className="container mx-auto">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Page Not Found</h1>
             <p className="mb-6 text-muted-foreground">
@@ -86,8 +95,8 @@ const BusinessPublicView = () => {
               Go Back
             </Button>
           </div>
-        </PageContainer>
-      </PublicLayout>
+        </div>
+      </div>
     );
   }
 
@@ -97,17 +106,15 @@ const BusinessPublicView = () => {
 
   // Show the page content if a valid page was found
   return (
-    <PublicLayout>
-      <BusinessPageContent 
-        businessPage={businessPage} 
-        pageSections={pageSections || []} 
-        socialLinks={socialLinks || []}
-        isPreviewMode={isPreviewMode}
-        isAuthenticated={isAuthenticated}
-        businessHours={businessHours}
-        displayStyle={socialSettings?.display_style || 'icons'}
-      />
-    </PublicLayout>
+    <BusinessPageContent 
+      businessPage={businessPage} 
+      pageSections={pageSections || []} 
+      socialLinks={socialLinks || []}
+      isPreviewMode={isPreviewMode}
+      isAuthenticated={isAuthenticated}
+      businessHours={businessHours}
+      displayStyle={socialSettings?.display_style || 'icons'}
+    />
   );
 };
 

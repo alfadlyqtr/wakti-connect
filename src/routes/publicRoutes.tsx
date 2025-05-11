@@ -14,6 +14,7 @@ import FaqPage from '@/pages/public/FaqPage';
 import PrivacyPage from '@/pages/public/PrivacyPage';
 import TermsPage from '@/pages/public/TermsPage';
 import BusinessPublicView from '@/pages/public/BusinessPublicView';
+import PublicLayout from '@/components/layout/PublicLayout';
 
 // Temporary placeholder component for missing pages
 const PlaceholderPage = ({ title }: { title: string }) => (
@@ -23,42 +24,49 @@ const PlaceholderPage = ({ title }: { title: string }) => (
   </div>
 );
 
+// Wrapper to apply the PublicLayout
+const withPublicLayout = (Component: React.ComponentType<any>) => (
+  <PublicLayout>
+    <Component />
+  </PublicLayout>
+);
+
 export const publicRoutes = [
   {
     index: true,
-    element: <LandingPage />,
+    element: withPublicLayout(LandingPage),
   },
   {
     path: 'about',
-    element: <AboutPage />,
+    element: withPublicLayout(AboutPage),
   },
   {
     path: 'contact',
-    element: <ContactPage />,
+    element: withPublicLayout(ContactPage),
   },
   {
     path: 'features',
-    element: <FeaturesPage />,
+    element: withPublicLayout(FeaturesPage),
   },
   {
     path: 'pricing',
-    element: <PricingPage />,
+    element: withPublicLayout(PricingPage),
   },
   {
     path: 'privacy',
-    element: <PrivacyPage />,
+    element: withPublicLayout(PrivacyPage),
   },
   {
     path: 'terms',
-    element: <TermsPage />,
+    element: withPublicLayout(TermsPage),
   },
   {
     path: 'faq',
-    element: <FaqPage />,
+    element: withPublicLayout(FaqPage),
   },
   {
     path: 'i/:shareId',
-    element: <SharedInvitationView />,
+    element: withPublicLayout(SharedInvitationView),
   },
   {
     path: 'b/:slug',
@@ -70,7 +78,7 @@ export const publicRoutes = [
   },
   {
     path: '*',
-    element: <NotFoundPage />,
+    element: withPublicLayout(NotFoundPage),
   },
 ];
 
