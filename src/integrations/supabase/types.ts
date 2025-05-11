@@ -752,6 +752,33 @@ export type Database = {
         }
         Relationships: []
       }
+      business_hours: {
+        Row: {
+          business_id: string
+          created_at: string
+          hours: Json
+          id: string
+          is_automatic: boolean
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          hours?: Json
+          id?: string
+          is_automatic?: boolean
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          hours?: Json
+          id?: string
+          is_automatic?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       business_page_sections: {
         Row: {
           background_color: string | null
@@ -1048,6 +1075,30 @@ export type Database = {
           platform?: string
           updated_at?: string
           url?: string
+        }
+        Relationships: []
+      }
+      business_social_settings: {
+        Row: {
+          business_id: string
+          created_at: string
+          display_style: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          display_style?: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          display_style?: string
+          id?: string
+          updated_at?: string
         }
         Relationships: []
       }

@@ -1,350 +1,267 @@
 
 import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useBusinessSocialLinks } from "@/hooks/useBusinessSocialLinks";
+import { toast } from "@/components/ui/use-toast";
+import { Trash2, Plus, Facebook, Instagram, Twitter, Linkedin, Globe, Youtube } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "@/components/ui/use-toast";
-import { Instagram, Facebook, Twitter, Linkedin, Globe, PlusCircle, Share2, AlertCircle } from "lucide-react";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { SocialPlatform } from "@/types/business.types";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useStaffPermissions } from "@/hooks/useStaffPermissions";
-
-interface SocialLink {
-  id?: string;
-  business_id: string;
-  platform: string;
-  url: string;
-}
+import { BusinessSocialSettings } from "@/types/business-settings.types";
 
 interface SocialLinksManagementProps {
   profileId: string;
   readOnly?: boolean;
 }
 
-const SocialLinksManagement: React.FC<SocialLinksManagementProps> = ({
-  profileId,
-  readOnly = false
-}) => {
+const platformOptions: { value: SocialPlatform; label: string; icon: React.ReactNode }[] = [
+  { value: 'facebook', label: 'Facebook', icon: <Facebook className="h-4 w-4" /> },
+  { value: 'instagram', label: 'Instagram', icon: <Instagram className="h-4 w-4" /> },
+  { value: 'twitter', label: 'Twitter', icon: <Twitter className="h-4 w-4" /> },
+  { value: 'linkedin', label: 'LinkedIn', icon: <Linkedin className="h-4 w-4" /> },
+  { value: 'youtube', label: 'YouTube', icon: <Youtube className="h-4 w-4" /> },
+  { value: 'website', label: 'Website', icon: <Globe className="h-4 w-4" /> },
+];
+
+const SocialLinksManagement: React.FC<SocialLinksManagementProps> = ({ profileId, readOnly = false }) => {
+  const [newPlatform, setNewPlatform] = useState<SocialPlatform>('website');
+  const [newUrl, setNewUrl] = useState('');
+  const [displayStyle, setDisplayStyle] = useState<'icons' | 'buttons'>('icons');
   const queryClient = useQueryClient();
-  const { isStaff } = useStaffPermissions();
-  const isReadOnly = readOnly || isStaff;
   
-  const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
-  const [newPlatform, setNewPlatform] = useState<string>("");
-  const [newUrl, setNewUrl] = useState<string>("");
-  const [displayStyle, setDisplayStyle] = useState<"icons" | "buttons">("icons");
-  const [isLoading, setIsLoading] = useState(true);
+  const { 
+    socialLinks, 
+    isLoading, 
+    addSocialLink, 
+    updateSocialLink, 
+    deleteSocialLink 
+  } = useBusinessSocialLinks(profileId);
   
-  // Mutation for saving social links
-  const updateSocialLinks = useMutation({
-    mutationFn: async (links: SocialLink[]) => {
-      // First delete existing links
-      await supabase
-        .from('business_social_links')
-        .delete()
-        .eq('business_id', profileId);
-      
-      // Then insert new ones if there are any
-      if (links.length > 0) {
+  // Fetch display style settings
+  const { data: socialSettings, isLoading: isLoadingSettings } = useQuery({
+    queryKey: ['socialSettings', profileId],
+    queryFn: async () => {
+      try {
         const { data, error } = await supabase
-          .from('business_social_links')
-          .insert(links)
+          .from('business_social_settings')
+          .select('*')
+          .eq('business_id', profileId)
+          .maybeSingle();
+          
+        if (error && error.code !== 'PGRST116') {
+          console.error("Error fetching social settings:", error);
+          return null;
+        }
+        
+        return data;
+      } catch (error) {
+        console.error("Error in social settings query:", error);
+        return null;
+      }
+    },
+    enabled: !!profileId,
+  });
+
+  // Update display style when settings are loaded
+  useEffect(() => {
+    if (socialSettings) {
+      setDisplayStyle(socialSettings.display_style as 'icons' | 'buttons');
+    }
+  }, [socialSettings]);
+
+  // Save display style preferences
+  const saveDisplayStyleMutation = useMutation({
+    mutationFn: async (newStyle: 'icons' | 'buttons') => {
+      const { data: existingSettings } = await supabase
+        .from('business_social_settings')
+        .select('id')
+        .eq('business_id', profileId)
+        .maybeSingle();
+      
+      if (existingSettings) {
+        // Update existing settings
+        const { data, error } = await supabase
+          .from('business_social_settings')
+          .update({
+            display_style: newStyle,
+            updated_at: new Date().toISOString()
+          })
+          .eq('business_id', profileId)
+          .select();
+          
+        if (error) throw error;
+        return data;
+      } else {
+        // Create new settings
+        const { data, error } = await supabase
+          .from('business_social_settings')
+          .insert({
+            business_id: profileId,
+            display_style: newStyle
+          })
           .select();
           
         if (error) throw error;
         return data;
       }
-      return [];
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['businessSocialLinks', profileId] });
       toast({
-        title: "Social links updated",
-        description: "Your social media links have been saved successfully."
+        title: "Display style updated",
+        description: "Your social links display preferences have been saved.",
       });
+      queryClient.invalidateQueries({ queryKey: ['socialSettings', profileId] });
     },
     onError: (error) => {
-      console.error("Failed to update social links:", error);
+      console.error("Error saving display style:", error);
       toast({
-        title: "Update failed",
-        description: "There was an error saving your social media links.",
-        variant: "destructive"
+        variant: "destructive",
+        title: "Save failed",
+        description: "There was a problem saving your display preferences.",
       });
     }
   });
 
-  // Mutation for saving display preference
-  const updateDisplayPreference = useMutation({
-    mutationFn: async (style: "icons" | "buttons") => {
-      const { data, error } = await supabase
-        .from('business_social_settings')
-        .upsert({
-          business_id: profileId,
-          display_style: style
-        })
-        .select();
-        
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['businessSocialSettings', profileId] });
-      toast({
-        title: "Display preference updated",
-        description: "Your social links display preference has been saved."
-      });
-    },
-    onError: (error) => {
-      console.error("Failed to update display preference:", error);
-      toast({
-        title: "Update failed",
-        description: "There was an error saving your display preference.",
-        variant: "destructive"
-      });
-    }
-  });
-  
-  // Fetch existing social links and display preferences
-  useEffect(() => {
-    const fetchSocialData = async () => {
-      setIsLoading(true);
-      try {
-        // Fetch social links
-        const { data: linksData, error: linksError } = await supabase
-          .from('business_social_links')
-          .select('*')
-          .eq('business_id', profileId);
-          
-        if (linksError) throw linksError;
-        
-        // Fetch display preferences
-        const { data: settingsData, error: settingsError } = await supabase
-          .from('business_social_settings')
-          .select('*')
-          .eq('business_id', profileId)
-          .single();
-          
-        if (settingsError && settingsError.code !== 'PGRST116') { // PGRST116 means no rows returned
-          throw settingsError;
-        }
-        
-        setSocialLinks(linksData || []);
-        
-        if (settingsData) {
-          setDisplayStyle(settingsData.display_style || "icons");
-        }
-      } catch (error) {
-        console.error("Error fetching social data:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchSocialData();
-  }, [profileId]);
-  
   const handleAddLink = () => {
     if (!newPlatform || !newUrl) {
       toast({
-        title: "Invalid input",
-        description: "Please select a platform and enter a URL.",
-        variant: "destructive"
+        variant: "destructive",
+        title: "Error",
+        description: "Please select a platform and enter a URL."
       });
       return;
     }
     
-    // Simple URL validation
-    if (!newUrl.startsWith('http://') && !newUrl.startsWith('https://')) {
-      setNewUrl(`https://${newUrl}`);
-    }
-    
-    const newLink: SocialLink = {
-      business_id: profileId,
-      platform: newPlatform,
-      url: newUrl
-    };
-    
-    setSocialLinks([...socialLinks, newLink]);
-    setNewPlatform("");
-    setNewUrl("");
-    
-    // Save immediately
-    updateSocialLinks.mutate([...socialLinks, newLink]);
+    addSocialLink.mutate({ platform: newPlatform, url: newUrl });
+    setNewUrl('');
   };
-  
-  const handleRemoveLink = (index: number) => {
-    const updatedLinks = [...socialLinks];
-    updatedLinks.splice(index, 1);
-    setSocialLinks(updatedLinks);
-    
-    // Save immediately
-    updateSocialLinks.mutate(updatedLinks);
-  };
-  
-  const handleDisplayStyleChange = (value: "icons" | "buttons") => {
-    setDisplayStyle(value);
-    updateDisplayPreference.mutate(value);
-  };
-  
-  const getPlatformIcon = (platform: string) => {
-    switch (platform.toLowerCase()) {
-      case 'instagram':
-        return <Instagram className="h-4 w-4" />;
-      case 'facebook':
-        return <Facebook className="h-4 w-4" />;
-      case 'twitter':
-        return <Twitter className="h-4 w-4" />;
-      case 'linkedin':
-        return <Linkedin className="h-4 w-4" />;
-      default:
-        return <Globe className="h-4 w-4" />;
+
+  const handleDisplayStyleChange = (value: string) => {
+    if (value === 'icons' || value === 'buttons') {
+      setDisplayStyle(value);
+      saveDisplayStyleMutation.mutate(value);
     }
   };
-  
+
+  if (isLoading || isLoadingSettings) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Social Media Links</CardTitle>
+          <CardDescription>Loading your social media links...</CardDescription>
+        </CardHeader>
+        <CardContent className="flex justify-center py-6">
+          <div className="h-8 w-8 border-4 border-t-transparent border-wakti-blue rounded-full animate-spin"></div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <Card className="border-gray-200 shadow-sm overflow-hidden">
-      <CardHeader className="px-4 sm:px-6 pb-4 bg-gradient-to-r from-wakti-blue/5 to-wakti-blue/10">
-        <div className="flex items-center gap-2">
-          <Share2 className="h-5 w-5 text-wakti-blue" />
-          <div>
-            <CardTitle>Social Media Links</CardTitle>
-            <CardDescription>
-              {isReadOnly 
-                ? "View business social media links" 
-                : "Connect your business to social media platforms"
-              }
-            </CardDescription>
-          </div>
-        </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Social Media Links</CardTitle>
+        <CardDescription>Add links to your social media profiles</CardDescription>
       </CardHeader>
-      <CardContent className="px-4 sm:px-6 pt-4 space-y-4">
-        {isLoading ? (
-          <div className="flex justify-center py-6">
-            <div className="h-8 w-8 border-4 border-t-transparent border-wakti-blue rounded-full animate-spin"></div>
+      <CardContent className="space-y-6">
+        {readOnly && (
+          <Alert variant="warning">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              You are viewing social media links in read-only mode.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {!readOnly && (
+          <>
+            <div className="space-y-4">
+              <div className="flex flex-col space-y-2">
+                <Label>Display Style</Label>
+                <ToggleGroup 
+                  type="single" 
+                  value={displayStyle} 
+                  onValueChange={handleDisplayStyleChange}
+                  className="justify-start"
+                >
+                  <ToggleGroupItem value="icons">Icons Only</ToggleGroupItem>
+                  <ToggleGroupItem value="buttons">Button Style</ToggleGroupItem>
+                </ToggleGroup>
+              </div>
+            </div>
+
+            <div className="flex flex-col space-y-4">
+              <div className="flex flex-wrap gap-2">
+                <Select value={newPlatform} onValueChange={(value) => setNewPlatform(value as SocialPlatform)}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Select Platform" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {platformOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        <div className="flex items-center">
+                          {option.icon}
+                          <span className="ml-2">{option.label}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                
+                <Input
+                  type="url"
+                  placeholder="https://"
+                  value={newUrl}
+                  onChange={(e) => setNewUrl(e.target.value)}
+                  className="flex-1"
+                />
+                
+                <Button onClick={handleAddLink} disabled={addSocialLink.isPending}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
+        
+        {socialLinks && socialLinks.length > 0 ? (
+          <div className="space-y-2">
+            {socialLinks.map((link) => {
+              const platform = platformOptions.find(p => p.value === link.platform);
+              return (
+                <div key={link.id} className="flex items-center justify-between border p-2 rounded">
+                  <div className="flex items-center">
+                    {platform?.icon}
+                    <span className="ml-2 truncate max-w-[200px] sm:max-w-[300px]">
+                      {link.url}
+                    </span>
+                  </div>
+                  {!readOnly && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => deleteSocialLink.mutate(link.id)}
+                      disabled={deleteSocialLink.isPending}
+                    >
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                    </Button>
+                  )}
+                </div>
+              );
+            })}
           </div>
         ) : (
-          <>
-            {socialLinks.length === 0 ? (
-              <div className="text-center py-4">
-                <p className="text-muted-foreground">No social media links added yet.</p>
-                {!isReadOnly && (
-                  <p className="text-sm mt-1">Add your first link below.</p>
-                )}
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {socialLinks.map((link, index) => (
-                  <div 
-                    key={index} 
-                    className="flex items-center justify-between p-3 bg-muted/50 rounded-md"
-                  >
-                    <div className="flex items-center gap-3">
-                      {getPlatformIcon(link.platform)}
-                      <div>
-                        <div className="font-medium capitalize">{link.platform}</div>
-                        <a 
-                          href={link.url} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
-                          className="text-sm text-blue-600 hover:underline"
-                        >
-                          {link.url}
-                        </a>
-                      </div>
-                    </div>
-                    {!isReadOnly && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => handleRemoveLink(index)}
-                      >
-                        Remove
-                      </Button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-            
-            {!isReadOnly && (
-              <>
-                <div className="border-t pt-4 mt-4">
-                  <h3 className="font-medium mb-2">Add New Social Link</h3>
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_2fr_auto]">
-                    <div>
-                      <Label htmlFor="platform" className="mb-1 block">Platform</Label>
-                      <Select 
-                        value={newPlatform} 
-                        onValueChange={setNewPlatform}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select platform" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="facebook">Facebook</SelectItem>
-                          <SelectItem value="instagram">Instagram</SelectItem>
-                          <SelectItem value="twitter">Twitter</SelectItem>
-                          <SelectItem value="linkedin">LinkedIn</SelectItem>
-                          <SelectItem value="website">Website</SelectItem>
-                          <SelectItem value="youtube">YouTube</SelectItem>
-                          <SelectItem value="tiktok">TikTok</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="url" className="mb-1 block">URL</Label>
-                      <Input 
-                        id="url" 
-                        value={newUrl} 
-                        onChange={(e) => setNewUrl(e.target.value)}
-                        placeholder="https://..."
-                      />
-                    </div>
-                    <div className="flex items-end">
-                      <Button 
-                        onClick={handleAddLink} 
-                        disabled={!newPlatform || !newUrl}
-                      >
-                        <PlusCircle className="h-4 w-4 mr-2" />
-                        Add
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="border-t pt-4 mt-4">
-                  <h3 className="font-medium mb-2">Display Preference</h3>
-                  <RadioGroup 
-                    value={displayStyle} 
-                    onValueChange={(value) => handleDisplayStyleChange(value as "icons" | "buttons")}
-                    className="flex flex-col sm:flex-row gap-4"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="icons" id="icons" />
-                      <Label htmlFor="icons">Show as icons only</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="buttons" id="buttons" />
-                      <Label htmlFor="buttons">Show as buttons with labels</Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-              </>
-            )}
-            
-            {updateSocialLinks.isError && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  There was an error saving your social links. Please try again.
-                </AlertDescription>
-              </Alert>
-            )}
-          </>
+          <p className="text-muted-foreground text-center py-4">
+            No social links added yet.
+          </p>
         )}
       </CardContent>
     </Card>

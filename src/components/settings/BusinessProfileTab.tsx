@@ -65,21 +65,20 @@ const BusinessProfileTab: React.FC = () => {
         </CardContent>
       </Card>
       
-      {!isStaff && (
-        <>
-          <SocialLinksManagement 
-            profileId={profile.id}
-            readOnly={isStaff}
-          />
-          
-          <BusinessHoursManagement 
-            profileId={profile.id} 
-            readOnly={isStaff} 
-          />
-          
-          <BusinessProfileInfo profile={profile} />
-        </>
-      )}
+      {/* Social Links Management */}
+      <SocialLinksManagement 
+        profileId={profile.id}
+        readOnly={isStaff}
+      />
+      
+      {/* Business Hours Management */}
+      <BusinessHoursManagement 
+        profileId={profile.id} 
+        readOnly={isStaff} 
+      />
+      
+      {/* Business Profile Info */}
+      <BusinessProfileInfo profile={profile} />
     </div>
   );
 };
