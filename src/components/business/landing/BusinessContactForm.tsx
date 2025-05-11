@@ -23,7 +23,8 @@ interface BusinessContactFormProps {
   businessId: string;
   pageId: string;
   onSubmitSuccess?: () => void;
-  submitContactForm: (data: { businessId: string; pageId: string; formData: any }) => Promise<any>;
+  submitForm?: (data: any) => Promise<any>;
+  submitContactForm?: (data: any) => Promise<any>;
   primaryColor?: string;
   textColor?: string;
 }
@@ -32,6 +33,7 @@ export function BusinessContactForm({
   businessId, 
   pageId, 
   onSubmitSuccess,
+  submitForm,
   submitContactForm,
   primaryColor = "#3B82F6",
   textColor = "#FFFFFF"
@@ -52,7 +54,14 @@ export function BusinessContactForm({
     try {
       setIsSubmitting(true);
       
-      await submitContactForm({
+      // Use submitForm if provided, otherwise fall back to submitContactForm
+      const submitFunction = submitForm || submitContactForm;
+      
+      if (!submitFunction) {
+        throw new Error("No submit function provided");
+      }
+      
+      await submitFunction({
         businessId,
         pageId,
         formData: {

@@ -1,6 +1,6 @@
 
 import React from "react";
-import { BusinessPage, BusinessPageSection, BusinessSocialLink } from "@/types/business.types";
+import { BusinessPage, BusinessPageSection, BusinessSocialLink, BusinessHour } from "@/types/business.types";
 import BusinessAbout from "./BusinessAbout";
 import BusinessGallery from "./BusinessGallery";
 import BusinessTestimonials from "./BusinessTestimonials";
@@ -13,13 +13,15 @@ interface BusinessPageSectionsProps {
   businessPage: BusinessPage;
   socialLinks?: BusinessSocialLink[];
   submitContactForm?: (data: any) => Promise<any>;
+  businessHours?: BusinessHour[];
 }
 
 const BusinessPageSections = ({
   pageSections,
   businessPage,
   socialLinks,
-  submitContactForm
+  submitContactForm,
+  businessHours
 }: BusinessPageSectionsProps) => {
   // Log passed-in social links for debugging
   console.log("BusinessPageSections received socialLinks:", socialLinks);

@@ -1,9 +1,10 @@
+
 import React from "react";
 import { BusinessPageSection, BusinessHour } from "@/types/business.types";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface BusinessHoursProps {
-  section: BusinessPageSection;
+  section?: BusinessPageSection;
   businessHours?: BusinessHour[];
 }
 

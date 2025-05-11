@@ -37,7 +37,7 @@ const BusinessContact: React.FC<BusinessContactProps> = ({
               <BusinessContactForm 
                 businessId={businessId} 
                 pageId={pageId}
-                submitForm={submitContactForm}
+                submitContactForm={submitContactForm}
                 primaryColor={primaryColor}
               />
             )}
