@@ -9,12 +9,27 @@ import { Separator } from "@/components/ui/separator";
 import { Mail, Phone, Globe, Info } from "lucide-react";
 import BusinessBookingTemplatesSection from "@/components/business/landing/sections/BusinessBookingTemplatesSection";
 import { Tables } from "@/integrations/supabase/types";
+import BusinessSocialLinks from "@/components/business/landing/BusinessSocialLinks";
+import { BusinessSocialLink } from "@/types/business.types";
+import BusinessHours from "@/components/business/landing/BusinessHours";
+
+interface BusinessHour {
+  id: string;
+  business_id: string;
+  day_of_week: number;
+  is_open: boolean;
+  opening_time: string | null;
+  closing_time: string | null;
+}
 
 const BusinessPublicView = () => {
   const { slug, businessId } = useParams<{ slug?: string; businessId?: string }>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [profile, setProfile] = useState<Tables<"profiles"> | null>(null);
+  const [socialLinks, setSocialLinks] = useState<BusinessSocialLink[]>([]);
+  const [businessHours, setBusinessHours] = useState<BusinessHour[]>([]);
+  const [loadingHours, setLoadingHours] = useState(false);
 
   useEffect(() => {
     const fetchBusinessProfile = async () => {
@@ -40,6 +55,14 @@ const BusinessPublicView = () => {
         }
         
         setProfile(data);
+        
+        // Once we have the profile, fetch social links and business hours
+        if (data && data.id) {
+          await Promise.all([
+            fetchSocialLinks(data.id),
+            fetchBusinessHours(data.id)
+          ]);
+        }
       } catch (err) {
         console.error("Exception during profile fetch:", err);
         setError("An unexpected error occurred");
@@ -50,6 +73,60 @@ const BusinessPublicView = () => {
 
     fetchBusinessProfile();
   }, [slug, businessId]);
+  
+  const fetchSocialLinks = async (profileId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('business_social_links')
+        .select('*')
+        .eq('business_id', profileId);
+        
+      if (error) {
+        console.error("Error fetching social links:", error);
+        return;
+      }
+      
+      setSocialLinks(data || []);
+    } catch (err) {
+      console.error("Exception fetching social links:", err);
+    }
+  };
+  
+  const fetchBusinessHours = async (profileId: string) => {
+    try {
+      setLoadingHours(true);
+      const { data, error } = await supabase
+        .from('business_hours')
+        .select('*')
+        .eq('business_id', profileId)
+        .single();
+        
+      if (error && error.code !== 'PGRST116') {
+        // PGRST116 is "no rows returned" which is ok - it just means no hours are set
+        console.error("Error fetching business hours:", error);
+        return;
+      }
+      
+      if (data && data.hours) {
+        // If we have structured hours data in the business_hours table
+        setBusinessHours(data.hours);
+      } else {
+        // Attempt to load legacy format if available
+        const { data: hourData, error: hourError } = await supabase
+          .from('business_hours')
+          .select('*')
+          .eq('business_id', profileId);
+          
+        if (!hourError && hourData && hourData.length > 0) {
+          setBusinessHours(hourData);
+        }
+      }
+    } catch (err) {
+      console.error("Exception fetching business hours:", err);
+    } finally {
+      setLoadingHours(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -88,6 +165,20 @@ const BusinessPublicView = () => {
           </h1>
           {profile.business_type && (
             <p className="text-xl text-white/80 mt-2">{profile.business_type}</p>
+          )}
+          
+          {/* Display social links if available */}
+          {socialLinks && socialLinks.length > 0 && (
+            <div className="mt-6">
+              <BusinessSocialLinks 
+                socialLinks={socialLinks}
+                iconsStyle="colored"
+                size="default"
+                backgroundColor="rgba(255,255,255,0.1)"
+                textColor="#ffffff"
+                buttonClassName="mx-1"
+              />
+            </div>
           )}
         </div>
       </section>
@@ -153,19 +244,43 @@ const BusinessPublicView = () => {
                     </div>
                   )}
                 </div>
+                
+                {/* Display social links again if available (footer style) */}
+                {socialLinks && socialLinks.length > 0 && (
+                  <div className="mt-6">
+                    <h3 className="text-sm font-medium mb-2">Connect With Us</h3>
+                    <BusinessSocialLinks 
+                      socialLinks={socialLinks}
+                      iconsStyle="default"
+                      size="default"
+                    />
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
           
           <div>
-            <Card className="h-full">
-              <CardHeader>
-                <CardTitle>Business Hours</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Please contact us for our business hours</p>
-              </CardContent>
-            </Card>
+            {/* Only show business hours if we have data */}
+            {businessHours && businessHours.length > 0 ? (
+              <Card className="h-full">
+                <CardHeader>
+                  <CardTitle>Business Hours</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <BusinessHours businessHours={businessHours} />
+                </CardContent>
+              </Card>
+            ) : !loadingHours && (
+              <Card className="h-full">
+                <CardHeader>
+                  <CardTitle>Contact Us</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">Please contact us for more information about our services and availability.</p>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </SectionContainer>
