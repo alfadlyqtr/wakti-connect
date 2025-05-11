@@ -3,7 +3,6 @@ import React from "react";
 import { useSectionEditor } from "@/hooks/useSectionEditor";
 import HeaderEditor from "./HeaderEditor";
 import ContactEditor from "./ContactEditor";
-import HoursEditor from "./HoursEditor";
 import AboutEditor from "./AboutEditor";
 import DefaultEditor from "./DefaultEditor";
 import GalleryEditor from "./gallery";
@@ -31,9 +30,6 @@ const SectionEditorFields: React.FC = () => {
         
       case 'contact':
         return <ContactEditor contentData={contentData} handleInputChange={handleInputChange} />;
-        
-      case 'hours':
-        return <HoursEditor contentData={contentData} handleInputChange={handleInputChange} />;
         
       case 'about':
         return <AboutEditor contentData={contentData} handleInputChange={handleInputChange} />;

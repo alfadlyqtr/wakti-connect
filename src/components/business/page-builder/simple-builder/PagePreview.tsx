@@ -3,7 +3,6 @@ import React from "react";
 import { SectionType, PageSettings, BusinessPageData } from "./types";
 import HeaderSection from "./sections/HeaderSection";
 import BookingSection from "./sections/BookingSection";
-import HoursSection from "./sections/HoursSection";
 import SocialSection from "./sections/SocialSection";
 import ChatbotSection from "./sections/ChatbotSection";
 import { Plus } from "lucide-react";
@@ -86,12 +85,6 @@ const PagePreview: React.FC<PagePreviewProps> = ({
           isActive={isActive} 
           onClick={() => setActiveSectionIndex(index)} 
         />;
-      case "hours":
-        return <HoursSection 
-          section={section} 
-          isActive={isActive} 
-          onClick={() => setActiveSectionIndex(index)} 
-        />;
       case "social":
         return <SocialSection 
           section={section} 
@@ -140,9 +133,6 @@ const PagePreview: React.FC<PagePreviewProps> = ({
               </Button>
               <Button variant="outline" size="sm" onClick={() => addSection("booking")}>
                 <Plus className="h-4 w-4 mr-1" /> Booking
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => addSection("hours")}>
-                <Plus className="h-4 w-4 mr-1" /> Hours
               </Button>
               <Button variant="outline" size="sm" onClick={() => addSection("social")}>
                 <Plus className="h-4 w-4 mr-1" /> Social

@@ -74,14 +74,6 @@ const BusinessPageSections: React.FC<BusinessPageSectionsProps> = ({
               />
             );
           
-          case 'hours':
-            return (
-              <BusinessHours
-                key={section.id}
-                businessHours={[]}
-              />
-            );
-          
           case 'gallery':
             return (
               <BusinessGallery
