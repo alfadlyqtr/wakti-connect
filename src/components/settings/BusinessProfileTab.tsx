@@ -1,7 +1,6 @@
 
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tables } from "@/integrations/supabase/types";
 import { User } from "lucide-react";
 import { useProfileSettings } from "@/hooks/useProfileSettings";
 import { useStaffPermissions } from "@/hooks/useStaffPermissions";

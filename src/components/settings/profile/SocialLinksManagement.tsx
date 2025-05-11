@@ -1,124 +1,116 @@
 import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { 
-  Facebook,
-  Instagram, 
-  Linkedin, 
-  Twitter, 
-  Youtube,
-  Globe,
-  Plus,
-  Trash2, 
-  MapPin,
-  Save
-} from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/components/ui/use-toast";
-import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
+import { LinkIcon, Loader2, Trash2, Plus, ExternalLink } from "lucide-react";
 import { useBusinessSocialLinks } from "@/hooks/useBusinessSocialLinks";
-import { useUpdatePageMutation } from "@/hooks/business-page/useBusinessPageMutations";
-import { useOwnerBusinessPageQuery } from "@/hooks/business-page/useBusinessPageQueries";
-import { BusinessSocialLink, SocialPlatform } from "@/types/business.types";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { SocialPlatform } from "@/types/business.types";
+import { toast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SocialLinksManagementProps {
-  profileId?: string;
+  profileId: string;
   readOnly?: boolean;
 }
 
-// Map of social platform icons
-const platformIcons: Record<string, React.ReactNode> = {
-  facebook: <Facebook className="h-5 w-5" />,
-  instagram: <Instagram className="h-5 w-5" />,
-  twitter: <Twitter className="h-5 w-5" />,
-  linkedin: <Linkedin className="h-5 w-5" />,
-  youtube: <Youtube className="h-5 w-5" />,
-  website: <Globe className="h-5 w-5" />,
-  whatsapp: <div className="h-5 w-5 flex items-center justify-center">Wa</div>,
-  tiktok: <div className="h-5 w-5 flex items-center justify-center">TT</div>,
-  pinterest: <div className="h-5 w-5 flex items-center justify-center">Pin</div>,
+type SocialLink = {
+  id?: string;
+  platform: SocialPlatform;
+  url: string;
 };
 
-const SocialLinksManagement: React.FC<SocialLinksManagementProps> = ({ 
-  profileId,
-  readOnly = false 
-}) => {
-  const [newPlatform, setNewPlatform] = useState<string>("");
-  const [newUrl, setNewUrl] = useState<string>("");
-  const [locationUrl, setLocationUrl] = useState<string>("");
-  const [displayAsButtons, setDisplayAsButtons] = useState<boolean>(false);
-  
-  const { socialLinks, isLoading, addSocialLink, updateSocialLink, deleteSocialLink } = useBusinessSocialLinks(profileId);
-  const { toast } = useToast();
-  
-  // Get business page data for social links style settings
-  const { data: businessPage } = useOwnerBusinessPageQuery();
-  const updatePage = useUpdatePageMutation();
+const platformOptions: SocialPlatform[] = [
+  "facebook",
+  "instagram",
+  "twitter",
+  "linkedin",
+  "youtube",
+  "tiktok",
+  "pinterest",
+  "website",
+  "whatsapp"
+];
 
-  // Initialize display preference from business page settings
+const platformLabels: Record<SocialPlatform, string> = {
+  facebook: "Facebook",
+  instagram: "Instagram",
+  twitter: "Twitter / X",
+  linkedin: "LinkedIn",
+  youtube: "YouTube",
+  tiktok: "TikTok",
+  pinterest: "Pinterest",
+  website: "Website",
+  whatsapp: "WhatsApp"
+};
+
+const SocialLinksManagement: React.FC<SocialLinksManagementProps> = ({ profileId, readOnly = false }) => {
+  const [newLink, setNewLink] = useState<SocialLink>({ platform: "website", url: "" });
+  const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
+  const [linkToDelete, setLinkToDelete] = useState<string | null>(null);
+  const [displayAsButtons, setDisplayAsButtons] = useState<boolean>(false);
+  const [isLoadingSetting, setIsLoadingSettings] = useState<boolean>(true);
+  const [isSavingSettings, setIsSavingSettings] = useState<boolean>(false);
+  
+  const { 
+    socialLinks, 
+    isLoading: isLoadingLinks, 
+    addSocialLink, 
+    updateSocialLink, 
+    deleteSocialLink
+  } = useBusinessSocialLinks(profileId);
+
+  // Load display settings from the database
   useEffect(() => {
-    if (businessPage) {
-      // Check if the social_icons_style is 'default' (icons) or 'button'
-      setDisplayAsButtons(businessPage.social_icons_style === 'button');
+    const loadDisplaySettings = async () => {
+      try {
+        const { data } = await supabase
+          .from('business_pages')
+          .select('social_icons_style')
+          .eq('business_id', profileId)
+          .single();
+        
+        if (data) {
+          setDisplayAsButtons(data.social_icons_style === 'button');
+        }
+      } catch (error) {
+        console.error('Error loading social links display settings:', error);
+      } finally {
+        setIsLoadingSettings(false);
+      }
+    };
+
+    if (profileId) {
+      loadDisplaySettings();
     }
-  }, [businessPage]);
+  }, [profileId]);
 
   const handleAddLink = async () => {
-    if (readOnly) return;
-    
-    if (!newPlatform) {
+    if (!newLink.url.trim()) {
       toast({
-        title: "Platform required",
-        description: "Please select a social media platform",
-        variant: "destructive",
+        title: "Error",
+        description: "Please enter a valid URL",
+        variant: "destructive"
       });
       return;
     }
-    
-    if (!newUrl) {
-      toast({
-        title: "URL required",
-        description: "Please enter the URL for your social media profile",
-        variant: "destructive",
-      });
-      return;
-    }
-    
+
     try {
-      // Validate URL format
-      let urlToAdd = newUrl;
-      if (!urlToAdd.startsWith('http://') && !urlToAdd.startsWith('https://')) {
-        urlToAdd = 'https://' + urlToAdd;
-      }
-      
-      await addSocialLink.mutateAsync({ 
-        platform: newPlatform as SocialPlatform, 
-        url: urlToAdd 
+      await addSocialLink.mutateAsync({
+        platform: newLink.platform,
+        url: newLink.url
       });
-      
-      setNewPlatform("");
-      setNewUrl("");
+
+      setNewLink({ platform: "website", url: "" });
     } catch (error) {
       console.error("Error adding social link:", error);
     }
   };
 
-  const handleDeleteLink = async (id: string) => {
-    if (readOnly) return;
-    
-    try {
-      await deleteSocialLink.mutateAsync(id);
-    } catch (error) {
-      console.error("Error deleting social link:", error);
-    }
-  };
-
   const handleUpdateLink = async (id: string, url: string) => {
-    if (readOnly) return;
-    
     try {
       await updateSocialLink.mutateAsync({ id, url });
     } catch (error) {
@@ -126,261 +118,224 @@ const SocialLinksManagement: React.FC<SocialLinksManagementProps> = ({
     }
   };
 
-  const handleSaveLocationUrl = async () => {
-    if (readOnly) return;
+  const confirmDelete = (id: string) => {
+    setLinkToDelete(id);
+    setShowDeleteDialog(true);
+  };
+
+  const handleDeleteLink = async () => {
+    if (linkToDelete) {
+      try {
+        await deleteSocialLink.mutateAsync(linkToDelete);
+        setShowDeleteDialog(false);
+        setLinkToDelete(null);
+      } catch (error) {
+        console.error("Error deleting social link:", error);
+      }
+    }
+  };
+
+  const handleDisplaySettingChange = async (value: boolean) => {
+    setDisplayAsButtons(value);
+    setIsSavingSettings(true);
     
     try {
-      // Find if we already have a maps URL in our social links
-      const existingMapsLink = socialLinks?.find(link => link.platform === "website" && link.url.includes("maps.google.com"));
+      const { data: existingPage } = await supabase
+        .from('business_pages')
+        .select('id')
+        .eq('business_id', profileId)
+        .single();
       
-      if (locationUrl) {
-        let urlToAdd = locationUrl;
-        if (!urlToAdd.startsWith('http://') && !urlToAdd.startsWith('https://')) {
-          urlToAdd = 'https://' + urlToAdd;
-        }
-        
-        if (existingMapsLink) {
-          // Update existing maps link
-          await updateSocialLink.mutateAsync({
-            id: existingMapsLink.id,
-            url: urlToAdd
+      if (existingPage) {
+        await supabase
+          .from('business_pages')
+          .update({
+            social_icons_style: value ? 'button' : 'default',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingPage.id);
+      } else {
+        await supabase
+          .from('business_pages')
+          .insert({
+            business_id: profileId,
+            social_icons_style: value ? 'button' : 'default',
+            page_title: 'My Business',
+            page_slug: 'my-business',
+            is_published: false,
           });
-        } else {
-          // Add new maps link
-          await addSocialLink.mutateAsync({
-            platform: "website" as SocialPlatform,
-            url: urlToAdd
-          });
-        }
-        
-        toast({
-          title: "Location saved",
-          description: "Your location URL has been saved successfully.",
-        });
       }
+      
+      toast({
+        title: "Display settings updated",
+        description: `Social links will now display as ${value ? 'buttons' : 'icons'} on your public page.`
+      });
     } catch (error) {
-      console.error("Error saving location URL:", error);
+      console.error('Error saving social links display setting:', error);
       toast({
         title: "Error",
-        description: "Failed to save location URL.",
-        variant: "destructive",
+        description: "Failed to save display settings",
+        variant: "destructive"
       });
+      setDisplayAsButtons(!value); // Revert the switch if saving fails
+    } finally {
+      setIsSavingSettings(false);
     }
   };
 
-  // Save the display preference to the database
-  const handleDisplayToggle = async (value: boolean) => {
-    setDisplayAsButtons(value);
-    
-    if (businessPage && !readOnly) {
-      try {
-        await updatePage.mutateAsync({
-          pageId: businessPage.id,
-          data: {
-            social_icons_style: value ? 'button' : 'default'
-          }
-        });
-        
-        toast({
-          title: "Display preference updated",
-          description: "Your social links display preference has been saved.",
-        });
-      } catch (error) {
-        console.error("Error updating display preference:", error);
-        toast({
-          title: "Error",
-          description: "Failed to update display preference.",
-          variant: "destructive",
-        });
-      }
-    }
-  };
-  
-  // Find maps URL from links if it exists
-  useEffect(() => {
-    if (socialLinks && socialLinks.length > 0) {
-      const mapsLink = socialLinks.find(link => link.url.includes("maps.google.com"));
-      if (mapsLink) {
-        setLocationUrl(mapsLink.url);
-      }
-    }
-  }, [socialLinks]);
+  const isLoading = isLoadingLinks || isLoadingSetting;
 
-  // Available platforms excluding already added ones
-  const getAvailablePlatforms = () => {
-    const allPlatforms = ["facebook", "instagram", "twitter", "linkedin", "youtube", "tiktok", "pinterest", "website", "whatsapp"];
-    const usedPlatforms = socialLinks?.map(link => link.platform) || [];
-    return allPlatforms.filter(platform => !usedPlatforms.includes(platform as SocialPlatform));
-  };
+  if (isLoading) {
+    return (
+      <Card className="border-gray-200 shadow-sm">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <LinkIcon className="h-5 w-5" />
+            <CardTitle>Social Links</CardTitle>
+          </div>
+          <CardDescription>Loading social links...</CardDescription>
+        </CardHeader>
+        <CardContent className="flex justify-center py-6">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <Card className="shadow-sm">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Globe className="h-5 w-5" />
-          Social Media Links
-        </CardTitle>
-        <CardDescription>
-          {readOnly 
-            ? "View social media links for this business"
-            : "Add your social media profiles so customers can connect with you"
-          }
-        </CardDescription>
-      </CardHeader>
-      
-      <CardContent>
-        <div className="space-y-4">
-          {/* Location Input (Google Maps) */}
-          <div className="space-y-2 border rounded-lg p-3">
-            <div className="flex items-center gap-2">
-              <MapPin className="h-5 w-5 text-primary" />
-              <Label className="text-base font-medium">Google Maps Location</Label>
-            </div>
-            <div className="text-sm text-muted-foreground mb-2">
-              Add your business location from Google Maps to help customers find you
-            </div>
-            
-            <div className="flex flex-wrap gap-2">
-              <Input
-                type="text"
-                placeholder="Paste your Google Maps URL here"
-                value={locationUrl}
-                onChange={(e) => setLocationUrl(e.target.value)}
-                disabled={readOnly}
-                className="flex-1"
-              />
-              
-              {!readOnly && (
-                <Button 
-                  onClick={handleSaveLocationUrl}
-                  disabled={!locationUrl}
-                  className="whitespace-nowrap"
-                >
-                  <Save className="h-4 w-4 mr-1" />
-                  Save Location
-                </Button>
-              )}
-            </div>
+    <>
+      <Card className="border-gray-200 shadow-sm">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <LinkIcon className="h-5 w-5" />
+            <CardTitle>Social Links</CardTitle>
           </div>
-          
-          <Separator />
-
-          {/* Display Toggle */}
+          <CardDescription>Manage your social media presence</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Display Settings */}
           {!readOnly && (
-            <div className="flex items-center justify-between">
-              <Label htmlFor="display-toggle">Display social links as buttons</Label>
+            <div className="flex items-center space-x-2 pb-4">
               <Switch
-                id="display-toggle"
+                id="display-as-buttons"
                 checked={displayAsButtons}
-                onCheckedChange={handleDisplayToggle}
+                onCheckedChange={handleDisplaySettingChange}
+                disabled={readOnly || isSavingSettings}
               />
+              <Label htmlFor="display-as-buttons">
+                {isSavingSettings ? "Saving..." : "Display social links as buttons on public page"}
+              </Label>
             </div>
           )}
-          
+
           {/* Existing Links */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-medium">Your social links</h3>
-            {isLoading ? (
-              <div className="h-8 w-8 border-4 border-t-transparent border-primary rounded-full animate-spin mx-auto"></div>
-            ) : socialLinks && socialLinks.length > 0 ? (
-              <div className="space-y-3">
-                {socialLinks.map(link => (
-                  <div key={link.id} className="flex flex-wrap items-center gap-2 border rounded-lg p-3">
-                    <div className="flex items-center gap-2 min-w-[160px]">
-                      <span className="text-primary">
-                        {platformIcons[link.platform] || <Globe className="h-5 w-5" />}
-                      </span>
-                      <span className="capitalize">{link.platform}</span>
-                    </div>
-                    
-                    {!readOnly ? (
-                      <div className="flex flex-1 gap-2">
-                        <Input
-                          type="text"
-                          value={link.url}
-                          onChange={(e) => handleUpdateLink(link.id, e.target.value)}
-                          className="flex-1"
-                        />
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => handleDeleteLink(link.id)}
-                          title="Remove link"
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <a 
-                        href={link.url} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        className="text-primary hover:underline truncate flex-1"
-                      >
-                        {link.url}
-                      </a>
-                    )}
+          {socialLinks && socialLinks.length > 0 ? (
+            <div className="space-y-3">
+              {socialLinks.map((link) => (
+                <div key={link.id} className="flex items-center gap-2">
+                  <div className="min-w-[100px] font-medium">
+                    {platformLabels[link.platform as SocialPlatform] || link.platform}
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-4 text-muted-foreground text-sm italic">
-                No social links added yet
-              </div>
-            )}
-          </div>
-          
-          {/* Add New Link Form */}
+                  <Input
+                    value={link.url}
+                    onChange={(e) => {
+                      // Only update in UI, we'll save on blur
+                      const updatedLinks = socialLinks.map(l =>
+                        l.id === link.id ? { ...l, url: e.target.value } : l
+                      );
+                    }}
+                    onBlur={(e) => link.id && handleUpdateLink(link.id, e.target.value)}
+                    className="flex-1"
+                    disabled={readOnly}
+                  />
+                  
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => window.open(link.url, '_blank')}
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                  </Button>
+                  
+                  {!readOnly && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => link.id && confirmDelete(link.id)}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-md bg-muted p-4 text-center text-muted-foreground">
+              No social links found. Add your first social link below.
+            </div>
+          )}
+
+          {/* Add New Link */}
           {!readOnly && (
-            <div className="border rounded-lg p-4">
-              <h3 className="text-sm font-medium mb-3">Add a social media link</h3>
-              <div className="flex flex-wrap gap-2">
+            <div className="flex items-end gap-2 pt-4">
+              <div className="w-1/3">
                 <Select
-                  value={newPlatform}
-                  onValueChange={setNewPlatform}
+                  value={newLink.platform}
+                  onValueChange={(value) => setNewLink({ ...newLink, platform: value as SocialPlatform })}
                 >
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select platform" />
+                  <SelectTrigger>
+                    <SelectValue placeholder="Platform" />
                   </SelectTrigger>
                   <SelectContent>
-                    {getAvailablePlatforms().length > 0 ? (
-                      getAvailablePlatforms().map(platform => (
-                        <SelectItem key={platform} value={platform}>
-                          <div className="flex items-center gap-2">
-                            <span className="text-primary">
-                              {platformIcons[platform] || <Globe className="h-4 w-4" />}
-                            </span>
-                            <span className="capitalize">{platform}</span>
-                          </div>
-                        </SelectItem>
-                      ))
-                    ) : (
-                      <SelectItem value="" disabled>No more platforms available</SelectItem>
-                    )}
+                    {platformOptions.map((platform) => (
+                      <SelectItem key={platform} value={platform}>
+                        {platformLabels[platform]}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
-                
-                <Input
-                  type="text"
-                  placeholder="Enter URL (e.g., https://facebook.com/youraccount)"
-                  value={newUrl}
-                  onChange={(e) => setNewUrl(e.target.value)}
-                  className="flex-1"
-                />
-                
-                <Button 
-                  onClick={handleAddLink} 
-                  disabled={!newPlatform || !newUrl}
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add Link
-                </Button>
               </div>
+              <div className="flex-1">
+                <Input
+                  placeholder={`Enter ${platformLabels[newLink.platform]} URL`}
+                  value={newLink.url}
+                  onChange={(e) => setNewLink({ ...newLink, url: e.target.value })}
+                />
+              </div>
+              <Button onClick={handleAddLink} disabled={addSocialLink.isPending}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add
+              </Button>
             </div>
           )}
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove this social link from your profile.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteLink} className="bg-destructive">
+              {deleteSocialLink.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
 
