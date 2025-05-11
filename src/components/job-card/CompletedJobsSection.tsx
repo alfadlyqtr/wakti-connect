@@ -12,12 +12,18 @@ interface CompletedJobsSectionProps {
   completedJobs: JobCard[];
   filterPeriod: FilterPeriod;
   setFilterPeriod: (period: FilterPeriod) => void;
+  paymentFilter?: string;
+  sortOption?: string;
+  isBusinessView?: boolean;
 }
 
 const CompletedJobsSection: React.FC<CompletedJobsSectionProps> = ({
   completedJobs,
   filterPeriod,
-  setFilterPeriod
+  setFilterPeriod,
+  paymentFilter,
+  sortOption,
+  isBusinessView
 }) => {
   const { formatCurrency } = useCurrencyFormat({});
   

@@ -99,8 +99,9 @@ const SimpleBusinessLandingPage: React.FC = () => {
             section_order: 2,
             is_visible: true,
             section_content: {
-              title: 'Our Services',
-              description: 'Browse our services and book your appointment online.'
+                title: 'Our Services',
+                description: 'Browse our services and book your appointment online.',
+                content: '' // Added content property to fix the error
             }
           });
           
