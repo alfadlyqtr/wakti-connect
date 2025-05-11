@@ -1,12 +1,17 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Globe, Plus, Trash2, Save, Facebook, Instagram, Twitter, Linkedin, MapPin } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { Facebook, Instagram, Linkedin, Twitter, Youtube, Globe, MessageCircle, Trash2, MapPin } from "lucide-react";
 import { useBusinessSocialLinks } from "@/hooks/useBusinessSocialLinks";
 import { SocialPlatform } from "@/types/business.types";
 import { Switch } from "@/components/ui/switch";
@@ -16,23 +21,13 @@ interface SocialLinksManagementProps {
   readOnly?: boolean;
 }
 
-const platformOptions: { value: SocialPlatform; label: string; icon: React.ReactNode }[] = [
-  { value: 'facebook', label: 'Facebook', icon: <Facebook className="h-4 w-4" /> },
-  { value: 'instagram', label: 'Instagram', icon: <Instagram className="h-4 w-4" /> },
-  { value: 'twitter', label: 'Twitter', icon: <Twitter className="h-4 w-4" /> },
-  { value: 'linkedin', label: 'LinkedIn', icon: <Linkedin className="h-4 w-4" /> },
-  { value: 'googleMaps', label: 'Google Maps', icon: <MapPin className="h-4 w-4" /> },
-  { value: 'website', label: 'Website', icon: <Globe className="h-4 w-4" /> },
-];
-
 const SocialLinksManagement: React.FC<SocialLinksManagementProps> = ({ 
   profileId,
   readOnly = false 
 }) => {
-  const [newPlatform, setNewPlatform] = useState<SocialPlatform>('website');
-  const [newUrl, setNewUrl] = useState<string>('');
-  const [useIconsOnly, setUseIconsOnly] = useState<boolean>(true);
-  const { toast } = useToast();
+  const [newPlatform, setNewPlatform] = useState<SocialPlatform>("website");
+  const [newUrl, setNewUrl] = useState<string>("");
+  const [displayAsButtons, setDisplayAsButtons] = useState(false);
   
   const { 
     socialLinks, 
@@ -42,219 +37,218 @@ const SocialLinksManagement: React.FC<SocialLinksManagementProps> = ({
     deleteSocialLink 
   } = useBusinessSocialLinks(profileId);
 
-  const handleAddLink = async () => {
-    if (!newUrl.trim()) {
-      toast({
-        title: "URL required",
-        description: "Please enter a URL for the social media link",
-        variant: "destructive"
-      });
-      return;
+  const getPlatformIcon = (platform: SocialPlatform) => {
+    switch (platform) {
+      case "facebook":
+        return <Facebook className="h-5 w-5" />;
+      case "instagram":
+        return <Instagram className="h-5 w-5" />;
+      case "twitter":
+        return <Twitter className="h-5 w-5" />;
+      case "linkedin":
+        return <Linkedin className="h-5 w-5" />;
+      case "youtube":
+        return <Youtube className="h-5 w-5" />;
+      case "website":
+        return <Globe className="h-5 w-5" />;
+      case "whatsapp":
+        return <MessageCircle className="h-5 w-5" />;
+      default:
+        return <Globe className="h-5 w-5" />;
     }
+  };
+
+  const handleAddLink = async () => {
+    if (!newUrl || !newPlatform) return;
     
     try {
-      // Validate URL format
-      let url = newUrl;
-      if (!url.startsWith('http://') && !url.startsWith('https://')) {
-        url = 'https://' + url;
-      }
-      
       await addSocialLink.mutateAsync({
         platform: newPlatform,
-        url
+        url: newUrl
       });
       
       // Reset form
-      setNewUrl('');
+      setNewPlatform("website");
+      setNewUrl("");
     } catch (error) {
-      console.error("Error adding social link:", error);
+      console.error("Failed to add social link:", error);
     }
   };
-  
-  const handleUpdateLink = async (id: string, url: string) => {
-    if (!url.trim()) return;
-    
-    try {
-      await updateSocialLink.mutateAsync({ id, url });
-    } catch (error) {
-      console.error("Error updating social link:", error);
-    }
-  };
-  
+
   const handleDeleteLink = async (id: string) => {
     try {
       await deleteSocialLink.mutateAsync(id);
     } catch (error) {
-      console.error("Error deleting social link:", error);
+      console.error("Failed to delete social link:", error);
     }
   };
-  
-  const getDisplayName = (platform: string): string => {
-    const option = platformOptions.find(opt => opt.value === platform);
-    return option ? option.label : platform.charAt(0).toUpperCase() + platform.slice(1);
-  };
-  
-  const getIcon = (platform: string): React.ReactNode => {
-    const option = platformOptions.find(opt => opt.value === platform);
-    return option?.icon || <Globe className="h-4 w-4" />;
-  };
-  
-  const formatUrl = (url: string): string => {
-    // Get domain name from URL for display
+
+  const handleUpdateLink = async (id: string, url: string) => {
     try {
-      const urlObj = new URL(url);
-      return urlObj.hostname;
-    } catch {
-      return url;
+      await updateSocialLink.mutateAsync({ id, url });
+    } catch (error) {
+      console.error("Failed to update social link:", error);
     }
   };
 
   return (
     <Card className="shadow-sm">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Globe className="h-5 w-5" />
-            <div>
-              <CardTitle>Social Media Links</CardTitle>
-              <CardDescription>
-                {readOnly 
-                  ? "View business social media links"
-                  : "Add and manage your business social media profiles"
-                }
-              </CardDescription>
-            </div>
-          </div>
-          
-          {!readOnly && (
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Show as buttons</span>
-              <Switch 
-                checked={!useIconsOnly} 
-                onCheckedChange={(checked) => setUseIconsOnly(!checked)}
-              />
-            </div>
-          )}
-        </div>
+      <CardHeader className="px-4 sm:px-6 pb-4 bg-gradient-to-r from-wakti-blue/5 to-wakti-blue/10">
+        <CardTitle className="flex items-center gap-2">
+          <Globe className="h-5 w-5" />
+          Social Media Links
+        </CardTitle>
+        <CardDescription>
+          {readOnly 
+            ? "View your business's social media links"
+            : "Add and manage links to your social media profiles and website"
+          }
+        </CardDescription>
       </CardHeader>
       
-      <CardContent className="space-y-4">
-        {isLoading ? (
-          <div className="flex justify-center py-4">
-            <div className="h-6 w-6 border-2 border-t-transparent border-wakti-blue rounded-full animate-spin"></div>
+      <CardContent className="p-4 sm:p-6 space-y-6">
+        {/* Display Style Toggle */}
+        {!readOnly && (
+          <div className="flex items-center justify-between">
+            <Label htmlFor="display-style">Display social links as buttons</Label>
+            <Switch 
+              id="display-style" 
+              checked={displayAsButtons} 
+              onCheckedChange={setDisplayAsButtons} 
+            />
           </div>
-        ) : socialLinks && socialLinks.length > 0 ? (
-          <div className="space-y-4">
-            <div className="grid gap-4">
-              {socialLinks.map((link) => (
-                <div key={link.id} className="flex items-center gap-3 p-3 border rounded-md bg-card">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                    {getIcon(link.platform)}
+        )}
+        
+        {/* Current Links */}
+        <div className="space-y-4">
+          <h3 className="text-sm font-medium">Your Social Links</h3>
+          
+          {isLoading ? (
+            <div className="text-center py-4">Loading social links...</div>
+          ) : socialLinks && socialLinks.length > 0 ? (
+            <div className="space-y-3">
+              {socialLinks.map(link => (
+                <div key={link.id} className="flex items-center justify-between gap-4 p-3 border rounded-md">
+                  <div className="flex items-center gap-2">
+                    {getPlatformIcon(link.platform)}
+                    <span className="font-medium capitalize">{link.platform}</span>
                   </div>
                   
-                  <div className="flex-grow">
-                    <Label className="text-sm font-medium">{getDisplayName(link.platform)}</Label>
-                    <div className="mt-1 flex items-center gap-2">
-                      <Input
+                  {readOnly ? (
+                    <div className="text-sm truncate max-w-[60%]">
+                      <a 
+                        href={link.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline"
+                      >
+                        {link.url}
+                      </a>
+                    </div>
+                  ) : (
+                    <div className="flex-1 flex items-center gap-2">
+                      <Input 
                         value={link.url}
                         onChange={(e) => handleUpdateLink(link.id, e.target.value)}
-                        placeholder={`Enter ${link.platform} URL`}
-                        disabled={readOnly}
-                        className="h-8"
+                        className="text-sm"
                       />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteLink(link.id)}
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
                     </div>
-                  </div>
-                  
-                  {!readOnly && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => handleDeleteLink(link.id)}
-                      className="flex-shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
                   )}
                 </div>
               ))}
             </div>
-            
-            <div className="pt-2">
-              <div className="flex items-center">
-                <span className="text-sm font-medium mr-2">Display style:</span>
-                <div className="flex gap-2 items-center">
-                  {useIconsOnly ? (
-                    <div className="flex gap-2">
-                      {socialLinks.map((link) => (
-                        <div key={link.id} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                          {getIcon(link.platform)}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="flex flex-wrap gap-2">
-                      {socialLinks.map((link) => (
-                        <Button key={link.id} variant="outline" size="sm" className="flex items-center gap-2">
-                          {getIcon(link.platform)}
-                          <span>{getDisplayName(link.platform)}</span>
-                        </Button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
+          ) : (
+            <div className="text-center py-4 text-muted-foreground">
+              No social links added yet
             </div>
-          </div>
-        ) : (
-          <div className="py-4 text-center border border-dashed rounded-md">
-            <p className="text-muted-foreground">No social media links added yet.</p>
-          </div>
-        )}
+          )}
+        </div>
         
+        {/* Add New Link Form */}
         {!readOnly && (
-          <div className="pt-4 border-t">
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="w-full sm:w-1/3">
+          <div className="border rounded-md p-4 mt-4">
+            <h3 className="text-sm font-medium mb-4">Add a New Link</h3>
+            <div className="space-y-4">
+              <div className="flex flex-col space-y-2">
                 <Label htmlFor="platform">Platform</Label>
-                <Select value={newPlatform} onValueChange={(val) => setNewPlatform(val as SocialPlatform)}>
-                  <SelectTrigger id="platform">
+                <Select 
+                  value={newPlatform} 
+                  onValueChange={(value) => setNewPlatform(value as SocialPlatform)}
+                >
+                  <SelectTrigger id="platform" className="w-full">
                     <SelectValue placeholder="Select platform" />
                   </SelectTrigger>
                   <SelectContent>
-                    {platformOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        <div className="flex items-center gap-2">
-                          {option.icon}
-                          <span>{option.label}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
+                    <SelectItem value="facebook">Facebook</SelectItem>
+                    <SelectItem value="instagram">Instagram</SelectItem>
+                    <SelectItem value="twitter">Twitter</SelectItem>
+                    <SelectItem value="linkedin">LinkedIn</SelectItem>
+                    <SelectItem value="youtube">YouTube</SelectItem>
+                    <SelectItem value="website">Website</SelectItem>
+                    <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                    <SelectItem value="tiktok">TikTok</SelectItem>
+                    <SelectItem value="pinterest">Pinterest</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               
-              <div className="flex-1">
+              <div className="flex flex-col space-y-2">
                 <Label htmlFor="url">URL</Label>
-                <div className="flex gap-2">
-                  <Input 
-                    id="url" 
-                    value={newUrl} 
-                    onChange={(e) => setNewUrl(e.target.value)} 
-                    placeholder={`Enter ${getDisplayName(newPlatform)} URL`}
-                  />
-                  <Button 
-                    onClick={handleAddLink} 
-                    className="flex items-center gap-1"
-                    disabled={!newUrl.trim()}
-                  >
-                    <Plus className="h-4 w-4" />
-                    <span>Add</span>
-                  </Button>
-                </div>
+                <Input
+                  id="url"
+                  placeholder="https://..."
+                  value={newUrl}
+                  onChange={(e) => setNewUrl(e.target.value)}
+                />
               </div>
+              
+              <Button
+                onClick={handleAddLink}
+                disabled={!newUrl || !newPlatform}
+                className="w-full"
+              >
+                Add Link
+              </Button>
             </div>
           </div>
         )}
+        
+        {/* Google Maps Location Section */}
+        <div className="border rounded-md p-4 mt-4">
+          <div className="flex items-center gap-2">
+            <MapPin className="h-5 w-5" />
+            <h3 className="text-sm font-medium">Google Maps Location</h3>
+          </div>
+          
+          <div className="mt-4 space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Add your business location to help customers find you on Google Maps.
+            </p>
+            
+            {!readOnly && (
+              <div className="flex flex-col space-y-2">
+                <Label htmlFor="maps-url">Google Maps URL</Label>
+                <div className="flex space-x-2">
+                  <Input
+                    id="maps-url"
+                    placeholder="https://maps.google.com/..."
+                  />
+                  <Button>Save</Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Paste your Google Maps business URL here. You can get this by searching for your business on Google Maps and copying the link.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
