@@ -5,7 +5,6 @@ import { PageHeader } from "./PageHeader";
 import { LogoPreview } from "./LogoPreview";
 import { BookingsPreview } from "./BookingsPreview";
 import { SocialInlinePreview } from "./SocialInlinePreview";
-import { WorkingHoursPreview } from "./WorkingHoursPreview";
 import { ChatbotPreview } from "./ChatbotPreview";
 import { SocialSidebarPreview } from "./SocialSidebarPreview";
 
@@ -13,13 +12,12 @@ export const PagePreview = () => {
   const { pageData } = useBusinessPage();
   const { theme, sectionOrder } = pageData;
   
-  // Map section IDs to their components
+  // Map section IDs to their components - removed workingHours
   const sectionComponents: Record<string, React.ReactNode> = {
     pageSetup: <PageHeader key="pageSetup" />,
     logo: <LogoPreview key="logo" />,
     bookings: <BookingsPreview key="bookings" />,
     socialInline: <SocialInlinePreview key="socialInline" />,
-    workingHours: <WorkingHoursPreview key="workingHours" />,
   };
   
   // Filter and order visible sections

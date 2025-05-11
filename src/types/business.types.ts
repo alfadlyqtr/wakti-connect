@@ -1,3 +1,4 @@
+
 export interface BusinessProfile {
   id: string;
   business_name: string;
@@ -88,7 +89,6 @@ export type SectionType =
   | 'about'
   | 'contact'
   | 'gallery'
-  | 'hours'
   | 'testimonials'
   | 'booking'
   | 'instagram'
@@ -127,12 +127,8 @@ export type SocialIconStyle = 'default' | 'colored' | 'rounded' | 'outlined';
 export type SocialIconSize = 'small' | 'default' | 'large';
 export type SocialIconPosition = 'footer' | 'header' | 'sidebar' | 'both' | 'top' | 'bottom' | 'left' | 'right';
 
-// Define our BusinessHour interface more explicitly
+// Define a placeholder BusinessHour interface to maintain compatibility with existing code
+// This is an empty interface as we're removing the working hours functionality
 export interface BusinessHour {
   id: string;
-  business_id: string;
-  day_of_week: number;
-  is_open: boolean;
-  opening_time: string | null;
-  closing_time: string | null;
 }

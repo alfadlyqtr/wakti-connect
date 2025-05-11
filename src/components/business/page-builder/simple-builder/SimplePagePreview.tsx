@@ -8,7 +8,7 @@ interface SimplePagePreviewProps {
 }
 
 const SimplePagePreview: React.FC<SimplePagePreviewProps> = ({ pageData }) => {
-  const { pageSetup, logo, workingHours, contactInfo, theme, chatbot } = pageData;
+  const { pageSetup, logo, contactInfo, theme, chatbot } = pageData;
 
   // Function to get text alignment class
   const getAlignmentClass = (alignment: string) => {
@@ -107,21 +107,6 @@ const SimplePagePreview: React.FC<SimplePagePreviewProps> = ({ pageData }) => {
           )}
         </div>
       </section>
-
-      {/* Business Hours */}
-      {workingHours.visible && (
-        <section className="py-6 px-4">
-          <h2 className="text-xl font-bold mb-4 text-center">Business Hours</h2>
-          <div className="max-w-md mx-auto">
-            {workingHours.hours.map((hour) => (
-              <div key={hour.day} className="flex justify-between py-2 border-b">
-                <span className="font-medium">{hour.day}</span>
-                <span>{hour.isOpen ? hour.hours : 'Closed'}</span>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
 
       {/* Chatbot Preview */}
       {chatbot.visible && chatbot.embedCode && (
