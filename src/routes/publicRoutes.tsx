@@ -16,14 +16,6 @@ import TermsPage from '@/pages/public/TermsPage';
 import BusinessPublicView from '@/pages/public/BusinessPublicView';
 import PublicLayout from '@/components/layout/PublicLayout';
 
-// Temporary placeholder component for missing pages
-const PlaceholderPage = ({ title }: { title: string }) => (
-  <div className="container mx-auto px-4 py-16 text-center">
-    <h1 className="text-3xl font-bold mb-4">{title} Page</h1>
-    <p className="text-muted-foreground">This page is currently under construction.</p>
-  </div>
-);
-
 // Define public routes with appropriate layout wrapper
 export const publicRoutes = [
   {

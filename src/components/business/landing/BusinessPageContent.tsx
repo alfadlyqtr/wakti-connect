@@ -2,7 +2,7 @@
 import React from "react";
 import { BusinessPage, BusinessPageSection } from "@/types/business.types";
 import { BusinessSocialLink } from "@/hooks/useBusinessSocialLinks";
-import { BusinessHours } from "@/types/business.types";
+import { BusinessHours } from "@/hooks/useBusinessHours";
 import BusinessPageHeader from "@/features/business/components/BusinessPageHeader";
 import PoweredByWAKTI from "@/components/common/PoweredByWAKTI";
 
@@ -29,13 +29,13 @@ const BusinessPageContent: React.FC<BusinessPageContentProps> = ({
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2">{businessPage.business_name || "Business Name"}</h1>
-          <p className="text-muted-foreground">{businessPage.page_description || "Business description"}</p>
+          <h1 className="text-3xl font-bold mb-2">{businessPage.page_title || "Business Name"}</h1>
+          <p className="text-muted-foreground">{businessPage.description || "Business description"}</p>
         </div>
         
         <div className="bg-card rounded-lg shadow p-6 mb-8">
           <h2 className="text-xl font-semibold mb-4">About This Business</h2>
-          <p>{businessPage.page_description || "No description available."}</p>
+          <p>{businessPage.description || "No description available."}</p>
         </div>
 
         {/* Display information about sections being available in preview mode */}

@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Navigate, useParams, useLocation } from "react-router-dom";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import useBusinessPageQueries from "@/hooks/business-page/useBusinessPageQueries";
-import { useBusinessSocialLinks } from "@/hooks/useBusinessSocialLinks";
+import { useBusinessSocialLinks, BusinessSocialLink } from "@/hooks/useBusinessSocialLinks";
 import { useBusinessHours } from "@/hooks/useBusinessHours";
 import BusinessPageContent from "@/components/business/landing/BusinessPageContent";
 import PublicLayout from "@/components/layout/PublicLayout";
@@ -49,9 +49,15 @@ const BusinessPublicView = () => {
   );
 
   // Fetch social links using business ID from the page data
-  const { data: socialLinks, isLoading: linksLoading } = useBusinessSocialLinksQuery(
+  const { data: socialLinksData, isLoading: linksLoading } = useBusinessSocialLinksQuery(
     businessPage?.business_id
   );
+  
+  // Convert socialLinksData to the expected BusinessSocialLink type
+  const socialLinks = socialLinksData ? socialLinksData.map(link => ({
+    ...link,
+    updated_at: link.created_at // Add missing updated_at field
+  })) : [];
 
   // Fetch business hours data
   const { businessHours, isLoading: hoursLoading } = useBusinessHours(
@@ -109,7 +115,7 @@ const BusinessPublicView = () => {
     <BusinessPageContent 
       businessPage={businessPage} 
       pageSections={pageSections || []} 
-      socialLinks={socialLinks || []}
+      socialLinks={socialLinks}
       isPreviewMode={isPreviewMode}
       isAuthenticated={isAuthenticated}
       businessHours={businessHours}
