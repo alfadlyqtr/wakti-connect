@@ -78,7 +78,7 @@ const BusinessPageSections: React.FC<BusinessPageSectionsProps> = ({
             return (
               <BusinessHours
                 key={section.id}
-                section={section}
+                businessHours={[]}
               />
             );
           

@@ -3,7 +3,6 @@ import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar, Map, Clock } from 'lucide-react';
-import { generateMapsUrl } from '@/utils/locationUtils';
 import { useCustomization } from '../context';
 import { format } from 'date-fns';
 

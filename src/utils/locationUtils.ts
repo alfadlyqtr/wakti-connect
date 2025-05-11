@@ -38,3 +38,10 @@ export const generateDirectionsUrl = (url: string): string => {
   // If we can't extract specific coordinates or place ID, return the original URL
   return url;
 };
+
+/**
+ * Generates a Google Maps URL from an address string
+ */
+export const generateMapsUrl = (address: string): string => {
+  return `https://www.google.com/maps?q=${encodeURIComponent(address)}`;
+};

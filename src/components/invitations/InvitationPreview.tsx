@@ -2,19 +2,9 @@ import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar, Map, Clock, CalendarDays } from 'lucide-react';
-import { generateMapsUrl } from '@/utils/locationUtils';
+import { generateDirectionsUrl } from '@/utils/locationUtils';
 import EventInvitationResponse from '@/components/events/EventInvitationResponse';
 import { createGoogleCalendarUrl, createICSFile } from '@/services/event/createICSFile';
-import EventResponseSummary from '@/components/events/EventResponseSummary';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/components/ui/use-toast';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
 
 interface InvitationPreviewProps {
   title: string;
@@ -245,7 +235,7 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({
             <Button 
               size="sm" 
               variant="outline"
-              onClick={() => window.open(generateMapsUrl(location), '_blank')}
+              onClick={() => window.open(generateDirectionsUrl(location), '_blank')}
               className="flex-1 bg-blue-500/40 hover:bg-blue-600/60 text-white font-medium py-3 h-12 rounded-md shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] flex items-center justify-center gap-2 backdrop-blur-sm"
             >
               <Map className="h-4 w-4" />
