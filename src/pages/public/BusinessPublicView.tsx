@@ -7,7 +7,6 @@ import { useBusinessSocialLinks } from "@/hooks/useBusinessSocialLinks";
 import { useBusinessHours } from "@/hooks/useBusinessHours";
 import BusinessPageContent from "@/components/business/landing/BusinessPageContent";
 import PublicLayout from "@/components/layout/PublicLayout";
-import { Button } from "@/components/ui/button";
 
 // Create a simple hook for setting document title
 const useTitle = (title: string) => {
@@ -93,9 +92,12 @@ const BusinessPublicView = () => {
               <p className="mb-6 text-muted-foreground">
                 Sorry, the business page you're looking for does not exist or has been removed.
               </p>
-              <Button variant="default" onClick={() => window.history.back()}>
+              <button 
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-md"
+                onClick={() => window.history.back()}
+              >
                 Go Back
-              </Button>
+              </button>
             </div>
           </div>
         </div>
@@ -120,8 +122,12 @@ const BusinessPublicView = () => {
     );
   };
 
-  // We're already returning the BusinessPublicView directly in routes, so no need to wrap it here
-  return renderContent();
+  // Wrap with public layout
+  return (
+    <PublicLayout>
+      {renderContent()}
+    </PublicLayout>
+  );
 };
 
 export default BusinessPublicView;

@@ -24,48 +24,51 @@ const PlaceholderPage = ({ title }: { title: string }) => (
 );
 
 // Wrapper to apply the PublicLayout - Fixed to properly pass children
-const withPublicLayout = (Component: React.ComponentType<any>) => (props: any) => (
-  <PublicLayout>
-    <Component {...props} />
-  </PublicLayout>
-);
+const withPublicLayout = (Component: React.ComponentType<any>) => {
+  const WrappedComponent = (props: any) => (
+    <PublicLayout>
+      <Component {...props} />
+    </PublicLayout>
+  );
+  return WrappedComponent;
+};
 
 export const publicRoutes = [
   {
     index: true,
-    element: withPublicLayout(LandingPage),
+    element: <LandingPage />,
   },
   {
     path: 'about',
-    element: withPublicLayout(AboutPage),
+    element: <AboutPage />,
   },
   {
     path: 'contact',
-    element: withPublicLayout(ContactPage),
+    element: <ContactPage />,
   },
   {
     path: 'features',
-    element: withPublicLayout(FeaturesPage),
+    element: <FeaturesPage />,
   },
   {
     path: 'pricing',
-    element: withPublicLayout(PricingPage),
+    element: <PricingPage />,
   },
   {
     path: 'privacy',
-    element: withPublicLayout(PrivacyPage),
+    element: <PrivacyPage />,
   },
   {
     path: 'terms',
-    element: withPublicLayout(TermsPage),
+    element: <TermsPage />,
   },
   {
     path: 'faq',
-    element: withPublicLayout(FaqPage),
+    element: <FaqPage />,
   },
   {
     path: 'i/:shareId',
-    element: withPublicLayout(SharedInvitationView),
+    element: <SharedInvitationView />,
   },
   {
     path: 'b/:slug',
@@ -77,7 +80,7 @@ export const publicRoutes = [
   },
   {
     path: '*',
-    element: withPublicLayout(NotFoundPage),
+    element: <NotFoundPage />,
   },
 ];
 
