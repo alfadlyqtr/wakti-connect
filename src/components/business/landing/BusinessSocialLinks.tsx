@@ -1,237 +1,83 @@
 
 import React from "react";
-import { BusinessSocialLink, SocialIconStyle, SocialIconSize } from "@/types/business.types";
-import { 
-  Facebook, 
-  Instagram, 
-  Twitter, 
-  Linkedin, 
-  Youtube,
-  Globe,
-  MessageCircle,
-  Map
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { Facebook, Instagram, Twitter, Linkedin, Globe } from "lucide-react";
+import { BusinessSocialLink } from "@/types/business.types";
 
 interface BusinessSocialLinksProps {
   socialLinks: BusinessSocialLink[];
-  iconsStyle?: SocialIconStyle;
-  size?: SocialIconSize;
-  vertical?: boolean;
-  className?: string;
-  buttonClassName?: string;
-  iconPosition?: 'top' | 'bottom' | 'left' | 'right' | 'footer' | 'header' | 'sidebar';
-  backgroundColor?: string;
-  textColor?: string;
-  hoverColor?: string;
-  borderRadius?: string;
+  iconsStyle?: "default" | "colored" | "outlined";
+  size?: "small" | "default" | "large";
 }
 
-// Custom Pinterest icon component since it's not in lucide-react
-const PinterestIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    {...props}
-  >
-    <circle cx="12" cy="12" r="10" />
-    <path d="M12 6v8" />
-    <path d="m9 15 3 3 3-3" />
-  </svg>
-);
-
-// Custom TikTok icon component
-const TikTokIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    {...props}
-  >
-    <path d="M9 12a4 4 0 1 0 0 8 4 4 0 0 0 0-8z" />
-    <path d="M16 8v8" />
-    <path d="M12 16v-8" />
-    <path d="M20 10c0-1.657-1.343-3-3-3s-3 1.343-3 3" />
-  </svg>
-);
-
-// Custom WhatsApp icon component
-const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    {...props}
-  >
-    <path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21" />
-    <path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1Z" />
-    <path d="M14 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1Z" />
-    <path d="M8.5 13.5a5 5 0 0 0 7 0" />
-  </svg>
-);
-
-const BusinessSocialLinks = ({ 
-  socialLinks, 
-  iconsStyle = 'default',
-  size = 'default',
-  vertical = false,
-  className = "",
-  buttonClassName = "",
-  iconPosition = 'footer',
-  backgroundColor,
-  textColor,
-  hoverColor,
-  borderRadius
-}: BusinessSocialLinksProps) => {
-  const getSocialIcon = (platform: string): any => {
-    switch (platform) {
-      case 'facebook':
-        return Facebook;
-      case 'instagram':
-        return Instagram;
-      case 'twitter':
-        return Twitter;
-      case 'linkedin':
-        return Linkedin;
-      case 'youtube':
-        return Youtube;
-      case 'tiktok':
-        return TikTokIcon;
-      case 'pinterest':
-        return PinterestIcon;
-      case 'whatsapp':
-        return WhatsAppIcon;
-      case 'maps':
-        return Map;
-      case 'website':
-      default:
-        return Globe;
-    }
+const BusinessSocialLinks: React.FC<BusinessSocialLinksProps> = ({
+  socialLinks,
+  iconsStyle = "default",
+  size = "default"
+}) => {
+  // Size classes for the icons
+  const sizeClasses = {
+    small: "h-4 w-4",
+    default: "h-5 w-5",
+    large: "h-6 w-6"
   };
-  
+
+  // Container size classes
+  const containerSizeClasses = {
+    small: "p-1.5",
+    default: "p-2",
+    large: "p-2.5"
+  };
+
+  // Style classes for the icon containers
+  const styleClasses = {
+    default: "bg-gray-100 text-gray-600 hover:bg-gray-200",
+    colored: "text-white",
+    outlined: "border border-gray-300 text-gray-600 hover:border-gray-400"
+  };
+
+  // Get color for specific platform
   const getPlatformColor = (platform: string): string => {
-    if (iconsStyle !== 'colored') return '';
-    
     switch (platform) {
-      case 'facebook':
-        return '#1877F2';
-      case 'instagram':
-        return '#E4405F';
-      case 'twitter':
-        return '#1DA1F2';
-      case 'linkedin':
-        return '#0A66C2';
-      case 'youtube':
-        return '#FF0000';
-      case 'tiktok':
-        return '#000000';
-      case 'pinterest':
-        return '#E60023';
-      case 'whatsapp':
-        return '#25D366';
-      case 'maps':
-        return '#4285F4'; // Google Maps blue
-      default:
-        return '#6B7280';
+      case 'facebook': return "bg-blue-600 hover:bg-blue-700";
+      case 'instagram': return "bg-gradient-to-tr from-purple-600 via-pink-500 to-orange-400 hover:from-purple-700";
+      case 'twitter': return "bg-sky-500 hover:bg-sky-600";
+      case 'linkedin': return "bg-blue-700 hover:bg-blue-800";
+      case 'website': return "bg-gray-700 hover:bg-gray-800";
+      default: return "bg-gray-600 hover:bg-gray-700";
     }
   };
-  
-  const getIconSize = (): number => {
-    switch (size) {
-      case 'small':
-        return 16;
-      case 'large':
-        return 24;
-      default:
-        return 20;
+
+  // Get the appropriate icon
+  const getIconForPlatform = (platform: string) => {
+    switch (platform) {
+      case 'facebook': return <Facebook className={sizeClasses[size]} />;
+      case 'instagram': return <Instagram className={sizeClasses[size]} />;
+      case 'twitter': return <Twitter className={sizeClasses[size]} />;
+      case 'linkedin': return <Linkedin className={sizeClasses[size]} />;
+      case 'website': return <Globe className={sizeClasses[size]} />;
+      default: return <Globe className={sizeClasses[size]} />;
     }
   };
-  
-  const getButtonSize = (): "sm" | "default" | "lg" | "icon" => {
-    switch (size) {
-      case 'small':
-        return 'sm';
-      case 'large':
-        return 'lg';
-      default:
-        return 'default';
-    }
-  };
-  
-  if (!socialLinks || socialLinks.length === 0) {
-    return null;
-  }
-  
+
   return (
-    <div className={cn(
-      "flex gap-2 justify-center",
-      vertical ? "flex-col" : "flex-wrap",
-      "animate-fade-in",
-      className
-    )}>
-      {socialLinks.map((link) => {
-        const Icon = getSocialIcon(link.platform);
-        const color = getPlatformColor(link.platform);
-        const iconSize = getIconSize();
-        const btnSize = getButtonSize();
-        
-        // Custom styling based on props
-        const customStyle: React.CSSProperties = {};
-        if (backgroundColor) customStyle.backgroundColor = backgroundColor;
-        if (textColor) customStyle.color = textColor;
-        if (borderRadius) customStyle.borderRadius = borderRadius;
-        
-        // Override color for colored style
-        if (iconsStyle === 'colored') {
-          customStyle.backgroundColor = color;
-          customStyle.color = '#ffffff';
-        }
-        
-        return (
-          <Button
-            key={link.id}
-            variant={iconsStyle === 'outlined' ? "outline" : iconsStyle === 'rounded' ? "secondary" : "ghost"}
-            size={btnSize}
-            className={cn(
-              "rounded-full transition-transform hover:scale-110",
-              iconsStyle === 'colored' && "text-white",
-              buttonClassName,
-              hoverColor && "hover:brightness-110"
-            )}
-            style={customStyle}
-            asChild
-          >
-            <a 
-              href={link.url} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              aria-label={`Visit our ${link.platform} page`}
-            >
-              <Icon size={iconSize} className={iconsStyle === 'colored' ? "text-white" : ""} />
-            </a>
-          </Button>
-        );
-      })}
+    <div className="flex items-center space-x-3">
+      {socialLinks.map((link) => (
+        <a
+          key={link.id || link.platform}
+          href={link.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`
+            flex items-center justify-center rounded-full transition-all duration-300
+            ${containerSizeClasses[size]}
+            ${iconsStyle === "colored" ? getPlatformColor(link.platform) : styleClasses[iconsStyle]}
+            hover:shadow-md hover:-translate-y-0.5
+          `}
+          aria-label={link.platform}
+        >
+          {getIconForPlatform(link.platform)}
+        </a>
+      ))}
     </div>
   );
 };

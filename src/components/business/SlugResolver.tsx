@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React from "react";
 import { useParams } from "react-router-dom";
 import EnhancedBusinessLandingPage from "@/pages/business/EnhancedBusinessLandingPage";
 import { useBusinessData } from "@/hooks/useBusinessData";
@@ -21,8 +21,8 @@ const SlugResolver = () => {
     );
   }
   
-  // If there was an error or no profile found, display the enhanced landing page
-  // which will handle the error state internally
+  // Whether there's a valid profile or not, show the enhanced landing page
+  // which will handle both success and error states internally
   return <EnhancedBusinessLandingPage />;
 };
 
