@@ -47,7 +47,7 @@ export const useFormReset = ({
     // Set default customization
     setCustomization({
       background: {
-        type: 'solid',
+        type: 'color',
         value: '#ffffff',
       },
       font: {

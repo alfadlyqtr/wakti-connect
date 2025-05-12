@@ -20,7 +20,7 @@ export const eventTemplates: EventTemplate[] = [
     previewImageUrl: "/images/templates/minimal-white.jpg",
     customization: {
       background: {
-        type: "solid",
+        type: "color",
         value: "#ffffff"
       },
       font: {
@@ -54,7 +54,7 @@ export const eventTemplates: EventTemplate[] = [
     previewImageUrl: "/images/templates/gradient-purple.jpg",
     customization: {
       background: {
-        type: "solid",
+        type: "color",
         value: "#6366f1"
       },
       font: {
@@ -88,7 +88,7 @@ export const eventTemplates: EventTemplate[] = [
     previewImageUrl: "/images/templates/business-blue.jpg",
     customization: {
       background: {
-        type: "solid",
+        type: "color",
         value: "#f8fafc"
       },
       font: {
@@ -123,7 +123,7 @@ export const eventTemplates: EventTemplate[] = [
     previewImageUrl: "/images/templates/dark-mode.jpg",
     customization: {
       background: {
-        type: "solid",
+        type: "color",
         value: "#1e293b"
       },
       font: {
@@ -157,7 +157,7 @@ export const eventTemplates: EventTemplate[] = [
     previewImageUrl: "/images/templates/sunset-gradient.jpg",
     customization: {
       background: {
-        type: "solid",
+        type: "color",
         value: "#f59e0b"
       },
       font: {

@@ -1,3 +1,4 @@
+
 import { Event, EventCustomization } from "@/types/event.types";
 
 /**
@@ -21,7 +22,7 @@ export const parseEventCustomization = (customizationJson: any): EventCustomizat
   // Default customization if parsing fails
   return {
     background: {
-      type: "solid",
+      type: "color",
       value: "#ffffff"
     },
     font: {

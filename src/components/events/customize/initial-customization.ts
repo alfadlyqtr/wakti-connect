@@ -3,7 +3,7 @@ import { EventCustomization } from '@/types/event.types';
 
 export const initialCustomization: EventCustomization = {
   background: {
-    type: 'solid',
+    type: 'color',
     value: '#ffffff',
   },
   font: {
