@@ -5,7 +5,7 @@ export const createBackgroundHandlers = (
   customization: EventCustomization,
   onCustomizationChange: (customization: EventCustomization) => void
 ) => {
-  const handleBackgroundChange = (type: BackgroundType, value: string) => {
+  const handleBackgroundChange = (type: 'color' | 'image', value: string) => {
     onCustomizationChange({
       ...customization,
       background: {

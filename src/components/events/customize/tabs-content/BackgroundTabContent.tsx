@@ -24,7 +24,7 @@ export const BackgroundTabContent: React.FC<BackgroundTabContentProps> = ({ titl
       <TabsContent value="color">
         <ColorTab 
           value={customization.background?.value || '#ffffff'} 
-          onChange={(value) => handleBackgroundChange('solid', value)} 
+          onChange={(value) => handleBackgroundChange('color', value)} 
         />
       </TabsContent>
       

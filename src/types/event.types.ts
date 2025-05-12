@@ -60,7 +60,7 @@ export interface EventFormData {
 }
 
 // Background type definition - updated to match invitation types
-export type BackgroundType = "solid" | "image";
+export type BackgroundType = "color" | "image";
 
 // Font weight type
 export type FontWeight = "normal" | "medium" | "bold" | "light";
@@ -70,7 +70,7 @@ export type AnimationDelay = "none" | "staggered" | "sequence";
 
 // Event customization interface
 export interface EventCustomization {
-  // Background - no gradient-related properties
+  // Background - updated type to use "color" instead of "solid"
   background: {
     type: BackgroundType;
     value: string;
