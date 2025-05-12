@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 export const TeamActivityChart: React.FC = () => {
   const isMobile = useIsMobile();
   
-  // Add querying for real staff performance data
+  // Fetch staff activity data using a manual join approach
   const { data: chartData, isLoading, error } = useQuery({
     queryKey: ['staffPerformance'],
     queryFn: async () => {
@@ -30,15 +30,10 @@ export const TeamActivityChart: React.FC = () => {
           throw new Error("Must be a business account to view staff performance");
         }
         
-        // Get staff members with work logs
+        // Step 1: Get staff members for the business
         const { data: staffData, error: staffError } = await supabase
           .from('business_staff')
-          .select(`
-            id,
-            staff_id,
-            name,
-            staff_work_logs (id, start_time, end_time)
-          `)
+          .select('id, name, staff_id')
           .eq('business_id', session.user.id)
           .eq('status', 'active');
         
@@ -48,14 +43,26 @@ export const TeamActivityChart: React.FC = () => {
           return [];
         }
         
-        // Calculate hours worked for each staff member
-        return staffData.map(staff => {
-          const workLogs = staff.staff_work_logs || [];
+        // Step 2: Process each staff member to calculate hours worked
+        const staffPerformanceData = await Promise.all(staffData.map(async (staff) => {
+          // Get work logs for this staff member
+          const { data: workLogs, error: logsError } = await supabase
+            .from('staff_work_logs')
+            .select('start_time, end_time, status')
+            .eq('staff_relation_id', staff.id);
+            
+          if (logsError) {
+            console.error(`Error fetching logs for staff ${staff.name}:`, logsError);
+            return {
+              name: isMobile ? staff.name.split(' ')[0] : staff.name,
+              "Hours Worked": 0
+            };
+          }
+          
+          // Calculate total hours from completed work logs
           let hoursWorked = 0;
           
-          // Handle safely in case staff_work_logs is an error and not an array
-          if (Array.isArray(workLogs)) {
-            // Calculate total hours from completed work logs
+          if (workLogs && workLogs.length > 0) {
             workLogs.forEach(log => {
               if (log.start_time && log.end_time) {
                 const start = new Date(log.start_time);
@@ -73,7 +80,11 @@ export const TeamActivityChart: React.FC = () => {
             name,
             "Hours Worked": Math.round(hoursWorked * 10) / 10 // Round to 1 decimal place
           };
-        });
+        }));
+        
+        // Return the processed data for the chart
+        return staffPerformanceData;
+        
       } catch (error) {
         console.error("Error loading staff performance data:", error);
         throw error;
