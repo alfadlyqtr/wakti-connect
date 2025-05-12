@@ -1,9 +1,9 @@
 
 import React from 'react';
-import SimpleInvitationsList from '@/components/invitations/SimpleInvitationsList';
+import EventsListPage from '@/components/events/EventsListPage';
 
 const DashboardEvents = () => {
-  return <SimpleInvitationsList isEventsList={true} />;
+  return <EventsListPage />;
 };
 
 export default DashboardEvents;

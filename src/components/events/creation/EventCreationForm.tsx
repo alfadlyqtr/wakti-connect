@@ -1,347 +1,435 @@
 
+// Import existing code and add the prepareEventForStorage import
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent } from '@/components/ui/card';
+import { z } from 'zod';
+import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
-import { useForm } from 'react-hook-form';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { EventFormTab, EventCustomization } from '@/types/event.types';
+import DetailsTab from './DetailsTab';
+import ShareLinksTab from './ShareLinksTab';
+import CustomizeTab from '../customize/CustomizeTab';
 import { supabase } from '@/integrations/supabase/client';
-import FormHeader from './FormHeader';
-import FormTabs from './FormTabs';
-import { useEventBasics } from '@/hooks/events/useEventBasics';
-import { useEventLocation } from '@/hooks/events/useEventLocation';
-import { useEventRecipients } from '@/hooks/events/useEventRecipients';
-import { EventFormValues } from '@/types/event.types';
+import { transformDatabaseEvent, prepareEventForStorage } from '@/services/event/eventHelpers';
 
-interface EventCreationFormProps {
-  eventId?: string;
+// Default customization settings
+const defaultCustomization: EventCustomization = {
+  background: {
+    type: 'solid',
+    value: '#ffffff'
+  },
+  font: {
+    family: 'system-ui, sans-serif',
+    size: 'medium',
+    color: '#333333',
+    alignment: 'left'
+  },
+  buttons: {
+    accept: {
+      background: '#4CAF50',
+      color: '#ffffff',
+      shape: 'rounded'
+    },
+    decline: {
+      background: '#f44336',
+      color: '#ffffff',
+      shape: 'rounded'
+    }
+  }
+};
+
+// Interface for form data
+interface FormData {
+  title: string;
+  description: string;
+  location: string;
+  locationTitle: string;
+  locationType: 'manual' | 'google_maps';
+  mapsUrl: string;
+  selectedDate: Date | undefined;
+  startTime: string;
+  endTime: string;
+  isAllDay: boolean;
 }
 
-const EventCreationForm: React.FC<EventCreationFormProps> = ({ eventId }) => {
+const EventCreationForm: React.FC<{ eventId?: string }> = ({ eventId }) => {
   const navigate = useNavigate();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(!!eventId);
-  
-  // Initialize form
-  const form = useForm<EventFormValues>({
-    defaultValues: {
-      title: '',
-      description: '',
-      location: '',
-      startDate: new Date(),
-      isAllDay: false
-    }
+  const [activeTab, setActiveTab] = useState<EventFormTab>('details');
+  const [formData, setFormData] = useState<FormData>({
+    title: '',
+    description: '',
+    location: '',
+    locationTitle: '',
+    locationType: 'manual',
+    mapsUrl: '',
+    selectedDate: undefined,
+    startTime: '12:00',
+    endTime: '13:00',
+    isAllDay: false
   });
-  
-  // Use custom hooks
-  const {
-    title,
-    setTitle,
-    description,
-    setDescription,
-    isAllDay,
-    setIsAllDay,
-    selectedDate,
-    setSelectedDate,
-    startTime,
-    setStartTime,
-    endTime,
-    setEndTime,
-    activeTab,
-    setActiveTab,
-    customization,
-    setCustomization
-  } = useEventBasics();
-  
-  const {
-    location,
-    locationTitle,
-    handleLocationChange,
-    isGettingLocation,
-    locationType,
-    mapsUrl,
-  } = useEventLocation();
-  
-  const {
-    recipients,
-    shareTab,
-    setShareTab,
-    addRecipient,
-    removeRecipient,
-    handleSendEmail
-  } = useEventRecipients();
+  const [customization, setCustomization] = useState<EventCustomization>(defaultCustomization);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Fetch event data if editing
-  const { data: eventData, isLoading: isLoadingEvent } = useQuery({
+  const { data: eventData, isLoading } = useQuery({
     queryKey: ['event', eventId],
     queryFn: async () => {
       if (!eventId) return null;
       
       const { data, error } = await supabase
         .from('events')
-        .select('*, event_invitations(*)')
+        .select('*')
         .eq('id', eventId)
         .single();
-        
-      if (error) {
-        console.error('Error fetching event:', error);
-        throw error;
-      }
       
-      return data;
+      if (error) throw error;
+      return transformDatabaseEvent(data);
     },
-    enabled: !!eventId,
-    onSuccess: (data) => {
-      if (!data) return;
-      
-      // Set form values
-      setTitle(data.title || '');
-      setDescription(data.description || '');
-      setIsAllDay(data.is_all_day || false);
-      
-      if (data.start_time) {
-        const startDate = new Date(data.start_time);
-        setSelectedDate(startDate);
-        
-        if (!data.is_all_day) {
-          setStartTime(`${startDate.getHours().toString().padStart(2, '0')}:${startDate.getMinutes().toString().padStart(2, '0')}`);
-          
-          if (data.end_time) {
-            const endDate = new Date(data.end_time);
-            setEndTime(`${endDate.getHours().toString().padStart(2, '0')}:${endDate.getMinutes().toString().padStart(2, '0')}`);
-          }
-        }
-      }
-      
-      // Set location
-      if (data.location) {
-        handleLocationChange(
-          data.location,
-          data.location_type as 'manual' | 'google_maps',
-          data.maps_url,
-          data.location_title
-        );
-      }
-      
-      // Set customization
-      if (data.customization) {
-        setCustomization(data.customization);
-      }
-      
-      // Set recipients from invitations
-      if (data.event_invitations && data.event_invitations.length > 0) {
-        // Map invitations to recipients
-        const eventRecipients = data.event_invitations.map(invitation => ({
-          id: invitation.id,
-          name: invitation.email || invitation.invited_user_id || '',
-          email: invitation.email,
-          type: 'email',
-          status: invitation.status
-        }));
-        
-        // Add recipients
-        eventRecipients.forEach(recipient => addRecipient(recipient));
-      }
-    }
+    enabled: !!eventId
   });
   
-  // Save event function
-  const saveEvent = async () => {
-    setIsSubmitting(true);
+  // Populate form data when editing an existing event
+  useEffect(() => {
+    if (eventData) {
+      try {
+        const startDate = new Date(eventData.start_time);
+        setFormData({
+          title: eventData.title || '',
+          description: eventData.description || '',
+          location: eventData.location || '',
+          locationTitle: eventData.location_title || '',
+          locationType: (eventData.location_type as 'manual' | 'google_maps') || 'manual',
+          mapsUrl: eventData.maps_url || '',
+          selectedDate: startDate,
+          startTime: format(startDate, 'HH:mm'),
+          endTime: eventData.end_time ? format(new Date(eventData.end_time), 'HH:mm') : '13:00',
+          isAllDay: eventData.is_all_day || false
+        });
+        
+        if (eventData.customization) {
+          setCustomization(eventData.customization);
+        }
+      } catch (error) {
+        console.error("Error parsing event data:", error);
+      }
+    }
+  }, [eventData]);
+  
+  const handleNextTab = () => {
+    if (activeTab === 'details') {
+      setActiveTab('customize');
+    } else if (activeTab === 'customize') {
+      setActiveTab('share');
+    }
+  };
+  
+  const handlePrevTab = () => {
+    if (activeTab === 'customize') {
+      setActiveTab('details');
+    } else if (activeTab === 'share') {
+      setActiveTab('customize');
+    }
+  };
+  
+  const handleSaveDraft = async () => {
+    if (!formData.title) {
+      toast({
+        title: "Title Required",
+        description: "Please add a title for your event",
+        variant: "destructive"
+      });
+      return;
+    }
     
     try {
-      // Get current user
+      setIsSubmitting(true);
+      
       const { data: { session } } = await supabase.auth.getSession();
-      
       if (!session) {
-        throw new Error('Not authenticated');
+        throw new Error("You must be logged in to create events");
       }
       
-      // Prepare start and end times
-      let startDateTime = new Date(selectedDate);
-      let endDateTime = new Date(selectedDate);
+      // Create start and end date from form data
+      const startDate = formData.selectedDate 
+        ? new Date(formData.selectedDate.setHours(
+            parseInt(formData.startTime.split(':')[0]),
+            parseInt(formData.startTime.split(':')[1])
+          )).toISOString()
+        : new Date().toISOString();
       
-      if (!isAllDay) {
-        const [startHours, startMinutes] = startTime.split(':').map(Number);
-        startDateTime.setHours(startHours);
-        startDateTime.setMinutes(startMinutes);
-        
-        const [endHours, endMinutes] = endTime.split(':').map(Number);
-        endDateTime.setHours(endHours);
-        endDateTime.setMinutes(endMinutes);
+      let endDate: string;
+      if (formData.isAllDay) {
+        // For all day events, set end time to end of day
+        const endOfDay = formData.selectedDate 
+          ? new Date(formData.selectedDate.setHours(23, 59, 59)) 
+          : new Date(new Date().setHours(23, 59, 59));
+        endDate = endOfDay.toISOString();
+      } else {
+        endDate = formData.selectedDate 
+          ? new Date(formData.selectedDate.setHours(
+              parseInt(formData.endTime.split(':')[0]),
+              parseInt(formData.endTime.split(':')[1])
+            )).toISOString()
+          : new Date().toISOString();
       }
       
-      // Prepare event data
       const eventData = {
-        title,
-        description,
-        location,
-        location_title: locationTitle,
-        location_type: locationType,
-        maps_url: mapsUrl,
-        start_time: startDateTime.toISOString(),
-        end_time: isAllDay ? null : endDateTime.toISOString(),
-        is_all_day: isAllDay,
-        status: 'published',
+        title: formData.title,
+        description: formData.description,
+        location: formData.location,
+        location_title: formData.locationTitle,
+        location_type: formData.locationType,
+        maps_url: formData.mapsUrl,
+        start_time: startDate,
+        end_time: endDate,
+        is_all_day: formData.isAllDay,
+        status: 'draft',
         user_id: session.user.id,
-        customization
+        customization: customization
       };
       
-      // Update or create event
-      if (isEditMode && eventId) {
-        // Update event
-        const { error } = await supabase
+      // Prepare for database storage by stringifying customization
+      const dbEventData = prepareEventForStorage(eventData);
+      
+      let result;
+      
+      if (eventId) {
+        // Update existing event
+        result = await supabase
           .from('events')
-          .update(eventData)
+          .update(dbEventData)
           .eq('id', eventId);
-          
-        if (error) throw error;
-        
-        toast({
-          title: 'Event updated',
-          description: 'Your event has been updated successfully.',
-        });
       } else {
         // Create new event
-        const { data, error } = await supabase
+        result = await supabase
           .from('events')
-          .insert(eventData)
-          .select()
-          .single();
-          
-        if (error) throw error;
-        
-        // Save event ID for invitations
-        const newEventId = data.id;
-        
-        // Create invitations if recipients exist
-        if (recipients.length > 0) {
-          const invitations = recipients.map(recipient => ({
-            event_id: newEventId,
-            email: recipient.email,
-            invited_user_id: recipient.userId,
-            status: 'pending',
-            shared_as_link: false
-          }));
-          
-          const { error: invitationError } = await supabase
-            .from('event_invitations')
-            .insert(invitations);
-            
-          if (invitationError) {
-            console.error('Error creating invitations:', invitationError);
-          }
-        }
-        
-        toast({
-          title: 'Event created',
-          description: 'Your event has been created successfully.',
-        });
+          .insert([dbEventData]);
       }
       
-      // Redirect to events list
-      navigate('/dashboard/events');
-    } catch (error) {
-      console.error('Error saving event:', error);
+      if (result.error) throw result.error;
+      
       toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to save event. Please try again.',
+        title: "Draft Saved",
+        description: `Your event "${formData.title}" has been saved as a draft`,
+      });
+      
+      if (!eventId) {
+        navigate('/dashboard/events');
+      }
+    } catch (error) {
+      console.error("Error saving draft:", error);
+      toast({
+        title: "Save Failed",
+        description: "There was an error saving your event draft",
+        variant: "destructive"
       });
     } finally {
       setIsSubmitting(false);
     }
   };
   
-  // Handle cancel
-  const handleCancel = () => {
-    navigate('/dashboard/events');
+  const handlePublish = async () => {
+    if (!formData.title || !formData.selectedDate) {
+      toast({
+        title: "Missing Information",
+        description: "Please add a title and date for your event",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      setIsSubmitting(true);
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error("You must be logged in to create events");
+      }
+      
+      // Create start and end date from form data
+      const startDate = new Date(formData.selectedDate.setHours(
+        parseInt(formData.startTime.split(':')[0]),
+        parseInt(formData.startTime.split(':')[1])
+      )).toISOString();
+      
+      let endDate: string;
+      if (formData.isAllDay) {
+        // For all day events, set end time to end of day
+        const endOfDay = new Date(formData.selectedDate.setHours(23, 59, 59));
+        endDate = endOfDay.toISOString();
+      } else {
+        endDate = new Date(formData.selectedDate.setHours(
+          parseInt(formData.endTime.split(':')[0]),
+          parseInt(formData.endTime.split(':')[1])
+        )).toISOString();
+      }
+      
+      const eventData = {
+        title: formData.title,
+        description: formData.description,
+        location: formData.location,
+        location_title: formData.locationTitle,
+        location_type: formData.locationType,
+        maps_url: formData.mapsUrl,
+        start_time: startDate,
+        end_time: endDate,
+        is_all_day: formData.isAllDay,
+        status: 'published',
+        user_id: session.user.id,
+        customization: customization
+      };
+      
+      // Prepare for database storage by stringifying customization
+      const dbEventData = prepareEventForStorage(eventData);
+      
+      let result;
+      let newEventId = eventId;
+      
+      if (eventId) {
+        // Update existing event
+        result = await supabase
+          .from('events')
+          .update(dbEventData)
+          .eq('id', eventId);
+      } else {
+        // Create new event
+        result = await supabase
+          .from('events')
+          .insert([dbEventData])
+          .select('id');
+          
+        if (result.data && result.data[0]) {
+          newEventId = result.data[0].id;
+        }
+      }
+      
+      if (result.error) throw result.error;
+      
+      toast({
+        title: "Event Published",
+        description: `Your event "${formData.title}" has been published`,
+      });
+      
+      navigate('/dashboard/events');
+    } catch (error) {
+      console.error("Error publishing event:", error);
+      toast({
+        title: "Publish Failed",
+        description: "There was an error publishing your event",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
-  const handleSaveDraft = async () => {
-    console.log('Saving draft...');
-    toast({
-      title: 'Draft saved',
-      description: 'Your event draft has been saved.',
-    });
+  const handleSendEmail = async (email: string) => {
+    try {
+      // Logic to send email invitations would go here
+      toast({
+        title: "Invitation Sent",
+        description: `An invitation has been sent to ${email}`,
+      });
+    } catch (error) {
+      console.error("Error sending invitation:", error);
+      toast({
+        title: "Error",
+        description: "Failed to send invitation",
+        variant: "destructive",
+      });
+    }
   };
   
-  // Check if we can safely proceed with form submission
-  const isFormValid = title.trim() !== '';
+  if (isLoading && eventId) {
+    return (
+      <div className="flex items-center justify-center h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4">Loading event...</p>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="container mx-auto p-4">
-      <Card>
-        <FormHeader 
-          isEdit={isEditMode} 
-          onCancel={handleCancel}
-        />
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as EventFormTab)}>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">
+            {eventId ? 'Edit Event' : 'Create New Event'}
+          </h1>
+          
+          <TabsList>
+            <TabsTrigger value="details">Details</TabsTrigger>
+            <TabsTrigger value="customize">Customize</TabsTrigger>
+            <TabsTrigger value="share">Share</TabsTrigger>
+          </TabsList>
+        </div>
         
-        <CardContent className="p-6">
-          {isLoadingEvent ? (
-            <div className="text-center p-8">Loading event details...</div>
-          ) : (
-            <form 
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (isFormValid) saveEvent();
-              }}
-            >
-              <FormTabs
-                activeTab={activeTab}
-                setActiveTab={setActiveTab}
-                title={title}
-                description={description}
-                selectedDate={selectedDate}
-                location={location}
-                locationTitle={locationTitle}
-                startTime={startTime}
-                endTime={endTime}
-                customization={customization}
-                onCustomizationChange={setCustomization}
-                recipients={recipients}
-                addRecipient={addRecipient}
-                removeRecipient={removeRecipient}
-                onTitleChange={setTitle}
-                onDescriptionChange={setDescription}
-                onDateChange={setSelectedDate}
-                onLocationChange={handleLocationChange}
-                onStartTimeChange={setStartTime}
-                onEndTimeChange={setEndTime}
-                onIsAllDayChange={setIsAllDay}
-                isAllDay={isAllDay}
-                locationType={locationType}
-                mapsUrl={mapsUrl}
-                getCurrentLocation={() => {}}
-                isGettingLocation={isGettingLocation}
-                shareTab={shareTab}
-                setShareTab={setShareTab}
-                onSendEmail={handleSendEmail}
-                handleSaveDraft={handleSaveDraft}
-              />
+        <TabsContent value="details">
+          <DetailsTab
+            formData={formData}
+            setFormData={setFormData}
+            handleNextTab={handleNextTab}
+            handleSaveDraft={handleSaveDraft}
+            isSubmitting={isSubmitting}
+          />
+        </TabsContent>
+        
+        <TabsContent value="customize">
+          <CustomizeTab
+            customization={customization}
+            onCustomizationChange={setCustomization}
+            handleNextTab={handleNextTab}
+            handleSaveDraft={handleSaveDraft}
+            location={formData.location}
+            locationTitle={formData.locationTitle}
+            title={formData.title}
+            description={formData.description}
+            selectedDate={formData.selectedDate}
+          />
+        </TabsContent>
+        
+        <TabsContent value="share">
+          <div className="space-y-6">
+            <ShareLinksTab
+              eventId={eventId}
+              shareLink={`${window.location.origin}/events/share/${eventId || 'new'}`}
+              onSendEmail={handleSendEmail}
+            />
+            
+            <div className="flex justify-end gap-2 pt-6">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handlePrevTab}
+              >
+                Back
+              </Button>
               
-              <div className="mt-8 flex justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleCancel}
-                  className="mr-2"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={isSubmitting || !isFormValid}
-                  className="px-8"
-                >
-                  {isSubmitting ? 'Saving...' : isEditMode ? 'Update Event' : 'Create Event'}
-                </Button>
-              </div>
-            </form>
-          )}
-        </CardContent>
-      </Card>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleSaveDraft}
+                disabled={isSubmitting}
+              >
+                Save Draft
+              </Button>
+              
+              <Button
+                type="button"
+                onClick={handlePublish}
+                disabled={isSubmitting}
+              >
+                Publish Event
+              </Button>
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

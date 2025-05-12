@@ -1,3 +1,4 @@
+
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/lib/supabase";
 import { Event, EventsResult, EventWithInvitations } from "@/types/event.types";

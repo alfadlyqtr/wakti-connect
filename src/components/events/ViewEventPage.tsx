@@ -10,6 +10,7 @@ import { toast } from '@/components/ui/use-toast';
 import { format, parseISO } from 'date-fns';
 import { Event } from '@/types/event.types';
 import { supabase } from '@/integrations/supabase/client';
+import { transformDatabaseEvent } from '@/services/event/eventHelpers';
 
 interface ViewEventPageProps {
   eventId: string;
@@ -36,7 +37,7 @@ const ViewEventPage: React.FC<ViewEventPageProps> = ({ eventId }) => {
           .single();
           
         if (error) throw error;
-        return data as Event;
+        return transformDatabaseEvent(data);
       } catch (error) {
         console.error('Error fetching event:', error);
         throw error;
