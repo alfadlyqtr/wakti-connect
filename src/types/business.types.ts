@@ -1,4 +1,3 @@
-
 export interface BusinessProfile {
   id: string;
   business_name: string;
@@ -111,7 +110,8 @@ export type SocialPlatform =
   | 'tiktok'
   | 'pinterest'
   | 'website'
-  | 'whatsapp';
+  | 'whatsapp'
+  | 'maps';
 
 // Section styling options
 export interface SectionStyles {

@@ -13,7 +13,6 @@ import FaqPage from '@/pages/public/FaqPage';
 import PrivacyPage from '@/pages/public/PrivacyPage';
 import TermsPage from '@/pages/public/TermsPage';
 import SlugResolver from '@/components/business/SlugResolver';
-import SimpleBusinessLandingPage from '@/pages/business/SimpleBusinessLandingPage';
 
 // Temporary placeholder component for missing pages
 const PlaceholderPage = ({ title }: { title: string }) => (
@@ -62,7 +61,7 @@ export const publicRoutes = [
   },
   {
     path: ':slug',
-    element: <SimpleBusinessLandingPage />, // Direct to SimpleBusinessLandingPage instead of SlugResolver
+    element: <SlugResolver />, // Use SlugResolver which will load the EnhancedBusinessLandingPage
   },
   {
     path: '*',

@@ -8,7 +8,8 @@ import {
   Linkedin, 
   Youtube,
   Globe,
-  MessageCircle
+  MessageCircle,
+  Map
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -120,6 +121,8 @@ const BusinessSocialLinks = ({
         return PinterestIcon;
       case 'whatsapp':
         return WhatsAppIcon;
+      case 'maps':
+        return Map;
       case 'website':
       default:
         return Globe;
@@ -146,6 +149,8 @@ const BusinessSocialLinks = ({
         return '#E60023';
       case 'whatsapp':
         return '#25D366';
+      case 'maps':
+        return '#4285F4'; // Google Maps blue
       default:
         return '#6B7280';
     }

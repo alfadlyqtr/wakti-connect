@@ -10,7 +10,7 @@ export interface BusinessData {
   error: Error | null;
 }
 
-export const useBusinessData = (businessId?: string) => {
+export const useBusinessData = (identifier?: string) => {
   const [data, setData] = useState<BusinessData>({
     profile: null,
     socialLinks: [],
@@ -20,23 +20,44 @@ export const useBusinessData = (businessId?: string) => {
 
   useEffect(() => {
     const fetchBusinessData = async () => {
-      if (!businessId) {
+      if (!identifier) {
         setData({
           profile: null,
           socialLinks: [],
           isLoading: false,
-          error: new Error('Business ID is required')
+          error: new Error('Business identifier is required')
         });
         return;
       }
 
       try {
-        // Fetch the business profile
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', businessId)
-          .single();
+        let profile;
+        let profileError;
+        
+        // Check if the identifier is a UUID or a slug
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier);
+        
+        if (isUUID) {
+          // Fetch by ID
+          const { data: profileData, error: error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', identifier)
+            .single();
+            
+          profile = profileData;
+          profileError = error;
+        } else {
+          // Fetch by slug
+          const { data: profileData, error: error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('slug', identifier)
+            .single();
+            
+          profile = profileData;
+          profileError = error;
+        }
 
         if (profileError) {
           console.error('Error fetching business profile:', profileError);
@@ -48,11 +69,11 @@ export const useBusinessData = (businessId?: string) => {
           return;
         }
 
-        // Fetch social links for the business
+        // Fetch social links for the business using the profile ID
         const { data: socialLinksData, error: socialLinksError } = await supabase
           .from('business_social_links')
           .select('*')
-          .eq('business_id', businessId);
+          .eq('business_id', profile.id);
 
         if (socialLinksError) {
           console.error('Error fetching business social links:', socialLinksError);
@@ -90,7 +111,7 @@ export const useBusinessData = (businessId?: string) => {
     };
 
     fetchBusinessData();
-  }, [businessId]);
+  }, [identifier]);
 
   return data;
 };

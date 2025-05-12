@@ -10,9 +10,9 @@ import {
   Linkedin, 
   Twitter, 
   Youtube, 
-  Globe, 
-  MessageCircle, 
-  PhoneOutgoing
+  Globe,
+  MessageCircle,
+  Map
 } from "lucide-react";
 import { useSocialLinks } from "@/hooks/useSocialLinks";
 import { FormItem } from "@/components/ui/form";
@@ -31,6 +31,7 @@ const SocialMediaForm: React.FC<SocialMediaFormProps> = ({ businessId }) => {
     youtube: "",
     website: "",
     whatsapp: "",
+    maps: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -49,6 +50,7 @@ const SocialMediaForm: React.FC<SocialMediaFormProps> = ({ businessId }) => {
         youtube: initialLinks.youtube || "",
         website: initialLinks.website || "",
         whatsapp: initialLinks.whatsapp || "",
+        maps: initialLinks.maps || "",
       });
     }
   }, [socialLinks]);
@@ -187,6 +189,21 @@ const SocialMediaForm: React.FC<SocialMediaFormProps> = ({ businessId }) => {
               placeholder="https://yourbusiness.com"
               value={links.website}
               onChange={handleChange("website")}
+            />
+          </div>
+        </FormItem>
+        
+        {/* Google Maps */}
+        <FormItem>
+          <Label htmlFor="maps" className="flex items-center gap-2">
+            <Map className="h-4 w-4" /> Google Maps
+          </Label>
+          <div className="mt-1">
+            <Input
+              id="maps"
+              placeholder="https://maps.google.com/..."
+              value={links.maps}
+              onChange={handleChange("maps")}
             />
           </div>
         </FormItem>
