@@ -1,5 +1,5 @@
 
-import { EventCustomization } from "@/types/event.types";
+import { EventCustomization, ButtonShape } from "@/types/event.types";
 
 export const createEffectHandlers = (
   customization: EventCustomization,
@@ -30,14 +30,27 @@ export const createEffectHandlers = (
     property: 'background' | 'color' | 'shape',
     value: string
   ) => {
+    // Initialize utilityButtons object if it doesn't exist
+    const currentUtilityButtons = customization.utilityButtons || {};
+    
+    // Initialize button type configuration if it doesn't exist
+    const currentButtonConfig = currentUtilityButtons[buttonType] || {
+      background: '#ffffff',
+      color: '#000000',
+      shape: 'rounded' as ButtonShape
+    };
+    
+    // Create updated configuration
+    const updatedButtonConfig = {
+      ...currentButtonConfig,
+      [property]: value
+    };
+
     onCustomizationChange({
       ...customization,
       utilityButtons: {
-        ...(customization.utilityButtons || {}),
-        [buttonType]: {
-          ...(customization.utilityButtons?.[buttonType] || {}),
-          [property]: value
-        }
+        ...currentUtilityButtons,
+        [buttonType]: updatedButtonConfig
       }
     });
   };

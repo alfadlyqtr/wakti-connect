@@ -19,8 +19,19 @@ export const createHeaderHandlers = (
     });
   };
 
-  return { 
+  const handleBrandingChange = (property: 'logo' | 'slogan', value: string) => {
+    onCustomizationChange({
+      ...customization,
+      branding: {
+        ...(customization.branding || {}),
+        [property]: value
+      }
+    });
+  };
+
+  return {
     handleHeaderStyleChange,
-    handleHeaderImageChange
+    handleHeaderImageChange,
+    handleBrandingChange
   };
 };

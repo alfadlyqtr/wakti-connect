@@ -8,7 +8,7 @@ export const createFeatureHandlers = (
   const handleToggleCalendar = (checked: boolean) => {
     onCustomizationChange({
       ...customization,
-      enableAddToCalendar: checked
+      showAddToCalendarButton: checked
     });
   };
 
@@ -16,16 +16,6 @@ export const createFeatureHandlers = (
     onCustomizationChange({
       ...customization,
       showAcceptDeclineButtons: checked
-    });
-  };
-
-  const handleBrandingChange = (property: 'logo' | 'slogan', value: string) => {
-    onCustomizationChange({
-      ...customization,
-      branding: {
-        ...(customization.branding || {}),
-        [property]: value
-      }
     });
   };
 
@@ -43,10 +33,9 @@ export const createFeatureHandlers = (
     });
   };
 
-  return { 
+  return {
     handleToggleCalendar,
     handleToggleButtons,
-    handleBrandingChange,
     handleAnimationChange,
     handleMapDisplayChange
   };

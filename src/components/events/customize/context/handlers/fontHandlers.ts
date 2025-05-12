@@ -22,10 +22,16 @@ export const createFontHandlers = (
     property: 'family' | 'size' | 'color' | 'weight',
     value: string
   ) => {
+    const currentHeaderFont = customization.headerFont || {
+      family: customization.font?.family || 'system-ui, sans-serif',
+      size: customization.font?.size || 'medium',
+      color: customization.font?.color || '#000000'
+    };
+    
     onCustomizationChange({
       ...customization,
       headerFont: {
-        ...(customization.headerFont || {}),
+        ...currentHeaderFont,
         [property]: value
       }
     });
@@ -35,10 +41,16 @@ export const createFontHandlers = (
     property: 'family' | 'size' | 'color' | 'weight',
     value: string
   ) => {
+    const currentDescriptionFont = customization.descriptionFont || {
+      family: customization.font?.family || 'system-ui, sans-serif',
+      size: customization.font?.size || 'medium',
+      color: customization.font?.color || '#000000'
+    };
+    
     onCustomizationChange({
       ...customization,
       descriptionFont: {
-        ...(customization.descriptionFont || {}),
+        ...currentDescriptionFont,
         [property]: value
       }
     });
@@ -48,10 +60,16 @@ export const createFontHandlers = (
     property: 'family' | 'size' | 'color' | 'weight',
     value: string
   ) => {
+    const currentDateTimeFont = customization.dateTimeFont || {
+      family: customization.font?.family || 'system-ui, sans-serif',
+      size: customization.font?.size || 'medium',
+      color: customization.font?.color || '#000000'
+    };
+    
     onCustomizationChange({
       ...customization,
       dateTimeFont: {
-        ...(customization.dateTimeFont || {}),
+        ...currentDateTimeFont,
         [property]: value
       }
     });

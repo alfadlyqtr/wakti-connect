@@ -1,11 +1,11 @@
 
-import { EventCustomization } from "@/types/event.types";
+import { EventCustomization, BackgroundType } from "@/types/event.types";
 
 export const createBackgroundHandlers = (
   customization: EventCustomization,
   onCustomizationChange: (customization: EventCustomization) => void
 ) => {
-  const handleBackgroundChange = (type: 'color' | 'image', value: string) => {
+  const handleBackgroundChange = (type: BackgroundType, value: string) => {
     onCustomizationChange({
       ...customization,
       background: {

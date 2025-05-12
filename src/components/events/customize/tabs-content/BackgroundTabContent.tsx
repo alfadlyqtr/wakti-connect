@@ -11,7 +11,7 @@ interface BackgroundTabContentProps {
 }
 
 export const BackgroundTabContent: React.FC<BackgroundTabContentProps> = ({ title, description }) => {
-  const { customization } = useCustomization();
+  const { customization, handleBackgroundChange } = useCustomization();
   const activeTab = customization.background?.type === 'image' ? 'image' : 'color';
 
   return (
@@ -22,19 +22,16 @@ export const BackgroundTabContent: React.FC<BackgroundTabContentProps> = ({ titl
       </TabsList>
       
       <TabsContent value="color">
-        <ColorTab value={customization.background?.value || '#ffffff'} onChange={(value) => {
-          const { handleBackgroundChange } = useCustomization();
-          handleBackgroundChange('color', value);
-        }} />
+        <ColorTab 
+          value={customization.background?.value || '#ffffff'} 
+          onChange={(value) => handleBackgroundChange('solid', value)} 
+        />
       </TabsContent>
       
       <TabsContent value="image">
         <ImageTab 
           value={customization.background?.value || ''} 
-          onChange={(value) => {
-            const { handleBackgroundChange } = useCustomization();
-            handleBackgroundChange('image', value);
-          }}
+          onChange={(value) => handleBackgroundChange('image', value)}
           title={title}
           description={description}
         />
