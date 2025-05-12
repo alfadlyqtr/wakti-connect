@@ -2,416 +2,325 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Card, CardContent } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { eventSchema, EventFormValues, EventStatus, EventCustomization, EventFormTab } from '@/types/event.types';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/components/ui/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 import FormHeader from './FormHeader';
 import FormTabs from './FormTabs';
-import { initialCustomization } from '../customize/initial-customization';
+import { EventFormValues, eventSchema, EventStatus, EventFormTab, EventCustomization } from '@/types/event.types';
 import { InvitationRecipient } from '@/types/invitation.types';
-import { createEvent, updateEvent } from '@/services/event/eventService';
+import { initialCustomization } from '@/components/events/customize/initial-customization';
+import { createEvent } from '@/services/event/createService';
+import { getEventById, updateEvent } from '@/services/event/eventService';
+import { sendEventInvitation } from '@/services/invitation/invitationService';
 import { ShareTab } from '@/types/form.types';
+import { useEventBasics } from '@/hooks/events/useEventBasics';
+import { useEventLocation } from '@/hooks/events/useEventLocation';
+import { useEventRecipients } from '@/hooks/events/useEventRecipients';
+import { useFormReset } from '@/hooks/events/useFormReset';
+import useEditEventEffect from '@/hooks/events/useEditEventEffect';
 
 interface EventCreationFormProps {
   eventId?: string;
+  onCancel?: () => void;
+  onSuccess?: () => void;
 }
 
-const EventCreationForm: React.FC<EventCreationFormProps> = ({ eventId }) => {
-  const isEditMode = !!eventId;
+const EventCreationForm: React.FC<EventCreationFormProps> = ({
+  eventId,
+  onCancel,
+  onSuccess
+}) => {
   const navigate = useNavigate();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
   
-  // Form data and state
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [location, setLocation] = useState('');
-  const [locationTitle, setLocationTitle] = useState('');
-  const [locationType, setLocationType] = useState<'manual' | 'google_maps'>('manual');
-  const [mapsUrl, setMapsUrl] = useState('');
-  const [startTime, setStartTime] = useState('09:00');
-  const [endTime, setEndTime] = useState('10:00');
-  const [isAllDay, setIsAllDay] = useState(false);
-  const [isGettingLocation, setIsGettingLocation] = useState(false);
-  const [customization, setCustomization] = useState<EventCustomization>(initialCustomization);
-  const [activeTab, setActiveTab] = useState<EventFormTab>('details');
-  const [shareTab, setShareTab] = useState<ShareTab>('recipients');
-  const [recipients, setRecipients] = useState<InvitationRecipient[]>([]);
-
-  // Setup form with Zod validation
-  const {
-    handleSubmit,
-    register,
-    formState: { errors }
-  } = useForm<EventFormValues>({
-    resolver: zodResolver(eventSchema),
+  // Event form and fields state
+  const form = useForm<EventFormValues>({
+    resolver: zodResolver(eventSchema) as any,
     defaultValues: {
       title: '',
       description: '',
       location: '',
-      location_title: '',
       startDate: new Date(),
-      endDate: undefined,
       isAllDay: false
     }
   });
 
-  // Fetch existing event data for edit mode
-  const { data: eventData, isLoading } = useQuery({
-    queryKey: ['event', eventId],
-    queryFn: async () => {
-      if (!eventId) return null;
-      
-      const { data, error } = await supabase
-        .from('events')
-        .select('*, invitations:event_invitations(*)')
-        .eq('id', eventId)
-        .single();
-        
-      if (error) throw error;
-      
-      return data;
-    },
-    enabled: isEditMode
+  // Event basic state hooks
+  const {
+    title, setTitle,
+    description, setDescription,
+    isAllDay, setIsAllDay,
+    selectedDate, setSelectedDate,
+    startTime, setStartTime,
+    endTime, setEndTime,
+    activeTab, setActiveTab,
+    customization, setCustomization
+  } = useEventBasics();
+
+  // Event location state hooks
+  const {
+    location, locationTitle,
+    locationType, mapsUrl,
+    handleLocationChange,
+    isGettingLocation
+  } = useEventLocation();
+
+  // Event recipients state hooks
+  const {
+    recipients, shareTab, setShareTab,
+    addRecipient, removeRecipient,
+    handleSendEmail
+  } = useEventRecipients();
+
+  // Event edit/create state
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editEvent, setEditEvent] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(!!eventId);
+
+  // Reset form state hook
+  const { resetForm } = useFormReset({
+    setTitle,
+    setDescription,
+    setSelectedDate,
+    setStartTime,
+    setEndTime,
+    setIsAllDay,
+    setActiveTab,
+    setRecipients: (newRecipients) => recipients.length = 0,
+    setLocation: handleLocationChange,
+    setLocationType: (type) => handleLocationChange(location, type, mapsUrl, locationTitle),
+    setMapsUrl: (url) => handleLocationChange(location, locationType, url, locationTitle),
+    setCustomization
   });
 
-  // Populate form when editing an existing event
+  // Set up edit effect hook
+  useEditEventEffect({
+    editEvent,
+    form,
+    setRecipients,
+    setIsEditMode,
+    setTitle,
+    setDescription,
+    setSelectedDate,
+    setIsAllDay,
+    setStartTime,
+    setEndTime,
+    setLocation: (loc) => handleLocationChange(loc),
+    setLocationType: (type) => handleLocationChange(location, type, mapsUrl, locationTitle),
+    setMapsUrl: (url) => handleLocationChange(location, locationType, url, locationTitle),
+    setCustomization
+  });
+
+  // Function to set recipients for external use
+  function setRecipients(newRecipients: InvitationRecipient[]) {
+    // Clear the current recipients array and add the new ones
+    recipients.length = 0;
+    newRecipients.forEach(recipient => addRecipient(recipient));
+  }
+
+  // Fetch event data if in edit mode
   useEffect(() => {
-    if (eventData) {
-      try {
-        setTitle(eventData.title || '');
-        setDescription(eventData.description || '');
-        
-        if (eventData.start_time) {
-          const startDate = new Date(eventData.start_time);
-          setSelectedDate(startDate);
-          
-          // Format start time
-          if (!eventData.is_all_day) {
-            const hours = String(startDate.getHours()).padStart(2, '0');
-            const minutes = String(startDate.getMinutes()).padStart(2, '0');
-            setStartTime(`${hours}:${minutes}`);
+    if (eventId) {
+      const fetchEvent = async () => {
+        try {
+          const event = await getEventById(eventId);
+          if (event) {
+            setEditEvent(event);
+          } else {
+            toast({
+              title: "Event not found",
+              description: "The event you're trying to edit doesn't exist.",
+              variant: "destructive"
+            });
+            navigate("/dashboard/events");
           }
-        }
-        
-        if (eventData.end_time && !eventData.is_all_day) {
-          const endDate = new Date(eventData.end_time);
-          const hours = String(endDate.getHours()).padStart(2, '0');
-          const minutes = String(endDate.getMinutes()).padStart(2, '0');
-          setEndTime(`${hours}:${minutes}`);
-        }
-        
-        setIsAllDay(eventData.is_all_day || false);
-        setLocation(eventData.location || '');
-        setLocationTitle(eventData.location_title || '');
-        setLocationType(eventData.location_type || 'manual');
-        setMapsUrl(eventData.maps_url || '');
-        
-        // Handle customization
-        if (eventData.customization) {
-          setCustomization({
-            ...initialCustomization,
-            ...eventData.customization
+        } catch (error) {
+          console.error("Error fetching event:", error);
+          toast({
+            title: "Error",
+            description: "Failed to load event data",
+            variant: "destructive"
           });
+        } finally {
+          setIsLoading(false);
         }
-        
-        // Handle invitations
-        if (eventData.invitations) {
-          const mappedRecipients: InvitationRecipient[] = eventData.invitations.map(
-            (invite: any) => ({
-              email: invite.email,
-              status: invite.status
-            })
-          );
-          setRecipients(mappedRecipients);
-        }
-      } catch (error) {
-        console.error("Error setting form data:", error);
-      }
+      };
+      
+      fetchEvent();
     }
-  }, [eventData]);
+  }, [eventId, navigate, toast]);
 
-  // Form actions
-  const handleFormCancel = () => {
-    navigate('/dashboard/events');
-  };
-
-  // Create or update event
-  const onSubmit = async () => {
+  // Handle form submission
+  const handleSubmit = async (status: EventStatus = 'draft') => {
     try {
       setIsSubmitting(true);
       
-      // Parse dates and times 
-      const dateObj = new Date(selectedDate);
-      const [startHours, startMinutes] = startTime.split(':').map(Number);
-      const [endHours, endMinutes] = endTime.split(':').map(Number);
-      
-      dateObj.setHours(startHours, startMinutes, 0);
-      const endDateObj = new Date(dateObj);
-      endDateObj.setHours(endHours, endMinutes, 0);
-
-      const eventFormData = {
+      // Prepare event data
+      const eventData = {
         title,
         description,
         location,
         location_title: locationTitle,
-        startDate: dateObj,
-        start_time: dateObj.toISOString(),
-        end_time: endDateObj.toISOString(),
+        startDate: selectedDate,
+        start_time: isAllDay ? undefined : `${selectedDate.toISOString().split('T')[0]}T${startTime}:00`,
+        end_time: isAllDay ? undefined : `${selectedDate.toISOString().split('T')[0]}T${endTime}:00`,
         isAllDay,
         is_all_day: isAllDay,
-        status: "draft" as EventStatus, // Cast to EventStatus type
+        status: status as EventStatus,
         customization,
         location_type: locationType,
-        maps_url: mapsUrl,
+        maps_url: mapsUrl
       };
-
-      if (isEditMode && eventId) {
+      
+      let eventId: string | undefined;
+      
+      // Create or update event
+      if (isEditMode && editEvent?.id) {
         // Update existing event
-        const updatedEvent = await updateEvent(eventId, eventFormData);
-        
-        if (updatedEvent) {
+        const updated = await updateEvent(editEvent.id, eventData);
+        if (updated) {
+          eventId = editEvent.id;
           toast({
-            title: "Event updated",
-            description: "Your event has been updated successfully",
-          });
-          navigate(`/dashboard/events/view/${eventId}`);
-        } else {
-          toast({
-            title: "Update failed",
-            description: "Failed to update the event. Please try again.",
-            variant: "destructive",
+            title: "Success",
+            description: "Event updated successfully",
           });
         }
       } else {
         // Create new event
-        const newEvent = await createEvent(eventFormData);
-        
-        if (newEvent) {
+        const created = await createEvent(eventData);
+        if (created) {
+          eventId = created.id;
           toast({
-            title: "Event created",
-            description: "Your new event has been created successfully",
-          });
-          navigate(`/dashboard/events/view/${newEvent.id}`);
-        } else {
-          toast({
-            title: "Creation failed",
-            description: "Failed to create the event. Please try again.",
-            variant: "destructive",
+            title: "Success",
+            description: "Event created successfully",
           });
         }
       }
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      toast({
-        title: "Submission error",
-        description: "An error occurred while submitting the form",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // Save draft handler
-  const handleSaveDraft = async () => {
-    try {
-      setIsSubmitting(true);
       
-      // Parse dates and times
-      const dateObj = new Date(selectedDate);
-      const [startHours, startMinutes] = startTime.split(':').map(Number);
-      const [endHours, endMinutes] = endTime.split(':').map(Number);
-      
-      dateObj.setHours(startHours, startMinutes, 0);
-      const endDateObj = new Date(dateObj);
-      endDateObj.setHours(endHours, endMinutes, 0);
-
-      const eventFormData = {
-        title: title || 'Draft Event',
-        description,
-        location,
-        location_title: locationTitle,
-        startDate: dateObj,
-        start_time: dateObj.toISOString(),
-        end_time: endDateObj.toISOString(),
-        isAllDay,
-        is_all_day: isAllDay,
-        status: "draft" as EventStatus, // Cast to EventStatus type
-        customization,
-        location_type: locationType,
-        maps_url: mapsUrl,
-      };
-
-      if (isEditMode && eventId) {
-        // Update existing event as draft
-        const updatedEvent = await updateEvent(eventId, eventFormData);
-        
-        if (updatedEvent) {
-          toast({
-            title: "Draft saved",
-            description: "Your event draft has been saved",
-          });
-        }
-      } else {
-        // Create new event as draft
-        const newEvent = await createEvent(eventFormData);
-        
-        if (newEvent && newEvent.id) {
-          toast({
-            title: "Draft saved",
-            description: "Your event draft has been saved",
-          });
-          // Update URL to the edit mode for the new draft
-          navigate(`/dashboard/events/edit/${newEvent.id}`, { replace: true });
-        }
-      }
-    } catch (error) {
-      console.error("Error saving draft:", error);
-      toast({
-        title: "Error saving draft",
-        description: "Failed to save your draft",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const addRecipient = (recipient: InvitationRecipient) => {
-    setRecipients([...recipients, recipient]);
-  };
-
-  const removeRecipient = (index: number) => {
-    setRecipients(recipients.filter((_, i) => i !== index));
-  };
-
-  const handleSendEmail = async (email: string) => {
-    if (!eventId) return;
-    
-    try {
-      await sendEventInvitation(eventId, email);
-      addRecipient({ email, status: 'pending' });
-    } catch (error) {
-      console.error('Error sending email:', error);
-    }
-  };
-
-  // Handle browser geolocation API
-  const getCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      toast({
-        title: "Geolocation not supported",
-        description: "Your browser doesn't support geolocation",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setIsGettingLocation(true);
-    
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const { latitude, longitude } = position.coords;
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
-          );
-          const data = await response.json();
-          
-          if (data && data.display_name) {
-            setLocation(data.display_name);
+      // Send invitations if recipients exist and we have an event ID
+      if (eventId && recipients.length > 0) {
+        for (const recipient of recipients) {
+          if (recipient.email) {
+            await sendEventInvitation(eventId, recipient.email);
           }
-        } catch (error) {
-          console.error('Error getting location details:', error);
-          toast({
-            title: "Location error",
-            description: "Could not get your location details",
-            variant: "destructive",
-          });
-        } finally {
-          setIsGettingLocation(false);
         }
-      },
-      (error) => {
-        console.error('Geolocation error:', error);
-        setIsGettingLocation(false);
-        toast({
-          title: "Location error",
-          description: "Could not get your current location",
-          variant: "destructive",
-        });
       }
-    );
+      
+      // Handle success callback or navigate
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        navigate(`/dashboard/events/view/${eventId}`);
+      }
+      
+    } catch (error: any) {
+      console.error("Error submitting event:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save event",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  if (isLoading) {
-    return <div className="container mx-auto py-8 px-4">Loading event details...</div>;
-  }
+  // Handle email sending
+  const handleEmailSend = (email: string) => {
+    // Make sure this is a valid email before adding
+    if (email && email.includes('@')) {
+      // Create a new invitation recipient
+      const newRecipient: InvitationRecipient = {
+        id: `temp-${Date.now()}`,
+        name: email,
+        email: email,
+        type: 'email',
+        status: 'pending'
+      };
+      
+      addRecipient(newRecipient);
+      toast({
+        title: "Recipient added",
+        description: `${email} has been added to the invitation list`
+      });
+    }
+  };
+
+  // Handle cancel
+  const handleCancel = () => {
+    if (onCancel) {
+      onCancel();
+    } else {
+      navigate("/dashboard/events");
+    }
+  };
+
+  // Handle save draft
+  const handleSaveDraft = async () => {
+    await handleSubmit('draft');
+  };
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <FormHeader 
-        isEdit={isEditMode} 
-        isLoading={isSubmitting}
-        onCancel={handleFormCancel}
-      />
-      
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <FormTabs
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          title={title}
-          description={description}
-          selectedDate={selectedDate}
-          location={location}
-          locationTitle={locationTitle}
-          startTime={startTime}
-          endTime={endTime}
-          customization={customization}
-          onCustomizationChange={setCustomization}
-          recipients={recipients}
-          addRecipient={addRecipient}
-          removeRecipient={removeRecipient}
-          onTitleChange={setTitle}
-          onDescriptionChange={setDescription}
-          onDateChange={setSelectedDate}
-          onLocationChange={(location, type, url, title) => {
-            setLocation(location);
-            if (type) setLocationType(type);
-            if (url) setMapsUrl(url);
-            if (title) setLocationTitle(title);
-          }}
-          onStartTimeChange={setStartTime}
-          onEndTimeChange={setEndTime}
-          onIsAllDayChange={setIsAllDay}
-          isAllDay={isAllDay}
-          locationType={locationType}
-          mapsUrl={mapsUrl}
-          getCurrentLocation={getCurrentLocation}
-          isGettingLocation={isGettingLocation}
-          shareTab={shareTab}
-          setShareTab={setShareTab}
-          onSendEmail={handleSendEmail}
-          handleSaveDraft={handleSaveDraft}
+    <div className="max-w-4xl mx-auto my-8">
+      <Card className="shadow-lg">
+        <FormHeader 
+          isEdit={isEditMode} 
+          isLoading={isLoading} 
+          onCancel={handleCancel} 
         />
-      </form>
+        
+        <CardContent>
+          <FormTabs 
+            activeTab={activeTab as EventFormTab}
+            setActiveTab={setActiveTab}
+            title={title}
+            description={description}
+            selectedDate={selectedDate}
+            location={location}
+            locationTitle={locationTitle}
+            startTime={startTime}
+            endTime={endTime}
+            customization={customization}
+            onCustomizationChange={setCustomization}
+            recipients={recipients}
+            addRecipient={addRecipient}
+            removeRecipient={removeRecipient}
+            onTitleChange={setTitle}
+            onDescriptionChange={setDescription}
+            onDateChange={setSelectedDate}
+            onLocationChange={handleLocationChange}
+            onStartTimeChange={setStartTime}
+            onEndTimeChange={setEndTime}
+            onIsAllDayChange={setIsAllDay}
+            isAllDay={isAllDay}
+            locationType={locationType}
+            mapsUrl={mapsUrl}
+            getCurrentLocation={() => {}}
+            isGettingLocation={isGettingLocation}
+            shareTab={shareTab}
+            setShareTab={setShareTab}
+            onSendEmail={handleEmailSend}
+            handleSaveDraft={handleSaveDraft}
+          />
+          
+          {activeTab === "share" && (
+            <div className="mt-8 flex justify-end">
+              <button
+                type="button"
+                className="px-6 py-2 bg-primary text-primary-foreground rounded-md font-medium"
+                onClick={() => handleSubmit('published')}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Saving...' : isEditMode ? 'Update Event' : 'Create Event'}
+              </button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
-};
-
-// Helper function for sending invitations
-const sendEventInvitation = async (eventId: string, email: string) => {
-  try {
-    // Import here to avoid circular dependency
-    const { sendEventInvitation } = await import('@/services/invitation/invitationService');
-    return await sendEventInvitation(eventId, email);
-  } catch (error) {
-    console.error('Error sending invitation:', error);
-    throw error;
-  }
 };
 
 export default EventCreationForm;
