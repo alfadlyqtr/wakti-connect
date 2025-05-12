@@ -69,7 +69,7 @@ export const dashboardRoutes = [
     element: <InvitationEdit />,
   },
   
-  // Events routes - restored with proper components
+  // Events routes - with proper components
   {
     path: "events",
     element: <EventsListPage />,

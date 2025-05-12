@@ -10,21 +10,21 @@ import { toast } from '@/components/ui/use-toast';
 interface ShareLinksTabProps {
   eventUrl?: string;
   onSendEmail?: (email: string) => void;
-  eventId?: string; // Add eventId prop
-  shareLink?: string; // Add shareLink prop
+  eventId?: string;
+  shareLink?: string;
 }
 
 const ShareLinksTab: React.FC<ShareLinksTabProps> = ({ 
-  eventUrl = window.location.href, // Default to current URL
+  eventUrl = window.location.href,
   onSendEmail,
-  eventId, // Support new prop
-  shareLink // Support new prop
+  eventId, 
+  shareLink
 }) => {
   const [email, setEmail] = useState('');
   const [activeTab, setActiveTab] = useState('qrcode');
   
   // If shareLink is provided, use that instead of eventUrl
-  const finalUrl = shareLink || eventUrl;
+  const finalUrl = shareLink || (eventId ? `${window.location.origin}/events/${eventId}` : eventUrl);
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(finalUrl);

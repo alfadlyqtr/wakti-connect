@@ -131,19 +131,27 @@ const ViewEventPage: React.FC<ViewEventPageProps> = ({ eventId }) => {
   const customization = event.customization || {};
   const cardStyle: React.CSSProperties = {};
   
-  // Apply background styling if available with proper null checks
-  if (customization.background && customization.background.type) {
-    if (customization.background.type === 'solid') {
-      cardStyle.backgroundColor = customization.background.value || '#ffffff';
-    } else if (customization.background.type === 'image' && customization.background.value) {
-      cardStyle.backgroundImage = `url(${customization.background.value})`;
+  // Safely access background properties
+  if (customization && 
+      customization.background && 
+      typeof customization.background === 'object') {
+    
+    const background = customization.background;
+    
+    if (background.type === 'solid' && background.value) {
+      cardStyle.backgroundColor = background.value;
+    } else if (background.type === 'image' && background.value) {
+      cardStyle.backgroundImage = `url(${background.value})`;
       cardStyle.backgroundSize = 'cover';
       cardStyle.backgroundPosition = 'center';
     }
   }
   
-  // Apply text color if available with proper null checks
-  if (customization.font && customization.font.color) {
+  // Safely apply text color if available
+  if (customization && 
+      customization.font && 
+      typeof customization.font === 'object' && 
+      customization.font.color) {
     cardStyle.color = customization.font.color;
   }
 

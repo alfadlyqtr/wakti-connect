@@ -1,101 +1,153 @@
 
 import React from 'react';
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Calendar, Map, Clock } from 'lucide-react';
-import { useCustomization } from '../context';
+import { Card } from '@/components/ui/card';
 import { format } from 'date-fns';
+import { useCustomization } from '../context';
 
 interface EventCardPreviewProps {
   title?: string;
   description?: string;
+  date?: Date;
   location?: string;
   locationTitle?: string;
-  date?: Date;
 }
 
-const EventCardPreview: React.FC<EventCardPreviewProps> = ({ 
-  title = "Event Title", 
-  description = "Event description goes here. This is where you can add details about your event.", 
-  location,
-  locationTitle,
-  date = new Date()
+const EventCardPreview: React.FC<EventCardPreviewProps> = ({
+  title = "Event Title",
+  description = "This is a description of your event. You can see how your customization choices affect the appearance here.",
+  date = new Date(),
+  location = "Event Location",
+  locationTitle
 }) => {
   const { customization } = useCustomization();
-  const hasLocation = !!location;
-  
-  // Generate background style with fallbacks for missing properties
-  const cardStyle: React.CSSProperties = {
-    color: customization.font?.color || '#000000',
-    width: '100%',
-    minHeight: '500px', // Increased for better preview
-    display: 'flex',
-    flexDirection: 'column',
+
+  const formatDate = (date: Date) => {
+    return format(date, 'EEEE, MMMM d, yyyy');
   };
-  
-  if (customization.background?.type === 'solid') {
-    cardStyle.backgroundColor = customization.background?.value || '#ffffff';
-  } else if (customization.background?.type === 'image' && customization.background?.value) {
-    cardStyle.backgroundImage = `url(${customization.background.value})`;
-    cardStyle.backgroundSize = 'cover';
-    cardStyle.backgroundPosition = 'center';
-    cardStyle.backgroundColor = 'rgba(0, 0, 0, 0.5)'; // Darken the image a bit
-    cardStyle.color = '#ffffff'; // Default text color on images
-  } else {
-    // Fallback if background is missing
-    cardStyle.backgroundColor = '#ffffff';
-  }
-  
-  // Format dates for display
-  const formattedDate = date ? format(date, 'MMM dd, yyyy') : '';
-  const formattedTime = date ? format(date, 'h:mm a') : '';
-  
-  return (
-    <Card className="overflow-hidden shadow-lg" style={cardStyle}>
-      <CardHeader className="pb-2">
-        <h3 className="text-lg font-semibold">{title}</h3>
-        <div className="flex items-center text-sm space-x-1">
-          <Calendar className="h-4 w-4 mr-1" />
-          <span>{formattedDate}</span>
-          {formattedTime && (
-            <div className="flex items-center">
-              <Clock className="h-3 w-3 mx-1" />
-              <span>{formattedTime}</span>
-            </div>
-          )}
-        </div>
-      </CardHeader>
-      
-      <CardContent className="flex-grow">
-        <p className="text-sm mb-3">{description}</p>
-        
-        {hasLocation && (
-          <div className="flex items-center text-sm mt-2">
-            <Map className="h-4 w-4 mr-1 flex-shrink-0" />
-            <span className="truncate">{locationTitle || location}</span>
+
+  // Background style handling
+  const getBackgroundStyle = () => {
+    if (!customization?.background) {
+      return { background: '#ffffff' };
+    }
+
+    if (customization.background.type === 'image' && customization.background.value) {
+      return {
+        backgroundImage: `url(${customization.background.value})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      };
+    }
+
+    return { background: customization.background.value || '#ffffff' };
+  };
+
+  // Font styles
+  const getFontStyle = () => {
+    return {
+      fontFamily: customization?.font?.family || 'system-ui, sans-serif',
+      color: customization?.font?.color || '#333333',
+      fontSize: customization?.font?.size || 'medium'
+    };
+  };
+
+  // Header style handling
+  const renderHeader = () => {
+    switch (customization?.headerStyle) {
+      case 'banner':
+        return (
+          <div 
+            className="mb-4 -mx-6 -mt-6 p-4 pt-8 pb-8"
+            style={{ 
+              background: 'rgba(0,0,0,0.1)', 
+              borderBottom: '1px solid rgba(0,0,0,0.05)',
+              fontFamily: customization.headerFont?.family || customization.font?.family
+            }}
+          >
+            <h2 className="text-2xl font-semibold text-center">{title}</h2>
+            <p className="text-sm opacity-80 text-center mt-2">{formatDate(date)}</p>
           </div>
-        )}
-      </CardContent>
-      
-      <CardFooter className="pt-2 flex justify-between mt-auto">
-        <div className="flex space-x-2">
-          {hasLocation && (
-            <Button 
-              size="sm" 
-              variant="outline"
-              className="text-xs h-8"
-            >
-              Get Directions
-            </Button>
-          )}
-        </div>
+        );
         
-        {customization.showAddToCalendarButton !== false && (
-          <Button size="sm" variant="outline" className="text-xs h-8">
-            Add to Calendar
-          </Button>
+      case 'minimal':
+        return (
+          <div 
+            className="flex flex-col items-center mb-4"
+            style={{ fontFamily: customization.headerFont?.family || customization.font?.family }}
+          >
+            <div className="w-12 h-12 bg-muted rounded-full mb-3 flex items-center justify-center">
+              📅
+            </div>
+            <h2 className="text-xl font-medium">{title}</h2>
+            <p className="text-sm opacity-80">{formatDate(date)}</p>
+          </div>
+        );
+        
+      default:
+        return (
+          <div style={{ fontFamily: customization.headerFont?.family || customization.font?.family }}>
+            <h2 className="text-2xl font-semibold mb-1">{title}</h2>
+            <p className="text-sm opacity-80">{formatDate(date)}</p>
+          </div>
+        );
+    }
+  };
+
+  // Button styles
+  const getButtonStyles = (type: 'accept' | 'decline') => {
+    const buttonConfig = customization?.buttons?.[type];
+    return {
+      background: buttonConfig?.background || (type === 'accept' ? '#4CAF50' : '#f44336'),
+      color: buttonConfig?.color || '#ffffff',
+      borderRadius: buttonConfig?.shape === 'pill' 
+        ? '9999px' 
+        : buttonConfig?.shape === 'square' 
+          ? '0' 
+          : '0.375rem'
+    };
+  };
+
+  return (
+    <Card 
+      className="w-full overflow-hidden shadow-lg" 
+      style={{ ...getBackgroundStyle(), ...getFontStyle(), padding: '1.5rem' }}
+    >
+      {renderHeader()}
+      
+      <div 
+        className="mt-4" 
+        style={{ fontFamily: customization.descriptionFont?.family || customization.font?.family }}
+      >
+        <p>{description}</p>
+      </div>
+      
+      <div className="mt-4 text-sm opacity-70">
+        {locationTitle ? (
+          <div className="text-sm mt-2">
+            <p className="font-medium">{locationTitle}</p>
+            <p>{location}</p>
+          </div>
+        ) : (
+          <p>Location: {location}</p>
         )}
-      </CardFooter>
+      </div>
+      
+      {(customization?.showAcceptDeclineButtons !== false) && (
+        <div className="flex gap-2 mt-6">
+          <button 
+            style={getButtonStyles('accept')}
+            className="px-4 py-2 font-medium text-sm transition-colors"
+          >
+            Accept
+          </button>
+          <button 
+            style={getButtonStyles('decline')}
+            className="px-4 py-2 font-medium text-sm transition-colors"
+          >
+            Decline
+          </button>
+        </div>
+      )}
     </Card>
   );
 };
