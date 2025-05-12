@@ -20,7 +20,7 @@ interface DetailsTabProps {
   isAllDay: boolean;
   location: string;
   locationTitle?: string;
-  locationType?: 'manual' | 'google_maps';
+  locationType: 'manual' | 'google_maps';
   mapsUrl?: string;
   handleNextTab: () => void;
   title: string;
@@ -34,10 +34,9 @@ interface DetailsTabProps {
   onIsAllDayChange: (isAllDay: boolean) => void;
   getCurrentLocation?: () => void;
   isGettingLocation?: boolean;
-  locationType?: 'manual' | 'google_maps';
-  mapsUrl?: string;
   isEdit?: boolean;
   formData?: any; // Add this prop to accept formData if passed
+  setFormData?: React.Dispatch<React.SetStateAction<any>>; // Add setFormData prop
 }
 
 const DetailsTab: React.FC<DetailsTabProps> = ({
@@ -49,6 +48,8 @@ const DetailsTab: React.FC<DetailsTabProps> = ({
   isAllDay,
   location,
   locationTitle,
+  locationType,
+  mapsUrl,
   onLocationChange,
   handleNextTab,
   title,
@@ -61,10 +62,9 @@ const DetailsTab: React.FC<DetailsTabProps> = ({
   onIsAllDayChange,
   getCurrentLocation,
   isGettingLocation = false,
-  locationType,
-  mapsUrl,
   isEdit = false,
-  formData // Accept formData but not use it directly, as we're using individual props
+  formData,
+  setFormData
 }) => {
   const isMobile = useIsMobile();
   

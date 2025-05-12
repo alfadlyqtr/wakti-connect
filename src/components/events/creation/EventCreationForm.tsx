@@ -1,435 +1,281 @@
-
-// Import existing code and add the prepareEventForStorage import
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { z } from 'zod';
-import { format } from 'date-fns';
+import React, { useState, useCallback } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { EventFormTab, EventCustomization } from '@/types/event.types';
+import { EventFormTab, EventFormData, EventCustomization } from '@/types/event.types';
 import DetailsTab from './DetailsTab';
+import CustomizeTab from './CustomizeTab';
 import ShareLinksTab from './ShareLinksTab';
-import CustomizeTab from '../customize/CustomizeTab';
-import { supabase } from '@/integrations/supabase/client';
-import { transformDatabaseEvent, prepareEventForStorage } from '@/services/event/eventHelpers';
+import { initialCustomization } from '../customize/initial-customization';
+import { useMutation } from '@tanstack/react-query';
+import { createEvent, updateEvent } from '@/services/event/eventService';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { eventSchema } from '@/types/event.types';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useToast } from "@/components/ui/use-toast";
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { DatePicker } from '@/components/ui/date-picker';
+import LocationInput from '../location/LocationInput';
+import { Switch } from '@/components/ui/switch';
+import { TimePicker } from '@/components/ui/time-picker';
+import { Calendar } from 'lucide-react';
+import { createInvitation } from '@/services/invitation/invitationService';
 
-// Default customization settings
-const defaultCustomization: EventCustomization = {
-  background: {
-    type: 'solid',
-    value: '#ffffff'
-  },
-  font: {
-    family: 'system-ui, sans-serif',
-    size: 'medium',
-    color: '#333333',
-    alignment: 'left'
-  },
-  buttons: {
-    accept: {
-      background: '#4CAF50',
-      color: '#ffffff',
-      shape: 'rounded'
-    },
-    decline: {
-      background: '#f44336',
-      color: '#ffffff',
-      shape: 'rounded'
-    }
-  }
-};
-
-// Interface for form data
-interface FormData {
-  title: string;
-  description: string;
-  location: string;
-  locationTitle: string;
-  locationType: 'manual' | 'google_maps';
-  mapsUrl: string;
-  selectedDate: Date | undefined;
-  startTime: string;
-  endTime: string;
-  isAllDay: boolean;
+interface EventCreationFormProps {
+  isEdit?: boolean;
+  eventData?: any;
 }
 
-const EventCreationForm: React.FC<{ eventId?: string }> = ({ eventId }) => {
-  const navigate = useNavigate();
+const EventCreationForm: React.FC<EventCreationFormProps> = ({ isEdit = false, eventData }) => {
   const [activeTab, setActiveTab] = useState<EventFormTab>('details');
-  const [formData, setFormData] = useState<FormData>({
-    title: '',
-    description: '',
-    location: '',
-    locationTitle: '',
-    locationType: 'manual',
-    mapsUrl: '',
-    selectedDate: undefined,
-    startTime: '12:00',
-    endTime: '13:00',
-    isAllDay: false
-  });
-  const [customization, setCustomization] = useState<EventCustomization>(defaultCustomization);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // Fetch event data if editing
-  const { data: eventData, isLoading } = useQuery({
-    queryKey: ['event', eventId],
-    queryFn: async () => {
-      if (!eventId) return null;
-      
-      const { data, error } = await supabase
-        .from('events')
-        .select('*')
-        .eq('id', eventId)
-        .single();
-      
-      if (error) throw error;
-      return transformDatabaseEvent(data);
+  const [title, setTitle] = useState(eventData?.title || '');
+  const [description, setDescription] = useState(eventData?.description || '');
+  const [selectedDate, setSelectedDate] = useState(eventData?.start_time ? new Date(eventData.start_time) : new Date());
+  const [location, setLocation] = useState(eventData?.location || '');
+  const [locationTitle, setLocationTitle] = useState(eventData?.location_title || '');
+  const [startTime, setStartTime] = useState(eventData?.start_time ? eventData.start_time.substring(11, 16) : '12:00');
+  const [endTime, setEndTime] = useState(eventData?.end_time ? eventData.end_time.substring(11, 16) : '13:00');
+  const [isAllDay, setIsAllDay] = useState(eventData?.is_all_day || false);
+  const [customization, setCustomization] = useState<EventCustomization>(eventData?.customization || initialCustomization);
+  const [locationType, setLocationType] = useState<"manual" | "google_maps">(eventData?.location_type || "manual");
+  const [mapsUrl, setMapsUrl] = useState(eventData?.maps_url || "");
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const [formData, setFormData] = useState<FormData>(new FormData());
+  const [errors, setErrors] = useState({});
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { eventId } = useParams<{ eventId: string }>();
+
+  const form = useForm<EventFormData>({
+    resolver: zodResolver(eventSchema),
+    defaultValues: {
+      title: '',
+      description: '',
+      location: '',
+      location_title: '',
+      startDate: new Date(),
+      endDate: new Date(),
+      isAllDay: false
     },
-    enabled: !!eventId
+    mode: "onChange"
   });
-  
-  // Populate form data when editing an existing event
-  useEffect(() => {
-    if (eventData) {
-      try {
-        const startDate = new Date(eventData.start_time);
-        setFormData({
-          title: eventData.title || '',
-          description: eventData.description || '',
-          location: eventData.location || '',
-          locationTitle: eventData.location_title || '',
-          locationType: (eventData.location_type as 'manual' | 'google_maps') || 'manual',
-          mapsUrl: eventData.maps_url || '',
-          selectedDate: startDate,
-          startTime: format(startDate, 'HH:mm'),
-          endTime: eventData.end_time ? format(new Date(eventData.end_time), 'HH:mm') : '13:00',
-          isAllDay: eventData.is_all_day || false
-        });
-        
-        if (eventData.customization) {
-          setCustomization(eventData.customization);
-        }
-      } catch (error) {
-        console.error("Error parsing event data:", error);
-      }
-    }
-  }, [eventData]);
-  
-  const handleNextTab = () => {
-    if (activeTab === 'details') {
-      setActiveTab('customize');
-    } else if (activeTab === 'customize') {
-      setActiveTab('share');
-    }
-  };
-  
-  const handlePrevTab = () => {
-    if (activeTab === 'customize') {
-      setActiveTab('details');
-    } else if (activeTab === 'share') {
-      setActiveTab('customize');
-    }
-  };
-  
-  const handleSaveDraft = async () => {
-    if (!formData.title) {
+
+  const mutation = useMutation({
+    mutationFn: isEdit ? updateEvent : createEvent,
+    onSuccess: (data) => {
       toast({
-        title: "Title Required",
-        description: "Please add a title for your event",
-        variant: "destructive"
+        title: isEdit ? "Event updated successfully!" : "Event created successfully!",
+        description: isEdit
+          ? "Your event details have been updated."
+          : "Your event has been created and is ready to share.",
       });
-      return;
-    }
-    
-    try {
-      setIsSubmitting(true);
-      
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error("You must be logged in to create events");
-      }
-      
-      // Create start and end date from form data
-      const startDate = formData.selectedDate 
-        ? new Date(formData.selectedDate.setHours(
-            parseInt(formData.startTime.split(':')[0]),
-            parseInt(formData.startTime.split(':')[1])
-          )).toISOString()
-        : new Date().toISOString();
-      
-      let endDate: string;
-      if (formData.isAllDay) {
-        // For all day events, set end time to end of day
-        const endOfDay = formData.selectedDate 
-          ? new Date(formData.selectedDate.setHours(23, 59, 59)) 
-          : new Date(new Date().setHours(23, 59, 59));
-        endDate = endOfDay.toISOString();
-      } else {
-        endDate = formData.selectedDate 
-          ? new Date(formData.selectedDate.setHours(
-              parseInt(formData.endTime.split(':')[0]),
-              parseInt(formData.endTime.split(':')[1])
-            )).toISOString()
-          : new Date().toISOString();
-      }
-      
-      const eventData = {
-        title: formData.title,
-        description: formData.description,
-        location: formData.location,
-        location_title: formData.locationTitle,
-        location_type: formData.locationType,
-        maps_url: formData.mapsUrl,
-        start_time: startDate,
-        end_time: endDate,
-        is_all_day: formData.isAllDay,
-        status: 'draft',
-        user_id: session.user.id,
-        customization: customization
-      };
-      
-      // Prepare for database storage by stringifying customization
-      const dbEventData = prepareEventForStorage(eventData);
-      
-      let result;
-      
-      if (eventId) {
-        // Update existing event
-        result = await supabase
-          .from('events')
-          .update(dbEventData)
-          .eq('id', eventId);
-      } else {
-        // Create new event
-        result = await supabase
-          .from('events')
-          .insert([dbEventData]);
-      }
-      
-      if (result.error) throw result.error;
-      
-      toast({
-        title: "Draft Saved",
-        description: `Your event "${formData.title}" has been saved as a draft`,
-      });
-      
-      if (!eventId) {
-        navigate('/dashboard/events');
-      }
-    } catch (error) {
-      console.error("Error saving draft:", error);
-      toast({
-        title: "Save Failed",
-        description: "There was an error saving your event draft",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-  
-  const handlePublish = async () => {
-    if (!formData.title || !formData.selectedDate) {
-      toast({
-        title: "Missing Information",
-        description: "Please add a title and date for your event",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    try {
-      setIsSubmitting(true);
-      
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error("You must be logged in to create events");
-      }
-      
-      // Create start and end date from form data
-      const startDate = new Date(formData.selectedDate.setHours(
-        parseInt(formData.startTime.split(':')[0]),
-        parseInt(formData.startTime.split(':')[1])
-      )).toISOString();
-      
-      let endDate: string;
-      if (formData.isAllDay) {
-        // For all day events, set end time to end of day
-        const endOfDay = new Date(formData.selectedDate.setHours(23, 59, 59));
-        endDate = endOfDay.toISOString();
-      } else {
-        endDate = new Date(formData.selectedDate.setHours(
-          parseInt(formData.endTime.split(':')[0]),
-          parseInt(formData.endTime.split(':')[1])
-        )).toISOString();
-      }
-      
-      const eventData = {
-        title: formData.title,
-        description: formData.description,
-        location: formData.location,
-        location_title: formData.locationTitle,
-        location_type: formData.locationType,
-        maps_url: formData.mapsUrl,
-        start_time: startDate,
-        end_time: endDate,
-        is_all_day: formData.isAllDay,
-        status: 'published',
-        user_id: session.user.id,
-        customization: customization
-      };
-      
-      // Prepare for database storage by stringifying customization
-      const dbEventData = prepareEventForStorage(eventData);
-      
-      let result;
-      let newEventId = eventId;
-      
-      if (eventId) {
-        // Update existing event
-        result = await supabase
-          .from('events')
-          .update(dbEventData)
-          .eq('id', eventId);
-      } else {
-        // Create new event
-        result = await supabase
-          .from('events')
-          .insert([dbEventData])
-          .select('id');
-          
-        if (result.data && result.data[0]) {
-          newEventId = result.data[0].id;
-        }
-      }
-      
-      if (result.error) throw result.error;
-      
-      toast({
-        title: "Event Published",
-        description: `Your event "${formData.title}" has been published`,
-      });
-      
       navigate('/dashboard/events');
-    } catch (error) {
-      console.error("Error publishing event:", error);
+    },
+    onError: (error: any) => {
       toast({
-        title: "Publish Failed",
-        description: "There was an error publishing your event",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-  
-  const handleSendEmail = async (email: string) => {
-    try {
-      // Logic to send email invitations would go here
-      toast({
-        title: "Invitation Sent",
-        description: `An invitation has been sent to ${email}`,
-      });
-    } catch (error) {
-      console.error("Error sending invitation:", error);
-      toast({
-        title: "Error",
-        description: "Failed to send invitation",
         variant: "destructive",
+        title: "Uh oh! Something went wrong.",
+        description: error.message || "Failed to save the event. Please try again.",
+      });
+    },
+  });
+
+  const handleCreate = async () => {
+    try {
+      const data = {
+        title,
+        description,
+        location,
+        location_title: locationTitle,
+        start_time: selectedDate,
+        end_time: selectedDate,
+        is_all_day: isAllDay,
+        customization,
+        location_type: locationType,
+        maps_url: mapsUrl,
+      };
+
+      if (isEdit && eventId) {
+        await mutation.mutateAsync({ ...data, id: eventId });
+      } else {
+        await mutation.mutateAsync(data);
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error!",
+        description: error.message || "Could not create event",
       });
     }
   };
-  
-  if (isLoading && eventId) {
-    return (
-      <div className="flex items-center justify-center h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4">Loading event...</p>
-        </div>
-      </div>
-    );
-  }
-  
+
+  const handleSaveDraft = async () => {
+    try {
+      const data = {
+        title,
+        description,
+        location,
+        location_title: locationTitle,
+        start_time: selectedDate,
+        end_time: selectedDate,
+        is_all_day: isAllDay,
+        customization,
+        status: 'draft',
+        location_type: locationType,
+        maps_url: mapsUrl,
+      };
+
+      if (isEdit && eventId) {
+        await mutation.mutateAsync({ ...data, id: eventId });
+      } else {
+        await mutation.mutateAsync(data);
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error!",
+        description: error.message || "Could not save event as draft",
+      });
+    }
+  };
+
+  const handleLocationChange = useCallback(
+    (location: string, type: "manual" | "google_maps" = "manual", url = "", title = "") => {
+      setLocation(location);
+      setLocationType(type);
+      setMapsUrl(url);
+      setLocationTitle(title);
+    },
+    []
+  );
+
+  const getCurrentLocation = () => {
+    setIsGettingLocation(true);
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setLocation(`${position.coords.latitude}, ${position.coords.longitude}`);
+          setIsGettingLocation(false);
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          setIsGettingLocation(false);
+          toast({
+            variant: "destructive",
+            title: "Error!",
+            description: "Could not retrieve current location.",
+          });
+        }
+      );
+    } else {
+      setIsGettingLocation(false);
+      toast({
+        variant: "destructive",
+        title: "Error!",
+        description: "Geolocation is not supported by this browser.",
+      });
+    }
+  };
+
+  const handleSendInvitationEmail = async (email: string) => {
+    if (!eventData?.id) {
+      toast({
+        variant: "destructive",
+        title: "Error!",
+        description: "Event ID is missing. Please save the event first.",
+      });
+      return;
+    }
+
+    try {
+      await createInvitation({
+        event_id: eventData.id,
+        email: email,
+        shared_as_link: true
+      });
+
+      toast({
+        title: "Invitation sent!",
+        description: `An invitation email has been sent to ${email}`,
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong.",
+        description: error.message || "Failed to send invitation. Please try again.",
+      });
+    }
+  };
+
   return (
-    <div className="container mx-auto p-4">
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as EventFormTab)}>
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">
-            {eventId ? 'Edit Event' : 'Create New Event'}
-          </h1>
-          
-          <TabsList>
-            <TabsTrigger value="details">Details</TabsTrigger>
-            <TabsTrigger value="customize">Customize</TabsTrigger>
-            <TabsTrigger value="share">Share</TabsTrigger>
-          </TabsList>
-        </div>
-        
-        <TabsContent value="details">
+    <div className="container max-w-4xl mx-auto py-10">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="flex justify-center mb-6">
+          <TabsTrigger value="details">Details</TabsTrigger>
+          <TabsTrigger value="customize">Customize</TabsTrigger>
+          <TabsTrigger value="share">Share</TabsTrigger>
+        </TabsList>
+        <TabsContent value="details" className="outline-none">
           <DetailsTab
+            selectedDate={selectedDate}
+            startTime={startTime}
+            endTime={endTime}
+            isAllDay={isAllDay}
+            title={title}
+            description={description}
+            location={location}
+            locationTitle={locationTitle}
+            locationType={locationType}
+            mapsUrl={mapsUrl}
+            onTitleChange={setTitle}
+            onDescriptionChange={setDescription}
+            onDateChange={setSelectedDate}
+            onStartTimeChange={setStartTime}
+            onEndTimeChange={setEndTime}
+            onIsAllDayChange={setIsAllDay}
+            onLocationChange={handleLocationChange}
+            handleNextTab={() => setActiveTab('customize')}
+            getCurrentLocation={getCurrentLocation}
+            isGettingLocation={isGettingLocation}
+            errors={errors}
             formData={formData}
             setFormData={setFormData}
-            handleNextTab={handleNextTab}
-            handleSaveDraft={handleSaveDraft}
-            isSubmitting={isSubmitting}
           />
         </TabsContent>
-        
-        <TabsContent value="customize">
+        <TabsContent value="customize" className="outline-none">
           <CustomizeTab
             customization={customization}
             onCustomizationChange={setCustomization}
-            handleNextTab={handleNextTab}
+            handleNextTab={() => setActiveTab('share')}
             handleSaveDraft={handleSaveDraft}
-            location={formData.location}
-            locationTitle={formData.locationTitle}
-            title={formData.title}
-            description={formData.description}
-            selectedDate={formData.selectedDate}
+            location={location}
+            locationTitle={locationTitle}
+            title={title}
+            description={description}
+            selectedDate={selectedDate}
           />
         </TabsContent>
-        
-        <TabsContent value="share">
-          <div className="space-y-6">
-            <ShareLinksTab
-              eventId={eventId}
-              shareLink={`${window.location.origin}/events/share/${eventId || 'new'}`}
-              onSendEmail={handleSendEmail}
-            />
-            
-            <div className="flex justify-end gap-2 pt-6">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handlePrevTab}
-              >
-                Back
-              </Button>
-              
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleSaveDraft}
-                disabled={isSubmitting}
-              >
-                Save Draft
-              </Button>
-              
-              <Button
-                type="button"
-                onClick={handlePublish}
-                disabled={isSubmitting}
-              >
-                Publish Event
-              </Button>
-            </div>
-          </div>
+        <TabsContent value="share" className="outline-none">
+          <ShareLinksTab
+            eventUrl={eventData ? window.location.origin + `/i/${eventData.id}` : undefined}
+            onSendEmail={handleSendInvitationEmail}
+            eventId={eventData?.id}
+            shareLink={eventData ? window.location.origin + `/i/${eventData.id}` : undefined}
+          />
         </TabsContent>
       </Tabs>
+
+      <div className="flex justify-end gap-4">
+        <Button type="button" variant="outline" onClick={handleSaveDraft}>
+          Save Draft
+        </Button>
+        <Button type="button" onClick={handleCreate} disabled={mutation.isPending}>
+          {mutation.isPending ? "Saving..." : "Publish Event"}
+        </Button>
+      </div>
     </div>
   );
 };

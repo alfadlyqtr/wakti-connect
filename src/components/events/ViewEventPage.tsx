@@ -127,20 +127,22 @@ const ViewEventPage: React.FC<ViewEventPageProps> = ({ eventId }) => {
     );
   }
   
-  // Extract customization for styling
+  // Extract customization for styling with proper null checks
   const customization = event.customization || {};
   const cardStyle: React.CSSProperties = {};
   
-  // Apply background styling if available
-  if (customization.background && customization.background.type === 'solid') {
-    cardStyle.backgroundColor = customization.background.value || '#ffffff';
-  } else if (customization.background && customization.background.type === 'image' && customization.background.value) {
-    cardStyle.backgroundImage = `url(${customization.background.value})`;
-    cardStyle.backgroundSize = 'cover';
-    cardStyle.backgroundPosition = 'center';
+  // Apply background styling if available with proper null checks
+  if (customization.background && customization.background.type) {
+    if (customization.background.type === 'solid') {
+      cardStyle.backgroundColor = customization.background.value || '#ffffff';
+    } else if (customization.background.type === 'image' && customization.background.value) {
+      cardStyle.backgroundImage = `url(${customization.background.value})`;
+      cardStyle.backgroundSize = 'cover';
+      cardStyle.backgroundPosition = 'center';
+    }
   }
   
-  // Apply text color if available
+  // Apply text color if available with proper null checks
   if (customization.font && customization.font.color) {
     cardStyle.color = customization.font.color;
   }

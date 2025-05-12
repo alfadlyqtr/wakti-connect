@@ -10,17 +10,24 @@ import { toast } from '@/components/ui/use-toast';
 interface ShareLinksTabProps {
   eventUrl?: string;
   onSendEmail?: (email: string) => void;
+  eventId?: string; // Add eventId prop
+  shareLink?: string; // Add shareLink prop
 }
 
 const ShareLinksTab: React.FC<ShareLinksTabProps> = ({ 
   eventUrl = window.location.href, // Default to current URL
-  onSendEmail 
+  onSendEmail,
+  eventId, // Support new prop
+  shareLink // Support new prop
 }) => {
   const [email, setEmail] = useState('');
   const [activeTab, setActiveTab] = useState('qrcode');
+  
+  // If shareLink is provided, use that instead of eventUrl
+  const finalUrl = shareLink || eventUrl;
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(eventUrl);
+    navigator.clipboard.writeText(finalUrl);
     toast({
       title: "Link copied!",
       description: "Event link has been copied to clipboard",
@@ -41,7 +48,7 @@ const ShareLinksTab: React.FC<ShareLinksTabProps> = ({
         await navigator.share({
           title: 'Check out this event',
           text: 'I wanted to share this event with you.',
-          url: eventUrl,
+          url: finalUrl,
         });
       } catch (error) {
         console.log('Sharing failed', error);
@@ -66,7 +73,7 @@ const ShareLinksTab: React.FC<ShareLinksTabProps> = ({
         
         <TabsContent value="qrcode" className="pt-4">
           <div className="flex flex-col items-center justify-center p-4 bg-muted/30 rounded-lg">
-            <QRCode value={eventUrl} size={200} />
+            <QRCode value={finalUrl} size={200} />
             <p className="text-sm text-muted-foreground mt-4">
               Scan this QR code to view the event details.
             </p>
@@ -77,7 +84,7 @@ const ShareLinksTab: React.FC<ShareLinksTabProps> = ({
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
               <Input 
-                value={eventUrl}
+                value={finalUrl}
                 readOnly
                 className="flex-1"
               />
