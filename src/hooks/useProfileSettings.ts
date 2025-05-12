@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
@@ -14,7 +13,7 @@ export type ProfileWithEmail = Tables<"profiles"> & {
 export const useProfileSettings = () => {
   const queryClient = useQueryClient();
   
-  const { data, isLoading, error, refetch } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ['settingsProfile'],
     queryFn: async (): Promise<ProfileWithEmail | null> => {
       try {
@@ -177,7 +176,6 @@ export const useProfileSettings = () => {
     isLoading,
     error,
     updateProfile: updateProfile.mutate,
-    isUpdating: updateProfile.isPending,
-    refetch // Export the refetch function
+    isUpdating: updateProfile.isPending
   };
 };
