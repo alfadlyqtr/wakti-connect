@@ -4,8 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useProfileSettings } from "@/hooks/useProfileSettings";
 import ProfileForm from "@/components/settings/profile/ProfileForm";
 import BusinessProfileInfo from "@/components/settings/profile/BusinessProfileInfo";
-import SocialMediaForm from "@/components/settings/profile/SocialMediaForm";
-import { BuildingStore, Users } from "lucide-react";
+import { Building, Users } from "lucide-react";
 
 const BusinessProfileTab = () => {
   const { data: profile, isLoading, error } = useProfileSettings();
@@ -43,7 +42,7 @@ const BusinessProfileTab = () => {
       <Card className="shadow-sm overflow-hidden">
         <CardHeader className="bg-gradient-to-r from-wakti-blue/5 to-wakti-blue/10">
           <div className="flex items-center gap-2">
-            <BuildingStore className="h-5 w-5 text-wakti-blue" />
+            <Building className="h-5 w-5 text-wakti-blue" />
             <div>
               <CardTitle>Business Information</CardTitle>
               <CardDescription>Manage your business details</CardDescription>

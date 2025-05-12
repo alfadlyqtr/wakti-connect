@@ -33,7 +33,13 @@ export const useSocialLinks = (businessId: string) => {
       
       if (error) throw error;
       
-      setSocialLinks(data || []);
+      // Cast the platform property as SocialPlatform to fix the type error
+      const typedSocialLinks = data?.map(link => ({
+        ...link,
+        platform: link.platform as SocialPlatform
+      })) || [];
+      
+      setSocialLinks(typedSocialLinks);
     } catch (err) {
       console.error('Error fetching social links:', err);
       setError(err instanceof Error ? err : new Error('Failed to fetch social links'));
@@ -53,7 +59,7 @@ export const useSocialLinks = (businessId: string) => {
   const updateSocialLink = async ({ businessId, platform, url }: UpdateSocialLinkParams) => {
     try {
       // Check if link already exists
-      const existingLink = socialLinks.find(link => link.platform === platform);
+      const existingLink = socialLinks.find(link => link.platform === platform as SocialPlatform);
       
       if (existingLink) {
         // If URL is empty, delete the link
@@ -79,7 +85,7 @@ export const useSocialLinks = (businessId: string) => {
           .from('business_social_links')
           .insert({
             business_id: businessId,
-            platform,
+            platform: platform as SocialPlatform,
             url,
           });
         
