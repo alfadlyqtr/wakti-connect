@@ -1,239 +1,277 @@
 
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar, MapPin, Clock, ArrowLeft, Edit, Trash } from 'lucide-react';
-import { Loader2 } from 'lucide-react';
-import { toast } from '@/components/ui/use-toast';
-import { format, parseISO } from 'date-fns';
-import { Event } from '@/types/event.types';
 import { supabase } from '@/integrations/supabase/client';
-import { transformDatabaseEvent } from '@/services/event/eventHelpers';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Event, EventCustomization } from '@/types/event.types';
+import { format } from 'date-fns';
+import { CalendarCheck, MapPin, Send, Share2, ArrowLeft } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { sendEventInvitation, getEventInvitations } from '@/services/invitation/invitationService';
+import { initialCustomization } from '@/components/events/customize/initial-customization';
+import { toast } from '@/components/ui/use-toast';
+import { useForm } from 'react-hook-form';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface ViewEventPageProps {
   eventId: string;
 }
 
 const ViewEventPage: React.FC<ViewEventPageProps> = ({ eventId }) => {
+  const [event, setEvent] = useState<Event | null>(null);
+  const [invitations, setInvitations] = useState<any[]>([]);
+  const [email, setEmail] = useState('');
   const navigate = useNavigate();
   
-  // Fetch event data
-  const { data: event, isLoading, error } = useQuery({
+  // Load event data
+  const { data: eventData, isLoading, error } = useQuery({
     queryKey: ['event', eventId],
     queryFn: async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session) {
-          throw new Error('Not authenticated');
-        }
-        
-        const { data, error } = await supabase
-          .from('events')
-          .select('*')
-          .eq('id', eventId)
-          .single();
-          
-        if (error) throw error;
-        return transformDatabaseEvent(data);
-      } catch (error) {
-        console.error('Error fetching event:', error);
-        throw error;
-      }
-    },
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .eq('id', eventId)
+        .single();
+      
+      if (error) throw error;
+      return data as Event;
+    }
   });
-
-  const handleEdit = () => {
-    navigate(`/dashboard/events/edit/${eventId}`);
-  };
-
-  const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this event?')) {
+  
+  // Load invitations
+  const { data: invitationsData } = useQuery({
+    queryKey: ['event-invitations', eventId],
+    queryFn: async () => {
+      return await getEventInvitations(eventId);
+    },
+    enabled: !!eventId
+  });
+  
+  // Update state when data is loaded
+  useEffect(() => {
+    if (eventData) {
+      setEvent(eventData);
+    }
+  }, [eventData]);
+  
+  useEffect(() => {
+    if (invitationsData) {
+      setInvitations(invitationsData);
+    }
+  }, [invitationsData]);
+  
+  const handleSendInvitation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email) {
+      toast({
+        title: "Email required",
+        description: "Please enter an email address",
+        variant: "destructive"
+      });
       return;
     }
     
     try {
-      const { error } = await supabase
-        .from('events')
-        .delete()
-        .eq('id', eventId);
-        
-      if (error) throw error;
+      const success = await sendEventInvitation(eventId, email);
       
-      toast({
-        title: 'Event deleted',
-        description: 'The event has been successfully deleted',
-      });
-      
-      navigate('/dashboard/events');
+      if (success) {
+        setEmail('');
+        // Refetch invitations
+        // queryClient.invalidateQueries(['event-invitations', eventId]);
+      }
     } catch (error) {
-      console.error('Error deleting event:', error);
+      console.error('Error sending invitation:', error);
       toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to delete the event',
+        title: "Failed to send invitation",
+        description: "There was an error sending the invitation",
+        variant: "destructive"
       });
     }
   };
+  
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-[60vh]">Loading event...</div>;
+  }
+  
+  if (error || !event) {
+    return <div className="flex flex-col items-center justify-center min-h-[60vh]">
+      <p className="text-lg text-red-500 mb-4">Error loading event</p>
+      <Button onClick={() => navigate('/dashboard/events')}>Back to Events</Button>
+    </div>;
+  }
+  
+  // Safely access customization with fallbacks to initialCustomization
+  const customization = event.customization || initialCustomization;
+  
+  // Background style
+  const getBackgroundStyle = () => {
+    if (!customization.background) {
+      return { background: initialCustomization.background.value };
+    }
 
-  const handleBack = () => {
-    navigate('/dashboard/events');
+    const { type, value } = customization.background;
+    
+    if (type === 'image') {
+      return { backgroundImage: `url(${value})`, backgroundSize: 'cover', backgroundPosition: 'center' };
+    }
+    
+    return { background: value || initialCustomization.background.value };
+  };
+  
+  // Font style
+  const getFontStyle = () => {
+    if (!customization.font) {
+      return {
+        fontFamily: initialCustomization.font.family,
+        color: initialCustomization.font.color,
+        fontSize: initialCustomization.font.size
+      };
+    }
+
+    return {
+      fontFamily: customization.font.family || initialCustomization.font.family,
+      color: customization.font.color || initialCustomization.font.color,
+      fontSize: customization.font.size || initialCustomization.font.size
+    };
   };
   
   // Format date for display
   const formatEventDate = (dateString: string) => {
     try {
-      return format(parseISO(dateString), 'EEEE, MMMM d, yyyy');
+      const date = new Date(dateString);
+      return format(date, 'EEEE, MMMM d, yyyy');
     } catch (error) {
-      return 'Invalid date';
+      console.error('Error formatting date:', error);
+      return dateString;
     }
   };
   
   // Format time for display
   const formatEventTime = (dateString: string) => {
     try {
-      return format(parseISO(dateString), 'h:mm a');
+      const date = new Date(dateString);
+      return format(date, 'h:mm a');
     } catch (error) {
+      console.error('Error formatting time:', error);
       return '';
     }
   };
-  
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-  
-  if (error || !event) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Event Not Found</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p>The event you're looking for could not be found or you don't have permission to view it.</p>
-        </CardContent>
-        <CardFooter>
-          <Button onClick={handleBack} variant="outline">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Events
-          </Button>
-        </CardFooter>
-      </Card>
-    );
-  }
-  
-  // Extract customization for styling with proper null checks
-  const customization = event.customization || {};
-  const cardStyle: React.CSSProperties = {};
-  
-  // Safely access background properties
-  if (customization && 
-      customization.background && 
-      typeof customization.background === 'object') {
-    
-    const background = customization.background;
-    
-    if (background.type === 'solid' && background.value) {
-      cardStyle.backgroundColor = background.value;
-    } else if (background.type === 'image' && background.value) {
-      cardStyle.backgroundImage = `url(${background.value})`;
-      cardStyle.backgroundSize = 'cover';
-      cardStyle.backgroundPosition = 'center';
-    }
-  }
-  
-  // Safely apply text color if available
-  if (customization && 
-      customization.font && 
-      typeof customization.font === 'object' && 
-      customization.font.color) {
-    cardStyle.color = customization.font.color;
-  }
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="mb-4">
-        <Button onClick={handleBack} variant="outline">
-          <ArrowLeft className="mr-2 h-4 w-4" />
+    <div className="container mx-auto py-8 px-4">
+      <div className="mb-6">
+        <Button 
+          variant="outline" 
+          onClick={() => navigate('/dashboard/events')}
+          className="flex items-center"
+        >
+          <ArrowLeft size={16} className="mr-1" />
           Back to Events
         </Button>
       </div>
       
-      <Card className="overflow-hidden shadow-lg" style={cardStyle}>
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle className="text-2xl font-bold">{event.title}</CardTitle>
-            <div className="flex space-x-2">
-              <Button onClick={handleEdit} size="sm" variant="outline">
-                <Edit className="mr-2 h-4 w-4" />
-                Edit
-              </Button>
-              <Button onClick={handleDelete} size="sm" variant="destructive">
-                <Trash className="mr-2 h-4 w-4" />
-                Delete
-              </Button>
-            </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Event Preview */}
+        <Card 
+          className="col-span-2 overflow-hidden" 
+          style={{ ...getBackgroundStyle(), ...getFontStyle(), padding: '2rem' }}
+        >
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold mb-2">{event.title}</h1>
+            <p className="opacity-80">
+              {formatEventDate(event.start_time)}
+              {!event.is_all_day && ` • ${formatEventTime(event.start_time)}`}
+            </p>
           </div>
-        </CardHeader>
-        
-        <CardContent className="space-y-4">
+          
           {event.description && (
-            <div className="text-lg">
-              {event.description}
+            <div className="mb-6">
+              <p className="whitespace-pre-line">{event.description}</p>
             </div>
           )}
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-center">
-              <Calendar className="h-5 w-5 mr-2 text-primary" />
-              <span>{formatEventDate(event.start_time)}</span>
+          {event.location && (
+            <div className="flex items-start mb-6">
+              <MapPin className="mr-2 mt-1 flex-shrink-0" size={18} />
+              <div>
+                {event.location_title && <p className="font-medium">{event.location_title}</p>}
+                <p>{event.location}</p>
+              </div>
             </div>
+          )}
+          
+          <div className="flex gap-3 mt-6">
+            <Button className="flex items-center">
+              <CalendarCheck size={18} className="mr-2" />
+              Add to Calendar
+            </Button>
             
-            {!event.is_all_day && (
-              <div className="flex items-center">
-                <Clock className="h-5 w-5 mr-2 text-primary" />
-                <span>
-                  {formatEventTime(event.start_time)}
-                  {event.end_time && ` - ${formatEventTime(event.end_time)}`}
-                </span>
-              </div>
-            )}
+            <Button variant="outline" className="flex items-center">
+              <Share2 size={18} className="mr-2" />
+              Share
+            </Button>
             
-            {event.location && (
-              <div className="flex items-center col-span-1 md:col-span-2">
-                <MapPin className="h-5 w-5 mr-2 text-primary" />
-                <span>{event.location}</span>
-              </div>
-            )}
+            {/* Edit button */}
+            <Button 
+              variant="secondary" 
+              onClick={() => navigate(`/dashboard/events/edit/${eventId}`)}
+            >
+              Edit Event
+            </Button>
           </div>
-        </CardContent>
+        </Card>
         
-        <CardFooter>
-          <div className="w-full flex justify-between">
-            <div>
-              {event.status === 'draft' && (
-                <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs">
-                  Draft
-                </span>
-              )}
-              {event.status === 'published' && (
-                <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs">
-                  Published
-                </span>
-              )}
-            </div>
+        {/* Invitation Section */}
+        <div className="col-span-1">
+          <Card className="p-6">
+            <h2 className="text-xl font-bold mb-4">Invite People</h2>
             
-            <div className="text-sm text-muted-foreground">
-              Created: {format(parseISO(event.created_at), 'MMM d, yyyy')}
+            <form onSubmit={handleSendInvitation} className="mb-6">
+              <div className="mb-4">
+                <Label htmlFor="email">Email Address</Label>
+                <div className="flex mt-1">
+                  <Input 
+                    id="email"
+                    type="email" 
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter email address"
+                    className="rounded-r-none"
+                  />
+                  <Button type="submit" className="rounded-l-none flex items-center">
+                    <Send size={16} className="mr-2" />
+                    Send
+                  </Button>
+                </div>
+              </div>
+            </form>
+            
+            <div>
+              <h3 className="font-medium mb-2">Sent Invitations</h3>
+              {invitations.length === 0 ? (
+                <p className="text-gray-500">No invitations sent yet</p>
+              ) : (
+                <ul className="space-y-2">
+                  {invitations.map((invitation) => (
+                    <li 
+                      key={invitation.id}
+                      className="flex items-center justify-between p-2 bg-gray-50 rounded"
+                    >
+                      <span>{invitation.email}</span>
+                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                        {invitation.status}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
-          </div>
-        </CardFooter>
-      </Card>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 };
