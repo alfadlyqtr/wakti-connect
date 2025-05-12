@@ -5,6 +5,8 @@ import SimpleInvitationCreator from '@/components/invitations/SimpleInvitationCr
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getSimpleInvitationById } from '@/services/invitation/simple-invitations';
+import DashboardBusinessReports from '@/pages/dashboard/DashboardBusinessReports';
+import DashboardAnalyticsHub from '@/pages/dashboard/DashboardAnalyticsHub';
 
 const InvitationEdit = () => {
   const { id } = useParams<{ id: string }>();
@@ -49,6 +51,15 @@ export const dashboardRoutes = [
   {
     path: "events/edit/:id",
     element: <InvitationEdit />,
+  },
+  // Add routes for analytics and reports
+  {
+    path: "analytics",
+    element: <DashboardAnalyticsHub />,
+  },
+  {
+    path: "reports",
+    element: <DashboardBusinessReports />,
   },
   // Business page route removed
 ];
