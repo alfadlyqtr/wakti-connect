@@ -60,7 +60,15 @@ const ViewEventPage: React.FC<ViewEventPageProps> = ({ eventId }) => {
   }
 
   // Safely access customization with defaults
-  const customization = event.customization || {};
+  const customization = event.customization || {
+    background: { type: 'solid', value: '#ffffff' },
+    font: { family: 'system-ui, sans-serif', size: 'medium', color: '#333333' },
+    buttons: {
+      accept: { background: '#4CAF50', color: 'white', shape: 'rounded' },
+      decline: { background: '#f44336', color: 'white', shape: 'rounded' }
+    }
+  };
+  
   const backgroundType = customization.background?.type || 'solid';
   const backgroundColor = customization.background?.value || '#ffffff';
   const backgroundStyle = backgroundType === 'image' 

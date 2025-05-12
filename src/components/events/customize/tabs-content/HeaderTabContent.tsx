@@ -1,21 +1,17 @@
 
-import React from "react";
-import { useCustomization } from "../context";
-import HeaderTab from "../tabs/HeaderTab";
+import React from 'react';
+import { useCustomization } from '../context';
+import { Label } from '@/components/ui/label';
 
 const HeaderTabContent: React.FC = () => {
-  const {
-    customization,
-    handleHeaderStyleChange,
-    handleHeaderImageChange
-  } = useCustomization();
-
+  const { customization, handleHeaderStyleChange } = useCustomization();
+  
   return (
-    <HeaderTab 
-      customization={customization}
-      onHeaderStyleChange={handleHeaderStyleChange}
-      onHeaderImageChange={handleHeaderImageChange}
-    />
+    <div className="space-y-4">
+      <div>
+        <Label>Header style customization coming soon</Label>
+      </div>
+    </div>
   );
 };
 

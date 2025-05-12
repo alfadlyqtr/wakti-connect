@@ -8,19 +8,51 @@ export const createEffectHandlers = (
   const handleCardEffectChange = (cardEffect: any) => {
     onCustomizationChange({
       ...customization,
-      cardEffect
+      cardEffect: {
+        ...(customization.cardEffect || {}),
+        ...cardEffect
+      }
     });
   };
 
   const handleElementAnimationsChange = (elementAnimations: any) => {
     onCustomizationChange({
       ...customization,
-      elementAnimations
+      elementAnimations: {
+        ...(customization.elementAnimations || {}),
+        ...elementAnimations
+      }
+    });
+  };
+
+  const handleUtilityButtonStyleChange = (
+    buttonType: 'calendar' | 'map' | 'qr',
+    property: 'background' | 'color' | 'shape',
+    value: string
+  ) => {
+    onCustomizationChange({
+      ...customization,
+      utilityButtons: {
+        ...(customization.utilityButtons || {}),
+        [buttonType]: {
+          ...(customization.utilityButtons?.[buttonType] || {}),
+          [property]: value
+        }
+      }
+    });
+  };
+
+  const handlePoweredByColorChange = (color: string) => {
+    onCustomizationChange({
+      ...customization,
+      poweredByColor: color
     });
   };
 
   return {
     handleCardEffectChange,
-    handleElementAnimationsChange
+    handleElementAnimationsChange,
+    handleUtilityButtonStyleChange,
+    handlePoweredByColorChange
   };
 };

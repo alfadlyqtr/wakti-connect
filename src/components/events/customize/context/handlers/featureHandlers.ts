@@ -8,8 +8,7 @@ export const createFeatureHandlers = (
   const handleToggleCalendar = (checked: boolean) => {
     onCustomizationChange({
       ...customization,
-      enableAddToCalendar: checked,
-      showAddToCalendarButton: checked
+      enableAddToCalendar: checked
     });
   };
 
@@ -21,14 +20,19 @@ export const createFeatureHandlers = (
   };
 
   const handleBrandingChange = (property: 'logo' | 'slogan', value: string) => {
-    const updatedBranding = {
-      ...customization.branding,
-      [property]: value
-    };
-    
     onCustomizationChange({
       ...customization,
-      branding: updatedBranding
+      branding: {
+        ...(customization.branding || {}),
+        [property]: value
+      }
+    });
+  };
+
+  const handleAnimationChange = (value: 'fade' | 'slide' | 'pop') => {
+    onCustomizationChange({
+      ...customization,
+      animation: value
     });
   };
 
@@ -38,19 +42,12 @@ export const createFeatureHandlers = (
       mapDisplay: value
     });
   };
-  
-  const handlePoweredByColorChange = (color: string) => {
-    onCustomizationChange({
-      ...customization,
-      poweredByColor: color
-    });
-  };
 
-  return {
+  return { 
     handleToggleCalendar,
     handleToggleButtons,
     handleBrandingChange,
-    handleMapDisplayChange,
-    handlePoweredByColorChange
+    handleAnimationChange,
+    handleMapDisplayChange
   };
 };

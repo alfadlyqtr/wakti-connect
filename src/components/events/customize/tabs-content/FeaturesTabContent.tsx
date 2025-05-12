@@ -1,29 +1,17 @@
 
-import React from "react";
-import { useCustomization } from "../context";
-import FeaturesTab from "../tabs/FeaturesTab";
+import React from 'react';
+import { useCustomization } from '../context';
+import { Label } from '@/components/ui/label';
 
 const FeaturesTabContent: React.FC = () => {
-  const {
-    customization,
-    handleToggleCalendar,
-    handleToggleButtons,
-    handleBrandingChange,
-    handleMapDisplayChange,
-    handleUtilityButtonStyleChange,
-    handlePoweredByColorChange
-  } = useCustomization();
-
+  const { customization } = useCustomization();
+  
   return (
-    <FeaturesTab 
-      customization={customization}
-      onToggleCalendar={handleToggleCalendar}
-      onToggleButtons={handleToggleButtons}
-      onBrandingChange={handleBrandingChange}
-      onMapDisplayChange={handleMapDisplayChange}
-      onUtilityButtonStyleChange={handleUtilityButtonStyleChange}
-      onPoweredByColorChange={handlePoweredByColorChange}
-    />
+    <div className="space-y-4">
+      <div>
+        <Label>Features customization coming soon</Label>
+      </div>
+    </div>
   );
 };
 

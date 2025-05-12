@@ -1,113 +1,74 @@
 
-import React from "react";
+import React from 'react';
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 interface ColorTabProps {
   value: string;
   onChange: (value: string) => void;
 }
 
-const ColorTab: React.FC<ColorTabProps> = ({
-  value,
-  onChange
-}) => {
-  // Expanded color palette with more options
-  const colorPalette = [
-    // Whites and Light Grays
-    "#ffffff", "#f8f9fa", "#e9ecef", "#dee2e6", "#ced4da", 
-    // Gray and Dark tones
-    "#6c757d", "#495057", "#343a40", "#212529", "#000000",
-    // Reds
-    "#f8d7da", "#f1aeb5", "#f44336", "#b71c1c", "#7f0000",
-    // Greens
-    "#d1e7dd", "#a3cfbb", "#4caf50", "#2e7d32", "#1b5e20",
-    // Blues
-    "#cff4fc", "#9eeaf9", "#03a9f4", "#0277bd", "#01579b",
-    // Yellows
-    "#fff3cd", "#ffe69c", "#ffc107", "#f57f17", "#ff6f00",
-    // Purples
-    "#d0d0f0", "#b0b0e0", "#3f51b5", "#283593", "#1a237e",
-    // Pinks
-    "#e2d3f4", "#c5a3e0", "#9c27b0", "#6a1b9a", "#4a148c"
+const ColorTab: React.FC<ColorTabProps> = ({ value, onChange }) => {
+  const presetColors = [
+    '#ffffff', // White
+    '#f8fafc', // Light gray
+    '#f1f5f9', // Lighter blue-gray
+    '#0ea5e9', // Sky blue
+    '#10b981', // Emerald
+    '#8b5cf6', // Violet
+    '#ec4899', // Pink
+    '#ef4444', // Red
+    '#f97316', // Orange
+    '#eab308'  // Yellow
   ];
-
-  // Trendy colors for 2024
-  const trendyColors = [
-    "#9b87f5", // Primary Purple
-    "#7E69AB", // Secondary Purple
-    "#D6BCFA", // Light Purple
-    "#8B5CF6", // Vivid Purple
-    "#D946EF", // Magenta Pink
-    "#F97316", // Bright Orange
-    "#0EA5E9", // Ocean Blue
-    "#1EAEDB", // Bright Blue
-    "#33C3F0", // Sky Blue
-    "#0FA0CE"  // Bright Blue
-  ];
-
+  
+  const handleColorInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onChange(e.target.value);
+  };
+  
+  const handlePresetClick = (color: string) => {
+    onChange(color);
+  };
+  
   return (
     <div className="space-y-4">
-      <div>
-        <Label htmlFor="color-picker" className="block mb-2">Choose Color</Label>
-        <div className="flex gap-2">
-          <input
+      <div className="space-y-2">
+        <Label htmlFor="colorPicker">Select Color</Label>
+        <div className="flex items-center space-x-2">
+          <Input
+            id="colorPicker"
             type="color"
-            id="color-picker"
             value={value}
-            onChange={(e) => onChange(e.target.value)}
-            className="w-12 h-10 p-1 cursor-pointer rounded-md border"
+            onChange={handleColorInputChange}
+            className="w-12 h-10 p-1"
           />
-          <input
+          <Input
             type="text"
             value={value}
-            onChange={(e) => onChange(e.target.value)}
-            className="flex-1 h-10 px-3 py-2 border rounded-md"
+            onChange={handleColorInputChange}
+            className="flex-1"
             placeholder="#000000"
           />
         </div>
       </div>
       
-      <div>
-        <Label className="block mb-2">Trendy Colors</Label>
-        <div className="grid grid-cols-5 gap-2 sm:grid-cols-10">
-          {trendyColors.map((color) => (
+      <div className="space-y-2">
+        <Label>Preset Colors</Label>
+        <div className="grid grid-cols-5 gap-2">
+          {presetColors.map((color, index) => (
             <button
-              key={color}
+              key={index}
               type="button"
-              className={`w-full aspect-square rounded-md border ${
-                value === color ? 'ring-2 ring-primary' : ''
-              }`}
+              className={cn(
+                "w-full aspect-square rounded-md border border-gray-200",
+                value === color && "ring-2 ring-primary ring-offset-2"
+              )}
               style={{ backgroundColor: color }}
-              onClick={() => onChange(color)}
-              aria-label={`Select color ${color}`}
+              onClick={() => handlePresetClick(color)}
             />
           ))}
         </div>
-      </div>
-      
-      <div>
-        <Label className="block mb-2">Color Palette</Label>
-        <div className="grid grid-cols-5 gap-2 sm:grid-cols-10">
-          {colorPalette.map((color) => (
-            <button
-              key={color}
-              type="button"
-              className={`w-full aspect-square rounded-md border ${
-                value === color ? 'ring-2 ring-primary' : ''
-              }`}
-              style={{ backgroundColor: color }}
-              onClick={() => onChange(color)}
-              aria-label={`Select color ${color}`}
-            />
-          ))}
-        </div>
-      </div>
-
-      <div className="mt-4">
-        <div 
-          className="h-14 rounded-md border"
-          style={{ backgroundColor: value }}
-        ></div>
       </div>
     </div>
   );

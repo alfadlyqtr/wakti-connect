@@ -1,4 +1,3 @@
-
 import { Event, EventCustomization } from "@/types/event.types";
 
 /**
@@ -45,6 +44,22 @@ export const parseEventCustomization = (customizationJson: any): EventCustomizat
     headerStyle: 'simple',
     animation: 'fade'
   };
+};
+
+/**
+ * Prepares event data for storage in the database
+ */
+export const prepareEventForStorage = (eventData: any): any => {
+  const preparedData = { ...eventData };
+  
+  // Ensure customization is a valid object or stringify it
+  if (preparedData.customization && typeof preparedData.customization === 'object') {
+    // Keep as is - Supabase will handle JSON conversion
+  } else if (preparedData.customization) {
+    preparedData.customization = JSON.stringify(preparedData.customization);
+  }
+  
+  return preparedData;
 };
 
 /**

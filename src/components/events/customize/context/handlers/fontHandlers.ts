@@ -5,7 +5,10 @@ export const createFontHandlers = (
   customization: EventCustomization,
   onCustomizationChange: (customization: EventCustomization) => void
 ) => {
-  const handleFontChange = (property: 'family' | 'size' | 'color' | 'weight' | 'alignment', value: string) => {
+  const handleFontChange = (
+    property: 'family' | 'size' | 'color' | 'weight' | 'alignment', 
+    value: string
+  ) => {
     onCustomizationChange({
       ...customization,
       font: {
@@ -15,61 +18,46 @@ export const createFontHandlers = (
     });
   };
 
-  const handleHeaderFontChange = (property: 'family' | 'size' | 'color' | 'weight', value: string) => {
-    // Create headerFont object if it doesn't exist
-    const currentHeaderFont = customization.headerFont || {
-      family: customization.font.family,
-      size: 'large',
-      color: customization.font.color,
-      weight: 'semibold'
-    };
-
+  const handleHeaderFontChange = (
+    property: 'family' | 'size' | 'color' | 'weight',
+    value: string
+  ) => {
     onCustomizationChange({
       ...customization,
       headerFont: {
-        ...currentHeaderFont,
+        ...(customization.headerFont || {}),
         [property]: value
       }
     });
   };
 
-  const handleDescriptionFontChange = (property: 'family' | 'size' | 'color' | 'weight', value: string) => {
-    // Create descriptionFont object if it doesn't exist
-    const currentDescriptionFont = customization.descriptionFont || {
-      family: customization.font.family,
-      size: 'medium',
-      color: customization.font.color,
-      weight: 'normal'
-    };
-
+  const handleDescriptionFontChange = (
+    property: 'family' | 'size' | 'color' | 'weight',
+    value: string
+  ) => {
     onCustomizationChange({
       ...customization,
       descriptionFont: {
-        ...currentDescriptionFont,
+        ...(customization.descriptionFont || {}),
         [property]: value
       }
     });
   };
 
-  const handleDateTimeFontChange = (property: 'family' | 'size' | 'color' | 'weight', value: string) => {
-    // Create dateTimeFont object if it doesn't exist
-    const currentDateTimeFont = customization.dateTimeFont || {
-      family: customization.font.family,
-      size: 'small',
-      color: customization.font.color,
-      weight: 'normal'
-    };
-
+  const handleDateTimeFontChange = (
+    property: 'family' | 'size' | 'color' | 'weight',
+    value: string
+  ) => {
     onCustomizationChange({
       ...customization,
       dateTimeFont: {
-        ...currentDateTimeFont,
+        ...(customization.dateTimeFont || {}),
         [property]: value
       }
     });
   };
 
-  return {
+  return { 
     handleFontChange,
     handleHeaderFontChange,
     handleDescriptionFontChange,

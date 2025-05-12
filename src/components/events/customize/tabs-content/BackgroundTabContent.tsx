@@ -2,10 +2,15 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCustomization } from '../context';
-import { ColorTab } from '../background-tabs/ColorTab';
-import { ImageTab } from '../background-tabs/ImageTab';
+import ColorTab from '../background-tabs/ColorTab';
+import ImageTab from '../background-tabs/ImageTab';
 
-export const BackgroundTabContent = () => {
+interface BackgroundTabContentProps {
+  title?: string;
+  description?: string;
+}
+
+export const BackgroundTabContent: React.FC<BackgroundTabContentProps> = ({ title, description }) => {
   const { customization } = useCustomization();
   const activeTab = customization.background?.type === 'image' ? 'image' : 'color';
 
@@ -17,11 +22,22 @@ export const BackgroundTabContent = () => {
       </TabsList>
       
       <TabsContent value="color">
-        <ColorTab />
+        <ColorTab value={customization.background?.value || '#ffffff'} onChange={(value) => {
+          const { handleBackgroundChange } = useCustomization();
+          handleBackgroundChange('color', value);
+        }} />
       </TabsContent>
       
       <TabsContent value="image">
-        <ImageTab />
+        <ImageTab 
+          value={customization.background?.value || ''} 
+          onChange={(value) => {
+            const { handleBackgroundChange } = useCustomization();
+            handleBackgroundChange('image', value);
+          }}
+          title={title}
+          description={description}
+        />
       </TabsContent>
     </Tabs>
   );

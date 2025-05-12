@@ -19,7 +19,7 @@ export const createHeaderHandlers = (
     });
   };
 
-  return {
+  return { 
     handleHeaderStyleChange,
     handleHeaderImageChange
   };
