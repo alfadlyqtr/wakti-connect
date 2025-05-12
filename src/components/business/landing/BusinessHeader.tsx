@@ -12,8 +12,8 @@ const BusinessHeader = ({ section, businessPage }: BusinessHeaderProps) => {
   
   const {
     title = businessPage.page_title,
-    subtitle = businessPage.description || "Book our services online", // Use description as subtitle
-    description = "", // Keep the third level description empty or use it for additional content
+    subtitle = "Book our services online",
+    description = businessPage.description || "",
   } = content;
 
   console.log("BusinessHeader rendering with logo:", businessPage.logo_url);

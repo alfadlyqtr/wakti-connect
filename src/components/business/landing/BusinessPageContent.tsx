@@ -64,7 +64,6 @@ const BusinessPageContent: React.FC<BusinessPageContentProps> = ({
         }} 
         isPreviewMode={isPreviewMode}
         isAuthenticated={isAuthenticated}
-        description={businessPage.description || businessProfile?.description} // Pass the description
       />
       
       <BusinessPageSections 

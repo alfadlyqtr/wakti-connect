@@ -11,14 +11,12 @@ export interface BusinessPageHeaderProps {
   business: BusinessProfile;
   isPreviewMode?: boolean;
   isAuthenticated?: boolean | null;
-  description?: string; // Add description prop
 }
 
 const BusinessPageHeader: React.FC<BusinessPageHeaderProps> = ({
   business,
   isPreviewMode,
   isAuthenticated,
-  description, // Include description prop
 }) => {
   const { sendContactRequest } = useContacts();
   const { checkContactRequest } = useContactSearch();
@@ -137,13 +135,6 @@ const BusinessPageHeader: React.FC<BusinessPageHeaderProps> = ({
         <h1 className="text-3xl md:text-4xl font-bold text-center mb-4">
           {business.business_name || "Business Name"}
         </h1>
-        
-        {/* Show business description instead of owner name */}
-        {description && (
-          <p className="text-lg text-center text-muted-foreground mb-6 max-w-lg mx-auto">
-            {description}
-          </p>
-        )}
         
         {!isPreviewMode && isAuthenticated && (
           <div className="mt-2 mb-4">
