@@ -39,20 +39,22 @@ const BusinessProfileTab = () => {
   return (
     <div className="space-y-6">
       {/* Business Profile Info Card */}
-      <Card className="shadow-sm overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-wakti-blue/5 to-wakti-blue/10">
-          <div className="flex items-center gap-2">
-            <Building className="h-5 w-5 text-wakti-blue" />
-            <div>
-              <CardTitle>Business Information</CardTitle>
-              <CardDescription>Manage your business details</CardDescription>
+      <div className="space-y-4">
+        <Card className="shadow-sm overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-wakti-blue/5 to-wakti-blue/10">
+            <div className="flex items-center gap-2">
+              <Building className="h-5 w-5 text-wakti-blue" />
+              <div>
+                <CardTitle>Business Information</CardTitle>
+                <CardDescription>Manage your business details and URL</CardDescription>
+              </div>
             </div>
-          </div>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <BusinessProfileInfo profile={profile} />
-        </CardContent>
-      </Card>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <BusinessProfileInfo profile={profile} />
+          </CardContent>
+        </Card>
+      </div>
       
       {/* Business Profile Form Card */}
       <Card className="shadow-sm overflow-hidden">
