@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tables } from "@/integrations/supabase/types";
 import { toast } from "@/components/ui/use-toast";
-import { AlertCircle, Copy, Globe } from "lucide-react";
+import { AlertCircle, Copy, Globe, Share2 } from "lucide-react";
 import { useProfileSettings } from "@/hooks/useProfileSettings";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -105,6 +105,23 @@ const BusinessPageUrlCard: React.FC<BusinessPageUrlCardProps> = ({ profile }) =>
       description: "Your business page URL has been copied to clipboard",
     });
   };
+  
+  const shareBusinessPage = () => {
+    if (!profile.slug) {
+      toast({
+        title: "No URL available",
+        description: "Please set a URL slug first",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    navigator.clipboard.writeText(`${window.location.origin}/${profile.slug}`);
+    toast({
+      title: "URL ready to share",
+      description: "Your business page URL has been copied and is ready to share",
+    });
+  };
 
   const getPageUrl = () => {
     return profile.slug ? `${window.location.origin}/${profile.slug}` : "Not set";
@@ -137,8 +154,18 @@ const BusinessPageUrlCard: React.FC<BusinessPageUrlCardProps> = ({ profile }) =>
                   size="icon" 
                   onClick={copyToClipboard}
                   disabled={!profile.slug}
+                  title="Copy URL"
                 >
                   <Copy className="h-4 w-4" />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={shareBusinessPage}
+                  disabled={!profile.slug}
+                  title="Share URL"
+                >
+                  <Share2 className="h-4 w-4" />
                 </Button>
               </div>
             </div>
