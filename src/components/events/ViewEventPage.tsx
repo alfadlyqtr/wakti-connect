@@ -132,16 +132,16 @@ const ViewEventPage: React.FC<ViewEventPageProps> = ({ eventId }) => {
   const cardStyle: React.CSSProperties = {};
   
   // Apply background styling if available
-  if (customization.background?.type === 'solid') {
+  if (customization.background && customization.background.type === 'solid') {
     cardStyle.backgroundColor = customization.background.value || '#ffffff';
-  } else if (customization.background?.type === 'image' && customization.background.value) {
+  } else if (customization.background && customization.background.type === 'image' && customization.background.value) {
     cardStyle.backgroundImage = `url(${customization.background.value})`;
     cardStyle.backgroundSize = 'cover';
     cardStyle.backgroundPosition = 'center';
   }
   
   // Apply text color if available
-  if (customization.font?.color) {
+  if (customization.font && customization.font.color) {
     cardStyle.color = customization.font.color;
   }
 

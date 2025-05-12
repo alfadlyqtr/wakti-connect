@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -33,7 +34,10 @@ interface DetailsTabProps {
   onIsAllDayChange: (isAllDay: boolean) => void;
   getCurrentLocation?: () => void;
   isGettingLocation?: boolean;
+  locationType?: 'manual' | 'google_maps';
+  mapsUrl?: string;
   isEdit?: boolean;
+  formData?: any; // Add this prop to accept formData if passed
 }
 
 const DetailsTab: React.FC<DetailsTabProps> = ({
@@ -59,7 +63,8 @@ const DetailsTab: React.FC<DetailsTabProps> = ({
   isGettingLocation = false,
   locationType,
   mapsUrl,
-  isEdit = false
+  isEdit = false,
+  formData // Accept formData but not use it directly, as we're using individual props
 }) => {
   const isMobile = useIsMobile();
   
