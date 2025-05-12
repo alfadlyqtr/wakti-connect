@@ -8,6 +8,11 @@ import { getSimpleInvitationById } from '@/services/invitation/simple-invitation
 import DashboardBusinessReports from '@/pages/dashboard/DashboardBusinessReports';
 import DashboardAnalyticsHub from '@/pages/dashboard/DashboardAnalyticsHub';
 
+// Import the proper events components
+import EventCreationForm from '@/components/events/creation/EventCreationForm';
+import ViewEventPage from '@/components/events/ViewEventPage';
+import EventsListPage from '@/components/events/EventsListPage';
+
 const InvitationEdit = () => {
   const { id } = useParams<{ id: string }>();
   const { data: invitation, isLoading, error } = useQuery({
@@ -27,7 +32,30 @@ const InvitationEdit = () => {
   return <SimpleInvitationCreator existingInvitation={invitation} />;
 };
 
+// Component for viewing a single event
+const EventView = () => {
+  const { id } = useParams<{ id: string }>();
+  
+  if (!id) {
+    return <div className="p-8 text-center">Event ID is required</div>;
+  }
+  
+  return <ViewEventPage eventId={id} />;
+};
+
+// Component for editing an event
+const EventEdit = () => {
+  const { id } = useParams<{ id: string }>();
+  
+  if (!id) {
+    return <div className="p-8 text-center">Event ID is required</div>;
+  }
+  
+  return <EventCreationForm eventId={id} />;
+};
+
 export const dashboardRoutes = [
+  // Invitations routes
   {
     path: "invitations",
     element: <SimpleInvitationsList />,
@@ -40,19 +68,30 @@ export const dashboardRoutes = [
     path: "invitations/edit/:id",
     element: <InvitationEdit />,
   },
+  
+  // Events routes - restored with proper components
   {
     path: "events",
-    element: <SimpleInvitationsList isEventsList={true} />,
+    element: <EventsListPage />,
+  },
+  {
+    path: "events/create",
+    element: <EventCreationForm />,
   },
   {
     path: "events/new",
-    element: <SimpleInvitationCreator isEvent={true} />,
+    element: <EventCreationForm />,
+  },
+  {
+    path: "events/view/:id",
+    element: <EventView />,
   },
   {
     path: "events/edit/:id",
-    element: <InvitationEdit />,
+    element: <EventEdit />,
   },
-  // Add routes for analytics and reports
+  
+  // Analytics and reports routes
   {
     path: "analytics",
     element: <DashboardAnalyticsHub />,
@@ -61,7 +100,6 @@ export const dashboardRoutes = [
     path: "reports",
     element: <DashboardBusinessReports />,
   },
-  // Business page route removed
 ];
 
 export default dashboardRoutes;

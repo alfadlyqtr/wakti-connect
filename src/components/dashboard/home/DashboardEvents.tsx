@@ -26,6 +26,10 @@ const DashboardEvents = () => {
     navigate('/dashboard/events');
   };
 
+  const handleCreateEvent = () => {
+    navigate('/dashboard/events/create');  // Update path to match our new route
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -58,9 +62,12 @@ const DashboardEvents = () => {
           </div>
         )}
       </CardContent>
-      <CardFooter>
-        <Button variant="outline" className="w-full" onClick={handleViewAllEvents}>
-          View All Events
+      <CardFooter className="flex gap-2">
+        <Button variant="outline" className="flex-1" onClick={handleViewAllEvents}>
+          View All
+        </Button>
+        <Button className="flex-1" onClick={handleCreateEvent}>
+          Create Event
         </Button>
       </CardFooter>
     </Card>
