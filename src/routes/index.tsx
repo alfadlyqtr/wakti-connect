@@ -1,7 +1,7 @@
 
 import { lazy } from "react";
 import { RouteObject } from "react-router-dom";
-import { businessRoutes, bookingRoutes } from "./businessRoutes";
+import { bookingRoutes } from "./businessRoutes"; // Only import bookingRoutes
 
 const Home = lazy(() => import("../pages/Home"));
 const About = lazy(() => import("../pages/About"));
@@ -88,8 +88,7 @@ const routes: RouteObject[] = [
     path: "/i/:id",
     element: <SharedEventPage />,
   },
-  // Add business routes here
-  ...businessRoutes,
+  // Note: We removed the business routes to completely eliminate any business page functionality
 ];
 
 export default routes;

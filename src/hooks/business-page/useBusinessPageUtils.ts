@@ -83,23 +83,12 @@ export const useAutoSavePageSettings = (updatePageMutation: any, pageId?: string
   return { autoSavePage, autoSaveField };
 };
 
-// This hook provides a function to get the public URL for a business page
-export const usePublicPageUrl = (pageSlug?: string) => {
+// This hook now returns a dummy function that returns a '#' instead of generating a URL
+export const usePublicPageUrl = () => {
   const getPublicPageUrl = useCallback(() => {
-    if (!pageSlug) {
-      return '#';
-    }
-    
-    // Check the environment and construct appropriate URL
-    const isLocalhost = window.location.hostname === 'localhost' || 
-                        window.location.hostname === '127.0.0.1';
-    
-    // Get the origin (protocol + hostname + port)
-    const baseUrl = window.location.origin;
-    
-    // Construct the full URL to the business page with the new simpler format
-    return `${baseUrl}/${pageSlug}`;
-  }, [pageSlug]);
+    // Return a placeholder URL since business pages are removed
+    return '#';
+  }, []);
   
   return getPublicPageUrl;
 };

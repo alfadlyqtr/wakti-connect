@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Route } from 'react-router-dom';
 import NotFoundPage from '@/pages/NotFound';
 import SharedInvitationView from '@/components/invitations/SharedInvitationView';
 
@@ -14,6 +13,7 @@ import FaqPage from '@/pages/public/FaqPage';
 import PrivacyPage from '@/pages/public/PrivacyPage';
 import TermsPage from '@/pages/public/TermsPage';
 import SlugResolver from '@/components/business/SlugResolver';
+import SimpleBusinessLandingPage from '@/pages/business/SimpleBusinessLandingPage';
 
 // Temporary placeholder component for missing pages
 const PlaceholderPage = ({ title }: { title: string }) => (
@@ -62,7 +62,7 @@ export const publicRoutes = [
   },
   {
     path: ':slug',
-    element: <SlugResolver />,
+    element: <SimpleBusinessLandingPage />, // Direct to SimpleBusinessLandingPage instead of SlugResolver
   },
   {
     path: '*',

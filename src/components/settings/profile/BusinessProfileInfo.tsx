@@ -30,6 +30,8 @@ const BusinessProfileInfo: React.FC<BusinessProfileInfoProps> = ({ profile }) =>
             <h3 className="font-medium">Account Type</h3>
             <p className="text-muted-foreground capitalize">{profile.account_type}</p>
           </div>
+          
+          {/* No URL display here anymore */}
         </div>
       </CardContent>
     </Card>

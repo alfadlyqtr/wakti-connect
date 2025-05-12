@@ -56,7 +56,7 @@ const PageSettingsTab = ({
             handleInputChangeWithAutoSave={handleInputChangeWithAutoSave}
             handleToggleWithAutoSave={handleToggleWithAutoSave}
             handleLogoUpload={handleLogoUpload}
-            getPublicPageUrl={getPublicPageUrl}
+            getPublicPageUrl={() => '#'} // Return placeholder # instead of URL
             uploadingLogo={uploadingLogo}
             updatePage={updatePage}
           />

@@ -4,7 +4,7 @@ import BookingPage from "@/pages/booking/BookingPage";
 import BookingConfirmationPage from "@/pages/booking/BookingConfirmationPage";
 import SlugResolver from "@/components/business/SlugResolver";
 
-// Business routes
+// Business routes - minimized to only handle slug resolution
 export const businessRoutes: RouteObject[] = [
   {
     path: ":slug",
@@ -12,7 +12,7 @@ export const businessRoutes: RouteObject[] = [
   }
 ];
 
-// Booking routes
+// Booking routes remain untouched
 export const bookingRoutes: RouteObject[] = [
   {
     path: ":businessId",
